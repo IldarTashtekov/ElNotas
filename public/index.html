@@ -11,15 +11,17 @@
     <main>
         <h1>General</h1>
 
-        <!-- Botón para crear nueva nota -->
         <button id="add-note-btn">
             Nueva nota
         </button>
 
 
-        <ul id="notes-list">
-            <!-- Las notas se añadirán aquí -->
-        </ul>
+        <ul id="notes-list"></ul>
+
+        <div id="note-display" style="display: none; margin-top: 20px;">
+            <h2 id="note-title"></h2>
+            <p id="note-content"></p>
+        </div>
     </main>
     <script type="module" src="/dist/scripts/main.js"></script>
 </body>
