@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES6",          // Genera JS compatible con la mayoría de navegadores modernos
+    "module": "ESNext",       // Sistema de módulos moderno
+    "outDir": "dist",         // Carpeta donde se guardará el JS compilado
+    "rootDir": "src",         // Carpeta donde está el TS
+    "strict": true,           // Habilita comprobaciones estrictas (mejor seguridad)
+    "esModuleInterop": true,  // Facilita importar librerías comunes
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]           // Compila todo el TS dentro de src
+}
