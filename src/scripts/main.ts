@@ -1,4 +1,4 @@
-import { Note } from "./models/Note";
+import { NoteExample } from "./models/NoteExample";
 
 // DOM references
 const addNoteBtn: HTMLButtonElement = document.getElementById("add-note-btn") as HTMLButtonElement;
@@ -8,7 +8,7 @@ const noteTitleEl: HTMLHeadingElement = document.getElementById("note-title") as
 const noteContentEl: HTMLParagraphElement = document.getElementById("note-content") as HTMLParagraphElement;
   
 // Array of Notes
-const notes: Note[] = [];
+const notes: NoteExample[] = [];
 
 
 // New note Button
@@ -19,7 +19,7 @@ addNoteBtn.addEventListener("click", () => {
   const content = prompt("Contenido de la nota:");
   if (!content || content.trim() === "") return;
 
-  const newNote: Note = { title: title.trim(), content: content.trim() };
+  const newNote: NoteExample = { title: title.trim(), content: content.trim() };
   notes.push(newNote);
   renderNotes();
 });
