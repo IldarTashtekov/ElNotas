@@ -52,7 +52,72 @@ interface Text extends Content {
     Note with a list of mixed content elements
 */
 interface Note {
-    id: string, 
-    title: string,
+    id: string,
+    name: string,
     content : Content[]
 }
+
+
+/** Base type for plan graph nodes */
+interface PlanNode {
+    type: string,
+    id: string,
+    positionX: number,
+    positionY: number,
+    /** IDs of parent nodes */
+    parents: string[],
+    /** IDs of child nodes */
+    children: string[]
+}
+
+/** Basic node with a text label */
+interface SimpleNode extends PlanNode {
+    type: "simple-node",
+    text: string
+}
+
+/** Node linked to a note, opens it on click */
+interface NoteNode extends PlanNode {
+    type: "note-node",
+    /** ID of the referenced note */
+    noteId: string
+}
+
+/** Plan represented as a graph of nodes */
+interface Plan {
+    id: string,
+    name: string,
+    nodes: PlanNode[]
+}
+
+
+/**
+ * Default view when opening a Context:
+ * - "context": shows the full item list
+ * - "note": opens a specific note by id
+ * - "plan": opens a specific plan by id
+ */
+type DefaultView =
+    | { type: "context" }
+    | { type: "note", id: string }
+    | { type: "plan", id: string }
+
+/** Groups a collection of notes and plans */
+interface Context {
+    id: string,
+    name: string,
+    defaultView: DefaultView,
+    /** Ordered list of notes and plans belonging to this context */
+    items: (Note | Plan)[],
+}
+
+
+/**
+ * Root state of the application.
+ */
+interface AppState {
+     contexts: Context[]
+}
+
+
+
