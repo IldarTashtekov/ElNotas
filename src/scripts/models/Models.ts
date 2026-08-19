@@ -26,14 +26,14 @@ como la primera vista del contexto
     Base type for note content elements
     @param type Parametro discriminador para castear los diferentes tipos de nota
 */
-interface Content {
+export interface Content {
     type: string
 }
 
 /*
     Checkbox element, supports nesting
 */
-interface CheckBox extends Content {
+export interface CheckBox extends Content {
     type : "checkbox",
     text : string,
     checked : boolean,
@@ -43,7 +43,7 @@ interface CheckBox extends Content {
 /*
     Text element
 */
-interface Text extends Content {
+export interface Text extends Content {
     type: "text",
     text: string
 }
@@ -51,7 +51,7 @@ interface Text extends Content {
 /*
     Note with a list of mixed content elements
 */
-interface Note {
+export interface Note {
     id: string,
     name: string,
     content : Content[]
@@ -59,7 +59,7 @@ interface Note {
 
 
 /** Base type for plan graph nodes */
-interface PlanNode {
+export interface PlanNode {
     type: string,
     id: string,
     positionX: number,
@@ -71,20 +71,20 @@ interface PlanNode {
 }
 
 /** Basic node with a text label */
-interface SimpleNode extends PlanNode {
+export interface SimpleNode extends PlanNode {
     type: "simple-node",
     text: string
 }
 
 /** Node linked to a note, opens it on click */
-interface NoteNode extends PlanNode {
+export interface NoteNode extends PlanNode {
     type: "note-node",
     /** ID of the referenced note */
     noteId: string
 }
 
 /** Plan represented as a graph of nodes */
-interface Plan {
+export interface Plan {
     id: string,
     name: string,
     nodes: PlanNode[]
@@ -97,13 +97,13 @@ interface Plan {
  * - "note": opens a specific note by id
  * - "plan": opens a specific plan by id
  */
-type DefaultView =
+export type DefaultView =
     | { type: "context" }
     | { type: "note", id: string }
     | { type: "plan", id: string }
 
 /** Groups a collection of notes and plans */
-interface Context {
+export interface Context {
     id: string,
     name: string,
     defaultView: DefaultView,
@@ -115,7 +115,7 @@ interface Context {
 /**
  * Root state of the application.
  */
-interface AppState {
+export interface AppState {
      contexts: Context[]
 }
 

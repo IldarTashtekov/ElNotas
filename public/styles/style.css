@@ -1,0 +1,109 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f4f4;
+  color: #222;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* Contenedor principal */
+main {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Título */
+#context-name {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  text-align: center;
+}
+
+/* Botones */
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+  margin-right: 10px;
+  margin-bottom: 20px;
+}
+
+button:hover {
+  background-color: #1d4ed8;
+}
+
+/* Botón delete */
+#delete-note-btn {
+  background-color: #dc2626;
+}
+
+#delete-note-btn:hover {
+  background-color: #b91c1c;
+}
+
+/* Lista de notas */
+#notes-list {
+  list-style: none;
+  margin-top: 10px;
+}
+
+/* Cada nota */
+#notes-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f9fafb;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  transition: all 0.2s ease;
+}
+
+#notes-list li span {
+  flex: 1;
+  cursor: pointer;
+}
+#notes-list li:hover {
+  background-color: #eef2ff;
+  transform: translateX(4px);
+}
+
+#notes-list li.selected {
+    border: 2px solid #6366f1;
+    background-color: #eef2ff;
+}
+
+/* Vista de nota */
+#note-display {
+  margin-top: 24px;
+  padding: 18px;
+  background-color: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* Título de nota */
+#note-title {
+  font-size: 1.4rem;
+  color: #111827;
+}
