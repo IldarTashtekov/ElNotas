@@ -1,0 +1,24 @@
+{
+  // Opciones compartidas por los tsconfig de la app, del core y de los tests.
+  //
+  // NO hay "paths" ni "baseUrl" aquí a propósito: los alias entre módulos se
+  // declaran UNA sola vez en el campo "imports" de package.json (ver "#core/*"),
+  // que TypeScript, Node y los bundlers entienden de forma nativa. Cero
+  // dependencias para resolverlos y cero listas duplicadas que desincronizar.
+  // ("baseUrl" además está deprecado en TS 6 y se retira en TS 7.)
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    "strict": true,
+    // Indexar un Record<Id, T> devuelve T | undefined. Es fricción a cambio de
+    // que "ese id no existe" sea un error de compilación y no un fallo en runtime,
+    // que con un estado normalizado por IDs es justo la clase de bug que importa.
+    "noUncheckedIndexedAccess": true,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}

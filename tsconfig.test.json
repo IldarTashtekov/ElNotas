@@ -1,0 +1,18 @@
+{
+  // Compilación para ejecutar los tests con el runner nativo de Node (node --test).
+  //
+  // Node 20 no ejecuta TypeScript, así que hay que compilar antes. Se emite
+  // CommonJS a tmp-test/ y se lanza `node --conditions=compiled`, que hace que el
+  // "#core/*" de package.json apunte al JS compilado en vez de a src/.
+  // Es el precio de no tener runner de tests como dependencia.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "rootDir": "./src",
+    "outDir": "tmp-test"
+  },
+  "include": ["src"]
+}

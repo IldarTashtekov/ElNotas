@@ -1,12 +1,17 @@
 {
+  // Configuración de la APP: aquí sí hay DOM. La usa ts-loader para el build.
+  // La pureza del core NO se comprueba aquí, sino con `npm run typecheck:core`
+  // (ver src/core/tsconfig.json).
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES6",          // Genera JS compatible con la mayoría de navegadores modernos
-    "module": "ESNext",       // Sistema de módulos moderno
-    "outDir": "dist",         // Carpeta donde se guardará el JS compilado
-    "rootDir": "src",         // Carpeta donde está el TS
-    "strict": true,           // Habilita comprobaciones estrictas (mejor seguridad)
-    "esModuleInterop": true,  // Facilita importar librerías comunes
-    "forceConsistentCasingInFileNames": true
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    // Red de seguridad: si alguien lanza `tsc` a pelo, el JS cae en una carpeta
+    // ignorada por git en vez de ensuciar src/. El typecheck usa --noEmit.
+    "rootDir": "./src",
+    "outDir": "dist"
   },
-  "include": ["src"]           // Compila todo el TS dentro de src
+  // Los tests los typechequea tsconfig.test.json, que sí carga los tipos de Node.
+  // Entre los dos queda src/ cubierto por completo.
+  "include": ["src"],
+  "exclude": ["**/*.test.ts"]
 }

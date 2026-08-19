@@ -1,0 +1,25 @@
+{
+  // LA VERJA DE PUREZA DEL CORE.
+  //
+  // Este fichero es lo que convierte "el core no depende de la plataforma" en un
+  // error de compilación en vez de una convención que se erosiona:
+  //
+  //   - "lib" sin DOM -> document, window, localStorage... no existen.
+  //   - "types": []   -> no se cargan los @types/node instalados.
+  //
+  // Se comprueba con `npm run typecheck:core`. Si necesitas IDs, hora o azar en el
+  // core, inyéctalos por puerto (IdGenerator, Clock), no los importes.
+  //
+  // Dentro del core los imports son RELATIVOS ("./schema"). El alias #core/* es
+  // para que lo consuman los otros módulos, no para uso interno.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2020"],
+    "types": [],
+    "noEmit": true
+  },
+  // Los tests sí pueden usar APIs de plataforma y el paquete de vitest; la verja
+  // aplica al código de producción.
+  "include": ["."],
+  "exclude": ["**/*.test.ts"]
+}

@@ -1,3 +1,9 @@
 *.txt
 node_modules/
 dist/
+
+# Output del build de webpack (public/styles y public/index.html SÍ se versionan)
+public/js/
+
+# JS compilado de los tests (node --test no ejecuta TS directamente)
+tmp-test/

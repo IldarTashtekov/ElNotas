@@ -1,5 +1,33 @@
 {
-  "dependencies": {
-    "typescript": "^5.9.3"
+  "name": "elnotas",
+  "description": "Repositorio provisional para un software de notas hecho por y para mi",
+  "version": "1.0.0",
+  "main": "index.js",
+  "imports": {
+    "#core/*": {
+      "compiled": "./tmp-test/core/*.js",
+      "default": "./src/core/*.ts"
+    }
+  },
+  "scripts": {
+    "test": "tsc -p tsconfig.test.json && node --conditions=compiled --test tmp-test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:core": "tsc -p src/core/tsconfig.json --noEmit",
+    "check": "npm run typecheck && npm run typecheck:core && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IldarTashtekov/ElNotas.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IldarTashtekov/ElNotas/issues"
+  },
+  "homepage": "https://github.com/IldarTashtekov/ElNotas#readme",
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^6.0.3"
   }
 }

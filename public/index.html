@@ -1,29 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App de notas</title>
+    <link rel="stylesheet" href="./styles/style.css" type="text/css">
 </head>
 
 <body>
     <main>
-        <h1>General</h1>
+        <h1 id="context-name"></h1>
 
-        <button id="add-note-btn">
-            Nueva nota
-        </button>
-
+        <button id="add-note-btn">Nueva nota</button>
+        <button id="delete-note-btn">Delete</button>
 
         <ul id="notes-list"></ul>
 
-        <div id="note-display" style="display: none; margin-top: 20px;">
-            <h2 id="note-title"></h2>
-            <p id="note-content"></p>
+        <div id="note-display" style="display: none;">
+
+            <!-- Título editable -->
+            <h2 id="note-title" contenteditable="true"></h2>
+
+            <!-- Toolbar -->
+            <div id="note-toolbar">
+                <button id="add-checkbox-btn">☑</button>
+                <button id="note-return-btn">return</button>
+            </div>
+
+            <!-- Contenido de la nota, aquí se renderizan los Content -->
+            <div id="note-content"></div>
+
         </div>
     </main>
-    <script type="module" src="/dist/scripts/main.js"></script>
+
+    <script type="module" src="./js/bundle.js"></script>
 </body>
 
 </html>
