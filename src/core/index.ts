@@ -8,8 +8,40 @@
  *
  * Dentro del core, en cambio, los imports son relativos.
  *
- * Vacío a propósito: el dominio (Note, Plan, Context, reducers, Store) entra en
- * la Fase 1. El fichero existe porque src/core/tsconfig.json necesita al menos
- * un .ts en el directorio para poder ejecutar la verja de pureza.
+ * Ahora mismo esto es SÓLO el modelo de datos: entidades, sus IDs y los
+ * constructores mínimos para crearlas y discriminarlas. Ninguna operación sobre
+ * ellas — ni árbol de contenido, ni reducers, ni Store.
  */
-export {}
+
+/* Identificadores y referencias */
+export type {
+  ContentId,
+  ContextId,
+  ItemRef,
+  NoteId,
+  PlanId,
+  PlanNodeId,
+  Revision,
+} from "./domain/Ids"
+export {
+  contentId,
+  contextId,
+  noteId,
+  noteRef,
+  planId,
+  planNodeId,
+  planRef,
+  revision,
+} from "./domain/Ids"
+
+/* Contenido de una nota */
+export type { CheckBox, Content, Text } from "./domain/Content"
+export { checkBox, isCheckBox, isText, text } from "./domain/Content"
+
+/* Entidades */
+export type { Versioned } from "./domain/Versioned"
+export type { Note } from "./domain/Note"
+export type { NoteNode, Plan, PlanNode, SimpleNode } from "./domain/Plan"
+export type { Context, DefaultView } from "./domain/Context"
+export type { AppState } from "./domain/AppState"
+export { emptyAppState } from "./domain/AppState"

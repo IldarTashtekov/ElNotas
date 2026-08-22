@@ -5,20 +5,33 @@ más adelante (shells nativos sobre la misma UI web).
 
 ## Estado actual del repo
 
-> **Aviso:** el código en `src/` es un **prototipo anterior** al rediseño descrito en
-> este documento. Todavía **no** refleja esta arquitectura. No lo tomes como referencia
-> de cómo deben hacerse las cosas.
+En `src/` **conviven dos cosas** y no hay que confundirlas:
 
-- **Implementado:** lista de notas (crear por `prompt()`, seleccionar con checkbox,
-  borrar seleccionadas) y una vista de nota que solo muestra el título.
-- **Modelado en `src/scripts/models/Models.ts` pero sin implementar:** el contenido de
-  las notas (`Content[]`, checkboxes anidados), los Planes, los contextos múltiples y
-  toda la persistencia.
-- **Bugs conocidos del prototipo** (se resuelven con el rediseño, no hace falta
-  parchearlos):
-  - `context.items` apunta al array `notes` original, que luego se reasigna → el
-    contexto se queda vacío para siempre.
-  - `deleteNoteBtn` no limpia `selectedNotesId` tras borrar.
+- **`src/core/` — la arquitectura nueva.** Dominio puro. **Esta es la referencia** de
+  cómo se hacen las cosas aquí, aunque hoy solo contenga el modelo de datos.
+- **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque
+  es lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que
+  imitarlo**. Se sustituye en la Fase 4. Ahora mismo ni se puede construir (webpack está
+  desinstalado hasta esa fase).
+
+**Lo que existe en el core: SÓLO el modelo de datos.** Las entidades (`Note`, `Plan`,
+`Context`), su contenido (`Text` | `CheckBox`), los IDs marcados, `ItemRef` y `AppState`
+normalizado. Más los constructores mínimos para crear y discriminar esos valores
+(`noteId(...)`, `checkBox(...)`, `isCheckBox(...)`), que son parte del modelo: sin ellos
+un tipo marcado o una unión discriminada no se pueden usar. **325 líneas y cero tests.**
+
+**Lo que NO existe, por decisión explícita:** ninguna operación sobre el modelo. Ni el
+árbol de contenido (`setChecked`, `insert`, `move`, `indent`…), ni reducers, ni `Store`,
+ni casos de uso, ni persistencia, ni UI nueva, ni nada de Planes.
+
+> Se escribió una primera versión de esa lógica y **se eliminó a propósito** para dejar
+> primero el modelo asentado. El diseño que tenía sigue documentado más abajo (es la
+> referencia para cuando se reescriba), pero **hoy no hay ni una línea de ella en el
+> repo**. No des por hecho que existe: compruébalo.
+
+**Bugs conocidos del prototipo** — se resuelven al sustituirlo, no hace falta parchearlos:
+`context.items` apunta al array `notes` original que luego se reasigna, así que el
+contexto se queda vacío para siempre; y `deleteNoteBtn` no limpia `selectedNotesId`.
 
 ## El dominio
 
@@ -49,10 +62,10 @@ core no importa nada de nadie.
 ```
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
-│   ├── domain/
-│   ├── ports/
-│   ├── app/       # Store, reducers, casos de uso
-│   ├── migrations/
+│   ├── domain/    # ← lo ÚNICO que existe hoy (y solo tipos)
+│   ├── ports/     # (Fase 2)
+│   ├── app/       # (Fase 2) Store, reducers, casos de uso
+│   ├── migrations/# (Fase 2)
 │   └── index.ts
 ├── storage/
 │   ├── memory/
@@ -124,8 +137,11 @@ Es más lento que un runner dedicado y no tiene watch mode; es el precio elegido
 cambio de cero dependencias.
 
 ⚠️ **Ahora mismo no hay ningún test**, y `node --test` sin ficheros sale con código 0:
-`npm test` pasa en verde sin comprobar nada. Los primeros tests reales llegan con la
-Fase 1, y serán también los que verifiquen que el alias `#core/` resuelve bien.
+`npm test` pasa en verde sin comprobar nada. No hay ninguno porque lo único que existe
+es el modelo de datos, que son tipos y no tiene comportamiento que comprobar. Los
+primeros llegarán con la lógica del dominio, y serán también los que verifiquen que el
+alias `#core/` resuelve bien en ambos modos (typecheck contra `src/`, ejecución contra
+`tmp-test/`).
 
 **Pendiente sin resolver:** los adaptadores sobre `FileSystemDirectoryHandle` y OPFS de
 la Fase 3 necesitan un navegador real, y esto no lo cubre. Hay que decidirlo al llegar
@@ -146,31 +162,63 @@ export type ItemRef =
   | { kind: "plan"; id: PlanId }
 
 export interface AppState {
-  schemaVersion: number
   notes:    Record<NoteId, Note>
   plans:    Record<PlanId, Plan>
   contexts: Record<ContextId, Context>
 }
 ```
 
+Todas las interfaces del dominio son `readonly` de arriba abajo (y los arrays,
+`ReadonlyArray`). Así la regla de inmutabilidad no depende de la disciplina de nadie:
+un `push` o una asignación a un campo **no compilan**.
+
+`schemaVersion` entra en la Fase 2, con el runner de migraciones que lo consume.
+
+Dos cambios respecto al modelo del prototipo, ambos deliberados:
+
+- **`Content` es una unión discriminada**, no una interfaz base `{ type: string }` de la
+  que hereden `Text` y `CheckBox`. Con `type: string` el compilador no puede comprobar
+  exhaustividad en un `switch`, que es justo lo que interesa que compruebe.
+- **`Text` también lleva `id`.** Hace falta para direccionar un bloque concreto al
+  editarlo y para la reconciliación por `data-id` de la UI.
+
 `Context.items` es `ItemRef[]`, **nunca** `(Note | Plan)[]`. Esto es deliberado y no
 negociable, por tres razones: una nota puede estar en varios contextos (que es lo que
 exige ContextoCompuesto), guardar un contexto no reescribe sus notas, y `ItemRef` es
 discriminable en runtime mientras que `Note` y `Plan` no lo son.
 
-### Base común de entidad
+### `Versioned`: los metadatos de escritura
 
 ```ts
-export interface Entity {
-  id: string
-  updatedAt: number   // del puerto Clock, nunca Date.now()
-  rev: string         // del puerto IdGenerator; cambia en cada escritura
+export interface Versioned {
+  readonly updatedAt: number    // del puerto Clock, nunca Date.now()
+  readonly revision: Revision   // del puerto IdGenerator; cambia en cada escritura
 }
+
+export interface Note extends Versioned { readonly id: NoteId; /* ... */ }
 ```
 
-`updatedAt` y `rev` van desde el principio aunque hoy no haya sync: añadirlos ahora es
-gratis, después es una migración de datos. Son lo que permitirá detectar conflictos y
-hacer escrituras condicionales el día que haya más de un backend.
+Se llama `Versioned` y **no `Entity`** porque no es una entidad: no tiene id ni
+contenido. Es la chapa de metadatos que una entidad lleva encima, y `Note extends
+Versioned` sí es una frase verdadera.
+
+**No lleva `id`** a propósito: cada entidad declara el suyo con su tipo marcado
+(`NoteId`, `PlanId`, `ContextId`). Un `id: string` heredado tiraría por tierra el
+marcado de `Ids.ts`.
+
+Los dos campos van desde el principio aunque hoy no haya sync: son campos de entidades
+que acabarán en disco, y añadirlos cuando ya haya notas guardadas sería una migración de
+datos.
+
+**`revision` (antes `rev`) es un token opaco, no un contador.** Lo único que se puede
+preguntar es si sigue siendo el mismo. Sirve para escribir condicionalmente y así
+**detectar** que algo cambió por debajo, no para resolver el conflicto: qué hacer
+entonces es una política aparte, y "gana el último" **no** es la elegida. Se prefiere a
+comparar `updatedAt` porque los relojes de dos dispositivos no coinciden y porque "gana
+el más nuevo" pierde datos sin avisar.
+
+Se descartó `version: number` (un contador que daría también orden) porque colisiona
+conceptualmente con `schemaVersion`: uno versiona un dato y el otro el formato de todos.
 
 ### `CheckBox` lleva `id`
 
@@ -300,7 +348,29 @@ cadena de `webpack-dev-server` es la que traía las 12 vulnerabilidades de `npm 
 
 - **Inmutabilidad:** en arrays usar `filter` / `map` / spread, **nunca** `push` / `splice`.
   Es una regla del proyecto anterior a este rediseño y se mantiene: es lo que hace
-  funcionar la comparación por referencia del store.
+  funcionar la comparación por referencia del store. Los tipos `readonly` la fuerzan.
+
+Las tres siguientes son **para cuando se escriba la lógica**. Hoy no hay código al que
+apliquen, pero son las conclusiones de un intento previo y ahorran repetir el análisis:
+
+- **⚠️ PRESERVAR LA IDENTIDAD CUANDO NO HAY CAMBIOS.** La invariante más fácil de
+  romper sin darse cuenta, y la que sostiene todo el rendimiento: si una operación de
+  dominio o el reducer no cambian nada, **tienen que devolver el mismo objeto de
+  entrada**, no una copia equivalente. El `Store` decidirá si re-renderizar con un
+  `next === current`, así que una función que siempre devuelve objeto nuevo desactiva
+  esa optimización en silencio y sin que ningún test obvio falle.
+  Ojo: `Array.map` y `Array.filter` devuelven **siempre** un array nuevo, así que no
+  sirven directamente — hacen falta envoltorios que comparen y devuelvan la entrada
+  intacta, y tests que comprueben referencias (no valores).
+- **El reducer, puro y total:** no genera IDs, no lee el reloj y no lanza excepciones.
+  Las acciones llevan un `meta: { now, revision }` construido por la capa de casos de uso, que
+  es la que tendrá inyectados `Clock` e `IdGenerator` — y de hecho la verja de pureza no
+  deja otra opción. Así los tests del reducer salen deterministas sin simular nada. Una
+  operación que no aplica **no hace nada** en lugar de fallar, y así una acción inocua
+  tampoco ensucia `updatedAt` ni `revision`.
+- **Integridad referencial:** no se deja una referencia apuntando a algo inexistente.
+  Borrar una nota tiene que quitarla de los contextos que la listaban; añadir a un
+  contexto una referencia a algo que no existe es un no-op.
 - **Cruzar de módulo, siempre por alias** (nunca una ruta relativa que salga del módulo);
   **dentro del módulo, siempre relativo**:
   ```ts
@@ -354,10 +424,14 @@ No empezar nada de esto sin pedirlo explícitamente:
 
 - **Fase 0 — Andamiaje. ✅ HECHA.** Alias por campo `imports`, verja de pureza del core,
   tests con `node:test`, y limpieza de los restos del prototipo.
-- **Fase 1 — Dominio puro.** Modelo normalizado, IDs marcados, operaciones recursivas
-  sobre checkboxes (toggle, insertar hijo, borrar, mover, indentar), reducers y `Store`.
-  Con tests y sin una línea de DOM. **Es la fase que más importa**: es el activo que
-  sobrevive a cualquier cambio de plataforma.
+- **Fase 1 — Dominio puro. 🟡 A MEDIAS.**
+  - ✅ **Modelo de datos:** entidades, IDs marcados, `ItemRef`, `AppState` normalizado.
+  - ⬜ **Operaciones de contenido** (`setChecked`, `setText`, `insert`, `remove`, `move`,
+    `indent`, `outdent`), **reducers** y **`Store`**. Se escribieron y se borraron para
+    asentar antes el modelo; hay que rehacerlas.
+  - Al rehacerlas, dos decisiones que ya se tomaron y conviene no volver a discutir:
+    **marcar una casilla NO arrastra a sus hijas** (la cascada es decisión de producto y
+    se compone en la UI), y **una operación que no aplica no hace nada** en vez de lanzar.
 - **Fase 2 — Puertos y memory.** Los puertos, `MemoryStorageAdapter`, la suite de
   contratos, y el enganche store↔persistencia con write-behind.
 - **Fase 3 — Fichero local.** `FileStorageAdapter` sobre `LocalStorageBlobStore`, luego
