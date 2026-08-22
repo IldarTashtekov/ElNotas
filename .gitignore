@@ -7,3 +7,6 @@ public/js/
 
 # JS compilado de los tests (node --test no ejecuta TS directamente)
 tmp-test/
+
+# Overrides personales de Claude Code. Lo compartido va en .claude/settings.json
+.claude/settings.local.json
