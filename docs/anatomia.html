@@ -1,0 +1,1164 @@
+<title>Anatomía de ElNotas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+  :root {
+    --ground:      #fafbfd;
+    --surface:     #ffffff;
+    --panel:       #f1f3f9;
+    --ink:         #14171f;
+    --ink-muted:   #596074;
+    --ink-faint:   #858ca1;
+    --rule:        #dfe3ed;
+    --rule-strong: #c3cade;
+    --accent:      #2d4bd0;
+    --accent-soft: #e9edfc;
+    --pass:        #0e6f52;
+    --pass-soft:   #e2f2ec;
+    --fail:        #a4322a;
+    --fail-soft:   #fbeae8;
+
+    --measure: 68ch;
+    --step-0: 1rem;
+    --step-1: 1.13rem;
+    --step-2: 1.35rem;
+    --step-3: 1.75rem;
+    --step-4: 2.4rem;
+    --step-5: 3.2rem;
+  }
+
+  :root:not([data-theme="light"]) {
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0d0f16;
+      --surface:     #141822;
+      --panel:       #1b202c;
+      --ink:         #e8eaf2;
+      --ink-muted:   #969db2;
+      --ink-faint:   #6f7689;
+      --rule:        #262c3a;
+      --rule-strong: #3a4254;
+      --accent:      #8ea6ff;
+      --accent-soft: #1a2240;
+      --pass:        #55c49a;
+      --pass-soft:   #10281f;
+      --fail:        #e28275;
+      --fail-soft:   #2c1614;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0d0f16;
+    --surface:     #141822;
+    --panel:       #1b202c;
+    --ink:         #e8eaf2;
+    --ink-muted:   #969db2;
+    --ink-faint:   #6f7689;
+    --rule:        #262c3a;
+    --rule-strong: #3a4254;
+    --accent:      #8ea6ff;
+    --accent-soft: #1a2240;
+    --pass:        #55c49a;
+    --pass-soft:   #10281f;
+    --fail:        #e28275;
+    --fail-soft:   #2c1614;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- shell ---------- */
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+  }
+
+  @media (min-width: 1040px) {
+    .shell {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      gap: 4rem;
+      padding-right: 3rem;
+    }
+  }
+
+  main { min-width: 0; }
+
+  .col { max-width: var(--measure); }
+
+  /* ---------- index rail ---------- */
+
+  .rail {
+    display: none;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 1040px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 4rem 0 3rem;
+    }
+  }
+
+  .rail h2 {
+    font-family: inherit;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 2rem 0 0.6rem;
+  }
+  .rail h2:first-child { margin-top: 0; }
+
+  .rail a {
+    display: block;
+    padding: 0.22rem 0;
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 0.7rem;
+    margin-left: -0.7rem;
+    transition: color .12s, border-color .12s;
+  }
+  .rail a:hover,
+  .rail a:focus-visible {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 4.5rem 0 3rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 3.5rem;
+  }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.2rem;
+  }
+
+  h1 {
+    font-family: "Spectral", Georgia, serif;
+    font-weight: 600;
+    font-size: var(--step-5);
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    margin: 0 0 1.2rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: var(--step-2);
+    line-height: 1.5;
+    color: var(--ink-muted);
+    margin: 0;
+    max-width: 58ch;
+  }
+
+  /* ---------- typography ---------- */
+
+  h2 {
+    font-family: "Spectral", Georgia, serif;
+    font-weight: 600;
+    font-size: var(--step-4);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.6rem;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-weight: 700;
+    font-size: var(--step-1);
+    line-height: 1.35;
+    margin: 0 0 0.9rem;
+    letter-spacing: -0.01em;
+  }
+
+  h4 {
+    font-family: "Public Sans", sans-serif;
+    font-weight: 600;
+    font-size: var(--step-0);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p { margin: 0 0 1.1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  a { color: var(--accent); }
+
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  code {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.87em;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: 0.05em 0.32em;
+    color: var(--ink);
+  }
+
+  pre {
+    margin: 1.4rem 0;
+    padding: 1.15rem 1.3rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.62;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  ul, ol { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+  li { margin-bottom: 0.45rem; }
+  li:last-child { margin-bottom: 0; }
+
+  /* ---------- sections ---------- */
+
+  .phase {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 3px solid var(--ink);
+  }
+  .phase:first-of-type { margin-top: 0; }
+
+  .phase-tag {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+
+  .piece {
+    margin-top: 3.5rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .piece-path {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.55rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+  .piece-path .meta {
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: none;
+    font-weight: 400;
+  }
+
+  /* ---------- callout ---------- */
+
+  .note {
+    margin: 1.6rem 0;
+    padding: 1.15rem 1.3rem;
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+  }
+  .note .label {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+  .note.key { border-color: var(--accent); background: var(--accent-soft); }
+  .note.key .label { color: var(--accent); }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.9rem 0.6rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom-color: var(--rule-strong);
+    white-space: nowrap;
+  }
+  td code { font-size: 0.8rem; white-space: nowrap; }
+  td.num {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding-right: 1.4rem;
+    color: var(--ink-muted);
+  }
+  th.num { text-align: right; padding-right: 1.4rem; }
+
+  .verdict {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.12rem 0.45rem;
+    white-space: nowrap;
+  }
+  .verdict.ok   { color: var(--pass); background: var(--pass-soft); }
+  .verdict.no   { color: var(--fail); background: var(--fail-soft); }
+
+  /* ---------- diagrams ---------- */
+
+  .diagram {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border: 1px solid var(--rule-strong);
+    background: var(--surface);
+  }
+  .diagram-title {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1.2rem;
+  }
+
+  .scopes { display: grid; gap: 0.9rem; }
+  @media (min-width: 620px) { .scopes { grid-template-columns: 1fr 1fr; } }
+
+  .scope {
+    border: 1px solid var(--rule);
+    background: var(--panel);
+    padding: 0.9rem 1rem;
+  }
+  .scope .name {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.45rem;
+    word-break: break-all;
+  }
+  .scope .desc { font-size: 0.82rem; color: var(--ink-muted); display: block; margin-bottom: 0.55rem; }
+  .scope .flags {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    display: block;
+  }
+  .scope.gate { border-color: var(--accent); border-width: 2px; }
+  .scope.gate .name { color: var(--accent); }
+
+  .tree {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    margin: 0;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .tree .lvl { color: var(--ink-faint); }
+  .tree .cb  { color: var(--accent); }
+  .tree .tx  { color: var(--pass); }
+
+  .flow { display: grid; gap: 0.5rem; font-size: 0.84rem; }
+  .flow-step {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.7rem 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+  }
+  .flow-step .n {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .flow-branch {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    gap: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px dashed var(--rule-strong);
+    font-size: 0.84rem;
+  }
+  .flow-branch .n {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- misc ---------- */
+
+  .lede {
+    font-size: var(--step-1);
+    color: var(--ink-muted);
+    margin-bottom: 2rem;
+    max-width: 62ch;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 3rem 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="shell">
+
+<nav class="rail" aria-label="Índice">
+  <h2>Fase 0 · Infraestructura</h2>
+  <a href="#imports">Campo <em>imports</em></a>
+  <a href="#tsconfigs">Los cuatro tsconfig</a>
+  <a href="#verja">La verja de pureza</a>
+  <a href="#tests0">Tests sin runner</a>
+  <a href="#deps">Dependencias</a>
+  <a href="#pruebas">Verificaciones</a>
+
+  <h2>Fase 1 · El core</h2>
+  <a href="#ids">Ids.ts</a>
+  <a href="#entity">Entity.ts</a>
+  <a href="#content">Content.ts</a>
+  <a href="#immutable">immutable.ts</a>
+  <a href="#contenttree">contentTree.ts</a>
+  <a href="#entidades">Entidades y AppState</a>
+  <a href="#actions">actions.ts</a>
+  <a href="#reducer">reducer.ts</a>
+  <a href="#store">Store.ts</a>
+  <a href="#barrel">index.ts</a>
+
+  <h2>Cierre</h2>
+  <a href="#tests">Los 72 tests</a>
+  <a href="#critico">Con ojo crítico</a>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <p class="eyebrow">ElNotas · Rediseño</p>
+  <h1>Anatomía de ElNotas</h1>
+  <p class="standfirst">Pieza a pieza por el andamiaje de la Fase&nbsp;0 y el dominio puro de la Fase&nbsp;1: qué hace cada fichero, por qué existe y qué pasaría si no estuviera.</p>
+</header>
+
+<div class="col">
+
+<p class="lede">La Fase&nbsp;0 ya está commiteada. La Fase&nbsp;1 está en el working tree esperando tu revisión: 16 ficheros, unas 1.900 líneas, de las que 660 son tests.</p>
+
+<p>Las dos fases resuelven problemas distintos. La Fase&nbsp;0 no escribe nada de la app: monta las <strong>restricciones</strong> dentro de las que se va a escribir. La Fase&nbsp;1 escribe el <strong>modelo y su lógica</strong> aprovechando esas restricciones. Por eso el orden importa — si la verja de pureza no existiera desde el principio, para cuando te dieras cuenta ya habría un <code>document.</code> metido en el dominio.</p>
+
+</div>
+
+<!-- ============================== FASE 0 ============================== -->
+
+<section class="phase">
+<p class="phase-tag">Fase 0 — commiteada</p>
+<div class="col">
+<h2>La infraestructura</h2>
+<p class="lede">Cinco decisiones que no producen ninguna funcionalidad visible, y que existen para que el compilador —no la disciplina— sostenga la arquitectura.</p>
+</div>
+
+<div class="col">
+<div class="table-wrap">
+<table>
+<thead><tr><th>Fichero</th><th>Trabajo</th></tr></thead>
+<tbody>
+<tr><td><code>package.json</code></td><td>Declara los alias entre módulos en el campo <code>imports</code></td></tr>
+<tr><td><code>tsconfig.base.json</code></td><td>Opciones de compilación comunes</td></tr>
+<tr><td><code>tsconfig.json</code></td><td>La app: con DOM, sin tests</td></tr>
+<tr><td><code>src/core/tsconfig.json</code></td><td><strong>La verja</strong>: sin DOM, sin Node</td></tr>
+<tr><td><code>tsconfig.test.json</code></td><td>Compila los tests a <code>tmp-test/</code></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- imports -->
+<article class="piece" id="imports">
+<div class="col">
+<p class="piece-path">package.json <span class="meta">campo <code>imports</code></span></p>
+<h3>El alias que entienden los tres a la vez</h3>
+
+<p>El problema: quieres escribir <code>import { Note } from "#core/index"</code> desde cualquier módulo, en vez de <code>"../../core/domain/Note"</code>. Y quieres que eso lo resuelvan <em>tres</em> herramientas distintas: TypeScript al typechequear, Node al ejecutar los tests, y el bundler al construir.</p>
+
+<p>La vía tradicional es declararlo tres veces —<code>paths</code> en tsconfig, <code>resolve.alias</code> en webpack, y un plugin para el runner— y rezar para que no se desincronicen. La vía que usamos es una sola declaración estándar:</p>
+
+<pre><code>"imports": {
+  "#core/*": {
+    "compiled": "./tmp-test/core/*.js",
+    "default":  "./src/core/*.ts"
+  }
+}</code></pre>
+
+<p>Tres cosas que conviene entender de aquí:</p>
+
+<ul>
+<li><strong>El <code>#</code> es obligatorio.</strong> No es estética: Node sólo reconoce como <em>subpath import</em> los especificadores que empiezan por almohadilla. Es lo que le distingue de un paquete de <code>node_modules</code>.</li>
+<li><strong>Las claves son <em>condiciones</em>.</strong> Cada consumidor resuelve la primera que reconoce. TypeScript y el bundler no saben qué es <code>"compiled"</code>, así que caen en <code>"default"</code> y apuntan al <code>.ts</code> fuente. Node, cuando se le pasa <code>--conditions=compiled</code>, coge la primera y apunta al JS ya compilado.</li>
+<li><strong>Por eso los tests funcionan.</strong> Los tests corren sobre el JS de <code>tmp-test/</code>, pero en el código escriben el mismo <code>#core/index</code> que escribiría la UI. Sin la condición, el <code>require("#core/index")</code> del JS compilado apuntaría a un <code>.ts</code> que Node no sabe ejecutar.</li>
+</ul>
+
+<div class="note key">
+<span class="label">Si añades un módulo</span>
+<p>Cuando exista <code>src/storage/</code>, hay que añadir su entrada <code>#storage/*</code> aquí. Hasta entonces <strong>no está declarada a propósito</strong>, y eso da un efecto secundario útil: si el core intentase importar <code>#ui/algo</code>, falla con <em>Cannot find module</em> simplemente porque ese alias todavía no existe.</p>
+</div>
+</div>
+</article>
+
+<!-- tsconfigs -->
+<article class="piece" id="tsconfigs">
+<div class="col">
+<p class="piece-path">tsconfig.base.json <span class="meta">+ tres más</span></p>
+<h3>Por qué hacen falta cuatro tsconfig</h3>
+
+<p>La razón de fondo cabe en una frase: <strong><code>lib</code> y <code>types</code> se aplican por invocación de <code>tsc</code>, no por fichero.</strong> En el momento en que decidiste que el core no viera el DOM pero la UI sí, quedó garantizado que harían falta al menos dos configuraciones. Las otras dos son economía (no repetir opciones) y los tests (que necesitan otro sistema de módulos).</p>
+</div>
+
+<div class="diagram">
+<p class="diagram-title">Qué cubre y qué prohíbe cada uno</p>
+<div class="scopes">
+  <div class="scope">
+    <span class="name">tsconfig.base.json</span>
+    <span class="desc">No compila nada. Sólo opciones que heredan los otros tres.</span>
+    <span class="flags">strict · noUncheckedIndexedAccess · ES2020</span>
+  </div>
+  <div class="scope">
+    <span class="name">tsconfig.json</span>
+    <span class="desc">La app. Todo <code>src/</code> menos los tests.</span>
+    <span class="flags">lib: ES2020 + DOM + DOM.Iterable</span>
+  </div>
+  <div class="scope gate">
+    <span class="name">src/core/tsconfig.json</span>
+    <span class="desc">Sólo <code>src/core/</code>, sin sus tests. La verja.</span>
+    <span class="flags">lib: ES2020 · types: [] · sin DOM</span>
+  </div>
+  <div class="scope">
+    <span class="name">tsconfig.test.json</span>
+    <span class="desc">Todo <code>src/</code>, tests incluidos. Emite a <code>tmp-test/</code>.</span>
+    <span class="flags">module: nodenext · types: ["node"]</span>
+  </div>
+</div>
+</div>
+
+<div class="col">
+<h4>Lo que hay en la base, y por qué</h4>
+
+<p>Dos opciones merecen comentario. <code>noUncheckedIndexedAccess</code> hace que indexar un <code>Record</code> devuelva <code>T | undefined</code>. Es fricción real —tienes que comprobar el caso en cada lookup— pero con un estado normalizado donde <em>todo</em> se busca por id, "ese id no existe" es exactamente el bug que no quieres descubrir en runtime.</p>
+
+<p>Y lo que <strong>no</strong> hay: ni <code>paths</code> ni <code>baseUrl</code>. Lo primero porque el campo <code>imports</code> ya lo cubre. Lo segundo porque <code>baseUrl</code> está deprecado en TypeScript&nbsp;6 y deja de funcionar en el 7 — TS ofrecía silenciarlo con <code>ignoreDeprecations</code>, pero eso sólo aplaza el problema.</p>
+</div>
+</article>
+
+<!-- verja -->
+<article class="piece" id="verja">
+<div class="col">
+<p class="piece-path">src/core/tsconfig.json <span class="meta">la pieza central de la Fase 0</span></p>
+<h3>La verja de pureza</h3>
+
+<p>Es lo que convierte «el core no depende de la plataforma» de una convención que se erosiona en <strong>un error de compilación</strong>. Son tres líneas:</p>
+
+<pre><code>"lib":   ["ES2020"],   // sin DOM  -> document, window, localStorage no existen
+"types": [],           // sin @types/node -> tampoco process ni Buffer
+"noEmit": true</code></pre>
+
+<p>Dentro del core, escribir <code>document.getElementById(...)</code> o <code>crypto.randomUUID()</code> no compila. No es un aviso ni una regla de estilo: <code>npm run typecheck:core</code> sale con error.</p>
+
+<p>La consecuencia práctica es la que hace que la arquitectura funcione: <strong>si el core necesita un ID, la hora o azar, no le queda más remedio que recibirlos de fuera.</strong> De ahí que las acciones traigan <code>meta: { now, rev }</code> en la Fase&nbsp;1 — no es una elección de estilo, es que la alternativa literalmente no compila.</p>
+
+<h4>Dos detalles de implementación</h4>
+
+<p><strong>Los tests están excluidos</strong> (<code>"exclude": ["**/*.test.ts"]</code>). La pureza aplica al código de producción; un test sí puede usar <code>node:test</code> y APIs de plataforma.</p>
+
+<p><strong>Está dentro de <code>src/core/</code> y se llama <code>tsconfig.json</code>, no <code>tsconfig.core.json</code> en la raíz.</strong> Eso es a propósito: tu editor busca el <code>tsconfig.json</code> más cercano al fichero abierto, así que al editar código del core te marca el error <em>mientras escribes</em>, y no sólo cuando lanzas el script.</p>
+
+<div class="note">
+<span class="label">Lo que la verja NO cubre</span>
+<p>Que el core no importe de <code>ui/</code> o <code>storage/</code> hoy se sostiene porque esos alias aún no están declarados. Cuando existan, la verja seguirá pillando el caso real —la UI usa DOM, así que arrastrarla al core rompe el typecheck— pero el mensaje de error será menos claro que un limpio <em>Cannot find module</em>. Merece la pena tenerlo presente.</p>
+</div>
+</div>
+</article>
+
+<!-- tests fase 0 -->
+<article class="piece" id="tests0">
+<div class="col">
+<p class="piece-path">tsconfig.test.json <span class="meta">+ el script <code>test</code></span></p>
+<h3>Tests sin instalar un runner</h3>
+
+<p>Node&nbsp;20 trae <code>node:test</code> y <code>node:assert/strict</code> de serie. Lo que no trae es la capacidad de ejecutar TypeScript. De ahí que <code>npm test</code> haga dos cosas:</p>
+
+<pre><code>tsc -p tsconfig.test.json && node --conditions=compiled --test tmp-test</code></pre>
+
+<p>Primero compila todo <code>src/</code> a <code>tmp-test/</code>, y luego lanza el runner sobre el JS resultante. El <code>--conditions=compiled</code> es la pieza que conecta esto con el campo <code>imports</code>: sin él, el JS compilado intentaría cargar ficheros <code>.ts</code>.</p>
+
+<p>El <code>tsconfig.test.json</code> usa <code>module: "nodenext"</code> en lugar del <code>ESNext</code> de la app. La razón es práctica: como el <code>package.json</code> no declara <code>"type": "module"</code>, ese ajuste emite CommonJS, y CommonJS resuelve imports relativos sin extensión. Con ESM habría que escribir <code>./schema.js</code> en el código fuente TypeScript, que es la clase de peaje que no merece la pena pagar en los tests.</p>
+
+<div class="note">
+<span class="label">Lo que cuesta</span>
+<p>No hay watch mode, y cada <code>npm test</code> compila antes de ejecutar, así que es más lento que un runner dedicado. Y queda un problema abierto: los adaptadores sobre <code>FileSystemDirectoryHandle</code> y OPFS de la Fase&nbsp;3 necesitan un navegador real, y esto no lo cubre. Es la decisión a tomar cuando lleguemos ahí — puede que la respuesta sea instalar algo <em>sólo</em> para esa fase.</p>
+</div>
+</div>
+</article>
+
+<!-- deps -->
+<article class="piece" id="deps">
+<div class="col">
+<p class="piece-path">package.json <span class="meta">devDependencies</span></p>
+<h3>Dos dependencias</h3>
+
+<p>La política que fijaste: no se instala nada hasta la fase que lo usa de verdad, y se desinstala si deja de usarse. Aplicada, el árbol quedó así:</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th></th><th class="num">Antes</th><th class="num">Ahora</th></tr></thead>
+<tbody>
+<tr><td><code>dependencies</code> de runtime</td><td class="num">0</td><td class="num">0</td></tr>
+<tr><td><code>devDependencies</code></td><td class="num">7</td><td class="num">2</td></tr>
+<tr><td>Paquetes en <code>node_modules</code></td><td class="num">~350</td><td class="num">17</td></tr>
+<tr><td>Peso en disco</td><td class="num">~160M</td><td class="num">27M</td></tr>
+<tr><td>Vulnerabilidades</td><td class="num">12</td><td class="num">0</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Quedan <code>typescript</code> y <code>@types/node</code> (este último sólo para que <code>node:test</code> y <code>node:assert</code> tengan tipos; es un paquete de tipos, sin código de runtime).</p>
+
+<p>Se fueron: <code>ts-node</code> (estaba declarado y no lo usaba nada), y toda la cadena de <code>webpack</code>, <code>webpack-cli</code>, <code>webpack-dev-server</code> y <code>ts-loader</code>, que no hacen falta hasta la Fase&nbsp;4. Esa cadena eran 339 paquetes ella sola, y contenía las 12 vulnerabilidades.</p>
+
+<div class="note">
+<span class="label">El precio</span>
+<p><code>npm run build</code> y <code>npm run serve</code> ya no existen, así que el prototipo de <code>src/scripts/</code> no se puede construir ni servir. Recuperarlo es <code>npm i -D webpack webpack-cli webpack-dev-server ts-loader</code> y volver a añadir los dos scripts.</p>
+</div>
+</div>
+</article>
+
+<!-- pruebas -->
+<article class="piece" id="pruebas">
+<div class="col">
+<p class="piece-path">Verificación <span class="meta">no basta con que compile</span></p>
+<h3>Comprobar que el andamiaje hace lo que dice</h3>
+
+<p>Un andamiaje que compila no demuestra nada: la verja podría no estar detectando nada y todo seguiría verde. Estas cuatro pruebas se ejecutaron metiendo código a propósito y viendo qué pasaba:</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Prueba</th><th>Esperado</th><th>Resultado</th></tr></thead>
+<tbody>
+<tr><td><code>document.title</code> en el core → <code>typecheck:core</code></td><td>Falla</td><td><span class="verdict no">TS2584</span></td></tr>
+<tr><td>Ese mismo código → <code>typecheck</code> de la app</td><td>Pasa</td><td><span class="verdict ok">sin errores</span></td></tr>
+<tr><td><code>import from "#ui/..."</code> en el core</td><td>Falla</td><td><span class="verdict no">TS2307</span></td></tr>
+<tr><td>Un bundle importando <code>#core/index</code></td><td>Resuelve</td><td><span class="verdict ok">compilado</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>La segunda fila es la importante: confirma que la verja aplica <strong>sólo</strong> al core y no está estorbando en el resto del proyecto.</p>
+</div>
+</article>
+</section>
+
+<!-- ============================== FASE 1 ============================== -->
+
+<section class="phase">
+<p class="phase-tag">Fase 1 — sin commitear</p>
+<div class="col">
+<h2>El core</h2>
+<p class="lede">El modelo de datos, las operaciones sobre él y el contenedor de estado. Cero DOM, cero plataforma, cero dependencias. Es el activo que sobrevive a cualquier cambio de framework o de dispositivo.</p>
+</div>
+
+<div class="col">
+<div class="table-wrap">
+<table>
+<thead><tr><th>Fichero</th><th class="num">Líneas</th><th>Qué es</th></tr></thead>
+<tbody>
+<tr><td><code>domain/Ids.ts</code></td><td class="num">50</td><td>IDs marcados y <code>ItemRef</code></td></tr>
+<tr><td><code>domain/Entity.ts</code></td><td class="num">16</td><td><code>updatedAt</code> y <code>rev</code></td></tr>
+<tr><td><code>domain/Content.ts</code></td><td class="num">66</td><td><code>Text</code> | <code>CheckBox</code></td></tr>
+<tr><td><code>domain/contentTree.ts</code></td><td class="num">355</td><td><strong>Las operaciones recursivas</strong></td></tr>
+<tr><td><code>domain/Note.ts</code></td><td class="num">10</td><td>La entidad Nota</td></tr>
+<tr><td><code>domain/Plan.ts</code></td><td class="num">42</td><td>Sólo tipos, sin operaciones</td></tr>
+<tr><td><code>domain/Context.ts</code></td><td class="num">26</td><td>Agrupación por referencias</td></tr>
+<tr><td><code>domain/AppState.ts</code></td><td class="num">29</td><td>El estado raíz, normalizado</td></tr>
+<tr><td><code>shared/immutable.ts</code></td><td class="num">63</td><td><strong>Preservación de identidad</strong></td></tr>
+<tr><td><code>app/actions.ts</code></td><td class="num">126</td><td>La unión de acciones</td></tr>
+<tr><td><code>app/reducer.ts</code></td><td class="num">257</td><td>Estado × acción → estado</td></tr>
+<tr><td><code>app/Store.ts</code></td><td class="num">48</td><td>Suscripción y despacho</td></tr>
+<tr><td><code>index.ts</code></td><td class="num">61</td><td>API pública del módulo</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Ids -->
+<article class="piece" id="ids">
+<div class="col">
+<p class="piece-path">domain/Ids.ts <span class="meta">50 líneas</span></p>
+<h3>IDs que el compilador sabe distinguir</h3>
+
+<p>Con un estado normalizado, absolutamente todo se referencia por id — y todos los ids son <code>string</code>. Sin más, pasar un <code>PlanId</code> donde se espera un <code>NoteId</code> compila perfectamente y el fallo aparece en runtime como «esa nota no existe». La marca lo arregla:</p>
+
+<pre><code>declare const brand: unique symbol
+
+type Branded&lt;T, B extends string&gt; = T &amp; { readonly [brand]: B }
+
+export type NoteId    = Branded&lt;string, "NoteId"&gt;
+export type PlanId    = Branded&lt;string, "PlanId"&gt;
+export type ContentId = Branded&lt;string, "ContentId"&gt;</code></pre>
+
+<p>El truco es que <code>brand</code> es un <code>unique symbol</code> <em>declarado pero nunca creado</em>. La propiedad no existe en runtime; sólo vive en el sistema de tipos. Un <code>NoteId</code> <strong>es</strong> un string a todos los efectos prácticos, pero un string no es un <code>NoteId</code>. Coste en el bundle: cero.</p>
+
+<p>Para cruzar la frontera están los constructores, que son los únicos sitios del proyecto donde se hace el cast:</p>
+
+<pre><code>export const noteId = (raw: string): NoteId =&gt; raw as NoteId</code></pre>
+
+<h4><code>ItemRef</code>: la decisión más importante del modelo</h4>
+
+<pre><code>export type ItemRef =
+  | { readonly kind: "note"; readonly id: NoteId }
+  | { readonly kind: "plan"; readonly id: PlanId }</code></pre>
+
+<p>Un Contexto guarda <em>esto</em>, no las entidades. Tu modelo original tenía <code>items: (Note | Plan)[]</code>, y cambiarlo tiene tres motivos independientes, cada uno suficiente por sí solo:</p>
+
+<ol>
+<li><strong>Una nota puede estar en varios contextos.</strong> Con las entidades embebidas, cada nota vive dentro de un contexto y sólo uno — lo que hace imposible el ContextoCompuesto que describías en tus comentarios.</li>
+<li><strong>Guardar un contexto no reescribe sus notas.</strong> Con las entidades dentro, cualquier adaptador de persistencia serio queda condenado a leer y escribir el árbol entero.</li>
+<li><strong>Es discriminable en runtime.</strong> <code>Note</code> y <code>Plan</code> son ambos <code>{ id, name, ... }</code>: dado un elemento de la lista, no hay forma fiable de saber cuál es. El campo <code>kind</code> lo resuelve.</li>
+</ol>
+</div>
+</article>
+
+<!-- Entity -->
+<article class="piece" id="entity">
+<div class="col">
+<p class="piece-path">domain/Entity.ts <span class="meta">16 líneas</span></p>
+<h3>Dos campos que hoy no sirven para nada</h3>
+
+<pre><code>export interface Entity {
+  readonly updatedAt: number   // ms epoch, del puerto Clock
+  readonly rev: Rev            // cambia en cada escritura
+}</code></pre>
+
+<p>Hoy no hay sincronización, así que nadie los lee. Están porque <strong>añadirlos ahora es gratis y añadirlos después es una migración de datos</strong> sobre ficheros que ya contienen tus notas reales.</p>
+
+<p>Son lo que permitirá, el día que haya más de un backend, detectar que «el otro dispositivo también editó esto» y hacer escrituras condicionales en vez de sobrescribir a ciegas. Es el mismo razonamiento que aplicamos al <code>schemaVersion</code>… con la diferencia de que ese sí lo quitamos, porque a diferencia de estos dos no forma parte de ninguna entidad ya escrita.</p>
+</div>
+</article>
+
+<!-- Content -->
+<article class="piece" id="content">
+<div class="col">
+<p class="piece-path">domain/Content.ts <span class="meta">66 líneas</span></p>
+<h3>El contenido de una nota</h3>
+
+<p>Dos cambios respecto a tu <code>Models.ts</code>, ambos deliberados.</p>
+
+<h4>Unión discriminada, no interfaz base</h4>
+
+<p>Tenías <code>interface Content { type: string }</code> con <code>Text</code> y <code>CheckBox</code> heredando. El problema es <code>type: string</code>: con eso, el compilador no puede comprobar exhaustividad en un <code>switch</code>. Si mañana añades un tercer tipo de bloque —una imagen, un separador— nada te avisa de los sitios que hay que actualizar. Con la unión, sí:</p>
+
+<pre><code>export type Content = Text | CheckBox</code></pre>
+
+<h4><code>Text</code> también lleva <code>id</code></h4>
+
+<p>Tu modelo sólo daba id a la nota. Hace falta en los bloques por dos razones concretas: para direccionar «este párrafo» al editarlo, y porque la UI de la Fase&nbsp;4 reconcilia por <code>data-id</code> y necesita una clave estable por nodo.</p>
+
+<p>En <code>CheckBox</code> el id además evita un bug clásico. La alternativa sería direccionar una casilla anidada por su ruta de índices —<code>[0, 2, 1]</code>— pero esa ruta deja de ser válida en cuanto insertas o borras un hermano por encima.</p>
+</div>
+
+<div class="diagram">
+<p class="diagram-title">La asimetría del árbol</p>
+<pre class="tree"><span class="lvl">Note.content: ReadonlyArray&lt;Content&gt;</span>
+├── <span class="tx">Text</span>        ← en la raíz caben textos
+├── <span class="cb">CheckBox</span>
+│   └── children: ReadonlyArray&lt;<span class="cb">CheckBox</span>&gt;
+│       ├── <span class="cb">CheckBox</span>   ← por debajo, sólo casillas
+│       └── <span class="cb">CheckBox</span>
+└── <span class="tx">Text</span></pre>
+</div>
+
+<div class="col">
+<p>Esa asimetría viene de tu modelo (<code>children: CheckBox[]</code>) y la respeté. Tiene una consecuencia que se nota al leer <code>contentTree.ts</code>: hay caminos de código duplicados, uno para el nivel raíz y otro para los niveles anidados, porque los tipos de los arrays no son el mismo. Si algún día decides que un texto pueda colgar de una casilla, ese fichero se acorta bastante.</p>
+</div>
+</article>
+
+<!-- immutable -->
+<article class="piece" id="immutable">
+<div class="col">
+<p class="piece-path">shared/immutable.ts <span class="meta">63 líneas · la pieza menos obvia</span></p>
+<h3>Preservar la identidad</h3>
+
+<p>Si sólo vas a leer un fichero con atención, que sea este, porque de él cuelga el rendimiento de toda la app.</p>
+
+<p>El <code>Store</code> decide si re-renderizar comparando por referencia: <code>next === current</code>. Eso funciona <em>a condición de</em> que una operación que no cambia nada devuelva <strong>el mismo objeto</strong>, no una copia equivalente. Y aquí está el problema:</p>
+
+<pre><code>const a = [1, 2, 3]
+a.map(x =&gt; x) === a   // false — map SIEMPRE crea array nuevo
+a.filter(() =&gt; true) === a   // false — filter también</code></pre>
+
+<p>Es decir: escribir el dominio con <code>map</code> y <code>filter</code> tal cual —que es lo que pide la regla de inmutabilidad— desactiva silenciosamente la detección de cambios. La app funcionaría igual de bien, sólo que re-renderizando entera con cada pulsación. Y ningún test obvio fallaría.</p>
+
+<p>De ahí los tres envoltorios:</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Función</th><th>Devuelve la entrada intacta si…</th></tr></thead>
+<tbody>
+<tr><td><code>mapPreservingIdentity</code></td><td>ningún elemento cambió de referencia</td></tr>
+<tr><td><code>filterPreservingIdentity</code></td><td>no se descartó ninguno</td></tr>
+<tr><td><code>mapRecordPreservingIdentity</code></td><td>ningún valor del Record cambió</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code>export const mapPreservingIdentity = &lt;T&gt;(
+  items: ReadonlyArray&lt;T&gt;,
+  fn: (item: T, index: number) =&gt; T,
+): ReadonlyArray&lt;T&gt; =&gt; {
+  let changed = false
+  const next = items.map((item, index) =&gt; {
+    const mapped = fn(item, index)
+    if (mapped !== item) changed = true
+    return mapped
+  })
+  return changed ? next : items
+}</code></pre>
+
+<p>Como la comprobación se propaga hacia arriba, el efecto es <strong>compartición estructural</strong>: al marcar una casilla en lo hondo del árbol, se recrea sólo la cadena de nodos desde esa casilla hasta la raíz. Todas las ramas laterales conservan su referencia original, y la UI podrá saltárselas comparando con <code>===</code>.</p>
+
+<div class="note key">
+<span class="label">Si tocas el dominio</span>
+<p>Esta es la invariante más fácil de romper sin darse cuenta. Hay tests específicos (<code>describe("compartición estructural")</code>) que la vigilan; si añades una operación, añade también su test de identidad.</p>
+</div>
+</div>
+</article>
+
+<!-- contentTree -->
+<article class="piece" id="contenttree">
+<div class="col">
+<p class="piece-path">domain/contentTree.ts <span class="meta">355 líneas · 41 tests</span></p>
+<h3>Las operaciones recursivas</h3>
+
+<p>Aquí está la lógica de verdad de la Fase&nbsp;1. Todas las funciones comparten un contrato:</p>
+
+<ul>
+<li><strong>Puras y totales.</strong> No lanzan excepciones nunca. Un reducer no puede permitirse petar.</li>
+<li><strong>Una operación que no aplica devuelve la entrada intacta</strong>, en lugar de fallar. Cada función documenta en qué casos concretos no hace nada.</li>
+<li><strong>Preservan la identidad</strong>, apoyándose en los helpers de arriba.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Operación</th><th>No hace nada si…</th></tr></thead>
+<tbody>
+<tr><td><code>setChecked</code></td><td>el id no existe, es un texto, o ya estaba en ese estado</td></tr>
+<tr><td><code>setText</code></td><td>el id no existe o el texto ya era ese</td></tr>
+<tr><td><code>insert</code></td><td>la referencia no existe, se pide <em>inside</em> sobre un texto, o se intenta meter un texto por debajo de la raíz</td></tr>
+<tr><td><code>remove</code></td><td>el id no existe</td></tr>
+<tr><td><code>move</code></td><td>id o referencia no existen, son el mismo, o el destino está dentro del subárbol que se mueve</td></tr>
+<tr><td><code>indent</code></td><td>es el primero de su nivel, el hermano anterior es un texto, o el propio bloque es un texto</td></tr>
+<tr><td><code>outdent</code></td><td>ya está en la raíz</td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>La guarda de <code>move</code></h4>
+
+<p>Mover un nodo dentro de su propio subárbol es el bug clásico de los outliners: creas un ciclo y la rama entera desaparece del árbol. La comprobación es de una línea, pero hay que acordarse de ella:</p>
+
+<pre><code>if (isCheckBox(node) &amp;&amp; findContent(node.children, target.referenceId)) {
+  return content
+}</code></pre>
+
+<h4><code>indent</code> y <code>outdent</code> no son operaciones nuevas</h4>
+
+<p>Están construidas sobre <code>move</code>, que es lo que evita duplicar la lógica de reinserción:</p>
+
+<ul>
+<li><strong>indent</strong> = mover <em>dentro</em> del hermano anterior.</li>
+<li><strong>outdent</strong> = mover <em>detrás</em> del padre.</li>
+</ul>
+
+<p>Hay un test que comprueba que se deshacen mutuamente. Y una decisión de comportamiento anotada: al hacer outdent, los hermanos que quedan por debajo dentro del padre <strong>se quedan donde están</strong> — no los adopta. Algunos outliners hacen lo contrario; si prefieres ese comportamiento, es un cambio localizado.</p>
+
+<div class="note">
+<span class="label">Decisión que dejé abierta</span>
+<p><strong>Marcar una casilla padre NO arrastra a sus hijas.</strong> La primitiva es deliberadamente mínima. Si quieres cascada, es una decisión de producto que se compone en la UI llamando a <code>setChecked</code> sobre los descendientes — pero también puede argumentarse que debería ser el comportamiento por defecto del dominio. Es tuya.</p>
+</div>
+</div>
+</article>
+
+<!-- entidades -->
+<article class="piece" id="entidades">
+<div class="col">
+<p class="piece-path">domain/ <span class="meta">Note · Plan · Context · AppState</span></p>
+<h3>Las entidades y el estado raíz</h3>
+
+<pre><code>export interface AppState {
+  readonly notes:    Readonly&lt;Record&lt;NoteId, Note&gt;&gt;
+  readonly plans:    Readonly&lt;Record&lt;PlanId, Plan&gt;&gt;
+  readonly contexts: Readonly&lt;Record&lt;ContextId, Context&gt;&gt;
+}</code></pre>
+
+<p>Plano y normalizado, como una mini base de datos. Las entidades no se anidan unas dentro de otras: los Contextos guardan <code>ItemRef</code>.</p>
+
+<p>Tres ausencias que son intencionadas:</p>
+
+<ul>
+<li><strong>El ContextoGeneral no está</strong> porque no es una entidad: es una vista derivada de <code>notes</code> y <code>plans</code>. Guardarlo sería duplicar datos que se pueden calcular.</li>
+<li><strong>Las Ventanas tampoco.</strong> La navegación es estado de vista, no de dominio. Mezclarlas aquí llenaría la persistencia de basura de UI y haría que abrir un menú marcara notas como sucias.</li>
+<li><strong><code>schemaVersion</code></strong> entra en la Fase&nbsp;2, con el runner de migraciones que lo consume.</li>
+</ul>
+
+<p>Todo es <code>readonly</code> y <code>ReadonlyArray</code> de arriba abajo. Eso convierte tu regla de «nunca <code>push</code> ni <code>splice</code>» en algo que el compilador hace cumplir en vez de depender de que te acuerdes.</p>
+
+<p>De <code>Plan</code> sólo están los tipos. El editor de grafos sigue fuera de alcance, y no hay ni una operación sobre planes. Queda anotado que, si llega ese editor, probablemente <code>nodes</code> deba pasar de array a <code>Record</code>: las aristas se guardan por id y con un array toda búsqueda es lineal.</p>
+</div>
+</article>
+
+<!-- actions -->
+<article class="piece" id="actions">
+<div class="col">
+<p class="piece-path">app/actions.ts <span class="meta">126 líneas</span></p>
+<h3>Por qué las acciones traen la hora</h3>
+
+<p>Cada acción mutante lleva esto:</p>
+
+<pre><code>export interface ActionMeta {
+  readonly now: number   // ms epoch, del puerto Clock
+  readonly rev: Rev      // revisión nueva
+}</code></pre>
+
+<p>Parece verboso, y la alternativa —que el reducer llame a <code>Date.now()</code> y genere un uuid— parece más cómoda. Pero esa alternativa <strong>ni siquiera compila dentro del core</strong>, porque la verja de pureza le ha quitado el acceso a las dos cosas. Así que la restricción de la Fase&nbsp;0 fuerza el diseño correcto de la Fase&nbsp;1.</p>
+
+<p>Y resulta que el diseño correcto tiene tres ventajas de propina:</p>
+
+<ol>
+<li>El reducer es una función pura de <code>(estado, acción)</code>, así que <strong>los tests son deterministas sin simular ningún reloj</strong>. No hay <em>fake timers</em> en ningún sitio.</li>
+<li>Todas las entidades que toca una acción reciben exactamente la misma marca de tiempo, en vez de milisegundos ligeramente distintos.</li>
+<li>Quien construye las acciones es la capa de casos de uso, que sí tendrá <code>Clock</code> e <code>IdGenerator</code> inyectados. Eso llega en la Fase&nbsp;2.</li>
+</ol>
+
+<p>La unión cubre notas (<code>create</code>, <code>rename</code>, <code>delete</code>), su contenido (siete acciones, una por operación del árbol) y contextos (<code>create</code>, <code>rename</code>, <code>delete</code>, <code>addItem</code>, <code>removeItem</code>, <code>setDefaultView</code>). Ninguna de planes.</p>
+</div>
+</article>
+
+<!-- reducer -->
+<article class="piece" id="reducer">
+<div class="col">
+<p class="piece-path">app/reducer.ts <span class="meta">257 líneas · 25 tests</span></p>
+<h3>Dos invariantes en todos los casos</h3>
+
+<h4>1. Si no cambia nada, devuelve el mismo estado</h4>
+
+<p>El helper que lo concentra para todas las acciones de contenido:</p>
+
+<pre><code>const updateContent = (state, noteId, meta, transform) =&gt; {
+  const note = state.notes[noteId]
+  if (!note) return state
+  const content = transform(note.content)
+  if (content === note.content) return state   // ← aquí paga la identidad
+  return withNote(state, { ...note, content, updatedAt: meta.now, rev: meta.rev })
+}</code></pre>
+
+<p>Fíjate en lo que consigue esa línea: un <code>indent</code> imposible, o marcar lo que ya estaba marcado, <strong>no ensucia <code>updatedAt</code> ni <code>rev</code></strong>. Sin ella, cada acción inocua marcaría la nota como modificada y dispararía una escritura a disco en la Fase&nbsp;3. Hay tests que lo comprueban explícitamente.</p>
+
+<h4>2. Integridad referencial</h4>
+
+<p>No se deja una referencia apuntando a algo inexistente. En concreto:</p>
+
+<ul>
+<li>Borrar una nota <strong>la quita también de todos los contextos que la listaban</strong>, y actualiza los metadatos de esos contextos (pero no los de contextos que no la tenían).</li>
+<li>Añadir a un contexto una referencia a algo que no existe es un no-op.</li>
+<li>Poner como vista por defecto una nota que no existe es un no-op — si no, abrir el contexto te dejaría una pantalla en blanco.</li>
+<li>Borrar un contexto <strong>no</strong> borra sus notas: pueden estar en otros contextos.</li>
+</ul>
+
+<h4>El <code>switch</code> es exhaustivo por tipos</h4>
+
+<pre><code>default: {
+  const exhaustive: never = action
+  void exhaustive
+  return state
+}</code></pre>
+
+<p>Si añades una acción a la unión y se te olvida manejarla, <code>action</code> deja de ser <code>never</code> en ese punto y el fichero no compila. En runtime devuelve el estado intacto, que es lo prudente si algún día llega una acción desconocida desde datos deserializados.</p>
+</div>
+</article>
+
+<!-- store -->
+<article class="piece" id="store">
+<div class="col">
+<p class="piece-path">app/Store.ts <span class="meta">48 líneas · 6 tests</span></p>
+<h3>Donde todo lo anterior se cobra</h3>
+
+<p>Cuarenta y ocho líneas, sin dependencias y sin plataforma. La UI se suscribirá y despachará; la persistencia se enganchará como un suscriptor más, con write-behind y debounce.</p>
+</div>
+
+<div class="diagram">
+<p class="diagram-title">Qué pasa en un dispatch</p>
+<div class="flow">
+  <div class="flow-step"><span class="n">1</span><span>Llega la acción. Se calcula <code>next = reduce(current, action)</code>.</span></div>
+  <div class="flow-step"><span class="n">2</span><span>Se compara <code>next === current</code>.</span></div>
+  <div class="flow-branch"><span class="n">→ ≠</span><span>Se guarda el estado nuevo y se notifica a los suscriptores.</span></div>
+  <div class="flow-branch"><span class="n">→ ==</span><span><strong>Se sale sin avisar a nadie.</strong> Ni un re-render.</span></div>
+</div>
+</div>
+
+<div class="col">
+<p>Esa segunda rama es el motivo de todo el cuidado con la identidad en <code>immutable.ts</code>, en <code>contentTree.ts</code> y en el reducer. Si cualquiera de esas capas devolviera siempre un objeto nuevo, la comparación sería siempre falsa y la optimización desaparecería en silencio — sin errores, sin tests rojos, sólo una app más lenta de lo que debería.</p>
+
+<p>Un detalle pequeño pero real: al notificar se recorre <strong>una copia</strong> de la lista de suscriptores.</p>
+
+<pre><code>for (const listener of [...this.listeners]) listener(next)</code></pre>
+
+<p>Así un suscriptor puede darse de baja (o de alta) durante su propia notificación sin corromper la iteración. Hay un test que lo cubre, porque es el tipo de cosa que sólo falla en producción y de forma intermitente.</p>
+</div>
+</article>
+
+<!-- barrel -->
+<article class="piece" id="barrel">
+<div class="col">
+<p class="piece-path">index.ts <span class="meta">61 líneas</span></p>
+<h3>La API pública del módulo</h3>
+
+<p>Todo lo que consuman <code>ui/</code>, <code>storage/</code> o <code>platform/</code> se importa de aquí, nunca apuntando a ficheros internos. Es lo que hace que el límite del módulo exista de verdad: si mañana mueves <code>src/core/</code> a <code>packages/core/</code>, el resto del proyecto no se entera.</p>
+
+<p>La regla complementaria: <strong>dentro</strong> del core los imports son relativos (<code>./domain/Note</code>), no por el alias. El alias es para cruzar fronteras, no para uso interno.</p>
+</div>
+</article>
+</section>
+
+<!-- ============================== CIERRE ============================== -->
+
+<section class="phase">
+<p class="phase-tag">Cierre</p>
+
+<article id="tests">
+<div class="col">
+<h2>Los 72 tests</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Fichero</th><th class="num">Tests</th><th>Qué vigila</th></tr></thead>
+<tbody>
+<tr><td><code>contentTree.test.ts</code></td><td class="num">41</td><td>Cada operación, cada caso de no-op, y la compartición estructural</td></tr>
+<tr><td><code>reducer.test.ts</code></td><td class="num">25</td><td>Cada acción, la integridad referencial y que un no-op no ensucie <code>rev</code></td></tr>
+<tr><td><code>Store.test.ts</code></td><td class="num">6</td><td>Suscripción, baja durante la notificación, y que un no-op no notifique</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Los que menos se parecen a un test normal son los de <code>describe("compartición estructural")</code>. No comprueban valores sino <em>referencias</em>: que al marcar una casilla en la rama B, la rama A siga siendo literalmente el mismo objeto en memoria. Son los que impedirán que alguien —tú dentro de seis meses, o yo— rompa la invariante sin enterarse.</p>
+
+<p>Con <code>npm run check</code> se ejecutan los tres typechecks y los tests de una vez. Es lo que conviene lanzar antes de cada commit.</p>
+</div>
+</article>
+
+<hr>
+
+<article id="critico">
+<div class="col">
+<h2>Con ojo crítico</h2>
+<p class="lede">Los sitios donde puedes razonablemente discrepar, para que la revisión vaya directa a lo discutible.</p>
+
+<h4>Decisiones de producto disfrazadas de dominio</h4>
+<ul>
+<li><strong>Marcar un padre no arrastra a las hijas.</strong> Puede que quieras lo contrario, y es defendible.</li>
+<li><strong>El outdent no adopta a los hermanos siguientes.</strong> Varios outliners populares sí lo hacen.</li>
+</ul>
+
+<h4>Cambios respecto a tu modelo original</h4>
+<ul>
+<li><code>Text</code> ahora lleva <code>id</code>, que tu <code>Models.ts</code> no le daba.</li>
+<li><code>Content</code> pasó de interfaz base a unión discriminada.</li>
+<li><code>Context.items</code> pasó de <code>(Note | Plan)[]</code> a <code>ItemRef[]</code>. Es el cambio de mayor alcance de los tres.</li>
+</ul>
+
+<h4>Deuda consciente</h4>
+<ul>
+<li><strong>La asimetría raíz/anidado</strong> de <code>contentTree.ts</code> genera caminos de código duplicados. Se arreglaría permitiendo textos como hijos de casillas, pero eso se aparta de tu modelo.</li>
+<li><strong>Dos casts feos</strong>, ambos encerrados y comentados: uno en <code>mapRecordPreservingIdentity</code> (porque <code>Object.keys</code> devuelve <code>string[]</code> y nuestras claves son ids marcados) y otro en <code>sameView</code> del reducer (comparar un <code>NoteId</code> con un <code>PlanId</code> requiere bajar a <code>string</code>).</li>
+<li><strong>El prototipo de <code>src/scripts/</code> no se puede construir</strong> hasta la Fase&nbsp;4, porque webpack está desinstalado.</li>
+</ul>
+
+<h4>Lo que aún no existe</h4>
+<p>Nada de persistencia: no hay puertos, ni <code>StorageAdapter</code>, ni <code>BlobStore</code>. Nada de UI nueva. Ninguna operación sobre Planes. Y ningún caso de uso — la capa que inyectará <code>Clock</code> e <code>IdGenerator</code> para construir las acciones con su <code>meta</code> es justamente lo primero de la Fase&nbsp;2.</p>
+</div>
+</article>
+</section>
+
+</main>
+</div>
