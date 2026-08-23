@@ -1,0 +1,71 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+
+    "allow": [
+      "Bash(npm run check:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run typecheck:core)",
+      "Bash(npm test:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm ls:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:nodejs.org)",
+      "WebFetch(domain:typescriptlang.org)"
+    ],
+
+    "ask": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git stash:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Edit(./.claude/**)",
+      "Write(./.claude/**)"
+    ],
+
+    "deny": [
+      "Edit(./.claude/agents/**)",
+      "Write(./.claude/agents/**)",
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(npm i:*)",
+      "Bash(npm install:*)",
+      "Bash(npm add:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm remove:*)",
+      "Bash(npm rm:*)",
+      "Bash(npm update:*)",
+      "Bash(npm audit fix:*)",
+      "Bash(npx:*)",
+      "Bash(yarn:*)",
+      "Bash(pnpm:*)",
+      "Edit(./tmp-test/**)",
+      "Write(./tmp-test/**)",
+      "Edit(./public/js/**)",
+      "Write(./public/js/**)",
+      "Edit(./package-lock.json)",
+      "Write(./package-lock.json)",
+      "Edit(./src/scripts/**)",
+      "Write(./src/scripts/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(//home/ubuntu/.ssh/**)",
+      "Read(//home/ubuntu/.aws/**)",
+      "Read(//home/ubuntu/.config/gh/**)"
+    ]
+  }
+}
