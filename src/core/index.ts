@@ -42,6 +42,13 @@ export { checkBox, isCheckBox, isText, text } from "./domain/Content"
 export type { Position } from "./domain/Position"
 export { after, lastChildOf, rootEnd } from "./domain/Position"
 
+/* La capa de aplicación: acciones, la caja del estado y los casos de uso */
+export type { Action, ActionMeta, SetChecked } from "./app/Action"
+export type { Listener, Store, Unsubscribe } from "./app/Store"
+export { createStore } from "./app/Store"
+export type { UseCaseDeps, UseCases } from "./app/useCases"
+export { createUseCases } from "./app/useCases"
+
 /* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
 export type { Clock } from "./ports/Clock"
 export type { IdGenerator } from "./ports/IdGenerator"

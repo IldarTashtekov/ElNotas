@@ -13,8 +13,15 @@ import type { Revision } from "./Ids"
  */
 export interface Versioned {
   /**
-   * Milisegundos epoch de la última escritura. Viene del puerto Clock, nunca
-   * de Date.now() — dentro del core eso no compila.
+   * Milisegundos epoch de la última escritura. Viene del puerto Clock, y llega
+   * hasta aquí dentro del `meta` de la acción: el reducer es puro y no lee el
+   * reloj.
+   *
+   * Ojo con lo que NO lo impide: el compilador. `Date` está en lib.es5, o sea
+   * dentro de `lib: ["ES2020"]`, así que `Date.now()` **compila** dentro del
+   * core. Lo que lo caza es `npm run check:purity`
+   * (`tools/check-core-purity.mjs`), que es una comprobación aparte. Esto lo
+   * decía al revés hasta ahora.
    *
    * Es el campo "para el usuario": ordenar por recientes, "editada hace 5 min".
    */

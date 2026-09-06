@@ -138,31 +138,41 @@ En este proyecto el reducer tiene además dos exigencias:
 Su forma completa es corta:
 
 ```ts
-class Store {
-  private state: AppState
-  private listeners: Array<(s: AppState) => void> = []
+export const createStore = (initial: AppState): Store => {
+  let state = initial
+  let listeners: ReadonlyArray<Listener> = []
 
-  dispatch(action: Action) {
-    const next = reduce(this.state, action)
-    if (next === this.state) return      // nada cambió → nadie se entera
-    this.state = next
-    for (const l of [...this.listeners]) l(next)
+  return {
+    getState: () => state,
+    dispatch: (action) => {
+      const next = reduce(state, action)
+      if (next === state) return    // nada cambió → nadie se entera
+      state = next                  // ← LA mutación
+      for (const listener of listeners) listener(next)
+    },
+    subscribe: (listener) => { /* ... */ },
   }
-
-  subscribe(l: (s: AppState) => void) { /* ... */ }
 }
 ```
 
-Fíjate en `this.state = next`: eso es una **mutación**. Y es deliberada. El `Store` es **lo
-único mutable de todo el sistema**: todo lo demás —dominio, operaciones, reducer— es puro y
-devuelve valores nuevos. El estado tiene que cambiar en algún sitio, porque la app avanza
-en el tiempo; la decisión de diseño es que ese sitio sea **uno solo, pequeño y localizable**
-en lugar de estar repartido por toda la base de código.
+Fíjate en `state = next`: eso es una **mutación**. Y es deliberada. El `Store` es **el único
+sitio de todo el sistema donde algo se reasigna**: todo lo demás —dominio, operaciones,
+reducer— es puro y devuelve valores nuevos. Los datos siguen siendo inmutables; lo que cambia
+es la variable que señala cuál es el estado actual, no el objeto al que señala. Una app
+interactiva es por definición algo que tiene un "ahora" distinto de su "antes", así que la
+decisión de diseño no es evitar la mutación —no se puede— sino que ocupe **un sitio, pequeño
+y localizable**.
 
-Un detalle real: al notificar se recorre **una copia** de la lista de suscriptores
-(`[...this.listeners]`). Así un suscriptor puede darse de baja durante su propia
-notificación sin corromper la iteración. Es la clase de bug que solo aparece en producción
-y de forma intermitente.
+**Es una función y no una clase**, y la razón que decide es concreta: la UI recibe
+`dispatch` **y nada más**, así que esa función tiene que poder viajar sola. Con una clase,
+`const { dispatch } = store` se lleva el método sin su `this` y revienta al llamarlo; con una
+clausura no hay `this` que perder. De propina, `Store` queda siendo sólo una interfaz que
+nadie puede instanciar por su cuenta.
+
+Un detalle real: la lista de suscriptores **se reemplaza, nunca se muta en el sitio**. Así el
+`for...of` en curso se queda iterando el array que había al empezar, y un suscriptor puede
+darse de baja durante su propia notificación sin corromper el recorrido. Con `push`/`splice`
+sí falla: es la clase de bug que solo aparece en producción y de forma intermitente.
 
 #### `dispatch` y suscriptor
 
@@ -186,12 +196,13 @@ frontera entre lo impuro y lo puro:
 
 ```ts
 // Impuro: le han inyectado un reloj y un generador de ids de verdad.
-const marcarCasilla = (clock: Clock, ids: IdGenerator, store: Store) =>
-  (noteId: NoteId, contentId: ContentId, checked: boolean) =>
+export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => ({
+  setChecked: (noteId, contentId, checked) =>
     store.dispatch({
       type: "set-checked", noteId, contentId, checked,
-      meta: { now: clock.now(), revision: revision(ids.newId()) },   // ← aquí, y solo aquí
-    })
+      meta: { now: clock.now(), revision: revision(ids.next()) },    // ← aquí, y solo aquí
+    }),
+})
 ```
 
 Todo lo que pasa de esta línea hacia dentro (reducer, operaciones de contenido, dominio) es

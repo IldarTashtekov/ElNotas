@@ -12,7 +12,7 @@ aparcada.
 
 ## Pendiente
 
-### Fase 1 — Dominio puro (en curso)
+### Fase 1 — Dominio puro ✅ TERMINADA
 
 En este orden. El helper va primero y solo: es la única pieza con dificultad real y todo lo
 demás se apoya en ella.
@@ -57,9 +57,9 @@ demás se apoya en ella.
         es la que caza que alguien añada un espacio de cortesía al unir. `split` es la única de
         las ocho que recibe un `ContentId` por parámetro. `merge` sube el texto a la hermana
         anterior, o **a la madre** si es la primera hija.
-  - [ ] ~~`indent`, `outdent`~~ — **eliminadas.** En el teclado de un móvil no hay Tabulador;
+  - [x] ~~`indent`, `outdent`~~ — **eliminadas.** En el teclado de un móvil no hay Tabulador;
         el nivel se elige al nacer la línea, con el modo activo. Cerró (a) y (g) de golpe.
-  - [ ] ~~`move`~~ — **eliminada.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y
+  - [x] ~~`move`~~ — **eliminada.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y
         no se construye lo que no tiene consumidor. Cerró (f) y (c). Aparcada abajo.
 - [x] **Un test explícito por cada caso no-op** de la tabla de `ARCHITECTURE.md` §9.3. ✅
       Hecho sobre la marcha, operación por operación, con `assert.strictEqual`. Y cada guarda
@@ -71,13 +71,22 @@ demás se apoya en ella.
       y quien llama lo marca con el constructor que toque: el generador no sabe qué clase de
       id estás creando. **Sin pruebas propias**: son interfaces, no hay comportamiento que
       comprobar. Lo que sí se verificó a mano es la verja (ver la tarea de abajo).
-- [ ] **La rebanada vertical:** `Store`, un reducer con un único caso (`set-checked`), un caso
-      de uso, y un suscriptor de prueba que cuente notificaciones. Debe demostrar que un
-      `set-checked` redundante **no notifica y no toca `updatedAt`**.
-- [ ] **Exportar todo lo nuevo por `src/core/index.ts`**, que es la API pública del módulo.
-      Fácil de olvidar: si no está ahí, para el resto del proyecto no existe.
+- [x] **La rebanada vertical** — ✅ Hecha, en `src/core/app/`: `Action`, `reduce`, `Store` y
+      `createUseCases`. **16 pruebas.** Demuestra el criterio de cierre: tres despachos
+      redundantes seguidos → **un solo aviso**, y `updatedAt` con la hora del primero.
+      El `Store` es **una función, no una clase**: el estado vive en una clausura, así que no
+      hay camino hasta él —el `private` de TypeScript desaparece al ejecutar—.
+      La lista de suscriptores **se reemplaza, nunca se muta en el sitio**, y eso resuelve
+      gratis que uno pueda darse de baja durante su propio aviso.
+- [x] **Exportar por `src/core/index.ts`** — ✅ Hecho sobre la marcha, pieza a pieza. Fuera
+      quedan **a propósito** las dos primitivas del helper y `reduce`: son maquinaria interna,
+      y lo que consumen `ui/` y `storage/` son las operaciones, el `Store` y los casos de uso.
 
-Criterio de cierre de la fase: los seis puntos de `ARCHITECTURE.md` §9.5.
+**Los seis puntos del criterio de cierre (`ARCHITECTURE.md` §9.5), cumplidos:** el helper
+devuelve la entrada intacta en sus dos casos · las ocho operaciones existen · cada una tiene
+pruebas de valor y de identidad con `strictEqual` · cada fila de no-op de §9.3 está probada ·
+la rebanada demuestra que tres despachos redundantes dan **un solo aviso** y no tocan
+`updatedAt` · `npm run check` en verde con **99 pruebas**, e incapaz de pasar en falso.
 
 ### Infraestructura (`infra-agent`)
 
@@ -95,7 +104,7 @@ documentación**.
       seguía ejecutándola. Pruebas fantasma de código que ya no existe, y pruebas renombradas
       corriendo dos veces.
 - [x] ✅ **`npm run check` vuelve a estar en verde**, y ahora significa algo: 9 pruebas
-      ejecutándose de verdad.
+      ejecutándose de verdad. Hoy van 99.
 - [x] **Que `npm run check` falle ante `Date.now()`, `Math.random()` o `new Date(` en
       `src/core`.** ✅ Hecho: `tools/check-core-purity.mjs`, enchufado como `npm run
       check:purity`. Tapa el único hueco de la verja — `Date` y `Math` están en `lib.es5.d.ts`,
@@ -108,13 +117,13 @@ documentación**.
       de las formas más plausibles de colarlo sin querer.
       Verificado en los tres sentidos: pasa limpio, caza las cuatro violaciones reales sin
       tocar las menciones en comentarios ni en cadenas, e ignora los `*.test.ts`.
-- [ ] **Corregir el comentario de `src/core/domain/Versioned.ts:16`**, que afirma que
-      `updatedAt` viene del puerto `Clock` "nunca de `Date.now()` — dentro del core eso no
-      compila". La primera mitad es la regla y sigue en pie; **la segunda es falsa** y
-      comprobada como tal.
-- [ ] **Borrar la mención a vitest del comentario de `src/core/tsconfig.json`** (línea 21:
-      "los tests sí pueden usar APIs de plataforma y el paquete de vitest"). Vitest se evaluó
-      y se descartó; es un comentario muerto que contradice a `CLAUDE.md`.
+- [x] **Corregir el comentario de `src/core/domain/Versioned.ts`** — ✅ Hecho. Decía que
+      `Date.now()` "dentro del core no compila", y es falso. Ahora dice quién lo caza de
+      verdad (`npm run check:purity`) y por dónde llega la hora: dentro del `meta` de la
+      acción, porque el reducer es puro.
+- [x] **Borrar la mención a vitest de `src/core/tsconfig.json`** — ✅ Hecho, y de paso se
+      añade ahí el aviso de que **la verja no cubre el reloj ni el azar**, que era justo el
+      sitio donde faltaba: quien va a tocar la verja lee ese fichero.
 
 ---
 

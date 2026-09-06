@@ -10,6 +10,11 @@
   // Se comprueba con `npm run typecheck:core`. Si necesitas IDs, hora o azar en el
   // core, inyéctalos por puerto (IdGenerator, Clock), no los importes.
   //
+  // OJO: esta verja NO cubre el reloj ni el azar. Date y Math están en lib.es5,
+  // o sea dentro de "lib": ["ES2020"], así que Date.now() y Math.random()
+  // compilan aquí dentro. Eso lo tapa `npm run check:purity`, que es otra cosa
+  // (tools/check-core-purity.mjs).
+  //
   // Dentro del core los imports son RELATIVOS ("./schema"). El alias #core/* es
   // para que lo consuman los otros módulos, no para uso interno.
   "extends": "../../tsconfig.base.json",
@@ -18,8 +23,8 @@
     "types": [],
     "noEmit": true
   },
-  // Los tests sí pueden usar APIs de plataforma y el paquete de vitest; la verja
-  // aplica al código de producción.
+  // Los tests sí pueden usar APIs de plataforma (node:test, node:assert); la
+  // verja aplica al código de producción. Se typechequean con tsconfig.test.json.
   "include": ["."],
   "exclude": ["**/*.test.ts"]
 }

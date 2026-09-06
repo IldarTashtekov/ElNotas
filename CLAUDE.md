@@ -22,13 +22,14 @@ pasa, compruébalo antes: `find src -name '*.ts' | sort`, `npm run check`, `git 
 En `src/` **conviven dos cosas** y no hay que confundirlas:
 
 - **`src/core/` — la arquitectura nueva.** Dominio puro. **Es la referencia** de cómo se
-  hacen las cosas aquí. Hoy tiene el modelo, el helper, las ocho operaciones y los puertos.
+  hacen las cosas aquí. Hoy tiene la Fase 1 entera: modelo, helper, operaciones, puertos y
+  la capa de aplicación.
 - **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
-**Lo que existe en el core: el modelo de datos y la mayor parte de la Fase 1.** ~800 líneas de
-código y ~960 de pruebas, todo en `src/core/domain/`:
+**Lo que existe en el core: la Fase 1 entera.** ~1240 líneas de código y ~1470 de pruebas, en
+`src/core/domain/`, `src/core/ports/` y `src/core/app/`:
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
@@ -38,12 +39,13 @@ código y ~960 de pruebas, todo en `src/core/domain/`:
   **Maquinaria interna: NO salen por `index.ts`**;
 - **las OCHO operaciones**, en `operations.ts` y todas exportadas: `setText`, `setChecked`,
   `insert`, `remove`, `convertToCheckBox`, `convertToText`, `split`, `merge`;
-- **los dos puertos** en `src/core/ports/`: `Clock` e `IdGenerator`, **sólo las interfaces**.
+- **los dos puertos** en `src/core/ports/`: `Clock` e `IdGenerator`, **sólo las interfaces**;
+- **la capa de aplicación** en `src/core/app/`: `Action`, `reduce`, `Store` (una **función**,
+  `createStore`, no una clase) y `createUseCases`. `reduce` **no** sale por `index.ts`.
 
-**Lo que NO existe todavía:** el reducer, el `Store`, los casos de uso, la persistencia, la UI
-y todo lo de Planes. Tampoco las implementaciones de los puertos —vivirían en `src/platform/`,
-que no nace hasta la Fase 4— ni las carpetas `core/app/`, `core/migrations/`, `src/storage/`,
-`src/ui/` ni `src/platform/`.
+**Lo que NO existe todavía:** la persistencia, la UI y todo lo de Planes. Tampoco las
+implementaciones de los puertos —vivirían en `src/platform/`, que no nace hasta la Fase 4— ni
+las carpetas `core/migrations/`, `src/storage/`, `src/ui/` ni `src/platform/`.
 
 **`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
 con código 1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin
@@ -60,7 +62,7 @@ src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
 │   ├── domain/    # ← modelo + Position + helper + las 8 operaciones
 │   ├── ports/     # ← Clock e IdGenerator (solo interfaces) · (F2) los de persistencia
-│   ├── app/       # (F1) Store + reducer con UN caso · (F2) el catálogo completo
+│   ├── app/       # ← Action + reduce + Store + useCases · (F2) el catálogo completo
 │   ├── migrations/# (F2)
 │   └── index.ts
 ├── storage/       # (F2 memory · F3 file)
@@ -197,13 +199,9 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 ## Plan por fases
 
 - **Fase 0 — Andamiaje. ✅ HECHA.**
-- **Fase 1 — Dominio puro. 🟡 EN CURSO.** Hecho el modelo de datos. Falta, en este orden: el
-  **helper de copia por camino** (primero y solo; es la **primitiva A**, y la **B** va con las
-  operaciones estructurales — §5.4), el tipo **`Position`**, las **ocho operaciones de
-  contenido**, los puertos
-  **`Clock`** e **`IdGenerator`** (solo interfaces), y una **rebanada vertical** (`Store` +
-  reducer de un caso + caso de uso + suscriptor que cuente). Detalle en `TAREAS.md`; criterio
-  de cierre en `ARCHITECTURE.md` §9.5.
+- **Fase 1 — Dominio puro. ✅ HECHA.** Los seis puntos del criterio de cierre (§9.5),
+  cumplidos, con **99 pruebas**. El helper con sus dos primitivas, `Position`, las ocho
+  operaciones, los puertos y la rebanada vertical.
 - **Fase 2 — Acciones, puertos de persistencia y memory.**
 - **Fase 3 — Fichero local.**
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
