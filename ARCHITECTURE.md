@@ -1053,12 +1053,19 @@ la casilla, y unir con la línea de arriba. **Se resuelve en secuencia**, no eli
 
 | Cursor | La línea es… | Retroceso hace… | Operación |
 |---|---|---|---|
-| al principio del todo | una **casilla** | se va la casilla, la línea queda como texto | `convertirEnTexto` |
+| al principio del todo | una **casilla de la raíz** | se va la casilla, la línea queda como texto | `convertirEnTexto` |
+| al principio del todo | una **casilla anidada** | se une directamente: el texto sube a la hermana anterior, o a la madre si es la primera hija | `merge` |
 | al principio del todo | un **texto** | se une con la de arriba | `merge` |
 | en cualquier otro sitio | cualquiera | borra el carácter anterior | (ni toca el modelo) |
 
-O sea: sobre una casilla hacen falta **dos** pulsaciones para unirla con la de arriba. La
-primera le quita el cuadradito, la segunda une.
+O sea: sobre una casilla **de la raíz** hacen falta **dos** pulsaciones para unirla con la de
+arriba. La primera le quita el cuadradito, la segunda une. Sobre una casilla **anidada** basta
+una, porque el primer paso no existe: una casilla anidada no puede volverse texto, ya que un
+texto sólo cabe en la raíz.
+
+El editor no necesita saber a qué profundidad está para elegir: le basta con **intentar quitar
+el cuadradito y mirar si cambió algo**. Si el contenido volvió intacto —que es lo que hace un
+no-op— pasa a unir. La invariante de identidad (§3) le sirve aquí de condición.
 
 ```
 ☐ Leche             ☐ Leche              ☐ Leche Pan
@@ -1378,9 +1385,23 @@ testean:
   devolver **exactamente** lo que había antes. Un espacio de cortesía al unir haría que partir
   y unir repetidamente fuera ensuciando el texto. Es una propiedad comprobable: partir por
   cualquier punto y volver a unir devuelve el original.
-- **La línea de abajo siempre es un `Text` cuando llega la unión**, porque sobre una casilla la
-  primera pulsación de Retroceso ya le ha quitado el cuadradito (§7.3). El caso "una casilla se
-  une a un texto" no puede darse desde el teclado.
+- **Quién recibe el texto depende de dónde estuviera la línea que desaparece:**
+
+  | La línea que se absorbe… | El texto sube a… |
+  |---|---|
+  | tiene una hermana encima | esa **hermana anterior** |
+  | es la **primera hija** de una casilla | su **madre**, y las demás hijas se quedan donde estaban |
+  | es la primera línea de la nota | nadie: **no hace nada** |
+
+  El segundo caso es el que no se ve venir, y es el que hace que `merge` no sea sólo "combinar
+  dos elementos de una lista": ahí la madre cambia de texto **y** pierde una hija, las dos
+  cosas a la vez.
+
+- **En la raíz, la línea de abajo siempre es un `Text` cuando llega la unión**, porque la
+  primera pulsación de Retroceso ya le ha quitado el cuadradito (§7.3). **En profundidad no**:
+  una casilla anidada no puede convertirse en texto —no cabría—, así que ahí Retroceso une
+  directamente y `merge` sí recibe una casilla. La línea que recibe conserva su clase en los
+  dos casos.
 
 Y de la fila de `split`: **la mitad nueva nace sin marcar**, aunque la original estuviera
 marcada. Los dos errores posibles no cuestan lo mismo — una tarea que aparece pendiente y ya
@@ -1403,12 +1424,12 @@ necesita su test explícito:
 |---|---|
 | `setText` | el id no existe · el texto ya es ese |
 | `setChecked` | el id no existe · el id es un `Text` (no tiene `checked`) · ya está en ese valor |
-| `insert` | el destino no existe · el destino es un `Text` y se pide meter dentro |
+| `insert` | el destino no existe · el destino es un `Text` y se pide meter dentro · **se pide meter un texto suelto en una lista de hijas** — no cabe, y con la primitiva B partida en dos ni siquiera compila |
 | `remove` | el id no existe · **es una casilla con hijas** (decisión (b), cerrada: se borra de abajo arriba) |
 | `split` | el id no existe · el punto de corte cae fuera de la línea. **Partir por el extremo NO es no-op:** deja una mitad vacía, que es justo lo que quieres al empezar una lista |
-| `merge` | el id no existe · es la primera línea (no hay nada encima) · **la línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que misma regla que `remove` |
+| `merge` | el id no existe · es la primera línea **de la nota** (no hay nada encima, ni hermana ni madre) · **la línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que misma regla que `remove` |
 | `convertirEnCasilla` | el id no existe · ya es una casilla |
-| `convertirEnTexto` | el id no existe · ya es un texto · **es una casilla con hijas** (un texto no puede tener nada colgando: se convierte de abajo arriba, igual que se borra) |
+| `convertirEnTexto` | el id no existe · ya es un texto · **es una casilla con hijas** (un texto no puede tener nada colgando: se convierte de abajo arriba, igual que se borra) · **es una casilla anidada** — un texto sólo puede vivir en la raíz, y sin `outdent` no hay forma de hacerle sitio |
 
 **Ocho filas, y las ocho necesitan su test explícito.** Fíjate en que la mitad de ellas dicen
 lo mismo con otras palabras —*es una casilla con hijas*—: es la regla de (b) propagándose sola

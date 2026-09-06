@@ -23,10 +23,11 @@ demás se apoya en ella.
       **9 pruebas en verde**, y verificadas al revés: rompiendo la invariante a propósito por
       sus dos sitios, caen 6 y 5 respectivamente. **No se exporta por `index.ts`** a propósito:
       es maquinaria interna, y lo que consumirán `ui/` y `storage/` son las operaciones.
-- [ ] **La primitiva B, "transformar el array contenedor"** — la que usan `insert`, `remove`,
-      `split` y `merge`. Sin reparentado: se queda en quitar un id de su array o meter algo en
-      él. **La extracción va siempre con la guarda** de las casillas con hijas, porque sus dos
-      únicos consumidores (`remove` y `merge`) hacen desaparecer una línea. Razonado en §5.4.
+- [x] **La primitiva B, "transformar el contenedor de una línea"** — ✅ Hecha, en
+      `src/core/domain/updateContainerOf.ts`. **Una sola función**, no dos: el contenedor es la
+      lista raíz o **la casilla madre entera** (no su lista de hijas), porque `merge` necesita
+      que la madre cambie de texto y pierda una hija a la vez. **12 pruebas.** No va en
+      `index.ts`: maquinaria interna, como la A.
 - [x] **El tipo `Position`**, el vocabulario del "dónde". ✅ Hecho, en
       `src/core/domain/Position.ts`, y exportado por `index.ts` porque **sí es API pública**:
       la UI construye posiciones para pasárselas a `insert`. Sin pruebas propias a propósito —
