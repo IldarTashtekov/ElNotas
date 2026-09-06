@@ -17,23 +17,38 @@ aparcada.
 En este orden. El helper va primero y solo: es la única pieza con dificultad real y todo lo
 demás se apoya en ella.
 
-- [ ] **El helper de copia por camino**, con sus tests de identidad. Tiene que devolver el
-      array de entrada **intacto** en dos casos: id ausente, y transformación que no cambia
-      nada. El segundo es el que se olvida. Depende de la decisión **(e)**.
-- [ ] **El tipo `Position`**, que es el vocabulario del "dónde" que hoy falta en el modelo.
-      Los tres casos de la propuesta (`root-end`, `after`, `last-child-of`) son
-      **provisionales, no acordados**: cuáles son exactamente es la decisión **(d)**.
-- [ ] **Las nueve operaciones de contenido**, en orden de coste:
+- [ ] **El helper de copia por camino — primitiva A, "transformar un nodo".** Decidida su
+      forma en `ARCHITECTURE.md` §5.4: `mapPreservandoIdentidad`, un `updateCheckBoxes`
+      recursivo y un `updateContent` de raíz parametrizado por `onText`/`onCheckBox`. Unas 26
+      líneas. Con sus tres tests de identidad (`assert.strictEqual`): devuelve el array de
+      entrada **intacto** con id ausente y con transformación que no cambia nada —éste es el
+      que se olvida—, y comparte por referencia la rama no tocada.
+- [ ] **La primitiva B, "transformar el array contenedor"** — la que usan `insert`, `remove`,
+      `split` y `merge`. Sin reparentado: se queda en quitar un id de su array o meter algo en
+      él. **La extracción va siempre con la guarda** de las casillas con hijas, porque sus dos
+      únicos consumidores (`remove` y `merge`) hacen desaparecer una línea. Razonado en §5.4.
+- [ ] **El tipo `Position`**, el vocabulario del "dónde" que hoy falta en el modelo. Decidido:
+      **tres casos exactos** —`root-end`, `after`, `last-child-of`— y ninguno más, uno por cada
+      estado de `ModosEscritura`. Su **único consumidor es `insert`**. `before`,
+      `first-child-of` y `root-start` quedan fuera por coste de ramas a testear; el disparador
+      para reabrirlo va en el mismo paquete que `move`. Razonado en `ARCHITECTURE.md` §9.4.
+- [ ] **Las ocho operaciones de contenido**, en orden de coste. Eran nueve, subieron a once y
+      se quedaron en ocho: fuera `indent`, `outdent` y `move`; dentro las dos conversiones.
+      **Ninguna pasa de dificultad media.** Razonado en `ARCHITECTURE.md` §9.3.
   - [ ] `setText`, `setChecked` — triviales encima del helper; no cambian la estructura.
-  - [ ] `insert`, `remove` — coste medio. `remove` depende de la decisión **(b)**.
-  - [ ] `move` — **aquí está el trabajo real de la fase.** Ojo al destino dentro del propio
-        subárbol: hay que detectarlo o generas un ciclo (decisión **(c)**).
-  - [ ] `indent`, `outdent` — **son `move` disfrazado**: `indent` es "muévete a última hija de
-        tu hermano anterior" y `outdent` es "muévete a hermano siguiente de tu madre". Si
-        `move` está bien hecho salen en **~3 líneas cada una**. No escribir un recorrido de
-        árbol propio para ellas. `indent` depende de la decisión **(a)**; `outdent`, de la
-        **(g)**.
-  - [ ] `split`, `merge` — pendientes de confirmar (decisión **(f)**).
+  - [ ] `insert`, `remove` — coste medio. `remove` **es no-op sobre una casilla con hijas**
+        (decisión (b), cerrada): se borra de abajo arriba o no se borra.
+  - [ ] `convertirEnCasilla`, `convertirEnTexto` — las que pide el botón de `ModosEscritura`
+        (§7.2). `convertirEnTexto` sobre una casilla con hijas es no-op, por la misma razón
+        que `remove`: un texto no puede tener nada colgando.
+  - [ ] `split`, `merge` — **confirmadas.** Intro en medio de una línea la parte; Retroceso al
+        principio une con la de arriba. Dos avisos: `split` **necesita un `ContentId` nuevo por
+        parámetro** (el dominio no genera IDs), y `merge` es no-op si la línea que se absorbe
+        tiene hijas, por la misma razón que `remove`. Teclado completo en §7.3.
+  - [ ] ~~`indent`, `outdent`~~ — **eliminadas.** En el teclado de un móvil no hay Tabulador;
+        el nivel se elige al nacer la línea, con el modo activo. Cerró (a) y (g) de golpe.
+  - [ ] ~~`move`~~ — **eliminada.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y
+        no se construye lo que no tiene consumidor. Cerró (f) y (c). Aparcada abajo.
 - [ ] **Un test explícito por cada caso no-op** de la tabla de `ARCHITECTURE.md` §9.3. Con
       `assert.strictEqual`, nunca `deepEqual`.
 - [ ] **`core/ports/Clock.ts` y `core/ports/IdGenerator.ts`** — solo las interfaces, cuatro
@@ -51,9 +66,19 @@ Criterio de cierre de la fase: los seis puntos de `ARCHITECTURE.md` §9.5.
 Las cuatro son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
 documentación**.
 
-- [ ] **Que `npm test` falle si no hay ficheros de test.** Hoy `node --test` sin ficheros
-      imprime `1..0` y **sale con código 0**, así que `npm run check` pasa entero sin
-      comprobar ni un comportamiento. Mientras siga así, "los tests pasan" no significa nada.
+- [x] **Que `npm test` falle si no hay ficheros de test.** ✅ Hecho. `tools/require-tests.mjs`
+      cuenta los `*.test.js` de `tmp-test/` y sale con código 1 si no hay ninguno, porque
+      `node --test` sin ficheros imprime `1..0` y **sale con código 0**. Mira la salida
+      compilada y no las fuentes a propósito: así caza también las pruebas escritas que no
+      llegan a compilarse adonde el runner las busca.
+- [x] **Que `tmp-test/` se limpie antes de cada compilación.** ✅ Hecho,
+      `tools/clean-tmp-test.mjs`. Salió al verificar lo anterior: **`tsc` no borra lo que
+      sobra**, sólo emite, así que una prueba borrada dejaba su `.js` atrás y `node --test`
+      seguía ejecutándola. Pruebas fantasma de código que ya no existe, y pruebas renombradas
+      corriendo dos veces.
+- [ ] ⚠️ **`npm run check` está EN ROJO a propósito** hasta que exista la primera prueba. No
+      es una avería: es el guardián haciendo su trabajo. Se pone en verde con el primer
+      `*.test.ts`, que será el del helper.
 - [ ] **Un `grep` en `npm run check` que falle ante `Date.now()`, `Math.random()` o
       `new Date(` en `src/core`** (excluyendo `**/*.test.ts`). Tapa el único hueco de la verja
       de pureza: `Date` y `Math` están en `lib.es5.d.ts`, o sea dentro de `lib: ["ES2020"]`, y
@@ -73,17 +98,40 @@ documentación**.
 
 **No las resuelva por su cuenta quien implemente.** Si te topas con una, pregunta.
 
-### Las siete de la Fase 1
+### Las siete de la Fase 1 — ✅ **cerradas las siete**
+
+**No queda ninguna abierta: la Fase 1 está especificada entera y se puede escribir de un tirón.**
+Se dejan aquí con su respuesta porque el valor está en el porqué, no en la casilla marcada. Las
+letras no se reciclan, para que las referencias de `ARCHITECTURE.md` sigan valiendo.
 
 | | Pregunta | Qué depende de ella |
 |---|---|---|
-| **(a)** | `indent` sobre un `Text`: ¿no-op, o lo convierte en `CheckBox`? Surge porque `CheckBox.children` es `ReadonlyArray<CheckBox>`, así que un `Text` no cabe dentro de una casilla. | `indent`, y `move` con destino `last-child-of`. |
-| **(b)** | `remove` de una casilla con hijas: ¿se va el subárbol entero, o las hijas suben al nivel donde estaba la madre? | `remove`. Es **la que más cambia cómo se siente la app** al usarla; las dos son defendibles. |
-| **(c)** | `move` con destino dentro del propio subárbol: es no-op por convención, pero **hay que detectarlo** o generas un ciclo. | `move`. Va en la especificación aunque parezca implementación: si no está escrito, no se testea. |
-| **(d)** | Qué casos tiene exactamente `Position`. Faltan candidatos evidentes (`before`, `first-child-of`, `root-start`). | `insert`, `move`, `indent`, `outdent`. Cada caso extra es una rama más que testear en `move`, que ya es la operación más cara. |
-| **(e)** | El helper: ¿dos funciones separadas de ~25 líneas, o una parametrizada por dos transformaciones? La asimetría raíz/profundidad impide una firma recursiva uniforme. | **Todo lo demás de la fase.** Es la única decisión de diseño con dificultad real. |
-| **(f)** | ¿Se confirma que son **nueve** operaciones (con `split` y `merge`) y no siete? | La Fase 4: sin `split` y `merge` no se puede escribir con el teclado. |
-| **(g)** | `outdent`: al sacar una casilla de su madre, ¿qué pasa con **los hermanos que quedaban por debajo** de ella? ¿Se quedan donde están, o se van con ella? | `outdent`. La implementación borrada hacía lo primero (no los adoptaba) y varios outliners populares hacen lo segundo — pero **eso nunca se registró como decisión**, así que hoy está abierta. Es el ejemplo de cómo se cuela una: resuelta en el código, en ningún documento. |
+| ~~**(a)**~~ | ✅ **Cerrada por eliminación.** Preguntaba qué hace `indent` sobre un texto; `indent` ya no existe. → `ARCHITECTURE.md` §9.3 | |
+| ~~**(b)**~~ | ✅ **Cerrada.** Ninguna de las dos: `remove` sobre una casilla con hijas es **no-op**. Se borra de abajo arriba. → `ARCHITECTURE.md` §9.3 | Desbloqueó la primitiva B. Deja **dos deberes**: `move` no puede ser `remove`+`insert`, y la Fase 4 necesita un "borrar rama" explícito. |
+| ~~**(c)**~~ | ✅ **Cerrada por eliminación.** Preguntaba cómo detectar el ciclo al mover algo dentro de su propio subárbol; `move` ya no existe, así que no hay destino que comprobar. → `ARCHITECTURE.md` §9.3 | |
+| ~~**(d)**~~ | ✅ **Cerrada.** `Position` tiene tres casos y no más. → `ARCHITECTURE.md` §9.4 | |
+| ~~**(e)**~~ | ✅ **Cerrada.** El helper es **dos primitivas**; la A va parametrizada por variante con la recursión escrita una sola vez. → `ARCHITECTURE.md` §5.4 | Destapó que la primitiva B queda pendiente de **(b)**. |
+| ~~**(f)**~~ | ✅ **Cerrada. Son ocho:** `setText`, `setChecked`, `insert`, `remove`, `split`, `merge`, `convertirEnCasilla`, `convertirEnTexto`. Fuera `indent`, `outdent` y `move`. → `ARCHITECTURE.md` §9.3 | Cerró también la (c), y fija el tamaño de la Fase 1: ninguna de las ocho pasa de dificultad media. |
+| ~~**(g)**~~ | ✅ **Cerrada por eliminación.** Preguntaba qué pasa con los hermanos al hacer `outdent`; `outdent` ya no existe. → `ARCHITECTURE.md` §9.3 | |
+
+### Del editor (Fase 4)
+
+No bloquean nada de la Fase 1, pero salieron al diseñar `ModosEscritura` y se pierden si no se
+apuntan.
+
+- **El escalón infinito en modo *Casilla hija*.** Si cada Intro creara una hija de la línea
+  actual, irías bajando un nivel por pulsación y **sin `outdent` no habría forma de subir**.
+  La regla tiene que ser que el modo baje un nivel **una sola vez**, y de ahí en adelante las
+  siguientes sean hermanas en ese nivel. Falta confirmarlo.
+- **Cómo se baja un segundo nivel.** Con el ciclo actual (*Texto → Casilla → Casilla hija →
+  Texto*) hacen falta tres pulsaciones del botón para volver a *Casilla hija*. Si se quiere
+  anidar con soltura, hay que replantear el ciclo.
+- **Las cuatro esquinas del teclado propuestas en `ARCHITECTURE.md` §7.3** y sin confirmar:
+  cursor al final al pulsar el botón de modo · volver de *Casilla* a *Texto* con el botón ·
+  unir dos textos normales sin casilla de por medio · partir una casilla que tiene hijas.
+- **El identificador de `ModosEscritura` en el código.** El concepto se llama así; el nombre
+  en el código está sin fijar, porque todo lo demás está en inglés (`WritingMode`, y en
+  singular). O se cambia la convención a conciencia y para todo. → `ARCHITECTURE.md` §7.2
 
 ### Cómo se verifica la Fase 3
 
@@ -135,6 +183,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
+| **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
 | **Adaptador de MongoDB** | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
 | **Adaptador de Google Drive** | Escribir **siempre** exige OAuth (scope `drive.file`), aunque la carpeta sea pública. Eso arrastra registro de app, PKCE y gestión de tokens. | Querer de verdad sincronizar entre dispositivos, y aceptar el coste de OAuth. Antes tendría que estar cerrado el `BlobStore`. |
 | **`CompositeStorage` y outbox durable** | Sin consumidor mientras haya un solo backend. La semántica (local primario + réplicas con reintentos) ya está decidida. | Que exista un segundo backend real. Ni un día antes: es infraestructura para un problema que aún no se tiene. |

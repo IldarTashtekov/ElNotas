@@ -690,10 +690,10 @@ Note.content: ReadonlyArray<Content>
 Viene del modelo del prototipo (`children: CheckBox[]`) y se respetó, pero **no es un detalle
 inocente**: los dos arrays no son del mismo tipo, así que el recorrido del árbol **no tiene una
 firma recursiva uniforme** y habrá caminos de código separados para el nivel raíz y para los
-niveles anidados. Es el fondo de dos de las decisiones abiertas: la del helper (**(e)**) y la de
-qué hace `indent` sobre un `Text` (**(a)**, porque un `Text` literalmente no cabe dentro de una
-casilla). Si algún día se decide que un texto pueda colgar de una casilla, las dos se disuelven
-y el código se acorta bastante.
+niveles anidados. Fue el fondo de dos decisiones ya cerradas: la forma del helper (**(e)**,
+§5.4) y qué hacía `indent` sobre un `Text` (**(a)**, que se cerró por eliminación al
+desaparecer `indent`). Si algún día se decide que un texto pueda colgar de una casilla, la
+asimetría se disuelve y el código se acorta bastante.
 
 Otro peaje previsible de los tipos marcados: recorrer un `Record` con claves marcadas obliga a
 bajar a `string`, porque `Object.keys` devuelve `string[]` y pierde la marca. Cuando aparezca,
@@ -734,6 +734,124 @@ venía dando —"añadirlos cuando ya haya notas guardadas sería una migración
 del todo válido todavía**, porque no hay persistencia y por tanto no hay datos que migrar; y
 si valiera, valdría igual para `schemaVersion`, que sí se aplaza a la Fase 2. Está anotado en
 `TAREAS.md` para reescribir la justificación real.
+
+### 5.4 El helper de copia por camino: son dos primitivas, no una
+
+La técnica está explicada en §2.3 y la invariante que sostiene, en §3. Aquí va **qué forma
+tiene exactamente** el helper que la implementa, que era la decisión (e) y está cerrada.
+
+Lo primero, porque cambia el reparto del trabajo de la fase: las operaciones no piden
+una sola cosa al helper, piden **dos**.
+
+| | Qué hace | Quién la usa |
+|---|---|---|
+| **A — transformar un nodo** | llega al nodo con ese id y lo sustituye | `setText`, `setChecked` |
+| **B — transformar el array contenedor** | llega al array *donde vive* ese id (o al de sus hijas) y lo reescribe | `insert`, `remove`, `split`, `merge` |
+
+**Esta sección decide A. B se diseña con las operaciones estructurales**, y ya no está
+bloqueada: cerrada la decisión (b) —`remove` no borra una casilla con hijas, §9.3— B se queda
+en "quita este id del array donde vive" o "mete esto en este array", sin reparentar nada.
+
+Dos avisos para cuando le toque:
+
+- **La extracción va siempre con la guarda.** Sus dos únicos consumidores son `remove` y
+  `merge`, y ambos hacen desaparecer una línea, así que ambos se niegan a hacerlo si tiene
+  hijas (§9.3). No hace falta exponer una extracción pelada porque **nadie la usaría**. Si
+  algún día llega `move` —que sí mueve subárboles enteros sin perder nada—, ese día habrá que
+  sacarla, y ese día hay que acordarse de que `move` **no** puede escribirse como `remove` +
+  `insert` o heredaría la guarda y dejaría de mover casillas con hijas, en silencio.
+- **B no se puede generalizar como se generalizó A.** Una firma
+  `<T extends Content>(items: readonly T[]) => readonly T[]` funciona para la extracción
+  (`filter` conserva `T`) pero **rompe para `insert`**, porque meter un `Content` en un
+  `readonly CheckBox[]` es justo lo que el compilador tiene que rechazar.
+
+#### La decisión: parametrizada por variante, con la recursión escrita una sola vez
+
+La alternativa era dos funciones separadas de ~25 líneas, una para la raíz y otra para la
+profundidad. Se descartó. **El eje que importa no es raíz/profundidad, es `Text`/`CheckBox`.**
+
+El problema de tipos es que en la raíz el array es `ReadonlyArray<Content>` y en profundidad
+es `ReadonlyArray<CheckBox>`. Con una firma uniforme `(nodo: Content) => Content`, en
+profundidad el compilador ya no puede garantizar que una casilla siga siendo casilla, y hay
+que meter un `as` o un `isCheckBox(next) ? next : c` que **se traga el error en silencio** —lo
+contrario de §1—. Parametrizando por **una transformación por variante**, el cast desaparece y
+la recursión solo hace falta en el caso homogéneo:
+
+```ts
+const mapPreservandoIdentidad = <T>(items: ReadonlyArray<T>, fn: (x: T) => T): ReadonlyArray<T> => {
+  let cambió = false
+  const next = items.map(item => {
+    const nuevo = fn(item)
+    if (nuevo !== item) cambió = true
+    return nuevo
+  })
+  return cambió ? next : items      // ← si nada cambió, el array ORIGINAL
+}
+
+/** La recursión. Vive aquí y sólo aquí: el caso homogéneo. */
+const updateCheckBoxes = (
+  items: ReadonlyArray<CheckBox>,
+  id: ContentId,
+  fn: (c: CheckBox) => CheckBox,
+): ReadonlyArray<CheckBox> =>
+  mapPreservandoIdentidad(items, c => {
+    if (c.id === id) return fn(c)
+    const children = updateCheckBoxes(c.children, id, fn)
+    return children === c.children ? c : { ...c, children }
+  })
+
+/** La raíz. No es una segunda implementación: es el adaptador de la unión. */
+export const updateContent = (
+  content: ReadonlyArray<Content>,
+  id: ContentId,
+  fn: { readonly onText: (t: Text) => Text; readonly onCheckBox: (c: CheckBox) => CheckBox },
+): ReadonlyArray<Content> =>
+  mapPreservandoIdentidad<Content>(content, item => {
+    if (item.id === id) return isCheckBox(item) ? fn.onCheckBox(item) : fn.onText(item)
+    if (!isCheckBox(item)) return item
+    const children = updateCheckBoxes(item.children, id, fn.onCheckBox)
+    return children === item.children ? item : { ...item, children }
+  })
+```
+
+**Unas 26 líneas las tres**, menos que las dos funciones de 25 que se descartaron, y sin un
+solo cast. Los nombres no son sagrados; el reparto sí.
+
+Dos razones, y la segunda es la que decidió:
+
+1. **Un solo recorrido del árbol.** Duplicar el descenso recursivo es donde se esconden los
+   bugs de esta clase de código. Y aquí el descenso carga con la invariante de identidad **en
+   cada nivel** — escrito dos veces, hay que acertar dos veces.
+2. **Los casos no-op salen gratis en vez de ser una rama más.** Mira `setChecked`:
+
+   ```ts
+   export const setChecked = (content: ReadonlyArray<Content>, id: ContentId, checked: boolean) =>
+     updateContent(content, id, {
+       onText: t => t,                                    // ← el no-op "es un Text", sin escribirlo
+       onCheckBox: c => (c.checked === checked ? c : { ...c, checked }),
+     })
+   ```
+
+   Los tres casos no-op de `setChecked` en la tabla de §9.3 —*el id no existe*, *el id es un
+   `Text`*, *ya está en ese valor*— **no aparecen como condicionales en ninguna parte**: son
+   consecuencia de la forma del helper. Siendo los no-ops la mitad de la especificación, que
+   la mitad se sostenga sola es el argumento de peso.
+
+En contra, para que quede escrito: dos funciones sueltas se leen de un vistazo, sin entender
+un objeto de callbacks. Es cierto, y se paga **una vez** al leerlas; el descenso duplicado se
+paga en cada operación que lo toque.
+
+#### Los tres tests que lo cierran
+
+Los dos del criterio de §9.5, con `assert.strictEqual`:
+
+1. `updateContent(c, idQueNoExiste, …)` **`=== c`** — el array de entrada, no una copia.
+2. `updateContent(c, idQueSíExiste, { onCheckBox: x => x, … })` **`=== c`** — el que se olvida.
+
+Y el tercero, en positivo, que es el que demuestra de verdad la copia por camino: sobre el
+árbol de la compra de §2.3, tras marcar `"Peras"`, comprobar que `"Limpieza"` **sigue siendo
+el mismo objeto** y que `content`, `"Fruta"` y `"Peras"` son nuevos. Tres objetos nuevos, ni
+uno más.
 
 ---
 
@@ -845,6 +963,154 @@ La persistencia se engancha como **suscriptor con write-behind y debounce**, esc
 las entidades marcadas como sucias. Nunca guardar en cada tecla.
 
 El CSS del prototipo se reutiliza casi tal cual.
+
+### 7.1 Tres clases de estado, no dos
+
+Es la distinción que más fácil se pasa por alto, y la que decide dónde acaba viviendo cada
+cosa:
+
+| | Qué es | Cada cuánto se cambia | Dónde vive |
+|---|---|---|---|
+| **Contenido** | las líneas, las casillas, lo marcado | constantemente | dentro de la nota, persistido |
+| **Modo de escritura** | cómo se comporta el teclado ahora mismo | **muchas veces mientras escribes una sola nota** | en el editor, en memoria, **sin persistir** |
+| **Ajustes** | tema, dónde se guarda el fichero, tamaño de letra | una vez y te olvidas | pantalla de ajustes, aparte |
+
+La fila del medio es la que no existía en este diseño hasta que apareció `ModosEscritura`. Y
+la trampa está en confundirla con la tercera: **un ajuste se busca en un menú y se cambia una
+vez al año; el modo de escritura se pulsa veinte veces haciendo la lista de la compra.** Si se
+trata como ajuste, acaba escondido en una pantalla de ajustes y es inservible. Se parece mucho
+más al pincel de una aplicación de dibujo que al control de brillo.
+
+### 7.2 `ModosEscritura`: el objeto auxiliar de la nota abierta
+
+Un selector con **tres estados en ciclo**, siempre a la vista mientras editas:
+
+```
+Texto  →  Casilla  →  Casilla hija  →  Texto  →  ...
+```
+
+Los tres tienen nombre propio a propósito: ninguno es "desactivado". Un interruptor con un
+apagado y dos encendidos obliga al usuario a preguntarse qué significa el apagado; tres
+herramientas con nombre, no.
+
+**Es un objeto auxiliar de la nota abierta, y es deliberadamente desechable:**
+
+- **nace al abrir la nota y muere al salir de ella.** No hay un modo "de la aplicación": cada
+  nota que abres empieza en *Texto*;
+- **no se persiste, y perder sus datos no tiene consecuencias.** El usuario ve en qué modo
+  está y lo cambia de un toque, así que no hay nada que recuperar;
+- por tanto **no hace falta ningún sitio donde guardar preferencias**. La persistencia (§6)
+  sigue siendo solo notas, sin un fichero de ajustes que no existía.
+
+Que sea por nota y no global no es un detalle: **un modo global te arrastraría el modo
+*Casilla* de la lista de la compra hasta la entrada del diario**, y te nacerían casillas en
+mitad de un párrafo. Es la clase de fallo que no se ve al diseñarlo y molesta cada día al
+usarlo.
+
+**Dónde NO vive, y las tres importan:**
+
+1. **No va dentro de la nota.** Sería el mismo ajuste repetido en cada una y contradiciéndose.
+2. **No va en el motor.** Al núcleo le llega `insert` con la `Position` **ya elegida**; el
+   modo es lo que el editor usa para elegirla. El núcleo no sabe que los modos existen, y así
+   debe seguir.
+3. **No va con las notas en el mismo saco.** Las notas llevan encima `Versioned` y detección
+   de conflictos; una variable desechable no necesita nada de eso, y metiéndola ahí cambiar de
+   modo marcaría notas como sucias y las reescribiría en disco (§3).
+
+> **Nombre pendiente de un detalle.** `ModosEscritura` es el nombre del **concepto**, y como
+> tal se usa en esta documentación. El identificador en el código está sin fijar: todo lo
+> demás está en inglés (`Note`, `CheckBox`, `AppState`), así que lo coherente sería
+> `WritingMode` —y en singular, porque lo que el editor guarda es **un** modo activo, no el
+> conjunto—. Cambiar la convención y pasar el código nuevo a castellano también es defendible,
+> pero entonces se decide una vez y para todo.
+
+**Qué más cabe en esa barra, y qué no.** La regla: cabe si cambia el comportamiento mientras
+escribes o mientras miras. Candidatos que ya se ven —**"al marcar una casilla, marcar también
+sus hijas"** (y aquí es exactamente donde se compone esa cascada que el dominio se niega a
+hacer, §9.3), **"esconder las marcadas"**, **"mandar las marcadas al final"**—. No cabe lo que
+es contenido (el nombre de la nota) ni lo que es ajuste de la aplicación.
+
+### 7.3 El teclado: Intro construye, el Tabulador no
+
+**Intro es quien crea la línea siguiente**, y el modo activo decide de qué clase es:
+
+| Modo | Al pulsar Intro nace… | `Position` que usa el editor |
+|---|---|---|
+| **Texto** | otra línea de texto | `root-end` |
+| **Casilla** | una casilla **hermana**, al mismo nivel | `after` |
+| **Casilla hija** | una casilla **hija**, un nivel dentro | `last-child-of` |
+
+**Con el cursor en medio de una línea, Intro la parte** (`split`): la primera mitad se queda y
+la segunda se va a la línea nueva, que nace de la clase que diga el modo.
+
+**El Tabulador solo mete un carácter de tabulación** dentro de la línea. No mueve nada, no
+anida nada, no convierte nada: es texto, como en cualquier editor.
+
+#### Retroceso al principio: dos pulsaciones, dos cosas distintas
+
+Aquí colisionan dos comportamientos que se quieren la misma tecla en la misma posición: quitar
+la casilla, y unir con la línea de arriba. **Se resuelve en secuencia**, no eligiendo uno:
+
+| Cursor | La línea es… | Retroceso hace… | Operación |
+|---|---|---|---|
+| al principio del todo | una **casilla** | se va la casilla, la línea queda como texto | `convertirEnTexto` |
+| al principio del todo | un **texto** | se une con la de arriba | `merge` |
+| en cualquier otro sitio | cualquiera | borra el carácter anterior | (ni toca el modelo) |
+
+O sea: sobre una casilla hacen falta **dos** pulsaciones para unirla con la de arriba. La
+primera le quita el cuadradito, la segunda une.
+
+```
+☐ Leche             ☐ Leche              ☐ Leche Pan
+☐ |Pan       →      |Pan          →
+                 (1ª: fuera la casilla)  (2ª: unir)
+```
+
+Es como se comporta Notion, y es coherente con el resto: **cada pulsación hace una sola cosa**,
+y ninguna se lleva por delante algo que el usuario no esté mirando.
+
+#### El botón de modo no solo elige: también actúa sobre la línea actual
+
+`ModosEscritura` no es un interruptor pasivo que solo afecte a las líneas futuras. **Al
+pulsarlo, la línea donde estás cambia en el momento**, y lo que pasa depende de dónde tengas
+el cursor:
+
+| Estás en… | Al llegar a *Casilla* pasa… |
+|---|---|
+| un texto, cursor **al principio** | la línea entera se convierte en casilla |
+| un texto, cursor **en medio** | la línea **se parte** y la segunda mitad nace como casilla |
+| una **casilla** | nada: ya es una casilla |
+
+El caso de en medio es el que pediste explícitamente:
+
+```
+Leche |y pan          Leche
+              →       ☐ y pan
+```
+
+Y no necesita ninguna operación nueva: es **`split` y luego `convertirEnCasilla`**, dos
+llamadas que compone el editor. El motor sigue sin saber que los modos existen.
+
+> **Propuesto, pendiente de confirmar.** Cuatro esquinas que el diseño de arriba deja sin
+> cubrir, con lo que haría falta que fuera:
+> - **Cursor al final de la línea** al pulsar el botón de modo → la línea se parte igual, y
+>   nace debajo una casilla vacía. Es lo útil cuando acabas un párrafo y empiezas una lista.
+> - **Ir de *Casilla* a *Texto*** con el botón, estando en una casilla → la casilla se
+>   convierte en texto, por simetría con lo que hace Retroceso.
+> - **Unir dos textos normales** (`merge` sin ninguna casilla de por medio) → funciona, como
+>   en cualquier editor. Tu frase *"si estamos en una casilla o encima nuestra hay una"* sonaba
+>   a restringirlo, y creo que no hace falta restringir nada.
+> - **Partir una casilla que tiene hijas** → las hijas se quedan con la **primera** mitad, que
+>   es la que conserva su identidad. `split` no destruye nada, así que se permite.
+
+**Y por eso no existen `indent` ni `outdent`** — el motivo está en §9.3. El nivel de una línea
+se elige **al nacer**, con el modo activo en ese momento.
+
+> **Sin cerrar.** En modo *Casilla hija*, si cada Intro creara una hija de la línea actual,
+> irías bajando un escalón por pulsación y sin `outdent` no habría forma de volver a subir. La
+> regla tiene que ser que **el modo baja un nivel una sola vez** y a partir de ahí las
+> siguientes son hermanas en ese nivel nuevo, pero está pendiente de confirmar, igual que qué
+> hace exactamente el botón para bajar un segundo nivel.
 
 ---
 
@@ -993,7 +1259,7 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   orden:
   1. **El helper de copia por camino** y sus tests de identidad. Va **primero y solo**: es la
      única pieza con dificultad real, y todo lo demás se apoya en ella.
-  2. **Las nueve operaciones de contenido** (§9.3).
+  2. **Las operaciones de contenido** (§9.3).
   3. **El tipo `Position`** (§9.4).
   4. **`core/ports/Clock.ts` e `core/ports/IdGenerator.ts`** — solo las interfaces, cuatro
      líneas, dentro del core. **Sin implementaciones:** ver §9.6.
@@ -1021,36 +1287,113 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   anidados (§7) y, con él, `src/platform/web/` con las implementaciones reales de `Clock` e
   `IdGenerator`.
 
-### 9.3 Las operaciones de contenido son nueve, no siete
+### 9.3 Las operaciones de contenido
 
-A las siete que se venían arrastrando (`setChecked`, `setText`, `insert`, `remove`, `move`,
-`indent`, `outdent`) les faltan dos:
+La lista ha cambiado dos veces y conviene ver el vaivén, porque explica por qué el documento
+decía otra cosa hasta hace nada:
 
-- **`split`** — Enter en medio de un bloque lo parte en dos.
-- **`merge`** — Retroceso al principio de un bloque lo une con el anterior.
+1. eran **siete** (`setChecked`, `setText`, `insert`, `remove`, `move`, `indent`, `outdent`);
+2. subieron a **nueve** con `split` y `merge`, sin las cuales no se puede escribir con el
+   teclado, y a **once** al aparecer las conversiones entre texto y casilla que necesita
+   `ModosEscritura` (§7.2);
+3. y bajaron al quitarse `indent` y `outdent`, que ya no tienen quien las use.
 
-Sin ellas **no se puede escribir con el teclado** en la Fase 4, que es el corazón de la app.
-Son puras de contenido, así que por el criterio de `Versioned` caen en la Fase 1. Queda
-**pendiente de confirmar** (decisión (f), en `TAREAS.md`).
+#### Por qué no existen `indent` ni `outdent`
 
-No son nueve trabajos iguales:
+Cierra de golpe las decisiones **(a)** y **(g)**, que preguntaban por el comportamiento de dos
+operaciones que han dejado de existir. **El motivo es el móvil:** en el teclado de un teléfono
+**no hay tecla Tabulador**, así que un diseño que dependa de ella es un diseño solo para
+ordenador, y esta app es multiplataforma desde el principio.
+
+En su lugar, **el nivel de una línea se elige al nacer**, con el modo activo de
+`ModosEscritura` (§7.3). El Tabulador queda para meter un carácter de tabulación y nada más.
+
+**El precio, aceptado a conciencia:** una línea creada en el nivel equivocado **no se puede
+re-anidar**. Hay que borrarla y volver a escribirla. Y conviene tener presente el filo de esa
+decisión: borrar y reescribir **en un móvil duele más que en un ordenador**, no menos, así que
+el argumento que quita `indent` no es gratis del todo. Se asume.
+
+#### Por qué tampoco existe `move`
+
+Sin `indent` ni `outdent`, a `move` solo le quedaba un trabajo: **reordenar** hermanas
+arrastrando una línea arriba o abajo. Tampoco se construye, y con eso **se cierran de golpe las
+decisiones (f) y (c)** — la (c) preguntaba qué hacer si el destino de un `move` cae dentro de
+su propio subárbol, y sin `move` no hay destino que comprobar.
+
+El motivo es el mismo que este proyecto aplica a las dependencias: **no se construye nada hasta
+que existe quien lo use.** `insert`, `split` y `merge` tienen consumidor con nombre —Intro,
+Retroceso, el botón de modo (§7.3)—. `move` no tendrá ninguno mientras no exista un gesto de
+arrastrar, y eso es una decisión de la Fase 4, con el editor delante y sabiendo si de verdad se
+echa de menos.
+
+Además tiene un precio que no se ve de primeras: **`move` obligaría a reabrir la decisión (d)**.
+Con las tres posiciones de §9.4 se puede decir "detrás de esta" pero **no "la primera del
+todo"**, y mover algo al principio de una lista es justo lo que se quiere al reordenar. Haría
+falta un cuarto caso, `before`, y añadirlo obliga a volver a pasar también la batería de
+`insert`, que comparte el tipo.
+
+**El precio de no tenerlo, escrito para que nadie lo descubra usándolo:** una lista se queda
+para siempre en el orden en que se escribió. Ni reordenar ni re-anidar. Cualquier error de
+estructura se arregla borrando y volviendo a escribir.
+
+**Y no cierra ninguna puerta.** `move` es puramente añadido: no cambia ninguna operación
+existente, no cambia el formato en disco, no obliga a migrar nada. Cuesta lo mismo dentro de
+seis meses que hoy, más el cuarto caso de `Position`. Queda anotado en `TAREAS.md` →
+*Ideas aparcadas* con lo que lo desbloquearía.
+
+#### El coste no está repartido por igual
 
 | Operación | Coste | Por qué |
 |---|---|---|
 | `setText`, `setChecked` | trivial | encima del helper; no cambian la estructura |
 | `insert`, `remove` | medio | cambian un array, en un solo nivel |
-| **`move`** | **alto** | **aquí está el trabajo real de la fase** |
-| `indent`, `outdent` | ~3 líneas | son `move` disfrazado |
-| `split`, `merge` | por confirmar | decisión (f) |
+| `convertirEnCasilla`, `convertirEnTexto` | medio | las que pide el botón de modo (§7.2), y `convertirEnTexto` también el Retroceso al principio de una casilla (§7.3) |
+| `split`, `merge` | medio | **confirmadas.** Intro en medio de una línea y Retroceso al principio. `split` es además la mitad del botón de modo cuando el cursor está en medio |
+| ~~`indent`, `outdent`~~ | — | **eliminadas**, ver arriba |
+| ~~`move`~~ | — | **eliminada**, ver abajo |
 
-`indent` es "muévete a última hija de tu hermano anterior" y `outdent` es "muévete a hermano
-siguiente de tu madre". Las dos son un `move` con una `Position` calculada, y nada más.
-Construirlas aparte sería escribir **tres veces** el mismo recorrido del árbol, que es
-justamente donde se esconden los bugs de esta clase de código.
+**Son ocho, y ninguna pasa de dificultad media.** Eso cierra la decisión (f), y con ella la
+Fase 1 no tiene ni una pregunta abierta.
 
-Ojo con `outdent`: qué pasa con los hermanos que quedaban por debajo de la casilla que sale
-(¿se quedan donde están, o se van con ella?) **está sin decidir** — es la decisión **(g)** de
-`TAREAS.md`.
+#### Qué línea conserva su identidad, operación por operación
+
+Tres operaciones producen o destruyen líneas, y en las tres hay que decir **cuál de las líneas
+implicadas es la de antes** y cuál es nueva. No es un detalle de implementación: de esto
+depende si la operación necesita un `ContentId` inyectado, y depende también que el editor no
+te borre el cursor a media palabra —reconcilia por `data-id` (§7), así que una línea que cambia
+de id se destruye y se vuelve a crear en el DOM—.
+
+La regla, una para las tres: **sobrevive con su identidad la línea que ya estaba ahí.**
+
+| Operación | Qué conserva su id | Qué es nuevo |
+|---|---|---|
+| `convertirEnCasilla` / `convertirEnTexto` | **la propia línea: mismo `ContentId`**. Es la misma línea con otra pinta | nada — **por eso no necesitan `IdGenerator`** |
+| `split` | la **primera** mitad: mismo id, y se queda con las hijas y con su `checked` | la **segunda** mitad, con id nuevo por parámetro y **`checked: false`**: es una tarea que nadie ha hecho todavía |
+| `merge` | la línea **de arriba**, la que absorbe: conserva id, clase, `checked` e hijas; su texto pasa a ser `arriba.text + abajo.text` | nada — la de abajo desaparece |
+
+Dos consecuencias de la fila de `merge` que van en la especificación porque si no, no se
+testean:
+
+- **Los textos se pegan sin añadir espacio.** `partir` y `unir` la misma línea tienen que
+  devolver **exactamente** lo que había antes. Un espacio de cortesía al unir haría que partir
+  y unir repetidamente fuera ensuciando el texto. Es una propiedad comprobable: partir por
+  cualquier punto y volver a unir devuelve el original.
+- **La línea de abajo siempre es un `Text` cuando llega la unión**, porque sobre una casilla la
+  primera pulsación de Retroceso ya le ha quitado el cuadradito (§7.3). El caso "una casilla se
+  une a un texto" no puede darse desde el teclado.
+
+Y de la fila de `split`: **la mitad nueva nace sin marcar**, aunque la original estuviera
+marcada. Los dos errores posibles no cuestan lo mismo — una tarea que aparece pendiente y ya
+estaba hecha la ves y la marcas; una tarea que aparece **hecha sin haberla hecho** desaparece
+de tu radar y no te enteras.
+
+#### `split` es la primera —y única— operación que necesita un id nuevo
+
+Al partir una línea nacen dos, y la segunda necesita su propio `ContentId`. Pero **el dominio
+no genera IDs** —eso viene del puerto `IdGenerator`, que vive fuera del core (§4)—, así que
+`split` lo recibe **ya hecho por parámetro**, exactamente igual que hacen hoy los constructores
+de `Content.ts`. Y es **la única** de las ocho que lo necesita: las conversiones reutilizan el
+id de la línea, y `merge` no crea nada. Conviene no descubrirlo a mitad de implementarla.
 
 **Los casos no-op son la mitad de la especificación.** Si "una operación que no aplica no hace
 nada", enumerar *cuándo* no aplica es la mitad del trabajo de especificarla. Cada fila
@@ -1061,23 +1404,62 @@ necesita su test explícito:
 | `setText` | el id no existe · el texto ya es ese |
 | `setChecked` | el id no existe · el id es un `Text` (no tiene `checked`) · ya está en ese valor |
 | `insert` | el destino no existe · el destino es un `Text` y se pide meter dentro |
-| `remove` | el id no existe |
-| `move` | el id no existe · el destino no existe · el destino está dentro del propio subárbol · ya está ahí |
-| `indent` | es el primero (no hay hermano anterior) · el hermano anterior es un `Text` · el bloque es un `Text` |
-| `outdent` | ya está en la raíz |
+| `remove` | el id no existe · **es una casilla con hijas** (decisión (b), cerrada: se borra de abajo arriba) |
+| `split` | el id no existe · el punto de corte cae fuera de la línea. **Partir por el extremo NO es no-op:** deja una mitad vacía, que es justo lo que quieres al empezar una lista |
+| `merge` | el id no existe · es la primera línea (no hay nada encima) · **la línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que misma regla que `remove` |
+| `convertirEnCasilla` | el id no existe · ya es una casilla |
+| `convertirEnTexto` | el id no existe · ya es un texto · **es una casilla con hijas** (un texto no puede tener nada colgando: se convierte de abajo arriba, igual que se borra) |
 
-El caso de `move` con destino dentro del propio subárbol es una trampa: es no-op por
-convención, pero **hay que detectarlo activamente** o generas un ciclo y la rama entera se
-sale del árbol. Es el bug clásico de los outliners.
+**Ocho filas, y las ocho necesitan su test explícito.** Fíjate en que la mitad de ellas dicen
+lo mismo con otras palabras —*es una casilla con hijas*—: es la regla de (b) propagándose sola
+a todo lo que hace desaparecer una línea.
 
 **Decisión ya cerrada:** marcar una casilla **NO** arrastra a sus hijas. La primitiva es
 deliberadamente mínima; la cascada es decisión de producto y se compone en la UI llamando a
 `setChecked` sobre los descendientes.
 
+#### `remove` no borra una casilla con hijas
+
+Era la decisión (b), y está cerrada: **`remove` sobre una casilla con hijas es un no-op.** Se
+borra de abajo arriba o no se borra. Sólo salen del árbol las hojas —y los `Text`, que no
+pueden tener hijas—.
+
+Es la misma forma que la decisión de arriba, y por el mismo motivo: **la primitiva es mínima y
+la cascada se compone**. Ninguna operación del dominio hace desaparecer contenido que el
+usuario no esté mirando. Un borrado accidental de una rama de cuarenta casillas no es un
+`undo` más: es la clase de pérdida que hace que dejes de fiarte de la app.
+
+Y de paso resuelve el bloqueo que tenía la primitiva B (§5.4): si `remove` sólo saca hojas,
+**nunca tiene que decidir qué hacer con un subárbol ni reparentar nada**. Se queda en "quita
+este id del array donde vive", que es la versión más simple posible.
+
+Se descartaron las dos alternativas: llevarse el subárbol entero (rápido, pero es justo la
+pérdida silenciosa que se quiere evitar) y promocionar las hijas al nivel de la madre
+(conserva el contenido, pero reordena el documento por debajo del cursor sin que nadie lo
+haya pedido).
+
+**Dos consecuencias que hay que tener presentes al implementar, o esto se rompe solo:**
+
+1. **La regla se propaga a `merge`, y ahí es fácil olvidarla.** Absorber una línea la hace
+   desaparecer igual que borrarla, así que `merge` sobre una línea con hijas tampoco hace nada.
+   Está en su fila de la tabla de arriba. *(Y si algún día llega `move`, ojo: mover **no**
+   pierde nada, así que la guarda es de `remove`, no de la extracción — un `move` escrito como
+   `remove` + `insert` heredaría la guarda y dejaría de mover casillas con hijas, en silencio.)*
+2. **En la Fase 4 hace falta una forma explícita de borrar una rama**, o "seleccionar y pulsar
+   Supr" no hará nada y se leerá como un fallo. Se compone recorriendo el subárbol **de las
+   hojas hacia arriba** y aplicando `remove` en ese orden. Ojo: se pliegan las N llamadas en
+   **una sola acción** desde el caso de uso; si se despachan una a una, cada nodo borrado
+   estampa `updatedAt`, notifica al `Store` y escribe a disco (§3). Lo mismo vale para la
+   cascada de `setChecked`.
+
+Tampoco vale colar un borrado con hijas por la puerta de atrás de `merge`: es una operación
+distinta y responde por lo suyo — y responde igual, porque absorber una línea que tiene hijas
+las dejaría colgando de nada. Misma regla, escrita en su propia fila de la tabla de no-ops.
+
 ### 9.4 El tipo `Position`: el vocabulario del "dónde"
 
-Falta una pieza en el modelo que hasta ahora no se había nombrado: `insert`, `move`, `indent`
-y `outdent` necesitan expresar *dónde* va algo, y el modelo solo sabe direccionar **nodos**
+Falta una pieza en el modelo que hasta ahora no se había nombrado: `insert` necesita expresar
+*dónde* va algo, y el modelo solo sabe direccionar **nodos**
 (`ContentId`), no **posiciones**. Un id dice "esta casilla"; no dice "justo detrás de esta
 casilla".
 
@@ -1088,15 +1470,32 @@ type Position =
   | { readonly at: "last-child-of"; readonly id: ContentId }
 ```
 
-Con esto `insert(content, bloque, pos)` y `move(content, id, pos)` comparten vocabulario en
-vez de inventarse cada uno el suyo, e `indent`/`outdent` se reducen a un `move`:
-
-- `indent(id)` → `move(id, { at: "last-child-of", id: hermanoAnterior })`
-- `outdent(id)` → `move(id, { at: "after", id: madre })`
+Con esto `insert(content, bloque, pos)` tiene un vocabulario para el "dónde" en vez de una
+firma inventada para el caso.
 
 Es una unión discriminada por `at`, por el mismo motivo que `Content` lo es por `type`: para
-que el `switch` que la consuma sea exhaustivo. **Los casos exactos están sin decidir**
-(decisión (d)).
+que el `switch` que la consuma sea exhaustivo.
+
+**Son esos tres casos y no más.** Era la decisión (d), y está cerrada.
+
+**Y quedó confirmada por segunda vez desde el otro extremo del diseño:** los tres casos
+resultaron ser, uno a uno, los tres estados de `ModosEscritura` (§7.3) — `root-end` es el modo
+*Texto*, `after` es *Casilla*, `last-child-of` es *Casilla hija*. No falta ninguno ni sobra
+ninguno. Ojo, eso sí: cuando se decidió, los consumidores previstos eran `insert`, `move`,
+`indent` y `outdent`; hoy las tres últimas no existen y **el único consumidor es `insert`**.
+
+Los candidatos que quedan fuera —`before`, `first-child-of`, `root-start`— no son
+descabellados; se descartan por coste: **cada caso de `Position` es una rama más que testear**
+en quien la consuma. Y las operaciones se expresan enteras con los tres de arriba: `insert` y
+`split` colocan detrás o dentro según el modo, y ninguna pide los otros tres.
+
+Lo que **sí** los pediría es el arrastrar y soltar de la Fase 4, donde soltar *encima* de la
+primera casilla de una lista no se puede expresar con `after`. Ese es el disparador concreto
+para reabrirlo, y **va en el mismo paquete que `move`**: reordenar arrastrando pide "la primera
+del todo", que con estos tres casos no se puede decir. Conviene saber lo que costará entonces:
+añadir un caso obliga a **volver a pasar entera la batería de tests de `insert`**, no solo a
+escribir la rama nueva. Se acepta ese coste futuro antes que testear hoy ramas que quizá no se
+usen nunca.
 
 ### 9.5 Definición de "Fase 1 terminada"
 
@@ -1105,7 +1504,8 @@ contrato*. Sin criterio, "terminada" acaba queriendo decir "me he cansado". Son 
 
 1. El helper devuelve el array de entrada **intacto** en sus dos casos: id ausente, y
    transformación que no cambia nada.
-2. Las nueve operaciones existen.
+2. **Las ocho operaciones existen** (§9.3): `setText`, `setChecked`, `insert`, `remove`,
+   `split`, `merge`, `convertirEnCasilla` y `convertirEnTexto`.
 3. Cada una tiene tests de **valor** y de **identidad** (`assert.strictEqual`, nunca
    `deepEqual`).
 4. Cada caso no-op de la tabla está testeado explícitamente.

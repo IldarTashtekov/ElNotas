@@ -41,8 +41,11 @@ casos de uso, ni persistencia, ni UI nueva, ni nada de Planes. Tampoco existen l
 > antes el modelo. El diseño sigue documentado en `ARCHITECTURE.md`, pero **hoy no hay ni una
 > línea de ella en el repo**. No la des por hecha: compruébalo.
 
-⚠️ **`npm test` pasa en verde sin comprobar nada.** No hay ningún test, y `node --test` sin
-ficheros sale con código 0 (`1..0`). Mientras siga así, "los tests pasan" no significa nada.
+⚠️ **`npm run check` está EN ROJO a propósito, y no es una avería.** Sigue sin haber ni un
+test, y ahora eso **falla** en vez de pasar en falso: `tools/require-tests.mjs` sale con código
+1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin ficheros imprime
+`1..0` y sale con código 0. Se pondrá en verde con la primera prueba, que es la del helper.
+No lo "arregles" quitando el guardián.
 Anotado en `TAREAS.md`.
 
 ## Estructura y límites
@@ -145,12 +148,39 @@ duda**; no la cambies por tu cuenta.
 - **Dependencias solo cuando la fase las necesita.** No instalar "para tenerlo listo".
 - **La Fase 1 termina por el criterio de `Versioned`:** lo que opera por debajo de `Versioned`
   es Fase 1; producir entidades es Fase 2.
+- **El helper de copia por camino son DOS primitivas:** A (transformar un nodo) y B
+  (transformar el array contenedor). La A va parametrizada por `onText`/`onCheckBox` con la
+  recursión escrita **una sola vez**, no dos funciones raíz/profundidad. §5.4.
+- **`Position` tiene tres casos** —`root-end`, `after`, `last-child-of`— **y ninguno más**.
+  Uno por cada estado de `ModosEscritura`, y su único consumidor es `insert`. §9.4.
+- **Las operaciones de contenido son OCHO** y ninguna pasa de dificultad media: `setText`,
+  `setChecked`, `insert`, `remove`, `split`, `merge`, `convertirEnCasilla`, `convertirEnTexto`.
+  §9.3.
+- **Tampoco existe `move`.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y aquí no
+  se construye lo que no tiene consumidor. Consecuencia asumida: **una lista se queda en el
+  orden en que se escribió**; reordenar es borrar y reescribir. Aparcada en `TAREAS.md`. §9.3.
+- **No existen `indent` ni `outdent`.** En el teclado de un móvil no hay Tabulador, y la app es
+  multiplataforma. El nivel de una línea **se elige al nacer**, con el modo activo de
+  `ModosEscritura`; el Tabulador solo mete un carácter. Precio aceptado: una línea en el nivel
+  equivocado se borra y se reescribe. §9.3.
+- **Retroceso al principio de una casilla hace DOS cosas, en dos pulsaciones:** la primera
+  quita la casilla (`convertirEnTexto`), la segunda une con la línea de arriba (`merge`). Cada
+  pulsación, una sola cosa. §7.3.
+- **`ModosEscritura` es un objeto auxiliar de la nota abierta**, con tres estados en ciclo
+  (*Texto → Casilla → Casilla hija*). **No se persiste** y muere al salir de la nota: no va
+  dentro de `Note`, no va en el core —al núcleo le llega `insert` con la `Position` ya
+  elegida— y no necesita fichero de preferencias. §7.2.
+- **`remove` NO borra una casilla con hijas: es no-op.** Se borra de abajo arriba. Ninguna
+  operación del dominio hace desaparecer contenido que el usuario no esté mirando; la cascada
+  se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertirEnTexto`**:
+  todo lo que hace desaparecer una línea se niega si tiene hijas. §9.3.
 
 ## Fuera de alcance por ahora
 
 No empezar nada de esto sin pedirlo explícitamente. El motivo de cada uno y qué lo
 desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 
+- **Reordenar y re-anidar líneas** (`move`, `indent`, `outdent`)
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
 - El editor de grafos de los **Planes**
@@ -161,24 +191,28 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 
 - **Fase 0 — Andamiaje. ✅ HECHA.**
 - **Fase 1 — Dominio puro. 🟡 EN CURSO.** Hecho el modelo de datos. Falta, en este orden: el
-  **helper de copia por camino** (primero y solo), el tipo **`Position`**, las **nueve
-  operaciones** de contenido (nueve y no siete: faltaban `split` y `merge`; **pendiente de
-  confirmar**, decisión (f)), los puertos **`Clock`** e **`IdGenerator`** (solo interfaces), y
-  una **rebanada vertical** (`Store` + reducer de un caso + caso de uso + suscriptor que
-  cuente). Detalle en `TAREAS.md`; criterio de cierre en `ARCHITECTURE.md` §9.5.
+  **helper de copia por camino** (primero y solo; es la **primitiva A**, y la **B** va con las
+  operaciones estructurales — §5.4), el tipo **`Position`**, las **ocho operaciones de
+  contenido**, los puertos
+  **`Clock`** e **`IdGenerator`** (solo interfaces), y una **rebanada vertical** (`Store` +
+  reducer de un caso + caso de uso + suscriptor que cuente). Detalle en `TAREAS.md`; criterio
+  de cierre en `ARCHITECTURE.md` §9.5.
 - **Fase 2 — Acciones, puertos de persistencia y memory.**
 - **Fase 3 — Fichero local.**
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
 
-**Siete decisiones de la Fase 1 siguen abiertas** (a)–(g) y **no se resuelven por iniciativa
-propia**: están en `TAREAS.md` → *Sin decidir*. Si te topas con una, pregunta.
+**Las siete decisiones de la Fase 1 (a)–(g) están CERRADAS.** La fase está especificada entera
+y se puede escribir de un tirón; el criterio de cierre es `ARCHITECTURE.md` §9.5. Las
+respuestas y su porqué están en `TAREAS.md` → *Sin decidir*, que se conserva como registro. Lo
+que sigue abierto es **de la Fase 4** (cuatro esquinas del teclado, el escalón de anidamiento,
+el nombre en código de `ModosEscritura`) y no bloquea nada de la Fase 1.
 
 ## Comandos
 
 ```bash
 npm run check           # typecheck app + verja del core + tests. Esto antes de commit.
 
-npm test                # compila a tmp-test/ y lanza node --test
+npm test                # limpia tmp-test/, compila, EXIGE que haya pruebas, y lanza node --test
 npm run typecheck       # tsc de la app (excluye tests)
 npm run typecheck:core  # LA VERJA: falla si el core toca plataforma
 ```
