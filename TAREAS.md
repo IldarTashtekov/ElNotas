@@ -17,12 +17,12 @@ aparcada.
 En este orden. El helper va primero y solo: es la única pieza con dificultad real y todo lo
 demás se apoya en ella.
 
-- [ ] **El helper de copia por camino — primitiva A, "transformar un nodo".** Decidida su
-      forma en `ARCHITECTURE.md` §5.4: `mapPreservandoIdentidad`, un `updateCheckBoxes`
-      recursivo y un `updateContent` de raíz parametrizado por `onText`/`onCheckBox`. Unas 26
-      líneas. Con sus tres tests de identidad (`assert.strictEqual`): devuelve el array de
-      entrada **intacto** con id ausente y con transformación que no cambia nada —éste es el
-      que se olvida—, y comparte por referencia la rama no tocada.
+- [x] **El helper de copia por camino — primitiva A, "transformar un nodo".** ✅ Hecho, en
+      `src/core/domain/updateContent.ts`: `mapPreservingIdentity`, un `updateCheckBoxes`
+      recursivo (privado) y un `updateContent` de raíz parametrizado por `onText`/`onCheckBox`.
+      **9 pruebas en verde**, y verificadas al revés: rompiendo la invariante a propósito por
+      sus dos sitios, caen 6 y 5 respectivamente. **No se exporta por `index.ts`** a propósito:
+      es maquinaria interna, y lo que consumirán `ui/` y `storage/` son las operaciones.
 - [ ] **La primitiva B, "transformar el array contenedor"** — la que usan `insert`, `remove`,
       `split` y `merge`. Sin reparentado: se queda en quitar un id de su array o meter algo en
       él. **La extracción va siempre con la guarda** de las casillas con hijas, porque sus dos
@@ -76,9 +76,8 @@ documentación**.
       sobra**, sólo emite, así que una prueba borrada dejaba su `.js` atrás y `node --test`
       seguía ejecutándola. Pruebas fantasma de código que ya no existe, y pruebas renombradas
       corriendo dos veces.
-- [ ] ⚠️ **`npm run check` está EN ROJO a propósito** hasta que exista la primera prueba. No
-      es una avería: es el guardián haciendo su trabajo. Se pone en verde con el primer
-      `*.test.ts`, que será el del helper.
+- [x] ✅ **`npm run check` vuelve a estar en verde**, y ahora significa algo: 9 pruebas
+      ejecutándose de verdad.
 - [ ] **Un `grep` en `npm run check` que falle ante `Date.now()`, `Math.random()` o
       `new Date(` en `src/core`** (excluyendo `**/*.test.ts`). Tapa el único hueco de la verja
       de pureza: `Date` y `Math` están en `lib.es5.d.ts`, o sea dentro de `lib: ["ES2020"]`, y
