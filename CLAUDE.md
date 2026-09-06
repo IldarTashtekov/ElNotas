@@ -22,7 +22,7 @@ pasa, compruébalo antes: `find src -name '*.ts' | sort`, `npm run check`, `git 
 En `src/` **conviven dos cosas** y no hay que confundirlas:
 
 - **`src/core/` — la arquitectura nueva.** Dominio puro. **Es la referencia** de cómo se
-  hacen las cosas aquí, aunque hoy solo contenga el modelo de datos.
+  hacen las cosas aquí. Hoy tiene el modelo, el helper, las ocho operaciones y los puertos.
 - **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
@@ -36,13 +36,14 @@ código y ~960 de pruebas, todo en `src/core/domain/`:
 - **el helper de copia por camino, con sus dos primitivas** — `updateContent.ts` (A:
   transformar un nodo) y `updateContainerOf.ts` (B: transformar el contenedor de una línea).
   **Maquinaria interna: NO salen por `index.ts`**;
-- **seis de las ocho operaciones**, en `operations.ts` y exportadas: `setText`, `setChecked`,
-  `insert`, `remove`, `convertToCheckBox`, `convertToText`.
+- **las OCHO operaciones**, en `operations.ts` y todas exportadas: `setText`, `setChecked`,
+  `insert`, `remove`, `convertToCheckBox`, `convertToText`, `split`, `merge`;
+- **los dos puertos** en `src/core/ports/`: `Clock` e `IdGenerator`, **sólo las interfaces**.
 
-**Lo que NO existe todavía:** `split` y `merge`, los puertos (`Clock`, `IdGenerator`), el
-reducer, el `Store`, los casos de uso, la persistencia, la UI y todo lo de Planes. Tampoco
-existen las carpetas `core/ports/`, `core/app/`, `core/migrations/`, `src/storage/`, `src/ui/`
-ni `src/platform/`.
+**Lo que NO existe todavía:** el reducer, el `Store`, los casos de uso, la persistencia, la UI
+y todo lo de Planes. Tampoco las implementaciones de los puertos —vivirían en `src/platform/`,
+que no nace hasta la Fase 4— ni las carpetas `core/app/`, `core/migrations/`, `src/storage/`,
+`src/ui/` ni `src/platform/`.
 
 **`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
 con código 1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin
@@ -57,8 +58,8 @@ pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no va
 ```
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
-│   ├── domain/    # ← modelo + Position + helper + 6 de las 8 operaciones
-│   ├── ports/     # (F1) Clock, IdGenerator · (F2) los de persistencia
+│   ├── domain/    # ← modelo + Position + helper + las 8 operaciones
+│   ├── ports/     # ← Clock e IdGenerator (solo interfaces) · (F2) los de persistencia
 │   ├── app/       # (F1) Store + reducer con UN caso · (F2) el catálogo completo
 │   ├── migrations/# (F2)
 │   └── index.ts

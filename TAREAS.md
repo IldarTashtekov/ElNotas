@@ -64,8 +64,13 @@ demás se apoya en ella.
 - [x] **Un test explícito por cada caso no-op** de la tabla de `ARCHITECTURE.md` §9.3. ✅
       Hecho sobre la marcha, operación por operación, con `assert.strictEqual`. Y cada guarda
       verificada **rompiéndola a propósito** para comprobar que la prueba salta.
-- [ ] **`core/ports/Clock.ts` y `core/ports/IdGenerator.ts`** — solo las interfaces, cuatro
-      líneas, dentro del core. Sin implementaciones: no hacen falta hasta la Fase 4.
+- [x] **`core/ports/Clock.ts` y `core/ports/IdGenerator.ts`** — ✅ Hechos: sólo las interfaces,
+      y exportadas por `index.ts` porque quien las implementa vive fuera del core. Sin
+      implementaciones, a propósito: vivirían en `src/platform/`, que no nace hasta la Fase 4,
+      y una prueba se fabrica su reloj en una línea. `IdGenerator` devuelve un `string` pelado
+      y quien llama lo marca con el constructor que toque: el generador no sabe qué clase de
+      id estás creando. **Sin pruebas propias**: son interfaces, no hay comportamiento que
+      comprobar. Lo que sí se verificó a mano es la verja (ver la tarea de abajo).
 - [ ] **La rebanada vertical:** `Store`, un reducer con un único caso (`set-checked`), un caso
       de uso, y un suscriptor de prueba que cuente notificaciones. Debe demostrar que un
       `set-checked` redundante **no notifica y no toca `updatedAt`**.
@@ -96,6 +101,9 @@ documentación**.
       de pureza: `Date` y `Math` están en `lib.es5.d.ts`, o sea dentro de `lib: ["ES2020"]`, y
       **compilan** dentro del core. `IdGenerator` lo protege el compilador; `Clock` hoy solo
       lo protege la convención.
+      **Recomprobado el 2026-09-06** con un fichero desechable en `src/core/ports/`:
+      `crypto.randomUUID()` da `TS2304 Cannot find name 'crypto'`, y `Date.now()` **compila
+      sin una queja**. El hueco sigue exactamente donde estaba.
 - [ ] **Corregir el comentario de `src/core/domain/Versioned.ts:16`**, que afirma que
       `updatedAt` viene del puerto `Clock` "nunca de `Date.now()` — dentro del core eso no
       compila". La primera mitad es la regla y sigue en pie; **la segunda es falsa** y

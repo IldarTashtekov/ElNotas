@@ -42,6 +42,10 @@ export { checkBox, isCheckBox, isText, text } from "./domain/Content"
 export type { Position } from "./domain/Position"
 export { after, lastChildOf, rootEnd } from "./domain/Position"
 
+/* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
+export type { Clock } from "./ports/Clock"
+export type { IdGenerator } from "./ports/IdGenerator"
+
 /* Operaciones sobre el contenido de una nota */
 export {
   convertToCheckBox,
