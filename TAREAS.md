@@ -43,8 +43,10 @@ demás se apoya en ella.
   - [x] `setText`, `setChecked` — ✅ Hechas, en `src/core/domain/operations.ts` y exportadas
         por `index.ts`. **12 pruebas**, con las cinco filas de no-op de §9.3 cubiertas y una
         explícita de que `setChecked` **no arrastra a las hijas**.
-  - [ ] `insert`, `remove` — coste medio. `remove` **es no-op sobre una casilla con hijas**
-        (decisión (b), cerrada): se borra de abajo arriba o no se borra.
+  - [x] `insert`, `remove` — ✅ Hechas. **19 pruebas.** `remove` es no-op sobre una casilla con
+        hijas (decisión (b)). A `insert` se le añadió una fila de no-op que no estaba en la
+        tabla: **id repetido**, porque dos líneas con el mismo id hacen que toda operación
+        posterior actúe siempre sobre la primera y jamás sobre la segunda.
   - [ ] `convertirEnCasilla`, `convertirEnTexto` — las que pide el botón de `ModosEscritura`
         (§7.2). `convertirEnTexto` sobre una casilla con hijas es no-op, por la misma razón
         que `remove`: un texto no puede tener nada colgando.

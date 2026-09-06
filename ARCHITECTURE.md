@@ -1424,12 +1424,18 @@ necesita su test explícito:
 |---|---|
 | `setText` | el id no existe · el texto ya es ese |
 | `setChecked` | el id no existe · el id es un `Text` (no tiene `checked`) · ya está en ese valor |
-| `insert` | el destino no existe · el destino es un `Text` y se pide meter dentro · **se pide meter un texto suelto en una lista de hijas** — no cabe, y con la primitiva B partida en dos ni siquiera compila |
+| `insert` | el destino no existe · el destino es un `Text` y se pide meter dentro · **se pide meter un texto suelto en una lista de hijas** — no cabe, y con la primitiva B partida en dos ni siquiera compila · **ya existe una línea con ese id** (ver abajo) |
 | `remove` | el id no existe · **es una casilla con hijas** (decisión (b), cerrada: se borra de abajo arriba) |
 | `split` | el id no existe · el punto de corte cae fuera de la línea. **Partir por el extremo NO es no-op:** deja una mitad vacía, que es justo lo que quieres al empezar una lista |
 | `merge` | el id no existe · es la primera línea **de la nota** (no hay nada encima, ni hermana ni madre) · **la línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que misma regla que `remove` |
 | `convertirEnCasilla` | el id no existe · ya es una casilla |
 | `convertirEnTexto` | el id no existe · ya es un texto · **es una casilla con hijas** (un texto no puede tener nada colgando: se convierte de abajo arriba, igual que se borra) · **es una casilla anidada** — un texto sólo puede vivir en la raíz, y sin `outdent` no hay forma de hacerle sitio |
+
+**El id repetido en `insert` no estaba en esta tabla**, y se añadió al implementarla. Merece
+su párrafo porque el fallo que evita es de los que no se ven: dos líneas con el mismo id no
+rompen nada de inmediato, pero a partir de ahí **toda operación sobre ese id actúa siempre
+sobre la primera coincidencia y jamás sobre la segunda**. Marcas una casilla y se marca otra.
+Detectarlo cuesta un recorrido del árbol; convivir con ello, mucho más.
 
 **Ocho filas, y las ocho necesitan su test explícito.** Fíjate en que la mitad de ellas dicen
 lo mismo con otras palabras —*es una casilla con hijas*—: es la regla de (b) propagándose sola

@@ -16,7 +16,10 @@
  */
 
 import type { Content } from "./Content"
+import { isCheckBox } from "./Content"
 import type { ContentId } from "./Ids"
+import type { Position } from "./Position"
+import { updateContainerOf } from "./updateContainerOf"
 import { updateContent } from "./updateContent"
 
 /* ───────────────────────── Sin tocar la estructura ─────────────────────────
@@ -62,4 +65,109 @@ export const setChecked = (
   updateContent(content, id, {
     onText: (block) => block,
     onCheckBox: (block) => (block.checked === checked ? block : { ...block, checked }),
+  })
+
+/* ──────────────────────────── Cambiando la estructura ────────────────────────────
+    Las que hacen que una lista crezca o mengüe. Se apoyan en la primitiva B
+    (`updateContainerOf`), salvo `insert` como hija, que resulta ser la A. */
+
+/** ¿Existe ya esa línea en el árbol, a cualquier profundidad? */
+const existsIn = (items: ReadonlyArray<Content>, id: ContentId): boolean =>
+  items.some((item) => item.id === id || (isCheckBox(item) && existsIn(item.children, id)))
+
+/** Mete el bloque justo detrás de `afterId`. Lista intacta si `afterId` no está. */
+const insertAfter = <T extends Content>(
+  items: ReadonlyArray<T>,
+  afterId: ContentId,
+  block: T,
+): ReadonlyArray<T> => {
+  const index = items.findIndex((item) => item.id === afterId)
+  if (index === -1) return items
+  return [...items.slice(0, index + 1), block, ...items.slice(index + 1)]
+}
+
+/**
+ * Mete un bloque en el sitio que diga la posición.
+ *
+ * **No hace nada si:** el destino no existe · el destino es un `Text` y se pide
+ * meter dentro · se pide meter un texto suelto en una lista de hijas · **ya
+ * existe una línea con ese id**.
+ *
+ * El último no estaba en la tabla original y se añadió al implementarla: un id
+ * repetido corrompe el árbol **en silencio**, porque a partir de ahí toda
+ * operación sobre ese id actúa siempre sobre la primera coincidencia y jamás
+ * sobre la segunda. Sale más barato negarse que detectarlo después.
+ */
+export const insert = (
+  content: ReadonlyArray<Content>,
+  block: Content,
+  position: Position,
+): ReadonlyArray<Content> => {
+  if (existsIn(content, block.id)) return content
+
+  switch (position.at) {
+    case "root-end":
+      return [...content, block]
+
+    case "after": {
+      const targetId = position.id
+      return updateContainerOf(content, targetId, {
+        onRoot: (items) => insertAfter(items, targetId, block),
+        onParent: (parent) => {
+          // Un texto suelto no cabe entre hijas. Sin este descarte no compila.
+          if (!isCheckBox(block)) return parent
+          const children = insertAfter(parent.children, targetId, block)
+          return children === parent.children ? parent : { ...parent, children }
+        },
+      })
+    }
+
+    case "last-child-of":
+      // Aquí no hace falta la primitiva B: el destino no es el contenedor de
+      // nadie todavía, es el propio nodo al que le crecen las hijas.
+      return updateContent(content, position.id, {
+        onText: (target) => target, // un texto no tiene hijas donde meter nada
+        onCheckBox: (target) =>
+          isCheckBox(block) ? { ...target, children: [...target.children, block] } : target,
+      })
+
+    default: {
+      // Exhaustividad: si `Position` gana un caso algún día, esto deja de
+      // compilar en vez de tratarlo en silencio (§9.4).
+      const nunca: never = position
+      return nunca
+    }
+  }
+}
+
+/** Quita esa línea de la lista, salvo que sea una casilla con hijas. */
+const removeFrom = <T extends Content>(
+  items: ReadonlyArray<T>,
+  id: ContentId,
+): ReadonlyArray<T> => {
+  const target = items.find((item) => item.id === id)
+  if (target === undefined) return items
+  if (isCheckBox(target) && target.children.length > 0) return items
+  return items.filter((item) => item.id !== id)
+}
+
+/**
+ * Saca una línea de la nota.
+ *
+ * **No hace nada si:** el id no existe · **es una casilla con hijas**. Lo
+ * segundo es decisión cerrada (§9.3): se borra de abajo arriba o no se borra.
+ * Ninguna operación del dominio hace desaparecer contenido que el usuario no
+ * esté mirando, y borrar una rama de cuarenta casillas por accidente no es un
+ * *deshacer* más.
+ */
+export const remove = (
+  content: ReadonlyArray<Content>,
+  id: ContentId,
+): ReadonlyArray<Content> =>
+  updateContainerOf(content, id, {
+    onRoot: (items) => removeFrom(items, id),
+    onParent: (parent) => {
+      const children = removeFrom(parent.children, id)
+      return children === parent.children ? parent : { ...parent, children }
+    },
   })
