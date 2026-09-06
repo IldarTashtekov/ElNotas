@@ -13,7 +13,8 @@
     "test": "node tools/clean-tmp-test.mjs && tsc -p tsconfig.test.json && node tools/require-tests.mjs && node --conditions=compiled --test tmp-test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:core": "tsc -p src/core/tsconfig.json --noEmit",
-    "check": "npm run typecheck && npm run typecheck:core && npm test"
+    "check:purity": "node tools/check-core-purity.mjs",
+    "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm test"
   },
   "repository": {
     "type": "git",

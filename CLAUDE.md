@@ -72,10 +72,12 @@ src/
   `src/core/tsconfig.json` va sin `DOM` en `lib` y con `"types": []`, así que dentro del core
   un `document.` o un `crypto.randomUUID()` **no compila**. Si necesitas IDs, hora o azar,
   **inyéctalos por puerto** (`IdGenerator`, `Clock`). Los tests quedan excluidos de la verja.
-- ⚠️ **La verja cubre los IDs, pero no el reloj.** `Date.now()`, `new Date()` y
-  `Math.random()` **sí compilan** en el core: están en `lib.es5.d.ts`, dentro de
-  `lib: ["ES2020"]`. O sea, **`IdGenerator` lo protege el compilador; `Clock` solo la
-  convención.** No escribas que el typecheck bloquea el reloj, porque es falso.
+- **El reloj y el azar los tapa un guardián aparte, no el compilador.** `Date.now()`,
+  `new Date()` y `Math.random()` **sí compilan** en el core —están en `lib.es5.d.ts`, dentro
+  de `lib: ["ES2020"]`—, así que el typecheck **no** los caza. Los caza
+  `npm run check:purity` (`tools/check-core-purity.mjs`), que mira sólo el código: los
+  comentarios y las cadenas pueden mencionarlos, y un `${Date.now()}` dentro de una plantilla
+  también salta. Sigue siendo falso decir que el typecheck bloquea el reloj.
 - **No añadas `baseUrl` ni `paths`.** `baseUrl` está deprecado en TS 6 y se retira en TS 7, y
   los alias van en el campo `imports` de `package.json`.
 - **Un alias se declara cuando el módulo existe**, no antes. Hoy solo hay `#core/*`.
@@ -215,11 +217,12 @@ el nombre en código de `ModosEscritura`) y no bloquea nada de la Fase 1.
 ## Comandos
 
 ```bash
-npm run check           # typecheck app + verja del core + tests. Esto antes de commit.
+npm run check           # las cuatro de abajo, en orden. Esto antes de commit.
 
 npm test                # limpia tmp-test/, compila, EXIGE que haya pruebas, y lanza node --test
 npm run typecheck       # tsc de la app (excluye tests)
 npm run typecheck:core  # LA VERJA: falla si el core toca plataforma
+npm run check:purity    # EL OTRO GUARDIÁN: falla si el core lee el reloj o el azar
 ```
 
 No hay `build` ni `serve` hasta la Fase 4. `npm audit` da 0 vulnerabilidades.

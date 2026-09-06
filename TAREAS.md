@@ -96,14 +96,18 @@ documentación**.
       corriendo dos veces.
 - [x] ✅ **`npm run check` vuelve a estar en verde**, y ahora significa algo: 9 pruebas
       ejecutándose de verdad.
-- [ ] **Un `grep` en `npm run check` que falle ante `Date.now()`, `Math.random()` o
-      `new Date(` en `src/core`** (excluyendo `**/*.test.ts`). Tapa el único hueco de la verja
-      de pureza: `Date` y `Math` están en `lib.es5.d.ts`, o sea dentro de `lib: ["ES2020"]`, y
-      **compilan** dentro del core. `IdGenerator` lo protege el compilador; `Clock` hoy solo
-      lo protege la convención.
-      **Recomprobado el 2026-09-06** con un fichero desechable en `src/core/ports/`:
-      `crypto.randomUUID()` da `TS2304 Cannot find name 'crypto'`, y `Date.now()` **compila
-      sin una queja**. El hueco sigue exactamente donde estaba.
+- [x] **Que `npm run check` falle ante `Date.now()`, `Math.random()` o `new Date(` en
+      `src/core`.** ✅ Hecho: `tools/check-core-purity.mjs`, enchufado como `npm run
+      check:purity`. Tapa el único hueco de la verja — `Date` y `Math` están en `lib.es5.d.ts`,
+      dentro de `lib: ["ES2020"]`, y **compilan** dentro del core (recomprobado el 2026-09-06:
+      `crypto.randomUUID()` da `TS2304`, `Date.now()` no da nada).
+      **No es un `grep`**, y no puede serlo: los comentarios del proyecto mencionan
+      `Date.now()` a propósito —son justo los que explican la regla—, así que un `grep` daría
+      positivo en `Clock.ts` y en el propio guardián. Lleva un escáner que borra comentarios y
+      cadenas antes de buscar. Y **`${Date.now()}` dentro de una plantilla sí salta**, que es
+      de las formas más plausibles de colarlo sin querer.
+      Verificado en los tres sentidos: pasa limpio, caza las cuatro violaciones reales sin
+      tocar las menciones en comentarios ni en cadenas, e ignora los `*.test.ts`.
 - [ ] **Corregir el comentario de `src/core/domain/Versioned.ts:16`**, que afirma que
       `updatedAt` viene del puerto `Clock` "nunca de `Date.now()` — dentro del core eso no
       compila". La primera mitad es la regla y sigue en pie; **la segunda es falsa** y
