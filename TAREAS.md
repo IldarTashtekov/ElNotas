@@ -27,7 +27,11 @@ demás se apoya en ella.
       `split` y `merge`. Sin reparentado: se queda en quitar un id de su array o meter algo en
       él. **La extracción va siempre con la guarda** de las casillas con hijas, porque sus dos
       únicos consumidores (`remove` y `merge`) hacen desaparecer una línea. Razonado en §5.4.
-- [ ] **El tipo `Position`**, el vocabulario del "dónde" que hoy falta en el modelo. Decidido:
+- [x] **El tipo `Position`**, el vocabulario del "dónde". ✅ Hecho, en
+      `src/core/domain/Position.ts`, y exportado por `index.ts` porque **sí es API pública**:
+      la UI construye posiciones para pasárselas a `insert`. Sin pruebas propias a propósito —
+      es un tipo con tres constructores de una línea, y lo que de verdad hay que comprobar de
+      él (que el `switch` sea exhaustivo) lo comprueba el compilador en `insert`. Decidido:
       **tres casos exactos** —`root-end`, `after`, `last-child-of`— y ninguno más, uno por cada
       estado de `ModosEscritura`. Su **único consumidor es `insert`**. `before`,
       `first-child-of` y `root-start` quedan fuera por coste de ramas a testear; el disparador
@@ -35,7 +39,9 @@ demás se apoya en ella.
 - [ ] **Las ocho operaciones de contenido**, en orden de coste. Eran nueve, subieron a once y
       se quedaron en ocho: fuera `indent`, `outdent` y `move`; dentro las dos conversiones.
       **Ninguna pasa de dificultad media.** Razonado en `ARCHITECTURE.md` §9.3.
-  - [ ] `setText`, `setChecked` — triviales encima del helper; no cambian la estructura.
+  - [x] `setText`, `setChecked` — ✅ Hechas, en `src/core/domain/operations.ts` y exportadas
+        por `index.ts`. **12 pruebas**, con las cinco filas de no-op de §9.3 cubiertas y una
+        explícita de que `setChecked` **no arrastra a las hijas**.
   - [ ] `insert`, `remove` — coste medio. `remove` **es no-op sobre una casilla con hijas**
         (decisión (b), cerrada): se borra de abajo arriba o no se borra.
   - [ ] `convertirEnCasilla`, `convertirEnTexto` — las que pide el botón de `ModosEscritura`

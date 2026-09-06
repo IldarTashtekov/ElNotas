@@ -38,6 +38,13 @@ export {
 export type { CheckBox, Content, Text } from "./domain/Content"
 export { checkBox, isCheckBox, isText, text } from "./domain/Content"
 
+/* El "dónde": vocabulario de posiciones para insertar */
+export type { Position } from "./domain/Position"
+export { after, lastChildOf, rootEnd } from "./domain/Position"
+
+/* Operaciones sobre el contenido de una nota */
+export { setChecked, setText } from "./domain/operations"
+
 /* Entidades */
 export type { Versioned } from "./domain/Versioned"
 export type { Note } from "./domain/Note"
