@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "test": "tsc -p tsconfig.test.json && node --conditions=compiled --test tmp-test",
+    "test": "node tools/clean-tmp-test.mjs && tsc -p tsconfig.test.json && node tools/require-tests.mjs && node --conditions=compiled --test tmp-test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:core": "tsc -p src/core/tsconfig.json --noEmit",
     "check": "npm run typecheck && npm run typecheck:core && npm test"
