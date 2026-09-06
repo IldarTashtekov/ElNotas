@@ -43,7 +43,14 @@ export type { Position } from "./domain/Position"
 export { after, lastChildOf, rootEnd } from "./domain/Position"
 
 /* Operaciones sobre el contenido de una nota */
-export { insert, remove, setChecked, setText } from "./domain/operations"
+export {
+  convertToCheckBox,
+  convertToText,
+  insert,
+  remove,
+  setChecked,
+  setText,
+} from "./domain/operations"
 
 /* Entidades */
 export type { Versioned } from "./domain/Versioned"

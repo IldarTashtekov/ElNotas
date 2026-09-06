@@ -14,7 +14,14 @@ import type { CheckBox, Content } from "./Content"
 import { checkBox, isCheckBox, text } from "./Content"
 import { contentId } from "./Ids"
 import { after, lastChildOf, rootEnd } from "./Position"
-import { insert, remove, setChecked, setText } from "./operations"
+import {
+  convertToCheckBox,
+  convertToText,
+  insert,
+  remove,
+  setChecked,
+  setText,
+} from "./operations"
 
 /* ─────────────────────────── El árbol de pruebas ───────────────────────────
     La misma lista de la compra de ARCHITECTURE.md §2.3:
@@ -373,4 +380,118 @@ test("remove: no muta el árbol original", () => {
   remove(antes, ID_PERAS)
 
   assert.equal(casillaEn(antes, 1).children.length, 2)
+})
+
+/* ═══════════════════════ convertToCheckBox ═══════════════════════ */
+
+test("convertToCheckBox: un texto suelto pasa a casilla sin marcar y sin hijas", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = convertToCheckBox(antes, ID_COMPRA)
+
+  const convertida = casillaEn(despues, 0)
+  assert.equal(convertida.text, "Compra semanal", "el texto se conserva")
+  assert.equal(convertida.checked, false)
+  assert.equal(convertida.children.length, 0)
+})
+
+/* La regla de identidad: es la MISMA línea con otra pinta. */
+test("convertToCheckBox: conserva el id de la línea", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = convertToCheckBox(antes, ID_COMPRA)
+
+  assert.equal(casillaEn(despues, 0).id, ID_COMPRA)
+})
+
+test("convertToCheckBox: no hace nada si el id no existe", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(convertToCheckBox(antes, ID_INEXISTENTE), antes)
+})
+
+test("convertToCheckBox: no hace nada si ya es una casilla", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(convertToCheckBox(antes, ID_FRUTA), antes, "en la raíz")
+  assert.strictEqual(convertToCheckBox(antes, ID_PERAS), antes, "anidada")
+})
+
+test("convertToCheckBox: no toca el resto del árbol", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = convertToCheckBox(antes, ID_COMPRA)
+
+  assert.strictEqual(bloqueEn(despues, 1), bloqueEn(antes, 1), "'Fruta' intacta")
+  assert.strictEqual(bloqueEn(despues, 2), bloqueEn(antes, 2), "'Limpieza' intacta")
+})
+
+/* ═══════════════════════ convertToText ═══════════════════════ */
+
+test("convertToText: una casilla de la raíz sin hijas pasa a texto suelto", () => {
+  const soloCasilla: ReadonlyArray<Content> = [checkBox(ID_NUEVO, "Plátanos")]
+
+  const despues = convertToText(soloCasilla, ID_NUEVO)
+
+  const convertida = bloqueEn(despues, 0)
+  assert.equal(isCheckBox(convertida), false, "ya no es casilla")
+  assert.equal(convertida.text, "Plátanos")
+  assert.equal(convertida.id, ID_NUEVO, "conserva el id")
+})
+
+test("convertToText: no hace nada si el id no existe", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(convertToText(antes, ID_INEXISTENTE), antes)
+})
+
+test("convertToText: no hace nada si ya es un texto", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(convertToText(antes, ID_COMPRA), antes)
+})
+
+/* Misma regla que `remove`: nada que haga desaparecer estructura se lleva por
+   delante lo que cuelga de ella. */
+test("convertToText: NO convierte una casilla con hijas", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(
+    convertToText(antes, ID_FRUTA),
+    antes,
+    "las hijas se quedarían colgando de nada",
+  )
+})
+
+/* La decisión del Hueco 1: un texto sólo cabe en la raíz. */
+test("convertToText: NO convierte una casilla anidada, ni aunque no tenga hijas", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(convertToText(antes, ID_PERAS), antes, "'Peras' no tiene hijas, pero está dentro")
+  assert.strictEqual(convertToText(antes, ID_FREGONA), antes, "'Fregona' igual")
+})
+
+test("convertToText: sí convierte una casilla una vez vaciada de hijas", () => {
+  let arbol = listaDeLaCompra()
+
+  arbol = remove(arbol, ID_FREGONA)
+  arbol = convertToText(arbol, ID_LIMPIEZA)
+
+  assert.equal(isCheckBox(bloqueEn(arbol, 2)), false)
+  assert.equal(bloqueEn(arbol, 2).text, "Limpieza")
+})
+
+/* ═══════════ Las dos juntas: ida y vuelta ═══════════ */
+
+test("texto → casilla → texto devuelve una línea equivalente, y con el mismo id", () => {
+  const antes = listaDeLaCompra()
+
+  const ida = convertToCheckBox(antes, ID_COMPRA)
+  const vuelta = convertToText(ida, ID_COMPRA)
+
+  const original = bloqueEn(antes, 0)
+  const final = bloqueEn(vuelta, 0)
+  assert.equal(final.type, original.type)
+  assert.equal(final.id, original.id)
+  assert.equal(final.text, original.text)
 })

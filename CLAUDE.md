@@ -27,33 +27,37 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
-**Lo que existe en el core: SÓLO el modelo de datos. 306 líneas y cero tests.** Las entidades
-(`Note`, `Plan`, `Context`), su contenido (`Text` | `CheckBox`), los IDs marcados, `ItemRef` y
-`AppState` normalizado, más los constructores mínimos para crear y discriminar esos valores
-(`noteId(...)`, `checkBox(...)`, `isCheckBox(...)`).
+**Lo que existe en el core: el modelo de datos y la mayor parte de la Fase 1.** ~800 líneas de
+código y ~960 de pruebas, todo en `src/core/domain/`:
 
-**Lo que NO existe, por decisión explícita:** ninguna operación sobre el modelo (ni
-`setChecked`, ni `insert`, ni `move`, ni `indent`…), ni puertos, ni reducers, ni `Store`, ni
-casos de uso, ni persistencia, ni UI nueva, ni nada de Planes. Tampoco existen las carpetas
-`core/ports/`, `core/app/`, `core/migrations/`, `src/storage/`, `src/ui/` ni `src/platform/`.
+- **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
+  marcados, `ItemRef`, `AppState` normalizado y sus constructores;
+- **`Position`** — el vocabulario del "dónde", tres casos, uno por cada modo de escritura;
+- **el helper de copia por camino, con sus dos primitivas** — `updateContent.ts` (A:
+  transformar un nodo) y `updateContainerOf.ts` (B: transformar el contenedor de una línea).
+  **Maquinaria interna: NO salen por `index.ts`**;
+- **seis de las ocho operaciones**, en `operations.ts` y exportadas: `setText`, `setChecked`,
+  `insert`, `remove`, `convertToCheckBox`, `convertToText`.
 
-> Se escribió una primera versión de esa lógica y **se eliminó a propósito** para asentar
-> antes el modelo. El diseño sigue documentado en `ARCHITECTURE.md`, pero **hoy no hay ni una
-> línea de ella en el repo**. No la des por hecha: compruébalo.
+**Lo que NO existe todavía:** `split` y `merge`, los puertos (`Clock`, `IdGenerator`), el
+reducer, el `Store`, los casos de uso, la persistencia, la UI y todo lo de Planes. Tampoco
+existen las carpetas `core/ports/`, `core/app/`, `core/migrations/`, `src/storage/`, `src/ui/`
+ni `src/platform/`.
 
-⚠️ **`npm run check` está EN ROJO a propósito, y no es una avería.** Sigue sin haber ni un
-test, y ahora eso **falla** en vez de pasar en falso: `tools/require-tests.mjs` sale con código
-1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin ficheros imprime
-`1..0` y sale con código 0. Se pondrá en verde con la primera prueba, que es la del helper.
-No lo "arregles" quitando el guardián.
-Anotado en `TAREAS.md`.
+**`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
+con código 1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin
+ficheros imprime `1..0` y sale con código 0. **No lo "arregles" quitando el guardián.**
+
+⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y comprobando que las
+pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no vale nada, y un
+`deepEqual` pasaría igual de verde. Es la disciplina de esta capa, no una floritura.
 
 ## Estructura y límites
 
 ```
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
-│   ├── domain/    # ← lo ÚNICO que existe hoy (y solo tipos)
+│   ├── domain/    # ← modelo + Position + helper + 6 de las 8 operaciones
 │   ├── ports/     # (F1) Clock, IdGenerator · (F2) los de persistencia
 │   ├── app/       # (F1) Store + reducer con UN caso · (F2) el catálogo completo
 │   ├── migrations/# (F2)
@@ -154,7 +158,7 @@ duda**; no la cambies por tu cuenta.
 - **`Position` tiene tres casos** —`root-end`, `after`, `last-child-of`— **y ninguno más**.
   Uno por cada estado de `ModosEscritura`, y su único consumidor es `insert`. §9.4.
 - **Las operaciones de contenido son OCHO** y ninguna pasa de dificultad media: `setText`,
-  `setChecked`, `insert`, `remove`, `split`, `merge`, `convertirEnCasilla`, `convertirEnTexto`.
+  `setChecked`, `insert`, `remove`, `split`, `merge`, `convertToCheckBox`, `convertToText`.
   §9.3.
 - **Tampoco existe `move`.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y aquí no
   se construye lo que no tiene consumidor. Consecuencia asumida: **una lista se queda en el
@@ -164,7 +168,7 @@ duda**; no la cambies por tu cuenta.
   `ModosEscritura`; el Tabulador solo mete un carácter. Precio aceptado: una línea en el nivel
   equivocado se borra y se reescribe. §9.3.
 - **Retroceso al principio de una casilla hace DOS cosas, en dos pulsaciones:** la primera
-  quita la casilla (`convertirEnTexto`), la segunda une con la línea de arriba (`merge`). Cada
+  quita la casilla (`convertToText`), la segunda une con la línea de arriba (`merge`). Cada
   pulsación, una sola cosa. §7.3.
 - **`ModosEscritura` es un objeto auxiliar de la nota abierta**, con tres estados en ciclo
   (*Texto → Casilla → Casilla hija*). **No se persiste** y muere al salir de la nota: no va
@@ -172,7 +176,7 @@ duda**; no la cambies por tu cuenta.
   elegida— y no necesita fichero de preferencias. §7.2.
 - **`remove` NO borra una casilla con hijas: es no-op.** Se borra de abajo arriba. Ninguna
   operación del dominio hace desaparecer contenido que el usuario no esté mirando; la cascada
-  se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertirEnTexto`**:
+  se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertToText`**:
   todo lo que hace desaparecer una línea se niega si tiene hijas. §9.3.
 
 ## Fuera de alcance por ahora

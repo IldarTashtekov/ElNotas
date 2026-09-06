@@ -47,9 +47,11 @@ demás se apoya en ella.
         hijas (decisión (b)). A `insert` se le añadió una fila de no-op que no estaba en la
         tabla: **id repetido**, porque dos líneas con el mismo id hacen que toda operación
         posterior actúe siempre sobre la primera y jamás sobre la segunda.
-  - [ ] `convertirEnCasilla`, `convertirEnTexto` — las que pide el botón de `ModosEscritura`
-        (§7.2). `convertirEnTexto` sobre una casilla con hijas es no-op, por la misma razón
-        que `remove`: un texto no puede tener nada colgando.
+  - [x] `convertToCheckBox`, `convertToText` — ✅ Hechas. **12 pruebas.** Las dos usan la
+        primitiva **B**, no la A: la A no puede cambiar de variante por diseño (`Text → Text`,
+        `CheckBox → CheckBox`), que es justo lo que hacen éstas. Conservan el `ContentId`, así
+        que no necesitan `IdGenerator`. `convertToText` es no-op con hijas **y** anidada, y lo
+        segundo sale solo de que `onParent` devuelva la madre intacta.
   - [ ] `split`, `merge` — **confirmadas.** Intro en medio de una línea la parte; Retroceso al
         principio une con la de arriba. Dos avisos: `split` **necesita un `ContentId` nuevo por
         parámetro** (el dominio no genera IDs), y `merge` es no-op si la línea que se absorbe
@@ -119,7 +121,7 @@ letras no se reciclan, para que las referencias de `ARCHITECTURE.md` sigan valie
 | ~~**(c)**~~ | ✅ **Cerrada por eliminación.** Preguntaba cómo detectar el ciclo al mover algo dentro de su propio subárbol; `move` ya no existe, así que no hay destino que comprobar. → `ARCHITECTURE.md` §9.3 | |
 | ~~**(d)**~~ | ✅ **Cerrada.** `Position` tiene tres casos y no más. → `ARCHITECTURE.md` §9.4 | |
 | ~~**(e)**~~ | ✅ **Cerrada.** El helper es **dos primitivas**; la A va parametrizada por variante con la recursión escrita una sola vez. → `ARCHITECTURE.md` §5.4 | Destapó que la primitiva B queda pendiente de **(b)**. |
-| ~~**(f)**~~ | ✅ **Cerrada. Son ocho:** `setText`, `setChecked`, `insert`, `remove`, `split`, `merge`, `convertirEnCasilla`, `convertirEnTexto`. Fuera `indent`, `outdent` y `move`. → `ARCHITECTURE.md` §9.3 | Cerró también la (c), y fija el tamaño de la Fase 1: ninguna de las ocho pasa de dificultad media. |
+| ~~**(f)**~~ | ✅ **Cerrada. Son ocho:** `setText`, `setChecked`, `insert`, `remove`, `split`, `merge`, `convertToCheckBox`, `convertToText`. Fuera `indent`, `outdent` y `move`. → `ARCHITECTURE.md` §9.3 | Cerró también la (c), y fija el tamaño de la Fase 1: ninguna de las ocho pasa de dificultad media. |
 | ~~**(g)**~~ | ✅ **Cerrada por eliminación.** Preguntaba qué pasa con los hermanos al hacer `outdent`; `outdent` ya no existe. → `ARCHITECTURE.md` §9.3 | |
 
 ### Del editor (Fase 4)

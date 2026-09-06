@@ -1053,7 +1053,7 @@ la casilla, y unir con la línea de arriba. **Se resuelve en secuencia**, no eli
 
 | Cursor | La línea es… | Retroceso hace… | Operación |
 |---|---|---|---|
-| al principio del todo | una **casilla de la raíz** | se va la casilla, la línea queda como texto | `convertirEnTexto` |
+| al principio del todo | una **casilla de la raíz** | se va la casilla, la línea queda como texto | `convertToText` |
 | al principio del todo | una **casilla anidada** | se une directamente: el texto sube a la hermana anterior, o a la madre si es la primera hija | `merge` |
 | al principio del todo | un **texto** | se une con la de arriba | `merge` |
 | en cualquier otro sitio | cualquiera | borra el carácter anterior | (ni toca el modelo) |
@@ -1095,7 +1095,7 @@ Leche |y pan          Leche
               →       ☐ y pan
 ```
 
-Y no necesita ninguna operación nueva: es **`split` y luego `convertirEnCasilla`**, dos
+Y no necesita ninguna operación nueva: es **`split` y luego `convertToCheckBox`**, dos
 llamadas que compone el editor. El motor sigue sin saber que los modos existen.
 
 > **Propuesto, pendiente de confirmar.** Cuatro esquinas que el diseño de arriba deja sin
@@ -1354,7 +1354,7 @@ seis meses que hoy, más el cuarto caso de `Position`. Queda anotado en `TAREAS.
 |---|---|---|
 | `setText`, `setChecked` | trivial | encima del helper; no cambian la estructura |
 | `insert`, `remove` | medio | cambian un array, en un solo nivel |
-| `convertirEnCasilla`, `convertirEnTexto` | medio | las que pide el botón de modo (§7.2), y `convertirEnTexto` también el Retroceso al principio de una casilla (§7.3) |
+| `convertToCheckBox`, `convertToText` | medio | las que pide el botón de modo (§7.2), y `convertToText` también el Retroceso al principio de una casilla (§7.3) |
 | `split`, `merge` | medio | **confirmadas.** Intro en medio de una línea y Retroceso al principio. `split` es además la mitad del botón de modo cuando el cursor está en medio |
 | ~~`indent`, `outdent`~~ | — | **eliminadas**, ver arriba |
 | ~~`move`~~ | — | **eliminada**, ver abajo |
@@ -1374,7 +1374,7 @@ La regla, una para las tres: **sobrevive con su identidad la línea que ya estab
 
 | Operación | Qué conserva su id | Qué es nuevo |
 |---|---|---|
-| `convertirEnCasilla` / `convertirEnTexto` | **la propia línea: mismo `ContentId`**. Es la misma línea con otra pinta | nada — **por eso no necesitan `IdGenerator`** |
+| `convertToCheckBox` / `convertToText` | **la propia línea: mismo `ContentId`**. Es la misma línea con otra pinta | nada — **por eso no necesitan `IdGenerator`** |
 | `split` | la **primera** mitad: mismo id, y se queda con las hijas y con su `checked` | la **segunda** mitad, con id nuevo por parámetro y **`checked: false`**: es una tarea que nadie ha hecho todavía |
 | `merge` | la línea **de arriba**, la que absorbe: conserva id, clase, `checked` e hijas; su texto pasa a ser `arriba.text + abajo.text` | nada — la de abajo desaparece |
 
@@ -1428,8 +1428,8 @@ necesita su test explícito:
 | `remove` | el id no existe · **es una casilla con hijas** (decisión (b), cerrada: se borra de abajo arriba) |
 | `split` | el id no existe · el punto de corte cae fuera de la línea. **Partir por el extremo NO es no-op:** deja una mitad vacía, que es justo lo que quieres al empezar una lista |
 | `merge` | el id no existe · es la primera línea **de la nota** (no hay nada encima, ni hermana ni madre) · **la línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que misma regla que `remove` |
-| `convertirEnCasilla` | el id no existe · ya es una casilla |
-| `convertirEnTexto` | el id no existe · ya es un texto · **es una casilla con hijas** (un texto no puede tener nada colgando: se convierte de abajo arriba, igual que se borra) · **es una casilla anidada** — un texto sólo puede vivir en la raíz, y sin `outdent` no hay forma de hacerle sitio |
+| `convertToCheckBox` | el id no existe · ya es una casilla |
+| `convertToText` | el id no existe · ya es un texto · **es una casilla con hijas** (un texto no puede tener nada colgando: se convierte de abajo arriba, igual que se borra) · **es una casilla anidada** — un texto sólo puede vivir en la raíz, y sin `outdent` no hay forma de hacerle sitio |
 
 **El id repetido en `insert` no estaba en esta tabla**, y se añadió al implementarla. Merece
 su párrafo porque el fallo que evita es de los que no se ven: dos líneas con el mismo id no
@@ -1532,7 +1532,7 @@ contrato*. Sin criterio, "terminada" acaba queriendo decir "me he cansado". Son 
 1. El helper devuelve el array de entrada **intacto** en sus dos casos: id ausente, y
    transformación que no cambia nada.
 2. **Las ocho operaciones existen** (§9.3): `setText`, `setChecked`, `insert`, `remove`,
-   `split`, `merge`, `convertirEnCasilla` y `convertirEnTexto`.
+   `split`, `merge`, `convertToCheckBox` y `convertToText`.
 3. Cada una tiene tests de **valor** y de **identidad** (`assert.strictEqual`, nunca
    `deepEqual`).
 4. Cada caso no-op de la tabla está testeado explícitamente.

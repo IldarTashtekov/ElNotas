@@ -16,11 +16,11 @@
  */
 
 import type { Content } from "./Content"
-import { isCheckBox } from "./Content"
+import { checkBox, isCheckBox, isText, text } from "./Content"
 import type { ContentId } from "./Ids"
 import type { Position } from "./Position"
 import { updateContainerOf } from "./updateContainerOf"
-import { updateContent } from "./updateContent"
+import { mapPreservingIdentity, updateContent } from "./updateContent"
 
 /* ───────────────────────── Sin tocar la estructura ─────────────────────────
     Las dos triviales: cambian un campo de una línea y nada más. */
@@ -170,4 +170,67 @@ export const remove = (
       const children = removeFrom(parent.children, id)
       return children === parent.children ? parent : { ...parent, children }
     },
+  })
+
+/* ───────────────────────────── Cambiando de clase ─────────────────────────────
+    Las dos que dispara el botón de `ModosEscritura` (§7.2), y también el
+    Retroceso al principio de una casilla de la raíz (§7.3).
+
+    Las dos conservan el `ContentId` de la línea: es la MISMA línea con otra
+    pinta, no una nueva. Si cambiara de id, el editor —que reconcilia por
+    `data-id`— la borraría de la pantalla y dibujaría otra, y perderías el cursor
+    en cada pulsación del botón. Y al no hacer falta id nuevo, ninguna de las dos
+    necesita el `IdGenerator`.
+
+    Nótese que las DOS usan la primitiva B y no la A. La A no sirve aquí por
+    diseño: sus transformaciones son `Text → Text` y `CheckBox → CheckBox`, o sea
+    que no puede cambiar de variante. Que es justo lo que hacen éstas. */
+
+/**
+ * Un texto suelto pasa a ser una casilla, sin marcar y sin hijas.
+ *
+ * **No hace nada si:** el id no existe · ya es una casilla. Lo segundo cubre de
+ * paso todas las líneas anidadas, porque **una línea anidada es siempre una
+ * casilla**: ahí no hay textos que convertir, y por eso `onParent` devuelve la
+ * madre tal cual.
+ */
+export const convertToCheckBox = (
+  content: ReadonlyArray<Content>,
+  id: ContentId,
+): ReadonlyArray<Content> =>
+  updateContainerOf(content, id, {
+    onRoot: (items) =>
+      mapPreservingIdentity(items, (item) =>
+        item.id === id && isText(item) ? checkBox(item.id, item.text) : item,
+      ),
+    onParent: (parent) => parent,
+  })
+
+/**
+ * Una casilla pasa a ser un texto suelto.
+ *
+ * **No hace nada si:** el id no existe · ya es un texto · **es una casilla con
+ * hijas** · **es una casilla anidada**.
+ *
+ * Los dos últimos son la misma idea vista desde dos sitios: un texto **no puede
+ * tener nada colgando** y **sólo cabe en la raíz**. Con hijas, convertir las
+ * dejaría colgando de nada —misma regla que `remove`, se convierte de abajo
+ * arriba—; anidada, el resultado no cabría donde está, y sin `outdent` no hay
+ * forma de hacerle sitio.
+ *
+ * El caso de la anidada no está escrito como condición en ninguna parte: sale de
+ * que `onParent` devuelva la madre intacta.
+ */
+export const convertToText = (
+  content: ReadonlyArray<Content>,
+  id: ContentId,
+): ReadonlyArray<Content> =>
+  updateContainerOf(content, id, {
+    onRoot: (items) =>
+      mapPreservingIdentity(items, (item) =>
+        item.id === id && isCheckBox(item) && item.children.length === 0
+          ? text(item.id, item.text)
+          : item,
+      ),
+    onParent: (parent) => parent,
   })
