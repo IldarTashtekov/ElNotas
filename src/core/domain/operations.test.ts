@@ -18,9 +18,11 @@ import {
   convertToCheckBox,
   convertToText,
   insert,
+  merge,
   remove,
   setChecked,
   setText,
+  split,
 } from "./operations"
 
 /* ─────────────────────────── El árbol de pruebas ───────────────────────────
@@ -482,6 +484,207 @@ test("convertToText: sí convierte una casilla una vez vaciada de hijas", () => 
 })
 
 /* ═══════════ Las dos juntas: ida y vuelta ═══════════ */
+
+/* ══════════════════════════════ split ══════════════════════════════ */
+
+test("split: parte un texto suelto de la raíz en dos", () => {
+  const antes = listaDeLaCompra()
+
+  // "Compra semanal" → "Compra " + "semanal"
+  const despues = split(antes, ID_COMPRA, 7, ID_NUEVO)
+
+  assert.equal(despues.length, 4)
+  assert.equal(bloqueEn(despues, 0).text, "Compra ")
+  assert.equal(bloqueEn(despues, 1).text, "semanal", "la mitad nueva va justo detrás")
+})
+
+test("split: la primera mitad es la línea de antes — mismo id, marca e hijas", () => {
+  const marcada = setChecked(listaDeLaCompra(), ID_FRUTA, true)
+
+  const despues = split(marcada, ID_FRUTA, 2, ID_NUEVO)
+
+  const primera = casillaEn(despues, 1)
+  assert.equal(primera.id, ID_FRUTA, "conserva el id")
+  assert.equal(primera.text, "Fr")
+  assert.equal(primera.checked, true, "conserva la marca")
+  assert.equal(primera.children.length, 2, "conserva las hijas")
+})
+
+test("split: la mitad nueva nace sin marcar y sin hijas", () => {
+  const marcada = setChecked(listaDeLaCompra(), ID_FRUTA, true)
+
+  const despues = split(marcada, ID_FRUTA, 2, ID_NUEVO)
+
+  const segunda = casillaEn(despues, 2)
+  assert.equal(segunda.id, ID_NUEVO)
+  assert.equal(segunda.text, "uta")
+  assert.equal(segunda.checked, false, "una tarea que nadie ha hecho todavía")
+  assert.equal(segunda.children.length, 0)
+})
+
+test("split: partir por un extremo NO es no-op, deja una mitad vacía", () => {
+  const antes = listaDeLaCompra()
+
+  const alPrincipio = split(antes, ID_COMPRA, 0, ID_NUEVO)
+  assert.equal(bloqueEn(alPrincipio, 0).text, "")
+  assert.equal(bloqueEn(alPrincipio, 1).text, "Compra semanal")
+
+  const alFinal = split(antes, ID_COMPRA, 14, ID_NUEVO)
+  assert.equal(bloqueEn(alFinal, 0).text, "Compra semanal")
+  assert.equal(bloqueEn(alFinal, 1).text, "", "lo que quieres al empezar una lista")
+})
+
+test("split: parte una casilla anidada, entre sus hermanas", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = split(antes, ID_MANZANAS, 3, ID_NUEVO)
+
+  const hijas = casillaEn(despues, 1).children
+  assert.equal(hijas.length, 3)
+  assert.equal(hijaEn(hijas, 0).text, "Man")
+  assert.equal(hijaEn(hijas, 1).text, "zanas")
+  assert.equal(hijaEn(hijas, 2).text, "Peras", "'Peras' se corre una posición")
+})
+
+test("split: no hace nada si el id no existe", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(split(antes, ID_INEXISTENTE, 2, ID_NUEVO), antes)
+})
+
+test("split: no hace nada si el punto de corte cae fuera de la línea", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(split(antes, ID_FRUTA, -1, ID_NUEVO), antes, "negativo")
+  assert.strictEqual(split(antes, ID_FRUTA, 6, ID_NUEVO), antes, "'Fruta' tiene 5 letras")
+})
+
+test("split: no hace nada si el id nuevo ya está en uso", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(split(antes, ID_COMPRA, 3, ID_PERAS), antes)
+})
+
+test("split: no toca las ramas que no van en el camino", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = split(antes, ID_MANZANAS, 3, ID_NUEVO)
+
+  assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0), "'Compra semanal' intacto")
+  assert.strictEqual(casillaEn(despues, 2), casillaEn(antes, 2), "'Limpieza' intacta")
+})
+
+/* ══════════════════════════════ merge ══════════════════════════════ */
+
+test("merge: el texto sube a la hermana anterior, en la raíz", () => {
+  const dosLineas: ReadonlyArray<Content> = [
+    text(ID_COMPRA, "Compra "),
+    text(ID_NUEVO, "semanal"),
+  ]
+
+  const despues = merge(dosLineas, ID_NUEVO)
+
+  assert.equal(despues.length, 1)
+  assert.equal(bloqueEn(despues, 0).text, "Compra semanal")
+  assert.equal(bloqueEn(despues, 0).id, ID_COMPRA, "el receptor conserva su id")
+})
+
+test("merge: el texto sube a la hermana anterior, en profundidad", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = merge(antes, ID_PERAS)
+
+  const hijas = casillaEn(despues, 1).children
+  assert.equal(hijas.length, 1)
+  assert.equal(hijaEn(hijas, 0).text, "ManzanasPeras")
+  assert.equal(hijaEn(hijas, 0).id, ID_MANZANAS, "el receptor conserva su id")
+})
+
+/* El caso que no se ve venir, y el que dio forma a la primitiva B. */
+test("merge: si es la primera hija, el texto sube a la MADRE", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = merge(antes, ID_MANZANAS)
+
+  const fruta = casillaEn(despues, 1)
+  assert.equal(fruta.text, "FrutaManzanas")
+  assert.equal(fruta.children.length, 1)
+  assert.equal(hijaEn(fruta.children, 0).text, "Peras", "las demás hijas se quedan donde estaban")
+})
+
+test("merge: el receptor conserva su clase, su marca y sus hijas", () => {
+  const marcada = setChecked(listaDeLaCompra(), ID_FRUTA, true)
+  // Un texto suelto detrás de "Fruta", para unirlo a una casilla marcada.
+  const conTexto = insert(marcada, text(ID_NUEVO, "y verdura"), after(ID_FRUTA))
+
+  const despues = merge(conTexto, ID_NUEVO)
+
+  const fruta = casillaEn(despues, 1)
+  assert.equal(fruta.type, "checkbox", "una casilla que absorbe un texto sigue siendo casilla")
+  assert.equal(fruta.checked, true)
+  assert.equal(fruta.children.length, 2)
+  assert.equal(fruta.text, "Frutay verdura")
+})
+
+test("merge: no hace nada si el id no existe", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(merge(antes, ID_INEXISTENTE), antes)
+})
+
+test("merge: no hace nada si es la primera línea de la nota", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(merge(antes, ID_COMPRA), antes, "no hay nada encima, ni hermana ni madre")
+})
+
+/* Misma regla que `remove` y que `convertToText`. */
+test("merge: NO absorbe una línea que tiene hijas", () => {
+  const antes = listaDeLaCompra()
+
+  assert.strictEqual(
+    merge(antes, ID_LIMPIEZA),
+    antes,
+    "'Limpieza' tiene a 'Fregona': se quedaría colgando de nada",
+  )
+})
+
+test("merge: sí absorbe la línea una vez vaciada de hijas", () => {
+  const sinFregona = remove(listaDeLaCompra(), ID_FREGONA)
+
+  const despues = merge(sinFregona, ID_LIMPIEZA)
+
+  assert.equal(despues.length, 2)
+  assert.equal(casillaEn(despues, 1).text, "FrutaLimpieza")
+  assert.equal(casillaEn(despues, 1).children.length, 2, "'Fruta' conserva sus hijas")
+})
+
+test("merge: no toca las ramas que no van en el camino", () => {
+  const antes = listaDeLaCompra()
+
+  const despues = merge(antes, ID_PERAS)
+
+  assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0), "'Compra semanal' intacto")
+  assert.strictEqual(casillaEn(despues, 2), casillaEn(antes, 2), "'Limpieza' intacta")
+})
+
+/* ═══════════ Las dos juntas: partir y volver a unir ═══════════ */
+
+test("partir por cualquier punto y volver a unir devuelve el texto original", () => {
+  const antes = listaDeLaCompra()
+  const original = bloqueEn(antes, 0).text
+
+  for (let corte = 0; corte <= original.length; corte++) {
+    const partido = split(antes, ID_COMPRA, corte, ID_NUEVO)
+    const unido = merge(partido, ID_NUEVO)
+
+    assert.equal(
+      bloqueEn(unido, 0).text,
+      original,
+      `partiendo por ${corte} y volviendo a unir. Si esto falla, alguien añadió un espacio`,
+    )
+  }
+})
 
 test("texto → casilla → texto devuelve una línea equivalente, y con el mismo id", () => {
   const antes = listaDeLaCompra()

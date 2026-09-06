@@ -47,9 +47,11 @@ export {
   convertToCheckBox,
   convertToText,
   insert,
+  merge,
   remove,
   setChecked,
   setText,
+  split,
 } from "./domain/operations"
 
 /* Entidades */

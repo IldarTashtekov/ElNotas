@@ -37,9 +37,9 @@ demás se apoya en ella.
       estado de `ModosEscritura`. Su **único consumidor es `insert`**. `before`,
       `first-child-of` y `root-start` quedan fuera por coste de ramas a testear; el disparador
       para reabrirlo va en el mismo paquete que `move`. Razonado en `ARCHITECTURE.md` §9.4.
-- [ ] **Las ocho operaciones de contenido**, en orden de coste. Eran nueve, subieron a once y
-      se quedaron en ocho: fuera `indent`, `outdent` y `move`; dentro las dos conversiones.
-      **Ninguna pasa de dificultad media.** Razonado en `ARCHITECTURE.md` §9.3.
+- [x] **Las ocho operaciones de contenido** — ✅ **Las ocho hechas.** Eran nueve, subieron a
+      once y se quedaron en ocho: fuera `indent`, `outdent` y `move`; dentro las dos
+      conversiones. Razonado en `ARCHITECTURE.md` §9.3.
   - [x] `setText`, `setChecked` — ✅ Hechas, en `src/core/domain/operations.ts` y exportadas
         por `index.ts`. **12 pruebas**, con las cinco filas de no-op de §9.3 cubiertas y una
         explícita de que `setChecked` **no arrastra a las hijas**.
@@ -52,16 +52,18 @@ demás se apoya en ella.
         `CheckBox → CheckBox`), que es justo lo que hacen éstas. Conservan el `ContentId`, así
         que no necesitan `IdGenerator`. `convertToText` es no-op con hijas **y** anidada, y lo
         segundo sale solo de que `onParent` devuelva la madre intacta.
-  - [ ] `split`, `merge` — **confirmadas.** Intro en medio de una línea la parte; Retroceso al
-        principio une con la de arriba. Dos avisos: `split` **necesita un `ContentId` nuevo por
-        parámetro** (el dominio no genera IDs), y `merge` es no-op si la línea que se absorbe
-        tiene hijas, por la misma razón que `remove`. Teclado completo en §7.3.
+  - [x] `split`, `merge` — ✅ Hechas. **19 pruebas**, incluida una que recorre **todos** los
+        puntos de corte de una línea, parte y vuelve a unir, y comprueba que sale el original:
+        es la que caza que alguien añada un espacio de cortesía al unir. `split` es la única de
+        las ocho que recibe un `ContentId` por parámetro. `merge` sube el texto a la hermana
+        anterior, o **a la madre** si es la primera hija.
   - [ ] ~~`indent`, `outdent`~~ — **eliminadas.** En el teclado de un móvil no hay Tabulador;
         el nivel se elige al nacer la línea, con el modo activo. Cerró (a) y (g) de golpe.
   - [ ] ~~`move`~~ — **eliminada.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y
         no se construye lo que no tiene consumidor. Cerró (f) y (c). Aparcada abajo.
-- [ ] **Un test explícito por cada caso no-op** de la tabla de `ARCHITECTURE.md` §9.3. Con
-      `assert.strictEqual`, nunca `deepEqual`.
+- [x] **Un test explícito por cada caso no-op** de la tabla de `ARCHITECTURE.md` §9.3. ✅
+      Hecho sobre la marcha, operación por operación, con `assert.strictEqual`. Y cada guarda
+      verificada **rompiéndola a propósito** para comprobar que la prueba salta.
 - [ ] **`core/ports/Clock.ts` y `core/ports/IdGenerator.ts`** — solo las interfaces, cuatro
       líneas, dentro del core. Sin implementaciones: no hacen falta hasta la Fase 4.
 - [ ] **La rebanada vertical:** `Store`, un reducer con un único caso (`set-checked`), un caso

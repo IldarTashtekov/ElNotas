@@ -234,3 +234,130 @@ export const convertToText = (
       ),
     onParent: (parent) => parent,
   })
+
+/* ───────────────────────────── Partir y unir ─────────────────────────────
+    Las del teclado (§7.3): Intro en medio de una línea la parte, Retroceso al
+    principio la une con la de arriba. Son inversas, y esa simetría es
+    comprobable: partir por cualquier punto y volver a unir devuelve el original.
+    Por eso al unir NO se añade un espacio de cortesía. */
+
+/**
+ * Parte una línea por el punto de corte y deja las dos mitades seguidas.
+ *
+ * **La primera mitad es la línea de antes**: conserva su `ContentId`, su marca y
+ * sus hijas. La segunda es nueva, **nace sin marcar**, y recibe su id por
+ * parámetro porque el dominio no genera IDs — es la única de las ocho que lo
+ * necesita.
+ *
+ * Que la mitad nueva nazca sin marcar es deliberado: los dos errores posibles no
+ * cuestan lo mismo. Una tarea que aparece pendiente y ya estaba hecha la ves y la
+ * marcas; una que aparece **hecha sin haberla hecho** desaparece de tu radar.
+ *
+ * **No hace nada si:** el id no existe · el punto de corte cae fuera de la línea
+ * · ya existe una línea con `newId`. **Partir por un extremo NO es no-op:** deja
+ * una mitad vacía, que es justo lo que quieres al empezar una lista.
+ */
+const splitAt = <T extends Content>(
+  items: ReadonlyArray<T>,
+  id: ContentId,
+  offset: number,
+  makeSecond: (target: T, rest: string) => T,
+): ReadonlyArray<T> => {
+  const index = items.findIndex((item) => item.id === id)
+  const target = items[index] // con index -1 sale `undefined`: una comprobación cubre las dos
+  if (target === undefined) return items
+  if (offset < 0 || offset > target.text.length) return items
+
+  const first = { ...target, text: target.text.slice(0, offset) }
+  const second = makeSecond(target, target.text.slice(offset))
+  return [...items.slice(0, index), first, second, ...items.slice(index + 1)]
+}
+
+export const split = (
+  content: ReadonlyArray<Content>,
+  id: ContentId,
+  offset: number,
+  newId: ContentId,
+): ReadonlyArray<Content> => {
+  if (existsIn(content, newId)) return content
+
+  return updateContainerOf(content, id, {
+    onRoot: (items) =>
+      splitAt(items, id, offset, (target, rest) =>
+        // La mitad nueva es de la misma clase que la que se parte.
+        isCheckBox(target) ? checkBox(newId, rest) : text(newId, rest),
+      ),
+    onParent: (parent) => {
+      // Aquí no hay que discriminar: entre hijas todo son casillas.
+      const children = splitAt(parent.children, id, offset, (_, rest) => checkBox(newId, rest))
+      return children === parent.children ? parent : { ...parent, children }
+    },
+  })
+}
+
+/**
+ * Une una línea con la de arriba: la línea desaparece y su texto sube.
+ *
+ * **Quién recibe el texto depende de dónde estuviera** (§9.3):
+ *
+ *     tiene una hermana encima  →  esa hermana anterior
+ *     es la primera hija        →  su madre, y las demás hijas se quedan donde estaban
+ *     es la primera de la nota  →  nadie: no hace nada
+ *
+ * El segundo caso es el que no se ve venir, y es el que obligó a que el
+ * "contenedor" de la primitiva B fuese **la madre entera** y no su lista de
+ * hijas: ahí la madre cambia de texto **y** pierde una hija a la vez.
+ *
+ * La línea que recibe **conserva su clase, su marca y sus hijas**; lo único que
+ * le cambia es el texto. Y los textos se pegan **sin añadir espacio**, para que
+ * partir y volver a unir devuelva exactamente lo que había.
+ *
+ * **No hace nada si:** el id no existe · es la primera línea de la nota · **la
+ * línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que
+ * misma regla que `remove`.
+ */
+export const merge = (
+  content: ReadonlyArray<Content>,
+  id: ContentId,
+): ReadonlyArray<Content> =>
+  updateContainerOf(content, id, {
+    onRoot: (items) => {
+      const index = items.findIndex((item) => item.id === id)
+      if (index <= 0) return items // 0 = la primera de la nota, no hay nada encima
+      const target = items[index]
+      const receiver = items[index - 1]
+      if (target === undefined || receiver === undefined) return items
+      if (isCheckBox(target) && target.children.length > 0) return items
+
+      const merged = { ...receiver, text: receiver.text + target.text }
+      return [...items.slice(0, index - 1), merged, ...items.slice(index + 1)]
+    },
+
+    onParent: (parent) => {
+      const index = parent.children.findIndex((child) => child.id === id)
+      const target = parent.children[index]
+      if (target === undefined) return parent
+      if (target.children.length > 0) return parent
+
+      // Primera hija: la absorbe su madre, y las demás hijas ni se mueven.
+      if (index === 0) {
+        return {
+          ...parent,
+          text: parent.text + target.text,
+          children: parent.children.filter((child) => child.id !== id),
+        }
+      }
+
+      const receiver = parent.children[index - 1]
+      if (receiver === undefined) return parent
+      const merged = { ...receiver, text: receiver.text + target.text }
+      return {
+        ...parent,
+        children: [
+          ...parent.children.slice(0, index - 1),
+          merged,
+          ...parent.children.slice(index + 1),
+        ],
+      }
+    },
+  })
