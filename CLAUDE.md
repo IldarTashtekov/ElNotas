@@ -28,8 +28,8 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
-**Lo que existe en el core: la Fase 1 entera, más los puertos de persistencia.** ~1390 líneas
-de código y ~1470 de pruebas, en `src/core/domain/`, `src/core/ports/` y `src/core/app/`:
+**Lo que existe: las fases 1 y 2 enteras.** ~2570 líneas de código y ~3320 de pruebas, en
+`src/core/` y `src/storage/`:
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
@@ -43,20 +43,21 @@ de código y ~1470 de pruebas, en `src/core/domain/`, `src/core/ports/` y `src/c
   la Fase 1, y `Repository`, `StorageAdapter` y `BlobStore` de la Fase 2. El id de
   `Repository` va **marcado** (`Repository<Note, NoteId>`) y todos son propiedades de función,
   no métodos;
-- **la capa de aplicación** en `src/core/app/`: `Action`, `reduce`, `Store` (una **función**,
-  `createStore`, no una clase) y `createUseCases`. `reduce` **no** sale por `index.ts`.
-  **`Action` tiene todavía UN SOLO miembro** (`set-checked`); las otras quince son la Fase 2.
+- **la capa de aplicación** en `src/core/app/`: **las DIECISÉIS acciones** (8 de contenido, 3
+  de Nota, 6 de Contexto), `reduce`, `Store` (una **función**, `createStore`, no una clase),
+  `createUseCases` y `diffState`. `reduce` **no** sale por `index.ts`;
+- **el arranque en su mitad pura**, en `src/core/migrations/`: `hydrate` y `runMigrations`.
+  `MIGRATIONS` está **vacía a propósito** — no hay nada guardado con un esquema viejo.
 
-**Y existe `src/storage/`** — ~120 líneas de código y ~240 de pruebas: la suite de contratos en
-`contract-tests/` y `MemoryStorageAdapter`, que la pasa entera. **El adaptador no tiene ni una
+**Y existe `src/storage/`** — la suite de contratos en `contract-tests/`,
+`MemoryStorageAdapter`, que la pasa entera, y el `writeBehind`. **El adaptador no tiene ni una
 prueba propia**, y eso es el diseño, no un descuido: lo que se le exige es lo que se le exige a
 cualquier backend. El de la Fase 3 reusará la misma suite sin tocarla.
 
-**Lo que NO existe todavía:** la UI, todo lo de Planes salvo sus tipos, el write-behind y
-quince de las dieciséis acciones. Tampoco las implementaciones de `Clock` e `IdGenerator`
-—vivirían en `src/platform/`, que no nace hasta la Fase 4—, ni ninguna de `BlobStore`, que no
-tiene consumidor hasta la Fase 3, ni las carpetas `core/migrations/`, `src/ui/` ni
-`src/platform/`.
+**Lo que NO existe todavía:** la UI, todo lo de Planes salvo sus tipos, y **ninguna
+implementación de `BlobStore`** —su primera llega en la Fase 3—. Tampoco las de `Clock` e
+`IdGenerator`, que vivirían en `src/platform/`, que no nace hasta la Fase 4, ni las carpetas
+`src/ui/` ni `src/platform/`.
 
 **`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
 con código 1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin
@@ -74,7 +75,7 @@ src/
 │   ├── domain/    # ← modelo + Position + helper + las 8 operaciones
 │   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
 │   ├── app/       # ← Action + reduce + Store + useCases · (F2) las 15 acciones que faltan
-│   ├── migrations/# (F2)
+│   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← implementa los puertos de persistencia. Conoce al core; él a ella no.
 │   ├── contract-tests/ # ← LA suite que todo adaptador debe pasar
@@ -234,21 +235,24 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 1 — Dominio puro. ✅ HECHA.** Los seis puntos del criterio de cierre (§9.5),
   cumplidos, con **99 pruebas**. El helper con sus dos primitivas, `Position`, las ocho
   operaciones, los puertos y la rebanada vertical.
-- **Fase 2 — Acciones, puertos de persistencia y memory. 🟡 EN CURSO: 3 de 8 tareas.** Hechos
-  los tres puertos, `MemoryStorageAdapter` con su suite de contratos, y el write-behind en sus
-  dos mitades (§6.4). Quedan la prueba de punta a punta de que un `set-checked` redundante
-  **no llega a disco**, las quince acciones que faltan y `schemaVersion` + migraciones +
-  `hydrate`. **Se ataca de abajo
-  arriba:** la persistencia primero, verificada con la única acción que ya existe. La lista en
-  orden está en `TAREAS.md`; el criterio de cierre, en `ARCHITECTURE.md` §9.8.
-- **Fase 3 — Fichero local.**
+- **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los seis puntos del criterio de
+  cierre (§9.8), cumplidos, con **203 pruebas**. Los tres puertos, `MemoryStorageAdapter` con
+  su suite de contratos, el write-behind en sus dos mitades (§6.4), **las dieciséis acciones**
+  y la parte pura del arranque. Se atacó **de abajo arriba** —la persistencia primero,
+  verificada con la única acción que ya existía— por el mismo motivo que la rebanada vertical
+  de la Fase 1: descubrir un fallo con un candidato, no con dieciséis.
+- **Fase 3 — Fichero local. ← LA SIGUIENTE.** `FileStorageAdapter` sobre `BlobStore`, que ya
+  existe como interfaz y **sigue sin una sola implementación**. Reusa la suite de contratos sin
+  tocarla. **Tiene una pregunta abierta que conviene cerrar antes de empezar:** cómo se
+  verifica, porque `FileSystemDirectoryHandle` y OPFS necesitan un navegador real y `node:test`
+  no llega ahí. Está en `TAREAS.md` → *Sin decidir*.
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
 
-**Las siete decisiones de la Fase 1 (a)–(g) están CERRADAS.** La fase está especificada entera
-y se puede escribir de un tirón; el criterio de cierre es `ARCHITECTURE.md` §9.5. Las
-respuestas y su porqué están en `TAREAS.md` → *Sin decidir*, que se conserva como registro. Lo
-que sigue abierto es **de la Fase 4** (cuatro esquinas del teclado, el escalón de anidamiento,
-el nombre en código de `ModosEscritura`) y no bloquea nada de la Fase 1.
+**Las decisiones de las fases 1 y 2 están CERRADAS**, y las dos fases están escritas. Lo que
+sigue abierto es **de la Fase 3** (cómo verificar los adaptadores de navegador) y **de la Fase
+4** (cuatro esquinas del teclado, el escalón de anidamiento, el nombre en código de
+`ModosEscritura`). Las respuestas y su porqué están en `TAREAS.md` → *Sin decidir*, que se
+conserva como registro.
 
 ## Comandos
 

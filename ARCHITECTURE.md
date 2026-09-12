@@ -676,9 +676,9 @@ Tres entidades, más nociones de agrupación:
 
 ### 5.1 Lo que existe hoy en el repo
 
-**33 ficheros, ~3975 líneas contando pruebas, y 138 pruebas en verde.** La Fase 1 entera, más
-las tres primeras tareas de la Fase 2. Esta tabla se queda desactualizada sola: antes de
-afirmar nada sobre ella, `find src -name '*.ts' | sort` y `npm run check`.
+**Las fases 1 y 2 enteras: ~2570 líneas de código, ~3320 de pruebas, y 203 pruebas en verde.**
+Esta tabla se queda desactualizada sola: antes de afirmar nada sobre ella,
+`find src -name '*.ts' | sort` y `npm run check`.
 
 | Fichero | Líneas | Qué es |
 |---|---|---|
@@ -697,12 +697,15 @@ afirmar nada sobre ella, `find src -name '*.ts' | sort` y `npm run check`.
 | `Clock.ts` · `IdGenerator.ts` | 66 | Fase 1 |
 | `Repository.ts` · `StorageAdapter.ts` · `BlobStore.ts` | 144 | Fase 2 |
 | **`app/` — la capa de aplicación** | | |
-| `Action.ts` | 44 | **Un solo miembro todavía**: `set-checked` |
-| `reduce.ts` | 65 | Un caso. No sale por `index.ts` |
+| `Action.ts` | 227 | **Las dieciséis acciones**: 8 de contenido, 3 de Nota, 6 de Contexto |
+| `reduce.ts` | 297 | Los dieciséis casos. **No sale por `index.ts`** |
 | `Store.ts` | 79 | Una **función**, no una clase |
 | `useCases.ts` | 46 | La frontera entre lo impuro y lo puro |
 | `diffState.ts` | 108 | La mitad **pura** del write-behind |
 | `index.ts` | 82 | API pública del core |
+| **`migrations/` — la mitad pura del arranque** | | |
+| `hydrate.ts` | 69 | De listas a mapas, limpiando `ItemRef` rotas |
+| `runMigrations.ts` | 118 | El runner. `MIGRATIONS` **vacía a propósito** |
 | **`src/storage/` — el primer módulo que implementa puertos** | | |
 | `contract-tests/storageContract.test.ts` | 224 | **La suite que todo adaptador debe pasar** |
 | `memory/MemoryStorageAdapter.ts` | 106 | Tres `Map` y un número |
@@ -1439,17 +1442,18 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   operaciones: la alternativa —escribirlas todas y enchufarlas al final— habría descubierto un
   fallo de identidad cuando ya hubiera ocho sitios donde pudiera estar.
 
-- **Fase 2 — Acciones, puertos de persistencia y memory.** El catálogo completo de acciones y
-  sus casos de reducer (§9.7); los puertos `Repository` / `StorageAdapter` / `BlobStore` (§6.1);
-  `MemoryStorageAdapter` y la suite de contratos (§6.3); el enganche store↔persistencia con
-  write-behind, que son **dos piezas y no una** (§6.4); `schemaVersion`, el runner de
-  migraciones y la hidratación. Criterio de cierre en §9.8.
+- **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los seis puntos del criterio de
+  cierre (§9.8), cumplidos, con 203 pruebas: los tres puertos (§6.1), `MemoryStorageAdapter` y
+  su suite de contratos (§6.3), el write-behind en sus **dos** piezas (§6.4), **las dieciséis
+  acciones** (§9.7) y la mitad pura del arranque.
 
-  **Se ataca de abajo arriba, no de arriba abajo:** primero la persistencia entera verificada
-  con la única acción que ya existe, y sólo después las quince que faltan. Es el mismo
-  razonamiento de la rebanada vertical de la Fase 1 — el write-behind es la única pieza con
-  riesgo real de esta fase, y se quiere descubrir que escribe de más **cuando hay un solo
-  candidato**, no dieciséis.
+  **Se atacó de abajo arriba, no de arriba abajo:** primero la persistencia entera verificada
+  con la única acción que ya existía, y sólo después las quince que faltaban. Mismo
+  razonamiento que la rebanada vertical de la Fase 1 — el write-behind era la única pieza con
+  riesgo real de la fase, y se quería descubrir que escribe de más **con un solo candidato**,
+  no con dieciséis. Valió la pena: la rotura que comprobaba ese corte no tumbaba **ninguna**
+  prueba hasta que se añadió un contador de transacciones, y eso se vio con una acción en el
+  catálogo en vez de con dieciséis.
 
 - **Fase 3 — Fichero local.** `FileStorageAdapter` sobre `LocalStorageBlobStore`, luego
   `DirectoryHandleBlobStore`. Ojo al detalle de UX: al recargar **no se puede recuperar el

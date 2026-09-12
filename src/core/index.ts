@@ -79,6 +79,18 @@ export { createUseCases } from "./app/useCases"
 export type { EntityChanges, StateDiff } from "./app/diffState"
 export { NO_CHANGES, diffState } from "./app/diffState"
 
+/* El arranque, en su mitad pura: de lo guardado al estado, y las migraciones.
+   La otra mitad —quién abre el storage, qué se ve sin nada guardado— es Fase 4. */
+export type { StoredEntities } from "./migrations/hydrate"
+export { hydrate } from "./migrations/hydrate"
+export type { Migration, MigrationOptions, MigrationResult } from "./migrations/runMigrations"
+export {
+  CURRENT_SCHEMA_VERSION,
+  EMPTY_STORE_VERSION,
+  MIGRATIONS,
+  runMigrations,
+} from "./migrations/runMigrations"
+
 /* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
 export type { Clock } from "./ports/Clock"
 export type { IdGenerator } from "./ports/IdGenerator"

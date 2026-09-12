@@ -88,7 +88,7 @@ pruebas de valor y de identidad con `strictEqual` · cada fila de no-op de §9.3
 la rebanada demuestra que tres despachos redundantes dan **un solo aviso** y no tocan
 `updatedAt` · `npm run check` en verde con **99 pruebas**, e incapaz de pasar en falso.
 
-### Fase 2 — Acciones, persistencia y memory
+### Fase 2 — Acciones, persistencia y memory ✅ TERMINADA
 
 **En este orden, y el orden es la decisión.** Se ataca **de abajo arriba**: la persistencia
 entera primero, verificada con la única acción que ya existe, y sólo después las quince que
@@ -183,15 +183,36 @@ rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
       colgando— tumba **2**; copiar todos los contextos en vez de sólo los afectados tumba
       **2**; y quitar de `remove-item` la comparación de longitud tumba **1**, que es la
       trampa del `filter` devolviendo siempre array nuevo.
-- [ ] **`schemaVersion`, el runner de migraciones y `hydrate`.** Nace `src/core/migrations/`.
-      `schemaVersion` **no se añade a `AppState`** —ya vive en `StorageAdapter`, que es donde
-      significa algo—, y hay que **corregir el comentario de `AppState.ts`**, que hoy dice que
-      falta. `hydrate(entidades) → AppState` entra aquí por ser pura; el arranque de verdad
-      (quién abre el storage, qué se enseña si no hay nada) es Fase 4. → `ARCHITECTURE.md` §9.7
+- [x] **`schemaVersion`, el runner de migraciones y `hydrate`** — ✅ Hechos, en
+      `src/core/migrations/`, con **12 pruebas**. `schemaVersion` **no se añadió a `AppState`**
+      y se corrigió su comentario, que decía que faltaba. Tres cosas que salieron al hacerlo:
+  - **`EMPTY_STORE_VERSION` (0) no es "esquema viejo", es "nunca se ha escrito nada"**, y
+    confundirlos rompía el primer arranque: el runner buscaría una migración del 0 al 1 que no
+    existe ni va a existir. Se descubrió escribiendo la primera prueba.
+  - **`MIGRATIONS` está vacía a propósito.** No hay nada guardado con un esquema viejo, así
+    que inventar una de ejemplo sería inventarse un pasado. Lo que sí hace falta es el runner,
+    para que el día que llegue la primera sólo haya que añadir una fila.
+  - **`migrations` y `target` se inyectan**, como el `schedule` del write-behind. Con `CURRENT`
+    valiendo 1 no existe hoy ninguna versión intermedia, así que dos caminos del runner
+    —encadenar y avisar de que falta una— no serían alcanzables desde fuera y quedarían sin
+    probar hasta el día que hicieran falta, que es el peor día para descubrir que están mal.
+  - **`hydrate` limpia las `ItemRef` rotas al entrar**, porque el reducer mantiene la
+    integridad referencial en cada acción pero eso no vale de nada si la app arranca ya con
+    referencias colgando. **Verificado rompiéndolo:** copiar los contextos siempre —en vez de
+    devolver intactos los que no tenían nada que limpiar— tumba **1**, la que impide que la
+    app se reescriba entera en cada arranque.
 
 **Lo que NO entra en esta fase, dicho para que nadie lo dé por hecho:** ninguna acción de Plan
 —se persisten, no se operan—; ninguna acción compuesta —cascada de `setChecked`, borrar una
 rama—; ningún fichero de verdad; y nada de UI.
+
+**Los seis puntos del criterio de cierre (`ARCHITECTURE.md` §9.8), cumplidos:** los tres
+puertos existen como interfaces y todos `async` · `MemoryStorageAdapter` pasa la suite de
+contratos entera, escrita contra la interfaz · un `set-checked` redundante **no llega a
+disco**, demostrado de punta a punta desde un `dispatch` · las dieciséis acciones existen con
+su caso de reducer y el `switch` vuelve a ser exhaustivo por el compilador · `delete-note` deja
+los contextos consistentes y devuelve intactos los que no la listaban, con `strictEqual` ·
+`npm run check` en verde con **203 pruebas**.
 
 ### Infraestructura (`infra-agent`)
 
