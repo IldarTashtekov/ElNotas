@@ -43,7 +43,33 @@ export type { Position } from "./domain/Position"
 export { after, lastChildOf, rootEnd } from "./domain/Position"
 
 /* La capa de aplicación: acciones, la caja del estado y los casos de uso */
-export type { Action, ActionMeta, SetChecked } from "./app/Action"
+export type {
+  Action,
+  ActionMeta,
+  /* Las ocho de contenido */
+  ContentAction,
+  ConvertToCheckBox,
+  ConvertToText,
+  Insert,
+  Merge,
+  Remove,
+  SetChecked,
+  SetText,
+  Split,
+  /* Las tres de Nota */
+  CreateNote,
+  DeleteNote,
+  NoteAction,
+  RenameNote,
+  /* Las seis de Contexto */
+  AddItem,
+  ContextAction,
+  CreateContext,
+  DeleteContext,
+  RemoveItem,
+  RenameContext,
+  SetDefaultView,
+} from "./app/Action"
 export type { Listener, Store, Unsubscribe } from "./app/Store"
 export { createStore } from "./app/Store"
 export type { UseCaseDeps, UseCases } from "./app/useCases"

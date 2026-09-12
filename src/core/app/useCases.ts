@@ -13,8 +13,11 @@
  * reducer capacidad de generar ids costaría su pureza.
  */
 
-import type { ContentId, NoteId } from "../domain/Ids"
-import { revision } from "../domain/Ids"
+import { checkBox, text } from "../domain/Content"
+import type { DefaultView } from "../domain/Context"
+import type { ContentId, ContextId, ItemRef, NoteId } from "../domain/Ids"
+import { contentId, contextId, noteId, revision } from "../domain/Ids"
+import type { Position } from "../domain/Position"
 import type { Clock } from "../ports/Clock"
 import type { IdGenerator } from "../ports/IdGenerator"
 import type { Store } from "./Store"
@@ -25,6 +28,38 @@ export interface UseCases {
     contentId: ContentId,
     checked: boolean,
   ) => void
+  readonly setText: (noteId: NoteId, contentId: ContentId, value: string) => void
+  /**
+   * Mete una línea de texto. El id lo genera **aquí**, no la UI: es esta capa la
+   * que tiene el `IdGenerator`. Por eso hay dos casos de uso para una sola
+   * acción —uno por clase de línea— en vez de uno que reciba el bloque hecho.
+   */
+  readonly insertText: (noteId: NoteId, value: string, at: Position) => void
+  readonly insertCheckBox: (noteId: NoteId, value: string, at: Position) => void
+  readonly remove: (noteId: NoteId, contentId: ContentId) => void
+  /** Parte una línea por `offset`. El id de la mitad nueva se genera aquí. */
+  readonly split: (noteId: NoteId, contentId: ContentId, offset: number) => void
+  readonly merge: (noteId: NoteId, contentId: ContentId) => void
+  readonly convertToCheckBox: (noteId: NoteId, contentId: ContentId) => void
+  readonly convertToText: (noteId: NoteId, contentId: ContentId) => void
+
+  /**
+   * Crea una nota vacía y **devuelve su id**, que se genera aquí.
+   *
+   * Es el único caso de uso que devuelve algo, y hace falta: quien la crea
+   * necesita el id para abrirla a continuación, y si no lo devolviera tendría que
+   * buscarla en el estado adivinando cuál es la nueva.
+   */
+  readonly createNote: (name: string) => NoteId
+  readonly renameNote: (noteId: NoteId, name: string) => void
+  readonly deleteNote: (noteId: NoteId) => void
+
+  readonly createContext: (name: string) => ContextId
+  readonly renameContext: (contextId: ContextId, name: string) => void
+  readonly deleteContext: (contextId: ContextId) => void
+  readonly addItem: (contextId: ContextId, item: ItemRef) => void
+  readonly removeItem: (contextId: ContextId, item: ItemRef) => void
+  readonly setDefaultView: (contextId: ContextId, view: DefaultView) => void
 }
 
 export interface UseCaseDeps {
@@ -33,14 +68,102 @@ export interface UseCaseDeps {
   readonly store: Store
 }
 
-export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => ({
-  setChecked: (noteId, contentId, checked) =>
-    store.dispatch({
-      type: "set-checked",
-      noteId,
-      contentId,
-      checked,
-      // Aquí, y sólo aquí, se lee el mundo.
-      meta: { now: clock.now(), revision: revision(ids.next()) },
-    }),
-})
+export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => {
+  /* Aquí, y sólo aquí, se lee el mundo. Se construye uno por acción, así que
+     todas las entidades que esa acción toque reciben la MISMA marca de tiempo. */
+  const meta = () => ({ now: clock.now(), revision: revision(ids.next()) })
+
+  return {
+    setChecked: (noteId, contentId, checked) =>
+      store.dispatch({ type: "set-checked", noteId, contentId, checked, meta: meta() }),
+
+    setText: (noteId, contentId, value) =>
+      store.dispatch({ type: "set-text", noteId, contentId, value, meta: meta() }),
+
+    insertText: (noteId, value, at) =>
+      store.dispatch({
+        type: "insert",
+        noteId,
+        block: text(contentId(ids.next()), value),
+        position: at,
+        meta: meta(),
+      }),
+
+    insertCheckBox: (noteId, value, at) =>
+      store.dispatch({
+        type: "insert",
+        noteId,
+        block: checkBox(contentId(ids.next()), value),
+        position: at,
+        meta: meta(),
+      }),
+
+    remove: (noteId, contentId) =>
+      store.dispatch({ type: "remove", noteId, contentId, meta: meta() }),
+
+    split: (noteId, contentId, offset) =>
+      store.dispatch({
+        type: "split",
+        noteId,
+        contentId,
+        offset,
+        newId: contentIdNuevo(ids),
+        meta: meta(),
+      }),
+
+    merge: (noteId, contentId) =>
+      store.dispatch({ type: "merge", noteId, contentId, meta: meta() }),
+
+    convertToCheckBox: (noteId, contentId) =>
+      store.dispatch({ type: "convert-to-checkbox", noteId, contentId, meta: meta() }),
+
+    convertToText: (noteId, contentId) =>
+      store.dispatch({ type: "convert-to-text", noteId, contentId, meta: meta() }),
+
+    /* ── Nota ── */
+
+    createNote: (name) => {
+      const id = noteIdNuevo(ids)
+      store.dispatch({ type: "create-note", noteId: id, name, meta: meta() })
+      return id
+    },
+
+    renameNote: (noteId, name) =>
+      store.dispatch({ type: "rename-note", noteId, name, meta: meta() }),
+
+    deleteNote: (noteId) =>
+      store.dispatch({ type: "delete-note", noteId, meta: meta() }),
+
+    /* ── Contexto ── */
+
+    createContext: (name) => {
+      const id = contextIdNuevo(ids)
+      store.dispatch({ type: "create-context", contextId: id, name, meta: meta() })
+      return id
+    },
+
+    renameContext: (contextId, name) =>
+      store.dispatch({ type: "rename-context", contextId, name, meta: meta() }),
+
+    deleteContext: (contextId) =>
+      store.dispatch({ type: "delete-context", contextId, meta: meta() }),
+
+    addItem: (contextId, item) =>
+      store.dispatch({ type: "add-item", contextId, item, meta: meta() }),
+
+    removeItem: (contextId, item) =>
+      store.dispatch({ type: "remove-item", contextId, item, meta: meta() }),
+
+    setDefaultView: (contextId, view) =>
+      store.dispatch({ type: "set-default-view", contextId, view, meta: meta() }),
+  }
+}
+
+/*
+    El generador devuelve una cadena pelada: no sabe ni le importa qué clase de
+    id estás creando. Quien lo marca es quien llama, que sí lo sabe. De ahí estos
+    tres envoltorios de una línea en vez de un método por tipo en el puerto.
+*/
+const contentIdNuevo = (ids: IdGenerator): ContentId => contentId(ids.next())
+const noteIdNuevo = (ids: IdGenerator): NoteId => noteId(ids.next())
+const contextIdNuevo = (ids: IdGenerator): ContextId => contextId(ids.next())

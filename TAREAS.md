@@ -147,23 +147,42 @@ rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
     tumba **1**… y esa última sólo por accidente, así que se añadió una prueba explícita de
     que **una copia equivalente SÍ cuenta como cambio**, que es la semántica elegida y lo que
     impide que alguien "mejore" el diff comparando por valor. Todo revertido.
-- [ ] **La prueba que cierra la cadena entera:** un `set-checked` redundante **no llega a
-      disco**. La Fase 1 demostró que no notifica al suscriptor; esto es el eslabón siguiente
-      (§3 ②), con un `StorageAdapter` que cuente escrituras. **Es el punto de la fase que hay
-      que escribir mirándolo**; todo lo demás es mecánico.
-- [ ] **Las siete acciones de contenido** — `set-text`, `insert`, `remove`, `split`, `merge`,
-      `convert-to-checkbox`, `convert-to-text`. Mecánicas: su caso de reducer es calcado al de
-      `set-checked`. Lo único que vigilar es que **ninguna de las siete se salte la comparación
-      `content === note.content`**. Al añadir la segunda, el `switch` deja de ser exhaustivo
-      solo y el compilador empieza a exigir las demás.
-- [ ] **Las acciones de Nota** — `create-note`, `rename-note`, `delete-note`. `create-note`
-      recibe el `NoteId` **ya hecho** del caso de uso, igual que `split` recibe su `ContentId`.
-- [ ] **Las acciones de Contexto** — `create-context`, `rename-context`, `delete-context`,
-      `add-item`, `remove-item`, `set-default-view`. **Aquí está la enjundia de la fase:**
-      `delete-note` es la primera acción que toca **dos entidades a la vez** y tiene que dejar
-      los contextos consistentes, con el **mismo `meta`** para todos los tocados y los demás
-      **intactos por referencia**. `add-item` es no-op si la entidad referenciada no existe.
-      → `ARCHITECTURE.md` §9.7
+- [x] **La prueba que cierra la cadena entera** — ✅ Hecha, en `src/storage/chain.test.ts`.
+      **8 pruebas**, y con ellas el **punto 3 del criterio de cierre**: un `set-checked`
+      redundante no avisa, no ensucia `updatedAt` y **no llega a disco**. Es la primera vez que
+      `core` y `storage` se montan juntos —`Store` → `createWriteBehind` →
+      `MemoryStorageAdapter`—, con `Clock` e `IdGenerator` fabricados en dos líneas.
+      **Verificado rompiéndolo por dos sitios:** quitar del reducer la línea
+      `content === note.content` tumba **9** pruebas (cinco de la Fase 1 y cuatro de éstas), y
+      **no suscribir el escritor al `Store`** tumba **3** — que era justo lo que había que
+      comprobar, porque las dos mitades siguen verdes por separado si no están enchufadas.
+- [x] **Las siete acciones de contenido** — ✅ Hechas, con sus casos de uso y **18 pruebas**
+      en `contentActions.test.ts`. `Action` ya es una unión de ocho y el `switch` vuelve a ser
+      exhaustivo por el compilador (ahora con `const nunca: never`, que con un solo miembro no
+      servía). Tres cosas que salieron al escribirlas:
+  - **La comparación se escribe UNA sola vez, en un helper `onContent`.** Era el riesgo
+    anunciado —«que ninguna de las siete se salte el `===`»— y copiar catorce líneas ocho
+    veces son ocho oportunidades de olvidarlo. Mismo razonamiento que la primitiva A con su
+    recursión escrita una vez (§5.4).
+  - **`insert` tiene DOS casos de uso y una sola acción** (`insertText` / `insertCheckBox`):
+    el bloque llega ya construido con su id, y quien genera ids es esta capa, no la UI.
+    `split` es la única que además pide un id para la mitad nueva.
+  - **Verificado rompiéndolo por dos sitios:** quitar la comparación del helper tumba **17**
+    pruebas; un copy-paste realista —que `convert-to-text` llame a `convertToCheckBox`, que es
+    el error natural al escribir ocho casos casi iguales— tumba **1**, la suya.
+- [x] **Las acciones de Nota y de Contexto** — ✅ Las nueve hechas, con sus casos de uso y
+      **27 pruebas** en `entityActions.test.ts`. **El catálogo son ya las dieciséis.**
+      `createNote` y `createContext` son los **únicos casos de uso que devuelven algo** —el id
+      recién generado—, porque quien crea una nota necesita abrirla justo después y si no
+      tendría que adivinar cuál es la nueva buscando en el estado.
+      **La enjundia estaba donde se esperaba, `delete-note`:** toca dos entidades a la vez,
+      da a todos los contextos afectados **el mismo `meta`** y devuelve **intactos por
+      referencia** los que no la listaban. Si ninguno la listaba, devuelve el mismo mapa
+      `contexts` de entrada.
+      **Verificado rompiéndolo por tres sitios:** no limpiar los contextos —dejar la `ItemRef`
+      colgando— tumba **2**; copiar todos los contextos en vez de sólo los afectados tumba
+      **2**; y quitar de `remove-item` la comparación de longitud tumba **1**, que es la
+      trampa del `filter` devolviendo siempre array nuevo.
 - [ ] **`schemaVersion`, el runner de migraciones y `hydrate`.** Nace `src/core/migrations/`.
       `schemaVersion` **no se añade a `AppState`** —ya vive en `StorageAdapter`, que es donde
       significa algo—, y hay que **corregir el comentario de `AppState.ts`**, que hoy dice que
