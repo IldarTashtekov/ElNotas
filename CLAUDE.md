@@ -133,6 +133,12 @@ src/
 - **Una operación que no aplica NO HACE NADA** en lugar de fallar. Así una acción inocua
   tampoco ensucia `updatedAt` ni `revision`. Enumerar los casos no-op es **la mitad de la
   especificación** de cada operación (tabla en `ARCHITECTURE.md` §9.3).
+- **Los errores no se propagan: se devuelven.** Lo que pueda fallar devuelve
+  `Result<T, StorageError>`, no lanza. Un `throw` no sale en ninguna firma, así que quien llama
+  no se entera. **El `try/catch` no desaparece, se confina:** cada adaptador tiene UNA frontera
+  donde envuelve la llamada de plataforma y la traduce; por encima de esa línea nada lanza.
+  Ojo: **ausencia no es fallo** — `get` de algo que no está es `ok(null)`. El tipo, la
+  taxonomía y el porqué, en `ARCHITECTURE.md` §6.5. **Aún no está construido** (`TAREAS.md`).
 - **`setChecked`, no `toggleChecked`.** Un `toggle` no puede ser nunca un no-op; el nombre
   sostiene la invariante de identidad. Vale como criterio general al nombrar operaciones.
 - **Integridad referencial:** no se deja una referencia apuntando a algo inexistente. Borrar
@@ -140,6 +146,13 @@ src/
   referencia a algo que no existe es un no-op.
 - **`noUncheckedIndexedAccess` está activo.** Indexar `Record<NoteId, Note>` devuelve
   `Note | undefined`; hay que tratar el caso "ese id no existe".
+- **Toda declaración de valor lleva tipo explícito**, aunque TypeScript lo infiera:
+  `let numero: number = 1`. Así, cuando el tipo de una variable cambia, **se ve en el diff**
+  en vez de que la inferencia lo absorba en silencio. **Tres excepciones**, porque ahí la
+  anotación no cabe: las **declaraciones de función** (ese trabajo lo hace el tipo de retorno,
+  y anotar además obligaría a escribir la firma dos veces), **`as const`** (la anotación
+  ensancha justo lo que `as const` estrecha) y el **destructuring**. Pendiente de aplicar al
+  código ya escrito: `TAREAS.md`.
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Plan)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
   memoria, **nunca** en localStorage. En desktop, keychain del sistema.
@@ -218,6 +231,13 @@ duda**; no la cambies por tu cuenta.
   Y llega con el runner que lo consume, porque **es** el mecanismo de migración. §9.7.
 - **El arranque de la app está partido en dos fases:** `hydrate` y las migraciones son puras y
   van en la Fase 2; quién abre el storage y qué se ve sin nada guardado es Fase 4. §9.7.
+- **Los errores se devuelven, no se lanzan.** `Result<T, E>` a mano (~20 líneas, cero
+  dependencias), y `StorageError` con **cinco casos elegidos por "¿reintentar sirve de algo?"**
+  —`permission-denied`, `not-found`, `quota-exceeded`, `corrupt`, `io`—, no por qué mensaje sale
+  en pantalla. `corrupt` **no** se mete dentro de `io`: es la diferencia entre perder una nota y
+  creer que las has perdido todas. Se aplica **antes** del adaptador de fichero de la Fase 3,
+  porque después habría dos adaptadores y una suite de contratos que convertir en vez de una.
+  §6.5.
 - **`remove` NO borra una casilla con hijas: es no-op.** Se borra de abajo arriba. Ninguna
   operación del dominio hace desaparecer contenido que el usuario no esté mirando; la cascada
   se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertToText`**:
@@ -247,17 +267,21 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   y la parte pura del arranque. Se atacó **de abajo arriba** —la persistencia primero,
   verificada con la única acción que ya existía— por el mismo motivo que la rebanada vertical
   de la Fase 1: descubrir un fallo con un candidato, no con diecisiete.
-- **Fase 3 — Fichero local. ← LA SIGUIENTE.** `FileStorageAdapter` sobre `BlobStore`, que ya
-  existe como interfaz y **sigue sin una sola implementación**. Reusa la suite de contratos sin
-  tocarla. **Ya no tiene preguntas abiertas:** cómo se verifica está decidido — a mano y
-  documentado, sin runner de navegador (ver abajo).
+- **Fase 3 — Fichero local. ← LA SIGUIENTE.** Empieza por un **paso 0: convertir los puertos a
+  `Result`** (§6.5), antes de escribir el adaptador — después serían dos adaptadores y una
+  suite de contratos que convertir en vez de una. Luego `FileStorageAdapter` sobre `BlobStore`,
+  que ya existe como interfaz y **sigue sin una sola implementación**. Ojo: **la suite de
+  contratos sí se toca**, en el paso 0, porque cambia con las firmas de los puertos; a partir
+  de ahí el adaptador la reusa sin tocarla. Cómo se verifica ya está decidido: a mano y
+  documentado, sin runner de navegador.
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
 
-**Las decisiones de las fases 1 y 2 están CERRADAS**, y las dos fases están escritas. Lo que
-sigue abierto es **de la Fase 3** (cómo verificar los adaptadores de navegador) y **de la Fase
-4** (cuatro esquinas del teclado, el escalón de anidamiento, el nombre en código de
-`ModosEscritura`). Las respuestas y su porqué están en `TAREAS.md` → *Sin decidir*, que se
-conserva como registro.
+**Las decisiones de las fases 1 y 2 están CERRADAS**, y las dos fases están escritas. **De la
+Fase 3 también:** cómo se verifican los adaptadores de navegador y la taxonomía de errores. Lo
+único abierto es **la escritura condicional** —el conflicto entre dos pestañas, que `revision`
+sabe detectar pero que nadie puede disparar todavía— y lo **de la Fase 4** (cuatro esquinas del
+teclado, el escalón de anidamiento, el nombre en código de `ModosEscritura`). Las respuestas y
+su porqué están en `TAREAS.md` → *Sin decidir*, que se conserva como registro.
 
 ## Comandos
 

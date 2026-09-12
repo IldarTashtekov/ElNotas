@@ -232,10 +232,86 @@ su caso de reducer y el `switch` vuelve a ser exhaustivo por el compilador · `d
 los contextos consistentes y devuelve intactos los que no la listaban, con `strictEqual` ·
 `npm run check` en verde con **216 pruebas**.
 
+### Fase 3 — Fichero local ← LA SIGUIENTE
+
+**El paso 0 va antes que el adaptador, y el orden es la decisión.** Convertir los puertos a
+`Result` después de escribir el adaptador de fichero sería escribirlo dos veces: es **lo primero
+que falla de verdad** —tiene permisos que revocar y disco que llenar, cosas que el de memoria no
+tiene—. Y la suite de contratos cambia con los puertos: hoy hay **un** adaptador que la pasa,
+después de esta fase habría dos. Razonado en `ARCHITECTURE.md` §6.5.
+
+- [ ] **Paso 0 — `Result<T, E>`: que los errores se devuelvan en vez de lanzarse.**
+      El tipo va a mano, ~20 líneas con sus dos constructores, cero dependencias, en el estilo
+      de unión discriminada de `Content` y `Position`. Con él, `StorageError` (cinco casos) y
+      `MigrationError` (dos), con la taxonomía cerrada de §6.5 — elegida por **"¿reintentar
+      sirve de algo?"**, no por qué mensaje sale en pantalla.
+      **Alcance exacto, medido:**
+  - [ ] **Los siete métodos de puerto.** En `Repository<T, TId>`: `get` (`Promise<T | null>` →
+        `Promise<Result<T | null, StorageError>>`), `getAll`, `put` y `delete`. En
+        `StorageAdapter`: `transaction`, `getSchemaVersion` y `setSchemaVersion`.
+  - [ ] **Los dos `throw` de `runMigrations`** — `src/core/migrations/runMigrations.ts:110`
+        (esquema más nuevo que el que este código entiende) y `:123` (falta un paso de la
+        cadena). La firma pasa a `Result<MigrationResult, MigrationError>`. Con esto
+        `runMigrations` deja de ser sólo **pura** y pasa a ser **pura y total**: son dos
+        propiedades distintas, y la totalidad hasta ahora sólo la prometía el reducer.
+  - [ ] **`MemoryStorageAdapter`** — hoy no falla nunca, así que es mecánico: envolver en
+        `ok(...)`. Es el primer sitio donde se ve si el tipo estorba.
+  - [ ] **`writeBehind`** — `src/storage/writeBehind.ts:129` no crea un error, **lo relanza**:
+        restaura `pendiente` y propaga. Aquí está el trabajo real de este paso y el motivo de
+        toda la decisión: **hoy reintenta siempre, a ciegas**, así que si el usuario revoca el
+        permiso de la carpeta la app se pasa la sesión reintentando en silencio, sin
+        conseguirlo nunca y sin poder avisar. Con la taxonomía puede decidir. **Precio
+        aceptado:** el bucle de seis `await` de `escribirPendiente` (`writeBehind.ts:99`) pasa
+        de un `try` que cubre los seis a comprobar uno a uno con corte al primer fallo. Más
+        ruidoso y sin arreglo elegante.
+  - [ ] **La suite de contratos** de `src/storage/contract-tests/` — cambia con los puertos, y
+        es la que fija lo que se le exigirá al adaptador de fichero. Hacerla **antes** que él es
+        justamente el motivo de este orden.
+  - [ ] *(Opcional, y va después)* **Un guardián en `tools/`** que falle si aparece un `throw`
+        fuera de la frontera de los adaptadores (`src/storage/*/`), al estilo de
+        `tools/check-core-purity.mjs`. Sin él la regla dura lo que dure la memoria. Necesita el
+        mismo escáner que borra comentarios y cadenas, y **no puede prohibir el `throw` a secas**:
+        por debajo de la frontera de cada adaptador hay `try/catch` legítimo, porque `JSON.parse`
+        y la File System Access API lanzan por su cuenta.
+
+      **Lo que NO se toca:** que `get` de algo que no está guardado devuelva `null`, y que
+      borrar lo que no existe no sea un error. **Ausencia no es fallo**, eso ya está bien
+      resuelto y el `Result` envuelve sólo el fallo de entrada/salida.
+
+- [ ] **`FileStorageAdapter` sobre `BlobStore`**, ya contra las firmas nuevas. Reusa la suite de
+      contratos sin tocarla.
+- [ ] **`LocalStorageBlobStore`** y **`DirectoryHandleBlobStore`** — la primera implementación
+      de `BlobStore`, que hoy existe como interfaz y no tiene ninguna. La segunda **se verifica a
+      mano**, con una lista de pasos escrita en el repo (cerrado en *Sin decidir*, más abajo).
+
 ### Infraestructura (`infra-agent`)
 
-Las cuatro son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
+Todas son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
 documentación**.
+
+- [ ] **Anotar el tipo en toda declaración de valor** (`const` / `let`), aunque TypeScript lo
+      infiera: `let numero: number = 1`. La regla ya está escrita en `CLAUDE.md`; esto es
+      aplicarla al código que ya existe. El porqué: cuando el tipo de una variable cambia, se
+      ve **en el diff** en vez de que la inferencia lo absorba en silencio.
+      **Alcance medido** sobre `src/core` y `src/storage`, ignorando comentarios: unas **500
+      declaraciones sin anotar**, frente a las 13 de código y ~54 de pruebas que ya lo llevan.
+      Van en dos casillas porque son dos trabajos de tamaño muy distinto:
+  - [ ] **El código — ~55 declaraciones.** Es el que importa: es lo que se lee al revisar un
+        cambio de comportamiento.
+  - [ ] **Las pruebas — ~441 declaraciones.** Ocho veces más volumen y mecánico casi entero.
+  - [ ] *(Opcional, y va después)* **Un guardián en `tools/`** enchufado a `npm run check`, al
+        estilo de `tools/check-core-purity.mjs`, para que la regla la sostenga la comprobación
+        y no la disciplina — que es como el proyecto sostiene todo lo demás. Necesita el mismo
+        escáner que borra comentarios y cadenas antes de mirar, y saltarse las tres
+        excepciones de abajo.
+
+      **Las tres excepciones, o la regla no es implementable:**
+      **(1) declaraciones de función** (`const setText = (…): X => …`) — ese trabajo lo hace el
+      tipo de retorno, y anotar además la constante obligaría a escribir la firma entera dos
+      veces; **(2) `as const`** — una sola en código, `src/core/app/diffState.ts:52`
+      (`const NADA = {…} as const`): una anotación ensancha el tipo y `as const` existe justo
+      para estrecharlo; **(3) destructuring** — dos en código, `src/core/app/reduce.ts:227` y
+      `:267`, donde anotar exige repetir la forma del objeto entero.
 
 - [x] **Que `npm test` falle si no hay ficheros de test.** ✅ Hecho. `tools/require-tests.mjs`
       cuenta los `*.test.js` de `tmp-test/` y sale con código 1 si no hay ninguno, porque
@@ -309,6 +385,35 @@ apuntan.
 - **El identificador de `ModosEscritura` en el código.** El concepto se llama así; el nombre
   en el código está sin fijar, porque todo lo demás está en inglés (`WritingMode`, y en
   singular). O se cambia la convención a conciencia y para todo. → `ARCHITECTURE.md` §7.2
+
+### Escritura condicional y conflicto entre dos pestañas
+
+**Abierta a conciencia, no por olvido.** Salió al cerrar la taxonomía de `StorageError` (§6.5) y
+es el único caso que se dejó fuera a propósito.
+
+El problema es real y va a pasar: **dos pestañas abiertas sobre la misma nota**, y la segunda
+pisando lo que acaba de guardar la primera. El modelo ya tiene la pieza para detectarlo
+—`revision` existe justo para eso, y por eso es un token opaco y no un contador (§5.3)— pero el
+mecanismo **no está construido**: `Repository.put` no recibe revisión, así que hoy no hay forma
+de decir "escribe esto sólo si nadie lo ha tocado desde que lo leí".
+
+**Por qué no se metió ya un caso de error para esto:** sería inventar un aviso que nadie puede
+disparar, y choca con la regla del proyecto de no construir lo que no tiene consumidor — la
+misma por la que no existen `move` ni el puerto `Scheduler`.
+
+Queda anotado como **lo primero que se añadirá a `StorageError`** el día que el mecanismo
+exista. Tres cosas que habrá que decidir ese día, y conviene que estén escritas ya:
+
+- **La firma.** Si `put` pasa a recibir la revisión leída (`put(entity, esperada)`) o si la
+  escritura condicional es un método aparte.
+- **El caso de error.** Algo como `{ kind: "stale"; stored: Revision }` — y **no es un `io`**:
+  reintentar a ciegas es justo lo que no hay que hacer, porque volvería a pisar.
+- **Qué hace la app al recibirlo**, que es decisión de producto y no de arquitectura. Lo único
+  ya descartado es **"gana el último"** (§5.3).
+
+**Qué lo desbloquearía:** que la app se use de verdad en dos pestañas, o llegar a la Fase 4 con
+el editor delante. No antes: sin un segundo escritor real, no hay forma de probar que el
+mecanismo funciona.
 
 ### ~~Cómo se verifica la Fase 3~~ — ✅ **cerrada: a mano, y documentado**
 

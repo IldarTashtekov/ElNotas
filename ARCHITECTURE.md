@@ -33,7 +33,7 @@ Una regla de proyecto que solo vive en un documento se erosiona. Nadie la rompe 
 propósito: se rompe por descuido, seis meses después, en un fichero que nadie relee. La
 apuesta de este repo es convertir cada regla importante en **un error de compilación**.
 
-Seis mecanismos, una sola filosofía:
+Siete mecanismos, una sola filosofía:
 
 | Mecanismo | Regla que hace cumplir | Sin él |
 |---|---|---|
@@ -43,10 +43,15 @@ Seis mecanismos, una sola filosofía:
 | **Unión discriminada** (`Content = Text \| CheckBox`) | tratar todos los casos | añades un tipo de bloque y nada te avisa de dónde falta |
 | **`noUncheckedIndexedAccess`** | tratar el "ese id no existe" | `undefined` se cuela por un lookup en un estado normalizado |
 | **Alias no declarado** (`#ui/*` no existe todavía) | el core no importa de fuera | una dependencia al revés pasa desapercibida |
+| **`Result<T, E>`** en vez de excepciones (§6.5) | tratar el fallo de E/S | un `throw` sube sin tipo hasta arriba y nadie sabe que existe |
 
 El sexto es el más curioso, porque no se diseñó: sale gratis de la regla "un alias se
 declara cuando el módulo existe". Como `#ui/*` no está en el campo `imports`, importarlo
 desde el core falla con un limpio *Cannot find module*.
+
+El séptimo es el más reciente y el de mayor alcance, porque **es el único que ataca algo que
+hoy es invisible**: una excepción no aparece en ninguna firma, así que el compilador no puede
+avisar de que existe. Está desarrollado en §6.5.
 
 **El orden importa.** Todo esto es la Fase 0 y se montó *antes* de escribir una línea de
 dominio. Si la verja hubiera llegado después, habría llegado tarde.
@@ -55,8 +60,11 @@ dominio. Si la verja hubiera llegado después, habría llegado tarde.
 `lib.es5.d.ts`, o sea dentro de `lib: ["ES2020"]`, así que **compilan** dentro del core.
 Solo caen `crypto`, `performance` y `document`, que viven en `lib.dom` / `@types/node`.
 Consecuencia: **`IdGenerator` está protegido por el compilador; `Clock` solo por
-convención.** No se puede tapar por `lib` sin renunciar a medio ES2020, así que el hueco se
-tapa con un `grep` en `npm run check` (pendiente, ver `TAREAS.md`).
+convención.** No se puede tapar por `lib` sin renunciar a medio ES2020, así que el hueco lo
+tapa un guardián aparte, `tools/check-core-purity.mjs`, enchufado como `npm run check:purity`.
+**No es un `grep`** y no puede serlo: los comentarios del proyecto mencionan `Date.now()` a
+propósito —son justo los que explican la regla—, así que lleva un escáner que borra comentarios
+y cadenas antes de buscar.
 
 ---
 
@@ -1125,6 +1133,142 @@ Un puerto se declara cuando el dominio necesita algo del mundo, no para dar cobi
 en realidad no es del dominio. Para que la parte de abajo se pueda probar sin esperas reales,
 recibe la función de programación **por parámetro, con un valor por defecto**; eso no es un
 puerto, es un argumento.
+
+### 6.5 Los errores no se propagan: `Result<T, E>`
+
+**Decisión cerrada, y aún no construida.** Se aplica **antes** del adaptador de fichero de la
+Fase 3 (el porqué del momento, al final de la sección).
+
+> **Toda operación que pueda fallar queda encapsulada y devuelve un resultado explícito en
+> lugar de lanzar una excepción.**
+
+Es el séptimo mecanismo de §1, y ataca lo único que los otros seis no pueden ver. Una excepción
+**no aparece en ninguna firma**: `put(entity: Note): Promise<void>` es una función que, leída,
+promete no fallar nunca. TypeScript no tiene `throws` en el tipo y no va a tenerlo, así que
+quien llama no se entera de que hay un caso que tratar, y el compilador tampoco puede avisarle.
+Un `Result` mete ese caso **dentro del tipo**, donde el resto de la arquitectura ya trabaja.
+
+```ts
+export type Result<T, E> =
+  | { readonly ok: true;  readonly value: T }
+  | { readonly ok: false; readonly error: E }
+```
+
+Unas veinte líneas con sus dos constructores, cero dependencias, y en el mismo estilo de unión
+discriminada que ya usan `Content` y `Position` (§2.4): al comprobar `if (r.ok)` el compilador
+estrecha, y **leer `r.value` sin comprobar antes no compila**. Esa es toda la fuerza del
+mecanismo.
+
+#### El punto de partida es bueno, y eso hace el cambio barato
+
+Medido sobre el repo, no supuesto. **Hay tres `throw` en todo el código de producción**, y
+ninguno en `src/core/domain/`:
+
+| Dónde | Qué es |
+|---|---|
+| `core/migrations/runMigrations.ts:110` | lo guardado es de un esquema **más nuevo** que el que este código entiende |
+| `core/migrations/runMigrations.ts:123` | falta un paso de migración en la cadena |
+| `storage/writeBehind.ts:129` | **no crea un error: lo relanza.** Restaura `pendiente` y propaga |
+
+Y **cero aserciones no-nulas** (`algo!.campo`) en el código, así que tampoco hay excepciones
+implícitas esperando su turno.
+
+Que haya tan poco no es suerte: **el dominio no puede fallar por diseño.** La regla «una
+operación que no aplica NO HACE NADA» (§9.3) eliminó el caso de error en vez de tiparlo, y el
+reducer es **total** por contrato. Por eso el único sitio del core que lanza es
+`runMigrations` — ahí dentro no hay nada más que convertir.
+
+También conviene deshacer un malentendido sobre el `catch`. Con `strict` va activo
+`useUnknownInCatchVariables`, así que hoy `catch (fallo)` ya recibe **`unknown`**: no es que al
+error le falte el tipo en la firma, es que **no existe en ninguna parte**. Tipar el `catch` no
+arreglaría nada; hay que mover el fallo al valor de retorno.
+
+#### El argumento que decide: hoy se reintenta a ciegas
+
+`writeBehind` no distingue por qué falló una escritura, así que **reintenta siempre**. Si el
+usuario revoca el permiso de la carpeta, la app se pasa la sesión entera reintentando en
+silencio, sin conseguirlo jamás y sin poder avisar de nada. No es un fallo de implementación:
+con `Promise<void>` **no hay dónde poner esa información**, porque el valor de retorno no tiene
+sitio para ella.
+
+#### La taxonomía: el criterio es «¿reintentar sirve de algo?»
+
+Aquí está la razón de que sean casos separados y no un error genérico. La pregunta que decide
+**no es qué mensaje sale en pantalla**, sino qué puede hacer el programa a continuación:
+
+| Caso | ¿Reintentar? | Qué hace la app |
+|---|---|---|
+| `permission-denied` — el permiso de la carpeta ya no vale | **no** | vuelve a pedir la carpeta. Lo no guardado sigue en memoria: no se pierde |
+| `not-found` — la carpeta o el fichero han desaparecido | **no** | avisa de que la carpeta ya no existe y ofrece elegir otra |
+| `quota-exceeded` — disco lleno o cuota excedida | **no** | deja de intentarlo y avisa de que hay que hacer hueco |
+| `corrupt` — el contenido de un fichero no se entiende | **no** | **aísla esa entidad y sigue con el resto**, diciendo cuál |
+| `io` — cualquier otra cosa | **sí** | reintenta en silencio; si persiste, avisa |
+
+```ts
+export type StorageError =
+  | { readonly kind: "permission-denied" }
+  | { readonly kind: "not-found";  readonly path: string }
+  | { readonly kind: "quota-exceeded" }
+  | { readonly kind: "corrupt";    readonly path: string; readonly cause: unknown }
+  | { readonly kind: "io";         readonly cause: unknown }
+
+export type MigrationError =
+  | { readonly kind: "schema-from-future"; readonly stored: number; readonly supported: number }
+  | { readonly kind: "missing-migration";  readonly from: number }
+```
+
+**`corrupt` no va dentro de `io`, y es deliberado.** Si un solo fichero de nota está corrupto,
+lo correcto es apartar esa nota y abrir todas las demás. Por el camino genérico la app
+reintentaría leerla eternamente y **parecería que está todo roto cuando sólo falla una nota**:
+la diferencia entre perder una nota y creer que las has perdido todas.
+
+**`cause` existe para depurar, no para enseñar.** Guarda el `unknown` que vino de la
+plataforma. Al usuario se le enseña el `kind`, que es lo que está en castellano y lo que tiene
+una acción asociada.
+
+#### Cuatro principios
+
+1. **Ausencia no es fallo.** `get` de algo que no está guardado devuelve `ok(null)`, no un
+   error; y borrar lo que no existe tampoco es error. Eso ya está bien resuelto hoy y **no se
+   toca**: el `Result` envuelve sólo el fallo de entrada/salida. Colapsar «no está» y «no he
+   podido mirar» en el mismo caso sería perder información que luego hace falta.
+2. **El `try/catch` no desaparece: se confina.** JavaScript lanza por su cuenta —`JSON.parse`
+   lanza, la File System Access API lanza, un `await` sobre una promesa rechazada lanza—, así
+   que «encapsulado» no significa que no haya `catch` en ningún sitio. Significa que **cada
+   adaptador tiene una frontera** donde envuelve la llamada de plataforma y la traduce a
+   `Result`. Por debajo de esa línea hay `try/catch`; por encima de ella, nada lanza. Es la
+   misma costura de §2.2: la cáscara imperativa habla con el mundo, el núcleo recibe valores.
+3. **`runMigrations` pasa de pura a pura y total.** Son dos propiedades distintas y merece
+   distinguirlas: la **pureza** se la impone la verja del core, la **totalidad** —no lanzar
+   nunca— era hasta ahora un contrato que sólo prometía el reducer. Con esto, las dos funciones
+   que deciden qué estado tiene la app lo prometen igual.
+4. **El coste, dicho sin esconderlo.** TypeScript no tiene *for-comprehension* ni operador de
+   propagación de errores, así que el bucle de seis `await` de `escribirPendiente`
+   (`writeBehind.ts:99`) pasa de un `try` que cubre los seis a **comprobar uno a uno**, con
+   corte al primer fallo. Es más ruidoso de leer y no tiene arreglo elegante. Se acepta.
+
+#### Por qué ahora y no después de la Fase 3
+
+Dos razones, las dos de coste:
+
+- **El adaptador de fichero es lo primero que falla de verdad.** El de memoria no tiene permisos
+  que revocar ni disco que llenar; el de fichero tiene las dos cosas. Escribirlo contra las
+  firmas viejas y convertirlo después es escribirlo dos veces.
+- **La suite de contratos cambia con los puertos, y hoy hay UN adaptador.** Después de la Fase 3
+  habría dos, y el contrato es precisamente lo que ambos comparten. El cambio cuesta la mitad
+  ahora.
+
+#### Lo que queda abierto: la escritura condicional
+
+Falta un caso que **va a hacer falta y hoy no se puede escribir**: dos pestañas abiertas sobre
+la misma nota, y la segunda pisando lo que guardó la primera. El modelo ya tiene la pieza para
+detectarlo —`revision` existe justo para eso (§5.3)— pero el mecanismo de «escribe sólo si
+nadie lo ha tocado» **no está construido**: `Repository.put` no recibe revisión.
+
+Añadir hoy un caso de error para eso sería inventar un aviso que nadie puede disparar, y choca
+con la regla del proyecto de no construir lo que no tiene consumidor. Queda anotado en
+`TAREAS.md` → *Sin decidir* como **lo primero que se añadirá a `StorageError`** el día que el
+mecanismo exista.
 
 ---
 
