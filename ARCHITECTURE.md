@@ -1075,8 +1075,20 @@ comporta distinto, el contrato lo cantea.
 Corre en dos modos: `unit` (memory, directorio temporal) en cada commit, e `integration`
 (servicios reales) opt-in por variable de entorno.
 
-Queda un problema **abierto**: los adaptadores sobre `FileSystemDirectoryHandle` y OPFS
-necesitan un navegador real, y `node:test` no llega ahí (ver `TAREAS.md`).
+Los adaptadores sobre `FileSystemDirectoryHandle` y OPFS necesitan un navegador real y
+`node:test` no llega ahí. **Decidido, y antes de empezar la Fase 3: se verifican a mano, con
+una lista de pasos escrita en el repo, y sin instalar ningún runner de navegador.**
+
+El reparto en dos niveles reduce el problema a casi nada: `FileStorageAdapter` —que es donde
+está toda la lógica— pasa esta misma suite en Node con un `BlobStore` falso, y lo único que
+queda sin automatizar son las ~50 líneas de `DirectoryHandleBlobStore`, que **no tienen lógica
+propia: sólo traducen a la API del navegador**.
+
+Y un doble ahí no compra lo que parece. Prueba **lo que uno cree que hace la API**, no lo que
+hace: escribir un fichero con la File System Access API exige un `close()` final que es lo que
+vuelca los datos al disco, y un `BlobStore` de mentira sobre un `Map` pasa en verde con ese
+`close()` olvidado. **Cuanto más fina es la capa de traducción, menos vale probarla con un
+doble.** El razonamiento completo y qué lo reabriría, en `TAREAS.md`.
 
 ### 6.4 El write-behind no cabe entero en el core
 

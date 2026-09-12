@@ -310,21 +310,43 @@ apuntan.
   en el código está sin fijar, porque todo lo demás está en inglés (`WritingMode`, y en
   singular). O se cambia la convención a conciencia y para todo. → `ARCHITECTURE.md` §7.2
 
-### Cómo se verifica la Fase 3
+### ~~Cómo se verifica la Fase 3~~ — ✅ **cerrada: a mano, y documentado**
 
-Los adaptadores sobre `FileSystemDirectoryHandle` y OPFS **necesitan un navegador real**, y
-`node:test` no llega ahí. Hoy figura como "pendiente de decidir al llegar", pero **se puede
-decidir ya**: no depende de nada que no se sepa hoy.
+**Nada de Playwright ni de ningún runner de navegador.** Se cierra antes de empezar la fase, no
+a mitad, que era el motivo de dejarla apuntada.
 
-Aplazarlo tiene dos costes concretos. Uno, convierte la Fase 3 en **la única con riesgo
-desconocido**: no sabemos si es un problema de una tarde o de una semana. Dos, si la respuesta
-acaba siendo Playwright o similar, **choca de frente con la política de cero dependencias** —y
-esa conversación es mejor tenerla ahora que con la fase a medias.
+**Lo primero que hay que ver es que el problema es mucho más pequeño de lo que decía esta
+entrada**, y lo es gracias al reparto en dos niveles de §6.1:
 
-Opciones que se ven desde aquí: verificar solo `LocalStorageBlobStore` en automático y el
-resto a mano; instalar un runner de navegador **solo para esa fase** (coherente con la
-política de dependencias por fase); o aceptar que ese adaptador se valida manualmente y
-documentarlo como tal.
+| Qué | Tiene lógica propia | Cómo se verifica |
+|---|---|---|
+| `FileStorageAdapter` | **sí** — serializa, traduce id → camino, mantiene el manifiesto | Node, con la **suite de contratos que ya existe** y un `BlobStore` falso |
+| `LocalStorageBlobStore` | poca | Node, con un objeto falso de diez líneas |
+| `DirectoryHandleBlobStore` | **no** — sólo traduce a la API del navegador | **a mano, una vez, con una lista de pasos escrita en el repo** |
+
+Así que lo que no se puede automatizar son **unas cincuenta líneas sin lógica**. Todo lo que
+puede tener un fallo interesante queda del lado de Node.
+
+**Por qué un test unitario con un doble no resuelve esas cincuenta líneas.** Porque un doble
+que escribes tú prueba **lo que tú crees que hace la API**, no lo que hace. El ejemplo que lo
+deja claro: escribir un fichero con la File System Access API exige un `close()` final, y **ese
+`close()` es lo que vuelca los datos al disco** — sin él no se guarda nada. Un `BlobStore` de
+mentira que guarde en un `Map` pasa en verde con el `close()` olvidado. La regla general:
+**cuanto más fina es la capa de traducción, menos vale probarla con un doble**; el test acaba
+siendo el mismo código escrito dos veces, y con el mismo error si lo hay.
+
+**Y el argumento que decide:** esas cincuenta líneas **se ejercitan solas cada vez que alguien
+usa la app**. Si guardar en la carpeta no funciona, se nota al minuto y de forma ruidosa. La
+verificación automática se reserva para lo que falla **en silencio**, que es lo que las fases 1
+y 2 han estado blindando.
+
+**Precio aceptado:** si el navegador cambia el comportamiento de esa API, no lo cazará ninguna
+prueba — lo cazará el uso. Para cincuenta líneas, se asume.
+
+**Qué lo reabriría:** que aparezca un segundo `BlobStore` sobre navegador con lógica de verdad
+(el de Drive, con su OAuth y sus reintentos), o que esas cincuenta líneas den más de un
+sobresalto. Ese día, el runner de navegador se instala **sólo para esa fase**, coherente con la
+política de dependencias. Aparcado abajo.
 
 ### ~~La justificación escrita de `schemaVersion` no es la real~~ — ✅ **cerrada**
 
@@ -368,5 +390,6 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **El editor de grafos de los Planes** | Los tipos de `Plan` están, pero no hay ni una operación. Es una app dentro de la app. | Que la parte de Notas esté terminada y en uso. Anotado: si llega, `Plan.nodes` probablemente deba pasar de array a `Record`, porque las aristas se guardan por id y con array toda búsqueda es lineal. |
 | **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web; no hay build web todavía. | Una Fase 4 terminada. Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
 | **Sync entre dispositivos, CRDTs, colaboración en tiempo real** | Salto enorme de complejidad. `revision` ya deja la puerta abierta a detectar conflictos, que es el 10% que sí hacía falta desde el principio. | Uso real en dos dispositivos y una política de conflictos elegida a conciencia. "Gana el último" ya está descartada. |
+| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node son ~50 líneas sin lógica, que además se ejercitan solas cada vez que alguien usa la app: si guardar en la carpeta falla, se nota al minuto. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** `BlobStore` sobre navegador con lógica de verdad —el de Drive, con su OAuth y sus reintentos— o que esas 50 líneas den más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | Webpack sigue siendo el bundler previsto para la Fase 4, hoy desinstalado. Migrar **no afecta a la arquitectura**, así que no urge. | Llegar a la Fase 4 y comparar los dos entonces. Está fuera de "decisiones cerradas" a propósito: es una opción abierta, no un compromiso. |
 | **Prototipo desechable del editor** (solo DOM, sin core y sin persistencia) | Es trabajo que se tira. | Nada: **puede que merezca la pena ya.** El editor con `contenteditable` es la parte más difícil del proyecto, está **al final del plan** y es la única sin verificación automática posible. Un prototipo de un rato responde pronto a la pregunta que más riesgo esconde: ¿aguanta en la práctica la regla de que "el nodo enfocado no se re-renderiza"? Si no aguanta, es mejor saberlo antes de construir tres fases encima. |

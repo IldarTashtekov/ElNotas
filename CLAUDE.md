@@ -199,6 +199,12 @@ duda**; no la cambies por tu cuenta.
   (*Texto → Casilla → Casilla hija*). **No se persiste** y muere al salir de la nota: no va
   dentro de `Note`, no va en el core —al núcleo le llega `insert` con la `Position` ya
   elegida— y no necesita fichero de preferencias. §7.2.
+- **Los adaptadores de navegador de la Fase 3 se verifican A MANO, no con Playwright.** Todo lo
+  que tiene lógica —`FileStorageAdapter`— pasa la suite de contratos en Node con un `BlobStore`
+  falso; lo único sin automatizar son las ~50 líneas de `DirectoryHandleBlobStore`, que sólo
+  traducen a la API del navegador. Un doble ahí prueba lo que **tú crees** que hace la API, no
+  lo que hace. **No propongas instalar un runner de navegador**; qué lo reabriría está en
+  `TAREAS.md`.
 - **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
   (`TS2304`: no está en `lib.es2020` ni con `"types": []`). *Qué está sucio* es puro y va en
   `core/app/`; *cuándo se escribe* va en `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
@@ -243,9 +249,8 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   de la Fase 1: descubrir un fallo con un candidato, no con diecisiete.
 - **Fase 3 — Fichero local. ← LA SIGUIENTE.** `FileStorageAdapter` sobre `BlobStore`, que ya
   existe como interfaz y **sigue sin una sola implementación**. Reusa la suite de contratos sin
-  tocarla. **Tiene una pregunta abierta que conviene cerrar antes de empezar:** cómo se
-  verifica, porque `FileSystemDirectoryHandle` y OPFS necesitan un navegador real y `node:test`
-  no llega ahí. Está en `TAREAS.md` → *Sin decidir*.
+  tocarla. **Ya no tiene preguntas abiertas:** cómo se verifica está decidido — a mano y
+  documentado, sin runner de navegador (ver abajo).
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
 
 **Las decisiones de las fases 1 y 2 están CERRADAS**, y las dos fases están escritas. Lo que
