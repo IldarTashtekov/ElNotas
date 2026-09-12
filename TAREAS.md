@@ -91,9 +91,9 @@ la rebanada demuestra que tres despachos redundantes dan **un solo aviso** y no 
 ### Fase 2 — Acciones, persistencia y memory ✅ TERMINADA
 
 **En este orden, y el orden es la decisión.** Se ataca **de abajo arriba**: la persistencia
-entera primero, verificada con la única acción que ya existe, y sólo después las quince que
+entera primero, verificada con la única acción que ya existe, y sólo después las dieciséis que
 faltan. El write-behind es la única pieza con riesgo real de la fase, y se quiere descubrir que
-escribe de más cuando hay **un solo candidato**, no dieciséis. Es el mismo razonamiento que la
+escribe de más cuando hay **un solo candidato**, no diecisiete. Es el mismo razonamiento que la
 rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
 
 - [x] **Los tres puertos de persistencia** — ✅ Hechos, en `src/core/ports/Repository.ts`,
@@ -171,7 +171,7 @@ rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
     pruebas; un copy-paste realista —que `convert-to-text` llame a `convertToCheckBox`, que es
     el error natural al escribir ocho casos casi iguales— tumba **1**, la suya.
 - [x] **Las acciones de Nota y de Contexto** — ✅ Las nueve hechas, con sus casos de uso y
-      **27 pruebas** en `entityActions.test.ts`. **El catálogo son ya las dieciséis.**
+      **27 pruebas** en `entityActions.test.ts`. **El catálogo son ya las diecisiete.**
       `createNote` y `createContext` son los **únicos casos de uso que devuelven algo** —el id
       recién generado—, porque quien crea una nota necesita abrirla justo después y si no
       tendría que adivinar cuál es la nueva buscando en el estado.
@@ -206,13 +206,31 @@ rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
 —se persisten, no se operan—; ninguna acción compuesta —cascada de `setChecked`, borrar una
 rama—; ningún fichero de verdad; y nada de UI.
 
+- [x] **Las pruebas de la capa de casos de uso** — ✅ Hechas, **13 pruebas** en
+      `useCases.test.ts`. No estaban en el plan y salieron de una revisión al dar la fase por
+      cerrada: de los dieciocho casos de uso, **sólo `setChecked` estaba ejercitado**. El
+      reducer de debajo sí estaba probado a fondo, pero hay tres cosas que sólo ocurren en esa
+      capa y que ninguna prueba del reducer puede ver: el **cableado** (dieciocho bloques casi
+      idénticos son donde se cuela un copy-paste), **los ids que se generan ahí** —`createNote`
+      y `createContext` devuelven el suyo; `insert` y `split` piden **dos** al generador, uno
+      para la línea y otro para la revisión— y que **el reloj se lea una sola vez por acción**,
+      que es lo que hace que `delete-note` ponga la misma marca a todo lo que toca.
+      **Y encontraron un error real: el catálogo son DIECISIETE acciones, no dieciséis.** El
+      fallo venía del planteamiento —se sumaron las siete de contenido que faltaban en vez de
+      las ocho que hay— y se había propagado al código y a los tres documentos sin que nada lo
+      comprobara, porque ningún sitio las contaba. Ahora hay un ancla que sí lo hace.
+      **Verificado rompiéndolo por dos sitios:** que `renameNote` despache `delete-note` tumba
+      **1** —y **compila sin queja**, porque una función con menos parámetros es asignable, así
+      que el compilador no la ve—; y que `createNote` devuelva un id distinto del que despachó,
+      otra **1**.
+
 **Los seis puntos del criterio de cierre (`ARCHITECTURE.md` §9.8), cumplidos:** los tres
 puertos existen como interfaces y todos `async` · `MemoryStorageAdapter` pasa la suite de
 contratos entera, escrita contra la interfaz · un `set-checked` redundante **no llega a
-disco**, demostrado de punta a punta desde un `dispatch` · las dieciséis acciones existen con
+disco**, demostrado de punta a punta desde un `dispatch` · las diecisiete acciones existen con
 su caso de reducer y el `switch` vuelve a ser exhaustivo por el compilador · `delete-note` deja
 los contextos consistentes y devuelve intactos los que no la listaban, con `strictEqual` ·
-`npm run check` en verde con **203 pruebas**.
+`npm run check` en verde con **216 pruebas**.
 
 ### Infraestructura (`infra-agent`)
 

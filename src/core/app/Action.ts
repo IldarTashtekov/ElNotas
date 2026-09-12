@@ -6,7 +6,7 @@
  * prácticas: se puede registrar, guardar, comparar en una prueba, o mandar por
  * la red tal cual.
  *
- * El catálogo son **dieciséis** (`ARCHITECTURE.md` §9.7) y no están inventadas:
+ * El catálogo son **diecisiete** (`ARCHITECTURE.md` §9.7) y no están inventadas:
  * cada una sale de un campo del modelo que alguien tiene que poder cambiar, o de
  * una operación de la Fase 1 que ya existe y no tenía quien la despachara. Aquí
  * están las **ocho de contenido**; las de Nota y Contexto van abajo.
@@ -220,5 +220,5 @@ export type ContextAction =
   | RemoveItem
   | SetDefaultView
 
-/** El catálogo entero: 8 + 3 + 6 = **dieciséis**. */
+/** El catálogo entero: 8 + 3 + 6 = **diecisiete**. */
 export type Action = ContentAction | NoteAction | ContextAction

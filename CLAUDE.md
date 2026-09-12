@@ -23,7 +23,7 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
 
 - **`src/core/` y `src/storage/` — la arquitectura nueva.** El core es dominio puro y **es la
   referencia** de cómo se hacen las cosas aquí; `storage/` es el primer módulo que implementa
-  puertos suyos. Hoy: la Fase 1 entera, más las dos primeras tareas de la Fase 2.
+  puertos suyos. Hoy: **las fases 1 y 2, enteras**.
 - **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
@@ -43,7 +43,7 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   la Fase 1, y `Repository`, `StorageAdapter` y `BlobStore` de la Fase 2. El id de
   `Repository` va **marcado** (`Repository<Note, NoteId>`) y todos son propiedades de función,
   no métodos;
-- **la capa de aplicación** en `src/core/app/`: **las DIECISÉIS acciones** (8 de contenido, 3
+- **la capa de aplicación** en `src/core/app/`: **las DIECISIETE acciones** (8 de contenido, 3
   de Nota, 6 de Contexto), `reduce`, `Store` (una **función**, `createStore`, no una clase),
   `createUseCases` y `diffState`. `reduce` **no** sale por `index.ts`;
 - **el arranque en su mitad pura**, en `src/core/migrations/`: `hydrate` y `runMigrations`.
@@ -74,7 +74,7 @@ src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
 │   ├── domain/    # ← modelo + Position + helper + las 8 operaciones
 │   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
-│   ├── app/       # ← Action + reduce + Store + useCases · (F2) las 15 acciones que faltan
+│   ├── app/       # ← las 17 acciones + reduce + Store + useCases + diffState
 │   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← implementa los puertos de persistencia. Conoce al core; él a ella no.
@@ -236,11 +236,11 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   cumplidos, con **99 pruebas**. El helper con sus dos primitivas, `Position`, las ocho
   operaciones, los puertos y la rebanada vertical.
 - **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los seis puntos del criterio de
-  cierre (§9.8), cumplidos, con **203 pruebas**. Los tres puertos, `MemoryStorageAdapter` con
-  su suite de contratos, el write-behind en sus dos mitades (§6.4), **las dieciséis acciones**
+  cierre (§9.8), cumplidos, con **216 pruebas**. Los tres puertos, `MemoryStorageAdapter` con
+  su suite de contratos, el write-behind en sus dos mitades (§6.4), **las diecisiete acciones**
   y la parte pura del arranque. Se atacó **de abajo arriba** —la persistencia primero,
   verificada con la única acción que ya existía— por el mismo motivo que la rebanada vertical
-  de la Fase 1: descubrir un fallo con un candidato, no con dieciséis.
+  de la Fase 1: descubrir un fallo con un candidato, no con diecisiete.
 - **Fase 3 — Fichero local. ← LA SIGUIENTE.** `FileStorageAdapter` sobre `BlobStore`, que ya
   existe como interfaz y **sigue sin una sola implementación**. Reusa la suite de contratos sin
   tocarla. **Tiene una pregunta abierta que conviene cerrar antes de empezar:** cómo se

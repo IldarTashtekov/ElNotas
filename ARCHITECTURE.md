@@ -676,7 +676,7 @@ Tres entidades, más nociones de agrupación:
 
 ### 5.1 Lo que existe hoy en el repo
 
-**Las fases 1 y 2 enteras: ~2570 líneas de código, ~3320 de pruebas, y 203 pruebas en verde.**
+**Las fases 1 y 2 enteras: ~2570 líneas de código, ~3320 de pruebas, y 216 pruebas en verde.**
 Esta tabla se queda desactualizada sola: antes de afirmar nada sobre ella,
 `find src -name '*.ts' | sort` y `npm run check`.
 
@@ -697,8 +697,8 @@ Esta tabla se queda desactualizada sola: antes de afirmar nada sobre ella,
 | `Clock.ts` · `IdGenerator.ts` | 66 | Fase 1 |
 | `Repository.ts` · `StorageAdapter.ts` · `BlobStore.ts` | 144 | Fase 2 |
 | **`app/` — la capa de aplicación** | | |
-| `Action.ts` | 227 | **Las dieciséis acciones**: 8 de contenido, 3 de Nota, 6 de Contexto |
-| `reduce.ts` | 297 | Los dieciséis casos. **No sale por `index.ts`** |
+| `Action.ts` | 227 | **Las diecisiete acciones**: 8 de contenido, 3 de Nota, 6 de Contexto |
+| `reduce.ts` | 297 | Los diecisiete casos. **No sale por `index.ts`** |
 | `Store.ts` | 79 | Una **función**, no una clase |
 | `useCases.ts` | 46 | La frontera entre lo impuro y lo puro |
 | `diffState.ts` | 108 | La mitad **pura** del write-behind |
@@ -1443,17 +1443,17 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   fallo de identidad cuando ya hubiera ocho sitios donde pudiera estar.
 
 - **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los seis puntos del criterio de
-  cierre (§9.8), cumplidos, con 203 pruebas: los tres puertos (§6.1), `MemoryStorageAdapter` y
-  su suite de contratos (§6.3), el write-behind en sus **dos** piezas (§6.4), **las dieciséis
+  cierre (§9.8), cumplidos, con 216 pruebas: los tres puertos (§6.1), `MemoryStorageAdapter` y
+  su suite de contratos (§6.3), el write-behind en sus **dos** piezas (§6.4), **las diecisiete
   acciones** (§9.7) y la mitad pura del arranque.
 
   **Se atacó de abajo arriba, no de arriba abajo:** primero la persistencia entera verificada
   con la única acción que ya existía, y sólo después las quince que faltaban. Mismo
   razonamiento que la rebanada vertical de la Fase 1 — el write-behind era la única pieza con
   riesgo real de la fase, y se quería descubrir que escribe de más **con un solo candidato**,
-  no con dieciséis. Valió la pena: la rotura que comprobaba ese corte no tumbaba **ninguna**
+  no con diecisiete. Valió la pena: la rotura que comprobaba ese corte no tumbaba **ninguna**
   prueba hasta que se añadió un contador de transacciones, y eso se vio con una acción en el
-  catálogo en vez de con dieciséis.
+  catálogo en vez de con diecisiete.
 
 - **Fase 3 — Fichero local.** `FileStorageAdapter` sobre `LocalStorageBlobStore`, luego
   `DirectoryHandleBlobStore`. Ojo al detalle de UX: al recargar **no se puede recuperar el
@@ -1725,7 +1725,7 @@ Hasta que haya código de producción que arranque la app de verdad, una impleme
 
 Hoy `Action` tiene **un solo miembro**, así que ni siquiera es una unión. El catálogo no se ha
 inventado: cada acción sale de un campo del modelo que alguien tiene que poder cambiar, o de
-una operación de la Fase 1 que ya existe y no tiene quien la despache. **Son dieciséis.**
+una operación de la Fase 1 que ya existe y no tiene quien la despache. **Son diecisiete.**
 
 | Grupo | Acciones | De dónde salen |
 |---|---|---|
@@ -1815,7 +1815,7 @@ seis:
 3. **Un `set-checked` redundante no llega a disco.** Es el punto 5 de §9.5 llevado un eslabón
    más abajo: la Fase 1 demostró que no notifica al suscriptor; la Fase 2 tiene que demostrar
    que **tampoco escribe**. Con un `StorageAdapter` que cuente escrituras.
-4. **Las dieciséis acciones existen**, cada una con su caso de reducer, y el `switch` vuelve a
+4. **Las diecisiete acciones existen**, cada una con su caso de reducer, y el `switch` vuelve a
    ser exhaustivo por el compilador.
 5. **`delete-note` deja los contextos consistentes** —ninguna `ItemRef` colgando— **y devuelve
    intactos los que no la listaban**, comprobado con `strictEqual`.
