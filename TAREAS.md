@@ -88,6 +88,92 @@ pruebas de valor y de identidad con `strictEqual` · cada fila de no-op de §9.3
 la rebanada demuestra que tres despachos redundantes dan **un solo aviso** y no tocan
 `updatedAt` · `npm run check` en verde con **99 pruebas**, e incapaz de pasar en falso.
 
+### Fase 2 — Acciones, persistencia y memory
+
+**En este orden, y el orden es la decisión.** Se ataca **de abajo arriba**: la persistencia
+entera primero, verificada con la única acción que ya existe, y sólo después las quince que
+faltan. El write-behind es la única pieza con riesgo real de la fase, y se quiere descubrir que
+escribe de más cuando hay **un solo candidato**, no dieciséis. Es el mismo razonamiento que la
+rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
+
+- [x] **Los tres puertos de persistencia** — ✅ Hechos, en `src/core/ports/Repository.ts`,
+      `StorageAdapter.ts` y `BlobStore.ts`, y exportados por `index.ts` porque quien los
+      implementa vive fuera del core. **Sólo interfaces**, como `Clock` e `IdGenerator`, y
+      **sin pruebas propias**: no hay comportamiento que comprobar. Todo `async` aunque el
+      adaptador de memoria vaya a ser síncrono — si expone firmas sincrónicas, enchufar un
+      fichero después obliga a reescribir a todos los llamantes, no sólo al adaptador.
+      **Dos desvíos del boceto de §6.1**, los dos al escribirlos: el id de `Repository` va
+      **marcado** (`Repository<Note, NoteId>`), verificado rompiéndolo —pasar un `ContextId` a
+      `notes.get` da `TS2345`—; y son **propiedades de función, no métodos**, porque TypeScript
+      comprueba los métodos de forma bivariante incluso con `strict`. `BlobStore` se adelanta
+      sin consumidor hasta la Fase 3, con el mismo trato que tuvieron `Clock` e `IdGenerator`.
+- [x] **`MemoryStorageAdapter` y la suite de contratos** — ✅ Hechos. Nace `src/storage/` con
+      su `index.ts`, y con él el alias `#storage/*`. **17 pruebas**, y ninguna escrita para el
+      adaptador en concreto: las diecisiete son del contrato, y el fichero
+      `MemoryStorageAdapter.test.ts` cabe en una línea. El de la Fase 3 tendrá otro igual.
+      Tres cosas que salieron al escribirlo:
+  - **El contrato usa `deepEqual`, y es lo correcto** — el único sitio del proyecto donde lo
+    es. Un almacén no promete devolver el mismo objeto: el de memoria lo hace porque no
+    serializa, el de fichero devolverá uno recién salido de un `JSON.parse`. Exigir
+    `strictEqual` sería exigir algo que sólo el de memoria puede cumplir, o sea lo contrario
+    de para lo que existe un contrato. Escrito en el fichero para que nadie lo "arregle".
+  - **La suite se llama `storageContract.test.ts` aunque no tenga ni una prueba**, porque
+    importa `node:test` y `tsconfig.json` va sin los tipos de Node. Se prefirió el nombre a
+    añadir una exclusión a mano en la config de la app.
+  - **Tres pruebas de contrato no son de `Repository` sino de que los tres estén aislados**, y
+    de que una entidad con contenido sobreviva entera. Sin ellas, un adaptador que guardara las
+    tres clases en el mismo saco, o que se dejara `items` por el camino, pasaría todo lo demás.
+  - **Verificado rompiéndolo por tres sitios**, y en los tres cayó lo que tenía que caer:
+    quitar el `async` de `transaction` tumba **1** (la del fallo síncrono, y sólo ésa); un
+    `Map` compartido por los tres repositorios tumba **4**; devolver `undefined` en vez de
+    `null` en `get` tumba **2**. Todo revertido.
+- [x] **El write-behind, que son DOS piezas y no una** — ✅ Hecho. `diffState.ts` en
+      `core/app/` (puro, **11 pruebas**) y `writeBehind.ts` en `src/storage/` (**11 pruebas**),
+      los dos exportados por sus `index.ts`. La programación va **por parámetro**, así que las
+      pruebas usan un reloj de mentira y no esperan ni un milisegundo. Sin puerto `Scheduler`:
+      partido así, el core no necesita temporizar nada. Cuatro cosas que salieron al hacerlo:
+  - **El diff se calcula contra "lo último escrito", no contra el aviso anterior.** El
+    `Listener` del `Store` sólo trae el estado nuevo, así que el escritor recuerda el último
+    que llegó a disco. Sale gratis un caso que si no habría que tratar a mano: **una nota
+    creada y borrada dentro de la misma ráfaga no llega nunca a disco**.
+  - **El orden importa: primero todos los `put`, después los `delete`.** Si el proceso muere a
+    mitad, así el peor caso es un contexto ya limpio y una nota que sobra —basura inofensiva—;
+    al revés sería una `ItemRef` colgando, que es lo que prohíbe la integridad referencial.
+  - **Las pruebas cuentan transacciones además de escrituras**, y no es un adorno: sin ese
+    contador, quitar del escritor el corte de "si no cambió nada no toques el disco" **no
+    rompía ninguna prueba**, porque un diff vacío no genera ningún `put` de todas formas.
+  - **Verificado rompiéndolo por tres sitios:** quitar el corte del eslabón ② tumba **2**;
+    no cancelar la espera anterior tumba **1**; comparar por valor en vez de por referencia
+    tumba **1**… y esa última sólo por accidente, así que se añadió una prueba explícita de
+    que **una copia equivalente SÍ cuenta como cambio**, que es la semántica elegida y lo que
+    impide que alguien "mejore" el diff comparando por valor. Todo revertido.
+- [ ] **La prueba que cierra la cadena entera:** un `set-checked` redundante **no llega a
+      disco**. La Fase 1 demostró que no notifica al suscriptor; esto es el eslabón siguiente
+      (§3 ②), con un `StorageAdapter` que cuente escrituras. **Es el punto de la fase que hay
+      que escribir mirándolo**; todo lo demás es mecánico.
+- [ ] **Las siete acciones de contenido** — `set-text`, `insert`, `remove`, `split`, `merge`,
+      `convert-to-checkbox`, `convert-to-text`. Mecánicas: su caso de reducer es calcado al de
+      `set-checked`. Lo único que vigilar es que **ninguna de las siete se salte la comparación
+      `content === note.content`**. Al añadir la segunda, el `switch` deja de ser exhaustivo
+      solo y el compilador empieza a exigir las demás.
+- [ ] **Las acciones de Nota** — `create-note`, `rename-note`, `delete-note`. `create-note`
+      recibe el `NoteId` **ya hecho** del caso de uso, igual que `split` recibe su `ContentId`.
+- [ ] **Las acciones de Contexto** — `create-context`, `rename-context`, `delete-context`,
+      `add-item`, `remove-item`, `set-default-view`. **Aquí está la enjundia de la fase:**
+      `delete-note` es la primera acción que toca **dos entidades a la vez** y tiene que dejar
+      los contextos consistentes, con el **mismo `meta`** para todos los tocados y los demás
+      **intactos por referencia**. `add-item` es no-op si la entidad referenciada no existe.
+      → `ARCHITECTURE.md` §9.7
+- [ ] **`schemaVersion`, el runner de migraciones y `hydrate`.** Nace `src/core/migrations/`.
+      `schemaVersion` **no se añade a `AppState`** —ya vive en `StorageAdapter`, que es donde
+      significa algo—, y hay que **corregir el comentario de `AppState.ts`**, que hoy dice que
+      falta. `hydrate(entidades) → AppState` entra aquí por ser pura; el arranque de verdad
+      (quién abre el storage, qué se enseña si no hay nada) es Fase 4. → `ARCHITECTURE.md` §9.7
+
+**Lo que NO entra en esta fase, dicho para que nadie lo dé por hecho:** ninguna acción de Plan
+—se persisten, no se operan—; ninguna acción compuesta —cascada de `setChecked`, borrar una
+rama—; ningún fichero de verdad; y nada de UI.
+
 ### Infraestructura (`infra-agent`)
 
 Las cuatro son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
@@ -182,30 +268,30 @@ resto a mano; instalar un runner de navegador **solo para esa fase** (coherente 
 política de dependencias por fase); o aceptar que ese adaptador se valida manualmente y
 documentarlo como tal.
 
-### La justificación escrita de `schemaVersion` no es la real
+### ~~La justificación escrita de `schemaVersion` no es la real~~ — ✅ **cerrada**
 
-`Versioned` (`updatedAt` + `revision`) se adelantó a la Fase 1 con el argumento de que
-"añadirlo cuando ya haya notas guardadas sería una migración de datos". `schemaVersion` se
-aplaza a la Fase 2.
+**Se adopta la razón buena y se reescribe.** El argumento viejo —«añadirlo cuando ya haya notas
+guardadas sería una migración de datos»— **no aplica**, porque no hay nada guardado todavía y
+por tanto valdría igual para `Versioned`, que sí se adelantó. La razón real: **`schemaVersion`
+*es* el mecanismo de migración**, y un número de versión que nadie lee no protege nada, así que
+llega con el runner que lo consume.
 
-El problema: **como todavía no hay persistencia, ese argumento no aplica a ninguno de los
-dos.** No hay datos guardados que migrar, así que no distingue un caso del otro.
+De paso se cierra dónde vive: **en `StorageAdapter`, no en `AppState`**. Es una propiedad de lo
+guardado; en el estado en memoria no significaría nada y cada acción tendría que arrastrarla.
+Queda pendiente **corregir el comentario de `AppState.ts`**, que hoy dice que falta ahí.
+→ `ARCHITECTURE.md` §9.7
 
-La decisión aguanta, pero **por otra razón**: `schemaVersion` **es** el mecanismo de migración,
-y no tiene sentido que preceda al runner que lo consume — un número de versión sin nadie que
-lo lea no protege nada. Lo que hay que decidir es si se adopta esa razón como la oficial y se
-reescribe, o si el reparto era arbitrario y hay que replantearlo.
+### ~~El arranque de la app no tiene fase asignada~~ — ✅ **cerrada: tenía dos**
 
-### El arranque de la app no tiene fase asignada
+Por eso no encajaba en ninguna. **Se parte**, por la misma costura que el write-behind:
 
-El plan cubre modelo → operaciones → reducers → puertos → adaptadores → UI, pero **nunca dice
-cómo arranca la app**: leer del storage, hidratar `AppState`, aplicar migraciones si la versión
-del esquema es vieja, y qué se muestra si no hay nada guardado (¿primer arranque? ¿nota de
-bienvenida? ¿contexto vacío?).
+- **la parte pura, en la Fase 2** — `hydrate(entidades) → AppState` y el runner de migraciones.
+  De datos a datos: se prueban sin navegador y sin temporizadores.
+- **la parte impura, en la Fase 4** — quién abre el storage y en qué orden, y qué se le enseña
+  al usuario si no hay nada guardado (¿nota de bienvenida? ¿contexto vacío?). Eso es
+  composición y decisión de producto, y vive en `platform/web/`, que no nace hasta entonces.
 
-Vive a caballo entre `core/app/` y `platform/web/`, y **no tiene dueño de fase**. Encaja en la
-2 (con el runner de migraciones) o en la 4 (con la composición real en `platform/web/`), pero
-mientras no se asigne es lo típico que se descubre el día que se necesita.
+→ `ARCHITECTURE.md` §9.7
 
 ---
 

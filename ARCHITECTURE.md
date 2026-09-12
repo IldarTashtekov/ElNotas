@@ -287,6 +287,42 @@ dependiera del de bajo nivel (el reloj del SO). Se invierte metiendo una interfa
 que pertenece **al de alto nivel**. Los dos acaban dependiendo de la interfaz, y el dominio
 no depende de nadie.
 
+#### Write-behind, debounce y *dirty tracking*
+
+Son tres cosas distintas que este documento nombra juntas —«un suscriptor con write-behind y
+debounce, escribiendo sólo las entidades sucias»— y conviene separarlas, porque cada una
+responde a una pregunta diferente.
+
+**Write-behind es el *qué*: escribir a disco después, no en el momento.** Se entiende mejor
+por su contrario:
+
+| | Cuándo escribe | Qué pasa mientras |
+|---|---|---|
+| *write-through* | en el acto, antes de dar la operación por buena | la app espera al disco |
+| **write-behind** | más tarde, cuando amaina | la app sigue; el disco va **por detrás** |
+
+Ese «por detrás» es el *behind* del nombre: la memoria es la verdad inmediata y el disco la
+persigue con unos segundos de retraso.
+
+**Por qué esta app no puede hacer otra cosa.** Escribir es *la* acción principal de una app de
+notas. Teclear una línea de veinte caracteres son veinte cambios de estado: con write-through,
+veinte escrituras de `notes/<id>.json` en dos segundos, y cada una reserializando la nota
+**entera** —cien líneas incluidas—. De ahí la regla de §7: **nunca guardar en cada tecla**.
+
+**Debounce es el *cuándo*:** no escribas mientras siga pasando algo; espera a que haya medio
+segundo de calma, y cada cambio nuevo reinicia la cuenta. Es distinto de un *throttle*, que
+sería «como mucho una escritura cada 500 ms» y sí escribiría a mitad de palabra.
+
+**Dirty tracking es el *qué se escribe*:** sólo las entidades que cambiaron. Y aquí está el
+enganche con todo lo demás — **ese «¿está sucia?» es un `===`**, el eslabón ② de §3. Por eso
+importa tanto que una operación que no cambia nada devuelva su entrada: si devolviera una copia
+equivalente, todo saldría sucio siempre y el filtro no filtraría nada.
+
+**El precio, que es real y no se arregla con más debounce:** si la app se cierra en la ventana
+entre el cambio y la escritura, ese cambio **se pierde**. Es inherente a diferir. Se paga
+forzando la escritura pendiente al cerrar —un `flush()` colgado de `beforeunload`—, que es
+plataforma y por tanto Fase 4.
+
 ### 2.3 Estructuras inmutables
 
 #### Igualdad por referencia
@@ -591,12 +627,12 @@ importa nada de nadie.
 ```
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
-│   ├── domain/    # ← lo ÚNICO que existe hoy (y solo tipos)
-│   ├── ports/     # (F1) Clock, IdGenerator · (F2) Repository, StorageAdapter, BlobStore
-│   ├── app/       # (F1) Store + reducer con UN caso · (F2) el catálogo completo
-│   ├── migrations/# (F2)
+│   ├── domain/    # ← modelo + Position + helper + las 8 operaciones
+│   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
+│   ├── app/       # ← Action + reduce + Store + useCases + diffState
+│   ├── migrations/# (F2, sin empezar)
 │   └── index.ts
-├── storage/       # (F2 memory · F3 file)
+├── storage/       # ← contract-tests/ + memory/ + writeBehind · (F3) file/
 ├── ui/            # (F4) vanilla: componentes + render(state)
 └── platform/      # (F4) composición
     └── web/       # el ÚNICO sitio que decide qué adaptador se inyecta
@@ -640,23 +676,40 @@ Tres entidades, más nociones de agrupación:
 
 ### 5.1 Lo que existe hoy en el repo
 
-**8 ficheros, 306 líneas, cero tests.** Solo tipos y constructores; ninguna operación.
+**33 ficheros, ~3975 líneas contando pruebas, y 138 pruebas en verde.** La Fase 1 entera, más
+las tres primeras tareas de la Fase 2. Esta tabla se queda desactualizada sola: antes de
+afirmar nada sobre ella, `find src -name '*.ts' | sort` y `npm run check`.
 
 | Fichero | Líneas | Qué es |
 |---|---|---|
-| `domain/Ids.ts` | 50 | IDs marcados, `Revision` e `ItemRef` |
-| `domain/Content.ts` | 66 | `Text` \| `CheckBox`, *type guards* y constructores |
-| `domain/Versioned.ts` | 36 | `updatedAt` y `revision` |
-| `domain/Note.ts` | 10 | La entidad Nota |
-| `domain/Plan.ts` | 42 | Solo tipos, sin operaciones |
-| `domain/Context.ts` | 26 | Agrupación por referencias |
-| `domain/AppState.ts` | 29 | El estado raíz, normalizado |
-| `index.ts` | 47 | API pública del módulo |
+| **`domain/` — el modelo** | | |
+| `Ids.ts` | 50 | IDs marcados, `Revision` e `ItemRef` |
+| `Content.ts` | 66 | `Text` \| `CheckBox`, *type guards* y constructores |
+| `Versioned.ts` | 43 | `updatedAt` y `revision` |
+| `Note.ts` · `Plan.ts` · `Context.ts` | 78 | Las tres entidades |
+| `AppState.ts` | 29 | El estado raíz, normalizado |
+| `Position.ts` | 46 | El vocabulario del "dónde", tres casos |
+| **`domain/` — la maquinaria** | | |
+| `updateContent.ts` | 102 | Primitiva **A**: transformar un nodo. No sale por `index.ts` |
+| `updateContainerOf.ts` | 93 | Primitiva **B**: transformar el contenedor de una línea. Tampoco |
+| `operations.ts` | 363 | **Las ocho operaciones**, todas exportadas |
+| **`ports/` — cinco interfaces, cero implementaciones** | | |
+| `Clock.ts` · `IdGenerator.ts` | 66 | Fase 1 |
+| `Repository.ts` · `StorageAdapter.ts` · `BlobStore.ts` | 144 | Fase 2 |
+| **`app/` — la capa de aplicación** | | |
+| `Action.ts` | 44 | **Un solo miembro todavía**: `set-checked` |
+| `reduce.ts` | 65 | Un caso. No sale por `index.ts` |
+| `Store.ts` | 79 | Una **función**, no una clase |
+| `useCases.ts` | 46 | La frontera entre lo impuro y lo puro |
+| `diffState.ts` | 108 | La mitad **pura** del write-behind |
+| `index.ts` | 82 | API pública del core |
+| **`src/storage/` — el primer módulo que implementa puertos** | | |
+| `contract-tests/storageContract.test.ts` | 224 | **La suite que todo adaptador debe pasar** |
+| `memory/MemoryStorageAdapter.ts` | 106 | Tres `Map` y un número |
+| `writeBehind.ts` | 156 | La mitad **impura**: debounce y temporizador |
 
-Que no haya tests no es un descuido: lo único escrito son tipos, y de su corrección responde
-el typecheck. Los primeros tests llegan con las operaciones. Ojo con la trampa asociada:
-`node --test` sin ficheros **sale con código 0**, así que hoy `npm test` pasa en verde sin
-comprobar nada (anotado en `TAREAS.md`).
+Las pruebas son ~1950 de esas líneas, más que el código que vigilan, y eso es lo esperado en
+una capa donde cada invariante se verifica rompiéndola a propósito.
 
 ### 5.2 Estado normalizado, con referencias por ID
 
@@ -872,31 +925,45 @@ uno más.
 
 ### 6.1 Dos puertos, a propósito en dos niveles
 
+**Escritos ya**, en `src/core/ports/`. Sólo las interfaces; las implementaciones viven fuera.
+
 ```ts
-export interface Repository<T> {
-  get(id: string): Promise<T | null>
-  getAll(): Promise<T[]>
-  put(entity: T): Promise<void>
-  delete(id: string): Promise<void>
+export interface Repository<T, TId extends string> {
+  readonly get:    (id: TId) => Promise<T | null>
+  readonly getAll: () => Promise<ReadonlyArray<T>>
+  readonly put:    (entity: T) => Promise<void>
+  readonly delete: (id: TId) => Promise<void>
 }
 
 export interface StorageAdapter {
-  readonly notes:    Repository<Note>
-  readonly plans:    Repository<Plan>
-  readonly contexts: Repository<Context>
-  transaction<T>(fn: () => Promise<T>): Promise<T>   // best-effort según adaptador
-  getSchemaVersion(): Promise<number>
-  setSchemaVersion(v: number): Promise<void>
+  readonly notes:    Repository<Note, NoteId>
+  readonly plans:    Repository<Plan, PlanId>
+  readonly contexts: Repository<Context, ContextId>
+  readonly transaction: <T>(fn: () => Promise<T>) => Promise<T>  // best-effort
+  readonly getSchemaVersion: () => Promise<number>
+  readonly setSchemaVersion: (v: number) => Promise<void>
 }
 
 /** Nivel bajo: solo mueve bytes. No sabe qué es una Nota. */
 export interface BlobStore {
-  read(path: string): Promise<Uint8Array | null>
-  write(path: string, data: Uint8Array): Promise<void>
-  delete(path: string): Promise<void>
-  list(prefix: string): Promise<string[]>
+  readonly read:   (path: string) => Promise<Uint8Array | null>
+  readonly write:  (path: string, data: Uint8Array) => Promise<void>
+  readonly delete: (path: string) => Promise<void>
+  readonly list:   (prefix: string) => Promise<ReadonlyArray<string>>
 }
 ```
+
+**Dos cosas cambiaron respecto al boceto que había aquí**, y las dos al escribirlos:
+
+- **El id de `Repository` va marcado**, con un segundo parámetro de tipo, en vez de ser un
+  `string` pelado. Con `string` se puede pasar un `ContextId` al repositorio de notas y compila
+  tan ricamente, que es justo el fallo que los ids marcados existen para impedir (§2.4).
+  Comprobado rompiéndolo: `s.notes.get(unContextId)` da
+  `TS2345: Argument of type 'ContextId' is not assignable to parameter of type 'NoteId'`.
+- **Son propiedades de función, no métodos** (`readonly get: (id) => …` en vez de `get(id)`).
+  No es cosmético: TypeScript comprueba los parámetros de un **método** de forma bivariante
+  incluso con `strict`, y los de una **propiedad de función** de forma contravariante, que es lo
+  estricto. De paso queda igual que `Clock` e `IdGenerator`.
 
 **Todos los puertos son `async`, incluso los adaptadores sincrónicos.** Si un adaptador en
 memoria expone firmas sincrónicas, enchufar red o SQLite después obliga a reescribir todos
@@ -919,6 +986,62 @@ Nota conceptual sobre el reparto por fases: `Clock` e `IdGenerator` son puertos 
 semántica de escritura del dominio**; `Repository`, `StorageAdapter` y `BlobStore` son
 puertos de **persistencia**. Son dos cosas distintas, y están en fases distintas por eso, no
 por inercia.
+
+#### Cómo se relacionan los tres entre sí
+
+El diagrama de «dos niveles» sugiere una relación que no es la que hay. **Las tres relaciones
+son de tipo distinto:**
+
+- `StorageAdapter` **tiene** tres `Repository`. Composición.
+- `Repository` es una **interfaz** que cada adaptador cumple a su manera.
+- `BlobStore` es un **parámetro** de *una* implementación concreta.
+
+Dicho del tirón, porque es lo que más se lee mal: **`BlobStore` no está debajo de
+`Repository`, está debajo de `FileStorageAdapter`.** El adaptador de memoria no lo toca jamás.
+
+```
+FASE 2 — MemoryStorageAdapter                FASE 3 — FileStorageAdapter
+─────────────────────────────                ──────────────────────────────
+StorageAdapter                               StorageAdapter
+├── notes    ──→ Map<NoteId, Note>           ├── notes    ─┐
+├── plans    ──→ Map<PlanId, Plan>           ├── plans    ─┼─→ serializa a JSON
+├── contexts ──→ Map<ContextId, Context>     ├── contexts ─┘   y traduce id → camino
+└── schemaVersion ──→ un number              └── schemaVersion       │
+                                                                     ▼
+    (ni rastro de BlobStore)                                    BlobStore
+                                                                     │
+                                                  ┌──────────────────┼─────────────┐
+                                                  ▼                  ▼             ▼
+                                            localStorage     carpeta / OPFS      Drive
+```
+
+**Cada capa habla un idioma distinto, y la traducción ocurre en un solo sitio:**
+
+| Capa | Su vocabulario | Ejemplo |
+|---|---|---|
+| `StorageAdapter` / `Repository` | entidades e ids | `notes.put(unaNota)` |
+| ⇅ **`FileStorageAdapter`** | *aquí y sólo aquí* se traduce | `Note` → JSON → bytes, y `NoteId` → `"notes/<id>.json"` |
+| `BlobStore` | caminos y bytes | `write("notes/abc.json", <bytes>)` |
+
+Que el esquema `notes/<id>.json` viva en **un único fichero** del proyecto es el beneficio
+entero del reparto: cambiarlo, o pasar de JSON a otro formato, toca ahí y en ningún otro lado,
+y los cuatro `BlobStore` ni se enteran.
+
+**Son dos ejes de variación independientes**, y por eso son dos puertos y no uno:
+
+```
+¿cómo se guarda?    memoria  ·  ficheros JSON   ←  lo elige el StorageAdapter
+¿dónde van?         ——       ·  ls/disco/OPFS   ←  lo elige el BlobStore
+                     ↑
+              en memoria este eje no existe
+```
+
+**Y por qué `Repository` no habla directamente con `BlobStore`**, que es la simplificación que
+tienta: porque un `put` no siempre es un blob —§6.2 prevé un `manifest.json` junto a las
+entidades, y tres repositorios escribiendo por su cuenta lo actualizarían tres veces,
+pisándose— y porque la serialización es la misma para las tres clases: puesta en el adaptador
+se escribe una vez; puesta en cada repositorio, tres veces casi iguales, que es como empiezan
+a divergir.
 
 ### 6.2 Formato y semántica
 
@@ -951,6 +1074,42 @@ Corre en dos modos: `unit` (memory, directorio temporal) en cada commit, e `inte
 
 Queda un problema **abierto**: los adaptadores sobre `FileSystemDirectoryHandle` y OPFS
 necesitan un navegador real, y `node:test` no llega ahí (ver `TAREAS.md`).
+
+### 6.4 El write-behind no cabe entero en el core
+
+Salió al planear la Fase 2, y no estaba previsto. §7 lo describe como «un suscriptor con
+write-behind y debounce», en singular, como si fuera una pieza. **No puede serlo:** un debounce
+necesita un temporizador, y dentro de la verja no hay ninguno.
+
+No es una suposición, está comprobado. Una sonda de una línea en `src/core/app/`:
+
+```ts
+export const probe = (fn: () => void) => setTimeout(fn, 10)
+```
+
+da `error TS2304: Cannot find name 'setTimeout'` en `npm run typecheck:core`. El motivo es el
+mismo que impide `document`: `setTimeout` no vive en `lib.es2020`, vive en `lib.dom.d.ts` y en
+`@types/node`, y `src/core/tsconfig.json` va sin `DOM` y con `"types": []`. Conviene subrayar
+la diferencia con el reloj: `Date.now()` **sí** compila en el core y hace falta un guardián
+aparte para cazarlo; `setTimeout` lo para el compilador solo.
+
+**Así que el write-behind son dos piezas, y se parten por donde se parte todo aquí:**
+
+| | Qué decide | Puro | Dónde vive |
+|---|---|---|---|
+| **qué está sucio** | comparar `prev` y `next` entidad a entidad con `===` y devolver los ids que cambiaron | sí | `core/app/` |
+| **cuándo se escribe** | el debounce, el temporizador, llamar al `StorageAdapter` | no | `src/storage/` |
+
+La de arriba es la que tiene la lógica y es la única que puede equivocarse en silencio —es el
+eslabón ② de §3—, y queda del lado puro, comprobable con dos estados y ningún temporizador. La
+de abajo es fontanería.
+
+**Y no se declara un puerto `Scheduler` para esto.** Sería la reacción automática —«si el core
+no puede, inyéctalo»— pero no hace falta: partido así, **el core no necesita temporizar nada**.
+Un puerto se declara cuando el dominio necesita algo del mundo, no para dar cobijo a código que
+en realidad no es del dominio. Para que la parte de abajo se pueda probar sin esperas reales,
+recibe la función de programación **por parámetro, con un valor por defecto**; eso no es un
+puerto, es un argumento.
 
 ---
 
@@ -1273,28 +1432,24 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
 - **Fase 0 — Andamiaje. ✅ HECHA.** Alias por campo `imports`, verja de pureza, tests con
   `node:test`, y limpieza de los restos del prototipo.
 
-- **Fase 1 — Dominio puro. 🟡 A MEDIAS.** Hecho el modelo de datos (§5.1). Falta, en este
-  orden:
-  1. **El helper de copia por camino** y sus tests de identidad. Va **primero y solo**: es la
-     única pieza con dificultad real, y todo lo demás se apoya en ella.
-  2. **Las operaciones de contenido** (§9.3).
-  3. **El tipo `Position`** (§9.4).
-  4. **`core/ports/Clock.ts` e `core/ports/IdGenerator.ts`** — solo las interfaces, cuatro
-     líneas, dentro del core. **Sin implementaciones:** ver §9.6.
-  5. **Una rebanada vertical:** `Store`, un reducer con un único caso (`set-checked`), un caso
-     de uso, y un suscriptor de prueba que **cuente notificaciones**. Verifica la cadena de
-     identidad de punta a punta *antes* de escribir las otras ocho operaciones; la alternativa
-     —escribirlas todas y enchufarlas al final— descubriría un fallo de identidad cuando ya
-     hay nueve sitios donde puede estar. De paso ejercita por primera vez el alias `#core/` en
-     modo `compiled`, que hoy nunca se ha ejecutado porque no hay tests.
+- **Fase 1 — Dominio puro. ✅ HECHA.** El helper con sus dos primitivas, `Position`, las ocho
+  operaciones (§9.3), los puertos `Clock` e `IdGenerator` y la rebanada vertical. Los seis
+  puntos del criterio de cierre (§9.5), cumplidos, con 99 pruebas. La rebanada fue lo que
+  verificó la cadena de identidad de punta a punta **antes** de escribir las otras siete
+  operaciones: la alternativa —escribirlas todas y enchufarlas al final— habría descubierto un
+  fallo de identidad cuando ya hubiera ocho sitios donde pudiera estar.
 
-  Todo esto se escribió una vez y **se borró a propósito** para asentar antes el modelo. Hay
-  que rehacerlo; hoy no queda ni una línea.
+- **Fase 2 — Acciones, puertos de persistencia y memory.** El catálogo completo de acciones y
+  sus casos de reducer (§9.7); los puertos `Repository` / `StorageAdapter` / `BlobStore` (§6.1);
+  `MemoryStorageAdapter` y la suite de contratos (§6.3); el enganche store↔persistencia con
+  write-behind, que son **dos piezas y no una** (§6.4); `schemaVersion`, el runner de
+  migraciones y la hidratación. Criterio de cierre en §9.8.
 
-- **Fase 2 — Acciones, puertos de persistencia y memory.** El resto del catálogo de acciones
-  y los casos de reducer que faltan; los puertos `Repository` / `StorageAdapter` / `BlobStore`;
-  `MemoryStorageAdapter` y la suite de contratos; el enganche store↔persistencia con
-  write-behind; `schemaVersion` y el runner de migraciones.
+  **Se ataca de abajo arriba, no de arriba abajo:** primero la persistencia entera verificada
+  con la única acción que ya existe, y sólo después las quince que faltan. Es el mismo
+  razonamiento de la rebanada vertical de la Fase 1 — el write-behind es la única pieza con
+  riesgo real de esta fase, y se quiere descubrir que escribe de más **cuando hay un solo
+  candidato**, no dieciséis.
 
 - **Fase 3 — Fichero local.** `FileStorageAdapter` sobre `LocalStorageBlobStore`, luego
   `DirectoryHandleBlobStore`. Ojo al detalle de UX: al recargar **no se puede recuperar el
@@ -1561,6 +1716,106 @@ pureza, así que ni siquiera necesitan permiso para tocar plataforma.
 Hasta que haya código de producción que arranque la app de verdad, una implementación real
 **no tiene consumidor**. Así que no se crea `src/platform/` y no se declara el alias
 `#platform/*`: un alias se declara cuando el módulo existe.
+
+### 9.7 El catálogo de acciones de la Fase 2
+
+Hoy `Action` tiene **un solo miembro**, así que ni siquiera es una unión. El catálogo no se ha
+inventado: cada acción sale de un campo del modelo que alguien tiene que poder cambiar, o de
+una operación de la Fase 1 que ya existe y no tiene quien la despache. **Son dieciséis.**
+
+| Grupo | Acciones | De dónde salen |
+|---|---|---|
+| **Contenido** | `set-text` · `insert` · `remove` · `split` · `merge` · `convert-to-checkbox` · `convert-to-text` | las siete operaciones de §9.3 que aún no tienen acción. La octava, `set-checked`, ya está |
+| **Notas** | `create-note` · `rename-note` · `delete-note` | `Note` tiene `name` y `content`; el contenido ya está cubierto arriba |
+| **Contextos** | `create-context` · `rename-context` · `delete-context` · `add-item` · `remove-item` · `set-default-view` | los cuatro campos de `Context`: `name`, `defaultView` e `items` |
+
+**Las siete de contenido son mecánicas.** Su caso de reducer es calcado al de `set-checked`:
+buscar la nota, llamar a la operación, comparar con `===`, y si el contenido no cambió devolver
+el estado tal cual. Copiar catorce líneas siete veces. Lo único que hay que vigilar es que
+**nadie se salte la comparación** en ninguna de las siete.
+
+#### Ninguna acción pliega varias operaciones
+
+Una acción, una operación, en toda la Fase 2. Las compuestas que §9.3 anticipa —la cascada de
+`setChecked` sobre los descendientes, borrar una rama entera de hojas hacia arriba— **no se
+diseñan aquí**: no se sabrá qué gestos existen de verdad hasta tener el editor delante, y
+adivinar la forma de la acción sin él es diseñar a ciegas. El aviso de §9.3 sigue en pie y se
+cobra en la Fase 4: cuando lleguen, se pliegan en **una sola** acción, porque N despachos son N
+`updatedAt`, N avisos al `Store` y N escrituras a disco.
+
+#### Los Planes se persisten, pero no se operan
+
+`AppState.plans` existe y `StorageAdapter` lleva su `Repository<Plan>`, así que un Plan se
+guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Plan** en el
+catálogo, ni siquiera `create-plan`.
+
+Es la misma regla que quitó `move` (§9.3): no se construye lo que no tiene consumidor. El
+editor de grafos está aparcado en `TAREAS.md`, así que una acción de Plan no tendría quien la
+despachara ni forma de comprobarse contra un uso real. **La consecuencia asumida y visible:**
+`add-item` acepta un `ItemRef` de tipo `plan` —el tipo lo permite y sería raro mutilarlo— pero
+en la Fase 2 no hay manera de crear un Plan que referenciar, así que ese camino queda muerto
+hasta que alguien lo despierte. Añadirlas luego es puramente aditivo.
+
+#### Lo que de verdad tiene enjundia: la integridad referencial
+
+`delete-note` es **la primera acción del proyecto que toca dos entidades a la vez**. Borrar la
+nota no basta: hay que quitarla de todos los contextos que la listaban, o queda una `ItemRef`
+apuntando a nada, que es justo lo que prohíbe la regla de integridad referencial.
+
+Tres cosas que hay que hacer bien y que no se parecen a nada de la Fase 1:
+
+- **Todos los contextos tocados reciben el mismo `meta`.** Aquí se cobra la decisión de
+  construir `meta` una sola vez por acción (`Action.ts`): la nota y los cuatro contextos que la
+  listaban se llevan exactamente la misma marca de tiempo y no cinco milisegundos distintos
+  según el orden del bucle.
+- **Los contextos que no la listaban se devuelven intactos.** La cadena de identidad de §3 no
+  distingue entre entidades: un `map` sobre `contexts` que devuelva copias equivalentes hace que
+  la persistencia reescriba en disco cada contexto de la app cada vez que borras una nota.
+- **`add-item` es no-op si la entidad referenciada no existe.** Es el otro lado de la misma
+  regla, y no hay dónde comprobarlo salvo aquí.
+
+#### La hidratación entra; el arranque de verdad, no
+
+Se parte por la misma costura que el write-behind (§6.4), y por el mismo motivo:
+
+- **puro y en la Fase 2** — `hydrate(entidades) → AppState`, y el runner de migraciones que la
+  precede. Son funciones de datos a datos, se prueban sin navegador y sin temporizadores.
+- **impuro y en la Fase 4** — quién abre el storage, en qué orden, y qué se le enseña al
+  usuario si no hay nada guardado. Eso vive en `platform/web/`, que no nace hasta entonces.
+
+Esto cierra la entrada de `TAREAS.md` que decía que el arranque no tenía dueño de fase. Tenía
+dos, y por eso no encajaba en ninguna.
+
+#### `schemaVersion` no va en `AppState`
+
+Ya está donde tiene que estar: en `StorageAdapter` (§6.1), con su `get` y su `set`. **No se
+añade a `AppState`**, aunque el comentario de `AppState.ts` diga hoy que falta. Es una
+propiedad de **lo guardado**, no del estado en memoria: en `AppState` no significaría nada, no
+la leería nadie, y cada acción tendría que arrastrarla intacta de un estado al siguiente.
+
+Y de paso se corrige la justificación, que `TAREAS.md` marcaba como no-real. El argumento
+escrito era que «añadirlo cuando ya haya notas guardadas sería una migración de datos», y **no
+aplica**: no hay nada guardado todavía, así que ese argumento valdría igual para `Versioned`,
+que sí se adelantó. La razón verdadera es otra: **`schemaVersion` *es* el mecanismo de
+migración**, y un número de versión que nadie lee no protege nada. Por eso llega con el runner
+que lo consume, en esta fase, y ni un día antes.
+
+### 9.8 Definición de "Fase 2 terminada"
+
+Al estilo de §9.5, porque sin criterio «terminada» acaba queriendo decir «me he cansado». Son
+seis:
+
+1. Los tres puertos de persistencia existen como **interfaces** (§6.1), todos `async`.
+2. **`MemoryStorageAdapter` pasa la suite de contratos entera**, y la suite está escrita contra
+   la interfaz, no contra él. Esa es la única definición de terminado que no se degrada.
+3. **Un `set-checked` redundante no llega a disco.** Es el punto 5 de §9.5 llevado un eslabón
+   más abajo: la Fase 1 demostró que no notifica al suscriptor; la Fase 2 tiene que demostrar
+   que **tampoco escribe**. Con un `StorageAdapter` que cuente escrituras.
+4. **Las dieciséis acciones existen**, cada una con su caso de reducer, y el `switch` vuelve a
+   ser exhaustivo por el compilador.
+5. **`delete-note` deja los contextos consistentes** —ninguna `ItemRef` colgando— **y devuelve
+   intactos los que no la listaban**, comprobado con `strictEqual`.
+6. `npm run check` en verde, con la verja y el guardián de pureza incluidos.
 
 ---
 

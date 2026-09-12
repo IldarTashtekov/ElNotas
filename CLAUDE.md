@@ -21,15 +21,15 @@ pasa, compruébalo antes: `find src -name '*.ts' | sort`, `npm run check`, `git 
 
 En `src/` **conviven dos cosas** y no hay que confundirlas:
 
-- **`src/core/` — la arquitectura nueva.** Dominio puro. **Es la referencia** de cómo se
-  hacen las cosas aquí. Hoy tiene la Fase 1 entera: modelo, helper, operaciones, puertos y
-  la capa de aplicación.
+- **`src/core/` y `src/storage/` — la arquitectura nueva.** El core es dominio puro y **es la
+  referencia** de cómo se hacen las cosas aquí; `storage/` es el primer módulo que implementa
+  puertos suyos. Hoy: la Fase 1 entera, más las dos primeras tareas de la Fase 2.
 - **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
-**Lo que existe en el core: la Fase 1 entera.** ~1240 líneas de código y ~1470 de pruebas, en
-`src/core/domain/`, `src/core/ports/` y `src/core/app/`:
+**Lo que existe en el core: la Fase 1 entera, más los puertos de persistencia.** ~1390 líneas
+de código y ~1470 de pruebas, en `src/core/domain/`, `src/core/ports/` y `src/core/app/`:
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
@@ -39,13 +39,24 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   **Maquinaria interna: NO salen por `index.ts`**;
 - **las OCHO operaciones**, en `operations.ts` y todas exportadas: `setText`, `setChecked`,
   `insert`, `remove`, `convertToCheckBox`, `convertToText`, `split`, `merge`;
-- **los dos puertos** en `src/core/ports/`: `Clock` e `IdGenerator`, **sólo las interfaces**;
+- **los CINCO puertos** en `src/core/ports/`, **sólo interfaces**: `Clock` e `IdGenerator` de
+  la Fase 1, y `Repository`, `StorageAdapter` y `BlobStore` de la Fase 2. El id de
+  `Repository` va **marcado** (`Repository<Note, NoteId>`) y todos son propiedades de función,
+  no métodos;
 - **la capa de aplicación** en `src/core/app/`: `Action`, `reduce`, `Store` (una **función**,
   `createStore`, no una clase) y `createUseCases`. `reduce` **no** sale por `index.ts`.
+  **`Action` tiene todavía UN SOLO miembro** (`set-checked`); las otras quince son la Fase 2.
 
-**Lo que NO existe todavía:** la persistencia, la UI y todo lo de Planes. Tampoco las
-implementaciones de los puertos —vivirían en `src/platform/`, que no nace hasta la Fase 4— ni
-las carpetas `core/migrations/`, `src/storage/`, `src/ui/` ni `src/platform/`.
+**Y existe `src/storage/`** — ~120 líneas de código y ~240 de pruebas: la suite de contratos en
+`contract-tests/` y `MemoryStorageAdapter`, que la pasa entera. **El adaptador no tiene ni una
+prueba propia**, y eso es el diseño, no un descuido: lo que se le exige es lo que se le exige a
+cualquier backend. El de la Fase 3 reusará la misma suite sin tocarla.
+
+**Lo que NO existe todavía:** la UI, todo lo de Planes salvo sus tipos, el write-behind y
+quince de las dieciséis acciones. Tampoco las implementaciones de `Clock` e `IdGenerator`
+—vivirían en `src/platform/`, que no nace hasta la Fase 4—, ni ninguna de `BlobStore`, que no
+tiene consumidor hasta la Fase 3, ni las carpetas `core/migrations/`, `src/ui/` ni
+`src/platform/`.
 
 **`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
 con código 1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin
@@ -61,11 +72,14 @@ pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no va
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
 │   ├── domain/    # ← modelo + Position + helper + las 8 operaciones
-│   ├── ports/     # ← Clock e IdGenerator (solo interfaces) · (F2) los de persistencia
-│   ├── app/       # ← Action + reduce + Store + useCases · (F2) el catálogo completo
+│   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
+│   ├── app/       # ← Action + reduce + Store + useCases · (F2) las 15 acciones que faltan
 │   ├── migrations/# (F2)
 │   └── index.ts
-├── storage/       # (F2 memory · F3 file)
+├── storage/       # ← implementa los puertos de persistencia. Conoce al core; él a ella no.
+│   ├── contract-tests/ # ← LA suite que todo adaptador debe pasar
+│   ├── memory/         # ← MemoryStorageAdapter · (F3) file/
+│   └── index.ts
 ├── ui/            # (F4) vanilla: componentes + render(state)
 └── platform/      # (F4) composición: el ÚNICO sitio que inyecta adaptadores
 ```
@@ -82,7 +96,8 @@ src/
   también salta. Sigue siendo falso decir que el typecheck bloquea el reloj.
 - **No añadas `baseUrl` ni `paths`.** `baseUrl` está deprecado en TS 6 y se retira en TS 7, y
   los alias van en el campo `imports` de `package.json`.
-- **Un alias se declara cuando el módulo existe**, no antes. Hoy solo hay `#core/*`.
+- **Un alias se declara cuando el módulo existe**, no antes. Hoy hay `#core/*` y `#storage/*`;
+  `#ui/*` y `#platform/*` no existen porque esas carpetas tampoco.
 - **Un `index.ts` por módulo** como API pública. Lo que no esté ahí, para los demás módulos no
   existe.
 - **`src/platform/` no nace hasta la Fase 4.** Un test se fabrica su propio `Clock` en una
@@ -107,6 +122,10 @@ src/
   que cuelgan de esta invariante están en `ARCHITECTURE.md` §3.
 - **Tests de identidad con `assert.strictEqual`, nunca `deepEqual`.** Un `deepEqual` pasa
   igual de verde con una implementación que rompe la invariante.
+  **Única excepción, y está razonada: la suite de contratos de `storage/`**, que compara por
+  valor a propósito. Un almacén no promete devolver el mismo objeto —el de fichero devolverá
+  uno salido de un `JSON.parse`—, así que exigir `strictEqual` ahí sería exigir algo que sólo
+  el adaptador de memoria puede cumplir. **No lo "arregles".**
 - **El reducer, puro y total:** no genera IDs, no lee el reloj y no lanza excepciones. Las
   acciones llevan un `meta: { now, revision }` construido por la capa de casos de uso, que es
   la que tiene inyectados `Clock` e `IdGenerator`.
@@ -179,6 +198,19 @@ duda**; no la cambies por tu cuenta.
   (*Texto → Casilla → Casilla hija*). **No se persiste** y muere al salir de la nota: no va
   dentro de `Note`, no va en el core —al núcleo le llega `insert` con la `Position` ya
   elegida— y no necesita fichero de preferencias. §7.2.
+- **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
+  (`TS2304`: no está en `lib.es2020` ni con `"types": []`). *Qué está sucio* es puro y va en
+  `core/app/`; *cuándo se escribe* va en `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
+- **En la Fase 2 los Planes se persisten, pero no se operan.** `StorageAdapter` lleva su
+  `Repository<Plan>` y ni una acción de Plan entra en el catálogo: el editor de grafos está
+  aparcado y no habría quien las despachara. §9.7.
+- **Una acción, una operación.** Ninguna acción pliega varias llamadas en la Fase 2. Las
+  compuestas —cascada de `setChecked`, borrar una rama— se diseñan en la Fase 4, con el editor
+  delante. §9.7.
+- **`schemaVersion` vive en `StorageAdapter`, no en `AppState`.** Es propiedad de lo guardado.
+  Y llega con el runner que lo consume, porque **es** el mecanismo de migración. §9.7.
+- **El arranque de la app está partido en dos fases:** `hydrate` y las migraciones son puras y
+  van en la Fase 2; quién abre el storage y qué se ve sin nada guardado es Fase 4. §9.7.
 - **`remove` NO borra una casilla con hijas: es no-op.** Se borra de abajo arriba. Ninguna
   operación del dominio hace desaparecer contenido que el usuario no esté mirando; la cascada
   se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertToText`**:
@@ -202,7 +234,13 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 1 — Dominio puro. ✅ HECHA.** Los seis puntos del criterio de cierre (§9.5),
   cumplidos, con **99 pruebas**. El helper con sus dos primitivas, `Position`, las ocho
   operaciones, los puertos y la rebanada vertical.
-- **Fase 2 — Acciones, puertos de persistencia y memory.**
+- **Fase 2 — Acciones, puertos de persistencia y memory. 🟡 EN CURSO: 3 de 8 tareas.** Hechos
+  los tres puertos, `MemoryStorageAdapter` con su suite de contratos, y el write-behind en sus
+  dos mitades (§6.4). Quedan la prueba de punta a punta de que un `set-checked` redundante
+  **no llega a disco**, las quince acciones que faltan y `schemaVersion` + migraciones +
+  `hydrate`. **Se ataca de abajo
+  arriba:** la persistencia primero, verificada con la única acción que ya existe. La lista en
+  orden está en `TAREAS.md`; el criterio de cierre, en `ARCHITECTURE.md` §9.8.
 - **Fase 3 — Fichero local.**
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
 
