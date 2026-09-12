@@ -48,10 +48,18 @@ export type { Listener, Store, Unsubscribe } from "./app/Store"
 export { createStore } from "./app/Store"
 export type { UseCaseDeps, UseCases } from "./app/useCases"
 export { createUseCases } from "./app/useCases"
+/* Qué cambió entre dos estados: la mitad PURA del write-behind, que consume
+   `storage/`. La otra mitad —el temporizador— vive allí, fuera de la verja. */
+export type { EntityChanges, StateDiff } from "./app/diffState"
+export { NO_CHANGES, diffState } from "./app/diffState"
 
 /* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
 export type { Clock } from "./ports/Clock"
 export type { IdGenerator } from "./ports/IdGenerator"
+/* …y los de persistencia, que implementa `storage/` */
+export type { Repository } from "./ports/Repository"
+export type { StorageAdapter } from "./ports/StorageAdapter"
+export type { BlobStore } from "./ports/BlobStore"
 
 /* Operaciones sobre el contenido de una nota */
 export {

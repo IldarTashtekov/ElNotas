@@ -7,6 +7,10 @@
     "#core/*": {
       "compiled": "./tmp-test/core/*.js",
       "default": "./src/core/*.ts"
+    },
+    "#storage/*": {
+      "compiled": "./tmp-test/storage/*.js",
+      "default": "./src/storage/*.ts"
     }
   },
   "scripts": {
