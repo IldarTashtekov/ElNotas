@@ -11,8 +11,7 @@ la **Fase 4**, y hoy no existen ni `src/ui/` ni `src/platform/`.
 
 **Si te han invocado: para.** No empieces a escribir código con esto por única guía — un
 stub sin reglas es peor que no tener agente, porque parece legítimo y no lo es. Lo primero
-es cerrar con el usuario lo que queda abierto aquí abajo. De eso se encarga
-`coordinador-agent`.
+es cerrar con el usuario lo que queda abierto aquí abajo.
 
 ## Carril previsto
 
