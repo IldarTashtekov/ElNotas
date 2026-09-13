@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>ElNotas — verificación manual de DirectoryHandleBlobStore</title>
+
+    <!--
+      ANDAMIO DE LA VERIFICACIÓN MANUAL. No es la app, no es una prueba y no
+      forma parte del producto: es lo mínimo para poder pulsar botones sobre
+      `DirectoryHandleBlobStore` en un navegador de verdad.
+
+      Los pasos y qué hay que mirar están en VERIFICACION-MANUAL.md, aquí al
+      lado. Esta página sólo llama al código de producción y enseña, tal cual,
+      el `Result` que devuelve. **El oráculo no es esta página: es la carpeta**,
+      mirada con el explorador de ficheros del sistema.
+
+      El mapa de importación de abajo resuelve el único import de runtime que
+      tiene el fichero compilado —`err` y `ok`— contra el `Result.js` de
+      producción. Nada está falseado.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "#core/index": "/dist/manual/core/domain/Result.js"
+        }
+      }
+    </script>
+
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+        max-width: 50rem;
+      }
+      button {
+        font-size: 1rem;
+        padding: 0.4rem 0.8rem;
+        margin: 0.2rem 0.2rem 0.2rem 0;
+      }
+      #registro {
+        background: #111;
+        color: #eee;
+        padding: 1rem;
+        white-space: pre-wrap;
+        font-family: ui-monospace, monospace;
+        font-size: 0.85rem;
+        min-height: 12rem;
+      }
+      .aviso {
+        border-left: 4px solid #c60;
+        padding-left: 0.8rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Verificación manual de <code>DirectoryHandleBlobStore</code></h1>
+
+    <p class="aviso">
+      Sigue los pasos de <code>VERIFICACION-MANUAL.md</code>, no esta página. Lo
+      que esta página imprime es el <code>Result</code> que devuelve el código;
+      <strong>lo que hay que comprobar es la carpeta</strong>, abierta con el
+      explorador de ficheros.
+    </p>
+
+    <h2>1 · De dónde sale la carpeta</h2>
+    <button id="elegir">Elegir una carpeta…</button>
+    <button id="reanudar">Reanudar con la carpeta guardada</button>
+    <button id="opfs">Usar OPFS (opcional)</button>
+    <button id="olvidar">Olvidar la carpeta guardada</button>
+
+    <h2>2 · Operaciones</h2>
+    <button id="escribir">write(notes/manual.json)</button>
+    <button id="leer">read(notes/manual.json)</button>
+    <button id="listar">list(notes/)</button>
+    <button id="borrar">delete(notes/manual.json)</button>
+    <button id="ausente">read(no/existe.json)</button>
+
+    <h2>3 · Bloques</h2>
+    <p class="aviso">
+      Atajos: encadenan las operaciones de un paso entero y dejan el disco en un
+      estado concreto que se pueda auditar después.
+      <strong>No sustituyen a mirar la carpeta</strong>, ni deciden si algo pasa
+      o falla: imprimen lo mismo que los botones de arriba, sólo que seguido.
+    </p>
+    <button id="bloqueA">Bloque A · write → read → list → read ausente</button>
+    <button id="bloqueB">Bloque B · read → list (sin escribir)</button>
+    <button id="bloqueD">Bloque D · delete → delete otra vez → list</button>
+
+    <h2>Registro</h2>
+    <pre id="registro"></pre>
+
+    <script type="module">
+      import { createDirectoryHandleBlobStore } from "/dist/manual/storage/blobs/DirectoryHandleBlobStore.js"
+
+      const registro = document.getElementById("registro")
+      const anota = (texto) => {
+        registro.textContent += `${new Date().toLocaleTimeString()}  ${texto}\n`
+      }
+
+      /* El `BlobStore` vivo. `null` hasta que haya carpeta: conseguir el handle
+         no es cosa del almacén, y por eso es un paso aparte. */
+      let blobs = null
+
+      const CAMINO = "notes/manual.json"
+
+      /* Se enseña el Result tal cual, sin interpretarlo: si algo sale como `io`
+         cuando tenía que salir como `permission-denied`, tiene que verse. */
+      const comoTexto = (r) => {
+        if (!r.ok) return `err ${JSON.stringify(r.error)}`
+        if (r.value === null) return "ok(null)  ← ausencia, que NO es fallo"
+        if (r.value instanceof Uint8Array) {
+          return `ok(${r.value.length} bytes): ${new TextDecoder().decode(r.value)}`
+        }
+        return `ok ${JSON.stringify(r.value)}`
+      }
+
+      const conAlmacen = (nombre, fn) => async () => {
+        if (blobs === null) return anota("todavía no hay carpeta: pulsa el paso 1")
+        try {
+          anota(`${nombre} → ${comoTexto(await fn())}`)
+        } catch (fallo) {
+          /* Si algo aparece aquí, el almacén ha LANZADO, y eso es un fallo de
+             la verificación: el puerto promete que nada lanza (§6.5). */
+          anota(`⚠️ ¡HA LANZADO! ${nombre}: ${fallo}`)
+        }
+      }
+
+      /* ── El handle, guardado entre recargas ──────────────────────────────
+         Un `FileSystemDirectoryHandle` es serializable, así que cabe en
+         IndexedDB y sobrevive a un F5. Esto NO es parte de lo que se verifica:
+         es andamio, para no tener que volver a pasar por el diálogo nativo en
+         cada paso — que es de donde salió el error de elegir `notes/` como raíz
+         en vez de la carpeta de prueba.
+
+         Hacer esto de verdad, en la app, es trabajo de `platform/` en la Fase 4
+         (lo dice el paso B de VERIFICACION-MANUAL.md). Aquí es un atajo. */
+      const conIdb = (modo, fn) =>
+        new Promise((resolver, rechazar) => {
+          const peticion = indexedDB.open("verificacion-manual", 1)
+          peticion.onupgradeneeded = () => peticion.result.createObjectStore("handles")
+          peticion.onerror = () => rechazar(peticion.error)
+          peticion.onsuccess = () => {
+            const almacen = peticion.result.transaction("handles", modo).objectStore("handles")
+            const op = fn(almacen)
+            op.onsuccess = () => resolver(op.result)
+            op.onerror = () => rechazar(op.error)
+          }
+        })
+
+      const guardarHandle = (handle) => conIdb("readwrite", (a) => a.put(handle, "carpeta"))
+      const recuperarHandle = () => conIdb("readonly", (a) => a.get("carpeta"))
+      const olvidarHandle = () => conIdb("readwrite", (a) => a.delete("carpeta"))
+
+      /* El handle recuperado espera aquí hasta que alguien conceda el permiso.
+         `requestPermission` exige gesto de usuario, así que no se puede hacer
+         al cargar: hace falta el botón «Reanudar». */
+      let handleGuardado = null
+
+      const usar = (handle, comoSeLlego) => {
+        blobs = createDirectoryHandleBlobStore(handle)
+        anota(`${comoSeLlego}: ${handle.name}`)
+      }
+
+      document.getElementById("elegir").onclick = async () => {
+        try {
+          const carpeta = await showDirectoryPicker({ mode: "readwrite" })
+          usar(carpeta, "carpeta elegida")
+          await guardarHandle(carpeta)
+          anota("   (guardada: una recarga ya no necesita volver a elegirla)")
+        } catch (fallo) {
+          anota(`no se eligió carpeta: ${fallo}`)
+        }
+      }
+
+      document.getElementById("reanudar").onclick = async () => {
+        if (handleGuardado === null) return anota("no hay ninguna carpeta guardada")
+        const estado = await handleGuardado.requestPermission({ mode: "readwrite" })
+        if (estado !== "granted") return anota(`permiso "${estado}": no se puede reanudar`)
+        usar(handleGuardado, "carpeta reanudada sin diálogo")
+      }
+
+      document.getElementById("olvidar").onclick = async () => {
+        await olvidarHandle()
+        handleGuardado = null
+        blobs = null
+        anota("carpeta olvidada. Vuelve al paso 1.")
+      }
+
+      document.getElementById("opfs").onclick = async () => {
+        blobs = createDirectoryHandleBlobStore(await navigator.storage.getDirectory())
+        anota("usando OPFS (la misma clase, otro handle)")
+      }
+
+      document.getElementById("escribir").onclick = conAlmacen("write", () => {
+        const texto = JSON.stringify({ escritoA: new Date().toISOString() }, null, 2)
+        return blobs.write(CAMINO, new TextEncoder().encode(`${texto}\n`))
+      })
+
+      document.getElementById("leer").onclick = conAlmacen("read", () => blobs.read(CAMINO))
+      document.getElementById("listar").onclick = conAlmacen("list", () =>
+        blobs.list("notes/"),
+      )
+      document.getElementById("borrar").onclick = conAlmacen("delete", () =>
+        blobs.delete(CAMINO),
+      )
+      document.getElementById("ausente").onclick = conAlmacen("read ausente", () =>
+        blobs.read("no/existe.json"),
+      )
+
+      /* ── Bloques ─────────────────────────────────────────────────────────
+         Encadenan lo de arriba y nada más. Imprimen el mismo `Result` crudo y
+         **no dicen si pasa o falla**: eso se decide mirando la carpeta. Un
+         andamio que se autoevalúa es juez y parte, que es justo lo que esta
+         verificación existe para evitar. */
+      const correrBloque = async (nombre, pasos) => {
+        if (blobs === null) return anota("todavía no hay carpeta: pulsa el paso 1")
+        anota(`── ${nombre} ──`)
+        for (const [etiqueta, fn] of pasos) {
+          try {
+            anota(`${etiqueta} → ${comoTexto(await fn())}`)
+          } catch (fallo) {
+            anota(`⚠️ ¡HA LANZADO! ${etiqueta}: ${fallo}`)
+          }
+        }
+        anota(`── fin de ${nombre}. Ahora toca mirar la carpeta. ──`)
+      }
+
+      const escribir = () => {
+        const texto = JSON.stringify({ escritoA: new Date().toISOString() }, null, 2)
+        return blobs.write(CAMINO, new TextEncoder().encode(`${texto}\n`))
+      }
+
+      document.getElementById("bloqueA").onclick = () =>
+        correrBloque("Bloque A", [
+          ["write", escribir],
+          ["read", () => blobs.read(CAMINO)],
+          ["list", () => blobs.list("notes/")],
+          ["read ausente", () => blobs.read("no/existe.json")],
+        ])
+
+      document.getElementById("bloqueB").onclick = () =>
+        correrBloque("Bloque B", [
+          ["read", () => blobs.read(CAMINO)],
+          ["list", () => blobs.list("notes/")],
+        ])
+
+      document.getElementById("bloqueD").onclick = () =>
+        correrBloque("Bloque D", [
+          ["delete", () => blobs.delete(CAMINO)],
+          ["delete otra vez", () => blobs.delete(CAMINO)],
+          ["list", () => blobs.list("notes/")],
+        ])
+
+      /* ── Arranque ────────────────────────────────────────────────────────
+         Si hay carpeta guardada de una sesión anterior se intenta recuperar.
+         Con permiso ya concedido entra sola; si el navegador lo pide otra vez,
+         hace falta el botón, porque `requestPermission` exige gesto. */
+      anota("listo. Empieza por el paso 1.")
+
+      try {
+        handleGuardado = (await recuperarHandle()) ?? null
+      } catch (fallo) {
+        anota(`no se pudo leer la carpeta guardada: ${fallo}`)
+      }
+
+      if (handleGuardado !== null) {
+        const estado = await handleGuardado.queryPermission({ mode: "readwrite" })
+        if (estado === "granted") usar(handleGuardado, "carpeta recuperada sin diálogo")
+        else {
+          anota(
+            `hay una carpeta guardada (${handleGuardado.name}) con permiso "${estado}".`,
+          )
+          anota("   pulsa «Reanudar con la carpeta guardada» — un clic, sin diálogo nativo.")
+        }
+      }
+    </script>
+  </body>
+</html>

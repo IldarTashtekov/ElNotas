@@ -26,6 +26,30 @@
  * y quien lo use no debe suponer lo contrario. Está en el puerto porque la
  * alternativa —que cada llamante invente su propio agrupamiento— es peor.
  *
+ * ── Todo devuelve `Result`, incluida `transaction` ─────────────────────────
+ *
+ * Las tres firmas de aquí y las cuatro de `Repository` van envueltas en
+ * `Result<…, StorageError>` (§6.5): **ningún método de este puerto lanza**. El
+ * `try/catch` no desaparece, se confina a la frontera de cada adaptador.
+ *
+ * `transaction` es la firma rara de las siete, porque es la única **genérica** y
+ * la única que ejecuta código ajeno. Su función recibe ya el `Result` dentro:
+ *
+ *     <T>(fn: () => Promise<Result<T, StorageError>>) => Promise<Result<T, StorageError>>
+ *
+ * Y se lee así: *ejecuta `fn` agrupando sus escrituras y devuelve lo que ella
+ * devuelva, o el fallo del agrupamiento en sí*. Las dos alternativas se
+ * descartaron por lo mismo, que es que el envoltorio se duplicaría: si `fn`
+ * devolviera una `T` pelada, el cuerpo real —que hace `put` tras `put`, y cada
+ * `put` ya devuelve un `Result`— acabaría produciendo `Result<Result<T, …>, …>`,
+ * dos sobres para un solo fallo. Aquí el aplanado es la firma.
+ *
+ * **`fn` que devuelve `err` corta la transacción**, y el adaptador devuelve ese
+ * mismo error sin reempaquetarlo: quien llama necesita el `kind` original para
+ * decidir si reintentar. Y si `fn` **lanza** —un bug, no un fallo previsto—, la
+ * excepción tampoco escapa: se traduce a `io`, porque este puerto promete no
+ * lanzar y la promesa no admite excepciones.
+ *
  * ── Por qué `schemaVersion` vive aquí y no en `AppState` ───────────────────
  *
  * Porque es una propiedad de **lo guardado**, no del estado en memoria. En
@@ -38,6 +62,8 @@ import type { Context } from "../domain/Context"
 import type { ContextId, NoteId, PlanId } from "../domain/Ids"
 import type { Note } from "../domain/Note"
 import type { Plan } from "../domain/Plan"
+import type { Result } from "../domain/Result"
+import type { StorageError } from "../domain/errors/StorageError"
 import type { Repository } from "./Repository"
 
 export interface StorageAdapter {
@@ -49,9 +75,11 @@ export interface StorageAdapter {
    * Agrupa escrituras. **Best-effort según el adaptador** — ver arriba.
    * El `T` es el de la función que se le pasa, no el de ninguna entidad.
    */
-  readonly transaction: <T>(fn: () => Promise<T>) => Promise<T>
+  readonly transaction: <T>(
+    fn: () => Promise<Result<T, StorageError>>,
+  ) => Promise<Result<T, StorageError>>
 
   /** Versión del esquema de lo guardado. Un almacén vacío responde `0`. */
-  readonly getSchemaVersion: () => Promise<number>
-  readonly setSchemaVersion: (v: number) => Promise<void>
+  readonly getSchemaVersion: () => Promise<Result<number, StorageError>>
+  readonly setSchemaVersion: (v: number) => Promise<Result<void, StorageError>>
 }

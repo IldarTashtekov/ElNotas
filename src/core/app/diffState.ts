@@ -65,7 +65,7 @@ export const NO_CHANGES: StateDiff = {
 
 /**
  * Compara dos mapas de entidades. Devuelve `null` —no un objeto vacío— cuando no
- * hay nada, para que el de arriba pueda decidir de un vistazo si devolver
+ * hay nada, para qu    e el de arriba pueda decidir de un vistazo si devolver
  * `NO_CHANGES`.
  *
  * Ni un `push` ni un cast: `Object.values` da las entidades ya tipadas, y el id

@@ -29,6 +29,10 @@
  * haga falta la primera sólo haya que añadir una fila.
  */
 
+import { err, ok } from "../domain/Result"
+import type { Result } from "../domain/Result"
+import type { MigrationError } from "../domain/errors/MigrationError"
+
 /** De un esquema al siguiente. Pura: no toca el almacén. */
 export interface Migration {
   /** Versión de la que parte. Produce `from + 1`. */
@@ -69,13 +73,13 @@ export interface MigrationResult {
 /**
  * Lleva lo guardado desde `version` hasta `CURRENT_SCHEMA_VERSION`.
  *
- * **Lanza** si no encuentra el paso que necesita, y es de los pocos sitios del
- * proyecto donde lanzar es lo correcto: la regla de "no lanzar" es del reducer y
- * de las operaciones, porque una acción rara del usuario no debe llevarse la app
- * por delante. Aquí es al revés — si los datos vienen de una versión que este
- * código no sabe leer, **seguir adelante los corrompe**. Ocurre de verdad cuando
- * alguien abre su fichero con una versión más nueva de la app y luego con una
- * vieja.
+ * **Devuelve** un `MigrationError` si los datos vienen de un esquema que este
+ * código no sabe leer, o si falta el paso que necesita para llegar. Sigue siendo
+ * un error y no un no-op —seguir adelante corrompería las notas—, pero viaja en
+ * el valor de retorno en lugar de lanzarse, así que quien llama lo ve en la firma
+ * y el compilador le obliga a mirarlo (`ARCHITECTURE.md` §6.5).
+ *
+ * Con esto la función es **pura y total**: nunca lanza, pase lo que pase.
  */
 /**
  * Lo inyectable, y por qué lo es.
@@ -98,34 +102,38 @@ export const runMigrations = (
   data: unknown,
   version: number,
   { migrations = MIGRATIONS, target = CURRENT_SCHEMA_VERSION }: MigrationOptions = {},
-): MigrationResult => {
+): Result<MigrationResult, MigrationError> => {
   /* Primer arranque: no hay nada guardado, así que no hay nada que migrar. Sin
      este corte, el 0 se trataría como "esquema viejo" y el runner buscaría una
      migración del 0 al 1 que no existe ni va a existir. */
   if (version === EMPTY_STORE_VERSION) {
-    return { data, version: target, applied: 0 }
+    return ok({ data, version: target, applied: 0 })
   }
 
   if (version > target) {
-    throw new Error(
-      `Lo guardado es del esquema ${version} y este código entiende hasta el ` +
-        `${target}. Seguramente se abrió con una versión más nueva de la app.`,
-    )
+    /* Se abrió con una versión más nueva de la app y ahora con una vieja. */
+    const desdeElFuturo: MigrationError = {
+      kind: "schema-from-future",
+      stored: version,
+      supported: target,
+    }
+    return err(desdeElFuturo)
   }
 
-  let actual = version
-  let acumulado = data
-  let applied = 0
+  let actual: number = version
+  let acumulado: unknown = data
+  let applied: number = 0
 
   while (actual < target) {
-    const paso = migrations.find((m) => m.from === actual)
+    const paso: Migration | undefined = migrations.find((m) => m.from === actual)
     if (paso === undefined) {
-      throw new Error(`Falta la migración del esquema ${actual} al ${actual + 1}.`)
+      const falta: MigrationError = { kind: "missing-migration", from: actual }
+      return err(falta)
     }
     acumulado = paso.migrate(acumulado)
     actual += 1
     applied += 1
   }
 
-  return { data: acumulado, version: actual, applied }
+  return ok({ data: acumulado, version: actual, applied })
 }

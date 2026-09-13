@@ -31,6 +31,16 @@
  *
  * `BlobStore` no aparece por ninguna parte, y es lo esperado: guardar en memoria
  * no tiene "dónde van los bytes". Ese puerto es de la Fase 3.
+ *
+ * ── Todo devuelve `ok(...)`, y aquí eso es la verdad ───────────────────────
+ *
+ * Un `Map` no tiene permisos que revocar ni disco que llenar, así que **este
+ * adaptador no produce ni un `StorageError`**: las siete firmas devuelven `ok`.
+ * No es que se los trague — es que no los hay. El primero que falla de verdad es
+ * el de fichero, de la Fase 3, y para entonces el tipo ya está en su sitio.
+ *
+ * La única excepción es `transaction`, que ejecuta **código ajeno** y por tanto
+ * sí tiene una frontera con `try/catch`. Es la única de este fichero.
  */
 
 import type {
@@ -42,7 +52,9 @@ import type {
   PlanId,
   Repository,
   StorageAdapter,
+  StorageError,
 } from "#core/index"
+import { err, ok } from "#core/index"
 
 /**
  * Un repositorio sobre un `Map`. Los tres son el mismo código: lo único que
@@ -56,17 +68,22 @@ const createMemoryRepository = <
   const guardadas = new Map<TId, T>()
 
   return {
-    get: async (id) => guardadas.get(id) ?? null,
+    /* `ok(null)` y no un error: preguntar por algo que no está guardado es una
+       respuesta, no un fracaso. Es el principio de "ausencia no es fallo" visto
+       desde el único sitio que puede romperlo. */
+    get: async (id) => ok(guardadas.get(id) ?? null),
     // Array nuevo en cada llamada, a propósito: si devolviera el interior del
     // Map, quien lo recibe podría manosear el almacén sin pasar por `put`.
-    getAll: async () => [...guardadas.values()],
+    getAll: async () => ok([...guardadas.values()]),
     put: async (entity) => {
       guardadas.set(entity.id, entity)
+      return ok(undefined)
     },
     // `Map.delete` sobre una clave que no está devuelve false y no lanza, que es
     // exactamente lo que el puerto promete: borrar lo que no existe no es error.
     delete: async (id) => {
       guardadas.delete(id)
+      return ok(undefined)
     },
   }
 }
@@ -89,18 +106,32 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
     /*
         En memoria no hay nada que agrupar: las tres escrituras son asignaciones
         en un Map y no se pueden quedar a medias. Así que `transaction` se limita
-        a ejecutar la función.
+        a ejecutar la función y a devolver lo que ella devuelva —incluido su
+        `err`, intacto: quien llama necesita el `kind` original para decidir si
+        reintentar, y reempaquetarlo aquí lo perdería.
 
-        Es `async` a propósito, aunque `fn()` ya devuelva una promesa: si `fn`
-        lanzara de forma SÍNCRONA, un `transaction` sin `async` lanzaría también
-        de forma síncrona en vez de devolver una promesa rechazada, y quien
-        esperase poder hacer `.catch()` se quedaría con la excepción por la cara.
+        LA ÚNICA FRONTERA DE ESTE FICHERO. `fn` es código ajeno y puede lanzar
+        aunque el puerto diga que no, así que el `catch` traduce la excepción a
+        `io` en vez de dejarla escapar: si escapara, `transaction` estaría
+        rompiendo su propia firma, que promete un `Result` y no un rechazo.
+
+        El `async` sigue siendo necesario por el motivo de siempre, y ahora por
+        dos: un `fn` que lanza de forma SÍNCRONA rompería un `transaction` sin
+        `async` antes de que hubiera promesa ninguna — ni `catch` que valiera.
     */
-    transaction: async (fn) => fn(),
+    transaction: async (fn) => {
+      try {
+        return await fn()
+      } catch (fallo) {
+        const excepcionAjena: StorageError = { kind: "io", cause: fallo }
+        return err(excepcionAjena)
+      }
+    },
 
-    getSchemaVersion: async () => schemaVersion,
+    getSchemaVersion: async () => ok(schemaVersion),
     setSchemaVersion: async (v) => {
       schemaVersion = v
+      return ok(undefined)
     },
   }
 }

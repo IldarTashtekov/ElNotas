@@ -23,7 +23,16 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, Clock, Content, IdGenerator, Note, StorageAdapter } from "#core/index"
+import type {
+  AppState,
+  Clock,
+  Content,
+  IdGenerator,
+  Note,
+  Result,
+  StorageAdapter,
+  StorageError,
+} from "#core/index"
 import {
   checkBox,
   contentId,
@@ -67,17 +76,25 @@ const ESTADO_INICIAL: AppState = {
   contexts: {},
 }
 
+/** Abre el sobre de un `Result` que tenía que haber ido bien. */
+const valorDe = <T>(r: Result<T, StorageError>): T => {
+  if (!r.ok) throw new Error(`se esperaba ok y vino err: ${r.error.kind}`)
+  return r.value
+}
+
 /** Cuenta escrituras y transacciones sin cambiar el comportamiento. */
 const contando = (
   base: StorageAdapter,
 ): { adapter: StorageAdapter; escrituras: () => number } => {
   let n = 0
-  const contar = <A extends unknown[]>(
-    fn: (...args: A) => Promise<void>,
-  ): ((...args: A) => Promise<void>) => {
+  /* Genérico en el retorno: lo que devuelven `put` y `delete` es un `Result` y
+     tiene que pasar por aquí intacto. */
+  const contar = <A extends unknown[], R>(
+    fn: (...args: A) => Promise<R>,
+  ): ((...args: A) => Promise<R>) => {
     return async (...args) => {
       n += 1
-      await fn(...args)
+      return fn(...args)
     }
   }
   return {
@@ -119,7 +136,8 @@ const montar = () => {
 
   const useCases = createUseCases({ clock, ids, store })
 
-  const notaGuardada = () => adapter.notes.get(ID_NOTA)
+  const notaGuardada = async (): Promise<Note | null> =>
+    valorDe(await adapter.notes.get(ID_NOTA))
   const notaEnMemoria = (): Note | undefined => store.getState().notes[ID_NOTA]
 
   return {

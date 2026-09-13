@@ -230,59 +230,248 @@ contratos entera, escrita contra la interfaz · un `set-checked` redundante **no
 disco**, demostrado de punta a punta desde un `dispatch` · las diecisiete acciones existen con
 su caso de reducer y el `switch` vuelve a ser exhaustivo por el compilador · `delete-note` deja
 los contextos consistentes y devuelve intactos los que no la listaban, con `strictEqual` ·
-`npm run check` en verde con **216 pruebas**.
+`npm run check` en verde con **216 pruebas al cerrarla**.
 
-### Fase 3 — Fichero local ← LA SIGUIENTE
+### Fase 3 — Fichero local ← EN CURSO: el código está entero, la fase NO
 
-**El paso 0 va antes que el adaptador, y el orden es la decisión.** Convertir los puertos a
-`Result` después de escribir el adaptador de fichero sería escribirlo dos veces: es **lo primero
-que falla de verdad** —tiene permisos que revocar y disco que llenar, cosas que el de memoria no
-tiene—. Y la suite de contratos cambia con los puertos: hoy hay **un** adaptador que la pasa,
-después de esta fase habría dos. Razonado en `ARCHITECTURE.md` §6.5.
+**Lo único que falta es el punto 5 de `ARCHITECTURE.md` §9.9: ejecutar la lista de verificación
+manual.** Está escrita y nadie la ha pasado, así que `DirectoryHandleBlobStore` es código que
+existe y que **nadie ha visto correr**. Necesita un navegador Chromium y las manos del usuario;
+no hay forma de cerrarlo desde aquí. Su casilla está más abajo.
 
-- [ ] **Paso 0 — `Result<T, E>`: que los errores se devuelvan en vez de lanzarse.**
-      El tipo va a mano, ~20 líneas con sus dos constructores, cero dependencias, en el estilo
-      de unión discriminada de `Content` y `Position`. Con él, `StorageError` (cinco casos) y
-      `MigrationError` (dos), con la taxonomía cerrada de §6.5 — elegida por **"¿reintentar
-      sirve de algo?"**, no por qué mensaje sale en pantalla.
-      **Alcance exacto, medido:**
-  - [ ] **Los siete métodos de puerto.** En `Repository<T, TId>`: `get` (`Promise<T | null>` →
-        `Promise<Result<T | null, StorageError>>`), `getAll`, `put` y `delete`. En
-        `StorageAdapter`: `transaction`, `getSchemaVersion` y `setSchemaVersion`.
-  - [ ] **Los dos `throw` de `runMigrations`** — `src/core/migrations/runMigrations.ts:110`
-        (esquema más nuevo que el que este código entiende) y `:123` (falta un paso de la
-        cadena). La firma pasa a `Result<MigrationResult, MigrationError>`. Con esto
-        `runMigrations` deja de ser sólo **pura** y pasa a ser **pura y total**: son dos
-        propiedades distintas, y la totalidad hasta ahora sólo la prometía el reducer.
-  - [ ] **`MemoryStorageAdapter`** — hoy no falla nunca, así que es mecánico: envolver en
-        `ok(...)`. Es el primer sitio donde se ve si el tipo estorba.
-  - [ ] **`writeBehind`** — `src/storage/writeBehind.ts:129` no crea un error, **lo relanza**:
-        restaura `pendiente` y propaga. Aquí está el trabajo real de este paso y el motivo de
-        toda la decisión: **hoy reintenta siempre, a ciegas**, así que si el usuario revoca el
-        permiso de la carpeta la app se pasa la sesión reintentando en silencio, sin
-        conseguirlo nunca y sin poder avisar. Con la taxonomía puede decidir. **Precio
-        aceptado:** el bucle de seis `await` de `escribirPendiente` (`writeBehind.ts:99`) pasa
-        de un `try` que cubre los seis a comprobar uno a uno con corte al primer fallo. Más
-        ruidoso y sin arreglo elegante.
-  - [ ] **La suite de contratos** de `src/storage/contract-tests/` — cambia con los puertos, y
-        es la que fija lo que se le exigirá al adaptador de fichero. Hacerla **antes** que él es
-        justamente el motivo de este orden.
-  - [ ] *(Opcional, y va después)* **Un guardián en `tools/`** que falle si aparece un `throw`
-        fuera de la frontera de los adaptadores (`src/storage/*/`), al estilo de
-        `tools/check-core-purity.mjs`. Sin él la regla dura lo que dure la memoria. Necesita el
+**El paso 0 iba antes que el adaptador, y el orden era la decisión.** Convertir los puertos a
+`Result` después de escribir el adaptador de fichero habría sido escribirlo dos veces: es **lo
+primero que falla de verdad** —tiene permisos que revocar y disco que llenar, cosas que el de
+memoria no tiene—. Y la suite de contratos cambia con los puertos: había **un** adaptador que la
+pasaba, después de esta fase habría dos. Razonado en `ARCHITECTURE.md` §6.5.
+
+**Criterio de cierre en `ARCHITECTURE.md` §9.9**, y escrito **antes** de que el adaptador
+exista, a diferencia de los de las fases 1 y 2: un criterio decidido con el trabajo delante se
+decide siempre a favor de lo que se hizo. Resumido, son siete: el paso 0 hecho ·
+`FileStorageAdapter` pasa la suite de contratos **sin tocarla** · su traducción de errores
+—`corrupt` al parsear, y no reclasificar lo que sube del `BlobStore`— probada aparte, porque el
+contrato no puede cubrirla · existen **las dos** implementaciones de `BlobStore`, no sólo la de
+desarrollo · la lista de verificación manual **escrita y ejecutada una vez, con su resultado
+anotado** · ni un `throw` por encima de la frontera de cada adaptador · `npm run check` en verde
+con su recuento. **Van cinco cumplidos —1, 2, 3, 4 y 6—**; el 7 está verde con **314 pruebas** y
+sólo espera a anotar la cifra de cierre; **el 5 es el que falta**. Y lo que **no** entra: la UI,
+el arranque real de la app, el `onError` y el `onCorrupt` con el botón de reconectar, la
+validación de esquema, y la escritura condicional.
+
+- [x] **Paso 0 — `Result<T, E>`: que los errores se devuelvan en vez de lanzarse.** ✅ Hecho,
+      y con él **`npm run check` en verde con 232 pruebas** (eran 216 al cerrar la Fase 2). En
+      el código de producción de `core/` y `storage/` **no queda ni un `throw`**.
+      `Result` son 43 líneas en `src/core/domain/Result.ts`, sin `map`, `andThen` ni `unwrapOr`
+      —no tienen consumidor—, y con un detalle que decidió más de lo que parece: **`ok` devuelve
+      `Result<T, never>` y `err` devuelve `Result<never, E>`**, cada uno dejando en `never` la
+      mitad que no construye. Es lo que hace que `ok(null)` encaje en un
+      `Result<Note | null, StorageError>` sin anotar nada.
+  - [x] **Los errores, a `src/core/domain/errors/`** — no estaba en esta lista y salió al
+        escribirlos: `StorageError` y `MigrationError` viven **juntos y al mismo nivel que el
+        resto de entidades**, no cada uno en el módulo que lo emite, porque **un error es una
+        entidad del dominio más**. La carpeta **no lleva `index.ts`** (`domain/` tampoco: la API
+        pública del módulo es `src/core/index.ts`), y **`Result.ts` se queda fuera de `errors/`**
+        — es el sobre, no lo que va dentro. → `ARCHITECTURE.md` §6.5.
+  - [x] **Los siete métodos de puerto.** ✅ Los cuatro de `Repository<T, TId>` y los tres de
+        `StorageAdapter`. `transaction` fue la única con decisión que tomar y quedó
+        `<T>(fn: () => Promise<Result<T, StorageError>>) => Promise<Result<T, StorageError>>`:
+        el `Result` va **dentro y fuera**, porque el cuerpo real hace `put` tras `put` y cada
+        uno ya devuelve uno — con una `T` pelada saldría `Result<Result<T, …>, …>`, dos sobres
+        para un solo fallo.
+  - [x] **`BlobStore`, también** — tampoco estaba en la lista. Sus cuatro métodos devuelven
+        `Result`, y el motivo es el reparto de §6.1: **cada implementación traduce los errores de
+        SU plataforma** —`localStorage` sabe cuál es su excepción de cuota, la File System Access
+        API cuál es la suya de permisos— mientras que `FileStorageAdapter` traduce sólo lo suyo,
+        la serialización (`JSON.parse` que falla → `corrupt`). Con la traducción de plataforma
+        arriba, el adaptador tendría que conocer las excepciones de los cuatro backends.
+  - [x] **Los dos `throw` de `runMigrations`** — ✅ Fuera los dos. La firma es ya
+        `Result<MigrationResult, MigrationError>`, así que `runMigrations` pasa de ser sólo
+        **pura** a **pura y total**: son dos propiedades distintas, y la totalidad hasta ahora
+        sólo la prometía el reducer.
+  - [x] **`MemoryStorageAdapter`** — ✅ Hecho, y fue casi todo mecánico como se esperaba. Lo
+        único que no: `transaction` tiene **la única frontera con `try/catch` del fichero**,
+        porque es lo único que ejecuta código ajeno.
+  - [x] **`writeBehind`** — ✅ Hecho, y aquí estaba el trabajo de verdad. `flush()` pasa de
+        `Promise<void>` a `Promise<Result<void, StorageError>>`, y con ella cambia el tipo
+        público `WriteBehind` que sale por `src/storage/index.ts`. Tres cosas que salieron al
+        hacerlo:
+    - **Un estado nuevo, *detenido*, que no estaba previsto en ninguna parte.** Ante un fallo
+      que no sea `io`, el escritor retiene el error, **cancela la espera programada** y a partir
+      de ahí cada `flush()` devuelve el mismo error **sin tocar el almacén**. Lo pendiente se
+      conserva en memoria: no se pierde nada, sólo se deja de insistir. Un aviso nuevo del
+      `Store` se recuerda pero ya no programa escritura. → `ARCHITECTURE.md` §6.5.
+    - **El `catch` de la cola de escrituras desapareció**, y no por descuido: un fallo es ahora
+      un valor, así que no puede envenenar las escrituras futuras. Si algo rechaza ahí es un
+      adaptador incumpliendo su puerto, y debe hacer ruido.
+    - **Precio aceptado, el que ya estaba escrito:** el bucle de seis `await` de
+      `escribirPendiente` pasa de un `try` que cubría los seis a comprobar uno a uno con corte
+      al primer fallo. Más ruidoso y sin arreglo elegante.
+  - [x] **La suite de contratos** de `src/storage/contract-tests/` — ✅ Convertida, y **dos de
+        sus casos quedaron invertidos**: los que exigían que una excepción lanzada dentro de
+        `transaction` se *propagara* ahora exigen que se **traduzca a `io`**. Van los dos
+        —asíncrono y síncrono—, y el síncrono no es un duplicado: un `transaction` sin `async`
+        rompería antes de que hubiera promesa, así que ningún `catch` lo alcanzaría.
+  - [x] **Verificado rompiéndolo, que es como se hace aquí.** Lo que más importa:
+        **invertir dos casos de `esReintentable`** —que `io` se detenga y `permission-denied` se
+        reintente— tumba **exactamente 2** pruebas, la de `io` y la de `permission-denied`, y
+        las otras tres siguen verdes, que es lo correcto porque no cambiaron de lado. Volver al
+        comportamiento viejo —reintentar siempre a ciegas— tumba **5**. Por eso los cuatro casos
+        no reintentables se prueban **uno a uno** y no con un representante: con un solo ejemplo,
+        mover un `kind` de lado no tumbaría nada.
+  - [ ] *(Opcional, y sigue pendiente. **Fuera del criterio de cierre de la Fase 3**: §9.9 exige
+        el hecho, no la herramienta, y una fase no se bloquea por una casilla opcional)* **Un
+        guardián en `tools/`** que falle si aparece un `throw` fuera de la frontera de los
+        adaptadores (`src/storage/*/`), al estilo de `tools/check-core-purity.mjs`. Hoy no queda
+        ninguno —medido: **cero `throw` y seis `try` en todo el código de producción de `core/` y
+        `storage/`**, uno en el de memoria, tres en el de fichero y uno en cada `BlobStore`—, así
+        que el guardián sólo tendría que **mantenerlo así**; sin él la regla dura lo que dure la
+        memoria, que es justo lo contrario de como se sostiene todo lo demás aquí. Necesita el
         mismo escáner que borra comentarios y cadenas, y **no puede prohibir el `throw` a secas**:
         por debajo de la frontera de cada adaptador hay `try/catch` legítimo, porque `JSON.parse`
         y la File System Access API lanzan por su cuenta.
 
-      **Lo que NO se toca:** que `get` de algo que no está guardado devuelva `null`, y que
-      borrar lo que no existe no sea un error. **Ausencia no es fallo**, eso ya está bien
-      resuelto y el `Result` envuelve sólo el fallo de entrada/salida.
+      **Lo que NO se tocó, y así sigue:** que `get` de algo que no está guardado devuelva
+      `ok(null)`, y que borrar lo que no existe no sea un error. **Ausencia no es fallo**, y
+      ahora son además dos casos del contrato.
 
-- [ ] **`FileStorageAdapter` sobre `BlobStore`**, ya contra las firmas nuevas. Reusa la suite de
-      contratos sin tocarla.
-- [ ] **`LocalStorageBlobStore`** y **`DirectoryHandleBlobStore`** — la primera implementación
-      de `BlobStore`, que hoy existe como interfaz y no tiene ninguna. La segunda **se verifica a
-      mano**, con una lista de pasos escrita en el repo (cerrado en *Sin decidir*, más abajo).
+- [ ] **Un `onError` para el write-behind, aplazado a la Fase 4.** El agujero es concreto:
+      cuando falla un flush **automático** —el del temporizador— **nadie mira su resultado**, así
+      que entre el fallo y la siguiente llamada manual a `flush()` no se entera nadie. Lo que
+      falta es un `onError?: (e: StorageError) => void` en `WriteBehindDeps`, que se llame cuando
+      el escritor se detiene: unas cinco líneas y una prueba.
+      **Por qué no ahora:** no hay UI a la que avisar, y aquí no se construye lo que no tiene
+      consumidor — la misma regla que quitó `move` y el puerto `Scheduler`.
+      **Qué lo desbloquea:** la Fase 4, que es cuando hay a quién avisar. Va en el mismo paquete
+      que el botón de "reconectar carpeta": **no se puede reanudar un escritor detenido**, y
+      reanudarlo significa volver a pedir la carpeta, que es plataforma. Hoy, en consecuencia, un
+      `permission-denied` deja el escritor muerto para el resto de la sesión.
+
+- [x] **`FileStorageAdapter` sobre `BlobStore`** — ✅ Hecho, en `src/storage/file/`, y con él
+      **`npm run check` en verde con 274 pruebas** (eran 232 al cerrar el paso 0): **17 del
+      contrato reusado** —que en ese momento pasó a correr dos veces; hoy corre **tres**, ver más
+      abajo— y **24 propias**. La
+      suite de contratos **no se tocó**, que era el punto 2 del criterio de cierre y se ve en el
+      diff. Con él quedan cumplidos los puntos 1, 2 y 3 de `ARCHITECTURE.md` §9.9.
+      Cinco cosas que salieron al escribirlo:
+  - **El formato en disco, que §6.2 no describía.** Ahora sí: `manifest.json` con la versión de
+    esquema, `notes/`, `plans/` y `contexts/` con un fichero por entidad, JSON indentado a dos
+    espacios, el id por `encodeURIComponent` al formar el camino y un `getAll` que ignora los
+    ficheros ajenos que aparezcan en la carpeta. → `ARCHITECTURE.md` §6.2.
+  - **El `manifest.json` lleva SÓLO `{ schemaVersion }`, y no un índice de ids.** Cierra un
+    hueco de *Sin decidir*. El motivo corto: un índice son **dos fuentes de verdad**, un `put`
+    pasaría a ser dos escrituras no atómicas, y morir en medio puede dejar **una nota guardada
+    que el índice no menciona y que por tanto no se abriría nunca**. Precio aceptado: `getAll`
+    son N lecturas, que se pagan al arrancar. → `ARCHITECTURE.md` §6.2.
+  - **`transaction` tiene por fin escrito qué garantiza:** que no reordena ni agrupa —de lo que
+    depende el orden `put`-antes-que-`delete` del write-behind—, que el `err` de dentro sale
+    intacto y que una excepción se traduce a `io`. Y qué no: atomicidad, aislamiento y lecturas
+    consistentes. → `ARCHITECTURE.md` §6.2.
+  - **Tiene pruebas propias, y el de memoria sigue sin tenerlas.** No es una excepción a la
+    regla: el contrato está escrito contra la interfaz y **no sabe que existe un `BlobStore`**,
+    así que no puede hacer fallar a la plataforma ni mirar el nombre del fichero. La regla
+    afinada está en `ARCHITECTURE.md` §6.3.
+  - **⚠️ Un fichero corrupto tumba el `getAll` entero**, lo que **contradice a §6.5**. Decidido
+    aceptarlo y aplazar el arreglo a la Fase 4 — la casilla del `onCorrupt`, justo aquí abajo.
+
+- [ ] **Un `onCorrupt` para `FileStorageAdapter`, aplazado a la Fase 4.** Va en el mismo paquete
+      que el `onError` de arriba, y por el mismo motivo. **El agujero es concreto y hoy está
+      vivo:** `getAll` corta al primer fichero ilegible, así que **una sola nota corrupta impide
+      abrir la app** — justo el «creer que las has perdido todas» que la taxonomía de §6.5 existe
+      para evitar, y que esa misma sección promete resolver aislando la entidad.
+      Lo que falta es un `onCorrupt?: (e: StorageError) => void` en las dependencias del
+      adaptador: saltar esa entidad y avisar de cuál.
+      **Por qué no ahora, y por qué no de otra forma:** saltársela **en silencio** es peor que el
+      fallo actual —deja `ItemRef` colgando y, sobre todo, el write-behind vería esa nota como
+      borrada y acabaría limpiándola de los contextos, convirtiendo un fichero recuperable en una
+      pérdida de verdad—; y cambiar la firma de `getAll` es deshacer lo que el paso 0 acaba de
+      estabilizar, ahora con un adaptador escrito encima.
+      **Qué lo desbloquea:** la Fase 4, que es cuando hay a quién avisar.
+      La prueba que fija el comportamiento de hoy está marcada con ⚠️ en
+      `FileStorageAdapter.errors.test.ts`, para que el cambio se vea en el diff.
+      → `ARCHITECTURE.md` §6.5.
+
+- [ ] **Validar el esquema de lo que se lee del disco.** Hoy, al leer una entidad sólo se
+      comprueba que lo parseado sea **un objeto con un `id` de texto**. Un `notes/x.json` con un
+      `content` inventado se acepta y entra en `AppState` tal cual.
+      **Por qué no se hizo de paso:** validar campo a campo **es un validador, no una frontera**,
+      no hay hoy en el repo nada que lo haga, y escribirlo a mano para tres entidades con
+      contenido recursivo es una pieza con entidad propia — no un `if` más dentro de `parsear`.
+      **Qué hay que decidir el día que se haga:** si se escribe a mano o si es el primer caso que
+      justifica una dependencia (y entonces, la política de dependencias manda comprobar antes si
+      Node o TypeScript ya lo hacen). → `ARCHITECTURE.md` §6.2.
+
+- [x] **`LocalStorageBlobStore`** — ✅ Hecho, en `src/storage/blobs/`, **108 líneas de código y
+      22 pruebas propias**. Es el de desarrollo y el de emergencia, y tiene pruebas porque tiene
+      tres cosas que inventa por encima del puerto: el espacio de nombres (`localStorage` es un
+      sitio compartido con cualquier otro script del origen), el base64 —`localStorage` sólo
+      guarda texto, y se elige base64 y no una cadena latin1 aunque ocupe un 33% más, para no
+      dejar en el almacén texto que parece texto y no lo es— y la traducción de excepciones.
+      Dos cosas que salieron al escribirlo:
+  - **La cuota se detecta por tres nombres y dos códigos**, no por uno: `QuotaExceededError`
+    (estándar y Chromium), `NS_ERROR_DOM_QUOTA_REACHED` (Firefox) y `QUOTA_EXCEEDED_ERR`
+    (Safari viejo), más `code` 22 y 1014 para los navegadores que dejan el `name` vacío. Fallar
+    ahí convierte «no cabe» en «reintenta», que es justo lo que detiene el write-behind o no.
+    Se prueba **caso por caso**, no con un representante, por lo mismo que los cuatro `kind` no
+    reintentables: con un solo ejemplo, mover una excepción de lado no tumbaría nada.
+  - **Un base64 ilegible sale como `corrupt`, y eso precisó una frontera que no estaba escrita**:
+    el **sobre** es del `BlobStore` —lo escribió él— y el **contenido** es de
+    `FileStorageAdapter`. No cambia el reparto de §6.1, sólo dice dónde cae la línea. →
+    `ARCHITECTURE.md` §6.1.
+
+- [x] **`DirectoryHandleBlobStore`** — ✅ Hecho, **156 líneas de código y ninguna prueba, que es
+      la decisión de §6.3 y no un descuido**. Sirve a la vez para la carpeta real y para OPFS:
+      es el mismo código y sólo cambia quién le pasa el handle. Tres cosas que dejar escritas:
+  - **La cifra vieja de «~50 líneas» era falsa**, y era el argumento para no instalar un runner
+    de navegador. **La decisión no cambia** y el porqué está en `ARCHITECTURE.md` §6.3: lo que
+    creció es el clasificador de excepciones —que es precisamente lo que un doble no puede
+    probar—, el `list` recursivo y unas declaraciones de tipo. Lógica interesante sigue sin
+    haber.
+  - **La File System Access API lanza el mismo `NotFoundError` para «falta el fichero» y para
+    «falta la carpeta»**. `read` y `delete` lo traducen a ausencia y `list` a lista vacía,
+    porque en una carpeta recién elegida no existe `notes/` y el `getAll` del arranque tiene que
+    devolver cero. **Precio asumido:** si desaparece la raíz entera se lee «vacío» en vez de «no
+    la encuentro»; el primer `write` sí dice `not-found`. → `ARCHITECTURE.md` §6.5.
+  - **Sin `abort()` de limpieza, a propósito:** `createWritable()` escribe en un temporal y el
+    `close()` es quien lo vuelca, así que si algo revienta antes el fichero original queda
+    intacto. Ahorra un segundo `try` en el único fichero sin pruebas.
+
+- [x] **La tercera pasada de la suite de contratos** — ✅ Hecha, y **no estaba prevista**:
+      `LocalStorageBlobStore.contract.test.ts` monta `FileStorageAdapter` sobre el `BlobStore`
+      **de producción**, no sobre el falso. Se ganó el sitio sola, y está medido rompiendo el
+      código: devolver las claves de `list` con el espacio de nombres delante tumba **7** pruebas,
+      **5 de ellas de esta pasada**; que `read` de una clave ausente devuelva `not-found` en vez
+      de `ok(null)` tumba **6**, **3 de ellas suyas**. Ni las pruebas del blob ni el contrato con
+      el falso las cazaban por separado. Con ella el contrato corre **tres** veces, no dos como
+      anticipaba el punto 7 de §9.9. → `ARCHITECTURE.md` §6.3.
+
+- [ ] **⬅️ LO ÚNICO QUE FALTA DE LA FASE 3: pasar la lista de verificación manual y anotar el
+      resultado.** La lista está en `src/storage/blobs/VERIFICACION-MANUAL.md`, con su
+      procedimiento, su andamio (`verificacion-manual.html`) y la hoja de resultados vacía. Es el
+      punto 5 de `ARCHITECTURE.md` §9.9 y **es lo que separa «el código está» de «la fase está
+      terminada»**.
+      **Qué hace falta:** un navegador Chromium —Firefox y Safari no tienen
+      `showDirectoryPicker()`—, servir el repo por HTTP (la API exige contexto seguro) y una
+      carpeta vacía abierta en el explorador de ficheros, **que es el oráculo de verdad**: la
+      página sólo enseña lo que devuelve el código.
+      **Cómo se cierra:** rellenando la plantilla de la hoja de resultados —fecha, navegador y
+      versión, sistema, commit— con lo que salga. **El punto se cierra con el resultado que haya,
+      no con el bueno:** lo que no se pueda provocar en ese navegador se anota como tal.
+      **No lo puede cerrar un agente**, y por eso lleva aquí abierto.
+
+- [ ] **Quitar la interfaz `CarpetaRecorrible` de `DirectoryHandleBlobStore.ts`, que hoy sobra**
+      *(de `back-dev-agent` o `infra-agent`: es código, no documentación)*. Se declaró a mano
+      `values()` con este motivo escrito en el fichero: que el recorrido de entradas «vive en
+      `lib.dom.asynciterable.d.ts`, una `lib` aparte que este proyecto no activa».
+      **Medido, y ya no es cierto con el TypeScript que hay instalado (6.0.3):** ese fichero es
+      hoy un stub de compatibilidad de 18 líneas —«This file's contents are now included in the
+      main types file»— y `FileSystemDirectoryHandle.values()` está declarado dentro de
+      `lib.dom.d.ts`, que la app ya carga (`lib: ["ES2020", "DOM", "DOM.Iterable"]`).
+      **Comprobado con una sonda**, fuera del repo: un `for await (const e of c.values())` sin
+      ningún tipo declarado a mano pasa `npm run typecheck` limpio.
+      **Qué hay que hacer:** borrar la interfaz, el `entradasDe` que castea y el párrafo del
+      comentario que dice algo falso — el propio fichero ya avisa de que «si algún día se activa
+      esa lib, esto se borra y no cambia nada». **No urge y no rompe nada**; lo que importa es
+      que el comentario no siga explicando una limitación que no existe.
 
 ### Infraestructura (`infra-agent`)
 
@@ -295,6 +484,10 @@ documentación**.
       ve **en el diff** en vez de que la inferencia lo absorba en silencio.
       **Alcance medido** sobre `src/core` y `src/storage`, ignorando comentarios: unas **500
       declaraciones sin anotar**, frente a las 13 de código y ~54 de pruebas que ya lo llevan.
+      *(La medida es anterior a `file/` y `blobs/`, que sí aplican la regla dentro de las
+      funciones; lo que dejan sin anotar son **siete constantes de módulo** —los caminos de
+      `FileStorageAdapter` y las dos de `LocalStorageBlobStore`—, así que el orden de magnitud no
+      cambia.)*
       Van en dos casillas porque son dos trabajos de tamaño muy distinto:
   - [ ] **El código — ~55 declaraciones.** Es el que importa: es lo que se lee al revisar un
         cambio de comportamiento.
@@ -324,7 +517,7 @@ documentación**.
       seguía ejecutándola. Pruebas fantasma de código que ya no existe, y pruebas renombradas
       corriendo dos veces.
 - [x] ✅ **`npm run check` vuelve a estar en verde**, y ahora significa algo: 9 pruebas
-      ejecutándose de verdad. Hoy van 99.
+      ejecutándose de verdad. Hoy van 314.
 - [x] **Que `npm run check` falle ante `Date.now()`, `Math.random()` o `new Date(` en
       `src/core`.** ✅ Hecho: `tools/check-core-purity.mjs`, enchufado como `npm run
       check:purity`. Tapa el único hueco de la verja — `Date` y `Math` están en `lib.es5.d.ts`,
@@ -415,6 +608,43 @@ exista. Tres cosas que habrá que decidir ese día, y conviene que estén escrit
 el editor delante. No antes: sin un segundo escritor real, no hay forma de probar que el
 mecanismo funciona.
 
+### Tres huecos que salieron al escribir el criterio de la Fase 3 — queda uno
+
+**Salieron de escribir `ARCHITECTURE.md` §9.9, y se dejaron abiertos a conciencia:** el criterio
+recoge lo ya decidido y lo hace comprobable; decidir esto de paso, y sin preguntar, habría sido
+cambiar el alcance de la fase por la puerta de atrás. **Dos están cerrados** —el del manifiesto y
+el de la lista manual—; **sigue abierto el de OPFS**, y no bloquea nada.
+
+- ~~**¿En qué fichero vive la lista de verificación manual, y su resultado?**~~ — ✅ **Cerrada al
+  escribirla: en `src/storage/blobs/VERIFICACION-MANUAL.md`, pegada al código que verifica.** Ni
+  una sección de este fichero ni un cuarto documento: **los documentos del proyecto siguen siendo
+  tres**, porque esto no es documentación de diseño sino **un procedimiento**, y vive junto a su
+  código por el mismo motivo por el que un test vive junto al suyo — quien toque
+  `DirectoryHandleBlobStore.ts` lo tiene delante. **Las pasadas se acumulan ahí mismo**, en una
+  «Hoja de resultados» con plantilla (fecha, navegador y versión, sistema, quién, commit) y **la
+  más reciente arriba**: no se sobreescribe la anterior, porque interesa saber en qué navegador
+  funcionó y en cuál no. Lo que sigue siendo tarea —ejecutarla— está arriba, en *Pendiente*.
+- ~~**¿Qué lleva dentro el `manifest.json`?**~~ — ✅ **Cerrada al escribir el adaptador: sólo
+  `{ schemaVersion }`, y NO un índice de ids.** `getAll` se resuelve con `list(prefijo)` más una
+  lectura por entidad, y el `schemaVersion` vive ahí y sólo ahí. El motivo que decidió es que un
+  índice crea **dos fuentes de verdad** sobre la misma carpeta: cada `put` serían dos escrituras
+  no atómicas, y morir en medio deja o un id fantasma o —peor— **una nota guardada que el índice
+  no menciona y que por tanto no se abriría nunca**. Además los tres repositorios se pisarían
+  sobre el mismo fichero, que es justo lo que §6.1 da como motivo para que `Repository` no hable
+  con `BlobStore`. **Precio aceptado:** N lecturas al arrancar; si algún día duele, **una caché,
+  no una segunda fuente de verdad**. → `ARCHITECTURE.md` §6.2.
+- **¿Entra OPFS en la Fase 3? — LA ÚNICA QUE SIGUE ABIERTA.** §6.1 dice que es **la misma**
+  `DirectoryHandleBlobStore` y que lo único que cambia es **cómo se consigue el handle**
+  (`showDirectoryPicker()` frente a `navigator.storage.getDirectory()`). Si eso es «quién abre el
+  storage», es composición y cae en la Fase 4 por §9.7; si se considera parte del adaptador,
+  entonces la lista manual necesita **una segunda pasada**. El criterio de cierre pide una pasada
+  sobre la carpeta real y no se pronuncia sobre la otra.
+  **Cómo se dejó mientras tanto, sin decidirlo por la puerta de atrás:** la lista manual lleva
+  OPFS como **sección E, marcada opcional**, con su botón en el andamio y la nota de que §9.9 no
+  la exige. Quien pase la lista puede hacerla o no; si la hace, se anota. Lo que esa sección **no
+  puede** sustituir es la de la carpeta real: en OPFS no hay explorador de ficheros que mirar, y
+  el oráculo del `close()` es precisamente mirar el fichero en el disco.
+
 ### ~~Cómo se verifica la Fase 3~~ — ✅ **cerrada: a mano, y documentado**
 
 **Nada de Playwright ni de ningún runner de navegador.** Se cierra antes de empezar la fase, no
@@ -426,13 +656,19 @@ entrada**, y lo es gracias al reparto en dos niveles de §6.1:
 | Qué | Tiene lógica propia | Cómo se verifica |
 |---|---|---|
 | `FileStorageAdapter` | **sí** — serializa, traduce id → camino, mantiene el manifiesto | Node, con la **suite de contratos que ya existe** y un `BlobStore` falso |
-| `LocalStorageBlobStore` | poca | Node, con un objeto falso de diez líneas |
+| `LocalStorageBlobStore` | poca | Node, con un `Storage` falso (52 líneas de código, y sabe lanzar excepciones) |
 | `DirectoryHandleBlobStore` | **no** — sólo traduce a la API del navegador | **a mano, una vez, con una lista de pasos escrita en el repo** |
 
-Así que lo que no se puede automatizar son **unas cincuenta líneas sin lógica**. Todo lo que
+Así que lo que no se puede automatizar es **un fichero sin lógica interesante**. Todo lo que
 puede tener un fallo interesante queda del lado de Node.
 
-**Por qué un test unitario con un doble no resuelve esas cincuenta líneas.** Porque un doble
+> **Cifra corregida al escribirlo, y se deja a la vista porque era el argumento:** aquí decía
+> «unas cincuenta líneas», y son **156 líneas de código**. La decisión **no cambia** —lo que
+> creció es el clasificador de excepciones, que es justo lo que un doble no puede probar, más un
+> `list` recursivo y unas declaraciones de tipo—, pero el número que la sostenía era falso y
+> repetirlo sin medirlo es como se pudre esto. El porqué desarrollado, en `ARCHITECTURE.md` §6.3.
+
+**Por qué un test unitario con un doble no resuelve esas líneas.** Porque un doble
 que escribes tú prueba **lo que tú crees que hace la API**, no lo que hace. El ejemplo que lo
 deja claro: escribir un fichero con la File System Access API exige un `close()` final, y **ese
 `close()` es lo que vuelca los datos al disco** — sin él no se guarda nada. Un `BlobStore` de
@@ -440,17 +676,17 @@ mentira que guarde en un `Map` pasa en verde con el `close()` olvidado. La regla
 **cuanto más fina es la capa de traducción, menos vale probarla con un doble**; el test acaba
 siendo el mismo código escrito dos veces, y con el mismo error si lo hay.
 
-**Y el argumento que decide:** esas cincuenta líneas **se ejercitan solas cada vez que alguien
-usa la app**. Si guardar en la carpeta no funciona, se nota al minuto y de forma ruidosa. La
-verificación automática se reserva para lo que falla **en silencio**, que es lo que las fases 1
-y 2 han estado blindando.
+**Y el argumento que decide:** ese fichero **se ejercita solo cada vez que alguien usa la app**.
+Si guardar en la carpeta no funciona, se nota al minuto y de forma ruidosa. La verificación
+automática se reserva para lo que falla **en silencio**, que es lo que las fases 1 y 2 han estado
+blindando.
 
 **Precio aceptado:** si el navegador cambia el comportamiento de esa API, no lo cazará ninguna
-prueba — lo cazará el uso. Para cincuenta líneas, se asume.
+prueba — lo cazará el uso. Y mientras la lista manual no se haya pasado ni una vez, tampoco lo
+caza el uso, porque nadie lo ha usado: por eso el punto 5 de §9.9 existe.
 
 **Qué lo reabriría:** que aparezca un segundo `BlobStore` sobre navegador con lógica de verdad
-(el de Drive, con su OAuth y sus reintentos), o que esas cincuenta líneas den más de un
-sobresalto. Ese día, el runner de navegador se instala **sólo para esa fase**, coherente con la
+(el de Drive, con su OAuth y sus reintentos), o que ese fichero dé más de un sobresalto. Ese día, el runner de navegador se instala **sólo para esa fase**, coherente con la
 política de dependencias. Aparcado abajo.
 
 ### ~~La justificación escrita de `schemaVersion` no es la real~~ — ✅ **cerrada**
@@ -492,9 +728,10 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Adaptador de Google Drive** | Escribir **siempre** exige OAuth (scope `drive.file`), aunque la carpeta sea pública. Eso arrastra registro de app, PKCE y gestión de tokens. | Querer de verdad sincronizar entre dispositivos, y aceptar el coste de OAuth. Antes tendría que estar cerrado el `BlobStore`. |
 | **`CompositeStorage` y outbox durable** | Sin consumidor mientras haya un solo backend. La semántica (local primario + réplicas con reintentos) ya está decidida. | Que exista un segundo backend real. Ni un día antes: es infraestructura para un problema que aún no se tiene. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
+| **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entra** en la Fase 4, pero para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. |
 | **El editor de grafos de los Planes** | Los tipos de `Plan` están, pero no hay ni una operación. Es una app dentro de la app. | Que la parte de Notas esté terminada y en uso. Anotado: si llega, `Plan.nodes` probablemente deba pasar de array a `Record`, porque las aristas se guardan por id y con array toda búsqueda es lineal. |
 | **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web; no hay build web todavía. | Una Fase 4 terminada. Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
 | **Sync entre dispositivos, CRDTs, colaboración en tiempo real** | Salto enorme de complejidad. `revision` ya deja la puerta abierta a detectar conflictos, que es el 10% que sí hacía falta desde el principio. | Uso real en dos dispositivos y una política de conflictos elegida a conciencia. "Gana el último" ya está descartada. |
-| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node son ~50 líneas sin lógica, que además se ejercitan solas cada vez que alguien usa la app: si guardar en la carpeta falla, se nota al minuto. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** `BlobStore` sobre navegador con lógica de verdad —el de Drive, con su OAuth y sus reintentos— o que esas 50 líneas den más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
+| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, 156 líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** `BlobStore` sobre navegador con lógica de verdad —el de Drive, con su OAuth y sus reintentos— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | Webpack sigue siendo el bundler previsto para la Fase 4, hoy desinstalado. Migrar **no afecta a la arquitectura**, así que no urge. | Llegar a la Fase 4 y comparar los dos entonces. Está fuera de "decisiones cerradas" a propósito: es una opción abierta, no un compromiso. |
 | **Prototipo desechable del editor** (solo DOM, sin core y sin persistencia) | Es trabajo que se tira. | Nada: **puede que merezca la pena ya.** El editor con `contenteditable` es la parte más difícil del proyecto, está **al final del plan** y es la única sin verificación automática posible. Un prototipo de un rato responde pronto a la pregunta que más riesgo esconde: ¿aguanta en la práctica la regla de que "el nodo enfocado no se re-renderiza"? Si no aguanta, es mejor saberlo antes de construir tres fases encima. |

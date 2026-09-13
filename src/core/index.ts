@@ -8,9 +8,15 @@
  *
  * Dentro del core, en cambio, los imports son relativos.
  *
- * Ahora mismo esto es SÓLO el modelo de datos: entidades, sus IDs y los
- * constructores mínimos para crearlas y discriminarlas. Ninguna operación sobre
- * ellas — ni árbol de contenido, ni reducers, ni Store.
+ * Lo que sale por aquí son cinco grupos: el **modelo** (entidades, IDs,
+ * contenido, `Position`, `Result` y los errores), las **ocho operaciones** sobre
+ * el contenido de una nota, la **capa de aplicación** (las diecisiete acciones,
+ * `createStore`, `createUseCases`, `diffState`), la **mitad pura del arranque**
+ * (`hydrate`, `runMigrations`) y los **cinco puertos**.
+ *
+ * Y hay tres cosas que a propósito NO salen, porque son maquinaria interna: las
+ * dos primitivas del helper de copia por camino (`updateContent` y
+ * `updateContainerOf`) y `reduce`, al que se llega por el `Store`.
  */
 
 /* Identificadores y referencias */
@@ -37,6 +43,18 @@ export {
 /* Contenido de una nota */
 export type { CheckBox, Content, Text } from "./domain/Content"
 export { checkBox, isCheckBox, isText, text } from "./domain/Content"
+
+/* El fallo como valor: lo que puede fallar lo devuelve, no lo lanza (§6.5).
+   Quien lo produce vive fuera del core —los adaptadores de `storage/`—, así que
+   el tipo y sus dos constructores salen por aquí. `Result` es el sobre y va
+   suelto en `domain/`: un `Result<Note, never>` no lleva ningún error dentro. */
+export type { Result } from "./domain/Result"
+export { err, ok } from "./domain/Result"
+
+/* …y lo que va dentro del sobre. Los errores son entidades del dominio y viven
+   juntos en `domain/errors/`, no repartidos por el módulo que los produce. */
+export type { StorageError } from "./domain/errors/StorageError"
+export type { MigrationError } from "./domain/errors/MigrationError"
 
 /* El "dónde": vocabulario de posiciones para insertar */
 export type { Position } from "./domain/Position"
@@ -94,7 +112,8 @@ export {
 /* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
 export type { Clock } from "./ports/Clock"
 export type { IdGenerator } from "./ports/IdGenerator"
-/* …y los de persistencia, que implementa `storage/` */
+/* …y los de persistencia, que implementa `storage/`. Su taxonomía de fallos
+   —`StorageError`— sale más arriba, con el resto de entidades del dominio. */
 export type { Repository } from "./ports/Repository"
 export type { StorageAdapter } from "./ports/StorageAdapter"
 export type { BlobStore } from "./ports/BlobStore"

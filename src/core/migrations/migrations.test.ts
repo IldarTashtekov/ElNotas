@@ -11,17 +11,40 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Context } from "../domain/Context"
+import type { MigrationError } from "../domain/errors/MigrationError"
 import { contextId, noteId, noteRef, planId, planRef, revision } from "../domain/Ids"
 import type { Note } from "../domain/Note"
+import type { Result } from "../domain/Result"
 import type { StoredEntities } from "./hydrate"
 import { hydrate } from "./hydrate"
-import type { Migration } from "./runMigrations"
+import type { Migration, MigrationResult } from "./runMigrations"
 import {
   CURRENT_SCHEMA_VERSION,
   EMPTY_STORE_VERSION,
   MIGRATIONS,
   runMigrations,
 } from "./runMigrations"
+
+/**
+ * Abre un resultado que se espera **bueno**, y falla la prueba con un mensaje
+ * útil si venía un error. Existe sólo para no repetir el `if (!r.ok)` en cada
+ * prueba: `assert.ok(r.ok)` no estrecha el tipo, así que sin esto habría que
+ * escribir la guarda a mano cinco veces.
+ */
+const valorDe = (r: Result<MigrationResult, MigrationError>): MigrationResult => {
+  if (!r.ok) {
+    assert.fail(`se esperaba un resultado correcto y vino ${r.error.kind}`)
+  }
+  return r.value
+}
+
+/** Y el simétrico, para los dos caminos que fallan. */
+const errorDe = (r: Result<MigrationResult, MigrationError>): MigrationError => {
+  if (r.ok) {
+    assert.fail("se esperaba un error y la migración dijo que fue bien")
+  }
+  return r.error
+}
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 
@@ -106,15 +129,15 @@ test("un arranque NORMAL devuelve los contextos INTACTOS, por referencia", () =>
 /* ───────────────────────────── runMigrations ──────────────────────────────── */
 
 test("un almacén vacío no migra nada y queda en la versión actual", () => {
-  const r = runMigrations({ nada: true }, EMPTY_STORE_VERSION)
+  const r: MigrationResult = valorDe(runMigrations({ nada: true }, EMPTY_STORE_VERSION))
 
   assert.equal(r.applied, 0, "ha intentado migrar un almacén vacío")
   assert.equal(r.version, CURRENT_SCHEMA_VERSION)
 })
 
 test("un almacén ya en la versión actual no migra nada", () => {
-  const datos = { notes: [] }
-  const r = runMigrations(datos, CURRENT_SCHEMA_VERSION)
+  const datos: { readonly notes: ReadonlyArray<Note> } = { notes: [] }
+  const r: MigrationResult = valorDe(runMigrations(datos, CURRENT_SCHEMA_VERSION))
 
   assert.equal(r.applied, 0)
   assert.strictEqual(r.data, datos, "ha tocado los datos sin necesidad")
@@ -126,7 +149,7 @@ test("las migraciones se aplican en cadena y en orden", () => {
     { from: 1, migrate: (d) => `${String(d)}→2` }, // a propósito, desordenada
   ]
 
-  const r = runMigrations("v1", 1, { migrations: pasos, target: 3 })
+  const r: MigrationResult = valorDe(runMigrations("v1", 1, { migrations: pasos, target: 3 }))
 
   assert.equal(r.applied, 2)
   assert.equal(r.version, 3)
@@ -140,30 +163,48 @@ test("se aplican SÓLO las que faltan, no la cadena entera", () => {
     { from: 2, migrate: (d) => `${String(d)}→3` },
   ]
 
-  const r = runMigrations("v2", 2, { migrations: pasos, target: 3 })
+  const r: MigrationResult = valorDe(runMigrations("v2", 2, { migrations: pasos, target: 3 }))
 
   assert.equal(r.applied, 1, "ha vuelto a aplicar una migración ya aplicada")
   assert.equal(r.data, "v2→3")
 })
 
-test("falta la migración que hace falta: lanza en vez de corromper", () => {
-  assert.throws(
-    () => runMigrations("viejo", 1, { migrations: [], target: 2 }),
-    /Falta la migración del esquema 1 al 2/,
-  )
+test("falta la migración que hace falta: lo DEVUELVE en vez de corromper", () => {
+  const fallo: MigrationError = errorDe(runMigrations("viejo", 1, { migrations: [], target: 2 }))
+
+  assert.equal(fallo.kind, "missing-migration")
+  if (fallo.kind === "missing-migration") {
+    // El escalón exacto que falta, para que se pueda decir cuál hay que escribir.
+    assert.equal(fallo.from, 1)
+  }
 })
 
-test("datos de una versión MÁS NUEVA que el código: lanza", () => {
+test("datos de una versión MÁS NUEVA que el código: lo DEVUELVE", () => {
   /*
       Pasa de verdad: alguien abre su fichero con una versión nueva de la app y
       luego con una vieja. Seguir adelante leyendo campos que no entiende y
-      volviendo a escribir corrompería sus notas, así que aquí lanzar es lo
-      correcto — a diferencia del reducer, que no lanza nunca.
+      volviendo a escribir corrompería sus notas, así que aquí sigue siendo un
+      error y no un no-op — a diferencia del reducer, que ante una acción rara no
+      hace nada. Lo que cambia es que ahora viaja en el valor de retorno.
   */
-  assert.throws(
-    () => runMigrations({}, CURRENT_SCHEMA_VERSION + 1),
-    /más nueva de la app/,
-  )
+  const fallo: MigrationError = errorDe(runMigrations({}, CURRENT_SCHEMA_VERSION + 1))
+
+  assert.equal(fallo.kind, "schema-from-future")
+  if (fallo.kind === "schema-from-future") {
+    assert.equal(fallo.stored, CURRENT_SCHEMA_VERSION + 1)
+    assert.equal(fallo.supported, CURRENT_SCHEMA_VERSION)
+  }
+})
+
+test("runMigrations es TOTAL: no lanza ni con lo que antes lanzaba", () => {
+  /*
+      ⚠️ La prueba que fija la propiedad nueva. Los dos caminos de arriba ya
+      comprueban el `Result`, pero ninguno impediría que alguien volviera a meter
+      un `throw` en otro sitio de la función; esto sí, y es lo que distingue
+      "pura" de "pura y total".
+  */
+  assert.doesNotThrow(() => runMigrations({}, CURRENT_SCHEMA_VERSION + 1))
+  assert.doesNotThrow(() => runMigrations("viejo", 1, { migrations: [], target: 2 }))
 })
 
 test("la lista de migraciones está vacía, y es correcto", () => {

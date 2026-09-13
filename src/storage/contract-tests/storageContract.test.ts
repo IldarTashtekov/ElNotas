@@ -34,13 +34,47 @@
  * exigiera `strictEqual`, estaría exigiendo algo que **ningún adaptador real
  * puede cumplir**, y lo pasaría sólo el de memoria — justo lo contrario de para
  * lo que existe. Comparar por valor no es aquí una relajación: es el contrato.
+ *
+ * ── Qué añadió el paso 0 de la Fase 3: los puertos devuelven `Result` ──────
+ *
+ * Todo lo que se le pide al adaptador viene ahora envuelto (§6.5), y eso mete en
+ * el contrato tres exigencias que antes no se podían escribir:
+ *
+ * 1. **el camino feliz devuelve `ok`** — un adaptador que devolviera `err`
+ *    cuando todo va bien pasaría cualquier prueba que sólo mirara el valor;
+ * 2. **ausencia no es fallo** — `get` de lo que no está es `ok(null)` y `delete`
+ *    de lo que no está es `ok`, no dos errores;
+ * 3. **nada lanza por encima de la frontera** — ni siquiera `transaction`, que
+ *    ejecuta código ajeno. Ahí es donde más se nota: las dos pruebas que antes
+ *    exigían *propagar* la excepción ahora exigen **traducirla**.
  */
 
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context, Note, Plan, StorageAdapter } from "#core/index"
-import { contextId, noteId, noteRef, planId, revision } from "#core/index"
+import type { Context, Note, Plan, Result, StorageAdapter, StorageError } from "#core/index"
+import { contextId, err, noteId, noteRef, ok, planId, revision } from "#core/index"
+
+/* ──────────────────── Abrir el sobre, fallando si no toca ─────────────────── */
+
+/**
+ * El valor de un `Result` que **tenía** que haber ido bien.
+ *
+ * Existe para que cada prueba diga una sola cosa. Sin esto, cada `get` de la
+ * suite se llevaría por delante tres líneas de comprobar el sobre antes de
+ * llegar a lo que de verdad está probando. El `throw` es legítimo: esto es
+ * código de prueba, y un fallo aquí ES el fallo de la prueba.
+ */
+const valorDe = <T>(r: Result<T, StorageError>): T => {
+  if (!r.ok) throw new Error(`se esperaba ok y vino err: ${r.error.kind}`)
+  return r.value
+}
+
+/** El error de un `Result` que tenía que haber ido mal. */
+const errorDe = <T>(r: Result<T, StorageError>): StorageError => {
+  if (r.ok) throw new Error(`se esperaba err y vino ok: ${JSON.stringify(r.value)}`)
+  return r.error
+}
 
 /* ───────────────────────────── Entidades de ejemplo ───────────────────────── */
 
@@ -91,13 +125,16 @@ export const runStorageContract = (
 
   /* ── Repository: lo básico ── */
 
-  caso("get de un id que no está guardado devuelve null", async (s) => {
-    assert.equal(await s.notes.get(COMPRA.id), null)
+  caso("get de un id que no está guardado devuelve ok(null)", async (s) => {
+    /* AUSENCIA NO ES FALLO, y por eso se comprueba el sobre entero y no sólo el
+       `null` de dentro: un adaptador que devolviera `err({kind:"not-found"})`
+       aquí estaría colapsando "no está" con "no he podido mirar". */
+    assert.deepEqual(await s.notes.get(COMPRA.id), ok(null))
   })
 
   caso("lo que se guarda se recupera igual", async (s) => {
-    await s.notes.put(COMPRA)
-    assert.deepEqual(await s.notes.get(COMPRA.id), COMPRA)
+    assert.deepEqual(await s.notes.put(COMPRA), ok(undefined))
+    assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), COMPRA)
   })
 
   caso("put con un id que ya estaba REEMPLAZA, no duplica", async (s) => {
@@ -105,32 +142,33 @@ export const runStorageContract = (
     const renombrada: Note = { ...COMPRA, name: "Compra del mes" }
     await s.notes.put(renombrada)
 
-    assert.deepEqual(await s.notes.get(COMPRA.id), renombrada)
-    assert.equal((await s.notes.getAll()).length, 1)
+    assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), renombrada)
+    assert.equal(valorDe(await s.notes.getAll()).length, 1)
   })
 
   caso("getAll de un almacén vacío devuelve una lista vacía", async (s) => {
-    assert.deepEqual(await s.notes.getAll(), [])
+    assert.deepEqual(valorDe(await s.notes.getAll()), [])
   })
 
   caso("getAll devuelve todas las guardadas", async (s) => {
     await s.notes.put(COMPRA)
     await s.notes.put(DIARIO)
-    assert.deepEqual(porId(await s.notes.getAll()), porId([COMPRA, DIARIO]))
+    assert.deepEqual(porId(valorDe(await s.notes.getAll())), porId([COMPRA, DIARIO]))
   })
 
   caso("delete quita la entidad de get y de getAll", async (s) => {
     await s.notes.put(COMPRA)
     await s.notes.put(DIARIO)
-    await s.notes.delete(COMPRA.id)
+    assert.deepEqual(await s.notes.delete(COMPRA.id), ok(undefined))
 
-    assert.equal(await s.notes.get(COMPRA.id), null)
-    assert.deepEqual(await s.notes.getAll(), [DIARIO])
+    assert.deepEqual(await s.notes.get(COMPRA.id), ok(null))
+    assert.deepEqual(valorDe(await s.notes.getAll()), [DIARIO])
   })
 
-  caso("delete de algo que no está guardado NO lanza", async (s) => {
-    await s.notes.delete(COMPRA.id)
-    assert.deepEqual(await s.notes.getAll(), [])
+  caso("delete de algo que no está guardado devuelve ok", async (s) => {
+    // Ni lanza ni devuelve `err`: no había nada que hacer, y eso no es fracasar.
+    assert.deepEqual(await s.notes.delete(COMPRA.id), ok(undefined))
+    assert.deepEqual(valorDe(await s.notes.getAll()), [])
   })
 
   /* ── Repository: los tres están aislados ──
@@ -143,9 +181,9 @@ export const runStorageContract = (
     await s.plans.put(MUDANZA)
     await s.contexts.put(CASA)
 
-    assert.deepEqual(await s.notes.getAll(), [COMPRA])
-    assert.deepEqual(await s.plans.getAll(), [MUDANZA])
-    assert.deepEqual(await s.contexts.getAll(), [CASA])
+    assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
+    assert.deepEqual(valorDe(await s.plans.getAll()), [MUDANZA])
+    assert.deepEqual(valorDe(await s.contexts.getAll()), [CASA])
   })
 
   caso("borrar en un repositorio no toca a los otros", async (s) => {
@@ -153,7 +191,7 @@ export const runStorageContract = (
     await s.plans.put(MUDANZA)
     await s.notes.delete(COMPRA.id)
 
-    assert.deepEqual(await s.plans.getAll(), [MUDANZA])
+    assert.deepEqual(valorDe(await s.plans.getAll()), [MUDANZA])
   })
 
   /* ── Las entidades se guardan enteras ──
@@ -167,58 +205,84 @@ export const runStorageContract = (
       defaultView: { type: "note", id: COMPRA.id },
     }
     await s.contexts.put(conNota)
-    assert.deepEqual(await s.contexts.get(CASA.id), conNota)
+    assert.deepEqual(valorDe(await s.contexts.get(CASA.id)), conNota)
   })
 
   /* ── schemaVersion ── */
 
   caso("un almacén vacío responde versión de esquema 0", async (s) => {
-    assert.equal(await s.getSchemaVersion(), 0)
+    // El 0 va dentro del `ok`: "nunca se ha escrito nada" es una respuesta
+    // válida, y es justo la que el runner de migraciones necesita distinguir de
+    // "esquema viejo". Un `err` aquí rompería el primer arranque de la app.
+    assert.deepEqual(await s.getSchemaVersion(), ok(0))
   })
 
   caso("la versión de esquema se guarda y se recupera", async (s) => {
-    await s.setSchemaVersion(3)
-    assert.equal(await s.getSchemaVersion(), 3)
+    assert.deepEqual(await s.setSchemaVersion(3), ok(undefined))
+    assert.equal(valorDe(await s.getSchemaVersion()), 3)
   })
 
   /* ── transaction ──
      OJO con lo que NO se exige: **atomicidad**. El puerto la declara
      "best-effort", y un adaptador sobre ficheros sueltos no puede deshacer lo ya
      escrito. Exigir rollback aquí sería exigir algo que sólo el de memoria podría
-     cumplir. Lo que sí se exige es que las escrituras se apliquen y que un fallo
-     se propague en vez de tragarse. */
+     cumplir. Lo que sí se exige es que las escrituras se apliquen, que el fallo
+     de dentro salga **entero** y que nada escape como excepción. */
 
   caso("transaction devuelve lo que devuelve su función", async (s) => {
-    assert.equal(await s.transaction(async () => 42), 42)
+    assert.deepEqual(await s.transaction(async () => ok(42)), ok(42))
   })
 
   caso("las escrituras de dentro de transaction quedan aplicadas", async (s) => {
     await s.transaction(async () => {
       await s.notes.put(COMPRA)
       await s.contexts.put(CASA)
+      return ok(undefined)
     })
 
-    assert.deepEqual(await s.notes.get(COMPRA.id), COMPRA)
-    assert.deepEqual(await s.contexts.get(CASA.id), CASA)
+    assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), COMPRA)
+    assert.deepEqual(valorDe(await s.contexts.get(CASA.id)), CASA)
   })
 
-  caso("transaction propaga la excepción de su función", async (s) => {
-    await assert.rejects(
-      s.transaction(async () => {
+  caso("transaction devuelve el err de su función SIN reempaquetar", async (s) => {
+    /* Lo que se exige es el `kind` de origen. Si el adaptador envolviera este
+       error en uno suyo —en `io`, pongamos—, quien llama creería que reintentar
+       sirve de algo cuando el permiso está revocado: exactamente el fallo que
+       toda la taxonomía existe para evitar. */
+    const sinPermiso: StorageError = { kind: "permission-denied" }
+    const r: Result<number, StorageError> = await s.transaction(async () =>
+      err(sinPermiso),
+    )
+
+    assert.deepEqual(errorDe(r), sinPermiso)
+  })
+
+  caso("una excepción de la función NO escapa: se traduce a io", async (s) => {
+    /* La frontera del adaptador. `transaction` ejecuta código ajeno, y ese
+       código puede lanzar aunque el puerto diga que no; lo que no puede es
+       romper la firma de `transaction`, que promete un `Result` y no un rechazo.
+       Si escapara, este `await` reventaría la prueba en vez de devolver nada. */
+    const fallo: StorageError = errorDe(
+      await s.transaction(async () => {
         throw new Error("fallo a mitad")
       }),
-      /fallo a mitad/,
     )
+
+    if (fallo.kind !== "io") throw new Error(`se esperaba io y vino ${fallo.kind}`)
+    // `cause` guarda lo que vino de abajo, intacto y para depurar.
+    assert.match(String(fallo.cause), /fallo a mitad/)
   })
 
-  caso("transaction propaga también un fallo SÍNCRONO", async (s) => {
+  caso("tampoco escapa un fallo SÍNCRONO de la función", async (s) => {
     // Un `transaction` sin `async` dejaría escapar esta excepción antes de
-    // devolver promesa, y `assert.rejects` ni llegaría a verla.
-    await assert.rejects(
-      s.transaction(() => {
+    // devolver promesa siquiera, y no habría `catch` que pudiera traducirla.
+    const fallo: StorageError = errorDe(
+      await s.transaction(() => {
         throw new Error("fallo antes de empezar")
       }),
-      /fallo antes de empezar/,
     )
+
+    if (fallo.kind !== "io") throw new Error(`se esperaba io y vino ${fallo.kind}`)
+    assert.match(String(fallo.cause), /fallo antes de empezar/)
   })
 }
