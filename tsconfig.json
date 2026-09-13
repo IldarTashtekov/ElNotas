@@ -10,8 +10,8 @@
     "rootDir": "./src",
     "outDir": "dist"
   },
-  // Los tests los typechequea tsconfig.test.json, que sí carga los tipos de Node.
-  // Entre los dos queda src/ cubierto por completo.
-  "include": ["src"],
-  "exclude": ["**/*.test.ts"]
+  // Las pruebas viven en test/, fuera de src/, así que aquí no entran por la
+  // propia forma del "include" y no hace falta excluirlas. Las typechequea
+  // tsconfig.test.json, que sí carga los tipos de Node.
+  "include": ["src"]
 }

@@ -15,16 +15,16 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState } from "../domain/AppState"
-import type { Content } from "../domain/Content"
-import { checkBox, isCheckBox, text } from "../domain/Content"
-import { contentId, noteId, revision } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Clock } from "../ports/Clock"
-import type { IdGenerator } from "../ports/IdGenerator"
-import { createStore } from "./Store"
-import { createUseCases } from "./useCases"
-import { reduce } from "./reduce"
+import type { AppState } from "#core/domain/AppState"
+import type { Content } from "#core/domain/Content"
+import { checkBox, isCheckBox, text } from "#core/domain/Content"
+import { contentId, noteId, revision } from "#core/domain/Ids"
+import type { Note } from "#core/domain/Note"
+import type { Clock } from "#core/ports/Clock"
+import type { IdGenerator } from "#core/ports/IdGenerator"
+import { createStore } from "#core/app/Store"
+import { createUseCases } from "#core/app/useCases"
+import { reduce } from "#core/app/reduce"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 

@@ -10,8 +10,8 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Result } from "./Result"
-import { err, ok } from "./Result"
+import type { Result } from "#core/domain/Result"
+import { err, ok } from "#core/domain/Result"
 
 test("ok envuelve el valor y lo estrecha al comprobarlo", () => {
   const r: Result<number, string> = ok(42)

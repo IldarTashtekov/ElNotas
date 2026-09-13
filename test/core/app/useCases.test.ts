@@ -23,16 +23,16 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState } from "../domain/AppState"
-import { isCheckBox, isText } from "../domain/Content"
-import { contentId, contextId, noteId, noteRef } from "../domain/Ids"
-import { rootEnd } from "../domain/Position"
-import type { Clock } from "../ports/Clock"
-import type { IdGenerator } from "../ports/IdGenerator"
-import type { Action } from "./Action"
-import type { Store } from "./Store"
-import type { UseCases } from "./useCases"
-import { createUseCases } from "./useCases"
+import type { AppState } from "#core/domain/AppState"
+import { isCheckBox, isText } from "#core/domain/Content"
+import { contentId, contextId, noteId, noteRef } from "#core/domain/Ids"
+import { rootEnd } from "#core/domain/Position"
+import type { Clock } from "#core/ports/Clock"
+import type { IdGenerator } from "#core/ports/IdGenerator"
+import type { Action } from "#core/app/Action"
+import type { Store } from "#core/app/Store"
+import type { UseCases } from "#core/app/useCases"
+import { createUseCases } from "#core/app/useCases"
 
 /* ────────────────────────────── Utillaje ────────────────────────────────── */
 

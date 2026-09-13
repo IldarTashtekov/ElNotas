@@ -62,8 +62,10 @@ la capa de aplicación (**diecisiete** acciones, `reduce` —que tampoco sale po
 `createStore`, `createUseCases`, `diffState`) y la mitad pura del arranque (`hydrate`,
 `runMigrations`, con `MIGRATIONS` vacía a propósito).
 
-En `src/storage/`: la suite de contratos, `MemoryStorageAdapter` y el `writeBehind`. Mira
-`MemoryStorageAdapter.test.ts`: son 16 líneas que **sólo enganchan la suite compartida, sin
+En `src/storage/`: `MemoryStorageAdapter` y el `writeBehind`; sus pruebas y la suite de
+contratos están en `test/storage/` (ver «Tests»). Mira
+`test/storage/memory/MemoryStorageAdapter.test.ts`: son 16 líneas que **sólo enganchan la
+suite compartida, sin
 ni una prueba propia del adaptador**. Eso es el diseño, no un descuido — lo que se le exige
 es lo que se le exige a cualquier backend, y el de la Fase 3 tendrá un fichero igual de
 corto. Si algún día hace falta probar algo que sólo vale para memoria, es la señal de que te
@@ -134,8 +136,17 @@ se escribe* vive en `src/storage/`, porque `setTimeout` **no compila dentro del 
 
 `node:test` + `node:assert/strict`, sin runner externo. `npm test` limpia `tmp-test/`,
 compila, **exige que haya pruebas** (`tools/require-tests.mjs` sale con 1 si no encuentra
-ninguna, porque `node --test` sin ficheros imprime `1..0` y sale con 0) y ejecuta. **No
-«arregles» ese guardián quitándolo.**
+ninguna en `tmp-test/test/`, porque `node --test` sin ficheros imprime `1..0` y sale con 0) y
+ejecuta. **No «arregles» ese guardián quitándolo.**
+
+**Las pruebas viven en `test/`, no junto al código**, en un árbol que calca el de `src/`:
+lo de `src/core/domain/operations.ts` está en `test/core/domain/operations.test.ts`. Tres
+consecuencias al escribir una: **(1)** desde ahí se importa por alias, y vale el alias
+profundo a lo que `index.ts` no exporta (`#core/domain/updateContent`, `#core/app/reduce`);
+entre ficheros de `test/`, relativo. **(2)** un ayudante que no contiene pruebas **no lleva
+`.test`** —`FakeBlobStore.ts`, `FakeStorage.ts`, `contract-tests/storageContract.ts`—, que
+ese sufijo es sólo para decirle a `node --test` qué ejecutar. **(3)** el porqué entero está
+en `ARCHITECTURE.md` §8.5.
 
 **Tests de identidad con `assert.strictEqual`, nunca `deepEqual`** — un `deepEqual` pasa
 igual de verde con una implementación que rompe la invariante. **Única excepción, y está
@@ -147,7 +158,8 @@ un almacén no promete devolver el mismo objeto (el de fichero devolverá uno sa
 las pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no vale nada.
 Es la disciplina de esta capa, no una floritura.
 
-Los tests están excluidos de los dos guardianes de pureza, así que en ellos sí puedes usar
+Los tests quedan fuera de los dos guardianes de pureza por vivir en `test/`, así que en
+ellos sí puedes usar
 APIs de plataforma.
 
 ## Decisiones cerradas — no propongas alternativas

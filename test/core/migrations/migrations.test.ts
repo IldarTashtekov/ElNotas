@@ -10,20 +10,20 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context } from "../domain/Context"
-import type { MigrationError } from "../domain/errors/MigrationError"
-import { contextId, noteId, noteRef, planId, planRef, revision } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Result } from "../domain/Result"
-import type { StoredEntities } from "./hydrate"
-import { hydrate } from "./hydrate"
-import type { Migration, MigrationResult } from "./runMigrations"
+import type { Context } from "#core/domain/Context"
+import type { MigrationError } from "#core/domain/errors/MigrationError"
+import { contextId, noteId, noteRef, planId, planRef, revision } from "#core/domain/Ids"
+import type { Note } from "#core/domain/Note"
+import type { Result } from "#core/domain/Result"
+import type { StoredEntities } from "#core/migrations/hydrate"
+import { hydrate } from "#core/migrations/hydrate"
+import type { Migration, MigrationResult } from "#core/migrations/runMigrations"
 import {
   CURRENT_SCHEMA_VERSION,
   EMPTY_STORE_VERSION,
   MIGRATIONS,
   runMigrations,
-} from "./runMigrations"
+} from "#core/migrations/runMigrations"
 
 /**
  * Abre un resultado que se espera **bueno**, y falla la prueba con un mensaje

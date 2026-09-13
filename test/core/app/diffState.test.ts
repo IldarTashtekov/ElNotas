@@ -14,12 +14,12 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState } from "../domain/AppState"
-import type { Context } from "../domain/Context"
-import { contextId, noteId, planId, revision } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Plan } from "../domain/Plan"
-import { NO_CHANGES, diffState } from "./diffState"
+import type { AppState } from "#core/domain/AppState"
+import type { Context } from "#core/domain/Context"
+import { contextId, noteId, planId, revision } from "#core/domain/Ids"
+import type { Note } from "#core/domain/Note"
+import type { Plan } from "#core/domain/Plan"
+import { NO_CHANGES, diffState } from "#core/app/diffState"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 

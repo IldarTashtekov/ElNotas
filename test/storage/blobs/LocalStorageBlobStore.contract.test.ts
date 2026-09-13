@@ -18,10 +18,10 @@
  * debajo es el objeto `Storage`, que son seis miembros sin sorpresas.
  */
 
-import { runStorageContract } from "../contract-tests/storageContract.test"
-import { createFileStorageAdapter } from "../file/FileStorageAdapter"
-import { createFakeStorage } from "./FakeStorage.test"
-import { createLocalStorageBlobStore } from "./LocalStorageBlobStore"
+import { runStorageContract } from "../contract-tests/storageContract"
+import { createFileStorageAdapter } from "#storage/file/FileStorageAdapter"
+import { createFakeStorage } from "./FakeStorage"
+import { createLocalStorageBlobStore } from "#storage/blobs/LocalStorageBlobStore"
 
 runStorageContract("FileStorageAdapter sobre LocalStorageBlobStore", () =>
   createFileStorageAdapter(createLocalStorageBlobStore(createFakeStorage())),

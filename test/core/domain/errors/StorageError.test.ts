@@ -17,7 +17,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { StorageError } from "./StorageError"
+import type { StorageError } from "#core/domain/errors/StorageError"
 
 /** ¿Reintentar sirve de algo? Es el criterio con el que se eligió la taxonomía. */
 const merecePenaReintentar = (fallo: StorageError): boolean => {

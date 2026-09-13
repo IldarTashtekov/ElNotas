@@ -9,12 +9,12 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { CheckBox, Content } from "./Content"
-import { checkBox, isCheckBox, text } from "./Content"
-import type { ContentId } from "./Ids"
-import { contentId } from "./Ids"
-import type { ContainerTransform } from "./updateContainerOf"
-import { updateContainerOf } from "./updateContainerOf"
+import type { CheckBox, Content } from "#core/domain/Content"
+import { checkBox, isCheckBox, text } from "#core/domain/Content"
+import type { ContentId } from "#core/domain/Ids"
+import { contentId } from "#core/domain/Ids"
+import type { ContainerTransform } from "#core/domain/updateContainerOf"
+import { updateContainerOf } from "#core/domain/updateContainerOf"
 
 /* ─────────────────────────── El árbol de pruebas ───────────────────────────
     La lista de la compra de §2.3, con una nieta añadida para poder comprobar

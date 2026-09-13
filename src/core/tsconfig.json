@@ -23,8 +23,9 @@
     "types": [],
     "noEmit": true
   },
-  // Los tests sí pueden usar APIs de plataforma (node:test, node:assert); la
-  // verja aplica al código de producción. Se typechequean con tsconfig.test.json.
-  "include": ["."],
-  "exclude": ["**/*.test.ts"]
+  // Aquí dentro sólo hay código de producción: las pruebas del core viven en
+  // test/core/, fuera de esta carpeta, y no las toca esta verja —sí pueden usar
+  // APIs de plataforma (node:test, node:assert)—. Se typechequean con
+  // tsconfig.test.json.
+  "include": ["."]
 }

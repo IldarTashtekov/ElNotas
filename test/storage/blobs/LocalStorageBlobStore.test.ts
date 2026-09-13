@@ -25,9 +25,9 @@ import assert from "node:assert/strict"
 import type { BlobStore, Result, StorageError } from "#core/index"
 import { ok } from "#core/index"
 
-import type { FakeStorage } from "./FakeStorage.test"
-import { createFakeStorage, excepcionDeCuota } from "./FakeStorage.test"
-import { createLocalStorageBlobStore } from "./LocalStorageBlobStore"
+import type { FakeStorage } from "./FakeStorage"
+import { createFakeStorage, excepcionDeCuota } from "./FakeStorage"
+import { createLocalStorageBlobStore } from "#storage/blobs/LocalStorageBlobStore"
 
 /* ───────────────────────────────── Utillaje ──────────────────────────────── */
 

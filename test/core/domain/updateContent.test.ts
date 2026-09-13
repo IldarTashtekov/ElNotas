@@ -11,11 +11,11 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { CheckBox, Content } from "./Content"
-import { checkBox, isCheckBox, text } from "./Content"
-import { contentId } from "./Ids"
-import type { NodeTransform } from "./updateContent"
-import { mapPreservingIdentity, updateContent } from "./updateContent"
+import type { CheckBox, Content } from "#core/domain/Content"
+import { checkBox, isCheckBox, text } from "#core/domain/Content"
+import { contentId } from "#core/domain/Ids"
+import type { NodeTransform } from "#core/domain/updateContent"
+import { mapPreservingIdentity, updateContent } from "#core/domain/updateContent"
 
 /* ────────────────────────── El árbol de pruebas ──────────────────────────
     Es la lista de la compra de ARCHITECTURE.md §2.3, para que el ejemplo del

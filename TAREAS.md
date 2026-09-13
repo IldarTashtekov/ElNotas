@@ -117,9 +117,11 @@ rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
     serializa, el de fichero devolverá uno recién salido de un `JSON.parse`. Exigir
     `strictEqual` sería exigir algo que sólo el de memoria puede cumplir, o sea lo contrario
     de para lo que existe un contrato. Escrito en el fichero para que nadie lo "arregle".
-  - **La suite se llama `storageContract.test.ts` aunque no tenga ni una prueba**, porque
+  - **La suite se llamó `storageContract.test.ts` aunque no tenga ni una prueba**, porque
     importa `node:test` y `tsconfig.json` va sin los tipos de Node. Se prefirió el nombre a
-    añadir una exclusión a mano en la config de la app.
+    añadir una exclusión a mano en la config de la app. **Ya no: hoy es
+    `test/storage/contract-tests/storageContract.ts`**, sin sufijo, porque la carpeta hace ese
+    trabajo desde la mudanza de las pruebas (`ARCHITECTURE.md` §8.5).
   - **Tres pruebas de contrato no son de `Repository` sino de que los tres estén aislados**, y
     de que una entidad con contenido sobreviva entera. Sin ellas, un adaptador que guardara las
     tres clases en el mismo saco, o que se dejara `items` por el camino, pasaría todo lo demás.
@@ -147,7 +149,7 @@ rebanada vertical de la Fase 1. Criterio de cierre en `ARCHITECTURE.md` §9.8.
     tumba **1**… y esa última sólo por accidente, así que se añadió una prueba explícita de
     que **una copia equivalente SÍ cuenta como cambio**, que es la semántica elegida y lo que
     impide que alguien "mejore" el diff comparando por valor. Todo revertido.
-- [x] **La prueba que cierra la cadena entera** — ✅ Hecha, en `src/storage/chain.test.ts`.
+- [x] **La prueba que cierra la cadena entera** — ✅ Hecha, en `test/storage/chain.test.ts`.
       **8 pruebas**, y con ellas el **punto 3 del criterio de cierre**: un `set-checked`
       redundante no avisa, no ensucia `updatedAt` y **no llega a disco**. Es la primera vez que
       `core` y `storage` se montan juntos —`Store` → `createWriteBehind` →
@@ -306,7 +308,7 @@ validación de esquema, y la escritura condicional.
     - **Precio aceptado, el que ya estaba escrito:** el bucle de seis `await` de
       `escribirPendiente` pasa de un `try` que cubría los seis a comprobar uno a uno con corte
       al primer fallo. Más ruidoso y sin arreglo elegante.
-  - [x] **La suite de contratos** de `src/storage/contract-tests/` — ✅ Convertida, y **dos de
+  - [x] **La suite de contratos** (hoy `test/storage/contract-tests/`) — ✅ Convertida, y **dos de
         sus casos quedaron invertidos**: los que exigían que una excepción lanzada dentro de
         `transaction` se *propagara* ahora exigen que se **traduzca a `io`**. Van los dos
         —asíncrono y síncrono—, y el síncrono no es un duplicado: un `transaction` sin `async`
@@ -445,7 +447,7 @@ validación de esquema, y la escritura condicional.
       anticipaba el punto 7 de §9.9. → `ARCHITECTURE.md` §6.3.
 
 - [ ] **⬅️ LO ÚNICO QUE FALTA DE LA FASE 3: pasar la lista de verificación manual y anotar el
-      resultado.** La lista está en `src/storage/blobs/VERIFICACION-MANUAL.md`, con su
+      resultado.** La lista está en `test/storage/blobs/VERIFICACION-MANUAL.md`, con su
       procedimiento, su andamio (`verificacion-manual.html`) y la hoja de resultados vacía. Es el
       punto 5 de `ARCHITECTURE.md` §9.9 y **es lo que separa «el código está» de «la fase está
       terminada»**.
@@ -478,6 +480,28 @@ validación de esquema, y la escritura condicional.
 Todas son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
 documentación**.
 
+- [x] **Las pruebas se mudan a `test/`, partido por capa** — ✅ Hecho. Las **21** que había
+      repartidas por `src/` (18 de pruebas y 3 ayudantes) pasan a `test/core/…` y
+      `test/storage/…`, en un árbol que calca el de `src/`. Sale del hecho de que `src/` mezclaba
+      dos cosas; lo que se gana de fondo es que la separación deja de depender del **sufijo**
+      `.test` y pasa a depender de la **carpeta**. El razonamiento entero, en `ARCHITECTURE.md`
+      §8.5. Lo que arrastró, que es más de lo que parece:
+  - **desaparecen las tres listas negras** que decían lo mismo: el `exclude` del `tsconfig.json`
+    de la app, el de la verja del core y el `.filter()` de `tools/check-core-purity.mjs`. Ese
+    último cambio hace al guardián **más** estricto, no menos;
+  - **los tres ayudantes pierden el `.test`** —`FakeBlobStore.ts`, `FakeStorage.ts`,
+    `storageContract.ts`—, que lo llevaban sólo para escapar del tsconfig de la app. `node --test`
+    deja de abrir tres ficheros para no encontrar pruebas en ellos;
+  - **`rootDir` de `tsconfig.test.json` pasa a ser la raíz del repo**, así que la salida es
+    `tmp-test/src/…` + `tmp-test/test/…` y la condición `compiled` de `package.json` apunta a la
+    primera. Es el acoplamiento a recordar: mover esto obliga a tocar aquello;
+  - **`require-tests.mjs` mira `tmp-test/test/`** y no `tmp-test/` a secas, con lo que caza un
+    fallo más: que las pruebas compilen a un sitio distinto del que mira el runner. Verificado
+    rompiéndolo, igual que los otros dos guardianes;
+  - **la lista de verificación manual se muda también**, a `test/storage/blobs/`. Se le tocó una
+    línea, la URL del paso 3; el procedimiento no cambia. Sigue **sin ejecutar**, que es lo que
+    tiene abierta la Fase 3.
+      Las **314 pruebas antes y después**, y `npm run check` en verde.
 - [ ] **Anotar el tipo en toda declaración de valor** (`const` / `let`), aunque TypeScript lo
       infiera: `let numero: number = 1`. La regla ya está escrita en `CLAUDE.md`; esto es
       aplicarla al código que ya existe. El porqué: cuando el tipo de una variable cambia, se
@@ -507,7 +531,7 @@ documentación**.
       `:267`, donde anotar exige repetir la forma del objeto entero.
 
 - [x] **Que `npm test` falle si no hay ficheros de test.** ✅ Hecho. `tools/require-tests.mjs`
-      cuenta los `*.test.js` de `tmp-test/` y sale con código 1 si no hay ninguno, porque
+      cuenta los `*.test.js` de `tmp-test/test/` y sale con código 1 si no hay ninguno, porque
       `node --test` sin ficheros imprime `1..0` y **sale con código 0**. Mira la salida
       compilada y no las fuentes a propósito: así caza también las pruebas escritas que no
       llegan a compilarse adonde el runner las busca.
@@ -529,7 +553,9 @@ documentación**.
       cadenas antes de buscar. Y **`${Date.now()}` dentro de una plantilla sí salta**, que es
       de las formas más plausibles de colarlo sin querer.
       Verificado en los tres sentidos: pasa limpio, caza las cuatro violaciones reales sin
-      tocar las menciones en comentarios ni en cadenas, e ignora los `*.test.ts`.
+      tocar las menciones en comentarios ni en cadenas. La excepción que tenía para los
+      `*.test.ts` **se le quitó** al mudarse las pruebas a `test/`: dentro de `src/core/` ya no
+      hay ninguna, así que ahora mira todo lo que encuentra ahí.
 - [x] **Corregir el comentario de `src/core/domain/Versioned.ts`** — ✅ Hecho. Decía que
       `Date.now()` "dentro del core no compila", y es falso. Ahora dice quién lo caza de
       verdad (`npm run check:purity`) y por dónde llega la hora: dentro del `meta` de la
@@ -616,11 +642,14 @@ cambiar el alcance de la fase por la puerta de atrás. **Dos están cerrados** �
 el de la lista manual—; **sigue abierto el de OPFS**, y no bloquea nada.
 
 - ~~**¿En qué fichero vive la lista de verificación manual, y su resultado?**~~ — ✅ **Cerrada al
-  escribirla: en `src/storage/blobs/VERIFICACION-MANUAL.md`, pegada al código que verifica.** Ni
+  escribirla: junto a las pruebas de su mismo rincón, hoy
+  `test/storage/blobs/VERIFICACION-MANUAL.md`.** Ni
   una sección de este fichero ni un cuarto documento: **los documentos del proyecto siguen siendo
-  tres**, porque esto no es documentación de diseño sino **un procedimiento**, y vive junto a su
-  código por el mismo motivo por el que un test vive junto al suyo — quien toque
-  `DirectoryHandleBlobStore.ts` lo tiene delante. **Las pasadas se acumulan ahí mismo**, en una
+  tres**, porque esto no es documentación de diseño sino **un procedimiento**. Cuando se escribió
+  vivía pegada al adaptador, en `src/storage/blobs/`; se mudó con las demás pruebas
+  (`ARCHITECTURE.md` §8.5) y el criterio no cambió, sólo la carpeta a la que apunta: **es una
+  prueba de `DirectoryHandleBlobStore`**, y lo único que la distingue de sus vecinas es que la
+  ejecutan unas manos. **Las pasadas se acumulan ahí mismo**, en una
   «Hoja de resultados» con plantilla (fecha, navegador y versión, sistema, quién, commit) y **la
   más reciente arriba**: no se sobreescribe la anterior, porque interesa saber en qué navegador
   funcionó y en cuál no. Lo que sigue siendo tarea —ejecutarla— está arriba, en *Pendiente*.

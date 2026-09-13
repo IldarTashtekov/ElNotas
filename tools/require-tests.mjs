@@ -15,9 +15,9 @@
  */
 import { readdirSync } from "node:fs"
 
-const DIRECTORIO = "tmp-test"
+const DIRECTORIO = "tmp-test/test"
 
-/** La convención del proyecto: `*.test.ts` en src/, que compila a `*.test.js`. */
+/** La convención del proyecto: `*.test.ts` en test/, que compila a `*.test.js`. */
 const ES_PRUEBA = /\.test\.[cm]?js$/
 
 let ficheros = []
@@ -38,7 +38,7 @@ if (pruebas.length === 0) {
       "  `node --test` sin ficheros sale con código 0, así que sin esta",
       "  comprobación `npm run check` pasaría en verde sin verificar nada.",
       "",
-      "  Se esperan ficheros `*.test.ts` dentro de src/.",
+      "  Se esperan ficheros `*.test.ts` dentro de test/.",
       "",
     ].join("\n"),
   )

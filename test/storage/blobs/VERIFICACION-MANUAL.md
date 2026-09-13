@@ -2,8 +2,9 @@
 
 **Esto no es documentación de diseño: es un procedimiento.** Los tres documentos del
 proyecto —`CLAUDE.md`, `ARCHITECTURE.md` y `TAREAS.md`— siguen siendo tres. Esta lista vive
-aquí, **pegada al código que verifica**, por el mismo motivo por el que un test vive al lado
-de su fichero: si alguien toca `DirectoryHandleBlobStore.ts`, esto es lo que tiene delante.
+en `test/storage/blobs/`, **junto a las pruebas del mismo rincón del código**, por el mismo
+motivo por el que están ahí ellas: esto es una prueba de `DirectoryHandleBlobStore.ts`, y lo
+único que la distingue de sus vecinas es que la ejecutan unas manos y no `node --test`.
 
 ## Por qué existe
 
@@ -93,7 +94,7 @@ find dist/manual -type f
 python3 -m http.server 8000
 ```
 
-**3. Abrir** <http://localhost:8000/src/storage/blobs/verificacion-manual.html>
+**3. Abrir** <http://localhost:8000/test/storage/blobs/verificacion-manual.html>
 
 **4. Crear una carpeta vacía** para la prueba, por ejemplo `~/elnotas-prueba`, y **tenerla
 abierta en el explorador de ficheros del sistema**. Esa ventana es el oráculo de esta lista: la

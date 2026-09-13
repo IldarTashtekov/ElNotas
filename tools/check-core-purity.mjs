@@ -145,8 +145,11 @@ const ficherosDe = (directorio) => {
   } catch {
     return []
   }
+  // Sin excepción para `*.test.ts`: las pruebas viven en test/, así que todo lo
+  // que hay aquí dentro es código de producción. Si alguna vuelve a colarse en
+  // src/core/, que la mire también.
   return entradas
-    .filter((nombre) => nombre.endsWith(".ts") && !nombre.endsWith(".test.ts"))
+    .filter((nombre) => nombre.endsWith(".ts"))
     .map((nombre) => `${directorio}/${nombre}`)
 }
 

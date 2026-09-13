@@ -645,11 +645,15 @@ src/
 │   ├── app/       # ← Action + reduce + Store + useCases + diffState
 │   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
-├── storage/       # ← contract-tests/ + memory/ + file/ + blobs/ + writeBehind
+├── storage/       # ← memory/ + file/ + blobs/ + writeBehind
 │   └── blobs/     #   ← las implementaciones de BlobStore, que es OTRO puerto (§6.1)
 ├── ui/            # (F4) vanilla: componentes + render(state)
 └── platform/      # (F4) composición
     └── web/       # el ÚNICO sitio que decide qué adaptador se inyecta
+
+test/              # las pruebas, fuera de src/ y calcando su árbol (§8.5)
+├── core/          # ← domain/ (+ errors/) · app/ · migrations/
+└── storage/       # ← contract-tests/ · memory/ · file/ · blobs/
 ```
 
 **`platform/` es la capa de composición**, y es una idea que conviene entender bien: es el
@@ -694,7 +698,7 @@ Tres entidades, más nociones de agrupación:
 pruebas.** `npm run check` está en verde con **314 pruebas** (eran 274 al terminar el adaptador
 de fichero y 232 al cerrar el paso 0). **Que el código esté no significa que la fase esté
 terminada:** falta la pasada manual del punto 5 de §9.9. Esta tabla se queda desactualizada
-sola: antes de afirmar nada sobre ella, `find src -name '*.ts' | sort` y `npm run check`.
+sola: antes de afirmar nada sobre ella, `find src test -name '*.ts' | sort` y `npm run check`.
 
 | Fichero | Líneas | Qué es |
 |---|---|---|
@@ -725,24 +729,27 @@ sola: antes de afirmar nada sobre ella, `find src -name '*.ts' | sort` y `npm ru
 | `hydrate.ts` | 67 | De listas a mapas, limpiando `ItemRef` rotas |
 | `runMigrations.ts` | 139 | El runner, **puro y total**. `MIGRATIONS` **vacía a propósito** |
 | **`src/storage/` — el primer módulo que implementa puertos** | | |
-| `contract-tests/storageContract.test.ts` | 288 | **La suite que todo adaptador debe pasar**: 17 casos |
 | `memory/MemoryStorageAdapter.ts` | 137 | Tres `Map` y un número. Una sola frontera con `try/catch`: `transaction` |
 | `writeBehind.ts` | 258 | La mitad **impura**: debounce, temporizador y el estado *detenido* |
 | **`src/storage/file/` — el adaptador de fichero** | | |
 | `FileStorageAdapter.ts` | 499 | El formato en disco de §6.2, parametrizado por `BlobStore`. Tres fronteras con `try/catch`: `aBytes`, `parsear` y `transaction` |
-| `FakeBlobStore.test.ts` | 167 | El doble **con inyección de fallos**, que es lo que permite verificarlo entero en Node |
-| `FileStorageAdapter.test.ts` | 26 | Engancha la suite de contratos. Tan corto como el de memoria |
-| `FileStorageAdapter.errors.test.ts` | 345 | Lo que el contrato **no puede ver**: el esquema en disco y la traducción de errores |
 | **`src/storage/blobs/` — las dos implementaciones de `BlobStore`** | | |
 | `LocalStorageBlobStore.ts` | 320 · **108 sin comentarios** | Desarrollo y emergencia: espacio de nombres, base64 y la traducción de las excepciones de `localStorage`. Una frontera |
 | `DirectoryHandleBlobStore.ts` | 415 · **156 sin comentarios** | La carpeta del usuario, y OPFS con otro handle. **Sin pruebas a propósito** (§6.3). Una frontera |
-| `FakeStorage.test.ts` | 121 | El `Storage` de mentira, **con inyección de excepciones**: es lo que permite probar la cuota sin llenar nada |
-| `LocalStorageBlobStore.test.ts` | 266 | 22 pruebas: lo que este fichero inventa por encima del puerto |
-| `LocalStorageBlobStore.contract.test.ts` | 28 | **La tercera pasada del contrato** (§6.3): la pila entera sobre un `BlobStore` de producción |
-| `VERIFICACION-MANUAL.md` · `verificacion-manual.html` | 198 · 150 | El procedimiento del punto 5 de §9.9 y el andamio para ejecutarlo. **No es TypeScript y no entra en `npm run check`** |
+| **`test/storage/` — las pruebas de esa capa, que viven aparte (§8.5)** | | |
+| `contract-tests/storageContract.ts` | 288 | **La suite que todo adaptador debe pasar**: 17 casos. **Sin `.test` en el nombre**: es una fábrica, no un fichero de pruebas |
+| `file/FakeBlobStore.ts` | 167 | El doble **con inyección de fallos**, que es lo que permite verificar el adaptador entero en Node |
+| `file/FileStorageAdapter.test.ts` | 26 | Engancha la suite de contratos. Tan corto como el de memoria |
+| `file/FileStorageAdapter.errors.test.ts` | 345 | Lo que el contrato **no puede ver**: el esquema en disco y la traducción de errores |
+| `blobs/FakeStorage.ts` | 121 | El `Storage` de mentira, **con inyección de excepciones**: es lo que permite probar la cuota sin llenar nada |
+| `blobs/LocalStorageBlobStore.test.ts` | 266 | 22 pruebas: lo que ese fichero inventa por encima del puerto |
+| `blobs/LocalStorageBlobStore.contract.test.ts` | 28 | **La tercera pasada del contrato** (§6.3): la pila entera sobre un `BlobStore` de producción |
+| `blobs/VERIFICACION-MANUAL.md` · `verificacion-manual.html` | 198 · 150 | El procedimiento del punto 5 de §9.9 y el andamio para ejecutarlo. **No es TypeScript y no entra en `npm run check`** |
 
 Las pruebas son ~4930 de esas líneas, más que el código que vigilan, y eso es lo esperado en
-una capa donde cada invariante se verifica rompiéndola a propósito.
+una capa donde cada invariante se verifica rompiéndola a propósito. Desde que viven en `test/`
+(§8.5) la cuenta es además directa: `src/` es código y `test/` son pruebas, sin tener que
+separar por el sufijo del nombre.
 
 **Dos columnas de líneas sólo en `blobs/`, y no es un capricho:** en esos dos ficheros la
 proporción de comentario es altísima —son los que hablan con navegadores de verdad— y la cifra
@@ -963,6 +970,102 @@ uno más.
 (§6.1).** Sigue siendo sólo diseño la semántica multi-backend —espejo, outbox, réplicas—. Y
 sigue sin ejecutarse la pasada manual que el punto 5 de §9.9 exige para dar la fase por
 terminada: el código de `DirectoryHandleBlobStore` **existe y nadie lo ha visto correr**.
+
+#### El recorrido de un cambio, de un vistazo
+
+El mapa de la sección: qué le pasa a un cambio desde que el usuario toca algo hasta que llega
+al disco. Lo que viene después de aquí son los detalles de cada tramo.
+
+**Antes del dibujo, lo que el dibujo no puede decir: esta cadena no la monta nadie en
+producción.** Cada pieza existe y encaja con la siguiente, pero quien las enchufa —quien
+suscribe el escritor al `Store` y elige adaptador— es `platform/`, que no nace hasta la Fase 4
+(§9.7). Hoy el único sitio del repo donde está montada entera es una prueba,
+`test/storage/chain.test.ts`.
+
+```
+  el usuario marca una casilla
+        │
+        ▼
+  useCases.setChecked(…)        añade meta: { now, revision }  ← el único sitio con Clock e IdGenerator
+        │
+        ▼
+  store.dispatch(action)
+        │  next = reduce(state, action)
+        ├───── next === state ──→ ✗ MUERE: nada cambió
+        │                            no se notifica a nadie y el disco ni se entera
+        ▼
+  state = next  ·  listener(next)          ← la única mutación del proyecto
+        │
+        ▼
+  writeBehind.onState(state)    pendiente = state
+        │                       cancela la espera anterior y programa otra   ← la coalescencia:
+        ▼                                                                      diez cambios seguidos
+  schedule(flush, 500 ms)                                                      son UNA escritura
+        │
+        ▼
+  flush() → cola.then(escribirPendiente)   ← encadena: el flush a mano y el del temporizador no se solapan
+        │
+        ├───── detenido !== null ──→ ✗ MUERE: el escritor está detenido
+        │                              devuelve el MISMO error y no toca el almacén
+        ▼
+  diffState(escrito, pendiente)            ← contra lo último ESCRITO, no contra el aviso anterior
+        │
+        ├───── === NO_CHANGES ──→ ✗ MUERE: nada nuevo que escribir
+        │                            escrito = objetivo, y el almacén sin tocar
+        ▼
+  adapter.transaction(…)
+        │   put     notes · plans · contexts     ← primero TODO lo que se guarda
+        │   delete  notes · plans · contexts     ← después lo que se borra
+        │
+        ├── err io ──────→ pendiente se conserva · escrito NO avanza  →  REINTENTA
+        ├── err lo demás ─→ detenido = error · cancela la espera      →  SE DETIENE (sin vuelta atrás)
+        ▼
+  escrito = objetivo                       el disco está al día
+```
+
+**Lo normal es que un cambio no llegue al disco**, y por eso lo que vale de este recorrido son
+las tres puertas donde se muere. Cada una tiene su porqué escrito en otro sitio y no se repite
+aquí: dos de ellas son eslabones de la cadena de identidad —el `dispatch` es el ③ de §3 y el
+`diffState` el ②—, el debounce y el reparto del escritor en dos mitades están en §6.4, el
+orden `put`-antes-que-`delete` en §6.2, y las dos salidas del fallo en §6.5.
+
+Dos detalles que no caben en el dibujo sin ensuciarlo. Hay una **cuarta salida, menor**: un
+`flush()` que no encuentra pendiente —otro se le adelantó— devuelve `ok` sin mirar nada. Y
+`onState` recuerda el estado **también cuando el escritor está detenido**; lo que deja de hacer
+es programar la espera. Nada de lo pendiente se pierde: se queda en memoria, esperando a un
+reanudar que hoy no existe.
+
+**El cambio baja; el error sube.** El segundo dibujo contesta otra pregunta —dónde nace cada
+error— porque es donde más se lee mal el reparto de §6.1:
+
+```
+                                  QUÉ INVENTA                        try/catch
+  ─────────────────────────────────────────────────────────────────────────────
+  writeBehind                nada: sólo pregunta «¿kind === io?»         0
+        ▲
+        │  Result<…, StorageError>, con el kind INTACTO: nadie reempaqueta
+        │
+  StorageAdapter
+   ├─ MemoryStorageAdapter    nada — un Map no falla                      1  transaction
+   │                          (su único io es un fn ajeno que lanzó)
+   └─ FileStorageAdapter      la SERIALIZACIÓN → corrupt                  3  aBytes
+        ▲                     (y un io si JSON.stringify fallara)            parsear
+        │  Result                                                            transaction
+        │
+      BlobStore
+       ├─ LocalStorageBlobStore      quota-exceeded · permission-denied   1  frontera
+       │                             · io · corrupt (su propio base64)
+       └─ DirectoryHandleBlobStore   permission-denied · not-found        1  frontera
+                                     · quota-exceeded · io
+                                     (corrupt nunca: no parsea nada)
+  ══════════════ LA FRONTERA · por encima de aquí no lanza nadie ══════════════
+  la plataforma              localStorage · File System Access API: LANZAN
+```
+
+**Las seis fronteras del dibujo son todas las que hay**, medido en el código de producción de
+`core/` y `storage/`: seis `try`, cero `throw`. Qué significa cada `kind` y por qué son esos
+cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
+del primer dibujo, porque es lo único que el escritor mira para decidir si insiste o se para.
 
 ### 6.1 Dos puertos, a propósito en dos niveles
 
@@ -1240,7 +1343,7 @@ memoria, **nunca** en localStorage. En escritorio, keychain del sistema.
 
 ### 6.3 Tests de contrato
 
-Una sola especificación (`storage/contract-tests`) que **todos** los adaptadores deben pasar.
+Una sola especificación (`test/storage/contract-tests`) que **todos** los adaptadores deben pasar.
 
 La idea es esta: en vez de testear cada adaptador por separado —lo que garantiza que cada uno
 funcione *a su manera*— se escribe **una sola suite** contra la interfaz, y se ejecuta contra
@@ -1830,16 +1933,17 @@ quedaron garantizadas al menos dos configuraciones. Las otras dos son economía 
 | Fichero | Para qué |
 |---|---|
 | `tsconfig.base.json` | opciones comunes. **Sin `paths` ni `baseUrl`** |
-| `tsconfig.json` | la app (con `DOM`), excluye los tests |
+| `tsconfig.json` | la app: `include: ["src"]`, con `DOM` |
 | `src/core/tsconfig.json` | **la verja de pureza**: `lib: ["ES2020"]`, `types: []` |
-| `tsconfig.test.json` | compila los tests a `tmp-test/` con tipos de Node |
+| `tsconfig.test.json` | compila `src/` **y `test/`** a `tmp-test/` con tipos de Node |
 
 Dos detalles de la verja que no son evidentes:
 
-- **Los tests están excluidos** (`"exclude": ["**/*.test.ts"]`). La pureza aplica al código de
-  producción; un test sí puede usar `node:test` y APIs de plataforma. Esto es justo lo que
-  hace que no haga falta implementar `Clock` para testear: un test se fabrica el suyo en una
-  línea.
+- **Los tests quedan fuera por vivir en otra carpeta, no por una exclusión.** Ninguno de los
+  dos ficheros de arriba lleva ya `"exclude": ["**/*.test.ts"]`: `test/` está fuera de `src/`,
+  así que no entra por la forma del `include` (§8.5). La pureza aplica al código de producción;
+  un test sí puede usar `node:test` y APIs de plataforma. Esto es justo lo que hace que no haga
+  falta implementar `Clock` para testear: un test se fabrica el suyo en una línea.
 - **Vive en `src/core/` y se llama `tsconfig.json`**, no `tsconfig.core.json` en la raíz. A
   propósito: el editor busca el `tsconfig.json` más cercano al fichero abierto, así que marca
   el error **mientras escribes**, no solo al lanzar el script.
@@ -1880,11 +1984,15 @@ Una sola declaración estándar lo cubre:
 ```json
 "imports": {
   "#core/*": {
-    "compiled": "./tmp-test/core/*.js",
+    "compiled": "./tmp-test/src/core/*.js",
     "default":  "./src/core/*.ts"
   }
 }
 ```
+
+(El `src/` que asoma en la primera ruta no es decorativo: la compilación de pruebas tiene por
+`rootDir` la raíz del repo, así que la salida conserva los nombres de los dos árboles. El
+porqué, en §8.5.)
 
 Tres cosas que conviene entender:
 
@@ -1899,8 +2007,8 @@ Tres cosas que conviene entender:
 ### 8.3 Tests: el runner nativo de Node
 
 `node:test` + `node:assert/strict`, sin runner externo. Node 20 no ejecuta TypeScript, así que
-`npm test` hace dos cosas: compila `src/` a `tmp-test/` (CommonJS) y lanza
-`node --conditions=compiled --test tmp-test`.
+`npm test` hace dos cosas: compila `src/` y `test/` a `tmp-test/` (CommonJS) y lanza
+`node --conditions=compiled --test tmp-test/test`.
 
 `tsconfig.test.json` usa `module: "nodenext"` en lugar del `ESNext` de la app, por un motivo
 práctico: como `package.json` no declara `"type": "module"`, ese ajuste emite CommonJS, y
@@ -1935,6 +2043,61 @@ Efecto medido al aplicarla: de ~350 paquetes y ~160M con 12 vulnerabilidades, a 
 Toda la cadena de `webpack-dev-server` era la que traía esas 12. Si cuentas carpetas de
 `node_modules` te saldrán diecisiete: son directorios vacíos que dejaron las desinstalaciones.
 La cifra buena está en `package-lock.json`.
+
+### 8.5 Dónde viven las pruebas: `test/`, espejo de `src/`
+
+Hasta aquí cada prueba vivía al lado de su fichero (`operations.ts` y `operations.test.ts`,
+hermanos). Ahora viven todas en `test/`, en un árbol que **calca** el de `src/`:
+
+```
+test/
+├── core/
+│   ├── domain/      # + errors/
+│   ├── app/
+│   └── migrations/
+└── storage/
+    ├── contract-tests/
+    ├── memory/
+    ├── file/
+    └── blobs/       # incluye VERIFICACION-MANUAL.md
+```
+
+**Lo que se gana no es estética, aunque la razón de partida fuera esa.** Es que la separación
+entre código y pruebas deja de depender de un **sufijo en el nombre** y pasa a depender de la
+**carpeta**, que es la unidad que ya entendían las herramientas. Antes había tres sitios que
+repetían la misma lista negra —`"exclude": ["**/*.test.ts"]` en el tsconfig de la app, otro
+igual en la verja del core, y un `.filter()` en `tools/check-core-purity.mjs`—; los tres han
+desaparecido, y ninguno se puede olvidar en un fichero nuevo. El sufijo `.test` se queda con
+un solo trabajo, que es el suyo: decirle a `node --test` qué ejecutar.
+
+Corolario inmediato, y es lo que arrastró a los tres ayudantes: **un fichero que no contiene
+pruebas ya no necesita llamarse `.test.ts`**. `FakeBlobStore.ts`, `FakeStorage.ts` y
+`contract-tests/storageContract.ts` llevaban ese sufijo sólo para escapar del tsconfig de la
+app; ahora los esconde la carpeta, y el nombre vuelve a decir la verdad — abrir
+`storageContract.test.ts` buscando pruebas y encontrar una fábrica era una pequeña mentira
+diaria. De paso, `node --test` deja de abrir tres ficheros para no encontrar nada en ellos.
+
+Y arrastró también la lista de verificación manual (§6.3), que estaba pegada al adaptador que
+verifica. Su sitio es `test/storage/blobs/`: **es una prueba de `DirectoryHandleBlobStore`**, y
+lo único que la distingue de sus vecinas es que la ejecutan unas manos en vez de `node --test`.
+Dejarla en `src/` habría sido dejar en la carpeta del código lo único que no es código.
+
+**Los dos precios, que se pagan a sabiendas:**
+
+- **Desde `test/` se importa por alias, y a veces profundo:** `#core/domain/updateContent`,
+  `#storage/file/FileStorageAdapter`. Es la excepción a la regla de cruzar siempre contra el
+  `index.ts`, y es inevitable: media Fase 1 son pruebas de maquinaria que `index.ts` **no
+  exporta a propósito** (el helper de copia, `reduce`), y quien la prueba tiene que poder
+  nombrarla. Entre ficheros de `test/` los imports siguen siendo relativos.
+- **`tsconfig.test.json` tiene por `rootDir` la raíz del repo**, no `./src`, porque tiene que
+  compilar dos árboles hermanos. La salida pasa a ser `tmp-test/src/…` y `tmp-test/test/…`, y
+  de ahí el `src/` en la condición `compiled` de §8.2. Es el acoplamiento que conviene tener
+  presente: **mover esto de sitio obliga a tocar `package.json`.**
+
+Un efecto lateral que sí es una ganancia: `tools/require-tests.mjs` ahora mira `tmp-test/test/`
+y no `tmp-test/` a secas, así que caza un fallo más de los que cazaba — que las pruebas se
+compilen a un sitio distinto de donde las busca el runner. Verificado rompiéndolo, como todo lo
+demás de esta sección.
 
 ---
 
@@ -2389,7 +2552,7 @@ entero — que es exactamente el agujero que este criterio existe para no dejar 
    puerto devuelven `Result`, `runMigrations` es pura **y total**, y la suite de contratos se
    convirtió con las firmas, antes de que hubiera dos adaptadores que convertir.
 2. **✅ `FileStorageAdapter` pasa la suite de contratos entera, en Node y con un `BlobStore`
-   falso** — y es comprobable en el diff: **de `src/storage/contract-tests/` no se toca nada**
+   falso** — y es comprobable en el diff: **de la suite de contratos no se toca nada**
    después del paso 0. El fichero que lo engancha es tan corto como el de memoria; si hace falta
    alargarlo, es que se está probando un detalle que los otros backends no cumplen.
 3. **✅ Lo que sólo tiene él va probado aparte: la traducción de errores.** El contrato está escrito
@@ -2413,8 +2576,8 @@ entero — que es exactamente el agujero que este criterio existe para no dejar 
 5. **⬜ LA ÚNICA QUE FALTA. La lista de pasos manual está escrita en el repo Y ejecutada al menos
    una vez, con su resultado anotado** — fecha, navegador y versión, y qué pasó. El «una vez» ya
    venía en la decisión (§6.3); esto sólo lo hace comprobable. **Escrita: sí**, en
-   `src/storage/blobs/VERIFICACION-MANUAL.md`, junto al código que verifica (dónde vivía era un
-   hueco de *Sin decidir* y está cerrado). **Ejecutada: no**, y por eso la fase sigue abierta.
+   `test/storage/blobs/VERIFICACION-MANUAL.md`, junto a las demás pruebas de ese rincón (dónde
+   vivía era un hueco de *Sin decidir* y está cerrado; se mudó ahí con el resto, §8.5). **Ejecutada: no**, y por eso la fase sigue abierta.
    Lo mínimo que cubre es lo que un doble no puede ver:
    - que los bytes **llegan de verdad al disco** — el `close()` olvidado de §6.3 pasa en verde
      contra un `Map`, y contra una carpeta real no;
@@ -2471,8 +2634,9 @@ escribiendo un criterio: **si la fase exige además una pasada manual sobre OPFS
 lista como sección opcional, y ningún punto de arriba la pide. Con su porqué, en `TAREAS.md` →
 *Sin decidir*. **Eran tres, y las otras dos ya están cerradas:** qué lleva dentro el
 `manifest.json` —sólo `schemaVersion`, sin índice de ids— se cerró al escribir el adaptador
-(§6.2), y **dónde vive la lista manual** se cerró al escribirla: en `src/storage/blobs/`, pegada
-al código que verifica, que es lo que evita convertirla en un cuarto documento.
+(§6.2), y **dónde vive la lista manual** se cerró al escribirla: junto a las pruebas del mismo
+rincón del código —hoy `test/storage/blobs/`, tras la mudanza de §8.5—, que es lo que evita
+convertirla en un cuarto documento.
 
 ---
 

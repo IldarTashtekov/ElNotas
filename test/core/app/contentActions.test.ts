@@ -19,14 +19,14 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState } from "../domain/AppState"
-import type { Content } from "../domain/Content"
-import { checkBox, isCheckBox, isText, text } from "../domain/Content"
-import { contentId, noteId, revision } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import { after, lastChildOf, rootEnd } from "../domain/Position"
-import type { ActionMeta } from "./Action"
-import { reduce } from "./reduce"
+import type { AppState } from "#core/domain/AppState"
+import type { Content } from "#core/domain/Content"
+import { checkBox, isCheckBox, isText, text } from "#core/domain/Content"
+import { contentId, noteId, revision } from "#core/domain/Ids"
+import type { Note } from "#core/domain/Note"
+import { after, lastChildOf, rootEnd } from "#core/domain/Position"
+import type { ActionMeta } from "#core/app/Action"
+import { reduce } from "#core/app/reduce"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 

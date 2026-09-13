@@ -5,16 +5,16 @@
   "main": "index.js",
   "imports": {
     "#core/*": {
-      "compiled": "./tmp-test/core/*.js",
+      "compiled": "./tmp-test/src/core/*.js",
       "default": "./src/core/*.ts"
     },
     "#storage/*": {
-      "compiled": "./tmp-test/storage/*.js",
+      "compiled": "./tmp-test/src/storage/*.js",
       "default": "./src/storage/*.ts"
     }
   },
   "scripts": {
-    "test": "node tools/clean-tmp-test.mjs && tsc -p tsconfig.test.json && node tools/require-tests.mjs && node --conditions=compiled --test tmp-test",
+    "test": "node tools/clean-tmp-test.mjs && tsc -p tsconfig.test.json && node tools/require-tests.mjs && node --conditions=compiled --test tmp-test/test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:core": "tsc -p src/core/tsconfig.json --noEmit",
     "check:purity": "node tools/check-core-purity.mjs",

@@ -10,10 +10,10 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { CheckBox, Content } from "./Content"
-import { checkBox, isCheckBox, text } from "./Content"
-import { contentId } from "./Ids"
-import { after, lastChildOf, rootEnd } from "./Position"
+import type { CheckBox, Content } from "#core/domain/Content"
+import { checkBox, isCheckBox, text } from "#core/domain/Content"
+import { contentId } from "#core/domain/Ids"
+import { after, lastChildOf, rootEnd } from "#core/domain/Position"
 import {
   convertToCheckBox,
   convertToText,
@@ -23,7 +23,7 @@ import {
   setChecked,
   setText,
   split,
-} from "./operations"
+} from "#core/domain/operations"
 
 /* ─────────────────────────── El árbol de pruebas ───────────────────────────
     La misma lista de la compra de ARCHITECTURE.md §2.3:

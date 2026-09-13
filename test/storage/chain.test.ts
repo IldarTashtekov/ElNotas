@@ -44,8 +44,8 @@ import {
   text,
 } from "#core/index"
 
-import { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter"
-import { createWriteBehind } from "./writeBehind"
+import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
+import { createWriteBehind } from "#storage/writeBehind"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 

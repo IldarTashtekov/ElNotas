@@ -17,7 +17,8 @@ tienen ya un motivo escrito y alternativas descartadas.
 ## Estado actual del repo
 
 **Verificado, no copiado.** Si vas a afirmar algo sobre lo que existe, cuánto hay o si algo
-pasa, compruébalo antes: `find src -name '*.ts' | sort`, `npm run check`, `git log --oneline`.
+pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
+`git log --oneline`.
 
 En `src/` **conviven dos cosas** y no hay que confundirlas:
 
@@ -30,7 +31,7 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
 **Lo que existe: las fases 1 y 2 enteras y el código entero de la Fase 3.** ~4240 líneas de
-código y ~4930 de pruebas, en `src/core/` y `src/storage/`:
+código en `src/core/` y `src/storage/`, y ~4930 de pruebas en `test/`, que es carpeta aparte:
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
@@ -55,7 +56,8 @@ código y ~4930 de pruebas, en `src/core/` y `src/storage/`:
 - **el arranque en su mitad pura**, en `src/core/migrations/`: `hydrate` y `runMigrations`.
   `MIGRATIONS` está **vacía a propósito** — no hay nada guardado con un esquema viejo.
 
-**Y existe `src/storage/`** — la suite de contratos en `contract-tests/` (**17 casos**), el
+**Y existe `src/storage/`** — la suite de contratos (**17 casos**, hoy en
+`test/storage/contract-tests/`), el
 `writeBehind`, **dos adaptadores que pasan esa suite** —`MemoryStorageAdapter` y
 `FileStorageAdapter`, en `file/`, con el formato en disco de `ARCHITECTURE.md` §6.2 y
 parametrizado por `BlobStore`— y, en `blobs/`, **las dos implementaciones de `BlobStore`**:
@@ -77,7 +79,7 @@ se conserva en memoria, así que no se pierde nada. **No hay forma de reanudarlo
 deliberado: reanudar es volver a pedir la carpeta, o sea plataforma, o sea Fase 4. §6.5.
 
 ⚠️ **Lo que falta de la Fase 3 no es código: es PASAR LA LISTA DE VERIFICACIÓN MANUAL** de
-`src/storage/blobs/VERIFICACION-MANUAL.md` (punto 5 de §9.9). Está escrita y **nadie la ha
+`test/storage/blobs/VERIFICACION-MANUAL.md` (punto 5 de §9.9). Está escrita y **nadie la ha
 ejecutado**, así que `DirectoryHandleBlobStore` existe y nadie lo ha visto correr. Necesita un
 navegador y las manos del usuario. **La Fase 3 NO está terminada.**
 
@@ -86,8 +88,10 @@ implementación de `Clock` ni de `IdGenerator`: vivirían en `src/platform/`, qu
 Fase 4, igual que `src/ui/`.
 
 **`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
-con código 1 si no encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin
-ficheros imprime `1..0` y sale con código 0. **No lo "arregles" quitando el guardián.**
+con código 1 si no encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin
+ficheros imprime `1..0` y sale con código 0. **No lo "arregles" quitando el guardián.** Mira
+`tmp-test/test/` y no `tmp-test/` a secas **a propósito**: así también caza que las pruebas
+compilen a un sitio distinto de donde las busca el runner.
 
 ⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y comprobando que las
 pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no vale nada, y un
@@ -105,19 +109,37 @@ src/
 │   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← implementa los puertos de persistencia. Conoce al core; él a ella no.
-│   ├── contract-tests/ # ← LA suite que todo adaptador debe pasar. Corre TRES veces
 │   ├── memory/         # ← MemoryStorageAdapter
 │   ├── file/           # ← FileStorageAdapter: el formato en disco (§6.2)
-│   ├── blobs/          # ← las dos de BlobStore, que es OTRO puerto (§6.1). Y la lista manual
+│   ├── blobs/          # ← las dos de BlobStore, que es OTRO puerto (§6.1)
 │   └── index.ts
 ├── ui/            # (F4) vanilla: componentes + render(state)
 └── platform/      # (F4) composición: el ÚNICO sitio que inyecta adaptadores
+
+test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de src/)
+├── core/          # ← domain/ (+ errors/) · app/ · migrations/
+└── storage/       # ← contract-tests/ · memory/ · file/ · blobs/
 ```
+
+- **Las pruebas van en `test/`, no al lado del código.** La carpeta es un **espejo** de `src/`:
+  lo que prueba `src/core/domain/operations.ts` está en `test/core/domain/operations.test.ts`.
+  Consecuencias, las tres:
+  - **desde `test/` se importa por alias, incluso lo que `index.ts` no exporta**
+    (`#core/domain/updateContent`, `#storage/file/FileStorageAdapter`). Es la excepción a la
+    regla de cruzar siempre contra el `index.ts`, y es inevitable: quien prueba maquinaria
+    interna tiene que poder nombrarla. Entre ficheros de `test/`, relativo;
+  - **un ayudante que no contiene pruebas NO lleva `.test`** —`FakeBlobStore.ts`,
+    `FakeStorage.ts`, `contract-tests/storageContract.ts`—, porque `node --test` sólo ejecuta
+    los `*.test.js` y así no se abre un fichero de pruebas para encontrar un doble;
+  - **la lista de verificación manual también vive ahí** (`test/storage/blobs/`): es una prueba
+    de `DirectoryHandleBlobStore`, y lo único que la distingue de sus vecinas es que la ejecutan
+    unas manos.
 
 - **La verja de pureza es un error de compilación, no una convención.**
   `src/core/tsconfig.json` va sin `DOM` en `lib` y con `"types": []`, así que dentro del core
   un `document.` o un `crypto.randomUUID()` **no compila**. Si necesitas IDs, hora o azar,
-  **inyéctalos por puerto** (`IdGenerator`, `Clock`). Los tests quedan excluidos de la verja.
+  **inyéctalos por puerto** (`IdGenerator`, `Clock`). Los tests quedan fuera de la verja **por
+  vivir en `test/`**, no por una exclusión: ahí sí pueden usar `node:test` y `node:assert`.
 - **El reloj y el azar los tapa un guardián aparte, no el compilador.** `Date.now()`,
   `new Date()` y `Math.random()` **sí compilan** en el core —están en `lib.es5.d.ts`, dentro
   de `lib: ["ES2020"]`—, así que el typecheck **no** los caza. Los caza
@@ -226,6 +248,13 @@ duda**; no la cambies por tu cuenta.
 - **Un fichero por entidad** (`notes/<id>.json`) más un `manifest.json`.
 - **`node:test` como runner**, no vitest ni jest (se evaluó vitest: ~64M para algo que Node ya
   trae).
+- **Las pruebas viven en `test/`, espejo de `src/` y partido por capa**, no junto al fichero que
+  prueban. Se movieron las 314 de golpe, y el criterio es que `src/` sea sólo código: la
+  separación deja de depender del sufijo `.test` y pasa a depender de la carpeta, que es lo que
+  ya usan el `tsconfig` de la app y la verja del core para no mirar dentro. Precio asumido:
+  desde `test/` se importa por alias profundo, y el `rootDir` de `tsconfig.test.json` es la raíz
+  del repo, así que la salida compilada lleva `tmp-test/src/…` y la condición `compiled` de
+  `package.json` apunta ahí. §8.5.
 - **Alias por el campo `imports` de package.json**, no `paths` ni `resolve.alias`.
 - **Dependencias solo cuando la fase las necesita.** No instalar "para tenerlo listo".
 - **La Fase 1 termina por el criterio de `Versioned`:** lo que opera por debajo de `Versioned`
@@ -258,7 +287,7 @@ duda**; no la cambies por tu cuenta.
   «~50» que decía este documento**, y la decisión no cambia: lo que creció es el clasificador de
   excepciones, §6.3). Un doble ahí prueba lo que **tú crees** que hace la API, no lo que hace.
   **No propongas instalar un runner de navegador**; qué lo reabriría está en `TAREAS.md`.
-  Su red de seguridad es `src/storage/blobs/VERIFICACION-MANUAL.md`: **si tocas ese fichero, se
+  Su red de seguridad es `test/storage/blobs/VERIFICACION-MANUAL.md`: **si tocas ese fichero, se
   vuelve a pasar la lista y se anota el resultado.**
 - **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
   (`TS2304`: no está en `lib.es2020` ni con `"types": []`). *Qué está sucio* es puro y va en
@@ -370,8 +399,9 @@ conserva como registro.
 ```bash
 npm run check           # las cuatro de abajo, en orden. Esto antes de commit.
 
-npm test                # limpia tmp-test/, compila, EXIGE que haya pruebas, y lanza node --test
-npm run typecheck       # tsc de la app (excluye tests)
+npm test                # limpia tmp-test/, compila src/ y test/, EXIGE que haya pruebas,
+                        # y lanza node --test sobre tmp-test/test
+npm run typecheck       # tsc de la app: sólo src/, que es donde vive el código
 npm run typecheck:core  # LA VERJA: falla si el core toca plataforma
 npm run check:purity    # EL OTRO GUARDIÁN: falla si el core lee el reloj o el azar
 ```

@@ -61,7 +61,7 @@ error más fácil de esta sección:
    una plantilla también salta.
 
 **Los otros dos guardianes de `tools/`:** `require-tests.mjs` sale con código 1 si no
-encuentra ningún `*.test.js` en `tmp-test/`, porque `node --test` sin ficheros imprime
+encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
 `1..0` y sale con 0 — sin él, `npm test` pasaría en verde sin comprobar nada. Y
 `clean-tmp-test.mjs` borra la salida anterior para que un test eliminado no siga
 ejecutándose desde el compilado viejo. **No los «arregles» quitándolos.**
@@ -69,7 +69,7 @@ ejecutándose desde el compilado viejo. **No los «arregles» quitándolos.**
 **Los alias, en un solo sitio.** Campo `imports` de package.json, con condiciones:
 
 ```json
-"#core/*": { "compiled": "./tmp-test/core/*.js", "default": "./src/core/*.ts" }
+"#core/*": { "compiled": "./tmp-test/src/core/*.js", "default": "./src/core/*.ts" }
 ```
 
 Lo entienden TypeScript, Node y los bundlers de forma nativa. La condición `compiled` es
@@ -82,7 +82,8 @@ lo que permite que los tests, que corren sobre el JS de `tmp-test/`, resuelvan e
 `ignoreDeprecations`, eso sólo aplaza el problema.
 
 **Los cuatro tsconfig.** `base` (comunes), raíz (la app, con DOM, sin tests), core (la
-pureza), y `test` (compila a `tmp-test/` con tipos de Node). Son cuatro porque `lib` y
+pureza), y `test` (compila `src/` **y `test/`** a `tmp-test/` con tipos de Node, con la raíz
+del repo por `rootDir`). Son cuatro porque `lib` y
 `types` se aplican **por invocación de `tsc`, no por fichero**: en el momento en que el
 core no puede ver el DOM y la UI sí, hacen falta configuraciones separadas.
 
@@ -100,7 +101,7 @@ comprueba que salta. Las pruebas de referencia:
 | ese mismo código → `npm run check:purity` | fallar |
 | `import from "#ui/..."` en el core | fallar |
 | algo importando `#core/index` | resolver |
-| `tmp-test/` vacío → `npm test` | fallar (código 1) |
+| `tmp-test/test/` vacío → `npm test` | fallar (código 1) |
 
 La segunda es la importante: confirma que la pureza aplica **sólo** al core. La tercera y la
 cuarta son la frontera entre los dos guardianes, y la que más gente da por sentada al revés.

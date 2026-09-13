@@ -17,9 +17,9 @@
  * porque no sabe que existe un `BlobStore`.
  */
 
-import { runStorageContract } from "../contract-tests/storageContract.test"
-import { createFakeBlobStore } from "./FakeBlobStore.test"
-import { createFileStorageAdapter } from "./FileStorageAdapter"
+import { runStorageContract } from "../contract-tests/storageContract"
+import { createFakeBlobStore } from "./FakeBlobStore"
+import { createFileStorageAdapter } from "#storage/file/FileStorageAdapter"
 
 runStorageContract("FileStorageAdapter", () =>
   createFileStorageAdapter(createFakeBlobStore()),

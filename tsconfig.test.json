@@ -5,14 +5,21 @@
   // CommonJS a tmp-test/ y se lanza `node --conditions=compiled`, que hace que el
   // "#core/*" de package.json apunte al JS compilado en vez de a src/.
   // Es el precio de no tener runner de tests como dependencia.
+  //
+  // Compila DOS árboles, src/ y test/, porque las pruebas viven fuera de src/ y
+  // aun así tienen que verse entre ellas y ver al código. De ahí que "rootDir"
+  // sea la raíz del repo y no "./src": así la salida conserva los dos nombres
+  // (tmp-test/src/... y tmp-test/test/...) en vez de aplastarlos en uno.
+  // Ojo: la condición "compiled" de package.json apunta a tmp-test/src, así que
+  // mover esto de sitio obliga a tocar también aquel campo.
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": ["node"],
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "tmp-test"
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

@@ -36,9 +36,9 @@ import assert from "node:assert/strict"
 import type { Context, Note, Plan, StorageAdapter, StorageError } from "#core/index"
 import { contextId, noteId, planId, revision } from "#core/index"
 
-import type { FakeBlobStore } from "./FakeBlobStore.test"
-import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore.test"
-import { createFileStorageAdapter } from "./FileStorageAdapter"
+import type { FakeBlobStore } from "./FakeBlobStore"
+import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"
+import { createFileStorageAdapter } from "#storage/file/FileStorageAdapter"
 
 /* ───────────────────────────── Entidades y utillaje ───────────────────────── */
 

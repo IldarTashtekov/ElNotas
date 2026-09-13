@@ -10,7 +10,7 @@
  * que se está apoyando en un detalle que los demás adaptadores no cumplen.
  */
 
-import { runStorageContract } from "../contract-tests/storageContract.test"
-import { createMemoryStorageAdapter } from "./MemoryStorageAdapter"
+import { runStorageContract } from "../contract-tests/storageContract"
+import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 
 runStorageContract("MemoryStorageAdapter", createMemoryStorageAdapter)
