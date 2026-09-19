@@ -1830,23 +1830,58 @@ cosa:
 | **Modo de escritura** | cómo se comporta el teclado ahora mismo | **muchas veces mientras escribes una sola nota** | en el editor, en memoria, **sin persistir** |
 | **Ajustes** | tema, dónde se guarda el fichero, tamaño de letra | una vez y te olvidas | pantalla de ajustes, aparte |
 
-La fila del medio es la que no existía en este diseño hasta que apareció `ModosEscritura`. Y
+La fila del medio es la que no existía en este diseño hasta que apareció `WritingMode`. Y
 la trampa está en confundirla con la tercera: **un ajuste se busca en un menú y se cambia una
 vez al año; el modo de escritura se pulsa veinte veces haciendo la lista de la compra.** Si se
 trata como ajuste, acaba escondido en una pantalla de ajustes y es inservible. Se parece mucho
 más al pincel de una aplicación de dibujo que al control de brillo.
 
-### 7.2 `ModosEscritura`: el objeto auxiliar de la nota abierta
+### 7.2 `WritingMode`: el objeto auxiliar de la nota abierta
 
-Un selector con **tres estados en ciclo**, siempre a la vista mientras editas:
+**Dos modos estables y un disparador**, siempre a la vista mientras editas:
 
 ```
-Texto  →  Casilla  →  Casilla hija  →  Texto  →  ...
+Texto  ⇄  Casilla        [anidar]  ← se arma, actúa UNA vez y se desarma solo
 ```
 
-Los tres tienen nombre propio a propósito: ninguno es "desactivado". Un interruptor con un
-apagado y dos encendidos obliga al usuario a preguntarse qué significa el apagado; tres
+Los dos modos tienen nombre propio a propósito: ninguno es "desactivado". Un interruptor con un
+apagado y un encendido obliga al usuario a preguntarse qué significa el apagado; dos
 herramientas con nombre, no.
+
+#### «Anidar» no es un tercer modo, y por eso está fuera del ciclo
+
+Un modo es un estado **en el que te quedas**; anidar ocurre una vez y se acaba. El diseño
+anterior los mezclaba en un ciclo de tres —*Texto → Casilla → Casilla hija*— y de ahí salían dos
+problemas que parecían independientes y no lo eran:
+
+1. **El escalón infinito.** Si el modo persiste, cada Intro crea una hija de la línea anterior y
+   bajas un nivel por pulsación. Sin `outdent` (§9.3) no hay forma de volver a subir.
+2. **El segundo nivel costaba tres pulsaciones**, porque había que dar la vuelta entera al ciclo
+   para regresar a *Casilla hija*. Y anidar con soltura es justo lo que distingue esta app de un
+   bloc de notas: era lo más incómodo precisamente donde más cómodo tenía que ser.
+
+Separándolo se caen los dos a la vez. El disparador **se consume solo** tras crear la hija, así
+que lo que ves en la barra siempre es lo que va a pasar; y volver a anidar es pulsar un botón, no
+tres. No se acumula: está armado o no lo está, y armarlo dos veces no baja dos niveles — que es
+lo que mata el escalón infinito **por construcción** y no por una regla que haya que recordar.
+
+#### Actúa sobre la línea SIGUIENTE, nunca sobre la actual
+
+Es la parte que más fácil se implementa mal, porque el resto de la barra hace lo contrario: el
+botón de modo sí toca la línea donde estás (convierte a casilla, o la parte). «Anidar» no.
+
+El motivo no es de gusto: **bajar de nivel una línea que ya existe es `indent`**, y `indent` está
+cerrado que no existe (§9.3) porque en el teclado de un móvil no hay Tabulador. Cambiar la
+**clase** de una línea viva —texto a casilla— es lo que el diseño permite; cambiar su **nivel**
+es lo que rechazó. Armar la siguiente respeta la regla de que *el nivel de una línea se elige al
+nacer*, y por eso no hace falta ninguna operación nueva en el dominio.
+
+Precio, el ya aceptado en §9.3: una línea escrita en el nivel equivocado **se borra y se
+reescribe**.
+
+⚠️ **El armado tiene que verse.** Es la contrapartida directa de lo anterior: si el efecto no
+está en la línea que miras sino en la que aún no existe, un disparador invisible convierte la
+próxima Intro en una sorpresa.
 
 **Es un objeto auxiliar de la nota abierta, y es deliberadamente desechable:**
 
@@ -1872,12 +1907,17 @@ usarlo.
    de conflictos; una variable desechable no necesita nada de eso, y metiéndola ahí cambiar de
    modo marcaría notas como sucias y las reescribiría en disco (§3).
 
-> **Nombre pendiente de un detalle.** `ModosEscritura` es el nombre del **concepto**, y como
-> tal se usa en esta documentación. El identificador en el código está sin fijar: todo lo
-> demás está en inglés (`Note`, `CheckBox`, `AppState`), así que lo coherente sería
-> `WritingMode` —y en singular, porque lo que el editor guarda es **un** modo activo, no el
-> conjunto—. Cambiar la convención y pasar el código nuevo a castellano también es defendible,
-> pero entonces se decide una vez y para todo.
+> **Nombre: cerrado el 2026-09-20.** El tipo se llama **`WritingMode`**, en inglés y en
+> singular —singular porque el editor guarda **un** modo activo, no el conjunto—.
+> `ModosEscritura` era el nombre provisional del diseño y **se retira**: un concepto, un nombre.
+>
+> La premisa con la que se planteó esta duda era falsa, y conviene dejarla corregida porque
+> volvería a usarse para decidir el siguiente nombre. Decía «todo lo demás está en inglés», y el
+> código **está mezclado**, con un patrón que nadie había escrito: **lo público en inglés**
+> (`Note`, `CheckBox`, `AppState`, `createFileRepository`, `insertAfter`) y **la maquinaria
+> interna en castellano** (`cambio`, `caminoDe`, `clasificar`, `codificador`, `esReintentable`,
+> `frontera`, `dePlataforma`). `WritingMode` sale por el `index.ts` de `ui/`, o sea es público, y
+> va en inglés **por eso** — no porque el repo entero lo esté.
 
 **Qué más cabe en esa barra, y qué no.** La regla: cabe si cambia el comportamiento mientras
 escribes o mientras miras. Candidatos que ya se ven —**"al marcar una casilla, marcar también
@@ -1889,11 +1929,16 @@ es contenido (el nombre de la nota) ni lo que es ajuste de la aplicación.
 
 **Intro es quien crea la línea siguiente**, y el modo activo decide de qué clase es:
 
-| Modo | Al pulsar Intro nace… | `Position` que usa el editor |
+| Estado de la barra | Al pulsar Intro nace… | `Position` que usa el editor |
 |---|---|---|
 | **Texto** | otra línea de texto | `root-end` |
 | **Casilla** | una casilla **hermana**, al mismo nivel | `after` |
-| **Casilla hija** | una casilla **hija**, un nivel dentro | `last-child-of` |
+| **Casilla** + *anidar* **armado** | una casilla **hija**, un nivel dentro · y se desarma | `last-child-of` |
+
+La tercera fila es una **combinación**, no un tercer modo (§7.2). Conviene fijarse en lo que
+*no* cambia: los tres casos de `Position` siguen usándose los tres, y el editor sigue llamando a
+`insert` con la posición ya elegida. Lo que se rediseñó fue quién elige `last-child-of` — antes
+un modo persistente, ahora un indicador que se consume—, y eso **no toca el núcleo**.
 
 **Con el cursor en medio de una línea, Intro la parte** (`split`): la primera mitad se queda y
 la segunda se va a la línea nueva, que nace de la clase que diga el modo.
@@ -1933,7 +1978,14 @@ y ninguna se lleva por delante algo que el usuario no esté mirando.
 
 #### El botón de modo no solo elige: también actúa sobre la línea actual
 
-`ModosEscritura` no es un interruptor pasivo que solo afecte a las líneas futuras. **Al
+⚠️ **Esto vale para el botón de MODO, no para el de anidar**, que hace justo lo contrario
+(§7.2): actúa sobre la línea siguiente y deja intacta la actual. Los dos botones están pegados
+en la barra y se comportan al revés, así que es el sitio donde más fácil se implementa uno con
+la regla del otro. La asimetría tiene motivo: el de modo cambia la **clase** de una línea, que
+está permitido; el de anidar cambiaría su **nivel**, que es `indent` y está cerrado que no
+existe.
+
+`WritingMode` no es un interruptor pasivo que solo afecte a las líneas futuras. **Al
 pulsarlo, la línea donde estás cambia en el momento**, y lo que pasa depende de dónde tengas
 el cursor:
 
@@ -1953,26 +2005,23 @@ Leche |y pan          Leche
 Y no necesita ninguna operación nueva: es **`split` y luego `convertToCheckBox`**, dos
 llamadas que compone el editor. El motor sigue sin saber que los modos existen.
 
-> **Propuesto, pendiente de confirmar.** Cuatro esquinas que el diseño de arriba deja sin
-> cubrir, con lo que haría falta que fuera:
+> **Confirmadas las cuatro el 2026-09-20.** Cuatro esquinas que el diseño de arriba dejaba sin
+> cubrir. Dejan de ser propuestas: son comportamiento exigible, y entran en el criterio de
+> cierre de la fase (§9.10).
 > - **Cursor al final de la línea** al pulsar el botón de modo → la línea se parte igual, y
 >   nace debajo una casilla vacía. Es lo útil cuando acabas un párrafo y empiezas una lista.
 > - **Ir de *Casilla* a *Texto*** con el botón, estando en una casilla → la casilla se
 >   convierte en texto, por simetría con lo que hace Retroceso.
-> - **Unir dos textos normales** (`merge` sin ninguna casilla de por medio) → funciona, como
->   en cualquier editor. Tu frase *"si estamos en una casilla o encima nuestra hay una"* sonaba
->   a restringirlo, y creo que no hace falta restringir nada.
+> - **Unir dos textos normales** (`merge` sin ninguna casilla de por medio) → funciona, como en
+>   cualquier editor. Se llegó a plantear restringirlo a cuando hay una casilla de por medio, y
+>   no hace falta: `merge` ya se niega solo donde importa, que es cuando la línea tiene hijas.
 > - **Partir una casilla que tiene hijas** → las hijas se quedan con la **primera** mitad, que
->   es la que conserva su identidad. `split` no destruye nada, así que se permite.
+>   es la que conserva su identidad. Parece chocar con la regla de §9.3 —*lo que tiene hijas no
+>   se toca*— y no choca: esa regla prohíbe lo que **hace desaparecer** una línea (`remove`,
+>   `merge`, `convertToText`), y `split` no destruye nada. Por eso se permite.
 
 **Y por eso no existen `indent` ni `outdent`** — el motivo está en §9.3. El nivel de una línea
-se elige **al nacer**, con el modo activo en ese momento.
-
-> **Sin cerrar.** En modo *Casilla hija*, si cada Intro creara una hija de la línea actual,
-> irías bajando un escalón por pulsación y sin `outdent` no habría forma de volver a subir. La
-> regla tiene que ser que **el modo baja un nivel una sola vez** y a partir de ahí las
-> siguientes son hermanas en ese nivel nuevo, pero está pendiente de confirmar, igual que qué
-> hace exactamente el botón para bajar un segundo nivel.
+se elige **al nacer**: con el modo activo, y con el disparador de anidar si está armado (§7.2).
 
 ---
 
@@ -2238,7 +2287,7 @@ decía otra cosa hasta hace nada:
 1. eran **siete** (`setChecked`, `setText`, `insert`, `remove`, `move`, `indent`, `outdent`);
 2. subieron a **nueve** con `split` y `merge`, sin las cuales no se puede escribir con el
    teclado, y a **once** al aparecer las conversiones entre texto y casilla que necesita
-   `ModosEscritura` (§7.2);
+   `WritingMode` (§7.2);
 3. y bajaron al quitarse `indent` y `outdent`, que ya no tienen quien las use.
 
 #### Por qué no existen `indent` ni `outdent`
@@ -2249,7 +2298,7 @@ operaciones que han dejado de existir. **El motivo es el móvil:** en el teclado
 ordenador, y esta app es multiplataforma desde el principio.
 
 En su lugar, **el nivel de una línea se elige al nacer**, con el modo activo de
-`ModosEscritura` (§7.3). El Tabulador queda para meter un carácter de tabulación y nada más.
+`WritingMode` (§7.3). El Tabulador queda para meter un carácter de tabulación y nada más.
 
 **El precio, aceptado a conciencia:** una línea creada en el nivel equivocado **no se puede
 re-anidar**. Hay que borrarla y volver a escribirla. Y conviene tener presente el filo de esa
@@ -2441,11 +2490,23 @@ que el `switch` que la consuma sea exhaustivo.
 
 **Son esos tres casos y no más.** Era la decisión (d), y está cerrada.
 
-**Y quedó confirmada por segunda vez desde el otro extremo del diseño:** los tres casos
-resultaron ser, uno a uno, los tres estados de `ModosEscritura` (§7.3) — `root-end` es el modo
-*Texto*, `after` es *Casilla*, `last-child-of` es *Casilla hija*. No falta ninguno ni sobra
-ninguno. Ojo, eso sí: cuando se decidió, los consumidores previstos eran `insert`, `move`,
-`indent` y `outdent`; hoy las tres últimas no existen y **el único consumidor es `insert`**.
+**Y quedó confirmada por segunda vez desde el otro extremo del diseño:** los tres casos son, uno
+a uno, las tres cosas que el editor puede querer al pulsar Intro (§7.3) — `root-end` para una
+línea de texto suelta, `after` para una casilla hermana, `last-child-of` para una hija. No falta
+ninguno ni sobra ninguno. Ojo, eso sí: cuando se decidió, los consumidores previstos eran
+`insert`, `move`, `indent` y `outdent`; hoy las tres últimas no existen y **el único consumidor
+es `insert`**.
+
+> **Esta correspondencia se enunció mal una vez, y cómo se rompió vale más que el enunciado.**
+> Decía que los tres casos eran «los tres estados de `ModosEscritura`», atándolos a una decisión
+> de interfaz. El 2026-09-20 esa decisión cambió —los tres estados pasaron a ser dos modos y un
+> disparador (§7.2)— y la frase quedó falsa **sin que nada fallara**, porque de los tres casos de
+> `Position` no sobró ninguno: sólo cambió quién elige `last-child-of`.
+>
+> Es la prueba desde dentro de que la frontera está donde tiene que estar: **un rediseño entero
+> de la barra de edición no costó ni una línea del núcleo**, ni una operación nueva, ni una de
+> las 329 pruebas. La lección al escribir: justificar una pieza del dominio por la forma que hoy
+> tiene la UI es atarla a lo que más cambia.
 
 Los candidatos que quedan fuera —`before`, `first-child-of`, `root-start`— no son
 descabellados; se descartan por coste: **cada caso de `Position` es una rama más que testear**
@@ -2726,6 +2787,97 @@ lista como sección opcional, y ningún punto de arriba la pide. Con su porqué,
 (§6.2), y **dónde vive la lista manual** se cerró al escribirla: junto a las pruebas del mismo
 rincón del código —hoy `test/storage/blobs/`, tras la mudanza de §8.5—, que es lo que evita
 convertirla en un cuarto documento.
+
+### 9.10 Definición de "Fase 4 terminada"
+
+Al estilo de §9.5, §9.8 y §9.9, y **escrito antes de que exista una línea de `ui/`**, por el
+mismo motivo de siempre: un criterio decidido con el trabajo delante se decide a favor de lo que
+se hizo.
+
+Esta fase lo necesita más que ninguna, y por una razón que las otras tres no tenían: **una UI no
+termina sola.** Las fases 1 a 3 acababan cuando una pieza cumplía un contrato; aquí siempre se
+puede pulir un píxel más, así que sin criterio escrito «terminada» quiere decir exactamente «me
+he cansado».
+
+**Y trae una dificultad propia, que conviene admitir en vez de disimular:** es la primera fase
+en la que **algunas decisiones no se pueden cerrar sobre el papel**. «¿Se aguanta no poder
+reordenar una lista?» no tiene respuesta hasta que alguien hace la compra con la app. El método
+de las fases anteriores —cerrarlo todo antes— aquí no aplica entero, y forzarlo sería teatro. La
+salida no es saltarse el criterio: es **escribir en él cuáles son esas preguntas y qué cuenta
+como haberlas contestado**. Van abajo, y son parte del cierre.
+
+#### Los criterios
+
+1. **La rebanada vertical enciende: teclear produce una nota que sobrevive al recargar.** Nace
+   `src/platform/` con las primeras implementaciones reales de `Clock` e `IdGenerator` —hasta
+   hoy no existe **ninguna**—, monta `LocalStorageBlobStore` y arranca con `hydrate` y
+   `runMigrations`. Es el **primer arranque real de la app**: hasta aquí el núcleo entero sólo ha
+   corrido dentro de pruebas. Este punto no juzga el tacto del editor, sólo que la pila encaja.
+2. **Las ocho operaciones de contenido llegan desde el teclado.** Intro construye según el estado
+   de la barra (§7.3), Retroceso al principio hace sus dos cosas en dos pulsaciones, y el botón
+   de anidar arma la línea siguiente sin tocar la actual (§7.2).
+3. **Las cuatro esquinas de §7.3 se comportan como dice su tabla.** Confirmadas el 2026-09-20.
+   Sin ellas el editor «funciona» y se siente roto justo en los bordes, que es donde se nota.
+4. **Un `set-checked` redundante no redibuja.** Tercer eslabón de la misma cadena: la Fase 1
+   demostró que no notifica (§9.5, punto 5), la Fase 2 que no escribe (§9.8, punto 3), y la 4
+   tiene que demostrar que **no toca el DOM**. ⚠️ Es el único de los tres que el usuario nota:
+   un re-render con el cursor dentro le borra lo que está escribiendo.
+5. **Escribir deprisa no pierde el cursor.** La regla de §7: mientras un nodo tiene el foco, el
+   DOM es la fuente de verdad y no se re-renderiza. Se comprueba escribiendo una frase larga
+   seguida en una casilla anidada, con el write-behind trabajando por debajo.
+6. **`onCorrupt`: una nota ilegible ya no impide abrir la app.** Es lo único de la deuda de la
+   Fase 3 que entra **con la primera rebanada** y no después, porque no es deuda interna: hoy un
+   solo fichero roto tumba el `getAll` entero y con él la app (§6.5).
+7. **`src/scripts/` ha desaparecido del repo.** El prototipo viejo se **sustituye**, no se
+   jubila. Mientras siga ahí, `CLAUDE.md` tiene que gastar un párrafo en cada sesión explicando
+   que no se imite, y eso se paga para siempre. Criterio verificable con un `ls`.
+8. **Una lista de verificación manual del editor, ejecutada y anotada**, al estilo de
+   `test/storage/blobs/VERIFICACION-MANUAL.md`. Sigue cerrado que no hay runner de navegador
+   (§6.3), y el tacto del teclado no lo prueba `node --test`. Sin lista escrita y pasada, «se
+   probó a mano» significa en la práctica «no se probó».
+9. **`npm run check` en verde y el recuento de pruebas anotado**, como en las tres fases
+   anteriores. La cifra de partida son **329** —99 al cerrar la Fase 1, 216 la 2, 314 la 3—.
+
+#### Las tres preguntas que se contestan con el editor delante
+
+No bloquean el cierre por sí solas: **lo que bloquea es no haberlas contestado por escrito.** La
+respuesta va a `TAREAS.md`, con fecha, después de usar la app de verdad —listas reales, varios
+días—, no después de una demo de cinco minutos.
+
+- **¿Se aguanta no tener `move`?** Hoy una lista se queda en el orden en que se escribió, y
+  reordenar es borrar y reescribir (§9.3).
+- **¿Se aguanta no tener `indent` ni `outdent`?** Una línea que nace en el nivel equivocado se
+  borra y se reescribe. Es el precio aceptado de que el nivel se elija al nacer.
+- **¿El disparador de anidar se entiende sin que nadie lo explique?** Es la pieza nueva de §7.2 y
+  la única que actúa sobre una línea que todavía no existe.
+
+⚠️ **«No se aguanta» es un resultado válido**, y reabre la decisión correspondiente con datos en
+vez de con intuiciones. Escribir estas tres preguntas ahora es justamente lo que compra el
+derecho a cambiar de opinión después sin que parezca una rendición.
+
+#### Lo que NO entra en la Fase 4
+
+Dicho explícitamente, como en §9.7 y §9.9:
+
+- **Los Planes y su editor de grafos.** Se persisten desde la Fase 2 y siguen sin operarse.
+- **`move`, `indent` y `outdent`**, salvo que las preguntas de arriba los reabran.
+- **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con
+  `LocalStorageBlobStore` para salir del paso. Es barato de revertir —`BlobStore` es un puerto,
+  y el destino se inyecta en un solo sitio de `platform/`—, pero deja **dos cabos con nombre**:
+  qué pasa con las notas ya escritas en `localStorage` el día que se cambie de destino, y el
+  techo de ~5 MB por origen, que el base64 del blob infla alrededor de un tercio.
+- **El `onError` del write-behind y la validación de esquema al leer.** Entran en la fase, pero
+  **después del editor**: hoy no hay a quién avisar, y el editor es quien crea al destinatario.
+- **La escritura condicional** (§6.5). Sigue sin poder dispararla nadie hasta que haya dos
+  pestañas de verdad.
+- **Los shells de desktop y móvil, y el sync entre dispositivos.**
+
+Y **queda una cosa sin decidir a propósito**, porque es de infraestructura y no de diseño: **si
+la fase instala un bundler o no**. Webpack está desinstalado desde la Fase 0 esperando a ésta,
+pero entre medias apareció una vía con cero dependencias que ya está probada en el repo —el
+`<script type="importmap">` de `test/storage/blobs/verificacion-manual.html`, que carga el código
+de producción compilado a ESM y funcionó en Brave y en Firefox—. Lo sensato es empezar por ahí y
+que el bundler entre sólo cuando algo concreto lo exija, no por costumbre.
 
 ---
 

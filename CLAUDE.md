@@ -31,9 +31,15 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
 **Lo que existe: las fases 1, 2 y 3 enteras.** ~3680 líneas en
-`src/core/` y `src/storage/`, y ~5040 de pruebas en `test/`, que es carpeta aparte. *(La cifra
+`src/core/` y `src/storage/`, y ~5150 de pruebas en `test/`, que es carpeta aparte. *(La cifra
 de `src/` bajó de ~4400 al adelgazar las cabeceras: se fueron 800 líneas de comentario, ni una
 de código.)*
+
+**Hoy son 329 pruebas, no las 314 con que cerró la Fase 3.** Las quince de diferencia las trajo
+`646f44f`, al hacer que los casos de uso devuelvan la entidad que tocan. Comprobado el
+**2026-09-20**: `npm run check` entero en verde —typecheck, la verja del core, los dos
+guardianes y las 329, cero fallos— y el árbol limpio. *(Esta cifra envejece sola: si no cuadra,
+manda `npm test`, no este párrafo.)*
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
@@ -332,8 +338,11 @@ duda**; no la cambies por tu cuenta.
 - **El helper de copia por camino son DOS primitivas:** A (transformar un nodo) y B
   (transformar el array contenedor). La A va parametrizada por `onText`/`onCheckBox` con la
   recursión escrita **una sola vez**, no dos funciones raíz/profundidad. §5.4.
-- **`Position` tiene tres casos** —`root-end`, `after`, `last-child-of`— **y ninguno más**.
-  Uno por cada estado de `ModosEscritura`, y su único consumidor es `insert`. §9.4.
+- **`Position` tiene tres casos** —`root-end`, `after`, `last-child-of`— **y ninguno más**. Uno
+  por cada cosa que el editor puede querer al pulsar Intro, y su único consumidor es `insert`.
+  ⚠️ **No los justifiques por la forma que tenga hoy la barra de edición**, que es lo que hacía
+  este documento y quedó falso al rediseñarla: atar una pieza del dominio a la UI es atarla a lo
+  que más cambia. §9.4.
 - **Las operaciones de contenido son OCHO** y ninguna pasa de dificultad media: `setText`,
   `setChecked`, `insert`, `remove`, `split`, `merge`, `convertToCheckBox`, `convertToText`.
   §9.3.
@@ -342,15 +351,25 @@ duda**; no la cambies por tu cuenta.
   orden en que se escribió**; reordenar es borrar y reescribir. Aparcada en `TAREAS.md`. §9.3.
 - **No existen `indent` ni `outdent`.** En el teclado de un móvil no hay Tabulador, y la app es
   multiplataforma. El nivel de una línea **se elige al nacer**, con el modo activo de
-  `ModosEscritura`; el Tabulador solo mete un carácter. Precio aceptado: una línea en el nivel
-  equivocado se borra y se reescribe. §9.3.
+  `WritingMode` y con el disparador de anidar si está armado; el Tabulador solo mete un
+  carácter. Precio aceptado: una línea en el nivel equivocado se borra y se reescribe.
+  ⚠️ **El botón de anidar NO es `indent` disfrazado**: actúa sobre la línea siguiente, no sobre
+  la actual. Si alguna vez bajara de nivel una línea ya escrita, sería esta decisión reabierta.
+  §9.3 y §7.2.
 - **Retroceso al principio de una casilla hace DOS cosas, en dos pulsaciones:** la primera
   quita la casilla (`convertToText`), la segunda une con la línea de arriba (`merge`). Cada
   pulsación, una sola cosa. §7.3.
-- **`ModosEscritura` es un objeto auxiliar de la nota abierta**, con tres estados en ciclo
-  (*Texto → Casilla → Casilla hija*). **No se persiste** y muere al salir de la nota: no va
-  dentro de `Note`, no va en el core —al núcleo le llega `insert` con la `Position` ya
-  elegida— y no necesita fichero de preferencias. §7.2.
+- **`WritingMode` es un objeto auxiliar de la nota abierta**, y son **dos modos estables
+  (*Texto* ⇄ *Casilla*) más un disparador de anidar** que se arma, actúa una vez y se desarma
+  solo. **No se persiste** y muere al salir de la nota: no va dentro de `Note`, no va en el core
+  —al núcleo le llega `insert` con la `Position` ya elegida— y no necesita fichero de
+  preferencias. El nombre va en inglés y en singular porque es un tipo **público** de `ui/`; la
+  convención real del repo es *público en inglés, maquinaria interna en castellano*. §7.2.
+  - *Decidido el 2026-09-20, y sustituye al ciclo de tres estados (`ModosEscritura`) que decía
+    este documento.* Con un tercer modo persistente, cada Intro anidaba otro nivel y sin
+    `outdent` no había vuelta; y volver a anidar costaba tres pulsaciones. Separando el
+    disparador se caen los dos problemas, y **el núcleo no se tocó**: los tres casos de
+    `Position` siguen intactos, sólo cambió quién elige `last-child-of`.
 - **Los adaptadores de navegador de la Fase 3 se verifican A MANO, no con Playwright.** Todo lo
   que tiene lógica —`FileStorageAdapter`— pasa la suite de contratos en Node con un `BlobStore`
   falso; lo único sin automatizar es `DirectoryHandleBlobStore` (**156 líneas de código, no las
@@ -434,7 +453,9 @@ duda**; no la cambies por tu cuenta.
 No empezar nada de esto sin pedirlo explícitamente. El motivo de cada uno y qué lo
 desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 
-- **Reordenar y re-anidar líneas** (`move`, `indent`, `outdent`)
+- **Reordenar y re-anidar líneas** (`move`, `indent`, `outdent`) — *lo único de esta lista con
+  fecha de revisión*: dos de las tres preguntas de §9.10 se contestan usando el editor de la
+  Fase 4, y un «no se aguanta» las reabre. Hasta entonces, siguen fuera
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
 - El editor de grafos de los **Planes**
@@ -454,7 +475,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   verificada con la única acción que ya existía— por el mismo motivo que la rebanada vertical
   de la Fase 1: descubrir un fallo con un candidato, no con diecisiete.
 - **Fase 3 — Fichero local. ✅ HECHA.** Los **siete** puntos del criterio de cierre (§9.9),
-  cumplidos, con **314 pruebas**. Hechos el **paso 0** (§6.5, 232 pruebas),
+  cumplidos, con **314 pruebas al cerrarla**. Hechos el **paso 0** (§6.5, 232 pruebas),
   **`FileStorageAdapter`** con el formato en disco de §6.2 (274) y **las dos implementaciones de
   `BlobStore`** en `blobs/` (**314**, y el contrato corriendo tres veces, no dos como preveía el
   punto 7). El punto 5 —la lista de verificación manual— se cerró el **2026-09-13**, que es lo
@@ -462,18 +483,25 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   además la lista explícita de lo que **no** entra en la fase, y tres cosas que quedan vivas y
   anotadas: el `onError` del write-behind, el `onCorrupt` de `getAll` y la validación de esquema
   al leer del disco. Las tres van a la Fase 4, porque hoy no hay a quién avisar.
-- **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
+- **Fase 4 — UI. ⏳ EN CURSO, en su plan.** El editor con checkboxes anidados: el corazón de la
+  app. **Su criterio de cierre está escrito: §9.10**, con los nueve puntos, lo que no entra y
+  —lo que la hace distinta de las tres anteriores— **las tres preguntas que sólo se contestan
+  con el editor delante** (si se aguanta no tener `move`, no tener `indent`/`outdent`, y si el
+  disparador de anidar se entiende solo). Nace `src/ui/` y nace `src/platform/`, que traerá las
+  **primeras implementaciones reales de `Clock` e `IdGenerator`** — hoy no hay ninguna.
+  Arranca guardando en `LocalStorageBlobStore`, decidido para salir del paso.
 
-**Las decisiones de las fases 1 y 2 están CERRADAS**, y las dos fases están escritas. **De la
-Fase 3 también:** cómo se verifican los adaptadores de navegador y la taxonomía de errores. Lo
-abierto es **la escritura condicional** —el conflicto entre dos pestañas, que `revision` sabe
-detectar pero que nadie puede disparar todavía—, **avisar de los fallos que hoy no ve nadie**
-(el `onError` del write-behind y el `onCorrupt` de `getAll`, los dos aplazados a la Fase 4
-porque hoy no hay a quién avisar), **la validación de esquema al leer del disco**, **si OPFS
-entra en la fase** —está en la lista manual como sección opcional y §9.9 no lo exige— y lo **de
-la Fase 4** (cuatro esquinas del teclado, el escalón de anidamiento, el nombre en código de
-`ModosEscritura`). Las respuestas y su porqué están en `TAREAS.md` → *Sin decidir*, que se
-conserva como registro.
+**Las decisiones de las fases 1, 2 y 3 están CERRADAS**, y las tres fases están escritas. **De
+la Fase 4 se cerraron siete el 2026-09-20**, todas del editor: el disparador de anidar en lugar
+del tercer modo, que arma la línea siguiente y no toca la actual, las cuatro esquinas del
+teclado, el nombre `WritingMode`, el alcance y el destino de guardado. Lo que queda abierto es
+**la escritura condicional** —el conflicto entre dos pestañas, que `revision` sabe detectar pero
+que nadie puede disparar todavía—, **avisar de los fallos que hoy no ve nadie** (el `onError` del
+write-behind, ya dentro de la Fase 4 pero después del editor; el `onCorrupt` de `getAll` entra
+con la primera rebanada), **la validación de esquema al leer del disco**, **si OPFS entra en
+juego** —§9.9 no lo exigía y hoy el destino es `localStorage`— y **si la fase instala un bundler
+o se apaña con el `importmap`** que ya funciona en el repo. Las respuestas y su porqué están en
+`TAREAS.md` → *Sin decidir*, que se conserva como registro.
 
 ## Comandos
 

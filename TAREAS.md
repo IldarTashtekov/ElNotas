@@ -34,7 +34,9 @@ demás se apoya en ella.
       es un tipo con tres constructores de una línea, y lo que de verdad hay que comprobar de
       él (que el `switch` sea exhaustivo) lo comprueba el compilador en `insert`. Decidido:
       **tres casos exactos** —`root-end`, `after`, `last-child-of`— y ninguno más, uno por cada
-      estado de `ModosEscritura`. Su **único consumidor es `insert`**. `before`,
+      cosa que el editor puede querer al pulsar Intro. *(Decía «uno por cada estado de
+      `ModosEscritura`», y esa barra se rediseñó el 2026-09-20 sin que sobrara ningún caso: ver
+      §9.4.)* Su **único consumidor es `insert`**. `before`,
       `first-child-of` y `root-start` quedan fuera por coste de ramas a testear; el disparador
       para reabrirlo va en el mismo paquete que `move`. Razonado en `ARCHITECTURE.md` §9.4.
 - [x] **Las ocho operaciones de contenido** — ✅ **Las ocho hechas.** Eran nueve, subieron a
@@ -529,6 +531,69 @@ validación de esquema, y la escritura condicional.
       —que es donde mira quien se plantee declarar otro— diciendo que el que hay ya es un caso
       de eso y está aquí anotado.
 
+### Fase 4 — UI ⏳ EN CURSO
+
+El criterio de cierre está en `ARCHITECTURE.md` §9.10, y **las siete decisiones del editor se
+cerraron el 2026-09-20** (abajo, en *Sin decidir*). El orden es **de abajo arriba y en rebanada
+vertical**, como en las fases 1 y 2 y por el mismo motivo: que el primer fallo aparezca con una
+pieza delante y no con quince.
+
+⚠️ **Las tres primeras van juntas y no se separan.** Hasta que la 2 pase, no hay ninguna prueba
+de que el núcleo entero arranque fuera de un test.
+
+- [ ] **`src/platform/` nace: `Clock` e `IdGenerator` reales, y la composición.** Es el único
+      sitio que inyecta adaptadores. Hoy **no existe ninguna implementación de los dos puertos
+      de la Fase 1**, así que esto es literalmente lo primero que puede ejecutarse. Monta
+      `LocalStorageBlobStore` sobre `FileStorageAdapter`, y arranca con `hydrate` +
+      `runMigrations`.
+- [ ] **La rebanada vertical mínima: teclear una nota y que sobreviva al recargar.** Sin
+      casillas, sin anidar y sin lista de notas. Una nota, líneas de texto, Intro que crea la
+      siguiente. Es el punto 1 de §9.10 y el que dice si la pila encaja.
+- [ ] **`onCorrupt` en `getAll`, y algo en pantalla que lo diga.** Entra aquí y no después:
+      hoy un solo fichero ilegible tumba el `getAll` entero y con él la app. Punto 6 de §9.10.
+- [ ] **Las casillas.** `setChecked`, `convertToCheckBox` y `convertToText` desde el teclado y
+      desde el ratón, con el modo *Casilla* de la barra.
+- [ ] **El anidamiento: el disparador de anidar.** Arma la línea **siguiente**, se consume al
+      usarse y **el armado se ve en pantalla** (§7.2). No toca la línea actual: eso sería
+      `indent`, que está cerrado que no existe.
+- [ ] **Los bordes del teclado: `split`, `merge` y las cuatro esquinas de §7.3.** Incluye el
+      Retroceso al principio en sus dos pulsaciones. Punto 3 de §9.10, y es donde un editor
+      que «funciona» se siente roto.
+- [ ] **Un `set-checked` redundante no redibuja.** Tercer eslabón de la cadena que empezó en
+      §9.5 y siguió en §9.8: no notifica → no escribe → **no toca el DOM**. Es el único que el
+      usuario nota, porque un re-render con el cursor dentro le borra lo que escribe.
+- [ ] **La lista de notas y los contextos.** Las seis acciones de Contexto, que están
+      construidas y sin consumidor desde la Fase 2.
+- [ ] **La lista de verificación manual del editor, escrita y pasada**, al estilo de
+      `test/storage/blobs/VERIFICACION-MANUAL.md`. Sigue sin haber runner de navegador, y el
+      tacto del teclado no lo prueba `node --test`.
+- [ ] **Contestar por escrito las tres preguntas de §9.10** —`move`, `indent`/`outdent`, y si el
+      disparador de anidar se entiende solo— **después de usar la app de verdad varios días**,
+      no tras una demo. Un «no se aguanta» reabre la decisión correspondiente, y es un resultado
+      válido.
+- [ ] **`src/scripts/` fuera del repo**, con lo que arrastre (`webpack.config.js`, `public/`).
+      Punto 7 de §9.10: mientras siga ahí, `CLAUDE.md` gasta un párrafo por sesión en explicar
+      que no se imite.
+- [ ] **El `onError` del write-behind** — dentro de la fase, **después del editor**: hoy no hay
+      a quién avisar, y es el editor quien crea al destinatario. Arrastra el botón de
+      «reconectar carpeta», que hoy no existe porque reanudar es volver a pedir la carpeta.
+- [ ] **Validar el esquema de lo que se lee del disco** — también después del editor. Lo que
+      hay es una comprobación de forma mínima.
+- [ ] **Decidir si la fase instala un bundler.** Webpack lleva desinstalado desde la Fase 0
+      esperando a ésta, pero el `<script type="importmap">` de
+      `test/storage/blobs/verificacion-manual.html` ya carga código de producción compilado a
+      ESM con **cero dependencias**, y funcionó en Brave y en Firefox. Empezar por ahí; que el
+      bundler entre sólo si algo concreto lo exige.
+- [ ] **Acordar la definición del `frontend-agent`.** Su ficha está sin escribir a propósito y
+      lo dice ella misma: hay que acordarla antes de usarlo. Es andamiaje de `.claude/`, no
+      documentación.
+- [ ] **Qué pasa con las notas de `localStorage` al cambiar de destino.** Arrancar en
+      `LocalStorageBlobStore` fue decidido «para salir del paso», y es barato de revertir porque
+      el destino se inyecta en un solo sitio. Lo que **no** es gratis son las notas ya escritas:
+      o se migran o se pierden. Conviene decidirlo antes de usar la app en serio. Techo
+      conocido mientras tanto: ~5 MB por origen, que el base64 del blob infla alrededor de un
+      tercio.
+
 ### Infraestructura (`infra-agent`)
 
 Todas son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
@@ -710,24 +775,53 @@ letras no se reciclan, para que las referencias de `ARCHITECTURE.md` sigan valie
 | ~~**(f)**~~ | ✅ **Cerrada. Son ocho:** `setText`, `setChecked`, `insert`, `remove`, `split`, `merge`, `convertToCheckBox`, `convertToText`. Fuera `indent`, `outdent` y `move`. → `ARCHITECTURE.md` §9.3 | Cerró también la (c), y fija el tamaño de la Fase 1: ninguna de las ocho pasa de dificultad media. |
 | ~~**(g)**~~ | ✅ **Cerrada por eliminación.** Preguntaba qué pasa con los hermanos al hacer `outdent`; `outdent` ya no existe. → `ARCHITECTURE.md` §9.3 | |
 
-### Del editor (Fase 4)
+### Del editor (Fase 4) — ✅ **cerradas las siete el 2026-09-20**
 
-No bloquean nada de la Fase 1, pero salieron al diseñar `ModosEscritura` y se pierden si no se
-apuntan.
+Eran cuatro dudas apuntadas al diseñar el modo de escritura, y al contestarlas salieron tres
+más. **Las tres primeras resultaron ser la misma decisión vista por tres lados**, y por eso se
+cerraron juntas.
 
-- **El escalón infinito en modo *Casilla hija*.** Si cada Intro creara una hija de la línea
-  actual, irías bajando un nivel por pulsación y **sin `outdent` no habría forma de subir**.
-  La regla tiene que ser que el modo baje un nivel **una sola vez**, y de ahí en adelante las
-  siguientes sean hermanas en ese nivel. Falta confirmarlo.
-- **Cómo se baja un segundo nivel.** Con el ciclo actual (*Texto → Casilla → Casilla hija →
-  Texto*) hacen falta tres pulsaciones del botón para volver a *Casilla hija*. Si se quiere
-  anidar con soltura, hay que replantear el ciclo.
-- **Las cuatro esquinas del teclado propuestas en `ARCHITECTURE.md` §7.3** y sin confirmar:
-  cursor al final al pulsar el botón de modo · volver de *Casilla* a *Texto* con el botón ·
-  unir dos textos normales sin casilla de por medio · partir una casilla que tiene hijas.
-- **El identificador de `ModosEscritura` en el código.** El concepto se llama así; el nombre
-  en el código está sin fijar, porque todo lo demás está en inglés (`WritingMode`, y en
-  singular). O se cambia la convención a conciencia y para todo. → `ARCHITECTURE.md` §7.2
+- **El escalón infinito** — ✅ **el modo anidado se consume.** Tras crear la hija, la barra
+  vuelve sola a *Casilla*. Se descartó «baja un nivel una sola vez y luego hermanas», que era lo
+  propuesto: funciona igual, pero deja la barra diciendo *Casilla hija* cuando ya se comporta
+  como *Casilla*, o sea **lo que ves deja de ser lo que hace**. Consumirlo mata el escalón
+  infinito **por construcción**: armado o no, y armar dos veces no baja dos niveles.
+- **Cómo se baja un segundo nivel** — ✅ **un botón «anidar» aparte, fuera del ciclo.** La barra
+  queda en dos modos estables (*Texto* ⇄ *Casilla*) más el disparador. Volver a anidar es una
+  pulsación en vez de tres, y anidar con soltura es justo lo que distingue esta app de un bloc
+  de notas.
+- **Sobre qué actúa «anidar»** — ✅ **sobre la línea SIGUIENTE, nunca sobre la actual.** Duda que
+  no estaba apuntada y apareció al juntar las dos de arriba: §7.3 dice que el botón de modo *sí*
+  toca la línea donde estás, así que lo simétrico habría sido que anidar bajara de nivel la línea
+  actual — y **eso es `indent`**, cerrado que no existe porque en el teclado de un móvil no hay
+  Tabulador. La distinción que lo resuelve: cambiar la **clase** de una línea viva está
+  permitido, cambiar su **nivel** no. Precio, el ya aceptado: una línea en el nivel equivocado se
+  borra y se reescribe. ⚠️ **Contrapartida obligatoria: el armado tiene que verse**, o la próxima
+  Intro es una sorpresa.
+- **Las cuatro esquinas del teclado de §7.3** — ✅ **confirmadas las cuatro tal cual.** La única
+  que merecía mirarse era *partir una casilla que tiene hijas*, porque parece chocar con la regla
+  de que lo que tiene hijas no se toca; no choca, porque esa regla prohíbe lo que **hace
+  desaparecer** una línea (`remove`, `merge`, `convertToText`) y `split` no destruye nada.
+- **El identificador en el código** — ✅ **`WritingMode`, en inglés y en singular.**
+  `ModosEscritura` era el nombre provisional del diseño y se retira. **La premisa de la duda era
+  falsa** y conviene no reutilizarla: decía que «todo lo demás está en inglés», y el repo está
+  mezclado con un patrón que nadie había escrito — **público en inglés** (`Note`, `CheckBox`,
+  `createFileRepository`), **maquinaria interna en castellano** (`cambio`, `caminoDe`,
+  `clasificar`, `esReintentable`, `frontera`). Va en inglés por ser público, no por el repo.
+- **El alcance de los tres pendientes de la Fase 3** — ✅ **`onCorrupt` entra con la primera
+  rebanada; `onError` y la validación de esquema, dentro de la fase pero después del editor.**
+  El criterio: `onCorrupt` no es deuda interna, es un fallo que el usuario ve — una nota ilegible
+  impide abrir la app.
+- **Dónde guarda la app al arrancar** — ✅ **`LocalStorageBlobStore`, para salir del paso.**
+  Decidido a sabiendas de que es provisional. Aquí lo provisional **sí** es barato, y por un
+  motivo estructural: `BlobStore` es un puerto, así que el destino se cambia en un solo sitio de
+  `platform/` — no es código que reescribir, es un parámetro. Lo que no es gratis está apuntado
+  como tarea: migrar las notas ya escritas el día del cambio, y el techo de ~5 MB.
+
+**Lo que este rediseño NO costó, que es el dato interesante:** ni una línea del núcleo. Los tres
+casos de `Position` siguen intactos y no hizo falta ninguna operación nueva; sólo cambió quién
+elige `last-child-of`. La lección, anotada en §9.4: justificar una pieza del dominio por la forma
+que hoy tiene la UI es atarla a lo que más cambia.
 
 ### Qué devuelven los casos de uso — ✅ **cerrada y CONSTRUIDA: la entidad protagonista, o `null`**
 
