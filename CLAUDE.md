@@ -30,8 +30,10 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
-**Lo que existe: las fases 1, 2 y 3 enteras.** ~4240 líneas de
-código en `src/core/` y `src/storage/`, y ~4930 de pruebas en `test/`, que es carpeta aparte:
+**Lo que existe: las fases 1, 2 y 3 enteras.** ~3680 líneas en
+`src/core/` y `src/storage/`, y ~5040 de pruebas en `test/`, que es carpeta aparte. *(La cifra
+de `src/` bajó de ~4400 al adelgazar las cabeceras: se fueron 800 líneas de comentario, ni una
+de código.)*
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
@@ -365,7 +367,16 @@ duda**; no la cambies por tu cuenta.
   aparcado y no habría quien las despachara. §9.7.
 - **Una acción, una operación.** Ninguna acción pliega varias llamadas en la Fase 2. Las
   compuestas —cascada de `setChecked`, borrar una rama— se diseñan en la Fase 4, con el editor
-  delante. §9.7.
+  delante.
+- **Los casos de uso devuelven la entidad que tocan, o `null` si no aplicó.** Construido: las
+  dieciocho con el mismo tipo, sin excepción ni aserción —`create-note` con un id repetido
+  también es no-op, así que `null` es alcanzable hasta al crear—. **No un `Result`:** un no-op
+  **no es un fallo**, así que meterlo en el canal `err` desharía esa regla, y además no hay `E`
+  posible sin inventar una taxonomía de errores para cosas que no lo son. El no-op **no hay que
+  calcularlo**: es la invariante de identidad, y los cuatro caminos salen de una expresión
+  (`cambio`, en `useCases.ts`). ⚠️ El retorno es **la entidad protagonista, no todo lo que
+  cambió**, así que **no sirve de undo** — `delete-note` también limpia los contextos que la
+  listaban. El razonamiento entero, en `TAREAS.md`. §9.7.
 - **`schemaVersion` vive en `StorageAdapter`, no en `AppState`.** Es propiedad de lo guardado.
   Y llega con el runner que lo consume, porque **es** el mecanismo de migración. §9.7.
 - **El arranque de la app está partido en dos fases:** `hydrate` y las migraciones son puras y

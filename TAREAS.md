@@ -729,6 +729,108 @@ apuntan.
   en el código está sin fijar, porque todo lo demás está en inglés (`WritingMode`, y en
   singular). O se cambia la convención a conciencia y para todo. → `ARCHITECTURE.md` §7.2
 
+### Qué devuelven los casos de uso — ✅ **cerrada y CONSTRUIDA: la entidad protagonista, o `null`**
+
+**Decidida y construida el 2026-09-19**, con **329 pruebas** en verde (eran 319: tres reescritas
+y diez nuevas). Salió al hacer inventario de las funciones que
+devuelven `void`: **16 de los 18 casos de uso no devuelven nada**, y sólo `createNote` y
+`createContext` devuelven su id. Cruzado con la regla de que *una operación que no aplica no
+hace nada en lugar de fallar*, eso deja que **desde el sitio de la llamada «hecho» y «no
+aplicaba» sean indistinguibles**: `remove` sobre una casilla con hijas es no-op, `add-item`
+sobre un destino inexistente también, y quien llama no se entera de ninguno de los dos.
+
+**Lo decidido: cada caso de uso devuelve la entidad que ha tocado, o `null` si no aplicó.**
+
+```
+Note | null     la nota como ha quedado · null si fue no-op
+Context | null  igual para las seis de Contexto
+```
+
+**Las dieciocho con el mismo tipo, sin excepción ni aserción**, y eso salió de un hecho que se
+comprobó en el reducer al implementarlo: **`create-note` con un id que ya existe es no-op**
+(`reduce.ts`, primera línea del caso), igual que `create-context`. O sea que `null` es
+alcanzable también al crear, y la idea inicial de que `createNote` devolviera una `Note` no
+nullable era falsa. `createNote` y `createContext` pasan de devolver el id a devolver la
+entidad, que es estrictamente más: el id sale dentro.
+
+**Y `Result` se descartó, que era la primera idea.** `Result<T, E>` significa aquí «esto puede
+fallar», y un no-op **no es un fallo** — está escrito en `CLAUDE.md` con esas palabras. Meterlo
+en el canal `err` desharía esa decisión por la puerta de atrás: todo el `if (!r.ok)` pasaría a
+tratar «no aplicaba» como error. El indicio práctico de que no encaja es que **no hay `E`
+posible**: ni `StorageError` ni `MigrationError` sirven, y haría falta inventar una tercera
+taxonomía de errores para cosas que no lo son.
+
+**El no-op no hay que calcularlo: ya está calculado.** Es la invariante de identidad, así que
+la comprobación es un `===`, **no hizo falta tocar el `Store` ni el reducer**, y los cuatro
+caminos salen de una sola expresión —`cambio`, al final de `useCases.ts`—:
+
+```ts
+const cambio = <T>(antes: T | undefined, despues: T | undefined): T | null =>
+  despues === antes ? null : (despues ?? antes ?? null)
+
+//  cambió      antes ≠ después        → la entidad nueva
+//  no aplicó   antes === después      → null
+//  se borró    después es undefined   → la que se leyó antes
+//  no existía  los dos undefined      → null
+```
+
+Encima van dos ayudantes de tres líneas, `trasNota` y `trasContexto`, que leen, despachan y
+comparan. Los dieciocho casos de uso siguen siendo una expresión cada uno.
+
+⚠️ **Esto vive de la invariante de identidad**: si una operación devolviera una copia
+equivalente en vez de su entrada, `cambio` diría «cambió» siempre y el `null` dejaría de
+significar nada. Es la misma dependencia que tiene `diffState`, y se rompe igual de callada.
+
+**Verificado rompiéndolo a propósito**, que es la disciplina de esta capa. Tres roturas de
+`cambio`, y cada una tumba **exactamente una** prueba y ninguna más:
+
+| Rotura | Qué cae |
+|---|---|
+| quitar la comparación `antes === despues` | *un NO-OP devuelve null* |
+| `despues ?? null` (se pierde la borrada) | *deleteNote devuelve la nota BORRADA* |
+| `antes ?? despues` (devuelve la vieja) | *una acción que cambia algo devuelve la entidad YA ACTUALIZADA* |
+
+⚠️ **Y un barrido que parecía cubrir los dieciocho y no cubría nada, que es la lección que
+conviene conservar.** El primero que se escribió llamaba a cada caso de uso **sobre un estado
+vacío** y exigía `null`. Se midió rompiendo un caso de uso a propósito —que `merge` se saltara
+`cambio` y devolviera `getState().notes[id]` a secas— y **las 326 pruebas pasaron en verde**:
+sin nota en el estado, el camino correcto y el incorrecto dan `null` los dos.
+
+El barrido con dientes es el otro: **la entidad existe y la acción aun así no aplica**. Ahí un
+no-op tiene que dar `null`, y quien se salte la comparación devuelve la entidad. Con la misma
+rotura, ése cae. Son dos listas, `NO_OP_CON_NOTA` (diez) y `NO_OP_CON_CONTEXTO` (cuatro), y
+comprueban además que la entidad guardada **sigue siendo el mismo objeto**, o sea que tampoco se
+estampó `updatedAt`. El débil se conserva porque cuesta nada y cubre el otro extremo, pero los
+que vigilan son éstos.
+
+Encontrar el no-op de cada uno fue la única parte con trabajo, y está en el reducer: renombrar
+**con el nombre que ya tiene**, insertar **tras una línea que no existe**, meter una referencia a
+algo inexistente, quitar lo que no estaba, poner la vista que ya tenía. `createNote`,
+`createContext`, `deleteNote` y `deleteContext` van con prueba propia porque siempre aplican.
+
+⚠️ **Y el agujero era simétrico, que es lo que casi se escapa.** Cerrado el lado de la Nota, el
+del Contexto seguía abierto: con `addItem` saltándose la comparación, **las 327 pasaban en
+verde**. La lección para la próxima: cuando una comprobación se hace por duplicado —`trasNota` y
+`trasContexto`— la cobertura hay que mirarla **en las dos mitades**, porque probar una no prueba
+la otra.
+
+⚠️ **Lo que este retorno NO da, y hay que saberlo porque suena a que sí: undo.** `delete-note`
+es la única acción que toca **dos clases de entidad** —borra la nota **y** limpia todos los
+contextos que la listaban, ver `sinReferenciasA` en `reduce.ts`—. Devolver la `Note` borrada y
+reinsertarla recupera la nota **huérfana**, fuera de todas las listas donde estaba, porque las
+`ItemRef` limpiadas no vuelven. Se evaluó darle a `deleteNote` un retorno más rico y **se
+descartó**: rompe la uniformidad de las dieciocho firmas por un solo caso, y el undo va a
+necesitar su propio diseño de todas formas —es una pila, no un valor de retorno—. Así que el
+retorno es **la entidad protagonista, no todo lo que cambió**: sirve para saber qué pasó y para
+pintar; no sirve para deshacer.
+
+**Una consecuencia en las pruebas que conviene no deshacer:** `useCases.test.ts` tiene ahora
+**dos montajes**, y la diferencia es deliberada. `montar()` sigue dando un `Store` de mentira
+que sólo apunta acciones —aísla esta capa del reducer, y es con el que se comprueba el
+cableado—; `montarDeVerdad()` monta el `Store` real, porque **lo que devuelve un caso de uso
+depende de si la acción cambió algo, y eso sólo lo sabe el reducer**. Unificarlos perdería el
+aislamiento de lo primero.
+
 ### Escritura condicional y conflicto entre dos pestañas
 
 **Abierta a conciencia, no por olvido.** Salió al cerrar la taxonomía de `StorageError` (§6.5) y
@@ -888,6 +990,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **`CompositeStorage` y outbox durable** | Sin consumidor mientras haya un solo backend. La semántica (local primario + réplicas con reintentos) ya está decidida. | Que exista un segundo backend real. Ni un día antes: es infraestructura para un problema que aún no se tiene. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
 | **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entra** en la Fase 4, pero para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. |
+| **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. **No confundir con el caso que sí queda vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo ve nadie — ése no se arregla con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo es el `onError` ya especificado más arriba. |
 | **El editor de grafos de los Planes** | Los tipos de `Plan` están, pero no hay ni una operación. Es una app dentro de la app. | Que la parte de Notas esté terminada y en uso. Anotado: si llega, `Plan.nodes` probablemente deba pasar de array a `Record`, porque las aristas se guardan por id y con array toda búsqueda es lineal. |
 | **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web; no hay build web todavía. | Una Fase 4 terminada. Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
 | **Sync entre dispositivos, CRDTs, colaboración en tiempo real** | Salto enorme de complejidad. `revision` ya deja la puerta abierta a detectar conflictos, que es el 10% que sí hacía falta desde el principio. | Uso real en dos dispositivos y una política de conflictos elegida a conciencia. "Gana el último" ya está descartada. |
