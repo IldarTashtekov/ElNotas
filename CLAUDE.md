@@ -315,7 +315,13 @@ Los motivos están en `ARCHITECTURE.md`. Si crees que una está equivocada, **pl
 duda**; no la cambies por tu cuenta.
 
 - **Carpetas con límites por `tsconfig`**, no monorepo con workspaces.
-- **UI vanilla**, no React/Svelte/Solid.
+- **UI vanilla**, no React/Svelte/Solid — **ni Angular, ni Redux, ni htmx**. Reconfirmada el
+  2026-09-20 al preguntarse de nuevo, y hoy el motivo es más concreto que cuando se tomó:
+  **`Store.ts` ya es Redux** (65 líneas, con la invariante de identidad que Redux no da), y el
+  DOM virtual es débil justo donde esta app es difícil —`contenteditable`—. Las dos únicas
+  alternativas que sobrevivieron al examen están aparcadas con su disparador en `TAREAS.md`:
+  **Snabbdom** (*diffing* sin estado) y un **motor de edición** (ProseMirror/Lexical), que
+  sustituiría al núcleo en vez de complementarlo. Si vuelve a surgir, se lee esa tabla.
 - **Estado normalizado con `ItemRef`**, no entidades anidadas.
 - **`Versioned` con `revision` como token opaco**, no `version: number` ni "gana el último".
 - **Marcar una casilla NO arrastra a sus hijas.** La cascada se compone en la UI.
