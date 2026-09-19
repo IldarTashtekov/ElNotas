@@ -588,16 +588,33 @@ documentación**.
         **deuda aceptada a sabiendas y no un olvido.** Es trabajo mecánico que no arregla ni
         caza ningún fallo, y el diff sería irrevisable. **Lo que se escriba o se toque en
         `test/` a partir de ahora sí cumple la regla**, que es lo que impide que esto crezca.
-  - [ ] *(Opcional, y va después)* **Un guardián en `tools/`** enchufado a `npm run check`, al
-        estilo de `tools/check-core-purity.mjs`, para que la regla la sostenga la comprobación
-        y no la disciplina — que es como el proyecto sostiene todo lo demás. Necesita el mismo
-        escáner que borra comentarios y cadenas antes de mirar, saltarse las **cuatro**
-        excepciones y **mirar sólo `src/`** mientras las pruebas sigan exentas.
-        **Pista de cómo se hace, que ya está probada:** las cifras de esta casilla no salen de
-        un `grep` sino de recorrer el AST con la API del compilador (`ts.createSourceFile` y
-        `ts.forEachChild`), mirando `VariableDeclaration` sin `type`, y los `parameters` y el
-        `type` de cada función. Así los comentarios y las cadenas no dan falsos positivos, que
-        es el mismo problema que ya resolvió `check-core-purity.mjs` a mano.
+  - ~~*(Opcional)* **Un guardián en `tools/`** que sostuviera esta regla~~ — ❌ **DESCARTADO, y
+        el motivo vale como criterio para la próxima vez que alguien proponga un guardián.**
+
+        Esta regla **no caza ni un solo fallo**. El compilador ya dice si un tipo está mal; lo
+        único que añade la anotación es que **un cambio de tipo se vea en el diff** en vez de
+        que la inferencia se lo trague. Es legibilidad, no corrección.
+
+        Y eso la pone en otra liga que los cuatro guardianes que sí existen. Compáralas por lo
+        que pasa **si se rompe la regla**:
+
+        | Guardián | Qué pasa si se incumple |
+        |---|---|
+        | `typecheck:core` | el core toca plataforma y deja de ser portable |
+        | `check:purity` | el core lee el reloj → las pruebas dejan de ser deterministas |
+        | `require-tests` | `npm test` pasa en verde **sin ejecutar nada** |
+        | `check:fronteras` | una excepción se escapa por una firma que prometía `Result` |
+        | *(el de tipos)* | **un diff se lee peor** |
+
+        Los cuatro primeros tapan agujeros donde algo **funciona mal en silencio**. Éste tapa
+        una molestia de revisión, y un script en `npm run check` para eso es maquinaria de más.
+        **La regla se queda** —está en `CLAUDE.md` y se aplica al escribir—; lo que se descarta
+        es comprobarla automáticamente.
+
+        *(Si alguna vez se reabre: se hace recorriendo el AST con `ts.createSourceFile` y
+        `ts.forEachChild`, mirando `VariableDeclaration` sin `type` y los `parameters`/`type` de
+        cada función, saltándose las cuatro excepciones y mirando sólo `src/`. Está probado. Pero
+        el motivo de arriba no cambia por que sea fácil de escribir.)*
 
 - [x] **Que `npm test` falle si no hay ficheros de test.** ✅ Hecho. `tools/require-tests.mjs`
       cuenta los `*.test.js` de `tmp-test/test/` y sale con código 1 si no hay ninguno, porque

@@ -258,6 +258,12 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
   arregla ningún fallo ni caza ninguno. Pero **lo que escribas o toques en `test/` a partir de
   ahora sí la cumple**, sin excepción. Una prueba vieja sin
   anotar no es un precedente ni una autorización: es deuda conocida y anotada en `TAREAS.md`.
+
+  **No hay comprobación automática, y es deliberado.** Se evaluó y se descartó un guardián para
+  `tools/`: esta regla **no caza ningún fallo** —el compilador ya dice si un tipo está mal— y lo
+  único que añade es que un cambio de tipo se vea en el diff. Es legibilidad, no corrección, y
+  los cuatro guardianes que sí existen tapan cosas que **funcionan mal en silencio**. Se aplica
+  al escribir, y punto. El razonamiento entero, en `TAREAS.md`. **No lo vuelvas a proponer.**
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Plan)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
   memoria, **nunca** en localStorage. En desktop, keychain del sistema.
