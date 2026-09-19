@@ -42,18 +42,18 @@ export interface StoredEntities {
 const porId = <TId extends string, T extends { readonly id: TId }>(
   xs: ReadonlyArray<T>,
 ): Readonly<Record<TId, T>> =>
-  Object.fromEntries(xs.map((x) => [x.id, x])) as Record<TId, T>
+  Object.fromEntries(xs.map((x: T): readonly [TId, T] => [x.id, x])) as Record<TId, T>
 
 export const hydrate = (stored: StoredEntities): AppState => {
-  const notes = porId(stored.notes)
-  const plans = porId(stored.plans)
+  const notes: AppState["notes"] = porId(stored.notes)
+  const plans: AppState["plans"] = porId(stored.plans)
 
   const existe = (item: ItemRef): boolean =>
     item.kind === "note" ? notes[item.id] !== undefined : plans[item.id] !== undefined
 
-  const contexts = porId(
-    stored.contexts.map((ctx) => {
-      const items = ctx.items.filter(existe)
+  const contexts: AppState["contexts"] = porId(
+    stored.contexts.map((ctx: Context): Context => {
+      const items: ReadonlyArray<ItemRef> = ctx.items.filter(existe)
       /* Si no sobraba ninguna, se devuelve el contexto TAL CUAL. `filter` crea
          siempre un array nuevo, y un contexto nuevo al arrancar saldría sucio en
          el primer diff y se reescribiría en disco sin haber cambiado nada (§3).

@@ -502,33 +502,48 @@ documentación**.
     línea, la URL del paso 3; el procedimiento no cambia. Sigue **sin ejecutar**, que es lo que
     tiene abierta la Fase 3.
       Las **314 pruebas antes y después**, y `npm run check` en verde.
-- [ ] **Anotar el tipo en toda declaración de valor** (`const` / `let`), aunque TypeScript lo
-      infiera: `let numero: number = 1`. La regla ya está escrita en `CLAUDE.md`; esto es
-      aplicarla al código que ya existe. El porqué: cuando el tipo de una variable cambia, se
-      ve **en el diff** en vez de que la inferencia lo absorba en silencio.
-      **Alcance medido** sobre `src/core` y `src/storage`, ignorando comentarios: unas **500
-      declaraciones sin anotar**, frente a las 13 de código y ~54 de pruebas que ya lo llevan.
-      *(La medida es anterior a `file/` y `blobs/`, que sí aplican la regla dentro de las
-      funciones; lo que dejan sin anotar son **siete constantes de módulo** —los caminos de
-      `FileStorageAdapter` y las dos de `LocalStorageBlobStore`—, así que el orden de magnitud no
-      cambia.)*
-      Van en dos casillas porque son dos trabajos de tamaño muy distinto:
-  - [ ] **El código — ~55 declaraciones.** Es el que importa: es lo que se lee al revisar un
-        cambio de comportamiento.
-  - [ ] **Las pruebas — ~441 declaraciones.** Ocho veces más volumen y mecánico casi entero.
+- [x] **Anotar el tipo en toda declaración de valor, parámetro y retorno** — ✅ Hecho en
+      `src/`, **330 anotaciones en 14 ficheros**, y `npm run check` en verde con las **314**
+      pruebas de siempre. El porqué: cuando un tipo cambia, se ve **en el diff** en vez de que
+      la inferencia lo absorba en silencio.
+      **La regla se ensanchó al aplicarla**, y ése es el cambio de fondo: no son sólo las
+      declaraciones de valor, son también **los parámetros y el tipo de retorno de toda función
+      o método, incluidos los callbacks de una línea** de un `.map` o un `.filter`. La versión
+      buena está en `CLAUDE.md`; aquí queda lo medido.
+      **Las cifras viejas de esta casilla eran ambas falsas**, y por el mismo motivo —se
+      midieron antes de `file/` y `blobs/`, y con la regla estrecha—: decía ~55 declaraciones en
+      código y eran **70**, más 11 `for…of` y 6 `catch`.
+      Cuatro cosas que salieron al hacerlo:
+  - **Apareció una CUARTA excepción, y es la única que no es una elección: `for (const x of …)`
+    no admite anotación.** Es `error TS2483`, comprobado con una sonda y no supuesto. Las
+    **11** declaraciones que quedan sin anotar en `src/` son exactamente esas once.
+  - **Se verificó comparando el JavaScript emitido contra el de antes**, que es la comprobación
+    fuerte que admite un refactor de sólo tipos: **idéntico**, salvo dos paréntesis redundantes
+    alrededor de un ternario en `operations.js` que salen de reformatear dos líneas.
+  - **`DirectoryHandleBlobStore.ts` entró, y su emitido salió con el MISMO sha256**
+    (`7342529b…`). Por eso **no se repitió la lista de verificación manual**: el navegador
+    ejecutaría los mismos bytes que pasaron la lista el 2026-09-13. Es la única excepción
+    registrada a la regla de `CLAUDE.md` de «si tocas ese fichero, se repasa la lista», y se
+    apoya en evidencia, no en criterio. **Si un cambio futuro mueve un solo byte del emitido,
+    la excepción no vale y la lista se repasa.**
+  - **Las tres excepciones viejas se confirman tal cual:** la constante que **es** una función
+    —se anotan sus parámetros y su retorno, no la constante—, el `as const` de
+    `src/core/app/diffState.ts:52` y los dos destructuring de `src/core/app/reduce.ts:227`
+    y `:267`.
+  - [ ] **Las pruebas — 942 anotaciones** (423 variables, 412 retornos, 107 parámetros),
+        **deuda aceptada a sabiendas y no un olvido.** Es trabajo mecánico que no arregla ni
+        caza ningún fallo, y el diff sería irrevisable. **Lo que se escriba o se toque en
+        `test/` a partir de ahora sí cumple la regla**, que es lo que impide que esto crezca.
   - [ ] *(Opcional, y va después)* **Un guardián en `tools/`** enchufado a `npm run check`, al
         estilo de `tools/check-core-purity.mjs`, para que la regla la sostenga la comprobación
         y no la disciplina — que es como el proyecto sostiene todo lo demás. Necesita el mismo
-        escáner que borra comentarios y cadenas antes de mirar, y saltarse las tres
-        excepciones de abajo.
-
-      **Las tres excepciones, o la regla no es implementable:**
-      **(1) declaraciones de función** (`const setText = (…): X => …`) — ese trabajo lo hace el
-      tipo de retorno, y anotar además la constante obligaría a escribir la firma entera dos
-      veces; **(2) `as const`** — una sola en código, `src/core/app/diffState.ts:52`
-      (`const NADA = {…} as const`): una anotación ensancha el tipo y `as const` existe justo
-      para estrecharlo; **(3) destructuring** — dos en código, `src/core/app/reduce.ts:227` y
-      `:267`, donde anotar exige repetir la forma del objeto entero.
+        escáner que borra comentarios y cadenas antes de mirar, saltarse las **cuatro**
+        excepciones y **mirar sólo `src/`** mientras las pruebas sigan exentas.
+        **Pista de cómo se hace, que ya está probada:** las cifras de esta casilla no salen de
+        un `grep` sino de recorrer el AST con la API del compilador (`ts.createSourceFile` y
+        `ts.forEachChild`), mirando `VariableDeclaration` sin `type`, y los `parameters` y el
+        `type` de cada función. Así los comentarios y las cadenas no dan falsos positivos, que
+        es el mismo problema que ya resolvió `check-core-purity.mjs` a mano.
 
 - [x] **Que `npm test` falle si no hay ficheros de test.** ✅ Hecho. `tools/require-tests.mjs`
       cuenta los `*.test.js` de `tmp-test/test/` y sale con código 1 si no hay ninguno, porque

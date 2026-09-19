@@ -52,6 +52,7 @@ import type {
   PlanId,
   Repository,
   StorageAdapter,
+  Result,
   StorageError,
 } from "#core/index"
 import { err, ok } from "#core/index"
@@ -65,23 +66,25 @@ const createMemoryRepository = <
   T extends { readonly id: TId },
   TId extends string,
 >(): Repository<T, TId> => {
-  const guardadas = new Map<TId, T>()
+  const guardadas: Map<TId, T> = new Map<TId, T>()
 
   return {
     /* `ok(null)` y no un error: preguntar por algo que no está guardado es una
        respuesta, no un fracaso. Es el principio de "ausencia no es fallo" visto
        desde el único sitio que puede romperlo. */
-    get: async (id) => ok(guardadas.get(id) ?? null),
+    get: async (id: TId): Promise<Result<T | null, StorageError>> =>
+      ok(guardadas.get(id) ?? null),
     // Array nuevo en cada llamada, a propósito: si devolviera el interior del
     // Map, quien lo recibe podría manosear el almacén sin pasar por `put`.
-    getAll: async () => ok([...guardadas.values()]),
-    put: async (entity) => {
+    getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> =>
+      ok([...guardadas.values()]),
+    put: async (entity: T): Promise<Result<void, StorageError>> => {
       guardadas.set(entity.id, entity)
       return ok(undefined)
     },
     // `Map.delete` sobre una clave que no está devuelve false y no lanza, que es
     // exactamente lo que el puerto promete: borrar lo que no existe no es error.
-    delete: async (id) => {
+    delete: async (id: TId): Promise<Result<void, StorageError>> => {
       guardadas.delete(id)
       return ok(undefined)
     },
@@ -89,14 +92,17 @@ const createMemoryRepository = <
 }
 
 export const createMemoryStorageAdapter = (): StorageAdapter => {
-  const notes = createMemoryRepository<Note, NoteId>()
-  const plans = createMemoryRepository<Plan, PlanId>()
-  const contexts = createMemoryRepository<Context, ContextId>()
+  const notes: Repository<Note, NoteId> = createMemoryRepository<Note, NoteId>()
+  const plans: Repository<Plan, PlanId> = createMemoryRepository<Plan, PlanId>()
+  const contexts: Repository<Context, ContextId> = createMemoryRepository<
+    Context,
+    ContextId
+  >()
 
   /* Empieza en 0: un almacén vacío es "sin esquema todavía", que es lo que el
      runner de migraciones de la Fase 2 tiene que saber distinguir de "esquema
      viejo". */
-  let schemaVersion = 0
+  let schemaVersion: number = 0
 
   return {
     notes,
@@ -119,17 +125,19 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
         dos: un `fn` que lanza de forma SÍNCRONA rompería un `transaction` sin
         `async` antes de que hubiera promesa ninguna — ni `catch` que valiera.
     */
-    transaction: async (fn) => {
+    transaction: async <T>(
+      fn: () => Promise<Result<T, StorageError>>,
+    ): Promise<Result<T, StorageError>> => {
       try {
         return await fn()
-      } catch (fallo) {
+      } catch (fallo: unknown) {
         const excepcionAjena: StorageError = { kind: "io", cause: fallo }
         return err(excepcionAjena)
       }
     },
 
-    getSchemaVersion: async () => ok(schemaVersion),
-    setSchemaVersion: async (v) => {
+    getSchemaVersion: async (): Promise<Result<number, StorageError>> => ok(schemaVersion),
+    setSchemaVersion: async (v: number): Promise<Result<void, StorageError>> => {
       schemaVersion = v
       return ok(undefined)
     },

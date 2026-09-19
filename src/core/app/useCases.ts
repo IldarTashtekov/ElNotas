@@ -18,6 +18,7 @@ import type { DefaultView } from "../domain/Context"
 import type { ContentId, ContextId, ItemRef, NoteId } from "../domain/Ids"
 import { contentId, contextId, noteId, revision } from "../domain/Ids"
 import type { Position } from "../domain/Position"
+import type { ActionMeta } from "./Action"
 import type { Clock } from "../ports/Clock"
 import type { IdGenerator } from "../ports/IdGenerator"
 import type { Store } from "./Store"
@@ -71,16 +72,16 @@ export interface UseCaseDeps {
 export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => {
   /* Aquí, y sólo aquí, se lee el mundo. Se construye uno por acción, así que
      todas las entidades que esa acción toque reciben la MISMA marca de tiempo. */
-  const meta = () => ({ now: clock.now(), revision: revision(ids.next()) })
+  const meta = (): ActionMeta => ({ now: clock.now(), revision: revision(ids.next()) })
 
   return {
-    setChecked: (noteId, contentId, checked) =>
+    setChecked: (noteId: NoteId, contentId: ContentId, checked: boolean): void =>
       store.dispatch({ type: "set-checked", noteId, contentId, checked, meta: meta() }),
 
-    setText: (noteId, contentId, value) =>
+    setText: (noteId: NoteId, contentId: ContentId, value: string): void =>
       store.dispatch({ type: "set-text", noteId, contentId, value, meta: meta() }),
 
-    insertText: (noteId, value, at) =>
+    insertText: (noteId: NoteId, value: string, at: Position): void =>
       store.dispatch({
         type: "insert",
         noteId,
@@ -89,7 +90,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    insertCheckBox: (noteId, value, at) =>
+    insertCheckBox: (noteId: NoteId, value: string, at: Position): void =>
       store.dispatch({
         type: "insert",
         noteId,
@@ -98,10 +99,10 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    remove: (noteId, contentId) =>
+    remove: (noteId: NoteId, contentId: ContentId): void =>
       store.dispatch({ type: "remove", noteId, contentId, meta: meta() }),
 
-    split: (noteId, contentId, offset) =>
+    split: (noteId: NoteId, contentId: ContentId, offset: number): void =>
       store.dispatch({
         type: "split",
         noteId,
@@ -111,50 +112,50 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    merge: (noteId, contentId) =>
+    merge: (noteId: NoteId, contentId: ContentId): void =>
       store.dispatch({ type: "merge", noteId, contentId, meta: meta() }),
 
-    convertToCheckBox: (noteId, contentId) =>
+    convertToCheckBox: (noteId: NoteId, contentId: ContentId): void =>
       store.dispatch({ type: "convert-to-checkbox", noteId, contentId, meta: meta() }),
 
-    convertToText: (noteId, contentId) =>
+    convertToText: (noteId: NoteId, contentId: ContentId): void =>
       store.dispatch({ type: "convert-to-text", noteId, contentId, meta: meta() }),
 
     /* ── Nota ── */
 
-    createNote: (name) => {
-      const id = noteIdNuevo(ids)
+    createNote: (name: string): NoteId => {
+      const id: NoteId = noteIdNuevo(ids)
       store.dispatch({ type: "create-note", noteId: id, name, meta: meta() })
       return id
     },
 
-    renameNote: (noteId, name) =>
+    renameNote: (noteId: NoteId, name: string): void =>
       store.dispatch({ type: "rename-note", noteId, name, meta: meta() }),
 
-    deleteNote: (noteId) =>
+    deleteNote: (noteId: NoteId): void =>
       store.dispatch({ type: "delete-note", noteId, meta: meta() }),
 
     /* ── Contexto ── */
 
-    createContext: (name) => {
-      const id = contextIdNuevo(ids)
+    createContext: (name: string): ContextId => {
+      const id: ContextId = contextIdNuevo(ids)
       store.dispatch({ type: "create-context", contextId: id, name, meta: meta() })
       return id
     },
 
-    renameContext: (contextId, name) =>
+    renameContext: (contextId: ContextId, name: string): void =>
       store.dispatch({ type: "rename-context", contextId, name, meta: meta() }),
 
-    deleteContext: (contextId) =>
+    deleteContext: (contextId: ContextId): void =>
       store.dispatch({ type: "delete-context", contextId, meta: meta() }),
 
-    addItem: (contextId, item) =>
+    addItem: (contextId: ContextId, item: ItemRef): void =>
       store.dispatch({ type: "add-item", contextId, item, meta: meta() }),
 
-    removeItem: (contextId, item) =>
+    removeItem: (contextId: ContextId, item: ItemRef): void =>
       store.dispatch({ type: "remove-item", contextId, item, meta: meta() }),
 
-    setDefaultView: (contextId, view) =>
+    setDefaultView: (contextId: ContextId, view: DefaultView): void =>
       store.dispatch({ type: "set-default-view", contextId, view, meta: meta() }),
   }
 }

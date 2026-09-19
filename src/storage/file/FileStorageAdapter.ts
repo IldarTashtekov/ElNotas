@@ -103,11 +103,11 @@ import { err, ok } from "#core/index"
     es maquinaria alrededor de ellas, y fuera de aquí no se escribe ni una.
 */
 
-const CARPETA_NOTAS = "notes/"
-const CARPETA_PLANES = "plans/"
-const CARPETA_CONTEXTOS = "contexts/"
-const CAMINO_MANIFEST = "manifest.json"
-const EXTENSION = ".json"
+const CARPETA_NOTAS: string = "notes/"
+const CARPETA_PLANES: string = "plans/"
+const CARPETA_CONTEXTOS: string = "contexts/"
+const CAMINO_MANIFEST: string = "manifest.json"
+const EXTENSION: string = ".json"
 
 /**
  * **DECISIÓN 1, confirmada: qué lleva dentro el manifiesto.**
@@ -203,7 +203,7 @@ const descodificador: TextDecoder = new TextDecoder("utf-8", { fatal: true })
 const aBytes = (valor: unknown): Result<Uint8Array, StorageError> => {
   try {
     return ok(codificador.encode(`${JSON.stringify(valor, null, 2)}\n`))
-  } catch (fallo) {
+  } catch (fallo: unknown) {
     const noSerializable: StorageError = { kind: "io", cause: fallo }
     return err(noSerializable)
   }
@@ -241,7 +241,7 @@ const parsear = (
     }
 
     return ok(valor as Record<string, unknown>)
-  } catch (fallo) {
+  } catch (fallo: unknown) {
     /* `fallo` es `unknown` por `useUnknownInCatchVariables`, y viaja intacto en
        `cause`: es para depurar, no para enseñar (§6.5). */
     const ilegible: StorageError = { kind: "corrupt", path: camino, cause: fallo }
@@ -284,7 +284,7 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
   blobs: BlobStore,
   carpeta: string,
 ): Repository<T, TId> => ({
-  get: async (id) => {
+  get: async (id: TId): Promise<Result<T | null, StorageError>> => {
     const camino: string = caminoDe(carpeta, id)
     const leido: Result<Uint8Array | null, StorageError> = await blobs.read(camino)
 
@@ -334,7 +334,7 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
    * `FileStorageAdapter.errors.test.ts`, y la marca se queda: existe para que el
    * día que esto cambie **se vea en el diff**.
    */
-  getAll: async () => {
+  getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> => {
     const listado: Result<ReadonlyArray<string>, StorageError> = await blobs.list(carpeta)
     if (!listado.ok) return listado
 
@@ -363,7 +363,7 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
     return ok(entidades)
   },
 
-  put: async (entity) => {
+  put: async (entity: T): Promise<Result<void, StorageError>> => {
     const bytes: Result<Uint8Array, StorageError> = aBytes(entity)
     if (!bytes.ok) return bytes
 
@@ -375,7 +375,8 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
 
   /* Borrar lo que no está no es un error, y aquí no hay nada que hacer para
      conseguirlo: el propio `BlobStore` promete lo mismo en su puerto. */
-  delete: async (id) => blobs.delete(caminoDe(carpeta, id)),
+  delete: async (id: TId): Promise<Result<void, StorageError>> =>
+    blobs.delete(caminoDe(carpeta, id)),
 })
 
 /* ═════════════════════════════ El adaptador ═══════════════════════════════ */
@@ -440,10 +441,12 @@ export const createFileStorageAdapter = (blobs: BlobStore): StorageAdapter => {
      * forma **síncrona** rompería antes de que existiera promesa alguna, y no
      * habría `catch` que llegara a tiempo.
      */
-    transaction: async (fn) => {
+    transaction: async <T>(
+      fn: () => Promise<Result<T, StorageError>>,
+    ): Promise<Result<T, StorageError>> => {
       try {
         return await fn()
-      } catch (fallo) {
+      } catch (fallo: unknown) {
         const excepcionAjena: StorageError = { kind: "io", cause: fallo }
         return err(excepcionAjena)
       }
@@ -460,7 +463,7 @@ export const createFileStorageAdapter = (blobs: BlobStore): StorageAdapter => {
      * migrar sin saber de qué versión se viene es la forma de estropear lo
      * guardado de verdad.
      */
-    getSchemaVersion: async () => {
+    getSchemaVersion: async (): Promise<Result<number, StorageError>> => {
       const leido: Result<Uint8Array | null, StorageError> =
         await blobs.read(CAMINO_MANIFEST)
       if (!leido.ok) return leido
@@ -488,7 +491,7 @@ export const createFileStorageAdapter = (blobs: BlobStore): StorageAdapter => {
     /* El manifiesto se reescribe entero, que hoy es exacto porque sólo tiene
        este campo (decisión 1). El día que tenga un segundo, esto pasa a ser
        leer-modificar-escribir. */
-    setSchemaVersion: async (v) => {
+    setSchemaVersion: async (v: number): Promise<Result<void, StorageError>> => {
       const manifest: Manifest = { schemaVersion: v }
       const bytes: Result<Uint8Array, StorageError> = aBytes(manifest)
       if (!bytes.ok) return bytes

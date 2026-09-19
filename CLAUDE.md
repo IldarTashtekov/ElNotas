@@ -205,13 +205,38 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
   referencia a algo que no existe es un no-op.
 - **`noUncheckedIndexedAccess` está activo.** Indexar `Record<NoteId, Note>` devuelve
   `Note | undefined`; hay que tratar el caso "ese id no existe".
-- **Toda declaración de valor lleva tipo explícito**, aunque TypeScript lo infiera:
-  `let numero: number = 1`. Así, cuando el tipo de una variable cambia, **se ve en el diff**
-  en vez de que la inferencia lo absorba en silencio. **Tres excepciones**, porque ahí la
-  anotación no cabe: las **declaraciones de función** (ese trabajo lo hace el tipo de retorno,
-  y anotar además obligaría a escribir la firma dos veces), **`as const`** (la anotación
-  ensancha justo lo que `as const` estrecha) y el **destructuring**. Pendiente de aplicar al
-  código ya escrito: `TAREAS.md`.
+- **TODO lleva tipo explícito, aunque TypeScript lo infiera**, y "todo" son tres cosas: las
+  **declaraciones de valor** (`let numero: number = 1`), los **parámetros** y el **tipo de
+  retorno** de toda función o método — **incluidos los callbacks de una línea** que se pasan a
+  un `.map`, un `.filter` o un `.find`:
+  ```ts
+  const afectados: ReadonlyArray<Context> = Object.values<Context>(contexts).filter(
+    (ctx: Context): boolean => ctx.items.some((i: ItemRef): boolean => mismoItem(i, item)),
+  )
+  ```
+  El porqué es el mismo en los tres: cuando un tipo cambia, **se ve en el diff** en vez de que
+  la inferencia lo absorba en silencio.
+
+  **Rige en `src/` Y en `test/`.** No hay una regla para el código y otra para las pruebas: una
+  prueba es código, y la inferencia se lo traga igual de callada.
+
+  **CUATRO excepciones, y sólo la primera no es una elección:**
+  1. **`for (const x of …)`** — `error TS2483: The left-hand side of a 'for...of' statement
+     cannot use a type annotation`. Lo prohíbe el lenguaje, no el criterio;
+  2. **la constante que ES una función** (`const setText = (…): X => …`) — ese trabajo lo hace
+     el tipo de retorno, y anotar además la constante obliga a escribir la firma dos veces.
+     Ojo: los **parámetros y el retorno de esa función sí van anotados**;
+  3. **`as const`** — la anotación ensancha justo lo que `as const` estrecha;
+  4. **destructuring** — no hay dónde ponerlo sin repetir la forma del objeto entero.
+
+  **Estado, que es lo que evita discutirlo cada vez:** `src/` **la cumple entero** — 330
+  anotaciones, y no queda ni una variable, ni un parámetro, ni un retorno sin tipo fuera de las
+  cuatro excepciones; las **11** declaraciones que quedan sin anotar son las once `for…of`.
+  **Las pruebas ya escritas NO la cumplen, y se quedan así a propósito:** son **942**
+  anotaciones —423 variables, 412 retornos y 107 parámetros, medido— de trabajo mecánico que no
+  arregla ningún fallo ni caza ninguno. Pero **lo que escribas o toques en `test/` a partir de
+  ahora sí la cumple**, sin excepción. Una prueba vieja sin
+  anotar no es un precedente ni una autorización: es deuda conocida y anotada en `TAREAS.md`.
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Plan)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
   memoria, **nunca** en localStorage. En desktop, keychain del sistema.

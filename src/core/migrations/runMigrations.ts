@@ -47,7 +47,7 @@ export interface Migration {
  * vacío —nunca se ha escrito nada— y ése es el caso de "primer arranque", no el
  * de "esquema viejo". Distinguirlos es lo que evita intentar migrar la nada.
  */
-export const CURRENT_SCHEMA_VERSION = 1
+export const CURRENT_SCHEMA_VERSION: number = 1
 
 /**
  * Lo que responde un almacén en el que **nunca se ha escrito nada**.
@@ -57,7 +57,7 @@ export const CURRENT_SCHEMA_VERSION = 1
  * así que un runner que tratara el 0 como una versión más lanzaría la primera
  * vez que alguien abre la aplicación. No hay nada que migrar cuando no hay nada.
  */
-export const EMPTY_STORE_VERSION = 0
+export const EMPTY_STORE_VERSION: number = 0
 
 /** Las migraciones conocidas, en orden. Vacía a propósito: ver arriba. */
 export const MIGRATIONS: ReadonlyArray<Migration> = []
@@ -125,7 +125,9 @@ export const runMigrations = (
   let applied: number = 0
 
   while (actual < target) {
-    const paso: Migration | undefined = migrations.find((m) => m.from === actual)
+    const paso: Migration | undefined = migrations.find(
+      (m: Migration): boolean => m.from === actual,
+    )
     if (paso === undefined) {
       const falta: MigrationError = { kind: "missing-migration", from: actual }
       return err(falta)

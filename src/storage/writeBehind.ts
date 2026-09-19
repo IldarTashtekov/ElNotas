@@ -63,7 +63,13 @@
  * arreglar el problema (pedir la carpeta otra vez) es Fase 4.
  */
 
-import type { AppState, Result, StorageAdapter, StorageError } from "#core/index"
+import type {
+  AppState,
+  Result,
+  StateDiff,
+  StorageAdapter,
+  StorageError,
+} from "#core/index"
 import { NO_CHANGES, diffState, err, ok } from "#core/index"
 
 /** Deshace una espera programada. */
@@ -98,7 +104,7 @@ export interface WriteBehind {
   readonly flush: () => Promise<Result<void, StorageError>>
 }
 
-const DEMORA_POR_DEFECTO_MS = 500
+const DEMORA_POR_DEFECTO_MS: number = 500
 
 /**
  * La línea que este paso 0 existe para poder escribir.
@@ -111,9 +117,9 @@ const DEMORA_POR_DEFECTO_MS = 500
  */
 const esReintentable = (fallo: StorageError): boolean => fallo.kind === "io"
 
-const porSetTimeout: Schedule = (fn, ms) => {
-  const id = setTimeout(fn, ms)
-  return () => clearTimeout(id)
+const porSetTimeout: Schedule = (fn: () => void, ms: number): Cancel => {
+  const id: ReturnType<typeof setTimeout> = setTimeout(fn, ms)
+  return (): void => clearTimeout(id)
 }
 
 export const createWriteBehind = ({
@@ -147,11 +153,11 @@ export const createWriteBehind = ({
        pendiente. Se devuelve el mismo error una y otra vez, que es la verdad. */
     if (detenido !== null) return err(detenido)
 
-    const objetivo = pendiente
+    const objetivo: AppState | null = pendiente
     if (objetivo === null) return ok(undefined) // alguien se nos adelantó
     pendiente = null
 
-    const cambios = diffState(escrito, objetivo)
+    const cambios: StateDiff = diffState(escrito, objetivo)
 
     // ⚠️ LA LÍNEA DEL ESLABÓN ②: si no cambió nada, no se toca el disco.
     if (cambios === NO_CHANGES) {
@@ -238,12 +244,12 @@ export const createWriteBehind = ({
        valor y no una excepción, así que no puede envenenar las escrituras
        futuras. Si algo llegara a rechazar aquí sería un adaptador incumpliendo
        su puerto —que promete no lanzar—, y eso tiene que hacer ruido. */
-    cola = siguiente.then(() => undefined)
+    cola = siguiente.then((): void => undefined)
     return siguiente
   }
 
   return {
-    onState: (state) => {
+    onState: (state: AppState): void => {
       /* El estado se recuerda pase lo que pase: aunque el escritor esté
          detenido, esto es lo que se guardará si algún día se reanuda. */
       pendiente = state
@@ -251,7 +257,7 @@ export const createWriteBehind = ({
       /* Pero no se programa nada si está detenido: esa espera sólo serviría para
          volver a fallar igual. */
       cancelarEspera =
-        detenido !== null ? null : schedule(() => void flush(), delayMs)
+        detenido !== null ? null : schedule((): void => void flush(), delayMs)
     },
     flush,
   }

@@ -43,7 +43,8 @@ import { mapPreservingIdentity } from "./updateContent"
 const contains = (
   items: ReadonlyArray<{ readonly id: ContentId }>,
   id: ContentId,
-): boolean => items.some((item) => item.id === id)
+): boolean =>
+  items.some((item: { readonly id: ContentId }): boolean => item.id === id)
 
 export interface ContainerTransform {
   /** La línea vive en la raíz: se recibe la lista raíz entera. */
@@ -61,9 +62,9 @@ const updateParentIn = (
   id: ContentId,
   fn: (parent: CheckBox) => CheckBox,
 ): ReadonlyArray<CheckBox> =>
-  mapPreservingIdentity(items, (checkbox) => {
+  mapPreservingIdentity(items, (checkbox: CheckBox): CheckBox => {
     if (contains(checkbox.children, id)) return fn(checkbox)
-    const children = updateParentIn(checkbox.children, id, fn)
+    const children: ReadonlyArray<CheckBox> = updateParentIn(checkbox.children, id, fn)
     return children === checkbox.children ? checkbox : { ...checkbox, children }
   })
 
@@ -83,11 +84,11 @@ export const updateContainerOf = (
   // la propia lista que nos han pasado.
   if (contains(content, id)) return fn.onRoot(content)
 
-  return mapPreservingIdentity<Content>(content, (block) => {
+  return mapPreservingIdentity<Content>(content, (block: Content): Content => {
     // Un texto no tiene hijas: no puede ser el contenedor de nadie.
     if (!isCheckBox(block)) return block
     if (contains(block.children, id)) return fn.onParent(block)
-    const children = updateParentIn(block.children, id, fn.onParent)
+    const children: ReadonlyArray<CheckBox> = updateParentIn(block.children, id, fn.onParent)
     return children === block.children ? block : { ...block, children }
   })
 }

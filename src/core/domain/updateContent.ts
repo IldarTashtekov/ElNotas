@@ -34,9 +34,9 @@ export const mapPreservingIdentity = <T>(
   items: ReadonlyArray<T>,
   fn: (item: T) => T,
 ): ReadonlyArray<T> => {
-  let changed = false
-  const next = items.map((item) => {
-    const updated = fn(item)
+  let changed: boolean = false
+  const next: ReadonlyArray<T> = items.map((item: T): T => {
+    const updated: T = fn(item)
     if (updated !== item) changed = true
     return updated
   })
@@ -57,9 +57,9 @@ const updateCheckBoxes = (
   id: ContentId,
   fn: (checkbox: CheckBox) => CheckBox,
 ): ReadonlyArray<CheckBox> =>
-  mapPreservingIdentity(items, (checkbox) => {
+  mapPreservingIdentity(items, (checkbox: CheckBox): CheckBox => {
     if (checkbox.id === id) return fn(checkbox)
-    const children = updateCheckBoxes(checkbox.children, id, fn)
+    const children: ReadonlyArray<CheckBox> = updateCheckBoxes(checkbox.children, id, fn)
     return children === checkbox.children ? checkbox : { ...checkbox, children }
   })
 
@@ -91,12 +91,12 @@ export const updateContent = (
   id: ContentId,
   fn: NodeTransform,
 ): ReadonlyArray<Content> =>
-  mapPreservingIdentity<Content>(content, (block) => {
+  mapPreservingIdentity<Content>(content, (block: Content): Content => {
     if (block.id === id) {
       return isCheckBox(block) ? fn.onCheckBox(block) : fn.onText(block)
     }
     // Un texto no tiene hijas: no hay por dónde seguir bajando.
     if (!isCheckBox(block)) return block
-    const children = updateCheckBoxes(block.children, id, fn.onCheckBox)
+    const children: ReadonlyArray<CheckBox> = updateCheckBoxes(block.children, id, fn.onCheckBox)
     return children === block.children ? block : { ...block, children }
   })

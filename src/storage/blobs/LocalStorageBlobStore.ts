@@ -85,7 +85,7 @@ import { err, ok } from "#core/index"
  * uno lo abre en las herramientas del navegador, que es justo cuando se usa esta
  * implementación.
  */
-const ESPACIO_DE_NOMBRES = "elnotas:blob:"
+const ESPACIO_DE_NOMBRES: string = "elnotas:blob:"
 
 const claveDe = (camino: string): string => `${ESPACIO_DE_NOMBRES}${camino}`
 
@@ -98,7 +98,7 @@ const claveDe = (camino: string): string => `${ESPACIO_DE_NOMBRES}${camino}`
  * en una nota se llega enseguida. 32 KiB es el tamaño que todo el mundo usa para
  * esto y está muy por debajo del límite de cualquier motor.
  */
-const TROZO = 0x8000
+const TROZO: number = 0x8000
 
 const aBase64 = (bytes: Uint8Array): string => {
   /* Acumulador local, como el `entidades` de `FileStorageAdapter`: lo que la
@@ -219,7 +219,7 @@ const frontera = <T>(
 ): Result<T, StorageError> => {
   try {
     return ok(fn())
-  } catch (fallo) {
+  } catch (fallo: unknown) {
     return err(aError(fallo))
   }
 }
@@ -261,9 +261,9 @@ export const createLocalStorageBlobStore = (almacen: Storage): BlobStore => ({
    * hacer, y es el único caso de la taxonomía que lleva `path` para poder decir
    * cuál.
    */
-  read: async (camino) => {
+  read: async (camino: string): Promise<Result<Uint8Array | null, StorageError>> => {
     const guardado: Result<string | null, StorageError> = frontera(
-      () => almacen.getItem(claveDe(camino)),
+      (): string | null => almacen.getItem(claveDe(camino)),
       dePlataforma,
     )
     if (!guardado.ok) return guardado
@@ -271,10 +271,13 @@ export const createLocalStorageBlobStore = (almacen: Storage): BlobStore => ({
     const texto: string | null = guardado.value
     if (texto === null) return ok(null)
 
-    return frontera(() => deBase64(texto), (fallo) => {
-      const ilegible: StorageError = { kind: "corrupt", path: camino, cause: fallo }
-      return ilegible
-    })
+    return frontera(
+      (): Uint8Array => deBase64(texto),
+      (fallo: unknown): StorageError => {
+        const ilegible: StorageError = { kind: "corrupt", path: camino, cause: fallo }
+        return ilegible
+      },
+    )
   },
 
   /**
@@ -282,11 +285,15 @@ export const createLocalStorageBlobStore = (almacen: Storage): BlobStore => ({
    * no hay nada que «crear por el camino»: sin carpetas, una clave con barras
    * dentro es una clave más.
    */
-  write: async (camino, data) =>
-    frontera(() => almacen.setItem(claveDe(camino), aBase64(data)), dePlataforma),
+  write: async (camino: string, data: Uint8Array): Promise<Result<void, StorageError>> =>
+    frontera(
+      (): void => almacen.setItem(claveDe(camino), aBase64(data)),
+      dePlataforma,
+    ),
 
   /** Borrar lo que no está no es un error, y `removeItem` ya se comporta así. */
-  delete: async (camino) => frontera(() => almacen.removeItem(claveDe(camino)), dePlataforma),
+  delete: async (camino: string): Promise<Result<void, StorageError>> =>
+    frontera((): void => almacen.removeItem(claveDe(camino)), dePlataforma),
 
   /**
    * Sin carpetas, «los caminos que empiezan por ese prefijo» es literalmente
@@ -298,8 +305,8 @@ export const createLocalStorageBlobStore = (almacen: Storage): BlobStore => ({
    * caminos son los mismos que vería cualquier otro `BlobStore`, y quien llama
    * pasa lo devuelto directo a `read`.
    */
-  list: async (prefijo) =>
-    frontera(() => {
+  list: async (prefijo: string): Promise<Result<ReadonlyArray<string>, StorageError>> =>
+    frontera((): ReadonlyArray<string> => {
       const completo: string = claveDe(prefijo)
       const encontrados: string[] = []
 

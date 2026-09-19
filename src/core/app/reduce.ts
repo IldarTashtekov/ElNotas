@@ -29,6 +29,7 @@ import type { Content } from "../domain/Content"
 import type { Context, DefaultView } from "../domain/Context"
 import type { ContextId, ItemRef, NoteId } from "../domain/Ids"
 import type { Note } from "../domain/Note"
+import type { Versioned } from "../domain/Versioned"
 import {
   convertToCheckBox,
   convertToText,
@@ -60,10 +61,10 @@ const onContent = (
   meta: ActionMeta,
   operar: (content: ReadonlyArray<Content>) => ReadonlyArray<Content>,
 ): AppState => {
-  const note = state.notes[id]
+  const note: Note | undefined = state.notes[id]
   if (note === undefined) return state // total: la nota no existe, no pasa nada
 
-  const content = operar(note.content)
+  const content: ReadonlyArray<Content> = operar(note.content)
   if (content === note.content) return state // ← la línea que lo sostiene todo
 
   const updated: Note = {
@@ -76,7 +77,7 @@ const onContent = (
 }
 
 /** Los metadatos de escritura, para no repetir las dos líneas en cada caso. */
-const stamp = (meta: ActionMeta) => ({
+const stamp = (meta: ActionMeta): Versioned => ({
   updatedAt: meta.now,
   revision: meta.revision,
 })
@@ -92,10 +93,10 @@ const onContext = (
   meta: ActionMeta,
   transformar: (ctx: Context) => Context,
 ): AppState => {
-  const ctx = state.contexts[id]
+  const ctx: Context | undefined = state.contexts[id]
   if (ctx === undefined) return state
 
-  const siguiente = transformar(ctx)
+  const siguiente: Context = transformar(ctx)
   if (siguiente === ctx) return state
 
   return {
@@ -134,63 +135,95 @@ const sinReferenciasA = (
   item: ItemRef,
   meta: ActionMeta,
 ): AppState["contexts"] => {
-  const afectados = Object.values<Context>(contexts).filter((ctx) =>
-    ctx.items.some((i) => mismoItem(i, item)),
+  const afectados: ReadonlyArray<Context> = Object.values<Context>(contexts).filter(
+    (ctx: Context): boolean => ctx.items.some((i: ItemRef): boolean => mismoItem(i, item)),
   )
   if (afectados.length === 0) return contexts
 
-  const limpios = afectados.map((ctx) => ({
+  const limpios: ReadonlyArray<Context> = afectados.map((ctx: Context): Context => ({
     ...ctx,
-    items: ctx.items.filter((i) => !mismoItem(i, item)),
+    items: ctx.items.filter((i: ItemRef): boolean => !mismoItem(i, item)),
     ...stamp(meta),
   }))
 
   return {
     ...contexts,
-    ...Object.fromEntries(limpios.map((ctx) => [ctx.id, ctx])),
+    ...Object.fromEntries(
+      limpios.map((ctx: Context): readonly [ContextId, Context] => [ctx.id, ctx]),
+    ),
   }
 }
 
 export const reduce = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case "set-checked":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        setChecked(c, action.contentId, action.checked),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          setChecked(c, action.contentId, action.checked),
       )
 
     case "set-text":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        setText(c, action.contentId, action.value),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          setText(c, action.contentId, action.value),
       )
 
     case "insert":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        insert(c, action.block, action.position),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          insert(c, action.block, action.position),
       )
 
     case "remove":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        remove(c, action.contentId),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> => remove(c, action.contentId),
       )
 
     case "split":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        split(c, action.contentId, action.offset, action.newId),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          split(c, action.contentId, action.offset, action.newId),
       )
 
     case "merge":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        merge(c, action.contentId),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> => merge(c, action.contentId),
       )
 
     case "convert-to-checkbox":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        convertToCheckBox(c, action.contentId),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          convertToCheckBox(c, action.contentId),
       )
 
     case "convert-to-text":
-      return onContent(state, action.noteId, action.meta, (c) =>
-        convertToText(c, action.contentId),
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          convertToText(c, action.contentId),
       )
 
     /* ───────────────────────────── Nota ───────────────────────────── */
@@ -209,7 +242,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
     }
 
     case "rename-note": {
-      const note = state.notes[action.noteId]
+      const note: Note | undefined = state.notes[action.noteId]
       if (note === undefined || note.name === action.name) return state
 
       return {
@@ -254,7 +287,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
     }
 
     case "rename-context":
-      return onContext(state, action.contextId, action.meta, (ctx) =>
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context =>
         ctx.name === action.name ? ctx : { ...ctx, name: action.name },
       )
 
@@ -269,24 +302,26 @@ export const reduce = (state: AppState, action: Action): AppState => {
     }
 
     case "add-item":
-      return onContext(state, action.contextId, action.meta, (ctx) => {
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
         // El otro lado de la integridad referencial: no se mete una referencia
         // a algo que no existe.
         if (!existeItem(state, action.item)) return ctx
-        if (ctx.items.some((i) => mismoItem(i, action.item))) return ctx
+        if (ctx.items.some((i: ItemRef): boolean => mismoItem(i, action.item))) return ctx
         return { ...ctx, items: [...ctx.items, action.item] }
       })
 
     case "remove-item":
-      return onContext(state, action.contextId, action.meta, (ctx) => {
-        const items = ctx.items.filter((i) => !mismoItem(i, action.item))
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
+        const items: ReadonlyArray<ItemRef> = ctx.items.filter(
+          (i: ItemRef): boolean => !mismoItem(i, action.item),
+        )
         // `filter` SIEMPRE devuelve array nuevo: sin esta comparación, quitar
         // algo que no estaba ensuciaría el contexto y lo reescribiría en disco.
         return items.length === ctx.items.length ? ctx : { ...ctx, items }
       })
 
     case "set-default-view":
-      return onContext(state, action.contextId, action.meta, (ctx) =>
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context =>
         mismaVista(ctx.defaultView, action.view)
           ? ctx
           : { ...ctx, defaultView: action.view },

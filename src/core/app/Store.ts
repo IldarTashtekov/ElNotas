@@ -43,7 +43,7 @@ export interface Store {
 }
 
 export const createStore = (initial: AppState): Store => {
-  let state = initial
+  let state: AppState = initial
 
   /*
       La lista se REEMPLAZA, nunca se muta en el sitio (nada de `push` ni
@@ -59,20 +59,22 @@ export const createStore = (initial: AppState): Store => {
   let listeners: ReadonlyArray<Listener> = []
 
   return {
-    getState: () => state,
+    getState: (): AppState => state,
 
-    dispatch: (action) => {
-      const next = reduce(state, action)
+    dispatch: (action: Action): void => {
+      const next: AppState = reduce(state, action)
       if (next === state) return // nada cambió → nadie se entera
 
       state = next // ← LA mutación. Aquí, y en ningún otro sitio del proyecto.
       for (const listener of listeners) listener(next)
     },
 
-    subscribe: (listener) => {
+    subscribe: (listener: Listener): Unsubscribe => {
       listeners = [...listeners, listener]
-      return () => {
-        listeners = listeners.filter((suscrito) => suscrito !== listener)
+      return (): void => {
+        listeners = listeners.filter(
+          (suscrito: Listener): boolean => suscrito !== listener,
+        )
       }
     },
   }

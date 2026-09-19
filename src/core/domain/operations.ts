@@ -15,7 +15,7 @@
  * Todas son puras: no generan IDs, no leen el reloj y no lanzan excepciones.
  */
 
-import type { Content } from "./Content"
+import type { CheckBox, Content, Text } from "./Content"
 import { checkBox, isCheckBox, isText, text } from "./Content"
 import type { ContentId } from "./Ids"
 import type { Position } from "./Position"
@@ -37,8 +37,9 @@ export const setText = (
   value: string,
 ): ReadonlyArray<Content> =>
   updateContent(content, id, {
-    onText: (block) => (block.text === value ? block : { ...block, text: value }),
-    onCheckBox: (block) => (block.text === value ? block : { ...block, text: value }),
+    onText: (block: Text): Text => (block.text === value ? block : { ...block, text: value }),
+    onCheckBox: (block: CheckBox): CheckBox =>
+      block.text === value ? block : { ...block, text: value },
   })
 
 /**
@@ -63,8 +64,9 @@ export const setChecked = (
   checked: boolean,
 ): ReadonlyArray<Content> =>
   updateContent(content, id, {
-    onText: (block) => block,
-    onCheckBox: (block) => (block.checked === checked ? block : { ...block, checked }),
+    onText: (block: Text): Text => block,
+    onCheckBox: (block: CheckBox): CheckBox =>
+      block.checked === checked ? block : { ...block, checked },
   })
 
 /* ──────────────────────────── Cambiando la estructura ────────────────────────────
@@ -73,7 +75,10 @@ export const setChecked = (
 
 /** ¿Existe ya esa línea en el árbol, a cualquier profundidad? */
 const existsIn = (items: ReadonlyArray<Content>, id: ContentId): boolean =>
-  items.some((item) => item.id === id || (isCheckBox(item) && existsIn(item.children, id)))
+  items.some(
+    (item: Content): boolean =>
+      item.id === id || (isCheckBox(item) && existsIn(item.children, id)),
+  )
 
 /** Mete el bloque justo detrás de `afterId`. Lista intacta si `afterId` no está. */
 const insertAfter = <T extends Content>(
@@ -81,7 +86,7 @@ const insertAfter = <T extends Content>(
   afterId: ContentId,
   block: T,
 ): ReadonlyArray<T> => {
-  const index = items.findIndex((item) => item.id === afterId)
+  const index: number = items.findIndex((item: T): boolean => item.id === afterId)
   if (index === -1) return items
   return [...items.slice(0, index + 1), block, ...items.slice(index + 1)]
 }
@@ -110,13 +115,18 @@ export const insert = (
       return [...content, block]
 
     case "after": {
-      const targetId = position.id
+      const targetId: ContentId = position.id
       return updateContainerOf(content, targetId, {
-        onRoot: (items) => insertAfter(items, targetId, block),
-        onParent: (parent) => {
+        onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          insertAfter(items, targetId, block),
+        onParent: (parent: CheckBox): CheckBox => {
           // Un texto suelto no cabe entre hijas. Sin este descarte no compila.
           if (!isCheckBox(block)) return parent
-          const children = insertAfter(parent.children, targetId, block)
+          const children: ReadonlyArray<CheckBox> = insertAfter(
+            parent.children,
+            targetId,
+            block,
+          )
           return children === parent.children ? parent : { ...parent, children }
         },
       })
@@ -126,8 +136,8 @@ export const insert = (
       // Aquí no hace falta la primitiva B: el destino no es el contenedor de
       // nadie todavía, es el propio nodo al que le crecen las hijas.
       return updateContent(content, position.id, {
-        onText: (target) => target, // un texto no tiene hijas donde meter nada
-        onCheckBox: (target) =>
+        onText: (target: Text): Text => target, // un texto no tiene hijas donde meter nada
+        onCheckBox: (target: CheckBox): CheckBox =>
           isCheckBox(block) ? { ...target, children: [...target.children, block] } : target,
       })
 
@@ -145,10 +155,10 @@ const removeFrom = <T extends Content>(
   items: ReadonlyArray<T>,
   id: ContentId,
 ): ReadonlyArray<T> => {
-  const target = items.find((item) => item.id === id)
+  const target: T | undefined = items.find((item: T): boolean => item.id === id)
   if (target === undefined) return items
   if (isCheckBox(target) && target.children.length > 0) return items
-  return items.filter((item) => item.id !== id)
+  return items.filter((item: T): boolean => item.id !== id)
 }
 
 /**
@@ -165,9 +175,9 @@ export const remove = (
   id: ContentId,
 ): ReadonlyArray<Content> =>
   updateContainerOf(content, id, {
-    onRoot: (items) => removeFrom(items, id),
-    onParent: (parent) => {
-      const children = removeFrom(parent.children, id)
+    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> => removeFrom(items, id),
+    onParent: (parent: CheckBox): CheckBox => {
+      const children: ReadonlyArray<CheckBox> = removeFrom(parent.children, id)
       return children === parent.children ? parent : { ...parent, children }
     },
   })
@@ -199,11 +209,11 @@ export const convertToCheckBox = (
   id: ContentId,
 ): ReadonlyArray<Content> =>
   updateContainerOf(content, id, {
-    onRoot: (items) =>
-      mapPreservingIdentity(items, (item) =>
+    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+      mapPreservingIdentity(items, (item: Content): Content =>
         item.id === id && isText(item) ? checkBox(item.id, item.text) : item,
       ),
-    onParent: (parent) => parent,
+    onParent: (parent: CheckBox): CheckBox => parent,
   })
 
 /**
@@ -226,13 +236,13 @@ export const convertToText = (
   id: ContentId,
 ): ReadonlyArray<Content> =>
   updateContainerOf(content, id, {
-    onRoot: (items) =>
-      mapPreservingIdentity(items, (item) =>
+    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+      mapPreservingIdentity(items, (item: Content): Content =>
         item.id === id && isCheckBox(item) && item.children.length === 0
           ? text(item.id, item.text)
           : item,
       ),
-    onParent: (parent) => parent,
+    onParent: (parent: CheckBox): CheckBox => parent,
   })
 
 /* ───────────────────────────── Partir y unir ─────────────────────────────
@@ -263,13 +273,13 @@ const splitAt = <T extends Content>(
   offset: number,
   makeSecond: (target: T, rest: string) => T,
 ): ReadonlyArray<T> => {
-  const index = items.findIndex((item) => item.id === id)
-  const target = items[index] // con index -1 sale `undefined`: una comprobación cubre las dos
+  const index: number = items.findIndex((item: T): boolean => item.id === id)
+  const target: T | undefined = items[index] // con index -1 sale `undefined`: una comprobación cubre las dos
   if (target === undefined) return items
   if (offset < 0 || offset > target.text.length) return items
 
-  const first = { ...target, text: target.text.slice(0, offset) }
-  const second = makeSecond(target, target.text.slice(offset))
+  const first: T = { ...target, text: target.text.slice(0, offset) }
+  const second: T = makeSecond(target, target.text.slice(offset))
   return [...items.slice(0, index), first, second, ...items.slice(index + 1)]
 }
 
@@ -282,14 +292,19 @@ export const split = (
   if (existsIn(content, newId)) return content
 
   return updateContainerOf(content, id, {
-    onRoot: (items) =>
-      splitAt(items, id, offset, (target, rest) =>
+    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+      splitAt(items, id, offset, (target: Content, rest: string): Content =>
         // La mitad nueva es de la misma clase que la que se parte.
         isCheckBox(target) ? checkBox(newId, rest) : text(newId, rest),
       ),
-    onParent: (parent) => {
+    onParent: (parent: CheckBox): CheckBox => {
       // Aquí no hay que discriminar: entre hijas todo son casillas.
-      const children = splitAt(parent.children, id, offset, (_, rest) => checkBox(newId, rest))
+      const children: ReadonlyArray<CheckBox> = splitAt(
+        parent.children,
+        id,
+        offset,
+        (_: CheckBox, rest: string): CheckBox => checkBox(newId, rest),
+      )
       return children === parent.children ? parent : { ...parent, children }
     },
   })
@@ -321,21 +336,23 @@ export const merge = (
   id: ContentId,
 ): ReadonlyArray<Content> =>
   updateContainerOf(content, id, {
-    onRoot: (items) => {
-      const index = items.findIndex((item) => item.id === id)
+    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> => {
+      const index: number = items.findIndex((item: Content): boolean => item.id === id)
       if (index <= 0) return items // 0 = la primera de la nota, no hay nada encima
-      const target = items[index]
-      const receiver = items[index - 1]
+      const target: Content | undefined = items[index]
+      const receiver: Content | undefined = items[index - 1]
       if (target === undefined || receiver === undefined) return items
       if (isCheckBox(target) && target.children.length > 0) return items
 
-      const merged = { ...receiver, text: receiver.text + target.text }
+      const merged: Content = { ...receiver, text: receiver.text + target.text }
       return [...items.slice(0, index - 1), merged, ...items.slice(index + 1)]
     },
 
-    onParent: (parent) => {
-      const index = parent.children.findIndex((child) => child.id === id)
-      const target = parent.children[index]
+    onParent: (parent: CheckBox): CheckBox => {
+      const index: number = parent.children.findIndex(
+        (child: CheckBox): boolean => child.id === id,
+      )
+      const target: CheckBox | undefined = parent.children[index]
       if (target === undefined) return parent
       if (target.children.length > 0) return parent
 
@@ -344,13 +361,13 @@ export const merge = (
         return {
           ...parent,
           text: parent.text + target.text,
-          children: parent.children.filter((child) => child.id !== id),
+          children: parent.children.filter((child: CheckBox): boolean => child.id !== id),
         }
       }
 
-      const receiver = parent.children[index - 1]
+      const receiver: CheckBox | undefined = parent.children[index - 1]
       if (receiver === undefined) return parent
-      const merged = { ...receiver, text: receiver.text + target.text }
+      const merged: CheckBox = { ...receiver, text: receiver.text + target.text }
       return {
         ...parent,
         children: [

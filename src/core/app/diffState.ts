@@ -78,10 +78,12 @@ const diffRecord = <TId extends string, T extends { readonly id: TId }>(
 ): EntityChanges<T, TId> | null => {
   if (prev === next) return null // el atajo que lo hace barato
 
-  const upserted = Object.values<T>(next).filter((e) => e !== prev[e.id])
-  const deleted = Object.values<T>(prev)
-    .filter((e) => next[e.id] === undefined)
-    .map((e) => e.id)
+  const upserted: ReadonlyArray<T> = Object.values<T>(next).filter(
+    (e: T): boolean => e !== prev[e.id],
+  )
+  const deleted: ReadonlyArray<TId> = Object.values<T>(prev)
+    .filter((e: T): boolean => next[e.id] === undefined)
+    .map((e: T): TId => e.id)
 
   return upserted.length === 0 && deleted.length === 0
     ? null
@@ -91,9 +93,12 @@ const diffRecord = <TId extends string, T extends { readonly id: TId }>(
 export const diffState = (prev: AppState, next: AppState): StateDiff => {
   if (prev === next) return NO_CHANGES
 
-  const notes = diffRecord(prev.notes, next.notes)
-  const plans = diffRecord(prev.plans, next.plans)
-  const contexts = diffRecord(prev.contexts, next.contexts)
+  const notes: EntityChanges<Note, NoteId> | null = diffRecord(prev.notes, next.notes)
+  const plans: EntityChanges<Plan, PlanId> | null = diffRecord(prev.plans, next.plans)
+  const contexts: EntityChanges<Context, ContextId> | null = diffRecord(
+    prev.contexts,
+    next.contexts,
+  )
 
   /* Los tres a null significa que los mapas cambiaron de objeto pero no de
      contenido —posible si alguien copia sin cambiar nada— y sigue sin haber nada
