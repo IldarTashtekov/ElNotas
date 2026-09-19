@@ -80,6 +80,13 @@ export interface MigrationResult {
  * y el compilador le obliga a mirarlo (`ARCHITECTURE.md` §6.5).
  *
  * Con esto la función es **pura y total**: nunca lanza, pase lo que pase.
+ *
+ * ⚠️ **Y «pase lo que pase» incluye una migración que reviente**, que es la
+ * parte que faltaba y que durante un tiempo esta frase prometía en falso: hasta
+ * que se puso el `try` de abajo, un `migrate` que lanzara **se escapaba de
+ * aquí** —medido, no supuesto—. `migrate` es código ajeno, igual que el `fn` de
+ * `transaction`, y se trata igual: sale por `Result`, como
+ * `migration-failed`.
  */
 /**
  * Lo inyectable, y por qué lo es.
@@ -132,7 +139,21 @@ export const runMigrations = (
       const falta: MigrationError = { kind: "missing-migration", from: actual }
       return err(falta)
     }
-    acumulado = paso.migrate(acumulado)
+    /* ⚠️ LA ÚNICA FRONTERA DE ESTE FICHERO, y la única de todo `core/`.
+       `migrate` es CÓDIGO AJENO: lo escribe quien migra y trabaja sobre datos
+       con forma vieja, que es justo cuando algo revienta. Sin este `try`, una
+       migración que lance se lleva por delante el arranque de la app — y esta
+       función promete en su firma que devuelve el fallo, no que lo lanza. */
+    try {
+      acumulado = paso.migrate(acumulado)
+    } catch (fallo: unknown) {
+      const migracionRota: MigrationError = {
+        kind: "migration-failed",
+        from: actual,
+        cause: fallo,
+      }
+      return err(migracionRota)
+    }
     actual += 1
     applied += 1
   }

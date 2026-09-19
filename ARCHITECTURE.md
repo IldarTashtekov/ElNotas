@@ -1063,8 +1063,9 @@ error— porque es donde más se lee mal el reparto de §6.1:
   la plataforma              localStorage · File System Access API: LANZAN
 ```
 
-**Las seis fronteras del dibujo son todas las que hay**, medido en el código de producción de
-`core/` y `storage/`: seis `try`, cero `throw`. Qué significa cada `kind` y por qué son esos
+**Las fronteras del dibujo son todas las que hay**, medido en el código de producción de
+`core/` y `storage/`: **ocho `try`, cero `throw`** —eran seis hasta que se taparon dos fugas,
+ver más abajo—. Qué significa cada `kind` y por qué son esos
 cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
 del primer dibujo, porque es lo único que el escritor mira para decidir si insiste o se para.
 
@@ -1533,10 +1534,16 @@ ninguno en `src/core/domain/`. **Hoy no queda ninguno vivo:**
 | `core/migrations/runMigrations.ts` | falta un paso de migración en la cadena | `err({ kind: "missing-migration", … })` |
 | `storage/writeBehind.ts` | **no creaba un error: lo relanzaba.** Restauraba `pendiente` y propagaba | el `Result` del adaptador, devuelto **intacto** por `flush()` |
 
+⚠️ **Y contar `throw` era la medida equivocada, cosa que se descubrió más tarde.** Cuenta lo que
+lanzamos nosotros; no cuenta **lo que llamamos sin envolver**, que es por donde se escapaban de
+verdad dos excepciones con cero `throw` en el repo: `encodeURIComponent` dentro de `caminoDe` y
+`paso.migrate()` en el runner. Las dos están tapadas y las vigila `npm run check:fronteras`.
+
 Los `try/catch` que quedan en el código de producción están todos donde manda el principio 2 de
 más abajo: **la frontera del adaptador**. En `MemoryStorageAdapter` es una sola —la de
 `transaction`, que es lo único de ese fichero que ejecuta código ajeno—; en
-`FileStorageAdapter` son tres, y las tres se justifican solas: `transaction` por lo mismo, y las
+`FileStorageAdapter` son cuatro, y las cuatro se justifican solas: `transaction` por lo mismo,
+`caminoDe` porque `encodeURIComponent` lanza, y las
 dos de la serialización, porque `JSON.parse` lanza y un `TextDecoder` con `fatal: true` también.
 
 Y **cero aserciones no-nulas** (`algo!.campo`) en el código, así que tampoco había excepciones
@@ -1584,7 +1591,17 @@ export type StorageError =
 export type MigrationError =
   | { readonly kind: "schema-from-future"; readonly stored: number; readonly supported: number }
   | { readonly kind: "missing-migration";  readonly from: number }
+  | { readonly kind: "migration-failed";   readonly from: number; readonly cause: unknown }
 ```
+
+**El tercero de `MigrationError` llegó después, y por un agujero medido.** Los dos primeros
+describen cosas que el runner comprueba **antes** de tocar nada; `migration-failed` describe lo
+único que no controla: **`migrate` es código ajeno**, lo escribe quien migra y trabaja sobre
+datos con forma vieja. Hasta que se envolvió, una migración que lanzara **se escapaba de
+`runMigrations` como excepción** —comprobado con una sonda—, justo desde la función que esta
+sección llama *pura y total*. No era alcanzable en producción sólo porque `MIGRATIONS` está
+vacía; la primera migración de verdad es exactamente este caso, y corre **al arrancar la app
+sobre las notas del usuario**.
 
 **`corrupt` no va dentro de `io`, y es deliberado.** Si un solo fichero de nota está corrupto,
 lo correcto es apartar esa nota y abrir todas las demás. Por el camino genérico la app
@@ -2612,13 +2629,27 @@ abierto:
    código ajeno, y las dos de la serialización, porque `JSON.parse` lanza y un `TextDecoder` con
    `fatal: true` también—; en cada `BlobStore` es **una**, y en el de la carpeta esa única
    frontera lleva el `await` dentro a propósito: sin él una promesa rechazada se escaparía del
-   `try`. **Medido: seis `try` en todo el código de producción de `core/` y `storage/`, y cero
-   `throw`.** La fase no podía ser la que estrenara uno. **El guardián de `tools/` no entra en el
-   criterio**:
-   `TAREAS.md` lo marca opcional y una fase no se bloquea por una casilla opcional. Lo que se
-   exige es el hecho, no la herramienta — con el precio dicho en voz alta: mientras el guardián
-   no exista, esa regla la sostiene la revisión y no la comprobación, que es justo lo contrario
-   de como se sostiene todo lo demás aquí.
+   `try`. **Medido al cerrar la fase: seis `try` en todo el código de producción de `core/` y
+   `storage/`, y cero `throw`.** La fase no podía ser la que estrenara uno.
+
+   ⚠️ **Y ese recuento se quedó corto, cosa que se descubrió DESPUÉS de cerrar la fase.**
+   Contar `try` y `throw` mide lo que nosotros lanzamos; no mide **lo que llamamos sin
+   envolver**, que resultó ser el agujero de verdad. Había dos, los dos medidos con una sonda:
+   `encodeURIComponent` dentro de `caminoDe` —`URIError` con un surrogate suelto, y `get`, `put`
+   y `delete` lo llamaban fuera de toda frontera— y `paso.migrate()` en `runMigrations`, que es
+   código ajeno. Hoy son **ocho `try`** y el punto se sostiene de verdad. **Esto no reabre la
+   fase** —el criterio se cumplía con lo que se sabía medir entonces— pero sí corrige el método:
+   la pregunta buena no es «¿cuántos `throw` hay?» sino «¿alguna llamada que lanza puede llegar
+   a una firma pública?».
+
+   **Y el guardián ya existe: `npm run check:fronteras`.** No entraba en el criterio —`TAREAS.md`
+   lo marcaba opcional y una fase no se bloquea por una casilla opcional—, y se escribió al
+   encontrar las dos fugas. Entiende la cobertura **transitiva**, que es lo que lo hace
+   utilizable: seis ayudantes locales están a salvo sólo porque se les llama desde dentro de una
+   frontera, y sin esa regla el guardián los marcaría a los seis. Aplicado al código de antes de
+   los arreglos, señala exactamente las dos fugas y ninguna más. Cae por tanto el precio que
+   este punto daba por asumido: esa regla ya no la sostiene la revisión sino la comprobación,
+   como todo lo demás aquí.
 7. **✅ `npm run check` en verde**, con la verja y el guardián de pureza, y **el recuento de
    pruebas anotado al cerrarla**, como en §9.5 y §9.8. **La cifra de cierre son 314 pruebas**
    —99 al cerrar la Fase 1, 216 al cerrar la 2—. Y una previsión que salió mal y

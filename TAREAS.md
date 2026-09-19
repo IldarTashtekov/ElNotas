@@ -324,17 +324,38 @@ validación de esquema, y la escritura condicional.
         comportamiento viejo —reintentar siempre a ciegas— tumba **5**. Por eso los cuatro casos
         no reintentables se prueban **uno a uno** y no con un representante: con un solo ejemplo,
         mover un `kind` de lado no tumbaría nada.
-  - [ ] *(Opcional, y sigue pendiente. **Fuera del criterio de cierre de la Fase 3**: §9.9 exige
-        el hecho, no la herramienta, y una fase no se bloquea por una casilla opcional)* **Un
-        guardián en `tools/`** que falle si aparece un `throw` fuera de la frontera de los
-        adaptadores (`src/storage/*/`), al estilo de `tools/check-core-purity.mjs`. Hoy no queda
-        ninguno —medido: **cero `throw` y seis `try` en todo el código de producción de `core/` y
-        `storage/`**, uno en el de memoria, tres en el de fichero y uno en cada `BlobStore`—, así
-        que el guardián sólo tendría que **mantenerlo así**; sin él la regla dura lo que dure la
-        memoria, que es justo lo contrario de como se sostiene todo lo demás aquí. Necesita el
-        mismo escáner que borra comentarios y cadenas, y **no puede prohibir el `throw` a secas**:
-        por debajo de la frontera de cada adaptador hay `try/catch` legítimo, porque `JSON.parse`
-        y la File System Access API lanzan por su cuenta.
+  - [x] **Un guardián en `tools/`** — ✅ Hecho, `tools/check-fronteras.mjs`, enchufado como
+        `npm run check:fronteras`. **Pero NO es el que decía esta casilla, y el cambio de idea es
+        lo que hay que leer:** aquí ponía «que falle si aparece un `throw` fuera de la frontera».
+        **Ese guardián habría dado verde con dos fugas reales dentro**, porque el peligro no es
+        lo que lanzamos nosotros —hay **cero `throw`** en el repo y sigue habiéndolos— sino **lo
+        que llamamos sin envolver**. Las dos fugas, encontradas leyendo el código y probadas con
+        una sonda:
+    - **`encodeURIComponent` dentro de `caminoDe`** (`FileStorageAdapter`), que lanza `URIError`
+      con un surrogate suelto. `get`, `put` y `delete` lo llamaban **fuera de toda frontera**, o
+      sea lanzando por una firma que promete `Result`. Estaba tapado **por accidente**: el único
+      consumidor de producción es el write-behind, que llama desde dentro de `transaction`. En
+      cuanto `platform/` (Fase 4) llamara al repositorio directamente, se acababa el accidente.
+      Arreglado: `caminoDe` devuelve `Result` y el compilador obliga a tratarlo en los tres
+      sitios. **3 pruebas**, y se cae rompiéndolo.
+    - **`paso.migrate()` en `runMigrations`**, que es código ajeno y estaba sin `try`, desde la
+      función que su propio comentario llamaba «pura y **total**: nunca lanza, pase lo que
+      pase». No era alcanzable sólo porque `MIGRATIONS` está vacía; la primera migración de
+      verdad es este caso, al arrancar y sobre las notas del usuario. Arreglado con la frontera
+      y un **tercer caso de `MigrationError`**, `migration-failed`, con `from` y `cause`.
+      **2 pruebas.**
+
+        **Cómo funciona el guardián, que es lo que lo hace utilizable:** entiende la cobertura
+        **transitiva**. Seis ayudantes locales —`aBase64`, `deBase64`, `navegar`, `caminosBajo`,
+        `entradasDe` y los del blob— llaman a cosas que lanzan **sin ningún `try` propio**: los
+        protege quien los llama. Sin esa regla el guardián marcaría los seis y sería ruido. Y es
+        exactamente esa forma de estar a salvo —depender del sitio de llamada— la que falló en
+        `caminoDe`, que era idéntico a los otros seis.
+        **Verificado en los tres sentidos:** pasa limpio; devolviéndole los dos agujeros reales
+        señala **esos dos y ninguno más, en su línea exacta**; y caza una regresión nueva (un
+        `JSON.parse` suelto en un método público). Recorre el AST, así que **no necesita** el
+        escáner que borra comentarios y cadenas que sí necesitó `check-core-purity.mjs`.
+        Hoy son **ocho `try` y cero `throw`**.
 
       **Lo que NO se tocó, y así sigue:** que `get` de algo que no está guardado devuelva
       `ok(null)`, y que borrar lo que no existe no sea un error. **Ausencia no es fallo**, y
@@ -480,12 +501,33 @@ validación de esquema, y la escritura condicional.
       hoy un stub de compatibilidad de 18 líneas —«This file's contents are now included in the
       main types file»— y `FileSystemDirectoryHandle.values()` está declarado dentro de
       `lib.dom.d.ts`, que la app ya carga (`lib: ["ES2020", "DOM", "DOM.Iterable"]`).
-      **Comprobado con una sonda**, fuera del repo: un `for await (const e of c.values())` sin
-      ningún tipo declarado a mano pasa `npm run typecheck` limpio.
-      **Qué hay que hacer:** borrar la interfaz, el `entradasDe` que castea y el párrafo del
-      comentario que dice algo falso — el propio fichero ya avisa de que «si algún día se activa
-      esa lib, esto se borra y no cambia nada». **No urge y no rompe nada**; lo que importa es
-      que el comentario no siga explicando una limitación que no existe.
+      **Recomprobado el 2026-09-19 mirando los ficheros de `node_modules/typescript/lib`, no
+      con una sonda:** `lib.dom.asynciterable.d.ts` son **18 líneas** —licencia y una nota de
+      compatibilidad, ya no declara nada— y `values()` está en **`lib.dom.d.ts:45115`**, dentro
+      de una segunda declaración de `FileSystemDirectoryHandle` que se fusiona con la primera.
+      **Qué hay que hacer:** borrar la interfaz, el `entradasDe` que castea, cambiar la llamada
+      a `carpeta.values()` y borrar el párrafo del comentario que dice algo falso — el propio
+      fichero ya avisa de que «si algún día se activa esa lib, esto se borra y no cambia nada».
+
+      **⚠️ CUÁNDO: agrupado con la Fase 4, NO suelto. El reparto de coste es el que manda:**
+      el cambio son ~15 minutos; **repasar la lista de verificación manual que obliga es una
+      tarde** con Chromium y las manos del usuario. Y obliga, sin escapatoria:
+  - **`entradasDe` no es un tipo, es un `const` con una función dentro**, o sea que existe en
+    tiempo de ejecución. Al quitarlo desaparece una función del módulo y cambia el sitio de la
+    llamada: **el JavaScript emitido cambia**, así que la excepción registrada en la casilla del
+    tipado —«emitido idéntico ⇒ no se repite la lista»— **no le aplica**.
+  - **Ni siquiera tocar sólo el comentario se escapa:** `removeComments` no está puesto en
+    ningún `tsconfig`, comprobado, así que los comentarios **viajan al emitido** y un cambio
+    sólo en el comentario también movería bytes. Dentro de un comentario, pero los movería.
+
+      **Qué lo desbloquea:** cualquier trabajo de la Fase 4 que abra ese fichero de todas
+      formas — el botón de «reconectar carpeta», el `onError` o el `onCorrupt`, que pasan los
+      tres por aquí. Ese día la lista se repasa igualmente y este refactor viaja gratis.
+      **Mientras tanto, y cuesta cero:** el daño de hoy no es el código muerto sino que el
+      comentario **miente** y alguien se lo va a creer. Eso se tapa sin tocar el fichero, con
+      una línea en la decisión cerrada de `CLAUDE.md` sobre declarar tipos de plataforma a mano
+      —que es donde mira quien se plantee declarar otro— diciendo que el que hay ya es un caso
+      de eso y está aquí anotado.
 
 ### Infraestructura (`infra-agent`)
 

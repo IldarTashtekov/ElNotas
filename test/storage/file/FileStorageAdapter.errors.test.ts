@@ -130,6 +130,49 @@ test("FileStorageAdapter: un id con barra dentro NO escapa de su carpeta", async
   assert.ok(!camino.slice("notes/".length).includes("/"), camino)
 })
 
+/*
+    ⚠️ Los tres de abajo cubren un agujero real y medido, no uno hipotético:
+    `encodeURIComponent` LANZA con un surrogate suelto, y `get`, `put` y
+    `delete` lo llamaban fuera de toda frontera. Lanzaban por una firma que
+    promete `Result`.
+
+    Estaba tapado por accidente —el write-behind llama desde dentro de
+    `transaction`, cuyo `try` lo traducía a `io`—, y el accidente se acababa en
+    cuanto `platform/` llamara al repositorio directamente.
+
+    Por eso los tres llaman al método A PELO, sin `transaction` de por medio:
+    probarlos por dentro de una transacción volvería a tapar lo que se quiere
+    comprobar. Si alguien vuelve a sacar el cálculo del camino de su frontera,
+    estos tres dejan de pasar por rechazo de la promesa, no por un assert.
+*/
+const ID_IMPOSIBLE: string = "nota-\uD800" // un surrogate suelto
+
+test("FileStorageAdapter: un id que no se puede codificar sale por Result, no lanzando", async () => {
+  const { s } = montar()
+
+  const leido = await s.notes.get(noteId(ID_IMPOSIBLE))
+  assert.equal(leido.ok, false)
+  assert.equal(errorDe(leido).kind, "corrupt")
+})
+
+test("FileStorageAdapter: put con un id no codificable devuelve corrupt y NO escribe", async () => {
+  const { blobs, s } = montar()
+
+  const escrito = await s.notes.put({ ...COMPRA, id: noteId(ID_IMPOSIBLE) })
+  assert.equal(escrito.ok, false)
+  assert.equal(errorDe(escrito).kind, "corrupt")
+  // Lo que de verdad importa: no se quedó medio escrito por ahí.
+  assert.deepEqual(blobs.caminos(), [])
+})
+
+test("FileStorageAdapter: delete con un id no codificable devuelve corrupt", async () => {
+  const { s } = montar()
+
+  const borrado = await s.notes.delete(noteId(ID_IMPOSIBLE))
+  assert.equal(borrado.ok, false)
+  assert.equal(errorDe(borrado).kind, "corrupt")
+})
+
 test("FileStorageAdapter: delete borra el fichero, no lo deja vacío", async () => {
   const { blobs, s } = montar()
   await s.notes.put(COMPRA)

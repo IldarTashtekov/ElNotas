@@ -154,9 +154,42 @@ interface Manifest {
  * lo que impide es que un id con `/` o `..` dentro escriba **fuera de su
  * carpeta**. No hace falta descodificar nunca: el id de vuelta sale de dentro
  * del JSON, no del nombre del fichero.
+ *
+ * ── ⚠️ Por qué devuelve `Result` y no una cadena ───────────────────────────
+ *
+ * **Porque `encodeURIComponent` LANZA.** Con un surrogate suelto dentro del id
+ * —`"nota-\uD800"`— tira un `URIError: URI malformed`. Y esto no es teórico: un
+ * id llega desde el disco, donde lo único que se comprueba de él es que sea una
+ * cadena (ver `entidadDe`; validar el esquema es otra tarea). Un `notes/x.json`
+ * tocado a mano o escrito a medias mete ese id en `AppState`.
+ *
+ * Devolviéndolo pelado, los tres métodos que lo usan —`get`, `put` y `delete`—
+ * **lanzaban por una firma que promete `Result`**, que es justo lo que §6.5
+ * prohíbe. Estaba tapado por accidente: el único consumidor de producción es el
+ * write-behind, que llama desde dentro de `transaction`, y su `try` lo traducía
+ * a `io`. En cuanto `platform/` (Fase 4) llame a `adapter.notes.get(id)`
+ * directamente, el accidente se acaba.
+ *
+ * **Con `Result` deja de depender de quién llame:** el tipo obliga a tratarlo en
+ * los tres sitios, y no hay forma de usarlo mal sin que el compilador proteste.
+ *
+ * Sale `corrupt` y no `io` por el criterio de §6.5 —*¿reintentar sirve de
+ * algo?*—: el id va a seguir siendo inválido la próxima vez. Y `corrupt` es
+ * además el único `kind` que lleva `path`, o sea el único que puede **decir
+ * cuál** es la entidad que no se puede nombrar.
  */
-const caminoDe = (carpeta: string, id: string): string =>
-  `${carpeta}${encodeURIComponent(id)}${EXTENSION}`
+const caminoDe = (carpeta: string, id: string): Result<string, StorageError> => {
+  try {
+    return ok(`${carpeta}${encodeURIComponent(id)}${EXTENSION}`)
+  } catch (fallo: unknown) {
+    const idImposible: StorageError = {
+      kind: "corrupt",
+      path: `${carpeta}<id no representable>${EXTENSION}`,
+      cause: fallo,
+    }
+    return err(idImposible)
+  }
+}
 
 /**
  * Si un camino del `list` es una entidad de esta carpeta y no otra cosa.
@@ -285,7 +318,10 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
   carpeta: string,
 ): Repository<T, TId> => ({
   get: async (id: TId): Promise<Result<T | null, StorageError>> => {
-    const camino: string = caminoDe(carpeta, id)
+    const destino: Result<string, StorageError> = caminoDe(carpeta, id)
+    if (!destino.ok) return destino
+
+    const camino: string = destino.value
     const leido: Result<Uint8Array | null, StorageError> = await blobs.read(camino)
 
     // El err del BlobStore, TAL CUAL. Envolverlo perdería el `kind` de origen.
@@ -364,19 +400,26 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
   },
 
   put: async (entity: T): Promise<Result<void, StorageError>> => {
+    const destino: Result<string, StorageError> = caminoDe(carpeta, entity.id)
+    if (!destino.ok) return destino
+
     const bytes: Result<Uint8Array, StorageError> = aBytes(entity)
     if (!bytes.ok) return bytes
 
     /* El `Result` del `BlobStore` sale tal cual, sin mirarlo siquiera: si es un
        `quota-exceeded`, quien llama necesita ese `kind` para dejar de insistir
        y avisar de que hay que hacer hueco. */
-    return blobs.write(caminoDe(carpeta, entity.id), bytes.value)
+    return blobs.write(destino.value, bytes.value)
   },
 
   /* Borrar lo que no está no es un error, y aquí no hay nada que hacer para
      conseguirlo: el propio `BlobStore` promete lo mismo en su puerto. */
-  delete: async (id: TId): Promise<Result<void, StorageError>> =>
-    blobs.delete(caminoDe(carpeta, id)),
+  delete: async (id: TId): Promise<Result<void, StorageError>> => {
+    const destino: Result<string, StorageError> = caminoDe(carpeta, id)
+    if (!destino.ok) return destino
+
+    return blobs.delete(destino.value)
+  },
 })
 
 /* ═════════════════════════════ El adaptador ═══════════════════════════════ */

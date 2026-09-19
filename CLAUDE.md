@@ -36,7 +36,7 @@ código en `src/core/` y `src/storage/`, y ~4930 de pruebas en `test/`, que es c
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
   marcados, `ItemRef`, `AppState` normalizado y sus constructores;
 - **`Result<T, E>`** en `domain/Result.ts` con `ok` y `err`, y **las dos taxonomías de error**
-  en `domain/errors/`: `StorageError` (cinco casos) y `MigrationError` (dos). En el código de
+  en `domain/errors/`: `StorageError` (cinco casos) y `MigrationError` (tres). En el código de
   producción de `core/` y `storage/` **no queda ni un `throw`**;
 - **`Position`** — el vocabulario del "dónde", tres casos, uno por cada modo de escritura;
 - **el helper de copia por camino, con sus dos primitivas** — `updateContent.ts` (A:
@@ -198,12 +198,22 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 - **Los errores no se propagan: se devuelven.** Lo que pueda fallar devuelve
   `Result<T, StorageError>`, no lanza. Un `throw` no sale en ninguna firma, así que quien llama
   no se entera. **El `try/catch` no desaparece, se confina:** vive sólo en las funciones frontera
-  que hablan con lo que lanza —**seis en todo el código de producción**: una en el adaptador de
-  memoria, tres en el de fichero (`JSON.parse` y `TextDecoder` lanzan) y **una en cada
-  `BlobStore`**— y las traduce; por encima de esa línea nada lanza —y
+  que hablan con lo que lanza —**ocho en todo el código de producción**: una en el adaptador de
+  memoria, **cuatro** en el de fichero (`JSON.parse`, `TextDecoder` y `encodeURIComponent`
+  lanzan), **una en cada `BlobStore`** y **una en `runMigrations`**, que ejecuta la migración
+  ajena— y las traduce; por encima de esa línea nada lanza —y
   eso incluye el código ajeno: una excepción dentro de `transaction` **no escapa**, se traduce
   a `io`. Ojo: **ausencia no es fallo** — `get` de algo que no está es `ok(null)`. El tipo, la
   taxonomía y el porqué, en `ARCHITECTURE.md` §6.5.
+- **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** No hay ni un `throw` en el
+  repo y aun así se escapaban dos excepciones, las dos encontradas y medidas:
+  `encodeURIComponent` dentro de `caminoDe` —lanza `URIError` con un surrogate suelto— y
+  `paso.migrate()` en el runner, que es código ajeno. Un guardián que buscara `throw` habría
+  dado verde con las dos ahí. **Antes de llamar a algo de plataforma, pregúntate si lanza**, y
+  si lanza, que esté dentro de un `try`, de `frontera()`/`transaction()`, o de un ayudante al
+  que sólo se llame desde dentro de una frontera. Eso último es **frágil a propósito de
+  reconocer**: seis ayudantes están a salvo sólo por dónde se les llama, y `caminoDe` era el
+  séptimo hasta que dejó de estarlo. Lo vigila `npm run check:fronteras`.
 - **Un error es una entidad del dominio: nace en `src/core/domain/errors/`**, no en el módulo
   que da la casualidad de producirlo. Ahí están `StorageError` y `MigrationError`, y ahí va el
   siguiente. La carpeta **no lleva `index.ts`** —`domain/` tampoco— porque la API pública del
@@ -435,13 +445,14 @@ conserva como registro.
 ## Comandos
 
 ```bash
-npm run check           # las cuatro de abajo, en orden. Esto antes de commit.
+npm run check            # las cinco de abajo, en orden. Esto antes de commit.
 
-npm test                # limpia tmp-test/, compila src/ y test/, EXIGE que haya pruebas,
-                        # y lanza node --test sobre tmp-test/test
-npm run typecheck       # tsc de la app: sólo src/, que es donde vive el código
-npm run typecheck:core  # LA VERJA: falla si el core toca plataforma
-npm run check:purity    # EL OTRO GUARDIÁN: falla si el core lee el reloj o el azar
+npm test                 # limpia tmp-test/, compila src/ y test/, EXIGE que haya pruebas,
+                         # y lanza node --test sobre tmp-test/test
+npm run typecheck        # tsc de la app: sólo src/, que es donde vive el código
+npm run typecheck:core   # LA VERJA: falla si el core toca plataforma
+npm run check:purity     # GUARDIÁN: falla si el core lee el reloj o el azar
+npm run check:fronteras  # GUARDIÁN: falla si una excepción puede escaparse de su frontera
 ```
 
 No hay `build` ni `serve` hasta la Fase 4. `npm audit` da 0 vulnerabilidades.

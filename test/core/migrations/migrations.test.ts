@@ -179,6 +179,69 @@ test("falta la migración que hace falta: lo DEVUELVE en vez de corromper", () =
   }
 })
 
+test("una migración que REVIENTA se devuelve, no se escapa lanzando", () => {
+  /*
+      ⚠️ El agujero que esto cierra era real y estaba medido: `paso.migrate()`
+      se llamaba sin `try`, así que una migración que lanzara **salía de
+      `runMigrations` como excepción** — por una firma que promete `Result` y
+      desde la función que este fichero llama "pura y TOTAL".
+
+      No era alcanzable en producción sólo porque `MIGRATIONS` está vacía. La
+      primera migración de verdad es exactamente este caso, y corre al arrancar
+      la app sobre las notas del usuario: el peor sitio para una excepción
+      suelta.
+
+      `migrate` es código ajeno, igual que el `fn` de `transaction`, y por eso
+      se trata igual.
+  */
+  const explosivo: Error = new Error("el fichero viejo no tenía ese campo")
+  const pasos: ReadonlyArray<Migration> = [
+    {
+      from: 1,
+      migrate: (): unknown => {
+        throw explosivo
+      },
+    },
+  ]
+
+  const fallo: MigrationError = errorDe(
+    runMigrations("viejo", 1, { migrations: pasos, target: 2 }),
+  )
+
+  assert.equal(fallo.kind, "migration-failed")
+  if (fallo.kind === "migration-failed") {
+    // Qué paso reventó, sin lo cual no hay forma de arreglarlo.
+    assert.equal(fallo.from, 1)
+    // Y la excepción original INTACTA, no un mensaje reescrito.
+    assert.strictEqual(fallo.cause, explosivo)
+  }
+})
+
+test("si una migración revienta, las siguientes NI SE INTENTAN", () => {
+  let segundaLlamada: boolean = false
+  const pasos: ReadonlyArray<Migration> = [
+    {
+      from: 1,
+      migrate: (): unknown => {
+        throw new Error("boom")
+      },
+    },
+    {
+      from: 2,
+      migrate: (d: unknown): unknown => {
+        segundaLlamada = true
+        return d
+      },
+    },
+  ]
+
+  errorDe(runMigrations("viejo", 1, { migrations: pasos, target: 3 }))
+
+  /* Seguir encadenando sobre datos que se quedaron a medias es justo la forma
+     de corromperlos, que es lo que esta taxonomía existe para evitar. */
+  assert.equal(segundaLlamada, false)
+})
+
 test("datos de una versión MÁS NUEVA que el código: lo DEVUELVE", () => {
   /*
       Pasa de verdad: alguien abre su fichero con una versión nueva de la app y
