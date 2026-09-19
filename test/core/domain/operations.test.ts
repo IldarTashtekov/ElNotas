@@ -3,7 +3,7 @@
  *
  * Cada operación se prueba por **valor** (hace lo que dice) y por **identidad**
  * (y no hace nada más). Los casos de "no hace nada" son la mitad de la
- * especificación, así que cada fila de la tabla de `ARCHITECTURE.md` §9.3 tiene
+ * especificación, así que cada fila de la tabla de casos no-op tiene
  * aquí su prueba, con `assert.strictEqual` y nunca `deepStrictEqual`.
  */
 
@@ -26,7 +26,7 @@ import {
 } from "#core/domain/operations"
 
 /* ─────────────────────────── El árbol de pruebas ───────────────────────────
-    La misma lista de la compra de ARCHITECTURE.md §2.3:
+    La misma lista de la compra que usa `ARCHITECTURE.md` de ejemplo:
 
         Text     "Compra semanal"
         CheckBox "Fruta"

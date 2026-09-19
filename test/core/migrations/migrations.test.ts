@@ -115,7 +115,7 @@ test("un arranque NORMAL devuelve los contextos INTACTOS, por referencia", () =>
       ⚠️ La prueba que evita que la app se reescriba entera cada vez que arranca.
       `filter` crea siempre un array nuevo: si `hydrate` copiara los contextos sin
       necesidad, el primer diff contra lo guardado los daría todos por sucios y el
-      write-behind los volcaría a disco sin que nada hubiera cambiado (§3).
+      write-behind los volcaría a disco sin que nada hubiera cambiado.
   */
   const sano = contexto(ID_CASA, [noteRef(ID_COMPRA)])
   const vacio = contexto(ID_VACIO, [])

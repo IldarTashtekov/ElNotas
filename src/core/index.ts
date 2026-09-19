@@ -1,22 +1,12 @@
 /**
  * API pública del core.
  *
- * Todo lo que consuman ui/, storage/ o platform/ se importa desde aquí (vía el
- * alias #core/ declarado en package.json), nunca apuntando a ficheros internos:
- * es lo que hace que el límite del módulo exista de verdad y que moverlo a
- * packages/core algún día sea trivial.
+ * Todo lo que consuman `ui/`, `storage/` o `platform/` se importa desde aquí, por
+ * el alias `#core/`, nunca apuntando a ficheros internos: es lo que hace que el
+ * límite del módulo exista de verdad. Dentro del core, los imports son relativos.
  *
- * Dentro del core, en cambio, los imports son relativos.
- *
- * Lo que sale por aquí son cinco grupos: el **modelo** (entidades, IDs,
- * contenido, `Position`, `Result` y los errores), las **ocho operaciones** sobre
- * el contenido de una nota, la **capa de aplicación** (las diecisiete acciones,
- * `createStore`, `createUseCases`, `diffState`), la **mitad pura del arranque**
- * (`hydrate`, `runMigrations`) y los **cinco puertos**.
- *
- * Y hay tres cosas que a propósito NO salen, porque son maquinaria interna: las
- * dos primitivas del helper de copia por camino (`updateContent` y
- * `updateContainerOf`) y `reduce`, al que se llega por el `Store`.
+ * Tres cosas NO salen a propósito, porque son maquinaria interna: las dos
+ * primitivas de copia por camino y `reduce`, al que se llega por el `Store`.
  */
 
 /* Identificadores y referencias */
@@ -44,7 +34,7 @@ export {
 export type { CheckBox, Content, Text } from "./domain/Content"
 export { checkBox, isCheckBox, isText, text } from "./domain/Content"
 
-/* El fallo como valor: lo que puede fallar lo devuelve, no lo lanza (§6.5).
+/* El fallo como valor: lo que puede fallar lo devuelve, no lo lanza.
    Quien lo produce vive fuera del core —los adaptadores de `storage/`—, así que
    el tipo y sus dos constructores salen por aquí. `Result` es el sobre y va
    suelto en `domain/`: un `Result<Note, never>` no lleva ningún error dentro. */

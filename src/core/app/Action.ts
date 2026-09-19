@@ -2,17 +2,12 @@
  * Las acciones: objetos planos que describen **qué ha pasado**.
  *
  * Una acción no es una función y no hace nada por sí misma. Es un dato, como un
- * apunte en un libro de cuentas. Y que sea un dato tiene consecuencias
- * prácticas: se puede registrar, guardar, comparar en una prueba, o mandar por
- * la red tal cual.
+ * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
+ * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * El catálogo son **diecisiete** (`ARCHITECTURE.md` §9.7) y no están inventadas:
- * cada una sale de un campo del modelo que alguien tiene que poder cambiar, o de
- * una operación de la Fase 1 que ya existe y no tenía quien la despachara. Aquí
- * están las **ocho de contenido**; las de Nota y Contexto van abajo.
- *
- * Es una unión discriminada por `type`, y eso hace que el `switch` del reducer
- * **deje de compilar** en cuanto se añada una acción sin tratar.
+ * Son diecisiete. Aquí están las ocho de contenido; las de Nota y Contexto, abajo.
+ * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
+ * compilar** en cuanto se añada una acción sin tratar.
  */
 
 import type { Content } from "../domain/Content"
@@ -26,7 +21,7 @@ import type { Position } from "../domain/Position"
  * Es lo peculiar de este proyecto y merece explicación: el reducer es puro, así
  * que no puede pedirle la hora al reloj ni una revisión al generador. Se las
  * tienen que dar hechas. Quien las construye es la capa de casos de uso, que es
- * la única con los puertos inyectados (`ARCHITECTURE.md` §2.1).
+ * la única con los puertos inyectados.
  *
  * De propina: como el `meta` se construye **una vez** por acción, todas las
  * entidades que esa acción toque reciben exactamente la misma marca de tiempo,
@@ -66,7 +61,7 @@ export interface SetText {
  *
  * El bloque llega **ya construido, con su id**, porque el dominio no genera
  * identificadores: lo hace el caso de uso, que es quien tiene el `IdGenerator`.
- * Y el "aquí" es un `Position`, que tiene tres casos y ni uno más (§9.4).
+ * Y el "aquí" es un `Position`, que tiene tres casos y ni uno más.
  */
 export interface Insert {
   readonly type: "insert"
@@ -156,7 +151,7 @@ export interface RenameNote {
  *
  * **La primera acción del proyecto que toca dos entidades a la vez:** hay que
  * quitarla también de todos los contextos que la listaban, o queda una `ItemRef`
- * apuntando a nada (§9.7).
+ * apuntando a nada.
  */
 export interface DeleteNote {
   readonly type: "delete-note"
@@ -189,7 +184,7 @@ export interface DeleteContext {
   readonly meta: ActionMeta
 }
 
-/** «Se metió una nota o un plan en este contexto». No-op si no existe (§9.7). */
+/** «Se metió una nota o un plan en este contexto». No-op si no existe. */
 export interface AddItem {
   readonly type: "add-item"
   readonly contextId: ContextId

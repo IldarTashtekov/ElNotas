@@ -1,22 +1,14 @@
 /**
- * El vocabulario del "dónde".
+ * El vocabulario del «dónde» al insertar una línea.
  *
- * El modelo sabe direccionar **nodos** (`ContentId`), pero no **posiciones**: un
- * id dice "esta casilla", no dice "justo detrás de esta casilla". `insert` lo
- * necesita, y esto es lo que le falta al modelo para poder expresarlo.
+ * El modelo sabe señalar nodos —«esta casilla»— pero no posiciones —«justo detrás
+ * de esta casilla»—, y eso es lo que le hace falta a `insert`.
  *
- * **Son tres casos y ninguno más** (`ARCHITECTURE.md` §9.4). No es casualidad que
- * sean tres: son exactamente los tres estados de `ModosEscritura` (§7.3), o sea
- * qué nace al pulsar Intro según el modo activo.
+ * Son tres casos y ninguno más, uno por cada modo de escritura:
  *
  *     Modo "Texto"        → root-end       otra línea suelta al final
  *     Modo "Casilla"      → after          una casilla hermana
  *     Modo "Casilla hija" → last-child-of  una casilla un nivel dentro
- *
- * Quedan fuera `before`, `first-child-of` y `root-start`, y quedan fuera por
- * coste: cada caso es una rama más que probar en quien lo consuma. El disparador
- * para reabrirlo es el arrastrar y soltar de la Fase 4, que va en el mismo
- * paquete que `move`.
  */
 
 import type { ContentId } from "./Ids"

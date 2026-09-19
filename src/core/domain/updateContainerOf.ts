@@ -1,37 +1,14 @@
 /**
- * Copia por camino, **primitiva B**: *transformar el contenedor de una línea*.
+ * Transformar el contenedor de una línea: la lista raíz de la nota, o la casilla
+ * de la que cuelga.
  *
- * La primitiva A (`updateContent.ts`) sabe sustituir una línea por otra, y con
- * eso basta para `setText` y `setChecked`. Pero recorre la lista pidiendo un
- * reemplazo por cada elemento, así que la lista que sale tiene **siempre** tantas
- * líneas como la que entró: no puede añadir, ni quitar, ni convertir una línea en
- * dos. Y eso es justo lo que hacen `insert`, `remove`, `split` y `merge`.
+ * Es la pieza que permite **cambiar cuántas líneas hay** —añadir, quitar, partir
+ * una en dos, unir dos en una—, que es lo que la primitiva A no puede hacer:
+ * aquélla sustituye una línea por otra y la lista sale siempre del mismo tamaño.
  *
- * ── Qué es un "contenedor" ─────────────────────────────────────────────────
- *
- * Toda línea vive en uno de dos sitios, y sólo dos:
- *
- *   - en la **raíz** de la nota, y entonces su contenedor es la lista raíz;
- *   - como **hija de una casilla**, y entonces su contenedor es esa casilla.
- *
- * Nótese que en el segundo caso el contenedor es **la casilla madre entera**, no
- * sólo su lista de hijas. No es un capricho: `merge` necesita que la madre
- * cambie de texto **y** pierda una hija a la vez, cuando absorbe a su primera
- * hija (§9.3).
- *
- * ── Por qué dos transformaciones y no una ──────────────────────────────────
- *
- * El mismo motivo que en la primitiva A: en la raíz conviven textos y casillas,
- * y en profundidad sólo hay casillas. Con una firma genérica se podría **meter un
- * texto suelto dentro de una casilla**, que es exactamente lo que el modelo
- * prohíbe. Partiéndola en dos, `onParent` recibe y devuelve una `CheckBox`, así
- * que sus hijas sólo pueden ser casillas: la regla la hace cumplir el compilador
- * y no hay comprobación que acordarse de escribir.
- *
- * ⚠️ Misma invariante que la A: **si nada cambia, se devuelve el array de
- * entrada.** Aquí la responsabilidad es compartida — la transformación tiene que
- * devolver *su* entrada tal cual cuando no aplique, y a cambio esta función
- * propaga esa identidad hasta la raíz.
+ * ⚠️ Si nada cambia se devuelve el array de entrada, sin copiar. La
+ * transformación tiene que colaborar devolviendo *su* entrada tal cual cuando no
+ * le toque hacer nada.
  */
 
 import type { CheckBox, Content } from "./Content"

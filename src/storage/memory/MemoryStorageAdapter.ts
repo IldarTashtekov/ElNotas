@@ -1,46 +1,15 @@
 /**
- * Almacenamiento en memoria: tres `Map` y un número.
+ * Almacenamiento en memoria: tres `Map` y un número. Se borra al recargar.
  *
- * Es el primer adaptador del proyecto, y está terminado **cuando pasa la suite
- * de contratos** (`../contract-tests/storageContract.test.ts`), no cuando parece
- * que funciona. Esa es la única definición de "modular" que no se degrada con el
- * tiempo: el `FileStorageAdapter` de la Fase 3 pasará exactamente la misma
- * suite, sin tocarla.
+ * Es el que usan las pruebas de todo lo que hay por encima, sin navegador ni
+ * ficheros temporales de por medio.
  *
- * Para qué sirve un almacén que se borra al recargar:
+ * Aquí sí se muta, y no contradice la regla de inmutabilidad: lo mutable es el
+ * almacén, que es un contenedor y no un dato. Las entidades que entran y salen
+ * siguen siendo inmutables.
  *
- * - es el que usan las pruebas de todo lo que haya por encima —incluida la que
- *   comprueba que un `set-checked` redundante **no llega a disco**—, sin
- *   necesidad de navegador ni de ficheros temporales;
- * - es el que permite escribir el write-behind y el catálogo de acciones enteros
- *   antes de que exista un solo fichero de verdad.
- *
- * ── Aquí sí hay mutación, y no es una excepción a la regla ─────────────────
- *
- * El proyecto prohíbe `push` y `splice` sobre los datos del dominio, y eso sigue
- * en pie: **las entidades que entran y salen de aquí son inmutables**. Lo
- * mutable es el **almacén**, que es un contenedor y no un dato — igual que un
- * fichero en disco se sobrescribe. Confundir las dos cosas llevaría a copiar tres
- * `Map` enteros en cada escritura para nada.
- *
- * ⚠️ **Este adaptador devuelve el MISMO objeto que se le guardó**, porque no
- * serializa nada. El de fichero devolverá uno equivalente pero distinto, salido
- * de un `JSON.parse`. **Nadie debe depender de recibir el mismo objeto**, y por
- * eso el contrato compara por valor y jamás con `strictEqual`. Es el único sitio
- * del proyecto donde `deepEqual` es lo correcto, y está explicado allí.
- *
- * `BlobStore` no aparece por ninguna parte, y es lo esperado: guardar en memoria
- * no tiene "dónde van los bytes". Ese puerto es de la Fase 3.
- *
- * ── Todo devuelve `ok(...)`, y aquí eso es la verdad ───────────────────────
- *
- * Un `Map` no tiene permisos que revocar ni disco que llenar, así que **este
- * adaptador no produce ni un `StorageError`**: las siete firmas devuelven `ok`.
- * No es que se los trague — es que no los hay. El primero que falla de verdad es
- * el de fichero, de la Fase 3, y para entonces el tipo ya está en su sitio.
- *
- * La única excepción es `transaction`, que ejecuta **código ajeno** y por tanto
- * sí tiene una frontera con `try/catch`. Es la única de este fichero.
+ * ⚠️ Devuelve el MISMO objeto que se le guardó, porque no serializa nada. El de
+ * fichero devolverá uno equivalente pero distinto: nadie debe depender de esto.
  */
 
 import type {

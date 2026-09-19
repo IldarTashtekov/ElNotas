@@ -339,7 +339,7 @@ test("un fallo de io NO se da por guardado, y el siguiente intento lo reescribe"
 /**
  * Los otros cuatro casos de la taxonomía, enteros y uno por uno.
  *
- * Están los cuatro y no un representante porque la tabla de §6.5 **es** la
+ * Están los cuatro y no un representante porque la taxonomía entera **es** la
  * especificación: mover un `kind` de lado —que `corrupt` pase por reintentable,
  * pongamos— tiene que tumbar una prueba, y con un solo ejemplo no la tumbaría.
  */

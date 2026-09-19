@@ -1,66 +1,13 @@
 /**
- * El escritor diferido: **la mitad impura del write-behind** (§6.4).
+ * Guarda los cambios en el disco, pero no en el momento: espera a que dejes de
+ * escribir. Teclear una palabra son veinte cambios, y guardar veinte veces la
+ * nota entera no es viable.
  *
- * *Write-behind* quiere decir que el disco va **por detrás** de la memoria. La
- * alternativa —escribir en el acto, en cada cambio— es inviable en una app de
- * notas: teclear una línea de veinte caracteres son veinte cambios de estado, y
- * con ellos veinte reserializaciones de la nota entera. De ahí la regla de §7:
- * **nunca guardar en cada tecla**.
+ * Si algo falla y reintentar no serviría de nada —permiso revocado, disco lleno—
+ * se detiene en vez de insistir. Lo no guardado se queda en memoria: no se pierde.
  *
- * Vive fuera del core porque necesita un temporizador, y `setTimeout` no compila
- * dentro de la verja. La parte que puede equivocarse en silencio —qué está
- * sucio— es `diffState`, y ésa sí es pura y está en el core.
- *
- * ── El diff se calcula contra "lo último escrito", no contra el aviso anterior
- *
- * Es lo que hace que esto no necesite acumular nada. El `Listener` del `Store`
- * sólo recibe el estado nuevo, así que aquí se recuerda cuál fue el último que
- * llegó a disco; la diferencia entre ése y el de ahora **es** exactamente lo que
- * falta por guardar, por muchos avisos que hayan pasado en medio.
- *
- * Sale gratis un caso que de otra forma habría que tratar a mano: una nota
- * creada y borrada dentro de la misma ráfaga **no llega nunca a disco**, porque
- * no aparece en el diff.
- *
- * ── El orden: primero todo lo que se guarda, después lo que se borra ───────
- *
- * No es indiferente, y el motivo es qué queda en disco si el proceso muere a
- * mitad. Borrar una nota deja también contextos que la listaban y hay que
- * reescribir. Con este orden, el peor caso es un contexto ya limpio y una nota
- * que sobra: basura inofensiva. Al revés, el peor caso sería una `ItemRef`
- * apuntando a una nota que ya no existe, que es justo lo que prohíbe la regla de
- * integridad referencial.
- *
- * ── Qué hace ante un fallo: la pregunta es «¿reintentar sirve de algo?» ────
- *
- * Es el motivo entero del paso 0 de la Fase 3 (§6.5). Hasta que los puertos
- * devolvieron `Result`, aquí no se podía más que **reintentar a ciegas**: una
- * escritura fallida sólo traía una excepción sin forma, así que si el usuario
- * revocaba el permiso de la carpeta la app se pasaba la sesión entera
- * reintentando en silencio, sin conseguirlo nunca y sin poder avisar de nada.
- *
- * Con la taxonomía en el valor de retorno la decisión es una sola línea:
- *
- *     io                                            → reintenta
- *     permission-denied · not-found · quota-exceeded
- *     · corrupt                                     → SE DETIENE
- *
- * **Detenerse no es perder nada.** `escrito` no se actualiza y el estado
- * pendiente se conserva, así que lo no guardado sigue entero en memoria; lo
- * único que se deja de hacer es insistir. Quien llame a `flush()` recibe el
- * error —el mismo objeto, sin reempaquetar— y lo seguirá recibiendo mientras el
- * escritor esté detenido, en vez de ver un `ok` que sería mentira.
- *
- * ⚠️ **Lo que este diseño NO da, y hay que saberlo:** si la app se cierra en la
- * ventana entre el cambio y la escritura, ese cambio se pierde. Es el precio
- * inherente de diferir y no se arregla con más debounce: se paga llamando a
- * `flush()` al cerrar, que es plataforma y por tanto Fase 4.
- *
- * Y tampoco da a quién **avisar** de que se ha detenido: hoy no hay UI, y aquí no
- * se construye lo que no tiene consumidor. Lo que hay es lo mínimo para que la
- * decisión sea visible desde fuera —el error sale por `flush()` y el escritor
- * deja de programar esperas—, no un canal de notificaciones. Reanudar tras
- * arreglar el problema (pedir la carpeta otra vez) es Fase 4.
+ * ⚠️ Lo que no da: si la app se cierra antes de que toque escribir, ese cambio se
+ * pierde. Se paga llamando a `flush()` al cerrar, y eso es de la Fase 4.
  */
 
 import type {
@@ -166,8 +113,8 @@ export const createWriteBehind = ({
     }
 
     /*
-        El precio de este paso, asumido por §6.5 y sin arreglo elegante:
-        TypeScript no tiene operador de propagación de errores, así que los seis
+        El precio de devolver el fallo en vez de lanzarlo, y sin arreglo
+        elegante: TypeScript no tiene operador de propagación, así que los seis
         bucles que antes cubría un solo `try` ahora se comprueban uno a uno, con
         corte al primer fallo. Es más ruidoso de leer; es lo que hay.
 

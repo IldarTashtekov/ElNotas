@@ -1,16 +1,12 @@
 /**
  * API pública del módulo de persistencia.
  *
- * Lo que hay aquí dentro son **implementaciones** de puertos que declara el core
- * (`Repository`, `StorageAdapter` y `BlobStore`). La dependencia
- * va, como siempre, de fuera hacia dentro: `storage/` conoce al core; el core no
- * sabe que esto existe.
+ * Lo que hay aquí dentro son implementaciones de puertos que declara el core. La
+ * dependencia va de fuera hacia dentro: `storage/` conoce al core; el core no sabe
+ * que esto existe.
  *
- * Quien decide cuál de los adaptadores se usa de verdad no es este módulo: es
- * `platform/`, que no nace hasta la Fase 4 (`ARCHITECTURE.md` §4).
- *
- * La suite de contratos NO sale por aquí: es código de pruebas, y quien la
- * consume son otros ficheros de prueba del propio módulo, con import relativo.
+ * Quién elige cuál de los adaptadores se usa de verdad no es este módulo, es
+ * `platform/`, que no nace hasta la Fase 4.
  */
 
 export { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter"
@@ -22,12 +18,12 @@ export { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter"
 export { createFileStorageAdapter } from "./file/FileStorageAdapter"
 
 /* Las implementaciones de `BlobStore`, en `blobs/`: son lo de abajo del reparto
-   en dos niveles (§6.1) y las dos se enchufan al adaptador de arriba.
+   en dos niveles y las dos se enchufan al adaptador de arriba.
 
    `LocalStorageBlobStore` es el de desarrollo y el de emergencia, y se prueba
    entero en Node. `DirectoryHandleBlobStore` es la carpeta de verdad —y OPFS,
    que es el mismo código con otro handle—, **no tiene pruebas a propósito**
-   (§6.3) y se verifica con `blobs/VERIFICACION-MANUAL.md`.
+   y se verifica con `blobs/VERIFICACION-MANUAL.md`.
 
    Las dos reciben por constructor lo que las conecta con la plataforma —un
    `Storage`, un `FileSystemDirectoryHandle`—, porque conseguirlo es composición

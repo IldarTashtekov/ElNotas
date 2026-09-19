@@ -5,7 +5,7 @@
  * nunca `deepStrictEqual`: un `deepEqual` pasa igual de verde con una
  * implementación que rompe la invariante de identidad, porque el contenido sería
  * correcto y sólo las referencias estarían mal. Es la clase de prueba que da
- * confianza sin dar garantía (`ARCHITECTURE.md` §2.3).
+ * confianza sin dar garantía.
  */
 
 import { test } from "node:test"
@@ -18,7 +18,7 @@ import type { NodeTransform } from "#core/domain/updateContent"
 import { mapPreservingIdentity, updateContent } from "#core/domain/updateContent"
 
 /* ────────────────────────── El árbol de pruebas ──────────────────────────
-    Es la lista de la compra de ARCHITECTURE.md §2.3, para que el ejemplo del
+    Es la lista de la compra de `ARCHITECTURE.md`, para que el ejemplo del
     documento y el de las pruebas sean literalmente el mismo:
 
         Text     "Compra semanal"

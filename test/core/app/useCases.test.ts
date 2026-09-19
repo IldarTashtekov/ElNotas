@@ -231,7 +231,7 @@ test("cada acción lee el reloj exactamente UNA vez", () => {
       No es una micro-optimización. Es lo que garantiza que `delete-note`, que
       toca la nota y todos los contextos que la listaban, les ponga a todos la
       MISMA marca de tiempo y no milisegundos distintos según el orden del bucle
-      (`ARCHITECTURE.md` §9.7).
+     .
   */
   for (const [nombre, llamar] of CABLEADO) {
     const app = montar()

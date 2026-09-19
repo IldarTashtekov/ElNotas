@@ -1,84 +1,13 @@
 /**
- * Almacenamiento en ficheros JSON: **un fichero por entidad**, más un
- * `manifest.json` (`ARCHITECTURE.md` §6.2).
+ * Guarda cada nota, plan y contexto en su propio fichero JSON, más un
+ * `manifest.json` con la versión del formato.
  *
- * Es la mitad de arriba del reparto en dos niveles de §6.1, y **aquí está toda
- * la lógica de la persistencia en fichero**. Su trabajo son cuatro cosas:
+ * Es la pieza que sabe de formato: convierte una entidad en texto y decide cómo
+ * se llama su fichero. Dónde acaban esos bytes —el navegador, una carpeta tuya,
+ * OPFS, Drive— lo pone el `BlobStore` que reciba.
  *
- *     serializa            Note | Plan | Context → JSON → bytes, y la vuelta
- *     traduce id → camino  NoteId → "notes/<id>.json"
- *     mantiene el manifest  la versión de esquema de lo guardado
- *     implementa StorageAdapter  los tres Repository, transaction y el esquema
- *
- * Va **parametrizado por `BlobStore`**, que le llega por constructor, así que no
- * sabe si detrás hay `localStorage`, una carpeta de verdad, OPFS o Drive. Ése es
- * el beneficio entero del reparto: **el esquema `notes/<id>.json` vive en este
- * único fichero del proyecto**, y cambiarlo —o pasar de JSON a otro formato— se
- * toca aquí y en ningún otro sitio. Los `BlobStore` ni se enteran.
- *
- * Está terminado **cuando pasa la suite de contratos** (§6.3), igual que el de
- * memoria, y la pasa con un `BlobStore` falso en Node: por eso es la única parte
- * de la Fase 3 que se verifica entera sin navegador.
- *
- * ── El reparto de errores: cada nivel traduce lo suyo ──────────────────────
- *
- * Es lo que hay que tener claro antes de tocar nada de aquí:
- *
- *     BlobStore           traduce los fallos de ENTRADA/SALIDA de SU plataforma
- *                         — permisos, cuota, la carpeta que ya no está.
- *     FileStorageAdapter  traduce lo suyo, que es la SERIALIZACIÓN: un
- *                         `JSON.parse` que falla es `corrupt`, con su `path`.
- *
- * De ahí las dos reglas que este fichero cumple sin excepción:
- *
- * 1. **un `err` del `BlobStore` se propaga tal cual**, sin reempaquetar. Meter
- *    un `permission-denied` dentro de un `io` sería decirle a quien llama que
- *    reintentar sirve justo cuando no sirve — y es lo único que la taxonomía
- *    existe para evitar (§6.5);
- * 2. **lo único que este fichero inventa es `corrupt`**, porque es quien parsea:
- *    un `BlobStore` no sabe qué son esos bytes, así que no puede decidir que el
- *    **contenido** esté corrupto. (Que uno de ellos produzca `corrupt` por su
- *    **sobre** —el base64 de `LocalStorageBlobStore`, que escribió él mismo— no
- *    rompe el reparto; la frontera exacta está en la cabecera de `BlobStore.ts`.)
- *
- * Y **ausencia no es fallo**: un `read` que devuelve `ok(null)` —ese camino no
- * existe— sale de `get` como `ok(null)`, nunca como `err(not-found)`. Borrar lo
- * que no está es `ok`, porque no hay nada que hacer.
- *
- * ── El `try/catch`, confinado a dos funciones ──────────────────────────────
- *
- * `JSON.parse` lanza por su cuenta, y `TextDecoder` con `fatal: true` también.
- * Ésa es la frontera de este adaptador, y está en `parsear` y en `aBytes`; por
- * encima de esas dos funciones ninguna firma lanza. La tercera es `transaction`,
- * que es la única que ejecuta **código ajeno** — misma frontera que en el
- * adaptador de memoria.
- *
- * ═══════════════════════════════════════════════════════════════════════════
- *  TRES DECISIONES TOMADAS AQUÍ, Y LAS TRES CONFIRMADAS
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * La documentación no las resolvía, así que se decidieron aquí; el usuario las
- * confirmó las tres y quedan cerradas. Se dejan visibles porque lo que vale de
- * ellas no es el veredicto sino el motivo, y cada una está razonada entera en
- * su sitio, más abajo.
- *
- * **1. El `manifest.json` lleva SÓLO la versión de esquema; NO lleva índice de
- * ids.** `getAll` se resuelve con `list(prefijo)` y una lectura por entidad. Un
- * índice ahorraría ese `list` a cambio de tener **dos fuentes de verdad** que se
- * pueden desincronizar, y la carpeta ya es una de ellas. Ver `Manifest`.
- *
- * **2. `transaction` no es atómica, y lo que garantiza está escrito.** No hay
- * transacción posible sobre ficheros sueltos: lo que promete es que no reordena
- * ni agrupa, que el `err` de dentro sale intacto y que una excepción se traduce
- * a `io`. Ver `transaction`.
- *
- * **3. Un fichero corrupto tumba el `getAll` entero**, con el `path` del
- * culpable. Es lo único honesto que permite la firma del puerto —`Result<T[],
- * …>` es todo o nada— y **contradice a §6.5**, que pide aislar esa entidad y
- * seguir con el resto: dicho sin suavizarlo, **hoy una sola nota ilegible
- * impide abrir la app**. Se confirma a sabiendas, porque las dos alternativas
- * son peores, y el arreglo bueno —un `onCorrupt`— queda aplazado a la Fase 4.
- * Ver `getAll`.
+ * ⚠️ Un solo fichero ilegible tumba la lectura entera: hoy una nota rota impide
+ * abrir la app. Arreglarlo es de la Fase 4.
  */
 
 import type {
@@ -110,73 +39,27 @@ const CAMINO_MANIFEST: string = "manifest.json"
 const EXTENSION: string = ".json"
 
 /**
- * **DECISIÓN 1, confirmada: qué lleva dentro el manifiesto.**
+ * Lo que va en `manifest.json`: sólo la versión del formato. Objeto y no número
+ * pelado para que pueda crecer sin romper lo ya escrito.
  *
- * Lleva **sólo la versión de esquema**, que es lo que está decidido que vive en
- * el almacén y no en `AppState` (§9.7), porque es propiedad de lo guardado. Va
- * como objeto y no como un número pelado para que pueda crecer sin romper lo ya
- * escrito: `JSON.parse` de `{"schemaVersion":3}` sigue funcionando el día que
- * haya un segundo campo.
- *
- * **Lo que NO lleva es el índice de ids**, que era la pregunta de verdad. Con
- * índice, `getAll` sería una sola lectura en vez de `list` más N. Sin índice,
- * hay **una sola fuente de verdad**: la carpeta. Se elige esto último, y el
- * motivo es lo que cuesta la otra opción:
- *
- * - **dos fuentes de verdad que se desincronizan.** Un `put` pasaría a ser dos
- *   escrituras —la entidad y el manifiesto— sin forma de hacerlas atómicas
- *   (decisión 2). Morir en medio deja o un id fantasma en el índice, apuntando a
- *   un fichero que no existe, o una nota guardada que el índice no menciona y
- *   que por tanto **no se abriría nunca**. Lo segundo es perder una nota que
- *   está ahí, en disco, intacta;
- * - **los tres repositorios se pisarían**, que es el problema que §6.1 da como
- *   motivo de que `Repository` no hable directamente con `BlobStore`: tres
- *   escritores sobre un mismo fichero;
- * - **el `list` del puerto existe precisamente para esto.** `BlobStore.list` se
- *   declaró con el comentario «es lo que hace posible `getAll`». Con índice no
- *   tendría consumidor.
- *
- * **Precio aceptado, dicho sin esconderlo:** `getAll` hace N lecturas, y en la
- * File System Access API cada una es abrir un fichero. Se paga una vez al
- * arrancar —quien llama a `getAll` es `hydrate`— y con cientos de notas es
- * irrelevante. Si algún día deja de serlo, la respuesta es una caché, no una
- * segunda fuente de verdad.
+ * No lleva índice de ids a propósito. La carpeta es la única fuente de verdad, y
+ * un índice desincronizado escondería notas que están en disco, intactas.
  */
 interface Manifest {
   readonly schemaVersion: number
 }
 
 /**
- * id → camino. La traducción que este fichero existe para concentrar.
+ * id → camino (`notes/<id>.json`). La traducción que este fichero concentra.
  *
- * El id va por `encodeURIComponent` aunque hoy no haga falta: los ids los
- * fabricará un `IdGenerator` en la Fase 4 y no traerán barras. Es una línea, y
- * lo que impide es que un id con `/` o `..` dentro escriba **fuera de su
- * carpeta**. No hace falta descodificar nunca: el id de vuelta sale de dentro
- * del JSON, no del nombre del fichero.
+ * ⚠️ Devuelve `Result` porque `encodeURIComponent` **lanza**: un id con un
+ * surrogate suelto tira `URIError`, y los ids vienen del disco, donde nadie ha
+ * comprobado más que sean cadenas. Sale `corrupt` —el id seguirá siendo inválido
+ * la próxima vez— y es el único `kind` con `path`, o sea el único que puede decir
+ * cuál es la entidad que no se puede nombrar.
  *
- * ── ⚠️ Por qué devuelve `Result` y no una cadena ───────────────────────────
- *
- * **Porque `encodeURIComponent` LANZA.** Con un surrogate suelto dentro del id
- * —`"nota-\uD800"`— tira un `URIError: URI malformed`. Y esto no es teórico: un
- * id llega desde el disco, donde lo único que se comprueba de él es que sea una
- * cadena (ver `entidadDe`; validar el esquema es otra tarea). Un `notes/x.json`
- * tocado a mano o escrito a medias mete ese id en `AppState`.
- *
- * Devolviéndolo pelado, los tres métodos que lo usan —`get`, `put` y `delete`—
- * **lanzaban por una firma que promete `Result`**, que es justo lo que §6.5
- * prohíbe. Estaba tapado por accidente: el único consumidor de producción es el
- * write-behind, que llama desde dentro de `transaction`, y su `try` lo traducía
- * a `io`. En cuanto `platform/` (Fase 4) llame a `adapter.notes.get(id)`
- * directamente, el accidente se acaba.
- *
- * **Con `Result` deja de depender de quién llame:** el tipo obliga a tratarlo en
- * los tres sitios, y no hay forma de usarlo mal sin que el compilador proteste.
- *
- * Sale `corrupt` y no `io` por el criterio de §6.5 —*¿reintentar sirve de
- * algo?*—: el id va a seguir siendo inválido la próxima vez. Y `corrupt` es
- * además el único `kind` que lleva `path`, o sea el único que puede **decir
- * cuál** es la entidad que no se puede nombrar.
+ * El `encodeURIComponent` impide además que un id con `/` o `..` escriba fuera de
+ * su carpeta. No hace falta descodificar: el id de vuelta sale del JSON.
  */
 const caminoDe = (carpeta: string, id: string): Result<string, StorageError> => {
   try {
@@ -222,16 +105,14 @@ const descodificador: TextDecoder = new TextDecoder("utf-8", { fatal: true })
  * Entidad → bytes. Una de las dos fronteras con `try/catch` de la lectura y la
  * escritura.
  *
- * Se indenta con dos espacios y se cierra con salto de línea porque §6.2 elige
- * un fichero por entidad **para tener diffs pequeños**, y un JSON en una sola
- * línea no los da: cambiar una palabra reescribiría la línea entera.
+ * Se indenta y se cierra con salto de línea para que los diffs sean pequeños: un
+ * JSON en una sola línea haría que cambiar una palabra reescribiera la línea
+ * entera.
  *
  * El `catch` cubre un caso que los tipos ya impiden —`JSON.stringify` sólo lanza
- * con ciclos o `BigInt`, y una entidad del dominio no tiene ni lo uno ni lo
- * otro—, y aun así está: el puerto promete que **nada lanza**, y una promesa que
- * se sostiene en un razonamiento es más débil que una que se sostiene en el
- * código. Sale como `io` y no como `corrupt`: en disco no hay nada corrupto
- * todavía, esto es un bug nuestro, y §6.5 ya acepta que un bug acabe en `io`.
+ * con ciclos o `BigInt`— y aun así está, porque una promesa que se sostiene en un
+ * razonamiento es más débil que una que se sostiene en el código. Sale `io` y no
+ * `corrupt`: en disco no hay nada roto, esto sería un bug nuestro.
  */
 const aBytes = (valor: unknown): Result<Uint8Array, StorageError> => {
   try {
@@ -246,9 +127,9 @@ const aBytes = (valor: unknown): Result<Uint8Array, StorageError> => {
  * Bytes → objeto JSON, o `corrupt`. **La otra frontera con `try/catch`.**
  *
  * Aquí es donde nace el único `StorageError` que este adaptador inventa, y es su
- * negocio porque es quien parsea. El `path` viaja dentro del error porque lo que
- * §6.5 pide de `corrupt` es poder **decir cuál** es el fichero que no se
- * entiende; un `corrupt` sin camino no serviría para nada de eso.
+ * negocio porque es quien parsea. El `path` viaja dentro del error porque de un
+ * `corrupt` hay que poder **decir cuál** es el fichero que no se entiende; sin
+ * camino no serviría para nada de eso.
  *
  * Se exige además que lo parseado sea un objeto: un fichero con `42`, `null` o
  * `[]` dentro es JSON válido y no es una entidad. Lo que **no** se hace es
@@ -276,7 +157,7 @@ const parsear = (
     return ok(valor as Record<string, unknown>)
   } catch (fallo: unknown) {
     /* `fallo` es `unknown` por `useUnknownInCatchVariables`, y viaja intacto en
-       `cause`: es para depurar, no para enseñar (§6.5). */
+       `cause`: es para depurar, no para enseñar. */
     const ilegible: StorageError = { kind: "corrupt", path: camino, cause: fallo }
     return err(ilegible)
   }
@@ -333,42 +214,19 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
   },
 
   /**
-   * ⚠️ **DECISIÓN 3, confirmada: un fichero corrupto tumba el `getAll`
-   * entero — y se confirma SABIENDO que contradice a §6.5.**
+   * ⚠️ **Un fichero ilegible tumba la lectura entera**, y hoy eso significa que
+   * una sola nota rota impide abrir la app.
    *
-   * La firma del puerto es `Result<ReadonlyArray<T>, StorageError>`, o sea
-   * **todo o nada**: no hay dónde poner «estas nueve notas, y esta décima está
-   * rota». Así que al primer `corrupt` se corta y sale el error con el `path`
-   * del culpable.
+   * La firma es todo o nada —no hay dónde poner «estas nueve, y la décima está
+   * rota»—, así que al primer `corrupt` se corta y sale el `path` del culpable.
+   * Saltárselo en silencio sería peor: el write-behind daría esa nota por borrada
+   * y la limpiaría de los contextos, convirtiendo un fichero recuperable en una
+   * pérdida de verdad.
    *
-   * La contradicción no se suaviza, se dice con todas las letras, porque una
-   * contradicción sin explicar se lee como un olvido: **§6.5 exige «aislar esa
-   * entidad y seguir con el resto, diciendo cuál»** —es la razón entera de que
-   * `corrupt` no esté metido dentro de `io`— y esto no lo hace. **Hoy una sola
-   * nota ilegible impide abrir la app**, que es justo el «creer que las has
-   * perdido todas» que esa decisión quería evitar.
-   *
-   * Se acepta igualmente, porque las otras dos salidas son peores:
-   *
-   * - **saltarse el fichero corrupto en silencio** devolvería nueve notas como
-   *   si fueran todas. Un `Context` que listara la décima se quedaría con una
-   *   `ItemRef` apuntando a nada, y eso **rompe la integridad referencial**, que
-   *   no es negociable. Peor todavía: el write-behind vería la nota como
-   *   borrada y acabaría limpiándola de los contextos, convirtiendo un fichero
-   *   recuperable en una pérdida de verdad;
-   * - **cambiar la firma del puerto** es justo lo que el paso 0 acaba de
-   *   estabilizar, y no se toca por iniciativa propia.
-   *
-   * **El arreglo bueno está decidido y aplazado a la Fase 4: un `onCorrupt` en
-   * las dependencias DE ESTE ADAPTADOR** —saltar la entidad y avisar de cuál—,
-   * que no toca el puerto. Va en el mismo paquete que el `onError` que el
-   * write-behind tiene aplazado por el mismo motivo: hoy no hay a quién avisar,
-   * y aquí no se construye lo que no tiene consumidor. Está anotado en
-   * `TAREAS.md`, al lado del `onError`.
-   *
-   * La prueba que fija este comportamiento está marcada con ⚠️ en
-   * `FileStorageAdapter.errors.test.ts`, y la marca se queda: existe para que el
-   * día que esto cambie **se vea en el diff**.
+   * El arreglo está decidido y aplazado a la Fase 4 (`onCorrupt`, anotado en
+   * `TAREAS.md`): saltar la entidad y avisar de cuál, sin tocar el puerto. La
+   * prueba que fija esto lleva ⚠️ en `FileStorageAdapter.errors.test.ts`, y la
+   * marca se queda para que el día que cambie se vea en el diff.
    */
   getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> => {
     const listado: Result<ReadonlyArray<string>, StorageError> = await blobs.list(carpeta)
@@ -444,45 +302,19 @@ export const createFileStorageAdapter = (blobs: BlobStore): StorageAdapter => {
     contexts,
 
     /**
-     * **DECISIÓN 2, confirmada: qué significa `transaction` aquí.**
+     * *Best-effort*, y aquí eso es literal: ejecuta la función y devuelve lo que
+     * ella devuelva. Ni agrupa, ni difiere, ni deshace nada — sobre ficheros
+     * sueltos no hay transacción posible. No hay atomicidad, ni aislamiento, ni
+     * lecturas consistentes.
      *
-     * El puerto la declara *best-effort* y avisa de que un adaptador sobre
-     * ficheros sueltos «no puede» cumplirla de verdad. Esto es exactamente eso:
-     * **ejecuta la función y devuelve lo que ella devuelva**. Ni agrupa, ni
-     * difiere las escrituras, ni deshace nada.
+     * ⚠️ Lo único que promete, y de lo que el write-behind depende: **las
+     * escrituras salen en el orden en que se pidieron**. Él hace primero todos
+     * los `put` y después todos los `delete` para que el peor caso sea una nota
+     * de más, y nunca una referencia apuntando a algo que ya no existe.
      *
-     * Lo que SÍ garantiza, que es lo que hay que poder decir de ella:
-     *
-     * - **las escrituras salen en el orden en que las pidió `fn`.** No se
-     *   reordenan ni se agrupan, y eso no es una perogrullada: es de lo que
-     *   depende el write-behind, que hace **primero todos los `put` y después
-     *   todos los `delete`** para que el peor caso sea una nota de más —basura
-     *   inofensiva— y nunca una `ItemRef` apuntando a algo que ya no existe. Si
-     *   este adaptador se pusiera a bufferizar y volcar en otro orden, esa
-     *   garantía se perdería aquí sin que nadie lo notara;
-     * - **el `err` de `fn` corta y sale sin reempaquetar**, con su `kind` de
-     *   origen intacto;
-     * - **una excepción de `fn` no escapa**: se traduce a `io`. `fn` es código
-     *   ajeno y puede lanzar aunque el puerto diga que no; lo que no puede es
-     *   romper la firma, que promete un `Result` y no un rechazo. Ésta es la
-     *   tercera y última frontera con `try/catch` del fichero.
-     *
-     * Lo que NO garantiza, y quien la use no debe suponer:
-     *
-     * - **atomicidad.** Si el proceso muere a mitad, unas escrituras están y
-     *   otras no. No hay rollback y no puede haberlo: lo ya escrito está en
-     *   disco;
-     * - **aislamiento.** No hay exclusión mutua: dos `transaction` concurrentes
-     *   intercalarían sus escrituras. Hoy no hay dos llamantes a la vez —el
-     *   write-behind encadena las suyas en una cola propia— y añadir un cerrojo
-     *   sería construir para un consumidor que no existe, con el regalo de un
-     *   interbloqueo si alguien anidara dos transacciones;
-     * - **lecturas consistentes.** Un `get` desde dentro de `fn` ve el disco tal
-     *   y como esté en ese momento, incluido lo que la propia `fn` lleve escrito.
-     *
-     * Y el `async` de la firma no es decorativo: sin él, un `fn` que lance de
-     * forma **síncrona** rompería antes de que existiera promesa alguna, y no
-     * habría `catch` que llegara a tiempo.
+     * El `async` de la firma no es decorativo: sin él, un `fn` que lance de forma
+     * síncrona rompería antes de que existiera promesa, y no habría `catch` a
+     * tiempo.
      */
     transaction: async <T>(
       fn: () => Promise<Result<T, StorageError>>,

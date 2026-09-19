@@ -1102,6 +1102,12 @@ export interface BlobStore {
 }
 ```
 
+**El `BlobStore` mueve `Uint8Array`, no `string`.** Hoy todo lo que se guarda es JSON, así que
+cadenas parecerían suficiente. Se eligen bytes porque son el denominador común de verdad: es lo
+que aceptan y devuelven las APIs de fichero, y en cuanto haya que guardar algo que no sea texto
+—una imagen pegada en una nota— un `BlobStore` de cadenas no sirve. Codificar y descodificar es
+trabajo de quien monta la entidad, no de quien mueve los bytes.
+
 **Los once métodos devuelven `Result`, y ninguno lanza** (§6.5). Dos de esas firmas merecen
 explicación, porque no se deducen de la regla general:
 
@@ -1150,6 +1156,12 @@ por eso no produce `corrupt` nunca. Lo de arriba sigue siendo serialización y s
 **Todos los puertos son `async`, incluso los adaptadores sincrónicos.** Si un adaptador en
 memoria expone firmas sincrónicas, enchufar red o SQLite después obliga a reescribir todos
 los llamantes.
+
+**Un `get` que no encuentra nada devuelve `null`, no `undefined`**, aunque el resto del
+proyecto conviva con `undefined` por `noUncheckedIndexedAccess` (§2.4). La diferencia es que
+aquí el valor es una **respuesta**: `null` dice «he ido a buscarlo y no está», que no es lo
+mismo que «no me han dado nada». Indexar un `Record` es lo segundo; preguntarle a un almacén
+es lo primero.
 
 **El `BlobStore` existe porque un fichero local y uno remoto solo difieren en dónde van los
 bytes.** Un único `FileStorageAdapter` parametrizado por `BlobStore` da cuatro backends:
@@ -1342,6 +1354,32 @@ aparte (`settings.json` o localStorage), o tienes un huevo-y-gallina al arrancar
 
 **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
 memoria, **nunca** en localStorage. En escritorio, keychain del sistema.
+
+#### Las dos decisiones propias de `LocalStorageBlobStore`
+
+`localStorage` no es un sistema de ficheros, es **un mapa de texto a texto**, y de ahí salen las
+dos únicas decisiones que ese adaptador toma por su cuenta. Las dos se confirmaron al
+escribirlo.
+
+**1. Los bytes van en base64, y cuesta un 33% de tamaño.** El puerto mueve `Uint8Array` y
+`localStorage` sólo guarda texto, así que hay que codificar. La alternativa era una «cadena
+binaria» latin1, un carácter por byte, que ocupa ese 33% menos; se descarta porque deja en el
+almacén **texto que parece texto y no lo es**, y cualquier herramienta que mire ahí —las de
+desarrollo del navegador, una exportación futura— lo estropearía sin avisar. Se paga el tamaño
+sobre una cuota que ya es pequeña, y para lo que esta implementación es —desarrollo y
+emergencia— es el cambio correcto. `btoa`/`atob` los traen el navegador y Node, así que las
+pruebas corren sin instalar nada.
+
+**2. Las claves llevan un espacio de nombres delante.** `localStorage` es un sitio
+**compartido**: en el mismo saco están las claves de esta app, las de cualquier script de
+terceros y las de cualquier prototipo que alguien dejara ahí. Sin prefijo propio pasarían dos
+cosas, y las dos en silencio: `list("")` devolvería **claves ajenas** como si fueran caminos
+nuestros —hoy le salvaría a `getAll` el filtro por carpeta y extensión, pero eso es que nos
+salva otro fichero, no éste—, y un `write` podría **pisar la clave de otro**, que es peor
+porque rompe algo que no es nuestro. El prefijo es un detalle privado: fuera de ese fichero los
+caminos son los mismos que ve cualquier otro `BlobStore`. No se hace configurable por
+constructor porque no tiene consumidor, la misma regla que dejó fuera `move` y el puerto
+`Scheduler`.
 
 ### 6.3 Tests de contrato
 

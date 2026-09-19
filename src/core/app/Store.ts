@@ -1,30 +1,14 @@
 /**
- * El `Store`: la caja que guarda el estado actual, recibe acciones y avisa a
- * quien esté escuchando.
+ * La caja que guarda el estado actual, recibe acciones y avisa a quien escuche.
  *
- * ── El único punto de mutabilidad de todo el sistema ───────────────────────
+ * Es **el único sitio mutable de todo el sistema**, y a propósito: una app
+ * interactiva tiene un «ahora» distinto de su «antes», y registrar esa diferencia
+ * es mutar. No se puede eliminar, sólo decidir dónde vive. Vive aquí y en ningún
+ * otro fichero, así que cuando algo vaya mal con el estado hay un solo sitio donde
+ * mirar.
  *
- * Todo lo demás —dominio, operaciones, reducer— es puro: recibe valores y
- * devuelve valores nuevos, sin reasignar nada. Pero una app interactiva es, por
- * definición, algo que tiene un "ahora" distinto de su "antes", y registrar esa
- * diferencia **es** mutar. No se puede eliminar; sólo se puede decidir dónde
- * ponerla y cuánto ocupa.
- *
- * La decisión de este proyecto: **que ocupe este fichero, y ninguno más.**
- * Cuando algo vaya mal con el estado —se pierde un cambio, se avisa de más, se
- * avisa de menos— hay un solo sitio donde mirar.
- *
- * Nótese que los datos **sí** son inmutables. Lo que cambia es la variable que
- * señala cuál es el estado actual; el objeto al que señala no se toca jamás.
- *
- * ── Por qué una función y no una clase ─────────────────────────────────────
- *
- * `estado` vive en una **clausura**: queda encerrada aquí dentro y sólo la
- * alcanzan las tres funciones que se devuelven. Con una clase y `private state`
- * la privacidad la vigila el compilador y **desaparece al ejecutar** —
- * `store.state` existiría como propiedad normal—. Aquí no hay camino hasta la
- * variable. Y de paso encaja con el resto del proyecto, donde no hay ni una
- * clase.
+ * Los datos sí son inmutables: lo que cambia es la variable que señala cuál es el
+ * estado actual, nunca el objeto al que señala.
  */
 
 import type { AppState } from "../domain/AppState"

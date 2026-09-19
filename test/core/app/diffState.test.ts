@@ -4,7 +4,7 @@
  * Lo que de verdad se comprueba aquí no es "que detecte los cambios" —eso es lo
  * fácil— sino lo contrario: **que NO detecte los que no hay**. Un diff que
  * devuelve todo sucio siempre funciona perfectamente de cara al usuario y sólo
- * escribe a disco de más, en silencio y para siempre (`ARCHITECTURE.md` §3).
+ * escribe a disco de más, en silencio y para siempre.
  *
  * De ahí que casi todas las pruebas de abajo comparen con `strictEqual` contra
  * `NO_CHANGES`, y que haya una que cuenta cuántas entidades salen sucias cuando
@@ -99,8 +99,8 @@ test("una COPIA equivalente sí cuenta como cambio, y tiene que ser así", () =>
 
       Comparar por valor —un `deepEqual` o un `JSON.stringify`— daría respuestas
       más "listas" a cambio de recorrer entera cada entidad en cada cambio, que
-      es precisamente el trabajo que la arquitectura está montada para no hacer
-      (§3). Que una copia equivalente ensucie no es un fallo del diff: es un
+      es precisamente el trabajo que la arquitectura está montada para no
+      hacer. Que una copia equivalente ensucie no es un fallo del diff: es un
       fallo de quien copió sin necesidad, y el sitio donde se arregla es la
       operación de dominio que devolvió una copia en vez de su entrada.
 

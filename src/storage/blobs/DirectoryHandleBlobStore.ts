@@ -1,65 +1,15 @@
 /**
- * `BlobStore` sobre un `FileSystemDirectoryHandle`: **la carpeta de verdad del
- * usuario** (`ARCHITECTURE.md` §6.1, filas 2 y 3 de la tabla de backends).
+ * Guarda los ficheros en una carpeta de verdad del ordenador: la que elige el
+ * usuario, o una privada del navegador. Es el almacén principal de la app, y lo
+ * que permite abrir las notas con cualquier otro programa.
  *
- * Es el almacén primario de la app (§6.2): ficheros JSON de verdad, en una
- * carpeta que el usuario elige y puede abrir con cualquier otro programa.
+ * Se mantiene deliberadamente tonto —sólo traduce llamadas— porque no tiene
+ * pruebas automáticas: `node:test` no llega a un navegador. Lo que tenga lógica
+ * va arriba, en `FileStorageAdapter`.
  *
- * **Las filas 2 y 3 son este mismo fichero, sin una línea de diferencia.** La
- * File System Access API y OPFS exponen el mismo `FileSystemDirectoryHandle`, y
- * lo único que cambia es **cómo se consigue el handle**:
- *
- *     showDirectoryPicker()              la carpeta que elige el usuario
- *     navigator.storage.getDirectory()   OPFS, sin diálogo ni permisos
- *
- * Y conseguir el handle **no es cosa de este fichero**: le llega por
- * constructor. Eso es composición, y la composición vive en `platform/`, que no
- * nace hasta la Fase 4 (§9.7). Aquí eso importa más que de costumbre, porque es
- * lo que deja este fichero reducido a traducir llamadas — que es justo lo que
- * permite no probarlo.
- *
- * ═══════════════════════════════════════════════════════════════════════════
- *  ⚠️ ESTE FICHERO NO TIENE PRUEBAS, Y ES UNA DECISIÓN (§6.3)
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * No es un descuido ni una tarea pendiente. `node:test` no llega a un navegador,
- * y **un doble aquí no compra lo que parece**: probaría lo que quien lo escribe
- * *cree* que hace la API, no lo que hace. El ejemplo es el de abajo y está
- * elegido porque es real: escribir exige un `close()` final que es **lo que
- * vuelca los datos al disco**, y un `BlobStore` de mentira sobre un `Map` pasa
- * en verde con ese `close()` olvidado. Cuanto más fina es la capa de traducción,
- * menos vale probarla con un doble.
- *
- * Lo que sí hay es **una lista de verificación manual**, en
- * `VERIFICACION-MANUAL.md`, aquí al lado. Es la red de seguridad de este
- * fichero: si se toca algo de aquí, se vuelve a pasar la lista y se anota el
- * resultado. **No hay otra.**
- *
- * Por eso este fichero se mantiene deliberadamente tonto: cada línea de lógica
- * que se le añada es una línea que nadie comprueba. Lo que tenga lógica va
- * arriba, en `FileStorageAdapter`, que sí pasa la suite de contratos entera.
- *
- * ── La traducción de errores, que es lo único que hace ────────────────────
- *
- * Es su trabajo, y el reparto está escrito en `BlobStore.ts`: **cada
- * implementación traduce las excepciones de SU plataforma**. Las de ésta:
- *
- *     NotAllowedError     → permission-denied  el permiso ya no vale
- *     SecurityError       → permission-denied  el contexto no permite ni pedirlo
- *     NotFoundError       → not-found          la carpeta o el fichero ya no están
- *     QuotaExceededError  → quota-exceeded     no cabe
- *     cualquier otra cosa → io                 y es una decisión, ver `clasificar`
- *
- * Lo que **no** produce nunca es `corrupt`: este fichero no mira lo que hay
- * dentro de los bytes. Eso es de `FileStorageAdapter`, que es quien parsea.
- *
- * ── Ausencia no es fallo, y aquí cuesta una vuelta más ────────────────────
- *
- * `read` de un fichero que no está es `ok(null)`, no `err(not-found)` (§6.5).
- * Pero la API no distingue: lanza `NotFoundError` tanto si falta el fichero como
- * si falta la carpeta que lo contiene. Así que `read` y `delete` traducen ese
- * `not-found` a ausencia, y `list` a lista vacía. El precio está dicho en voz
- * alta en cada uno de los tres.
+ * ⚠️ Su red de seguridad es `VERIFICACION-MANUAL.md`, aquí al lado: **si se toca
+ * algo de este fichero, se vuelve a pasar la lista a mano y se anota el
+ * resultado.** No hay otra.
  */
 
 import type { BlobStore, Result, StorageError } from "#core/index"
@@ -125,8 +75,8 @@ const partir = (camino: string): CaminoPartido => {
 /* ═══════════════════ La traducción de las excepciones ══════════════════════ */
 
 /**
- * Excepción de la File System Access API → `StorageError`. **El criterio es el
- * de §6.5: ¿reintentar sirve de algo?**
+ * Excepción de la File System Access API → `StorageError`. **El criterio es
+ * siempre el mismo: ¿reintentar sirve de algo?**
  *
  * Los cuatro que se clasifican, y por qué cae cada uno donde cae:
  *
@@ -135,8 +85,8 @@ const partir = (camino: string): CaminoPartido => {
  *   el usuario lo revocó desde el candado, o expiró—. Reintentar es inútil
  *   mientras nadie vuelva a pedirlo, y volver a pedirlo exige un gesto del
  *   usuario dentro de un evento suyo, o sea **plataforma y Fase 4**. Que salga
- *   con este `kind` es además lo que hace que el write-behind **se detenga**
- *   (§6.5) en vez de escribir en bucle contra una puerta cerrada;
+ *   con este `kind` es además lo que hace que el write-behind **se detenga** en
+ *   vez de escribir en bucle contra una puerta cerrada;
  * - **`SecurityError` → `permission-denied`.** Otra puerta cerrada, por otro
  *   motivo: el contexto no permite ni pedir el permiso —un `iframe` sin
  *   `allow`, una página no segura—. La acción de quien lo recibe es la misma,
@@ -164,8 +114,8 @@ const partir = (camino: string): CaminoPartido => {
  * - **`TypeMismatchError`** — hay una carpeta donde se esperaba un fichero, o
  *   al revés. Reintentar **no** sirve, así que `io` no es la etiqueta ideal;
  *   pero no hay ningún `kind` que le quede mejor —no es un permiso, no es una
- *   ausencia, no es la cuota, y `corrupt` es para bytes que no se entienden— y
- *   §6.5 acepta que un caso raro acabe en `io`. Se anota aquí en vez de
+ *   ausencia, no es la cuota, y `corrupt` es para bytes que no se entienden—, y
+ *   un caso raro acabando en `io` es aceptable. Se anota aquí en vez de
  *   esconderlo;
  * - **lo que no conozcamos** — un `TypeError` por un nombre de fichero
  *   inválido, un fallo del disco, algo que la API haga y aquí no se sepa. `io`
@@ -211,7 +161,7 @@ const clasificar = (fallo: unknown, camino: string): StorageError => {
 
 /**
  * **LA FRONTERA. El único `try/catch` del fichero**, y por encima de esta línea
- * ninguna firma lanza (§6.5).
+ * ninguna firma lanza.
  *
  * Todo lo que toca la plataforma pasa por aquí dentro, incluido el `await`: sin
  * él, una promesa rechazada se escaparía del `try` sin que el `catch` llegara a
@@ -341,9 +291,9 @@ export const createDirectoryHandleBlobStore = (
    * `createWritable()` **no escribe en el fichero**: abre un fichero temporal
    * aparte. `write()` llena ese temporal. Es `close()` quien lo vuelca sobre el
    * fichero de verdad, de una vez. Sin `close()` no se guarda absolutamente
-   * nada, **y ningún test lo detecta** —§6.3 usa justamente este caso como
-   * ejemplo de lo que un doble sobre un `Map` deja pasar en verde—. Lo detecta
-   * el paso 1 de `VERIFICACION-MANUAL.md`, y nada más.
+   * nada, **y ningún test lo detecta**: un doble sobre un `Map` pasa en verde con
+   * el `close()` olvidado. Lo detecta el paso 1 de `VERIFICACION-MANUAL.md`, y
+   * nada más.
    *
    * Ese mismo mecanismo del temporal es lo que hace que aquí no haga falta un
    * `abort()` en caso de fallo: si algo revienta antes del `close()`, **el

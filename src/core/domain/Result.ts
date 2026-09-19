@@ -1,25 +1,13 @@
 /**
- * El fallo como valor de retorno, no como excepción (`ARCHITECTURE.md` §6.5).
+ * El fallo como valor de retorno, no como excepción.
  *
- * Una excepción **no aparece en ninguna firma**: `put(entity: Note):
- * Promise<void>` es, leída, una función que promete no fallar nunca. TypeScript
- * no tiene `throws` en el tipo y no va a tenerlo, así que quien llama no se
- * entera de que hay un caso que tratar y el compilador tampoco puede avisarle.
- * `Result` mete ese caso **dentro del tipo**, que es donde el resto de la
- * arquitectura ya trabaja.
+ * Una excepción no aparece en ninguna firma: `put(nota): Promise<void>` es, leída,
+ * una función que promete no fallar nunca, así que quien llama no se entera de que
+ * hay un caso que tratar. Esto lo mete dentro del tipo, y **leer el valor sin
+ * comprobar antes no compila**.
  *
- * ── Por qué unión discriminada ─────────────────────────────────────────────
- *
- * El mismo estilo que `Content` (por `type`) y `Position` (por `at`), aquí por
- * `ok`: al comprobar `if (r.ok)` el compilador estrecha, y **leer `r.value` sin
- * comprobar antes no compila**. Ésa es toda la fuerza del mecanismo; no hay más
- * maquinaria debajo.
- *
- * ── A mano, y sin helpers de más ───────────────────────────────────────────
- *
- * Veinte líneas y cero dependencias. Tampoco lleva `map`, `andThen` ni
- * `unwrapOr`: aquí no se construye lo que no tiene consumidor, y el día que uno
- * de ellos haga falta de verdad se añade entonces.
+ * Veinte líneas y cero dependencias. Sin `map` ni `andThen`: el día que uno haga
+ * falta de verdad se añade entonces.
  */
 
 export type Result<T, E> =

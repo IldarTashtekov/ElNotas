@@ -1,32 +1,14 @@
 /**
- * Qué ha cambiado entre dos estados: **la mitad pura del write-behind**.
+ * Qué ha cambiado entre dos estados, para no escribir en disco lo que sigue igual.
  *
- * Es el eslabón ② de la cadena de identidad (`ARCHITECTURE.md` §3), el que
- * decide si algo llega a disco. Y está aquí, en el core, por una razón muy
- * concreta: **es la única mitad que puede equivocarse en silencio.** La otra
- * mitad —el temporizador, el debounce, llamar al adaptador— es fontanería y vive
- * en `src/storage/`, porque `setTimeout` ni siquiera compila dentro de la verja
- * (§6.4).
+ * No compara campo por campo: compara **referencias**. Una nota que no se tocó es
+ * literalmente el mismo objeto que antes, así que basta un `===`. Y como el estado
+ * se copia por capas, dos comparaciones descartan una clase entera: mil notas no
+ * cuestan más que una si lo único que cambió fue un contexto.
  *
- * Partido así, esto se comprueba con dos estados y ninguna espera.
- *
- * ── Todo se decide con `===`, y ahí está el truco ──────────────────────────
- *
- * No se comparan entidades campo por campo: se comparan **referencias**. Una
- * nota que no cambió es literalmente el mismo objeto que antes, porque el
- * reducer devuelve el estado intacto cuando una operación no aplica y sólo
- * reemplaza lo que de verdad tocó.
- *
- * El atajo de arriba es todavía mejor: al editar una nota, el reducer devuelve
- * `{ ...state, notes: { …nuevo… } }`, así que `plans` y `contexts` siguen siendo
- * **el mismo objeto**. Dos comparaciones de referencia y esas dos clases enteras
- * quedan descartadas sin recorrer nada. Mil notas no cuestan más que una si sólo
- * cambió un contexto.
- *
- * ⚠️ Y la cara fea: si alguien escribe una operación que devuelve una copia
- * equivalente cuando no cambió nada, esto empieza a decir que **todo** está
- * sucio, siempre. No falla ninguna prueba obvia — sólo se escribe a disco de más
- * para siempre. Por eso las pruebas de aquí son de identidad.
+ * ⚠️ De lo que depende: si alguna operación devuelve una copia equivalente cuando
+ * no ha cambiado nada, esto dirá que **todo** está sucio, siempre. No falla
+ * ninguna prueba obvia — sólo se escribe de más para siempre.
  */
 
 import type { AppState } from "../domain/AppState"

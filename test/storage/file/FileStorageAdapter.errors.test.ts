@@ -2,32 +2,14 @@
  * Lo que el contrato no puede ver: **el esquema en disco y la traducción de
  * errores** de `FileStorageAdapter`.
  *
- * ── Por qué este fichero existe, si el adaptador de memoria no tiene ninguno ─
+ * El contrato habla el idioma de entidades e ids y no sabe que existe un
+ * `BlobStore`, así que no puede escribir «guarda una nota y comprueba que el
+ * fichero se llama `notes/compra.json`» ni «haz que la plataforma falle». Dicho de
+ * otro modo: el contrato prueba que esto es *un almacén*; esto prueba que es *el
+ * de ficheros*.
  *
- * La regla del proyecto es que un adaptador está terminado cuando pasa la suite
- * de contratos, y que escribirle pruebas propias suele ser la señal de que uno
- * se está apoyando en un detalle que los demás backends no cumplen. Esto no es
- * ese caso, y la diferencia importa:
- *
- * - la suite de contratos habla el idioma de **entidades e ids**, y no sabe que
- *   existe un `BlobStore`. No puede escribir «guarda una nota y comprueba que el
- *   fichero se llama `notes/compra.json`», ni «haz que la plataforma falle»;
- * - y eso deja sin probar justo las dos cosas que este adaptador tiene de suyo:
- *   **que el `err` de abajo se propague sin reempaquetar** y **que unos bytes
- *   que no son JSON salgan como `corrupt`**. Escribir la traducción y no
- *   probarla sería escribir media traducción.
- *
- * Dicho de otro modo: el contrato prueba que este adaptador es *un almacén*;
- * esto prueba que es *el de ficheros*.
- *
- * ── La identidad del error se comprueba con `strictEqual`, y a propósito ────
- *
- * La excepción razonada del `deepEqual` es la suite de contratos, que compara
- * entidades por valor porque un almacén no promete devolver el mismo objeto.
- * Aquí se compara **el objeto de error**, y ahí sí se exige identidad: lo que se
- * está probando es que el adaptador **no lo toca**. Con `deepEqual` pasaría
- * igual de verde uno que lo reconstruyera por el camino — y reconstruirlo es el
- * primer paso para deformarlo.
+ * El objeto de error se compara con `strictEqual`, no con `deepEqual`: lo que se
+ * está probando es que el adaptador **no lo toca**.
  */
 
 import { test } from "node:test"
@@ -102,7 +84,7 @@ test("FileStorageAdapter: cada clase de entidad va a su carpeta", async () => {
   ])
 })
 
-test("FileStorageAdapter: el JSON va indentado, que es para lo que §6.2 parte por entidad", async () => {
+test("FileStorageAdapter: el JSON va indentado, que es para lo que se parte por entidad", async () => {
   const { blobs, s } = montar()
   await s.notes.put(COMPRA)
 
@@ -270,7 +252,7 @@ test("FileStorageAdapter: bytes que no son JSON salen como corrupt, con su path"
 
   /* `corrupt` y no `io`, que es toda la razón de que sean casos distintos: con
      `io` la app reintentaría leer eternamente un fichero que no va a cambiar, y
-     parecería que está todo roto cuando sólo falla una nota (§6.5). */
+     parecería que está todo roto cuando sólo falla una nota. */
   if (fallo.kind !== "corrupt") throw new Error(`se esperaba corrupt y vino ${fallo.kind}`)
   // El camino viaja dentro: `corrupt` existe para poder DECIR CUÁL.
   assert.equal(fallo.path, "notes/compra.json")
@@ -324,7 +306,7 @@ test("FileStorageAdapter: bytes que no son UTF-8 válido son corrupt", async () 
 })
 
 test("FileStorageAdapter: ⚠️ un fichero corrupto tumba el getAll ENTERO (decisión 3)", async () => {
-  /* Está puesto por escrito porque CONTRADICE a §6.5, que pide aislar esa
+  /* Está puesto por escrito porque CONTRADICE lo que se pide del `corrupt`: aislar esa
      entidad y seguir con el resto. La firma del puerto es todo o nada, y las
      otras salidas son peores: saltárselo en silencio dejaría `ItemRef`
      colgando. Si algún día se añade el `onCorrupt` del adaptador, esta prueba

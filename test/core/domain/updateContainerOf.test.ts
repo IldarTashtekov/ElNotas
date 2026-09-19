@@ -17,7 +17,7 @@ import type { ContainerTransform } from "#core/domain/updateContainerOf"
 import { updateContainerOf } from "#core/domain/updateContainerOf"
 
 /* ─────────────────────────── El árbol de pruebas ───────────────────────────
-    La lista de la compra de §2.3, con una nieta añadida para poder comprobar
+    La lista de la compra de `ARCHITECTURE.md`, con una nieta añadida para poder comprobar
     que la búsqueda del contenedor baja más de un nivel:
 
         Text     "Compra semanal"

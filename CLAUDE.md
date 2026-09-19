@@ -268,6 +268,22 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 - **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
   memoria, **nunca** en localStorage. En desktop, keychain del sistema.
 - **Los comentarios del código van en castellano**, igual que la documentación.
+- **La cabecera de un fichero responde a «¿para qué sirve esto?» y para ahí.** De tres a ocho
+  líneas, en lenguaje que entienda quien no programa: qué hace y, si lo tiene, el precio. **El
+  porqué NO va en el código**, va en `ARCHITECTURE.md`. Una cabecera que argumenta una decisión
+  es esa sección copiada, y las copias se separan del original sin que nadie lo note. Se midió
+  antes de escribir esta regla: **1035 de las 4416 líneas de `src/core` y `src/storage` eran
+  cabecera** —31 de media, y `BlobStore.ts` tenía 89 para 8 de código—, y las 29 primeras líneas
+  ya respondían a la pregunta ellas solas. Lo que sobraba iba debajo.
+- **⚠️ NADA de `§` en el código, ni en cabecera ni dentro.** Apunta a un número que se renumera
+  solo, nada comprueba esos punteros y había **123**. La frase casi siempre sobrevive sin él
+  porque ya lleva dentro lo que hay que saber: «sale `corrupt` y no `io` por el criterio de
+  §6.5» es «sale `corrupt` y no `io`: reintentar no arregla un fichero ilegible». Si de verdad
+  hay que señalar un documento, se nombra el **fichero**, que no se renumera.
+- **Los comentarios de dentro se quedan: son los que pagan su sitio.** Cortos, pegados a la
+  línea que explican y diciendo lo que el código no dice —«alguien se nos adelantó», «el error
+  viaja INTACTO»—. La verbosidad estaba en las cabeceras, no en ellos. Al quitar una cabecera,
+  **lo que explicara y no esté ya en `ARCHITECTURE.md` se mueve allí**, no se borra.
 
 ## Dependencias
 

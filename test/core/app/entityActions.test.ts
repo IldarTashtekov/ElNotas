@@ -5,7 +5,7 @@
  * la Fase 1**: la lógica está aquí, y por eso hay más que probar.
  *
  * El centro de todo es `delete-note`, que es la primera acción del proyecto que
- * toca **dos entidades a la vez** (`ARCHITECTURE.md` §9.7). Tiene tres cosas que
+ * toca **dos entidades a la vez**. Tiene tres cosas que
  * hacer bien y las tres tienen su prueba:
  *
  *   1. limpiar los contextos que la listaban — o queda una `ItemRef` colgando;
@@ -14,7 +14,7 @@
  *
  * La (3) es la que no salta a la vista y la que más cuesta si se rompe: un `map`
  * sobre todos los contextos hace que borrar una nota reescriba en disco la app
- * entera, sin fallar nada visible (§3).
+ * entera, sin fallar nada visible.
  */
 
 import { test } from "node:test"

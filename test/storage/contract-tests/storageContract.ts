@@ -1,52 +1,18 @@
 /**
  * LA SUITE DE CONTRATOS: una sola especificación que **todos** los adaptadores
- * tienen que pasar (`ARCHITECTURE.md` §6.3).
+ * tienen que pasar.
  *
- * La idea, que es lo importante: en vez de escribir pruebas para cada adaptador
- * por separado —lo que garantiza que cada uno funcione *a su manera*— se escribe
- * **una sola suite contra la interfaz**, y se ejecuta contra cada
- * implementación. Un adaptador está terminado cuando pasa el contrato. Si un
- * backend nuevo se comporta distinto, el contrato lo cantea el primer día y no
- * seis meses después.
- *
- * Se usa así, y la Fase 3 hará exactamente lo mismo con el de fichero:
+ * En vez de escribir pruebas para cada adaptador por separado —lo que garantiza
+ * que cada uno funcione *a su manera*— se escribe una sola suite contra la
+ * interfaz y se ejecuta contra cada implementación. Un adaptador está terminado
+ * cuando pasa el contrato:
  *
  *     runStorageContract("MemoryStorageAdapter", createMemoryStorageAdapter)
  *
- * ── Por qué este fichero se llama `.test.ts` si no tiene ni una prueba ─────
- *
- * Porque las tres configuraciones de TypeScript tratan a los `*.test.ts` como
- * código de pruebas, y esto lo es: importa `node:test` y `node:assert`, que
- * `tsconfig.json` no typechequea (va sin los tipos de Node). La alternativa era
- * añadir una exclusión a mano en la config de la app; se prefiere el nombre a
- * tocar la infraestructura. `node --test` lo carga y no encuentra pruebas de
- * nivel superior, que es inocuo: las define quien llama a `runStorageContract`.
- *
- * ── Por qué aquí SÍ se usa `deepEqual` ────────────────────────────────────
- *
- * El proyecto dice `strictEqual`, nunca `deepEqual`, y con razón: en el dominio
- * lo que se comprueba es la **identidad** de los objetos, y un `deepEqual` pasa
- * igual de verde con una implementación que la rompe (§3).
- *
- * **Aquí es al revés, y es deliberado.** Un almacén no promete devolver el mismo
- * objeto: el de memoria lo hace porque no serializa nada, y el de fichero
- * devolverá uno equivalente recién salido de un `JSON.parse`. Si el contrato
- * exigiera `strictEqual`, estaría exigiendo algo que **ningún adaptador real
- * puede cumplir**, y lo pasaría sólo el de memoria — justo lo contrario de para
- * lo que existe. Comparar por valor no es aquí una relajación: es el contrato.
- *
- * ── Qué añadió el paso 0 de la Fase 3: los puertos devuelven `Result` ──────
- *
- * Todo lo que se le pide al adaptador viene ahora envuelto (§6.5), y eso mete en
- * el contrato tres exigencias que antes no se podían escribir:
- *
- * 1. **el camino feliz devuelve `ok`** — un adaptador que devolviera `err`
- *    cuando todo va bien pasaría cualquier prueba que sólo mirara el valor;
- * 2. **ausencia no es fallo** — `get` de lo que no está es `ok(null)` y `delete`
- *    de lo que no está es `ok`, no dos errores;
- * 3. **nada lanza por encima de la frontera** — ni siquiera `transaction`, que
- *    ejecuta código ajeno. Ahí es donde más se nota: las dos pruebas que antes
- *    exigían *propagar* la excepción ahora exigen **traducirla**.
+ * ⚠️ Aquí SÍ se compara con `deepEqual`, al revés que en el resto del proyecto, y
+ * es deliberado: un almacén no promete devolver el mismo objeto —el de fichero
+ * devolverá uno recién salido de un `JSON.parse`—, así que exigir `strictEqual`
+ * sería exigir algo que sólo el de memoria puede cumplir. **No lo "arregles".**
  */
 
 import { test } from "node:test"

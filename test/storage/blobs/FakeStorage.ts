@@ -1,36 +1,16 @@
 /**
  * Un `localStorage` de mentira, sobre un `Map`, **con inyección de excepciones**.
  *
- * Es lo que hace que `LocalStorageBlobStore` se pueda verificar entero en Node
- * (`ARCHITECTURE.md` §6.3, que lo describe como «un objeto falso de diez
- * líneas»; son más, y todas las de más son para poder fallar).
+ * Es lo que permite verificar `LocalStorageBlobStore` entero en Node.
  *
- * ── Por qué aquí un doble SÍ es legítimo, y en el de la carpeta no ─────────
- *
- * Es el mismo razonamiento que justifica `FakeBlobStore`: lo que se prueba con
- * este doble es **la lógica de la capa de encima** —el espacio de nombres, el
- * base64, el recorrido de claves y, sobre todo, la traducción de excepciones—,
- * y para eso el almacén sólo tiene que comportarse como dice su especificación,
- * que en el caso de `Storage` son seis miembros y ninguna sorpresa.
- *
- * Lo que §6.3 descarta es al revés: usar un doble para probar una capa que **no
- * tiene lógica propia** y sólo traduce a una API del navegador. Ahí el doble
- * prueba lo que uno *cree* que hace la API. Aquí no hay nada que creer: un
- * `getItem` que no está devuelve `null` y punto.
- *
- * ── Lo que añade sobre un `Map`: poder lanzar ─────────────────────────────
- *
- * Sin eso quedaría sin probar justo lo que este `BlobStore` tiene de suyo: que
- * la excepción de cuota salga como `quota-exceeded` y no como `io`. Y como los
- * navegadores no se pusieron de acuerdo en cómo es esa excepción, hace falta
- * poder lanzar **cualquier cosa**, no una en concreto:
+ * Lo que añade sobre un `Map` es poder lanzar, porque sin eso quedaría sin probar
+ * lo que ese `BlobStore` tiene de suyo: que la excepción de cuota salga como
+ * `quota-exceeded` y no como `io`. Y como los navegadores no se pusieron de
+ * acuerdo en cómo es esa excepción, hace falta poder lanzar cualquier cosa:
  *
  *     lanzarEn(op, loQueSea)   la siguiente llamada a esa operación lanza ESO
  *     escribirCrudo(k, v)      mete texto tal cual, sin pasar por base64
  *     claves()                 las claves de verdad, con su prefijo
- *
- * Se llama `.test.ts` por lo mismo que `FakeBlobStore.test.ts`: es código de
- * pruebas y no debe salir por `src/storage/index.ts`.
  */
 
 /** Los cinco miembros de `Storage` que `LocalStorageBlobStore` llega a tocar. */

@@ -7,9 +7,9 @@
  *
  * Que esta línea pase es la mitad de la Fase 3: significa que toda la lógica de
  * la persistencia en fichero —serializar, id a camino, el manifiesto— queda
- * verificada en Node, sin navegador, con el `BlobStore` falso (§6.3). Lo que
- * queda sin automatizar son las ~50 líneas de `DirectoryHandleBlobStore`, que no
- * tienen lógica propia.
+ * verificada en Node, sin navegador, con el `BlobStore` falso. Lo que queda sin
+ * automatizar es `DirectoryHandleBlobStore`, que no tiene lógica propia y se
+ * verifica a mano con `VERIFICACION-MANUAL.md`.
  *
  * La otra mitad está en `FileStorageAdapter.errors.test.ts`, y no es una prueba
  * «propia del adaptador» en el sentido que el proyecto desaconseja: prueba la

@@ -35,7 +35,7 @@ test("err envuelve el error y NO trae valor", () => {
 test("ok devuelve el MISMO objeto que se le dio, no una copia", () => {
   /*
       ⚠️ Identidad, con `strictEqual` y no `deepEqual`. Un almacén que devolviera
-      copias rompería el diff por referencia del write-behind (§3): todo lo leído
+      copias rompería el diff por referencia del write-behind: todo lo leído
       parecería sucio. El envoltorio no puede ser quien introduzca la copia.
   */
   const nota: { readonly id: string } = { id: "compra" }

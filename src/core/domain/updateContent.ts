@@ -1,22 +1,18 @@
 /**
-* Copia por camino (*path copying*): llegar hasta un bloque del contenido de una
-* nota y cambiarlo reconstruyendo SÓLO el camino desde la raíz hasta él, y
-* reutilizando por referencia todo lo demás. La técnica está explicada en
-* `ARCHITECTURE.md` §2.3; la invariante que sostiene, en §3.
-*
-* Esta es la **primitiva A** de las dos que necesitan las operaciones de
-* contenido (§5.4): *transformar un nodo*. La **B** —*transformar el array
-* contenedor*, que es la que usarán `insert`, `remove`, `split` y `merge`— es
-* otra pieza y llega con las operaciones estructurales.
-*
-* ⚠️ LA INVARIANTE, que es lo único que de verdad no se puede romper aquí:
-*
-*     si nada cambió, se devuelve EL MISMO array de entrada,
-*     no una copia equivalente.
-*
-* Romperla no hace fallar nada visible. La app sigue funcionando: sólo redibuja
-* de más y escribe en disco de más, en silencio y para siempre.
-*/
+ * Llegar hasta un bloque del contenido de una nota y cambiarlo reconstruyendo
+ * sólo el camino desde la raíz hasta él, y reutilizando todo lo demás.
+ *
+ * Es la primitiva que sustituye una línea por otra. Cambiar cuántas líneas hay
+ * —añadir, quitar, partir una en dos, unir— es la otra, `updateContainerOf`.
+ *
+ * ⚠️ LA INVARIANTE, que es lo único que de verdad no se puede romper aquí:
+ *
+ *     si nada cambió, se devuelve EL MISMO array de entrada,
+ *     no una copia equivalente.
+ *
+ * Romperla no hace fallar nada visible: la app sigue funcionando, sólo redibuja de
+ * más y escribe en disco de más, en silencio y para siempre.
+ */
 
 import type { CheckBox, Content, Text } from "./Content"
 import { isCheckBox } from "./Content"
@@ -70,7 +66,7 @@ const updateCheckBoxes = (
  * profundidad es `CheckBox`. Con una sola firma `(nodo: Content) => Content` el
  * compilador no podría garantizar que una casilla siga siendo casilla al bajar, y
  * haría falta un `as` o un descarte silencioso — justo lo que este proyecto no
- * quiere (§1). Partiéndola en dos, el cast desaparece.
+ * quiere. Partiéndola en dos, el cast desaparece.
  */
 export interface NodeTransform {
   readonly onText: (text: Text) => Text

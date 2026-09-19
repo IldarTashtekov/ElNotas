@@ -1,27 +1,16 @@
 /**
- * El reducer: `(estado, acción) => estado`.
+ * Recibe la foto actual de la app y una acción, y devuelve la foto siguiente. No
+ * modifica la que recibe.
  *
- * Recibe la foto actual de la app y una acción, y devuelve la foto siguiente.
- * **No modifica la que recibe.** Tiene la forma exacta del callback de
- * `Array.reduce`, y la analogía no es decorativa: la app entera es un `reduce`
- * sobre la secuencia de acciones que ha hecho el usuario.
+ * No lee el reloj ni genera ids —le llegan puestos en la acción— y **no lanza
+ * nunca**: una acción que no se puede aplicar devuelve el estado que recibió. Un
+ * reducer que peta se lleva la app entera por delante, y «el usuario pulsó algo
+ * raro» no es motivo para eso.
  *
- * Dos exigencias, y las dos se comprueban:
- *
- * - **Puro** — no lee el reloj, no genera ids, no toca disco ni DOM. Sólo mira
- *   sus dos argumentos. La hora y la revisión le llegan puestas en `meta`. Por
- *   eso sus pruebas son deterministas sin simular nada.
- * - **Total** — **no lanza excepciones nunca**. Una acción que no se puede
- *   aplicar (marcar una casilla que no existe) devuelve el estado que recibió.
- *   Un reducer que peta se lleva la app entera por delante, y "el usuario pulsó
- *   algo raro" no es motivo para eso.
- *
- * ⚠️ **La línea que sostiene toda la cadena** es la comparación
- * `content === note.content`. Si el contenido no cambió, se devuelve el estado
- * **tal cual** y no se estampan ni `updatedAt` ni `revision`. Sin ella, marcar
- * una casilla que ya estaba marcada ensucia la nota, hace que el `Store` avise,
- * que el render redibuje y que la persistencia escriba (§3). Y no falla nada
- * visible: la app funciona, sólo va más lenta por un motivo invisible.
+ * ⚠️ La línea que lo sostiene todo es `content === note.content`: si el contenido
+ * no cambió se devuelve el estado tal cual, sin tocar `updatedAt` ni `revision`.
+ * Sin ella, marcar una casilla que ya estaba marcada redibuja y escribe en disco,
+ * y no falla nada visible.
  */
 
 import type { AppState } from "../domain/AppState"
@@ -50,10 +39,10 @@ import type { Action, ActionMeta } from "./Action"
  * Las ocho acciones de contenido se reducen igual —buscar la nota, llamar a la
  * operación, comparar, estampar—, y copiar esas catorce líneas ocho veces sería
  * dar ocho oportunidades de olvidarse del `===`. Olvidarlo no rompe nada
- * visible: la app funciona, sólo redibuja y escribe de más para siempre (§3).
+ * visible: la app funciona, sólo redibuja y escribe de más para siempre.
  *
  * Es el mismo razonamiento que hizo que la primitiva A del helper llevara la
- * recursión escrita una vez en lugar de dos (§5.4).
+ * recursión escrita una vez en lugar de dos.
  */
 const onContent = (
   state: AppState,
@@ -124,7 +113,7 @@ const mismaVista = (a: DefaultView, b: DefaultView): boolean =>
  * ⚠️ Las dos mitades de esto importan por igual, y la segunda es la que se
  * olvida: los contextos que **no** la listaban se devuelven **intactos, por
  * referencia**. Un `map` que copiara todos haría que borrar una nota reescribiera
- * en disco cada contexto de la app (§3). Y si ninguno la listaba, se devuelve el
+ * en disco cada contexto de la app. Y si ninguno la listaba, se devuelve el
  * mismo objeto `contexts` de entrada.
  *
  * Los que sí la listaban reciben todos el MISMO `meta`, que por eso se construye

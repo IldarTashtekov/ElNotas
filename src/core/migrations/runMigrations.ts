@@ -1,32 +1,13 @@
 /**
- * El runner de migraciones.
+ * Lleva lo que hay guardado de un formato antiguo al de hoy, paso a paso.
  *
- * `schemaVersion` **es** el mecanismo de migración, y por eso llega con esto y
- * no antes: un número de versión que nadie lee no protege nada
- * (`ARCHITECTURE.md` §9.7). Vive en `StorageAdapter`, no en `AppState`, porque es
- * una propiedad de lo guardado.
+ * Cada paso es una función de datos a datos: recibe lo guardado con el formato
+ * `n` y devuelve lo mismo con el `n+1`. No toca el almacén —escribir es de quien
+ * llama—, y por eso esto se prueba sin ficheros ni navegador.
  *
- * ── Qué es una migración aquí ──────────────────────────────────────────────
- *
- * Una función de **datos a datos**: recibe lo que había guardado con el esquema
- * `n` y devuelve lo mismo con el esquema `n+1`. Pura, sin tocar el almacén. Quien
- * escribe el resultado es quien llama, y por eso esto se puede probar sin
- * ficheros ni navegador.
- *
- * ── Por qué recibe `unknown` y no `StoredEntities` ─────────────────────────
- *
- * Porque es justo lo que **no** se puede dar por sabido. Una migración existe
- * precisamente porque lo guardado tiene una forma **vieja**, que ya no es la que
- * describen los tipos de hoy: tiparla como `StoredEntities` sería mentir, y la
- * mentira se descubriría en runtime leyendo un campo que no existe. El tipo
- * bueno aparece al final, cuando la cadena entera se ha ejecutado.
- *
- * ── La lista está vacía, y eso es correcto ─────────────────────────────────
- *
- * No hay ninguna migración porque **todavía no hay nada guardado con un esquema
- * viejo**: el primero es el primero. Escribir una de ejemplo sería inventarse un
- * pasado que no existe. Lo que sí hace falta es el runner, para que el día que
- * haga falta la primera sólo haya que añadir una fila.
+ * La lista está vacía, y es correcto: todavía no hay nada guardado con un formato
+ * viejo. Lo que hace falta es el runner, para que el día que la haya sólo haya que
+ * añadir una fila.
  */
 
 import { err, ok } from "../domain/Result"
@@ -77,7 +58,7 @@ export interface MigrationResult {
  * código no sabe leer, o si falta el paso que necesita para llegar. Sigue siendo
  * un error y no un no-op —seguir adelante corrompería las notas—, pero viaja en
  * el valor de retorno en lugar de lanzarse, así que quien llama lo ve en la firma
- * y el compilador le obliga a mirarlo (`ARCHITECTURE.md` §6.5).
+ * y el compilador le obliga a mirarlo.
  *
  * Con esto la función es **pura y total**: nunca lanza, pase lo que pase.
  *

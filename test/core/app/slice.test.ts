@@ -3,7 +3,7 @@
  *
  * No comprueba "que marcar una casilla funcione" —eso es lo fácil—. Comprueba la
  * propiedad que sostiene toda la arquitectura, y que es el criterio de cierre de
- * la Fase 1 (`ARCHITECTURE.md` §9.5):
+ * la Fase 1:
  *
  *     marcar una casilla que YA estaba marcada
  *     no avisa a nadie y no ensucia `updatedAt`.

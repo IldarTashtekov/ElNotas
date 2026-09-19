@@ -3,7 +3,7 @@
  *
  * A diferencia de `MemoryStorageAdapter` —que no tiene ni una prueba propia
  * porque no tiene lógica propia— aquí sí hay tres cosas que probar, y son las
- * tres que este fichero inventa por encima del puerto (§6.1):
+ * tres que este fichero inventa por encima del puerto:
  *
  *     el espacio de nombres   que no pise ni lea claves ajenas
  *     el base64               que los bytes vuelvan EXACTOS, sean los que sean
@@ -106,7 +106,7 @@ test("write reemplaza lo que hubiera", async () => {
 test("read de un camino que no existe devuelve ok(null)", async () => {
   const { blobs } = montar()
   /* El sobre entero, no sólo el `null` de dentro: un `err(not-found)` aquí
-     estaría colapsando "no está" con "no he podido mirar" (§6.5). */
+     estaría colapsando "no está" con "no he podido mirar". */
   assert.deepEqual(await blobs.read("no/existe.json"), ok(null))
 })
 

@@ -1,16 +1,15 @@
 /**
- * Las operaciones de contenido de una nota.
+ * Las ocho operaciones sobre el contenido de una nota.
  *
- * Son ocho (`ARCHITECTURE.md` §9.3) y viven juntas a propósito: comparten una
- * misma disciplina, y leerlas seguidas es como se comprueba que se aplica igual
- * en todas.
+ * Viven juntas a propósito: comparten una misma disciplina, y leerlas seguidas es
+ * como se comprueba que se aplica igual en todas.
  *
  *     Una operación que no aplica NO HACE NADA, en lugar de fallar.
  *     Y "no hacer nada" significa devolver el array de ENTRADA,
  *     no una copia equivalente.
  *
- * Enumerar cuándo no aplica cada una es **la mitad de su especificación**: la
- * tabla está en §9.3 y cada fila tiene su prueba en `operations.test.ts`.
+ * Enumerar cuándo no aplica cada una es **la mitad de su especificación**, y cada
+ * caso tiene su prueba.
  *
  * Todas son puras: no generan IDs, no leen el reloj y no lanzan excepciones.
  */
@@ -48,11 +47,11 @@ export const setText = (
  * Se llama `setChecked` **y no `toggleChecked`** a conciencia: un *toggle* no
  * puede ser nunca un no-op —siempre cambia algo por definición—, mientras que
  * `setChecked(id, true)` sobre una casilla ya marcada sí puede devolver el árbol
- * intacto. El nombre es lo que sostiene la invariante (§3).
+ * intacto. El nombre es lo que sostiene la invariante.
  *
  * **No arrastra a las hijas**, y es decisión cerrada: la primitiva es
  * deliberadamente mínima y la cascada se compone arriba, en la barra de
- * `ModosEscritura` (§7.2).
+ * `ModosEscritura`.
  *
  * **No hace nada si:** el id no existe · el id es un `Text`, que no tiene
  * `checked` · ya está en ese valor. Los tres salen de la forma del helper, sin
@@ -143,7 +142,7 @@ export const insert = (
 
     default: {
       // Exhaustividad: si `Position` gana un caso algún día, esto deja de
-      // compilar en vez de tratarlo en silencio (§9.4).
+      // compilar en vez de tratarlo en silencio.
       const nunca: never = position
       return nunca
     }
@@ -165,7 +164,7 @@ const removeFrom = <T extends Content>(
  * Saca una línea de la nota.
  *
  * **No hace nada si:** el id no existe · **es una casilla con hijas**. Lo
- * segundo es decisión cerrada (§9.3): se borra de abajo arriba o no se borra.
+ * segundo es decisión cerrada: se borra de abajo arriba o no se borra.
  * Ninguna operación del dominio hace desaparecer contenido que el usuario no
  * esté mirando, y borrar una rama de cuarenta casillas por accidente no es un
  * *deshacer* más.
@@ -183,8 +182,8 @@ export const remove = (
   })
 
 /* ───────────────────────────── Cambiando de clase ─────────────────────────────
-    Las dos que dispara el botón de `ModosEscritura` (§7.2), y también el
-    Retroceso al principio de una casilla de la raíz (§7.3).
+    Las dos que dispara el botón de `ModosEscritura`, y también el
+    Retroceso al principio de una casilla de la raíz.
 
     Las dos conservan el `ContentId` de la línea: es la MISMA línea con otra
     pinta, no una nueva. Si cambiara de id, el editor —que reconcilia por
@@ -246,7 +245,7 @@ export const convertToText = (
   })
 
 /* ───────────────────────────── Partir y unir ─────────────────────────────
-    Las del teclado (§7.3): Intro en medio de una línea la parte, Retroceso al
+    Las del teclado: Intro en medio de una línea la parte, Retroceso al
     principio la une con la de arriba. Son inversas, y esa simetría es
     comprobable: partir por cualquier punto y volver a unir devuelve el original.
     Por eso al unir NO se añade un espacio de cortesía. */
@@ -313,7 +312,7 @@ export const split = (
 /**
  * Une una línea con la de arriba: la línea desaparece y su texto sube.
  *
- * **Quién recibe el texto depende de dónde estuviera** (§9.3):
+ * **Quién recibe el texto depende de dónde estuviera**:
  *
  *     tiene una hermana encima  →  esa hermana anterior
  *     es la primera hija        →  su madre, y las demás hijas se quedan donde estaban

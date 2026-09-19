@@ -1,45 +1,18 @@
 /**
  * Un `BlobStore` de mentira, sobre un `Map`, **con inyección de fallos**.
  *
- * Es lo que hace que `FileStorageAdapter` —donde está toda la lógica de la
- * persistencia en fichero— se pueda verificar entero en Node, sin navegador y
- * sin tocar el disco (`ARCHITECTURE.md` §6.3).
+ * Es lo que permite verificar `FileStorageAdapter` entero en Node, sin navegador
+ * y sin tocar el disco.
  *
- * ── Por qué aquí un doble SÍ es legítimo ───────────────────────────────────
+ * Un `Map` a secas sólo probaría el camino feliz, y lo delicado de ese adaptador
+ * es justo lo otro. De ahí las dos herramientas que este falso añade al puerto:
  *
- * Parece chocar con la decisión de §6.3 de **no** probar los adaptadores de
- * navegador con dobles, y no choca: lo que allí se descarta es usar un doble
- * para probar `DirectoryHandleBlobStore`, que **no tiene lógica propia** y sólo
- * traduce a la API del navegador — probarlo con un `Map` demostraría lo que uno
- * *cree* que hace esa API, no lo que hace (el ejemplo escrito allí es el
- * `close()` que se olvida y aun así pasa en verde).
+ *     fallarEn(op, error)       la siguiente llamada devuelve ESE MISMO objeto
+ *     escribirTexto(ruta, txt)  mete texto crudo, JSON válido o no
  *
- * Aquí es al revés: lo que se prueba con este doble es **la lógica del
- * adaptador de encima** —serializar, traducir id a camino, mantener el
- * manifiesto, traducir errores—, y para eso el `BlobStore` sólo tiene que
- * comportarse como dice su puerto. Cuanto más gorda es la capa que se prueba,
- * más vale el doble; cuanto más fina, menos.
- *
- * ── Guardar bytes no basta: hace falta poder fallar ────────────────────────
- *
- * Un `Map` y ya está probaría únicamente el camino feliz, y dejaría sin probar
- * justo lo que este adaptador tiene de delicado: que **el `err` de la plataforma
- * se propague sin reempaquetar** y que **unos bytes que no son JSON salgan como
- * `corrupt`**. De ahí las dos herramientas que este falso añade al puerto:
- *
- *     fallarEn(op, error)       la siguiente llamada a esa operación devuelve
- *                               ESE MISMO objeto de error — lo que permite
- *                               comprobar la propagación con `strictEqual`
- *     escribirTexto(ruta, txt)  mete texto crudo en una ruta, JSON válido o no
- *
- * `fallarEn` devuelve **el mismo objeto**, no uno equivalente, y esa es toda la
- * gracia: con `deepEqual` pasaría igual de verde un adaptador que reconstruyera
- * el error por el camino, y reconstruirlo es el primer paso para deformarlo.
- *
- * Este fichero se llama `.test.ts` por el mismo motivo que la suite de
- * contratos: es código de pruebas y no debe salir por `src/storage/index.ts`.
- * `node --test` lo carga y no encuentra pruebas de nivel superior, que es
- * inocuo.
+ * `fallarEn` devuelve el mismo objeto, no uno equivalente, y ahí está la gracia:
+ * con `deepEqual` pasaría verde un adaptador que reconstruyera el error por el
+ * camino, y reconstruirlo es el primer paso para deformarlo.
  */
 
 import type { BlobStore, Result, StorageError } from "#core/index"

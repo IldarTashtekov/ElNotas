@@ -2,14 +2,14 @@
  * LA CADENA ENTERA, de la pulsación al disco.
  *
  * La rebanada vertical de la Fase 1 (`core/app/slice.test.ts`) demostró tres de
- * los cuatro eslabones de `ARCHITECTURE.md` §3: que el reducer no ensucia, que
+ * los cuatro eslabones de la cadena de identidad: que el reducer no ensucia, que
  * el `Store` no avisa y que la operación devuelve su entrada. Faltaba el ②, que
  * no existía todavía. Esto lo cierra:
  *
  *     marcar una casilla que YA estaba marcada
  *     no avisa a nadie, no ensucia `updatedAt`, y NO LLEGA A DISCO.
  *
- * Es el punto 3 del criterio de cierre de la Fase 2 (§9.8), y la primera vez que
+ * Es el punto 3 del criterio de cierre de la Fase 2, y la primera vez que
  * `core` y `storage` se montan juntos: `Store` → `createWriteBehind` →
  * `MemoryStorageAdapter`, con los puertos `Clock` e `IdGenerator` fabricados
  * aquí mismo en dos líneas.

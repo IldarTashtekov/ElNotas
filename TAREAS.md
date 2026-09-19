@@ -578,8 +578,16 @@ documentación**.
     (`7342529b…`). Por eso **no se repitió la lista de verificación manual**: el navegador
     ejecutaría los mismos bytes que pasaron la lista el 2026-09-13. Es la única excepción
     registrada a la regla de `CLAUDE.md` de «si tocas ese fichero, se repasa la lista», y se
-    apoya en evidencia, no en criterio. **Si un cambio futuro mueve un solo byte del emitido,
-    la excepción no vale y la lista se repasa.**
+    apoya en evidencia, no en criterio.
+      **⚠️ La excepción se AMPLIÓ el 2026-09-19, al adelgazar la documentación, y conviene
+      saber por qué:** `removeComments` está en `false` —ningún `tsconfig` lo toca, y ése es el
+      valor por defecto—, así que **TypeScript emite los comentarios al `.js`** y un cambio de
+      sólo comentarios mueve el sha256 sin que cambie una instrucción. Medido ese día: el
+      emitido pasó de `7342529b…` a `55946a3f…`, y **el código con los comentarios fuera salió
+      idéntico**, `1724398b…` antes y después. Así que la excepción ya no es «mismo emitido»
+      sino **«mismo código una vez quitados los comentarios»**, y se sigue apoyando en una
+      medición, no en criterio. Lo que no cambia: **si se mueve una sola instrucción, la lista
+      se repasa.**
   - **Las tres excepciones viejas se confirman tal cual:** la constante que **es** una función
     —se anotan sus parámetros y su retorno, no la constante—, el `as const` de
     `src/core/app/diffState.ts:52` y los dos destructuring de `src/core/app/reduce.ts:227`
@@ -616,6 +624,36 @@ documentación**.
         cada función, saltándose las cuatro excepciones y mirando sólo `src/`. Está probado. Pero
         el motivo de arriba no cambia por que sea fácil de escribir.)*
 
+- [x] **Adelgazar la documentación del código** — ✅ Hecho el **2026-09-19**, a petición del
+      usuario: *«la documentación del código es extremadamente verbosa y técnica; la quiero
+      mucho más corta, que un no dev la entienda, y que responda a "¿para qué sirve esto?"»*.
+      Lo medido antes de tocar nada, que es lo que dio la forma del arreglo: **1035 de las 4416
+      líneas de `src/core` y `src/storage` eran cabecera de fichero** —33 cabeceras, 31 de
+      media, y `BlobStore.ts` con 89 para 8 líneas de código—, mientras que los comentarios
+      pegados a su línea sumaban poco. O sea: **la verbosidad estaba concentrada en las
+      cabeceras**, y no repartida. Y la primera línea de las 29 ya respondía a la pregunta ella
+      sola; lo que sobraba iba debajo, y era `ARCHITECTURE.md` copiado.
+      Resultado: cabeceras de `src/` **1035 → 328**, las de `test/` 407 → 308, el módulo entero
+      de 4416 a 3600 líneas. 44 ficheros, −1237/+376, **ni una línea de código tocada** y
+      `npm run check` en verde con las 319 pruebas. La regla, en `CLAUDE.md`.
+  - **Las referencias `§` del código se fueron enteras: 123 → 0.** El motivo lo puso el usuario
+    —*«ARCHITECTURE puede cambiar, de hecho no hace falta el porqué»*— y es doble: un `§6.5`
+    apunta a un número que se renumera solo, **nada comprueba esos punteros**, y la frase casi
+    siempre sobrevive sin él porque ya lleva dentro lo que hay que saber. Comprobado ese día:
+    las 21 secciones citadas existían todas, así que ninguna estaba rota **todavía**. Se
+    quitaron igual. En los documentos (`VERIFICACION-MANUAL.md` incluido) los `§` se quedan:
+    ahí sí son navegación.
+  - **Tres razonamientos se movieron a `ARCHITECTURE.md` en vez de borrarse**, porque no
+    estaban allí: por qué `BlobStore` mueve `Uint8Array` y no `string`; las dos decisiones
+    propias de `LocalStorageBlobStore` (base64 frente a latin1, con su +33%, y el espacio de
+    nombres); y por qué un `get` vacío devuelve `null` y no `undefined`. **Comprobar cada
+    cabecera contra el documento antes de borrarla es parte del procedimiento**, no un extra.
+  - **Cayeron dos datos que ya estaban mal**, y los dos son el mismo síntoma: un comentario
+    decía «~50 líneas de `DirectoryHandleBlobStore`» cuando son 156, y otro remitía a una parte
+    de la cabecera de `BlobStore.ts` que se acababa de quitar.
+  - **Las cabeceras de `test/` se quedan casi enteras, y es una elección.** Explican *por qué
+    existe esa prueba* —«esto no comprueba que detecte los cambios, sino que **no** detecte los
+    que no hay»—, que es justo el registro que se pedía. Sólo perdieron los `§`.
 - [x] **Que `npm test` falle si no hay ficheros de test.** ✅ Hecho. `tools/require-tests.mjs`
       cuenta los `*.test.js` de `tmp-test/test/` y sale con código 1 si no hay ninguno, porque
       `node --test` sin ficheros imprime `1..0` y **sale con código 0**. Mira la salida
