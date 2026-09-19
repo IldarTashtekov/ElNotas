@@ -234,12 +234,16 @@ su caso de reducer y el `switch` vuelve a ser exhaustivo por el compilador · `d
 los contextos consistentes y devuelve intactos los que no la listaban, con `strictEqual` ·
 `npm run check` en verde con **216 pruebas al cerrarla**.
 
-### Fase 3 — Fichero local ← EN CURSO: el código está entero, la fase NO
+### Fase 3 — Fichero local ✅ TERMINADA
 
-**Lo único que falta es el punto 5 de `ARCHITECTURE.md` §9.9: ejecutar la lista de verificación
-manual.** Está escrita y nadie la ha pasado, así que `DirectoryHandleBlobStore` es código que
-existe y que **nadie ha visto correr**. Necesita un navegador Chromium y las manos del usuario;
-no hay forma de cerrarlo desde aquí. Su casilla está más abajo.
+**Los siete puntos de `ARCHITECTURE.md` §9.9, cumplidos, con 314 pruebas.** El último en caer
+fue el 5 —la lista de verificación manual—, el **2026-09-13**: era lo que separaba «el código
+está entero» de «la fase está terminada», y no lo podía cerrar un agente. Su casilla, con el
+resultado de las dos pasadas, está más abajo.
+
+**Lo que queda vivo de esta fase y va a la Fase 4**, anotado y no arreglado: el `onError` del
+write-behind, el `onCorrupt` de `getAll` —hoy **una nota corrupta impide abrir la app**— y la
+validación de esquema al leer del disco. Los tres tienen su casilla aquí abajo.
 
 **El paso 0 iba antes que el adaptador, y el orden era la decisión.** Convertir los puertos a
 `Result` después de escribir el adaptador de fichero habría sido escribirlo dos veces: es **lo
@@ -446,19 +450,27 @@ validación de esquema, y la escritura condicional.
       el falso las cazaban por separado. Con ella el contrato corre **tres** veces, no dos como
       anticipaba el punto 7 de §9.9. → `ARCHITECTURE.md` §6.3.
 
-- [ ] **⬅️ LO ÚNICO QUE FALTA DE LA FASE 3: pasar la lista de verificación manual y anotar el
-      resultado.** La lista está en `test/storage/blobs/VERIFICACION-MANUAL.md`, con su
-      procedimiento, su andamio (`verificacion-manual.html`) y la hoja de resultados vacía. Es el
-      punto 5 de `ARCHITECTURE.md` §9.9 y **es lo que separa «el código está» de «la fase está
-      terminada»**.
-      **Qué hace falta:** un navegador Chromium —Firefox y Safari no tienen
-      `showDirectoryPicker()`—, servir el repo por HTTP (la API exige contexto seguro) y una
-      carpeta vacía abierta en el explorador de ficheros, **que es el oráculo de verdad**: la
-      página sólo enseña lo que devuelve el código.
-      **Cómo se cierra:** rellenando la plantilla de la hoja de resultados —fecha, navegador y
-      versión, sistema, commit— con lo que salga. **El punto se cierra con el resultado que haya,
-      no con el bueno:** lo que no se pueda provocar en ese navegador se anota como tal.
-      **No lo puede cerrar un agente**, y por eso lleva aquí abierto.
+- [x] **Pasar la lista de verificación manual y anotar el resultado** — ✅ Hecho el
+      **2026-09-13**, y con él **cae el punto 5 de `ARCHITECTURE.md` §9.9, que era el último: la
+      Fase 3 queda TERMINADA**. Dos pasadas anotadas en la hoja de resultados de
+      `test/storage/blobs/VERIFICACION-MANUAL.md`:
+  - **Brave 1.95.101** (Chromium 153.0.8010.37, Ubuntu 22.04.5): pasan **las cinco** secciones,
+    incluida la E de OPFS que §9.9 no exige. ⚠️ Hubo que arrancarlo con
+    `--enable-features=FileSystemAccessAPI`: **Brave no trae la API de fábrica**, y eso es parte
+    del procedimiento para repetirla.
+  - **Firefox 153.0.4**: A, B, C y D **«no se ha podido probar»** —no tiene
+    `showDirectoryPicker()`—, sólo OPFS. **Eso también cierra el punto**, por la regla de oro de
+    la lista: se cierra con el resultado que haya, no con el bueno.
+
+      **Lo que cazó, que es lo que justifica que esta lista exista:** el fichero salió con **45
+      bytes y no 0** —el `close()` de §6.3—, y el `permission-denied` del paso C **no era
+      cosmético**: el `mtime` no se movió tras el `write` denegado.
+      **Y corrigió el método, que es lo que más valor tiene de cara a la próxima:** el paso B
+      hecho sin recargar reutiliza el handle en memoria y da verde sin probar nada — **«B sin F5
+      no es B»**. El oráculo tampoco fue el explorador de ficheros sino `find` y `stat`, que fue
+      lo que cazó una raíz equivocada que devolvía `ok` a todo.
+      ⚠️ **El asterisco, que se conserva:** las dos pasadas son sobre `dec4306` **con el árbol
+      sucio**, así que lo verificado no es literalmente ese commit.
 
 - [ ] **Quitar la interfaz `CarpetaRecorrible` de `DirectoryHandleBlobStore.ts`, que hoy sobra**
       *(de `back-dev-agent` o `infra-agent`: es código, no documentación)*. Se declaró a mano
@@ -499,8 +511,8 @@ documentación**.
     fallo más: que las pruebas compilen a un sitio distinto del que mira el runner. Verificado
     rompiéndolo, igual que los otros dos guardianes;
   - **la lista de verificación manual se muda también**, a `test/storage/blobs/`. Se le tocó una
-    línea, la URL del paso 3; el procedimiento no cambia. Sigue **sin ejecutar**, que es lo que
-    tiene abierta la Fase 3.
+    línea, la URL del paso 3; el procedimiento no cambia. *(Estaba sin ejecutar al escribir esto,
+    y era lo que tenía abierta la Fase 3; se pasó el 2026-09-13.)*
       Las **314 pruebas antes y después**, y `npm run check` en verde.
 - [x] **Anotar el tipo en toda declaración de valor, parámetro y retorno** — ✅ Hecho en
       `src/`, **330 anotaciones en 14 ficheros**, y `npm run check` en verde con las **314**
@@ -654,7 +666,8 @@ mecanismo funciona.
 **Salieron de escribir `ARCHITECTURE.md` §9.9, y se dejaron abiertos a conciencia:** el criterio
 recoge lo ya decidido y lo hace comprobable; decidir esto de paso, y sin preguntar, habría sido
 cambiar el alcance de la fase por la puerta de atrás. **Dos están cerrados** —el del manifiesto y
-el de la lista manual—; **sigue abierto el de OPFS**, y no bloquea nada.
+el de la lista manual—; el de OPFS **sigue sin contestarse formalmente**, aunque la pasada del
+2026-09-13 lo dejó sin filo: la fase se cerró sin exigirlo y OPFS pasó igualmente.
 
 - ~~**¿En qué fichero vive la lista de verificación manual, y su resultado?**~~ — ✅ **Cerrada al
   escribirla: junto a las pruebas de su mismo rincón, hoy
@@ -688,6 +701,11 @@ el de la lista manual—; **sigue abierto el de OPFS**, y no bloquea nada.
   la exige. Quien pase la lista puede hacerla o no; si la hace, se anota. Lo que esa sección **no
   puede** sustituir es la de la carpeta real: en OPFS no hay explorador de ficheros que mirar, y
   el oráculo del `close()` es precisamente mirar el fichero en el disco.
+  **Y la realidad la ha dejado sin filo, aunque la pregunta siga sin contestar formalmente:** en
+  la pasada del 2026-09-13 la sección E **se hizo y pasó en los dos navegadores** —es lo único
+  que Firefox pudo probar—, y la fase se cerró **sin exigirla**. Así que la respuesta de facto es
+  la primera: OPFS es «cómo se consigue el handle», o sea composición, o sea Fase 4. Si alguien
+  quiere cerrarla formalmente, eso es lo que hay que escribir.
 
 ### ~~Cómo se verifica la Fase 3~~ — ✅ **cerrada: a mano, y documentado**
 

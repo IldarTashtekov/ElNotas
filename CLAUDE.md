@@ -24,13 +24,13 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
 
 - **`src/core/` y `src/storage/` — la arquitectura nueva.** El core es dominio puro y **es la
   referencia** de cómo se hacen las cosas aquí; `storage/` es el primer módulo que implementa
-  puertos suyos. Hoy: **las fases 1 y 2 enteras y TODO EL CÓDIGO de la Fase 3** — que no es lo
-  mismo que la Fase 3 terminada, ver abajo.
+  puertos suyos. Hoy: **las fases 1, 2 y 3 enteras y terminadas**. La siguiente es la 4, que
+  estrena `src/ui/` y `src/platform/`.
 - **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
   Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
 
-**Lo que existe: las fases 1 y 2 enteras y el código entero de la Fase 3.** ~4240 líneas de
+**Lo que existe: las fases 1, 2 y 3 enteras.** ~4240 líneas de
 código en `src/core/` y `src/storage/`, y ~4930 de pruebas en `test/`, que es carpeta aparte:
 
 - **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
@@ -78,10 +78,21 @@ cancela la espera y cada `flush()` devuelve el mismo error sin tocar el almacén
 se conserva en memoria, así que no se pierde nada. **No hay forma de reanudarlo**, y es
 deliberado: reanudar es volver a pedir la carpeta, o sea plataforma, o sea Fase 4. §6.5.
 
-⚠️ **Lo que falta de la Fase 3 no es código: es PASAR LA LISTA DE VERIFICACIÓN MANUAL** de
-`test/storage/blobs/VERIFICACION-MANUAL.md` (punto 5 de §9.9). Está escrita y **nadie la ha
-ejecutado**, así que `DirectoryHandleBlobStore` existe y nadie lo ha visto correr. Necesita un
-navegador y las manos del usuario. **La Fase 3 NO está terminada.**
+✅ **La lista de verificación manual está PASADA, y con ella la Fase 3 terminada.**
+`test/storage/blobs/VERIFICACION-MANUAL.md` (punto 5 de §9.9) se ejecutó el **2026-09-13** y
+tiene **dos pasadas anotadas** en su hoja de resultados: **Brave 1.95.101** (Chromium 153), donde
+pasan las cinco secciones —A bytes al disco, B sesión nueva, C permiso revocado, D borrado y la
+E opcional de OPFS—, y **Firefox 153.0.4**, que anota lo que también es información: A–D **no se
+pueden probar ahí** porque no tiene `showDirectoryPicker()`, y sólo pasa OPFS.
+Lo que cazó, y es justo lo que ninguna prueba automática ve: el fichero apareció con **45 bytes
+y no 0** (ése es el `close()` de §6.3) y el `permission-denied` **no era cosmético** — el `mtime`
+del fichero no se movió tras el `write` denegado.
+⚠️ **El asterisco, que se conserva a propósito:** las dos pasadas se hicieron sobre el commit
+`dec4306` **con el árbol sucio** —todo el código de la Fase 3 estaba sin commitear—, así que lo
+verificado no es literalmente lo que hay en ese commit. **Si tocas
+`DirectoryHandleBlobStore.ts`, se vuelve a pasar la lista** (ver la decisión cerrada más abajo);
+la única excepción registrada es un cambio que deje el JavaScript emitido **idéntico**, y está
+documentada en `TAREAS.md`.
 
 **Lo que NO existe todavía:** la UI y todo lo de Planes salvo sus tipos. Y no hay **ninguna**
 implementación de `Clock` ni de `IdGenerator`: vivirían en `src/platform/`, que no nace hasta la
@@ -399,13 +410,15 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   y la parte pura del arranque. Se atacó **de abajo arriba** —la persistencia primero,
   verificada con la única acción que ya existía— por el mismo motivo que la rebanada vertical
   de la Fase 1: descubrir un fallo con un candidato, no con diecisiete.
-- **Fase 3 — Fichero local. ← EN CURSO: el código está ENTERO, la fase NO está terminada.**
-  Hechos el **paso 0** (§6.5, 232 pruebas), **`FileStorageAdapter`** con el formato en disco de
-  §6.2 (274) y **las dos implementaciones de `BlobStore`** en `blobs/` (**314**, y el contrato
-  corriendo tres veces). **Falta el punto 5 de §9.9 y sólo ése: ejecutar la lista de verificación
-  manual**, que no la puede cerrar un agente. De los siete puntos van **cinco cumplidos** —1, 2,
-  3, 4 y 6—; el 7 está verde y sólo espera a anotar la cifra de cierre. §9.9 lleva además la
-  lista explícita de lo que **no** entra en la fase.
+- **Fase 3 — Fichero local. ✅ HECHA.** Los **siete** puntos del criterio de cierre (§9.9),
+  cumplidos, con **314 pruebas**. Hechos el **paso 0** (§6.5, 232 pruebas),
+  **`FileStorageAdapter`** con el formato en disco de §6.2 (274) y **las dos implementaciones de
+  `BlobStore`** en `blobs/` (**314**, y el contrato corriendo tres veces, no dos como preveía el
+  punto 7). El punto 5 —la lista de verificación manual— se cerró el **2026-09-13**, que es lo
+  que separaba «el código está» de «la fase está terminada»; su resultado, arriba. §9.9 lleva
+  además la lista explícita de lo que **no** entra en la fase, y tres cosas que quedan vivas y
+  anotadas: el `onError` del write-behind, el `onCorrupt` de `getAll` y la validación de esquema
+  al leer del disco. Las tres van a la Fase 4, porque hoy no hay a quién avisar.
 - **Fase 4 — UI.** El editor con checkboxes anidados: el corazón de la app.
 
 **Las decisiones de las fases 1 y 2 están CERRADAS**, y las dos fases están escritas. **De la

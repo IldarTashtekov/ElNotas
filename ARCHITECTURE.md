@@ -967,9 +967,10 @@ uno más.
 
 **Construido: los puertos, el adaptador de memoria, el write-behind, el `Result` (§6.5),
 `FileStorageAdapter` con el formato en disco de §6.2 y las dos implementaciones de `BlobStore`
-(§6.1).** Sigue siendo sólo diseño la semántica multi-backend —espejo, outbox, réplicas—. Y
-sigue sin ejecutarse la pasada manual que el punto 5 de §9.9 exige para dar la fase por
-terminada: el código de `DirectoryHandleBlobStore` **existe y nadie lo ha visto correr**.
+(§6.1).** Sigue siendo sólo diseño la semántica multi-backend —espejo, outbox, réplicas—. La
+pasada manual que el punto 5 de §9.9 exige **está hecha** (2026-09-13, Brave y Firefox), así que
+`DirectoryHandleBlobStore` ya se ha visto correr contra una carpeta de verdad y **la Fase 3 está
+terminada**.
 
 #### El recorrido de un cambio, de un vistazo
 
@@ -2153,17 +2154,16 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   prueba hasta que se añadió un contador de transacciones, y eso se vio con una acción en el
   catálogo en vez de con diecisiete.
 
-- **Fase 3 — Fichero local. ← EN CURSO: el código está entero, la fase NO está terminada.**
+- **Fase 3 — Fichero local. ✅ HECHA.** Los siete puntos de §9.9, cumplidos, con **314 pruebas**.
   Hechos el **paso 0** —`Result<T, E>`, las dos taxonomías en `domain/errors/`, los once métodos
   de puerto, `runMigrations` ya total, `MemoryStorageAdapter`, el write-behind con su estado
   *detenido* y la suite de contratos (§6.5), con **232 pruebas** en ese punto—,
   **`FileStorageAdapter`** con el formato en disco de §6.2 —pasa la suite **sin tocarla** y lleva
   su propio fichero para lo que el contrato no puede ver (§6.3), **274 pruebas**— y **las dos
   implementaciones de `BlobStore`**, en `src/storage/blobs/`: **314 pruebas**, y el contrato
-  corriendo **tres** veces. **Lo que falta es lo único que no es código: ejecutar la lista de
-  verificación manual** (punto 5 de §9.9), que necesita un navegador y un par de manos. De los
-  siete puntos van **cinco cumplidos** —1, 2, 3, 4 y 6—, el 7 sólo espera a anotar el recuento al
-  cerrar, y el **5 sigue abierto**.
+  corriendo **tres** veces. **Y el punto 5, que era lo único que no es código: la lista de
+  verificación manual, ejecutada el 2026-09-13** en Brave —las cinco secciones pasan— y en
+  Firefox, que anota que sin `showDirectoryPicker()` cuatro de ellas no se pueden probar ahí.
   **Cuándo se da por terminada: §9.9**, escrito antes de que el adaptador exista. Ojo al detalle
   de UX: al recargar
   **no se puede recuperar el permiso de la carpeta en silencio** — el handle se guarda en
@@ -2543,10 +2543,10 @@ Esta fase lo necesita más que las dos anteriores por un motivo propio: **es la 
 se verifica a mano, y «a mano» sin una lista escrita y ejecutada significa en la práctica «no se
 verifica». El criterio es lo que impide que esa decisión se convierta en un agujero.
 
-**Son siete**, y hoy van **cinco cumplidos** —1, 2, 3, 4 y 6—; el 7 está verde y sólo espera a
-anotar el recuento de cierre. **El 5 sigue abierto, y es el único: la lista está escrita pero no
-ejecutada.** Mientras siga así, la fase **no está terminada**, por mucho que el código esté
-entero — que es exactamente el agujero que este criterio existe para no dejar abierto:
+**Son siete, y los siete están cumplidos: la Fase 3 está TERMINADA.** El 5 —la lista manual— fue
+el último en caer, el **2026-09-13**, y era el único que separaba «el código está entero» de «la
+fase está terminada», que es exactamente el agujero que este criterio existe para no dejar
+abierto:
 
 1. **✅ El paso 0, hecho** (§6.5) — el único punto ya cerrado al escribir esto: los once métodos de
    puerto devuelven `Result`, `runMigrations` es pura **y total**, y la suite de contratos se
@@ -2573,11 +2573,31 @@ entero — que es exactamente el agujero que este criterio existe para no dejar 
    excepciones** —sin eso la cuota no se puede provocar—, y `DirectoryHandleBlobStore`. Viven en
    `src/storage/blobs/` y el porqué de la carpeta está en §6.1. La fase se llama *fichero local*;
    cerrarla sin el de la carpeta real sería cerrarla sin lo que le da nombre.
-5. **⬜ LA ÚNICA QUE FALTA. La lista de pasos manual está escrita en el repo Y ejecutada al menos
-   una vez, con su resultado anotado** — fecha, navegador y versión, y qué pasó. El «una vez» ya
-   venía en la decisión (§6.3); esto sólo lo hace comprobable. **Escrita: sí**, en
-   `test/storage/blobs/VERIFICACION-MANUAL.md`, junto a las demás pruebas de ese rincón (dónde
-   vivía era un hueco de *Sin decidir* y está cerrado; se mudó ahí con el resto, §8.5). **Ejecutada: no**, y por eso la fase sigue abierta.
+5. **✅ La lista de pasos manual está escrita en el repo Y ejecutada, con su resultado anotado** —
+   fecha, navegador y versión, y qué pasó. El «una vez» ya venía en la decisión (§6.3); esto sólo
+   lo hace comprobable. **Escrita**, en `test/storage/blobs/VERIFICACION-MANUAL.md`, junto a las
+   demás pruebas de ese rincón (dónde vivía era un hueco de *Sin decidir* y está cerrado; se mudó
+   ahí con el resto, §8.5). **Y ejecutada el 2026-09-13, con DOS pasadas anotadas:**
+   - **Brave 1.95.101** (Chromium 153.0.8010.37, Ubuntu 22.04) — pasan **las cinco** secciones,
+     incluida la E de OPFS que este criterio no exige. ⚠️ Brave **no trae la API de fábrica**: se
+     arrancó con `--enable-features=FileSystemAccessAPI`, y eso queda anotado porque es parte de
+     poder repetir la pasada;
+   - **Firefox 153.0.4** — A, B, C y D **«no se ha podido probar»**, porque no tiene
+     `showDirectoryPicker()`. Eso **también cierra el punto**: la regla de oro de la lista es que
+     se cierra con el resultado que haya y no con el bueno, y «este navegador no puede» es
+     información, no un hueco. Sólo pasa OPFS.
+
+   **Lo que la pasada cazó, y que ninguna prueba automática podía ver:** el fichero apareció con
+   **45 bytes y no 0** —ése es el `close()` que §6.3 usa como ejemplo de lo que un doble deja
+   pasar en verde—, y el `permission-denied` del paso C resultó **no ser cosmético**: el `mtime`
+   del fichero no se movió tras el `write` denegado. También se corrigió un falso verde del
+   método: el paso B hecho sin recargar reutiliza el handle en memoria y **no prueba nada** —«B
+   sin F5 no es B»—.
+
+   ⚠️ **El asterisco, que se conserva en vez de taparlo:** las dos pasadas se hicieron sobre el
+   commit `dec4306` **con el árbol sucio**, o sea que lo verificado no es literalmente lo que hay
+   en ese commit. Es la debilidad conocida de este punto, y lo que la compensa es la regla de
+   `CLAUDE.md`: **si se toca `DirectoryHandleBlobStore.ts`, se repasa la lista.**
    Lo mínimo que cubre es lo que un doble no puede ver:
    - que los bytes **llegan de verdad al disco** — el `close()` olvidado de §6.3 pasa en verde
      contra un `Map`, y contra una carpeta real no;
@@ -2599,9 +2619,9 @@ entero — que es exactamente el agujero que este criterio existe para no dejar 
    exige es el hecho, no la herramienta — con el precio dicho en voz alta: mientras el guardián
    no exista, esa regla la sostiene la revisión y no la comprobación, que es justo lo contrario
    de como se sostiene todo lo demás aquí.
-7. **`npm run check` en verde**, con la verja y el guardián de pureza, y **el recuento de pruebas
-   anotado al cerrarla**, como en §9.5 y §9.8. Verde hoy, con **314 pruebas**; falta sólo anotar
-   la cifra de cierre, que será la que haya el día que se cierre. Y una previsión que salió mal y
+7. **✅ `npm run check` en verde**, con la verja y el guardián de pureza, y **el recuento de
+   pruebas anotado al cerrarla**, como en §9.5 y §9.8. **La cifra de cierre son 314 pruebas**
+   —99 al cerrar la Fase 1, 216 al cerrar la 2—. Y una previsión que salió mal y
    conviene dejar corregida: esto decía que la suite de contratos pasaría a correr **dos** veces,
    una por adaptador, y corre **tres** — la tercera monta el adaptador de fichero sobre un
    `BlobStore` de producción, y el porqué está en §6.3.
