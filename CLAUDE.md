@@ -28,7 +28,7 @@ En `src/` **conviven dos cosas** y no hay que confundirlas:
   estrena `src/ui/` y `src/platform/`.
 - **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
   lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
-  Se sustituye en la Fase 4 y hoy ni se puede construir (webpack está desinstalado).
+  Se sustituye en Fase 4 · Notas y hoy ni se puede construir (webpack está desinstalado).
 
 **Lo que existe: las fases 1, 2 y 3 enteras.** ~3680 líneas en
 `src/core/` y `src/storage/`, y ~5150 de pruebas en `test/`, que es carpeta aparte. *(La cifra
@@ -305,9 +305,9 @@ vulnerabilidades, y conviene que siga así. Ojo si cuentas carpetas de `node_mod
 directorios vacíos de desinstalaciones viejas y salen diecisiete. Lo que cuenta es el
 `package-lock.json`.
 
-Webpack y su cadena están desinstalados a propósito hasta la Fase 4, así que **`npm run build`
-y `npm run serve` no existen**. Para recuperarlos:
-`npm i -D webpack webpack-cli webpack-dev-server ts-loader` y volver a añadir los scripts.
+Webpack y su cadena están desinstalados, así que **`npm run build` y `npm run serve` no
+existen**. **Y la Fase 4 no los reinstala:** arranca con el `<script type="importmap">` ya probado
+en el repo, sin bundler (decisión cerrada abajo). Uno entra sólo cuando algo concreto lo exija.
 
 ## Decisiones cerradas — no volver a proponer alternativas
 
@@ -454,18 +454,54 @@ duda**; no la cambies por tu cuenta.
   se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertToText`**:
   todo lo que hace desaparecer una línea se niega si tiene hijas. §9.3.
 
+**De la navegación y el alcance de la Fase 4, cerradas el 2026-09-27** (el porqué, en §7.4 salvo
+que se diga otra cosa):
+
+- **Cuatro vistas: ventanas (la principal y la única que enseña contextos), nota, plan y
+  configuración.** De ventanas se entra a las demás **a un solo nivel**, y de una secundaria sólo
+  se sale con **exit** (o el atrás del navegador, que equivale), a **la misma ventana** de la que
+  se entró. ◀ ▶ no son circulares. En la vista nota no hay ◀ ▶ ni ⚙: así no se puede borrar el
+  contexto de debajo. El estado de navegación son **dos datos**: ventana activa y vista encima.
+- **Una ventana es una referencia** (`{ tipo, id }`) y **la lista se guarda FUERA del core, en
+  `localStorage`**. Riesgo aceptado: no viaja con las notas. La entidad en el core está aparcada.
+  Junto a ella se guarda **la ventana activa, como referencia y no como índice**: al recargar se
+  vuelve a ella; lo que hubiera encima no se recuerda.
+- **Las ventanas visibles se calculan siempre** como la lista guardada menos las referencias
+  rotas, y si la activa ya no está, se abre la primera: función pura, con pruebas y verificada
+  rompiéndola. Quitar una ventana no borra nada.
+- **El General** enseña todas las notas, no se renombra, y su papelera **borra de verdad**; en un
+  contexto la papelera **sólo quita de ese contexto**. Confirman sólo los dos borrados sin vuelta
+  atrás: borrar un contexto y la papelera del General.
+- **Selección por pulsación larga** (más clic derecho, Ctrl/Cmd+clic y teclado), sin casilla de
+  selección y sin dependencias. Su barra lleva la papelera y **«Mover a…»**, que **mueve**
+  (`remove-item` + `add-item`; desde el General sólo `add-item`) y no confirma. No es `move`.
+- **Una nota nace en el contexto donde se crea**, como «Nueva Nota», y **una nota vacía se
+  mantiene** (rectificado en la misma sesión: primero se iba a descartar; ver `TAREAS.md`).
+- **El título, sólo en la cabecera, y se renombra tocándolo.** Una nota que es ventana usa **el
+  mismo editor en dos marcos**. `defaultView` queda sin uso, y no se toca.
+- **La barra de modo admite también el exit de la vista nota** (§7.2). Las otras tres candidatas
+  de esa barra, aparcadas.
+- **La Fase 4 es sólo web y se parte en Fase 4 · Contextos y Fase 4 · Notas**, en ese orden y sin
+  tocar el core; **los Planes son la Fase 5**. §9.10.
+- **Sin bundler de entrada: el `importmap`.** §9.10.
+- **El aviso de `onError` sólo informa**, y llega con la validación de esquema al final de Fase 4
+  · Notas. El «reintentar» espera a la carpeta del usuario. §9.10.
+
 ## Fuera de alcance por ahora
 
 No empezar nada de esto sin pedirlo explícitamente. El motivo de cada uno y qué lo
 desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 
 - **Reordenar y re-anidar líneas** (`move`, `indent`, `outdent`) — *lo único de esta lista con
-  fecha de revisión*: dos de las tres preguntas de §9.10 se contestan usando el editor de la
-  Fase 4, y un «no se aguanta» las reabre. Hasta entonces, siguen fuera
+  fecha de revisión*: dos de las tres preguntas de §9.10 se contestan usando el editor de Fase 4
+  · Notas, y un «no se aguanta» las reabre. Hasta entonces, siguen fuera
+- Las tres candidatas extra de la barra de modo (cascada al marcar, esconder las marcadas,
+  mandarlas al final) · el «reintentar» del aviso de `onError` · las ventanas como entidad del
+  core
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
-- El editor de grafos de los **Planes**
-- Shells de desktop y móvil (Tauri / Capacitor)
+- El editor de grafos de los **Planes** — ya tiene fase, la 5, pero sigue fuera de la 4
+- Shells de desktop y móvil (Tauri / Capacitor) — la Fase 4 es sólo web
 - Sync entre dispositivos, CRDTs, colaboración en tiempo real
 
 ## Plan por fases
@@ -489,25 +525,29 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   además la lista explícita de lo que **no** entra en la fase, y tres cosas que quedan vivas y
   anotadas: el `onError` del write-behind, el `onCorrupt` de `getAll` y la validación de esquema
   al leer del disco. Las tres van a la Fase 4, porque hoy no hay a quién avisar.
-- **Fase 4 — UI. ⏳ EN CURSO, en su plan.** El editor con checkboxes anidados: el corazón de la
-  app. **Su criterio de cierre está escrito: §9.10**, con los nueve puntos, lo que no entra y
-  —lo que la hace distinta de las tres anteriores— **las tres preguntas que sólo se contestan
-  con el editor delante** (si se aguanta no tener `move`, no tener `indent`/`outdent`, y si el
-  disparador de anidar se entiende solo). Nace `src/ui/` y nace `src/platform/`, que traerá las
-  **primeras implementaciones reales de `Clock` e `IdGenerator`** — hoy no hay ninguna.
-  Arranca guardando en `LocalStorageBlobStore`, decidido para salir del paso.
+- **Fase 4 — UI. ⏳ EN CURSO, en su plan.** Sólo web, incluido el navegador del móvil. Nace
+  `src/ui/` y nace `src/platform/`, que traerá las **primeras implementaciones reales de `Clock`
+  e `IdGenerator`** — hoy no hay ninguna. Arranca guardando en `LocalStorageBlobStore`, decidido
+  para salir del paso. **Partida en dos, en este orden, y ninguna toca el core** (§9.10, cada una
+  con su criterio de cierre y su «no entra»):
+  - **Fase 4 · Contextos** — la rebanada vertical, `onCorrupt`, la vista ventanas, la lista de
+    ventanas con su guarda, la vista configuración y las listas de notas. Nueve puntos.
+  - **Fase 4 · Notas** — la vista nota, el editor con checkboxes anidados (el corazón de la app),
+    las ventanas de tipo nota, `onError` y la validación de esquema al final, y fuera
+    `src/scripts/`. Once puntos, más **las tres preguntas que sólo se contestan con el editor
+    delante** (si se aguanta no tener `move`, no tener `indent`/`outdent`, y si el disparador de
+    anidar se entiende solo).
+- **Fase 5 — Planes.** El editor de grafos. Se planifica cuando cierre la 4.
 
 **Las decisiones de las fases 1, 2 y 3 están CERRADAS**, y las tres fases están escritas. **De
-la Fase 4 se cerraron siete el 2026-09-20**, todas del editor: el disparador de anidar en lugar
-del tercer modo, que arma la línea siguiente y no toca la actual, las cuatro esquinas del
-teclado, el nombre `WritingMode`, el alcance y el destino de guardado. Lo que queda abierto es
+la Fase 4 se cerraron siete el 2026-09-20**, todas del editor, y **el 2026-09-27 la navegación,
+las pantallas y el alcance** (§7.4, §9.10): entre ellas el bundler —no, de entrada— y cuándo
+entran `onError` y la validación de esquema —al final de Fase 4 · Notas—. Lo que queda abierto es
 **la escritura condicional** —el conflicto entre dos pestañas, que `revision` sabe detectar pero
-que nadie puede disparar todavía—, **avisar de los fallos que hoy no ve nadie** (el `onError` del
-write-behind, ya dentro de la Fase 4 pero después del editor; el `onCorrupt` de `getAll` entra
-con la primera rebanada), **la validación de esquema al leer del disco**, **si OPFS entra en
-juego** —§9.9 no lo exigía y hoy el destino es `localStorage`— y **si la fase instala un bundler
-o se apaña con el `importmap`** que ya funciona en el repo. Las respuestas y su porqué están en
-`TAREAS.md` → *Sin decidir*, que se conserva como registro.
+que nadie puede disparar todavía, y fuera de la Fase 4—, **si OPFS entra en juego** —§9.9 no lo
+exigía y hoy el destino es `localStorage`— y **qué pasa con lo guardado en `localStorage` el día
+que cambie el destino**, que desde el 2026-09-27 incluye la lista de ventanas. Las respuestas y
+su porqué están en `TAREAS.md` → *Sin decidir*, que se conserva como registro.
 
 ## Comandos
 
@@ -522,4 +562,5 @@ npm run check:purity     # GUARDIÁN: falla si el core lee el reloj o el azar
 npm run check:fronteras  # GUARDIÁN: falla si una excepción puede escaparse de su frontera
 ```
 
-No hay `build` ni `serve` hasta la Fase 4. `npm audit` da 0 vulnerabilidades.
+No hay `build` ni `serve`, y la Fase 4 no trae webpack (ver *Dependencias*). `npm audit` da 0
+vulnerabilidades.

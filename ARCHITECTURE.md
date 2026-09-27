@@ -9,12 +9,10 @@ arquitectura de front. Si algún término del resto del documento suena a jerga 
 puerto, copia por camino—, está explicado ahí con ejemplos de notas y casillas.
 
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy
-> lo están las **fases 1 y 2 enteras** y **todo el código de la Fase 3**: el paso 0,
-> `FileStorageAdapter` con el formato en disco de §6.2 y **las dos implementaciones de
-> `BlobStore`** (§5.1). La Fase 3 **no está terminada**: le falta el único punto de §9.9 que
-> no es código —la pasada manual del punto 5, que necesita un navegador—. Siguen siendo sólo
-> diseño la UI (§7) y todo lo que dependa de `platform/`. Cada sección dice si lo que describe
-> existe o está planificado. Antes de dar algo por hecho, compruébalo contra el repo.
+> lo están las **fases 1, 2 y 3 enteras** (§5.1), la 3 con su pasada manual incluida (§9.9).
+> Siguen siendo sólo diseño la UI (§7, planificada el 2026-09-27) y todo lo que dependa de
+> `platform/`. Cada sección dice si lo que describe existe o está planificado. Antes de dar algo
+> por hecho, compruébalo contra el repo.
 
 **Índice**
 
@@ -683,22 +681,34 @@ Tres entidades, más nociones de agrupación:
   por ID, para esquematizar tareas. Un `NoteNode` es el puente: al pincharlo entras en una
   Nota.
 - **Context** — agrupa notas y planes, y decide su `defaultView` (la lista, o entrar directo
-  a una nota o plan concreto).
-- **ContextoGeneral** — **vista derivada** de todas las notas y planes. No es una entidad y
-  no se persiste: guardarlo sería duplicar datos que se pueden calcular.
+  a una nota o plan concreto). ⚠️ **`defaultView` se queda sin uso en la Fase 4**: «abrir
+  directamente una nota» lo hace ahora una ventana de tipo nota (§7.4). Sigue en el modelo, con
+  su acción `set-default-view`, porque el dominio está cerrado; se revisa con las entidades
+  «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
+- **ContextoGeneral** — **vista derivada** de todas las notas (y de los planes, cuando los haya).
+  No es una entidad y no se persiste: guardarlo sería duplicar datos que se pueden calcular. Ahí
+  aparecen las notas **huérfanas**, las que no están en ningún contexto. Como no es un contexto,
+  se comporta distinto en tres cosas (§7.4): su título **no se renombra**, su papelera **borra
+  la nota de verdad** (`delete-note`, con confirmación), y una nota creada desde él **nace sin
+  contexto**.
 - **ContextoCompuesto** — unión de varios contextos. Sale casi gratis del modelo por
   referencias.
 - **Ventanas** — navegación estilo app de móvil. Es **estado de vista, no de dominio**: va
   separado de `AppState`. Mezclarlo llenaría la persistencia de basura de UI y haría que
-  abrir un menú marcara notas como sucias.
+  abrir un menú marcara notas como sucias. **Sí se guarda** —qué ventanas hay y en qué orden—,
+  pero **fuera del core y fuera de `AppState`**: en `localStorage`, con una clave propia que
+  gestiona la presentación. Decidido el 2026-09-27; las cuatro opciones evaluadas y su riesgo,
+  en §7.4. *(Planificado: no hay ni una línea de `ui/`.)*
 
 ### 5.1 Lo que existe hoy en el repo
 
-**Las fases 1 y 2 enteras y todo el código de la Fase 3: ~4240 líneas de código y ~4930 de
-pruebas.** `npm run check` está en verde con **314 pruebas** (eran 274 al terminar el adaptador
-de fichero y 232 al cerrar el paso 0). **Que el código esté no significa que la fase esté
-terminada:** falta la pasada manual del punto 5 de §9.9. Esta tabla se queda desactualizada
-sola: antes de afirmar nada sobre ella, `find src test -name '*.ts' | sort` y `npm run check`.
+**Las fases 1, 2 y 3 enteras: ~3680 líneas en `src/core/` y `src/storage/` y ~5150 de
+pruebas**, medido el 2026-09-27. `npm run check` está en verde con **329 pruebas** (314 al
+cerrar la Fase 3; las quince de más las trajo que los casos de uso devuelvan la entidad).
+⚠️ **La columna de líneas de la tabla es anterior** a adelgazar las cabeceras de los ficheros
+(se fueron cientos de líneas de comentario, ni una de código) **y no se ha vuelto a medir**: vale
+para comparar tamaños, no como cifra. Esta tabla se queda desactualizada sola: antes de afirmar
+nada sobre ella, `find src test -name '*.ts' | sort` y `npm run check`.
 
 | Fichero | Líneas | Qué es |
 |---|---|---|
@@ -746,7 +756,7 @@ sola: antes de afirmar nada sobre ella, `find src test -name '*.ts' | sort` y `n
 | `blobs/LocalStorageBlobStore.contract.test.ts` | 28 | **La tercera pasada del contrato** (§6.3): la pila entera sobre un `BlobStore` de producción |
 | `blobs/VERIFICACION-MANUAL.md` · `verificacion-manual.html` | 198 · 150 | El procedimiento del punto 5 de §9.9 y el andamio para ejecutarlo. **No es TypeScript y no entra en `npm run check`** |
 
-Las pruebas son ~4930 de esas líneas, más que el código que vigilan, y eso es lo esperado en
+Las pruebas son ~5150 líneas, más que el código que vigilan, y eso es lo esperado en
 una capa donde cada invariante se verifica rompiéndola a propósito. Desde que viven en `test/`
 (§8.5) la cuenta es además directa: `src/` es código y `test/` son pruebas, sin tener que
 separar por el sufijo del nombre.
@@ -1801,7 +1811,8 @@ mecanismo exista.
 ## 7. La UI
 
 **Nada de esta sección está construido.** Es diseño para la Fase 4, y es el corazón de la
-app.
+app. La navegación y las pantallas (§7.4) se cerraron el **2026-09-27** a partir de un boceto en
+PDF del usuario; el editor (§7.2 y §7.3), el 2026-09-20.
 
 Sin framework, vanilla. El core expone reducers puros y un `Store`; la UI se suscribe y
 despacha. La inmutabilidad da la detección de cambios gratis por referencia (§3).
@@ -1829,6 +1840,15 @@ cosa:
 | **Contenido** | las líneas, las casillas, lo marcado | constantemente | dentro de la nota, persistido |
 | **Modo de escritura** | cómo se comporta el teclado ahora mismo | **muchas veces mientras escribes una sola nota** | en el editor, en memoria, **sin persistir** |
 | **Ajustes** | tema, dónde se guarda el fichero, tamaño de letra | una vez y te olvidas | pantalla de ajustes, aparte |
+
+**Y una cuarta cosa que no es ninguna de las tres, y conviene no meterla en ninguna:** *qué
+ventanas hay y en qué orden* (§7.4). No es contenido —no dice nada de ninguna nota, sólo cómo
+se enseñan— ni modo de escritura, y tampoco es un ajuste en el sentido de la tabla, aunque se
+edite en la vista configuración: es **organización de la vista**. Vive en `localStorage`, con
+clave propia, **fuera del core y de `AppState`**. Junto a ella se guarda **qué ventana está
+activa**, para volver a ella al recargar. Lo que es pura memoria es **qué vista hay encima**, más
+el historial del navegador para que funcione el atrás: al recargar se ve la ventana, no la nota
+ni la configuración que hubiera abierta.
 
 La fila del medio es la que no existía en este diseño hasta que apareció `WritingMode`. Y
 la trampa está en confundirla con la tercera: **un ajuste se busca en un menú y se cambia una
@@ -1920,10 +1940,19 @@ usarlo.
 > va en inglés **por eso** — no porque el repo entero lo esté.
 
 **Qué más cabe en esa barra, y qué no.** La regla: cabe si cambia el comportamiento mientras
-escribes o mientras miras. Candidatos que ya se ven —**"al marcar una casilla, marcar también
-sus hijas"** (y aquí es exactamente donde se compone esa cascada que el dominio se niega a
-hacer, §9.3), **"esconder las marcadas"**, **"mandar las marcadas al final"**—. No cabe lo que
-es contenido (el nombre de la nota) ni lo que es ajuste de la aplicación.
+escribes o mientras miras, **y la salida de la vista nota** (el botón exit). No cabe lo que es
+contenido (el nombre de la nota) ni lo que es ajuste de la aplicación.
+
+> **Ampliada el 2026-09-27 con el exit.** Se valoró ponerlo en la cabecera, y va abajo porque,
+> a juicio del usuario, mejora bastante la UX. Sólo aparece en la **vista
+> nota**; cuando la misma nota se edita como ventana, la barra va sin exit, porque de una ventana
+> no se sale (§7.4).
+
+Las otras tres candidatas que ya se veían —**"al marcar una casilla, marcar también sus hijas"**
+(y aquí es exactamente donde se compone esa cascada que el dominio se niega a hacer, §9.3),
+**"esconder las marcadas"**, **"mandar las marcadas al final"**— **quedan fuera de la Fase 4**,
+aparcadas en `TAREAS.md` con el mismo disparador que las tres preguntas de §9.10: si usando el
+editor se echan en falta, se reabren.
 
 ### 7.3 El teclado: Intro construye, el Tabulador no
 
@@ -2022,6 +2051,208 @@ llamadas que compone el editor. El motor sigue sin saber que los modos existen.
 
 **Y por eso no existen `indent` ni `outdent`** — el motivo está en §9.3. El nivel de una línea
 se elige **al nacer**: con el modo activo, y con el disparador de anidar si está armado (§7.2).
+
+### 7.4 La navegación: cuatro vistas y una lista de ventanas
+
+**Planificado, no construido.** Cerrado con el usuario el **2026-09-27** a partir de su boceto en
+PDF. Todo lo de aquí es **web**, incluido el navegador del móvil —por eso importan la pulsación
+larga y el atrás de Android—. Los shells nativos, cuando lleguen, envuelven esta misma UI: lo que
+cambia entonces es plataforma (el atrás nativo, el destino de los datos, el keychain), no la UI.
+
+#### Cuatro vistas, con la de ventanas en el centro
+
+- **Vista ventanas** — la principal. Es **la única forma de ver contextos**, y una ventana
+  también puede mostrar una nota (y, cuando lleguen, un plan).
+- **Vista nota**, **vista plan** (Fase 5) y **vista configuración** — las secundarias.
+
+```
+            ◀   ventana 1 · ventana 2 · … · ventana n   ▶          ← vista ventanas
+                                  │
+         ┌────────────────────────┼─────────────────────────┐
+   tocar una nota              "+ Nota"                      ⚙
+         ▼                        ▼                          ▼
+     vista nota          vista nota (recién creada)   vista configuración
+         └───────── exit, o atrás: vuelve a la MISMA ventana ─────────┘
+```
+
+Las reglas, que son pocas y se sostienen entre sí:
+
+- **Un solo nivel.** De la vista ventanas se entra a una secundaria, y de una secundaria no se
+  entra a otra. No hay pila ni historial entre vistas secundarias.
+- **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
+  ▶.
+- **De una secundaria sólo se sale con exit**, y se vuelve **siempre a la ventana desde la que se
+  entró**: de una nota, a la del contexto de origen; de configuración, a la ventana —de contexto
+  o de nota— desde la que se pulsó ⚙.
+- **En la vista nota no hay ◀ ▶ ni ⚙.** El engranaje sólo existe en la vista ventanas, también
+  cuando la ventana muestra una nota.
+
+**Todo el estado de navegación son dos datos: qué ventana está activa y qué vista hay encima, si
+hay alguna.** El efecto buscado, y es el motivo de que no haya más niveles: **desde una nota no se
+llega a configuración**, así que no se puede borrar el contexto de debajo mientras estás dentro de
+una nota suya. El caso raro no se trata: no se puede producir.
+
+**Al recargar, vuelves a la ventana en la que estabas; lo que hubiera encima, no.** *(Decidido el
+2026-09-27.)* La ventana activa se guarda junto a la lista de ventanas, en `localStorage` y fuera
+del core, y se guarda **como referencia a la ventana, no como índice**: un índice se desplaza en
+cuanto se quita una ventana anterior y acabaría señalando a otra. Si esa referencia ya no está
+entre las visibles —la guarda la ha quitado—, se abre **la primera**, o la pantalla vacía si no
+queda ninguna. Esa regla es parte de la guarda pura (abajo), con sus pruebas. La vista nota o la
+configuración que hubiera abierta **no se recuerda**: al recargar se ve la ventana.
+
+**El atrás del navegador equivale a exit** en cualquier vista secundaria —incluido el gesto o
+botón atrás del sistema en Chrome para Android, que es web—, y en la vista ventanas no hace nada
+propio. Se implementa con el historial del navegador: **abrir una vista secundaria se apunta en
+el historial; cambiar de ventana, no.** Si ◀ ▶ se apuntaran, el atrás recorrería ventanas y
+dejaría de significar «salir».
+
+**Descartado:**
+
+- **El mismo icono ◀ con dos significados** —atrás en una secundaria, ventana anterior en la
+  principal—. Por eso en la vista nota no hay flechas y la salida es un exit con su propio icono.
+- **Que cada ventana recuerde la nota abierta.** Una ventana muestra **siempre su contenido
+  base**. Recordarla añadiría un dato por ventana a un estado de navegación que hoy son dos.
+
+#### Una ventana es una referencia, y la lista se guarda fuera del core
+
+Una ventana es **una referencia en una lista ordenada**:
+
+```ts
+{ tipo: "contexto" | "nota" | "general", id }   // "plan", en la Fase 5
+```
+
+**Dónde se guarda esa lista fue la decisión con más enjundia.** Se evaluaron cuatro opciones:
+
+| | Opción | Veredicto |
+|---|---|---|
+| **A** | Un campo de orden en `Context` | **Descartada.** Mete un dato de vista en el dominio; reordenar reescribe varios contextos; el General no es entidad y no tendría dónde llevar su posición; y no permite una ventana de tipo nota sin disfrazarla |
+| **B** | Una entidad nueva en el core (algo como `Layout`), en su fichero junto a las notas | **Aparcada.** Es la más limpia: una sola fuente, viaja con las notas y el reducer vigila la integridad. Pero reabre `StorageAdapter`, la suite de contratos, `FileStorageAdapter` y el catálogo de acciones, todo cerrado. El usuario prevé entidades «meta» de UX en el core más adelante, y ese es su sitio |
+| **C** | **Fuera del core, en `localStorage`**, con clave propia gestionada desde la presentación | **ELEGIDA, para salir del paso** |
+| **D** | No guardarla: ordenar por fecha o por nombre | **Descartada.** Contradice que exista una pantalla de configuración donde se ordenan |
+
+El argumento del usuario para la C: **«las ventanas sólo sirven para organizar información que ya
+vive en el storage»**. No añaden datos; son una forma de mirarlos.
+
+⚠️ **Riesgo aceptado explícitamente, y conviene tenerlo a la vista:**
+
+- **no viaja con las notas.** Si cambia el destino de guardado (hoy `LocalStorageBlobStore`) o el
+  dispositivo, las notas llegan y las ventanas se pierden;
+- **hay dos sitios donde se guardan cosas**, el `StorageAdapter` y esta clave;
+- **la integridad no la vigila el core.** Por eso existe la guarda de abajo.
+
+#### La guarda de integridad: las ventanas visibles se calculan
+
+Una lista guardada fuera del core puede apuntar a un contexto o una nota que ya no existen, y el
+reducer no se va a enterar. La guarda —una «guarda tontorrona», a propósito— es: **las ventanas
+visibles son siempre la lista guardada menos las referencias que ya no existen**, y la lista
+guardada se limpia de paso.
+
+- **Siempre, no sólo al arrancar.** Si se borra un contexto o una nota que era ventana, la ventana
+  desaparece **en la misma sesión**.
+- **También resuelve la ventana activa:** si la guardada ya no es visible, la primera visible, o
+  ninguna (pantalla vacía).
+- **Es una función pura, con pruebas**, y se verifica **rompiéndola a propósito**, como todo lo que
+  vigila una invariante en este repo. Hace aquí el trabajo que en la opción B haría el reducer.
+
+Lo que no es la guarda, sino gestión de la lista:
+
+- **Quitar una ventana sólo quita la referencia.** El contexto o la nota siguen en el almacén, y se
+  pueden volver a añadir como ventana desde configuración.
+- **La ventana del General también se puede quitar** —el General en sí no se borra: no es un
+  contexto— y volver a añadir.
+- **Sin ninguna ventana, pantalla vacía** con el ⚙ para añadir desde configuración. **No se impide
+  quitar la última:** una pantalla vacía con salida no es un estado roto.
+
+#### La lista de un contexto: selección, papelera y «Mover a…»
+
+- **La papelera en un contexto quita la nota DE ESE contexto** (`remove-item`), no la borra de
+  todas partes: la nota sigue existiendo y se ve en el General. **En el General**, que no tiene de
+  dónde quitarla, **borra de verdad** (`delete-note`), con confirmación.
+- **«Mover a…»**, la otra acción de la barra de selección *(decidida el 2026-09-27)*. Semántica:
+  **mover**, no copiar.
+  - **Desde un contexto:** quita las notas seleccionadas de éste (`remove-item`) y las añade al
+    elegido (`add-item`). Son dos acciones compuestas por el caso de uso o la UI, así que *una
+    acción, una operación* se respeta. Si una nota ya estaba en el destino, `add-item` es no-op y
+    sólo se ejecuta el `remove-item`.
+  - **Desde el General**, que no es un contexto: sólo añade al elegido (`add-item`), sin tocar los
+    contextos donde ya estuviera. **Es la forma de devolver a un contexto una nota que se quitó.**
+  - **El selector de destino** lista los contextos existentes, **ni el General ni el actual**.
+  - **No confirma:** no destruye nada.
+  - **Descartados** «Añadir a otro» —copiar la referencia— y ofrecer las dos acciones.
+  - ⚠️ **No es la operación `move`** de §9.3, que reordenaría líneas dentro de una nota y sigue sin
+    existir. Esto mueve **referencias entre contextos**, con acciones que ya existen.
+- **Selección por pulsación larga** para el primer elemento; los siguientes, con toques normales
+  (el patrón de Android). En modo selección un toque **selecciona y no abre** la nota. Se sale al
+  quedarse sin nada seleccionado, con Escape o con atrás.
+- **En web, sin dependencias:** Pointer Events y un temporizador (~500 ms, que se cancela si el
+  dedo se mueve o se levanta), y en las filas se anulan con CSS y `contextmenu` el menú
+  contextual, la selección de texto y el *callout* de iOS. En escritorio se entra también con clic
+  derecho y con Ctrl/Cmd+clic, y hay tecla para el teclado (accesibilidad).
+- **Durante la selección:** aparece la barra de acciones con la papelera y «Mover a…»,
+  desaparecen los botones «+», y ◀ ▶ y ⚙ se apagan (color más apagado).
+- **Descartada la casilla de selección manual** que el boceto ponía a la derecha de cada fila:
+  allí era simbólica, y la pulsación larga ocupa su lugar.
+- **«+ Plan» no aparece en la Fase 4.**
+
+#### La vista configuración
+
+**Dos secciones:**
+
+- **Ventanas** — el orden. Al tocar una, tres acciones: **cambiar su contenido**, **añadir una
+  ventana nueva detrás** y **quitarla**. No hay «reordenar» como tal —coherente con que no exista
+  `move` (§9.3)—; «cambiar contenido» cubre lo mismo.
+- **Contextos** — todos los que existen, estén o no en alguna ventana, con **crear** y **borrar**.
+  Crear un contexto aquí **no le añade ventana**.
+
+**El selector de contenido** (al añadir detrás o al cambiar contenido) ofrece el General, los
+contextos existentes, las notas existentes —a partir de Fase 4 · Notas— y el atajo **«+ Contexto
+nuevo»**.
+
+**Borrar un contexto es `delete-context`, y no borra sus notas:** las que sólo estaban en él quedan
+huérfanas y siguen en el General. Las ventanas que apuntaban a él desaparecen por la guarda.
+
+**Confirmación sólo donde se borra sin vuelta atrás**, que son dos: borrar un contexto («¿Borrar
+X? Sus notas seguirán en General») y la papelera del General. Quitar una ventana, quitar una nota
+de un contexto y «Mover a…» **no confirman**: no destruyen nada. Una ventana quitada se vuelve a
+añadir desde configuración; una nota quitada sigue en el General, y desde ahí se recoloca con
+«Mover a…».
+
+#### Las notas
+
+- **Una nota nace en el contexto de la ventana donde se crea**: `create-note` y `add-item`,
+  compuestos por el caso de uso o la UI. Son **dos acciones**, así que la regla de *una acción,
+  una operación* se respeta. Sólo se crean notas desde ventanas de contexto o del General, y
+  **desde el General nace sin contexto** (`create-note` sin `add-item`): sólo se verá ahí.
+- **Nombre por defecto: «Nueva Nota».** El nombre se escribe aparte del contenido.
+- **El título aparece sólo en la cabecera** —no repetido dentro del contenido, como hacía el
+  boceto— y **se renombra tocándolo**. Igual para los contextos, tocando el título de su ventana.
+  La excepción es el General, que no se renombra.
+- **Una nota vacía se mantiene.**
+
+> **Rectificado el 2026-09-27, en la misma sesión.** Primero se decidió que *una nota abandonada
+> vacía se descarta* (vacía = sin texto en el contenido), y se cambió por **se mantiene** porque
+> simplifica la gestión: «+ Nota» crea en el momento y exit sólo vuelve, sin tener que decidir
+> nada al salir. Salió además un motivo que la regla de descarte no veía: **vaciar una nota
+> existente que es ventana la borraría de verdad al salir.** Precio aceptado: un «+» sin querer
+> deja una «Nueva Nota» vacía, que se quita con selección y papelera.
+
+**Una nota que es ventana se edita ahí mismo: es el MISMO editor en dos marcos.**
+
+| | Cabecera | Barra de abajo |
+|---|---|---|
+| **Como ventana** | ◀ ▶, título y ⚙ | modo de escritura, **sin exit** |
+| **En la vista nota** | sólo el título | modo de escritura **y exit** (§7.2) |
+
+`WritingMode` sigue siendo de la nota abierta (§7.2): nace al abrir el editor y muere al salir de
+él, en cualquiera de los dos marcos.
+
+#### Lo que se queda sin uso: `Context.defaultView`
+
+Existía para que un contexto «abriera directamente» una nota o un plan. Eso lo hace ahora una
+**ventana de tipo nota**, así que en la Fase 4 **ni `defaultView` ni `set-default-view` tienen
+consumidor**. No se eliminan —el dominio está cerrado, y quitarlos tocaría modelo, reducer,
+pruebas y formato en disco por algo que no molesta—; se anotan como candidatos a revisar cuando
+lleguen las entidades «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
 
 ---
 
@@ -2275,9 +2506,18 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   carpeta"). Y ojo a la consecuencia, que ahora tiene nombre: mientras ese botón no exista, un
   `permission-denied` **detiene el write-behind sin vuelta atrás** hasta recargar.
 
-- **Fase 4 — UI.** `render(state)`, reconciliación, el editor de contenido con checkboxes
-  anidados (§7) y, con él, `src/platform/web/` con las implementaciones reales de `Clock` e
-  `IdGenerator`.
+- **Fase 4 — UI. ⏳ EN CURSO, en su plan.** Sólo web, incluido el navegador del móvil.
+  `render(state)`, reconciliación, la navegación por ventanas (§7.4), el editor de contenido con
+  checkboxes anidados (§7.2 y §7.3) y, con todo ello, `src/platform/web/` con las
+  implementaciones reales de `Clock` e `IdGenerator`. **Partida en dos desde el 2026-09-27**, y
+  en este orden: **Fase 4 · Contextos** —la vista ventanas, configuración y las listas— y
+  **Fase 4 · Notas** —el editor—. Cada una con su criterio de cierre, y el porqué del orden, en
+  §9.10. Ninguna de las dos toca el core.
+
+- **Fase 5 — Planes.** El editor de grafos y la vista plan. **Sin planificar a propósito:** se
+  planifica cuando la Fase 4 haya cerrado. El boceto del usuario dice él mismo que aún no sabe
+  cómo plantear la interfaz de los diagramas, y hasta entonces los Planes siguen persistiéndose
+  sin operarse (§9.7).
 
 ### 9.3 Las operaciones de contenido
 
@@ -2513,7 +2753,8 @@ descabellados; se descartan por coste: **cada caso de `Position` es una rama má
 en quien la consuma. Y las operaciones se expresan enteras con los tres de arriba: `insert` y
 `split` colocan detrás o dentro según el modo, y ninguna pide los otros tres.
 
-Lo que **sí** los pediría es el arrastrar y soltar de la Fase 4, donde soltar *encima* de la
+Lo que **sí** los pediría es un arrastrar y soltar —que hoy no está en la Fase 4: entraría si
+las preguntas de §9.10 reabren `move`—, donde soltar *encima* de la
 primera casilla de una lista no se puede expresar con `after`. Ese es el disparador concreto
 para reabrirlo, y **va en el mismo paquete que `move`**: reordenar arrastrando pide "la primera
 del todo", que con estos tres casos no se puede decir. Conviene saber lo que costará entonces:
@@ -2581,7 +2822,7 @@ guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Pla
 catálogo, ni siquiera `create-plan`.
 
 Es la misma regla que quitó `move` (§9.3): no se construye lo que no tiene consumidor. El
-editor de grafos está aparcado en `TAREAS.md`, así que una acción de Plan no tendría quien la
+editor de grafos es la Fase 5 —sin planificar hasta que cierre la 4 (§9.2)—, así que una acción de Plan no tendría quien la
 despachara ni forma de comprobarse contra un uso real. **La consecuencia asumida y visible:**
 `add-item` acepta un `ItemRef` de tipo `plan` —el tipo lo permite y sería raro mutilarlo— pero
 en la Fase 2 no hay manera de crear un Plan que referenciar, así que ese camino queda muerto
@@ -2804,39 +3045,117 @@ en la que **algunas decisiones no se pueden cerrar sobre el papel**. «¿Se agua
 reordenar una lista?» no tiene respuesta hasta que alguien hace la compra con la app. El método
 de las fases anteriores —cerrarlo todo antes— aquí no aplica entero, y forzarlo sería teatro. La
 salida no es saltarse el criterio: es **escribir en él cuáles son esas preguntas y qué cuenta
-como haberlas contestado**. Van abajo, y son parte del cierre.
+como haberlas contestado**. Van abajo, y son parte del cierre de Fase 4 · Notas.
 
-#### Los criterios
+#### Partida en dos: primero Contextos, luego Notas
 
-1. **La rebanada vertical enciende: teclear produce una nota que sobrevive al recargar.** Nace
-   `src/platform/` con las primeras implementaciones reales de `Clock` e `IdGenerator` —hasta
-   hoy no existe **ninguna**—, monta `LocalStorageBlobStore` y arranca con `hydrate` y
+**Decidido el 2026-09-27**, al planificar la navegación (§7.4). La lista única de nueve criterios
+que había aquí se sustituye por dos, una por parte. **Se nombran por contenido y no por número**
+—ni «4a», ni «criterio N», que chocaría con los criterios numerados de abajo—: **Fase 4 ·
+Contextos** y **Fase 4 · Notas**, en ese orden. De lo global a lo específico, que fue la
+propuesta del usuario, por tres motivos:
+
+- **No hay andamio que tirar.** Cada parte se construye sobre la anterior: el editor de Notas se
+  abre desde las listas que construye Contextos.
+- **Sigue el camino por el que se llega a las cosas**: primero se ve una ventana, luego se entra a
+  una nota.
+- **La rebanada vertical cae sobre la pieza más sencilla.** Si la pila entera —`platform/`,
+  `LocalStorageBlobStore`, `hydrate`, el write-behind— no encaja, se descubre con contextos, que
+  son un nombre y una lista, y no con el editor.
+
+**Coste admitido:** lo difícil —el editor— llega segundo, y con él las tres preguntas empiezan a
+contestarse más tarde. Se mitiga haciendo Contextos **delgada**.
+
+**Ninguna de las dos toca el core.** Todas las acciones que hacen falta existen desde la Fase 2
+—`create-note`, `rename-note`, `delete-note`, `create-context`, `rename-context`,
+`delete-context`, `add-item`, `remove-item`— y el General es cálculo de presentación.
+
+**Y la fase es sólo web**, incluido el navegador del móvil. Los shells nativos siguen fuera (§7.4).
+
+#### Fase 4 · Contextos: los criterios
+
+1. **La rebanada vertical enciende: un contexto creado sobrevive al recargar.** Nace
+   `src/platform/` con las primeras implementaciones reales de `Clock` e `IdGenerator` —hasta hoy
+   no existe **ninguna**—, monta `LocalStorageBlobStore` y arranca con `hydrate` y
    `runMigrations`. Es el **primer arranque real de la app**: hasta aquí el núcleo entero sólo ha
-   corrido dentro de pruebas. Este punto no juzga el tacto del editor, sólo que la pila encaja.
+   corrido dentro de pruebas. Este punto no juzga el aspecto, sólo que la pila encaja.
+2. **`onCorrupt`: una nota ilegible ya no impide abrir la app.** Es lo único de la deuda de la
+   Fase 3 que entra **con la primera rebanada** y no después, porque no es deuda interna: hoy un
+   solo fichero roto tumba el `getAll` entero y con él la app (§6.5).
+3. **La vista ventanas se comporta como está diseñada** (§7.4): ◀ ▶ sin anterior en la primera ni
+   siguiente en la última; renombrar tocando el título, salvo el General; el General enseña todas
+   las notas; pantalla vacía sin ventanas. En esta parte, **sólo ventanas de contexto y del
+   General**.
+4. **La lista de ventanas vive en `localStorage`, fuera del core, y su guarda de integridad es una
+   función pura con pruebas.** Las ventanas visibles se calculan siempre, y la de un contexto
+   borrado desaparece **en la misma sesión**. **Al recargar se vuelve a la ventana activa**,
+   guardada como referencia y no como índice; si ya no es visible, la primera, o la pantalla
+   vacía. Lo que hubiera encima no se recuerda. Todo ello verificado rompiéndolo a propósito.
+5. **La vista configuración, entera:** sus dos secciones; el selector con el General, los
+   contextos existentes y «+ Contexto nuevo»; borrar un contexto con confirmación; y exit y el
+   atrás del navegador —también en el móvil— devuelven a la misma ventana.
+6. **La lista de un contexto, con todo lo que se hace sobre ella.** «+ Nota» crea una «Nueva Nota»
+   —en el contexto, o sin contexto desde el General— y **en esta parte todavía no se abre**;
+   selección por pulsación larga y toques, clic derecho, Ctrl/Cmd+clic y teclado; durante la
+   selección se ocultan los «+» y se apagan flechas y engranaje; la papelera es `remove-item` en un
+   contexto y `delete-note` con confirmación en el General; y **«Mover a…»** mueve entre
+   contextos (`remove-item` + `add-item`) o, desde el General, sólo añade (`add-item`), con un
+   selector sin el General ni el contexto actual y sin confirmación.
+7. **Las listas se reconcilian por `data-id`.** Seleccionar una fila o renombrar un contexto **no
+   recrea las filas que no cambiaron**. Es la regla de §7 probada donde es sencillo, antes de
+   llegar al editor, donde no lo es.
+8. **Una lista de verificación manual, ejecutada y anotada** —pulsación larga, atrás, recargar—,
+   en un navegador de escritorio **y en uno de móvil**, al estilo de
+   `test/storage/blobs/VERIFICACION-MANUAL.md`. Sigue cerrado que no hay runner de navegador
+   (§6.3).
+9. **`npm run check` en verde y el recuento de pruebas anotado**, como en las fases anteriores.
+   La cifra de partida son **329** —99 al cerrar la Fase 1, 216 la 2, 314 la 3—.
+
+**Lo que NO entra en Fase 4 · Contextos:** abrir y editar notas, las ventanas de tipo nota y
+borrar `src/scripts/` (las tres, a Fase 4 · Notas); los Planes (Fase 5); la carpeta del usuario y
+OPFS como destino, la escritura condicional, los shells, y `move`/`indent`/`outdent`.
+
+#### Fase 4 · Notas: los criterios
+
+1. **La vista nota, con su navegación** (§7.4). Se abre tocando una nota o con «+ Nota», que desde
+   esta parte **crea y entra**; exit y el atrás del navegador vuelven a la misma ventana; la
+   cabecera lleva sólo el título, renombrable, sin flechas ni engranaje; una nota vacía se queda.
 2. **Las ocho operaciones de contenido llegan desde el teclado.** Intro construye según el estado
-   de la barra (§7.3), Retroceso al principio hace sus dos cosas en dos pulsaciones, y el botón
-   de anidar arma la línea siguiente sin tocar la actual (§7.2).
+   de la barra (§7.3), Retroceso al principio hace sus dos cosas en dos pulsaciones, y el botón de
+   anidar arma la línea siguiente sin tocar la actual (§7.2).
 3. **Las cuatro esquinas de §7.3 se comportan como dice su tabla.** Confirmadas el 2026-09-20.
    Sin ellas el editor «funciona» y se siente roto justo en los bordes, que es donde se nota.
 4. **Un `set-checked` redundante no redibuja.** Tercer eslabón de la misma cadena: la Fase 1
    demostró que no notifica (§9.5, punto 5), la Fase 2 que no escribe (§9.8, punto 3), y la 4
-   tiene que demostrar que **no toca el DOM**. ⚠️ Es el único de los tres que el usuario nota:
-   un re-render con el cursor dentro le borra lo que está escribiendo.
+   tiene que demostrar que **no toca el DOM**. ⚠️ Es el único de los tres que el usuario nota: un
+   re-render con el cursor dentro le borra lo que está escribiendo.
 5. **Escribir deprisa no pierde el cursor.** La regla de §7: mientras un nodo tiene el foco, el
    DOM es la fuente de verdad y no se re-renderiza. Se comprueba escribiendo una frase larga
    seguida en una casilla anidada, con el write-behind trabajando por debajo.
-6. **`onCorrupt`: una nota ilegible ya no impide abrir la app.** Es lo único de la deuda de la
-   Fase 3 que entra **con la primera rebanada** y no después, porque no es deuda interna: hoy un
-   solo fichero roto tumba el `getAll` entero y con él la app (§6.5).
-7. **`src/scripts/` ha desaparecido del repo.** El prototipo viejo se **sustituye**, no se
-   jubila. Mientras siga ahí, `CLAUDE.md` tiene que gastar un párrafo en cada sesión explicando
-   que no se imite, y eso se paga para siempre. Criterio verificable con un `ls`.
-8. **Una lista de verificación manual del editor, ejecutada y anotada**, al estilo de
-   `test/storage/blobs/VERIFICACION-MANUAL.md`. Sigue cerrado que no hay runner de navegador
-   (§6.3), y el tacto del teclado no lo prueba `node --test`. Sin lista escrita y pasada, «se
-   probó a mano» significa en la práctica «no se probó».
-9. **`npm run check` en verde y el recuento de pruebas anotado**, como en las tres fases
-   anteriores. La cifra de partida son **329** —99 al cerrar la Fase 1, 216 la 2, 314 la 3—.
+6. **La barra de modo** (§7.2): *Texto* ⇄ *Casilla*, más el disparador de anidar, visible cuando
+   está armado; `WritingMode` nace al abrir la nota y muere al salir; el exit, sólo en la vista
+   nota.
+7. **Las ventanas de tipo nota.** El selector ofrece las notas existentes; es el mismo editor en
+   la ventana —cabecera con ◀ ▶, título y ⚙; barra sin exit—; y **la guarda sabe de notas**:
+   borrar desde el General una nota que es ventana la quita en la misma sesión. Con pruebas, y
+   verificada rompiéndola.
+8. **Los fallos que hoy no ve nadie, ya se ven.** El `onError` del write-behind —si se detiene, el
+   usuario lo sabe; el aviso **sólo informa**, «No se están guardando los cambios», porque un
+   escritor detenido no se reanuda (§6.5)— y la validación de esquema al leer: un fichero que
+   parsea pero no tiene forma de nota va por el mismo camino que `onCorrupt`.
+9. **`src/scripts/` ha desaparecido del repo.** El prototipo viejo se **sustituye**, no se jubila.
+   Mientras siga ahí, `CLAUDE.md` tiene que gastar un párrafo en cada sesión explicando que no se
+   imite, y eso se paga para siempre. Criterio verificable con un `ls`.
+10. **Una lista de verificación manual del editor, ejecutada y anotada**, en escritorio y en
+    móvil. El tacto del teclado no lo prueba `node --test`, y sin lista escrita y pasada «se probó
+    a mano» significa en la práctica «no se probó».
+11. **`npm run check` en verde y el recuento de pruebas anotado.**
+
+**Y las tres preguntas de abajo son de esta parte**: es la que pone el editor delante.
+
+**Lo que NO entra en Fase 4 · Notas:** los Planes (Fase 5); la escritura condicional; la carpeta
+del usuario y OPFS; los shells; `move`, `indent` y `outdent` salvo que las preguntas los reabran;
+y las tres candidatas extra de la barra (§7.2).
 
 #### Las tres preguntas que se contestan con el editor delante
 
@@ -2855,38 +3174,40 @@ días—, no después de una demo de cinco minutos.
 vez de con intuiciones. Escribir estas tres preguntas ahora es justamente lo que compra el
 derecho a cambiar de opinión después sin que parezca una rendición.
 
-#### Lo que NO entra en la Fase 4
+#### Lo que NO entra en la Fase 4, en ninguna de sus dos partes
 
-Dicho explícitamente, como en §9.7 y §9.9:
+Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas de arriba no cabe:
 
-- **Los Planes y su editor de grafos.** Se persisten desde la Fase 2 y siguen sin operarse.
+- **Los Planes y su editor de grafos: son la Fase 5.** Se persisten desde la Fase 2 y siguen sin
+  operarse; se planifican cuando la 4 haya cerrado.
 - **`move`, `indent` y `outdent`**, salvo que las preguntas de arriba los reabran.
 - **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con
   `LocalStorageBlobStore` para salir del paso. Es barato de revertir —`BlobStore` es un puerto,
-  y el destino se inyecta en un solo sitio de `platform/`—, pero deja **dos cabos con nombre**:
-  qué pasa con las notas ya escritas en `localStorage` el día que se cambie de destino, y el
-  techo de ~5 MB por origen, que el base64 del blob infla alrededor de un tercio.
-- **El `onError` del write-behind y la validación de esquema al leer.** Entran en la fase, pero
-  **después del editor**: hoy no hay a quién avisar, y el editor es quien crea al destinatario.
+  y el destino se inyecta en un solo sitio de `platform/`—, pero deja **tres cabos con nombre**:
+  qué pasa con las notas ya escritas en `localStorage` el día que se cambie de destino, el techo
+  de ~5 MB por origen, que el base64 del blob infla alrededor de un tercio, y —desde el
+  2026-09-27— que **la lista de ventanas no viaja** con las notas (§7.4).
+- **El botón «reintentar» del aviso de `onError`.** Aparcado para cuando el destino sea la carpeta
+  del usuario: ahí reanudar tiene sentido, porque es volver a pedir la carpeta.
 - **La escritura condicional** (§6.5). Sigue sin poder dispararla nadie hasta que haya dos
   pestañas de verdad.
 - **Los shells de desktop y móvil, y el sync entre dispositivos.**
 
-Y **queda una cosa sin decidir a propósito**, porque es de infraestructura y no de diseño: **si
-la fase instala un bundler o no**. Webpack está desinstalado desde la Fase 0 esperando a ésta,
-pero entre medias apareció una vía con cero dependencias que ya está probada en el repo —el
-`<script type="importmap">` de `test/storage/blobs/verificacion-manual.html`, que carga el código
-de producción compilado a ESM y funcionó en Brave y en Firefox—. Lo sensato es empezar por ahí y
-que el bundler entre sólo cuando algo concreto lo exija, no por costumbre.
+**El bundler, cerrado el 2026-09-27: de entrada no se instala.** Se arranca con el `<script
+type="importmap">` ya probado en el repo —el de `test/storage/blobs/verificacion-manual.html`,
+que carga el código de producción compilado a ESM y funcionó en Brave y en Firefox—, con cero
+dependencias. El bundler entra sólo cuando algo concreto lo exija, no por costumbre. Se aplica
+desde Fase 4 · Contextos, que es la que escribe la primera línea de `ui/`.
 
 ---
 
 ## Apéndice: el prototipo viejo
 
 `src/scripts/` es anterior al rediseño. Sigue en el repo porque es lo único que hace algo
-visible, pero **no refleja esta arquitectura y no hay que imitarlo**. Se sustituye en la
-Fase 4, y ahora mismo **no se puede construir ni servir**: webpack está desinstalado hasta esa
-fase, así que `npm run build` y `npm run serve` no existen.
+visible, pero **no refleja esta arquitectura y no hay que imitarlo**. Se sustituye en Fase 4 ·
+Notas (criterio 9 de §9.10), y ahora mismo **no se puede construir ni servir**: webpack está
+desinstalado, así que `npm run build` y `npm run serve` no existen. Y la Fase 4 no lo va a
+reinstalar para él: arranca con el `importmap` (§9.10).
 
 Arrastra dos bugs conocidos que se resuelven sustituyéndolo, no parcheándolo: `context.items`
 apunta al array `notes` original que luego se reasigna, así que el contexto se queda vacío
