@@ -10,7 +10,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Context } from "#core/index"
-import { contextId, emptyAppState, revision } from "#core/index"
+import { contextId, emptyAppState, noteId, revision } from "#core/index"
 import type { WindowRef, WindowsLayout } from "#ui/index"
 import {
   DEFAULT_LAYOUT,
@@ -20,6 +20,7 @@ import {
   parseWindowsLayout,
   removeWindowAt,
   replaceWindowAt,
+  sameWindow,
 } from "#ui/index"
 
 const contexto = (id: string): Context => ({
@@ -179,4 +180,45 @@ test("removeWindowAt quita sólo esa", (): void => {
 test("removeWindowAt fuera de rango devuelve el MISMO objeto", (): void => {
   assert.strictEqual(removeWindowAt(TRES, 3), TRES)
   assert.strictEqual(removeWindowAt(TRES, -1), TRES)
+})
+
+/* ────────────────────────── Las ventanas de tipo nota ──────────────────────── */
+
+const ventanaNota = (id: string): WindowRef => ({ kind: "note", id: noteId(id) })
+
+const conNota = (estado: AppState, id: string): AppState => ({
+  ...estado,
+  notes: {
+    ...estado.notes,
+    [noteId(id)]: { id: noteId(id), name: id, content: [], updatedAt: 0, revision: revision(`rev-${id}`) },
+  },
+})
+
+test("la guarda sabe de notas: la de una nota que existe se queda, y es la MISMA lista", (): void => {
+  const layout: WindowsLayout = { windows: [ventanaNota("lista"), GENERAL], active: ventanaNota("lista") }
+  assert.strictEqual(guardWindows(layout, conNota(emptyAppState(), "lista")), layout)
+})
+
+test("la guarda sabe de notas: la de una nota borrada desaparece", (): void => {
+  const layout: WindowsLayout = { windows: [ventanaNota("borrada"), GENERAL], active: ventanaNota("borrada") }
+  assert.deepEqual(guardWindows(layout, emptyAppState()), { windows: [GENERAL], active: GENERAL })
+})
+
+test("una nota y un contexto con el mismo id no son la misma ventana", (): void => {
+  const layout: WindowsLayout = { windows: [ventana("x"), ventanaNota("x")], active: ventanaNota("x") }
+  /* Existe el contexto «x» pero no la nota «x»: sólo se cae la de nota. */
+  assert.deepEqual(guardWindows(layout, conContextos("x")), { windows: [ventana("x")], active: ventana("x") })
+})
+
+test("una ventana de nota se lee de lo guardado", (): void => {
+  assert.deepEqual(parseWindowsLayout({ windows: [{ kind: "note", id: "lista" }], active: null }).windows, [
+    ventanaNota("lista"),
+  ])
+})
+
+test("sameWindow no confunde clases: ni nota con contexto, en ningún sentido", (): void => {
+  assert.equal(sameWindow(ventanaNota("x"), ventana("x")), false)
+  assert.equal(sameWindow(ventana("x"), ventanaNota("x")), false)
+  assert.equal(sameWindow(ventanaNota("x"), ventanaNota("x")), true)
+  assert.equal(sameWindow(ventanaNota("x"), GENERAL), false)
 })

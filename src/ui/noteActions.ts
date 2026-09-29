@@ -31,7 +31,8 @@ export const trashNotes = (
 ): void => {
   for (const id of ids) {
     if (ventana.kind === "general") useCases.deleteNote(id)
-    else useCases.removeItem(ventana.id, noteRef(id))
+    /* Una ventana de nota no tiene lista, así que no hay nada que tirar. */
+    else if (ventana.kind === "context") useCases.removeItem(ventana.id, noteRef(id))
   }
 }
 

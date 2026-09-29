@@ -112,3 +112,18 @@ test("una activa que ya no está en la lista enseña la pantalla vacía, no otra
   /* La guarda lo evita, pero si fallara no se enseña una ventana cualquiera. */
   assert.deepEqual(windowView({ windows: [GENERAL], active: COMPRA }, ESTADO), { kind: "empty" })
 })
+
+test("una ventana de nota: se titula con la nota, la renombra, y no lleva lista", (): void => {
+  const deNota: WindowRef = { kind: "note", id: LECHE.id }
+  const vista: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: [GENERAL, deNota], active: deNota })
+  assert.equal(vista.title, "Leche")
+  assert.equal(vista.editsNote, LECHE.id)
+  assert.equal(vista.renames, null)
+  assert.deepEqual(vista.notes, [])
+  assert.deepEqual(vista.prev, GENERAL)
+})
+
+test("en una ventana de contexto o del General no se edita ninguna nota", (): void => {
+  assert.equal(ventanaDe({ windows: TRES, active: COMPRA }).editsNote, null)
+  assert.equal(ventanaDe({ windows: TRES, active: GENERAL }).editsNote, null)
+})

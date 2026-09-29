@@ -8,13 +8,14 @@
  * Todo es puro: se prueba en Node sin navegador.
  */
 
-import type { AppState, ContextId } from "#core/index"
-import { contextId } from "#core/index"
+import type { AppState, ContextId, NoteId } from "#core/index"
+import { contextId, noteId } from "#core/index"
 
-/** Lo que enseña una ventana. Las de tipo nota llegan con el editor. */
+/** Lo que enseña una ventana: el General, un contexto o una nota. */
 export type WindowRef =
   | { readonly kind: "general" }
   | { readonly kind: "context"; readonly id: ContextId }
+  | { readonly kind: "note"; readonly id: NoteId }
 
 export interface WindowsLayout {
   readonly windows: ReadonlyArray<WindowRef>
@@ -27,12 +28,28 @@ export const GENERAL: WindowRef = { kind: "general" }
 /** Lo que se ve la primera vez, sin nada guardado: la ventana del General. */
 export const DEFAULT_LAYOUT: WindowsLayout = { windows: [GENERAL], active: GENERAL }
 
-export const sameWindow = (a: WindowRef, b: WindowRef): boolean =>
-  a.kind === "general" ? b.kind === "general" : b.kind === "context" && a.id === b.id
+export const sameWindow = (a: WindowRef, b: WindowRef): boolean => {
+  switch (a.kind) {
+    case "general":
+      return b.kind === "general"
+    case "context":
+      return b.kind === "context" && a.id === b.id
+    case "note":
+      return b.kind === "note" && a.id === b.id
+  }
+}
 
 /** Si lo que enseña esa ventana existe. El General, siempre: no es un contexto. */
-export const windowExists = (ref: WindowRef, state: AppState): boolean =>
-  ref.kind === "general" || state.contexts[ref.id] !== undefined
+export const windowExists = (ref: WindowRef, state: AppState): boolean => {
+  switch (ref.kind) {
+    case "general":
+      return true
+    case "context":
+      return state.contexts[ref.id] !== undefined
+    case "note":
+      return state.notes[ref.id] !== undefined
+  }
+}
 
 /**
  * Las ventanas que se pueden enseñar: las guardadas menos las que apuntan a algo
@@ -114,6 +131,9 @@ const refDe = (x: unknown): WindowRef | null => {
   if (x["kind"] === "general") return GENERAL
   if (x["kind"] === "context" && typeof x["id"] === "string") {
     return { kind: "context", id: contextId(x["id"]) }
+  }
+  if (x["kind"] === "note" && typeof x["id"] === "string") {
+    return { kind: "note", id: noteId(x["id"]) }
   }
   return null
 }

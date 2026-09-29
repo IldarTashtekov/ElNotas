@@ -185,6 +185,18 @@
         flex-direction: column;
         min-height: calc(100dvh - 2rem);
       }
+      /* En una ventana, bajo la cabecera de la vista ventanas: se descuenta su alto. */
+      .vista-nota.en-ventana {
+        min-height: calc(100dvh - 5rem);
+      }
+      .vista-nota.en-ventana:empty {
+        display: none;
+      }
+      .selector .grupo {
+        flex-basis: 100%;
+        font-size: 0.85rem;
+        opacity: 0.7;
+      }
       .contenido {
         flex: 1;
         padding: 0.5rem 0 1rem;

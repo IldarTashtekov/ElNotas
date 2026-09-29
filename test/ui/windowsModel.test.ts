@@ -11,6 +11,7 @@ import type {
   Context,
   ContextId,
   IdGenerator,
+  Note,
   Result,
   StorageError,
   Store,
@@ -206,4 +207,20 @@ test("con Casa en las dos ventanas, borrar Casa deja la pantalla vacía", (): vo
 
   useCases.deleteContext(casa)
   assert.deepEqual(model.getLayout(), { windows: [], active: null })
+})
+
+test("borrar desde el General una nota que es ventana la quita EN LA MISMA SESIÓN", (): void => {
+  const { store, useCases } = escenario()
+  const nota: Note | null = useCases.createNote("Lista")
+  if (nota === null) assert.fail("la nota tenía que crearse")
+  const deNota: WindowRef = { kind: "note", id: nota.id }
+  const model: WindowsModel = createWindowsModel({
+    store,
+    persistence: almacen(ok({ windows: [GENERAL, deNota], active: deNota })),
+  })
+  assert.deepEqual(model.getLayout().windows, [GENERAL, deNota])
+
+  useCases.deleteNote(nota.id)
+
+  assert.deepEqual(model.getLayout(), { windows: [GENERAL], active: GENERAL })
 })

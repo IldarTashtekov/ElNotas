@@ -1,16 +1,19 @@
 /**
  * La vista ventanas, la principal: una ventana cada vez, con ◀ ▶ para pasar a la
- * de al lado, el título —que en un contexto se renombra tocándolo—, sus notas y
- * el ⚙ de la configuración. Sin ventanas, una pantalla vacía con el ⚙.
+ * de al lado, el título —que se renombra tocándolo, salvo en el General—, sus
+ * notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
+ * que la vista nota, con su barra y sin exit. Sin ventanas, una pantalla vacía.
  *
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
 
-import type { AppState, NoteId, StorageError, Store, UseCases } from "#core/index"
+import type { AppState, Note, NoteId, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { corruptNotice, elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
+import type { NoteEditor } from "./NoteEditor.js"
+import { createNoteEditor } from "./NoteEditor.js"
 import type { NoteList } from "./NoteList.js"
 import { createNoteList } from "./NoteList.js"
 import type { WindowView } from "./windowView.js"
@@ -50,9 +53,11 @@ export const mountWindowsView = (
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
   const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
-  const titulo: EditableTitle = createEditableTitle("Nombre del contexto", (nombre: string): void => {
-    /* Se lee al guardar: es el contexto de la ventana en la que se empezó a escribir. */
-    if (vista.kind === "window" && vista.renames !== null) useCases.renameContext(vista.renames, nombre)
+  const titulo: EditableTitle = createEditableTitle("Nombre", (nombre: string): void => {
+    /* Se lee al guardar: es la ventana en la que se empezó a escribir. */
+    if (vista.kind !== "window") return
+    if (vista.editsNote !== null) useCases.renameNote(vista.editsNote, nombre)
+    else if (vista.renames !== null) useCases.renameContext(vista.renames, nombre)
   })
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"
@@ -86,6 +91,38 @@ export const mountWindowsView = (
 
   let vista: WindowView = { kind: "empty" }
 
+  /* ── La ventana de nota: el mismo editor que la vista nota, en otro marco ── */
+
+  const zonaEditor: HTMLElement = elemento("div")
+  zonaEditor.className = "vista-nota en-ventana"
+  /** El editor montado, y de qué nota. Uno a la vez: cambiar de ventana lo rehace. */
+  let editor: { readonly nota: NoteId; readonly instancia: NoteEditor } | null = null
+
+  const soltarEditor = (): void => {
+    editor?.instancia.destroy()
+    editor = null
+    zonaEditor.replaceChildren()
+  }
+
+  const montarEditor = (id: NoteId, nota: Note): void => {
+    if (editor === null || editor.nota !== id) {
+      /* El modo de escritura nace aquí y muere al salir de la ventana, como en la vista nota. */
+      soltarEditor()
+      const instancia: NoteEditor = createNoteEditor({
+        useCases,
+        noteId: id,
+        note: (): Note | undefined => store.getState().notes[id],
+      })
+      const barra: HTMLElement = elemento("div")
+      barra.className = "barra barra-modo"
+      /* Sin exit: de una ventana no se sale, se pasa a otra. */
+      barra.append(...instancia.modeButtons)
+      zonaEditor.append(instancia.element, barra)
+      editor = { nota: id, instancia }
+    }
+    editor.instancia.refresh(nota)
+  }
+
   anterior.addEventListener("click", (): void => {
     if (vista.kind === "window" && vista.prev !== null) windows.setActive(vista.prev)
   })
@@ -111,6 +148,7 @@ export const mountWindowsView = (
     if (vista.kind === "empty") {
       cabecera.hidden = true
       notas.update(null, [])
+      soltarEditor()
       sinVentanas.hidden = false
       return
     }
@@ -120,15 +158,26 @@ export const mountWindowsView = (
     mostrar(anterior, vista.prev !== null)
     mostrar(siguiente, vista.next !== null)
 
-    titulo.show(vista.title, vista.renames !== null)
+    titulo.show(vista.title, vista.renames !== null || vista.editsNote !== null)
 
-    notas.update(vista.ref, vista.notes)
+    const nota: Note | undefined =
+      vista.editsNote === null ? undefined : estado.notes[vista.editsNote]
+    if (vista.editsNote !== null && nota !== undefined) {
+      notas.element.hidden = true
+      notas.update(null, [])
+      montarEditor(vista.editsNote, nota)
+    } else {
+      soltarEditor()
+      notas.element.hidden = false
+      notas.update(vista.ref, vista.notes)
+    }
   }
 
   raiz.replaceChildren(
     ...(corrupt.length > 0 ? [corruptNotice(corrupt)] : []),
     cabecera,
     notas.element,
+    zonaEditor,
     sinVentanas,
   )
   pintar()

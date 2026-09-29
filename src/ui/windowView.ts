@@ -1,12 +1,13 @@
 /**
  * Qué enseña la vista ventanas ahora mismo: la ventana activa, su título, si se
- * puede renombrar, sus notas y si hay ventana antes y después.
+ * puede renombrar, sus notas —o la nota que se edita, si es una ventana de nota—
+ * y si hay ventana antes y después.
  *
  * Es un cálculo puro sobre el estado y la lista de ventanas, así que todo lo que
  * decide la pantalla se prueba en Node; al DOM sólo le queda pintarlo.
  */
 
-import type { AppState, Context, ContextId, ItemRef, Note } from "#core/index"
+import type { AppState, Context, ContextId, ItemRef, Note, NoteId } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { sameWindow } from "./windows.js"
 
@@ -18,8 +19,11 @@ export type WindowView =
       readonly kind: "window"
       readonly ref: WindowRef
       readonly title: string
-      /** El contexto que se renombra al tocar el título; `null` en el General. */
+      /** El contexto que se renombra al tocar el título; `null` en el General y en una nota. */
       readonly renames: ContextId | null
+      /** La nota que se edita en la ventana, si es de tipo nota. Su título la renombra. */
+      readonly editsNote: NoteId | null
+      /** La lista de la ventana. Vacía en una ventana de nota: ahí va el editor. */
       readonly notes: ReadonlyArray<Note>
       /** Sin anterior en la primera ni siguiente en la última: no es circular. */
       readonly prev: WindowRef | null
@@ -29,8 +33,16 @@ export type WindowView =
 const VACIA: WindowView = { kind: "empty" }
 
 /** Cómo se llama lo que enseña una ventana. Vacío si ya no existe: la guarda lo quita. */
-export const windowTitle = (ref: WindowRef, state: AppState): string =>
-  ref.kind === "general" ? GENERAL_TITLE : (state.contexts[ref.id]?.name ?? "")
+export const windowTitle = (ref: WindowRef, state: AppState): string => {
+  switch (ref.kind) {
+    case "general":
+      return GENERAL_TITLE
+    case "context":
+      return state.contexts[ref.id]?.name ?? ""
+    case "note":
+      return state.notes[ref.id]?.name ?? ""
+  }
+}
 
 /** El General enseña todas, por nombre: no hay otro orden que sea suyo. */
 const todasLasNotas = (state: AppState): ReadonlyArray<Note> =>
@@ -63,7 +75,22 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       ref: activa,
       title: GENERAL_TITLE,
       renames: null,
+      editsNote: null,
       notes: todasLasNotas(state),
+      ...vecinas,
+    }
+  }
+
+  if (activa.kind === "note") {
+    const nota: Note | undefined = state.notes[activa.id]
+    if (nota === undefined) return VACIA
+    return {
+      kind: "window",
+      ref: activa,
+      title: nota.name,
+      renames: null,
+      editsNote: nota.id,
+      notes: [],
       ...vecinas,
     }
   }
@@ -77,6 +104,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     ref: activa,
     title: ctx.name,
     renames: ctx.id,
+    editsNote: null,
     notes: notasDe(ctx, state),
     ...vecinas,
   }

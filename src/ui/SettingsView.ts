@@ -113,10 +113,16 @@ export const mountSettingsView = (
   const selector = (e: Eleccion, vista: SettingsContent): HTMLElement => {
     const caja: HTMLElement = elemento("div")
     caja.className = "selector"
+    /* Las notas, detrás de un rótulo: sin él, una nota y un contexto con el
+       mismo nombre no se distinguirían. */
+    const primeraNota: number = vista.choices.findIndex((o: WindowRow): boolean => o.ref.kind === "note")
+    const grupo: HTMLElement = elemento("span", "Notas:")
+    grupo.className = "grupo"
     caja.append(
-      ...vista.choices.map((opcion: WindowRow): HTMLButtonElement =>
+      ...vista.choices.flatMap((opcion: WindowRow, i: number): ReadonlyArray<HTMLElement> => [
+        ...(i === primeraNota ? [grupo] : []),
         boton(opcion.title, (): void => aplicar(e, opcion.ref)),
-      ),
+      ]),
       boton("+ Contexto nuevo", (): void => {
         const nuevo: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
         if (nuevo !== null) aplicar(e, { kind: "context", id: nuevo.id })
@@ -169,7 +175,7 @@ export const mountSettingsView = (
   }
 
   const claveDe = (ref: WindowRef): string =>
-    ref.kind === "general" ? "general" : `context:${ref.id}`
+    ref.kind === "general" ? "general" : `${ref.kind}:${ref.id}`
 
   const pintar = (forzar: boolean = false): void => {
     const estado: AppState = store.getState()
