@@ -8,3 +8,12 @@
 export type { ContextsScreenDeps } from "./ContextsScreen.js"
 export { mountContextsScreen } from "./ContextsScreen.js"
 export { describeBootError, describeMigrationError, describeStorageError } from "./messages.js"
+export type { WindowRef, WindowsLayout } from "./windows.js"
+export { DEFAULT_LAYOUT, GENERAL, guardWindows, parseWindowsLayout, sameWindow } from "./windows.js"
+export type {
+  WindowsListener,
+  WindowsModel,
+  WindowsModelDeps,
+  WindowsPersistence,
+} from "./windowsModel.js"
+export { createWindowsModel } from "./windowsModel.js"
