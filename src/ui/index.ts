@@ -5,6 +5,25 @@
  * no sabe dónde se guarda nada. Quien la monta es `platform/`.
  */
 
+export type { Caret, EditResult, EditorDeps } from "./editor.js"
+export {
+  pressBackspaceAtStart,
+  pressEnter,
+  startWriting,
+  toggleCheckbox,
+  toggleChecked,
+} from "./editor.js"
+export type { Located } from "./noteTree.js"
+export {
+  inReadingOrder,
+  lineBeside,
+  locate,
+  mergeTarget,
+  nextSibling,
+  rootAncestor,
+} from "./noteTree.js"
+export type { WritingMode } from "./writingMode.js"
+export { INITIAL_MODE, toggleNest } from "./writingMode.js"
 export type { EditableTitle } from "./editableTitle.js"
 export { createEditableTitle } from "./editableTitle.js"
 export type { NoteViewDeps } from "./NoteView.js"
