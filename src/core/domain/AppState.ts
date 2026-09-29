@@ -1,7 +1,7 @@
-import type { Context } from "./Context"
-import type { ContextId, NoteId, PlanId } from "./Ids"
-import type { Note } from "./Note"
-import type { Plan } from "./Plan"
+import type { Context } from "./Context.js"
+import type { ContextId, NoteId, PlanId } from "./Ids.js"
+import type { Note } from "./Note.js"
+import type { Plan } from "./Plan.js"
 
 /**
  * Estado raíz de la aplicación: plano y normalizado, como una mini base de datos.

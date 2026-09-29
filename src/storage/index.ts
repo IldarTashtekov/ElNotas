@@ -9,13 +9,13 @@
  * `platform/`, que no nace hasta la Fase 4.
  */
 
-export { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter"
+export { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter.js"
 
 /* El de ficheros JSON, parametrizado por un `BlobStore` que le llega por
    constructor. Quién es ese `BlobStore` —localStorage, la carpeta del usuario,
    OPFS— lo decide `platform/` en la Fase 4; el falso de las pruebas no sale por
    esta puerta. */
-export { createFileStorageAdapter } from "./file/FileStorageAdapter"
+export { createFileStorageAdapter } from "./file/FileStorageAdapter.js"
 
 /* Las implementaciones de `BlobStore`, en `blobs/`: son lo de abajo del reparto
    en dos niveles y las dos se enchufan al adaptador de arriba.
@@ -28,10 +28,10 @@ export { createFileStorageAdapter } from "./file/FileStorageAdapter"
    Las dos reciben por constructor lo que las conecta con la plataforma —un
    `Storage`, un `FileSystemDirectoryHandle`—, porque conseguirlo es composición
    y eso vive en `platform/`, que no nace hasta la Fase 4. */
-export { createLocalStorageBlobStore } from "./blobs/LocalStorageBlobStore"
-export { createDirectoryHandleBlobStore } from "./blobs/DirectoryHandleBlobStore"
+export { createLocalStorageBlobStore } from "./blobs/LocalStorageBlobStore.js"
+export { createDirectoryHandleBlobStore } from "./blobs/DirectoryHandleBlobStore.js"
 
 /* El escritor diferido: la mitad impura del write-behind. La otra mitad
    —`diffState`, que decide qué está sucio— es pura y vive en el core. */
-export type { Cancel, Schedule, WriteBehind, WriteBehindDeps } from "./writeBehind"
-export { createWriteBehind } from "./writeBehind"
+export type { Cancel, Schedule, WriteBehind, WriteBehindDeps } from "./writeBehind.js"
+export { createWriteBehind } from "./writeBehind.js"

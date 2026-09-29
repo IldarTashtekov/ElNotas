@@ -13,12 +13,12 @@
  * y no falla nada visible.
  */
 
-import type { AppState } from "../domain/AppState"
-import type { Content } from "../domain/Content"
-import type { Context, DefaultView } from "../domain/Context"
-import type { ContextId, ItemRef, NoteId } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Versioned } from "../domain/Versioned"
+import type { AppState } from "../domain/AppState.js"
+import type { Content } from "../domain/Content.js"
+import type { Context, DefaultView } from "../domain/Context.js"
+import type { ContextId, ItemRef, NoteId } from "../domain/Ids.js"
+import type { Note } from "../domain/Note.js"
+import type { Versioned } from "../domain/Versioned.js"
 import {
   convertToCheckBox,
   convertToText,
@@ -28,8 +28,8 @@ import {
   setChecked,
   setText,
   split,
-} from "../domain/operations"
-import type { Action, ActionMeta } from "./Action"
+} from "../domain/operations.js"
+import type { Action, ActionMeta } from "./Action.js"
 
 /**
  * Aplica una operación al contenido de una nota y estampa los metadatos **sólo

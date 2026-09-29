@@ -6,8 +6,8 @@
  * puerto, `BlobStore`, que ya no sabe qué es una Nota: sólo mueve bytes.
  */
 
-import type { Result } from "../domain/Result"
-import type { StorageError } from "../domain/errors/StorageError"
+import type { Result } from "../domain/Result.js"
+import type { StorageError } from "../domain/errors/StorageError.js"
 
 export interface Repository<T, TId extends string> {
   /** La entidad, o `null` si no está guardada — que **no** es un fallo. */

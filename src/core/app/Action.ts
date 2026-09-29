@@ -10,10 +10,10 @@
  * compilar** en cuanto se añada una acción sin tratar.
  */
 
-import type { Content } from "../domain/Content"
-import type { DefaultView } from "../domain/Context"
-import type { ContentId, ContextId, ItemRef, NoteId, Revision } from "../domain/Ids"
-import type { Position } from "../domain/Position"
+import type { Content } from "../domain/Content.js"
+import type { DefaultView } from "../domain/Context.js"
+import type { ContentId, ContextId, ItemRef, NoteId, Revision } from "../domain/Ids.js"
+import type { Position } from "../domain/Position.js"
 
 /**
  * La hora y la revisión, **ya calculadas**, que viajan dentro de la acción.

@@ -14,9 +14,9 @@
  * más y escribe en disco de más, en silencio y para siempre.
  */
 
-import type { CheckBox, Content, Text } from "./Content"
-import { isCheckBox } from "./Content"
-import type { ContentId } from "./Ids"
+import type { CheckBox, Content, Text } from "./Content.js"
+import { isCheckBox } from "./Content.js"
+import type { ContentId } from "./Ids.js"
 
 /**
  * Como `map`, pero devuelve el array de ENTRADA si `fn` no cambió ni un elemento.

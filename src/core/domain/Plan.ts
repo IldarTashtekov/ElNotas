@@ -10,8 +10,8 @@
  * array toda búsqueda es O(n).
  */
 
-import type { Versioned } from "./Versioned"
-import type { NoteId, PlanId, PlanNodeId } from "./Ids"
+import type { Versioned } from "./Versioned.js"
+import type { NoteId, PlanId, PlanNodeId } from "./Ids.js"
 
 interface PlanNodeBase {
   readonly id: PlanNodeId

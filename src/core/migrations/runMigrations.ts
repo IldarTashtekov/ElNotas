@@ -10,9 +10,9 @@
  * añadir una fila.
  */
 
-import { err, ok } from "../domain/Result"
-import type { Result } from "../domain/Result"
-import type { MigrationError } from "../domain/errors/MigrationError"
+import { err, ok } from "../domain/Result.js"
+import type { Result } from "../domain/Result.js"
+import type { MigrationError } from "../domain/errors/MigrationError.js"
 
 /** De un esquema al siguiente. Pura: no toca el almacén. */
 export interface Migration {

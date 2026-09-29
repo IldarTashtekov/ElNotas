@@ -11,13 +11,13 @@
  * medias. Quien la use no debe suponer lo contrario.
  */
 
-import type { Context } from "../domain/Context"
-import type { ContextId, NoteId, PlanId } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Plan } from "../domain/Plan"
-import type { Result } from "../domain/Result"
-import type { StorageError } from "../domain/errors/StorageError"
-import type { Repository } from "./Repository"
+import type { Context } from "../domain/Context.js"
+import type { ContextId, NoteId, PlanId } from "../domain/Ids.js"
+import type { Note } from "../domain/Note.js"
+import type { Plan } from "../domain/Plan.js"
+import type { Result } from "../domain/Result.js"
+import type { StorageError } from "../domain/errors/StorageError.js"
+import type { Repository } from "./Repository.js"
 
 export interface StorageAdapter {
   readonly notes: Repository<Note, NoteId>

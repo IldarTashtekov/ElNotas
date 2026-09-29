@@ -11,11 +11,11 @@
  * ninguna prueba obvia — sólo se escribe de más para siempre.
  */
 
-import type { AppState } from "../domain/AppState"
-import type { Context } from "../domain/Context"
-import type { ContextId, NoteId, PlanId } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Plan } from "../domain/Plan"
+import type { AppState } from "../domain/AppState.js"
+import type { Context } from "../domain/Context.js"
+import type { ContextId, NoteId, PlanId } from "../domain/Ids.js"
+import type { Note } from "../domain/Note.js"
+import type { Plan } from "../domain/Plan.js"
 
 /** Lo que hay que hacerle a una clase de entidad para poner el disco al día. */
 export interface EntityChanges<T, TId extends string> {

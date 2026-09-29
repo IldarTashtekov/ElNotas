@@ -11,10 +11,10 @@
  * le toque hacer nada.
  */
 
-import type { CheckBox, Content } from "./Content"
-import { isCheckBox } from "./Content"
-import type { ContentId } from "./Ids"
-import { mapPreservingIdentity } from "./updateContent"
+import type { CheckBox, Content } from "./Content.js"
+import { isCheckBox } from "./Content.js"
+import type { ContentId } from "./Ids.js"
+import { mapPreservingIdentity } from "./updateContent.js"
 
 /** ¿Está esa línea directamente en esta lista? Sin bajar a las hijas. */
 const contains = (

@@ -17,16 +17,16 @@
  * operación que no aplica no falla, no hace nada.
  */
 
-import { checkBox, text } from "../domain/Content"
-import type { Context, DefaultView } from "../domain/Context"
-import type { ContentId, ContextId, ItemRef, NoteId } from "../domain/Ids"
-import { contentId, contextId, noteId, revision } from "../domain/Ids"
-import type { Note } from "../domain/Note"
-import type { Position } from "../domain/Position"
-import type { Action, ActionMeta } from "./Action"
-import type { Clock } from "../ports/Clock"
-import type { IdGenerator } from "../ports/IdGenerator"
-import type { Store } from "./Store"
+import { checkBox, text } from "../domain/Content.js"
+import type { Context, DefaultView } from "../domain/Context.js"
+import type { ContentId, ContextId, ItemRef, NoteId } from "../domain/Ids.js"
+import { contentId, contextId, noteId, revision } from "../domain/Ids.js"
+import type { Note } from "../domain/Note.js"
+import type { Position } from "../domain/Position.js"
+import type { Action, ActionMeta } from "./Action.js"
+import type { Clock } from "../ports/Clock.js"
+import type { IdGenerator } from "../ports/IdGenerator.js"
+import type { Store } from "./Store.js"
 
 export interface UseCases {
   readonly setChecked: (

@@ -11,9 +11,9 @@
  * estado actual, nunca el objeto al que señala.
  */
 
-import type { AppState } from "../domain/AppState"
-import type { Action } from "./Action"
-import { reduce } from "./reduce"
+import type { AppState } from "../domain/AppState.js"
+import type { Action } from "./Action.js"
+import { reduce } from "./reduce.js"
 
 export type Listener = (state: AppState) => void
 

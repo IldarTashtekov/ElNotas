@@ -2,7 +2,7 @@
  * El contenido de una Nota: bloques de texto y checkboxes anidables.
  */
 
-import type { ContentId } from "./Ids"
+import type { ContentId } from "./Ids.js"
 
 /** Bloque de texto suelto. */
 export interface Text {

@@ -11,7 +11,7 @@
  *     Modo "Casilla hija" → last-child-of  una casilla un nivel dentro
  */
 
-import type { ContentId } from "./Ids"
+import type { ContentId } from "./Ids.js"
 
 /**
  * Unión discriminada por `at`, por el mismo motivo que `Content` lo es por

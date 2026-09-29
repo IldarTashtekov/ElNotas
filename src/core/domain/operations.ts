@@ -14,12 +14,12 @@
  * Todas son puras: no generan IDs, no leen el reloj y no lanzan excepciones.
  */
 
-import type { CheckBox, Content, Text } from "./Content"
-import { checkBox, isCheckBox, isText, text } from "./Content"
-import type { ContentId } from "./Ids"
-import type { Position } from "./Position"
-import { updateContainerOf } from "./updateContainerOf"
-import { mapPreservingIdentity, updateContent } from "./updateContent"
+import type { CheckBox, Content, Text } from "./Content.js"
+import { checkBox, isCheckBox, isText, text } from "./Content.js"
+import type { ContentId } from "./Ids.js"
+import type { Position } from "./Position.js"
+import { updateContainerOf } from "./updateContainerOf.js"
+import { mapPreservingIdentity, updateContent } from "./updateContent.js"
 
 /* ───────────────────────── Sin tocar la estructura ─────────────────────────
     Las dos triviales: cambian un campo de una línea y nada más. */

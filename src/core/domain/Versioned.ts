@@ -1,4 +1,4 @@
-import type { Revision } from "./Ids"
+import type { Revision } from "./Ids.js"
 
 /**
  * Lo que lleva encima toda entidad que se guarda: cuándo se escribió y qué

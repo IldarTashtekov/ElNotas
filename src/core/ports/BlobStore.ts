@@ -5,8 +5,8 @@
  * sea sólo cambiar dónde van los bytes, sin tocar nada de lo de arriba.
  */
 
-import type { Result } from "../domain/Result"
-import type { StorageError } from "../domain/errors/StorageError"
+import type { Result } from "../domain/Result.js"
+import type { StorageError } from "../domain/errors/StorageError.js"
 
 export interface BlobStore {
   /** Los bytes, o `null` si no existe ese camino — que **no** es un fallo. */

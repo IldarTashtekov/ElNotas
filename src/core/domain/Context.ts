@@ -1,5 +1,5 @@
-import type { Versioned } from "./Versioned"
-import type { ContextId, ItemRef, NoteId, PlanId } from "./Ids"
+import type { Versioned } from "./Versioned.js"
+import type { ContextId, ItemRef, NoteId, PlanId } from "./Ids.js"
 
 /**
  * Qué se muestra al abrir un Contexto:
