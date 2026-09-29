@@ -20,101 +20,63 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-En `src/` **conviven dos cosas** y no hay que confundirlas:
+**Medido el 2026-09-29:** `npm run check` en verde —sus seis pasos— con **489 pruebas** (la Fase
+4 empezó con 329; al terminar el código de Fase 4 · Contextos eran 423). Líneas de `.ts`:
+`src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442; `test/` 7195. *(Las
+cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
-- **`src/core/` y `src/storage/` — la arquitectura nueva.** El core es dominio puro y **es la
-  referencia** de cómo se hacen las cosas aquí; `storage/` es el primer módulo que implementa
-  puertos suyos. Hoy: **las fases 1, 2 y 3 enteras y terminadas**. La siguiente es la 4, que
-  estrena `src/ui/` y `src/platform/`.
-- **`src/scripts/` — el prototipo viejo**, anterior al rediseño. Sigue en el repo porque es
-  lo único que hace algo visible, pero **no refleja esta arquitectura y no hay que imitarlo**.
-  Se sustituye en Fase 4 · Notas y hoy ni se puede construir (webpack está desinstalado).
+**Fases 1, 2 y 3 terminadas. La 4, con el código hecho y SIN CERRAR:** faltan las dos listas de
+verificación manual y las tres preguntas del editor (ver *Plan por fases*).
 
-**Lo que existe: las fases 1, 2 y 3 enteras.** ~3680 líneas en
-`src/core/` y `src/storage/`, y ~5150 de pruebas en `test/`, que es carpeta aparte. *(La cifra
-de `src/` bajó de ~4400 al adelgazar las cabeceras: se fueron 800 líneas de comentario, ni una
-de código.)*
+Lo que hay en `src/`, de dentro afuera:
 
-**Hoy son 329 pruebas, no las 314 con que cerró la Fase 3.** Las quince de diferencia las trajo
-`646f44f`, al hacer que los casos de uso devuelvan la entidad que tocan. Comprobado el
-**2026-09-20**: `npm run check` entero en verde —typecheck, la verja del core, los dos
-guardianes y las 329, cero fallos— y el árbol limpio. *(Esta cifra envejece sola: si no cuadra,
-manda `npm test`, no este párrafo.)*
+- **`src/core/` — dominio puro, y la referencia de cómo se hacen las cosas aquí.** El modelo
+  (`Note`, `Plan`, `Context`, `Text` | `CheckBox`, IDs marcados, `ItemRef`, `AppState`
+  normalizado), `Position` (tres casos), el helper de copia por camino en dos primitivas
+  (`updateContent.ts` y `updateContainerOf.ts`, **maquinaria interna: no salen por
+  `index.ts`**), **las ocho operaciones** en `operations.ts`, `Result<T, E>` y las dos
+  taxonomías de error en `domain/errors/`, **los cinco puertos** (sólo interfaces), **las
+  diecisiete acciones** con `reduce` (que no sale por `index.ts`), `createStore` (una función,
+  no una clase), `createUseCases` y `diffState`, y la mitad pura del arranque (`hydrate`,
+  `runMigrations`; `MIGRATIONS` **vacía a propósito**). Ni un `throw`.
+- **`src/storage/` — implementa los puertos de persistencia.** `MemoryStorageAdapter`,
+  `FileStorageAdapter` (formato en disco de §6.2, con **`onCorrupt`** y la **validación de
+  esquema** de `file/schema.ts`), las dos de `BlobStore` en `blobs/` —`LocalStorageBlobStore` y
+  `DirectoryHandleBlobStore`, ésta **sin pruebas a propósito** (§6.3)— y el `writeBehind`, con
+  su **`onError`**. La suite de contratos (17 casos, `test/storage/contract-tests/`) corre tres
+  veces: memoria · fichero + `BlobStore` falso · fichero + `LocalStorageBlobStore` real.
+- **`src/platform/web/` — la composición.** `SystemClock` y `CryptoIdGenerator`, las únicas
+  implementaciones de `Clock` e `IdGenerator`; `boot.ts`, que monta la pila entera;
+  `LocalStorageWindows.ts`, la lista de ventanas; y `main.ts`, la entrada que carga
+  `index.html`. Hoy se guarda en `LocalStorageBlobStore`.
+- **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 salvo la de plan, el editor con casillas
+  anidadas y los avisos de `onCorrupt` y `onError`. Cómo está construida, en §7.5.
 
-- **el modelo** — entidades (`Note`, `Plan`, `Context`), contenido (`Text` | `CheckBox`), IDs
-  marcados, `ItemRef`, `AppState` normalizado y sus constructores;
-- **`Result<T, E>`** en `domain/Result.ts` con `ok` y `err`, y **las dos taxonomías de error**
-  en `domain/errors/`: `StorageError` (cinco casos) y `MigrationError` (tres). En el código de
-  producción de `core/` y `storage/` **no queda ni un `throw`**;
-- **`Position`** — el vocabulario del "dónde", tres casos, uno por cada modo de escritura;
-- **el helper de copia por camino, con sus dos primitivas** — `updateContent.ts` (A:
-  transformar un nodo) y `updateContainerOf.ts` (B: transformar el contenedor de una línea).
-  **Maquinaria interna: NO salen por `index.ts`**;
-- **las OCHO operaciones**, en `operations.ts` y todas exportadas: `setText`, `setChecked`,
-  `insert`, `remove`, `convertToCheckBox`, `convertToText`, `split`, `merge`;
-- **los CINCO puertos** en `src/core/ports/`, **sólo interfaces**: `Clock` e `IdGenerator` de
-  la Fase 1, y `Repository`, `StorageAdapter` y `BlobStore` de la Fase 2. El id de
-  `Repository` va **marcado** (`Repository<Note, NoteId>`) y todos son propiedades de función,
-  no métodos. **Los tres de persistencia devuelven `Result<…, StorageError>` en todos sus
-  métodos** —los siete de `Repository` y `StorageAdapter`, y los cuatro de `BlobStore`—, así
-  que **ninguno lanza**;
-- **la capa de aplicación** en `src/core/app/`: **las DIECISIETE acciones** (8 de contenido, 3
-  de Nota, 6 de Contexto), `reduce`, `Store` (una **función**, `createStore`, no una clase),
-  `createUseCases` y `diffState`. `reduce` **no** sale por `index.ts`;
-- **el arranque en su mitad pura**, en `src/core/migrations/`: `hydrate` y `runMigrations`.
-  `MIGRATIONS` está **vacía a propósito** — no hay nada guardado con un esquema viejo.
+**Qué se prueba dónde:** *lo que exige la interfaz va en el contrato; lo que sólo tiene una
+implementación, en un fichero aparte*. Por eso el adaptador de memoria no tiene ni una prueba
+propia y el de fichero sí (§6.3). Si una prueba pudiera escribirse contra la interfaz, su sitio
+es el contrato. **En la UI, lo que decide la pantalla es una función pura con pruebas en Node;
+el DOM de encima es delgado y se verifica a mano** con `test/ui/VERIFICACION-MANUAL.md` y
+`VERIFICACION-MANUAL-EDITOR.md`. No hay pruebas automáticas del DOM, a propósito.
 
-**Y existe `src/storage/`** — la suite de contratos (**17 casos**, hoy en
-`test/storage/contract-tests/`), el
-`writeBehind`, **dos adaptadores que pasan esa suite** —`MemoryStorageAdapter` y
-`FileStorageAdapter`, en `file/`, con el formato en disco de `ARCHITECTURE.md` §6.2 y
-parametrizado por `BlobStore`— y, en `blobs/`, **las dos implementaciones de `BlobStore`**:
-`LocalStorageBlobStore` (22 pruebas propias) y `DirectoryHandleBlobStore` (la carpeta del usuario
-y OPFS; **sin pruebas a propósito**, §6.3). La suite **corre TRES veces, no dos, y no se tocó**
-al añadirlas: memoria · fichero + `BlobStore` falso · **fichero + `LocalStorageBlobStore` real**,
-que es la que prueba que la pila entera encaja (§6.3).
+**`DirectoryHandleBlobStore` se verificó a mano el 2026-09-13** (`test/storage/blobs/
+VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). ⚠️ Se pasó sobre
+`dec4306` **con el árbol sucio**, y ese asterisco se conserva. **Si tocas ese fichero, se
+vuelve a pasar la lista**; la única excepción registrada —mismo código una vez quitados los
+comentarios— está en `TAREAS.md`.
 
-**Qué se prueba dónde, que es donde más se malinterpreta:** *lo que exige la interfaz va en el
-contrato; lo que sólo tiene una implementación, en un fichero aparte*. Por eso el de memoria
-—tres `Map` y un número— **no tiene ni una prueba propia**, y el de fichero sí: el contrato
-habla de entidades e ids y **no sabe que existe un `BlobStore`**, así que no puede hacer fallar
-a la plataforma ni mirar cómo se llama el fichero. El razonamiento, en §6.3. Corolario práctico:
-si una prueba pudiera escribirse contra la interfaz, su sitio es el contrato.
+**Lo que NO existe todavía:** todo lo de Planes salvo sus tipos (Fase 5), la carpeta del usuario
+y OPFS como destino de la app, el botón de «reconectar carpeta» y la escritura condicional.
 
-**El write-behind puede quedarse DETENIDO.** Ante un fallo que no sea `io` retiene el error,
-cancela la espera y cada `flush()` devuelve el mismo error sin tocar el almacén; lo pendiente
-se conserva en memoria, así que no se pierde nada. **No hay forma de reanudarlo**, y es
-deliberado: reanudar es volver a pedir la carpeta, o sea plataforma, o sea Fase 4. §6.5.
-
-✅ **La lista de verificación manual está PASADA, y con ella la Fase 3 terminada.**
-`test/storage/blobs/VERIFICACION-MANUAL.md` (punto 5 de §9.9) se ejecutó el **2026-09-13** y
-tiene **dos pasadas anotadas** en su hoja de resultados: **Brave 1.95.101** (Chromium 153), donde
-pasan las cinco secciones —A bytes al disco, B sesión nueva, C permiso revocado, D borrado y la
-E opcional de OPFS—, y **Firefox 153.0.4**, que anota lo que también es información: A–D **no se
-pueden probar ahí** porque no tiene `showDirectoryPicker()`, y sólo pasa OPFS.
-Lo que cazó, y es justo lo que ninguna prueba automática ve: el fichero apareció con **45 bytes
-y no 0** (ése es el `close()` de §6.3) y el `permission-denied` **no era cosmético** — el `mtime`
-del fichero no se movió tras el `write` denegado.
-⚠️ **El asterisco, que se conserva a propósito:** las dos pasadas se hicieron sobre el commit
-`dec4306` **con el árbol sucio** —todo el código de la Fase 3 estaba sin commitear—, así que lo
-verificado no es literalmente lo que hay en ese commit. **Si tocas
-`DirectoryHandleBlobStore.ts`, se vuelve a pasar la lista** (ver la decisión cerrada más abajo);
-la única excepción registrada es un cambio que deje el JavaScript emitido **idéntico**, y está
-documentada en `TAREAS.md`.
-
-**Lo que NO existe todavía:** la UI y todo lo de Planes salvo sus tipos. Y no hay **ninguna**
-implementación de `Clock` ni de `IdGenerator`: vivirían en `src/platform/`, que no nace hasta la
-Fase 4, igual que `src/ui/`.
-
-**`npm run check` está en verde y ya no puede pasar en falso:** `tools/require-tests.mjs` sale
-con código 1 si no encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin
-ficheros imprime `1..0` y sale con código 0. **No lo "arregles" quitando el guardián.** Mira
-`tmp-test/test/` y no `tmp-test/` a secas **a propósito**: así también caza que las pruebas
-compilen a un sitio distinto de donde las busca el runner.
+**`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
+encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
+`1..0` y sale con código 0. **No lo "arregles" quitando el guardián.** Mira `tmp-test/test/` y
+no `tmp-test/` a secas **a propósito**: así también caza que las pruebas compilen a un sitio
+distinto de donde las busca el runner.
 
 ⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y comprobando que las
 pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no vale nada, y un
-`deepEqual` pasaría igual de verde. Es la disciplina de esta capa, no una floritura.
+`deepEqual` pasaría igual de verde. Es la disciplina de este repo, no una floritura.
 
 ## Estructura y límites
 
@@ -128,16 +90,23 @@ src/
 │   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← implementa los puertos de persistencia. Conoce al core; él a ella no.
-│   ├── memory/         # ← MemoryStorageAdapter
-│   ├── file/           # ← FileStorageAdapter: el formato en disco (§6.2)
-│   ├── blobs/          # ← las dos de BlobStore, que es OTRO puerto (§6.1)
+│   ├── memory/    # ← MemoryStorageAdapter
+│   ├── file/      # ← FileStorageAdapter (§6.2) + schema.ts, la validación al leer
+│   ├── blobs/     # ← las dos de BlobStore, que es OTRO puerto (§6.1)
 │   └── index.ts
-├── ui/            # (F4) vanilla: componentes + render(state)
-└── platform/      # (F4) composición: el ÚNICO sitio que inyecta adaptadores
+├── ui/            # ← vanilla. Conoce sólo al core: no sabe dónde se guarda nada
+│   └── index.ts
+└── platform/      # ← composición: el ÚNICO sitio que inyecta adaptadores. Nadie la importa
+    ├── web/       # ← SystemClock, CryptoIdGenerator, boot, LocalStorageWindows, main
+    └── index.ts
 
 test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de src/)
 ├── core/          # ← domain/ (+ errors/) · app/ · migrations/
-└── storage/       # ← contract-tests/ · memory/ · file/ · blobs/
+├── storage/       # ← contract-tests/ · memory/ · file/ · blobs/
+├── platform/web/
+└── ui/            # ← incluye las dos listas de verificación manual de la Fase 4
+
+index.html         # la página: carga dist/web/ con un importmap, sin bundler (§8.6)
 ```
 
 - **Las pruebas van en `test/`, no al lado del código.** La carpeta es un **espejo** de `src/`:
@@ -150,8 +119,8 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
   - **un ayudante que no contiene pruebas NO lleva `.test`** —`FakeBlobStore.ts`,
     `FakeStorage.ts`, `contract-tests/storageContract.ts`—, porque `node --test` sólo ejecuta
     los `*.test.js` y así no se abre un fichero de pruebas para encontrar un doble;
-  - **la lista de verificación manual también vive ahí** (`test/storage/blobs/`): es una prueba
-    de `DirectoryHandleBlobStore`, y lo único que la distingue de sus vecinas es que la ejecutan
+  - **las listas de verificación manual también viven ahí** (`test/storage/blobs/`,
+    `test/ui/`): son pruebas, y lo único que las distingue de sus vecinas es que las ejecutan
     unas manos.
 
 - **La verja de pureza es un error de compilación, no una convención.**
@@ -167,21 +136,25 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
   también salta. Sigue siendo falso decir que el typecheck bloquea el reloj.
 - **No añadas `baseUrl` ni `paths`.** `baseUrl` está deprecado en TS 6 y se retira en TS 7, y
   los alias van en el campo `imports` de `package.json`.
-- **Un alias se declara cuando el módulo existe**, no antes. Hoy hay `#core/*` y `#storage/*`;
-  `#ui/*` y `#platform/*` no existen porque esas carpetas tampoco.
+- **Un alias se declara cuando el módulo existe**, no antes. Hoy existen los cuatro —`#core/*`,
+  `#storage/*`, `#platform/*`, `#ui/*`— y el `importmap` de `index.html` los calca: **si
+  añades uno, va en los dos sitios.**
 - **Un `index.ts` por módulo** como API pública. Lo que no esté ahí, para los demás módulos no
   existe.
-- **`src/platform/` no nace hasta la Fase 4.** Un test se fabrica su propio `Clock` en una
-  línea, así que las implementaciones reales no tienen consumidor hasta entonces.
 
 ## Reglas al escribir código
 
-- **Cruzar de módulo, siempre por alias contra el `index.ts`; dentro del módulo, relativo:**
+- **Cruzar de módulo, siempre por alias contra el `index.ts`; dentro del módulo, relativo y
+  CON `.js`:**
   ```ts
   import { Note } from "#core/index"            // ✅ desde ui/, storage/, platform/
   import { Note } from "../../core/domain/Note" // ❌
-  import { Note } from "./domain/Note"          // ✅ dentro del propio core
+  import { Note } from "./domain/Note.js"       // ✅ dentro del propio core
+  import { Note } from "./domain/Note"          // ❌ el navegador pide ./domain/Note y da 404
   ```
+  El `.js` en los relativos de `src/` es porque el navegador carga el JS compilado tal cual y
+  no adivina extensiones (§8.6). Lo vigila `npm run check:extensiones`: sin él, un import sin
+  `.js` pasa todas las pruebas —compilan a CommonJS— y sólo se nota al abrir la app.
 - **Inmutabilidad:** en arrays usar `filter` / `map` / spread, **nunca** `push` / `splice`.
   Los tipos `readonly` la fuerzan.
 - **⚠️ PRESERVAR LA IDENTIDAD CUANDO NO HAY CAMBIOS.** La invariante más fácil de romper sin
@@ -194,7 +167,7 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 - **Tests de identidad con `assert.strictEqual`, nunca `deepEqual`.** Un `deepEqual` pasa
   igual de verde con una implementación que rompe la invariante.
   **Única excepción, y está razonada: la suite de contratos de `storage/`**, que compara por
-  valor a propósito. Un almacén no promete devolver el mismo objeto —el de fichero devolverá
+  valor a propósito. Un almacén no promete devolver el mismo objeto —el de fichero devuelve
   uno salido de un `JSON.parse`—, así que exigir `strictEqual` ahí sería exigir algo que sólo
   el adaptador de memoria puede cumplir. **No lo "arregles".**
 - **El reducer, puro y total:** no genera IDs, no lee el reloj y no lanza excepciones. Las
@@ -206,32 +179,34 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 - **Los errores no se propagan: se devuelven.** Lo que pueda fallar devuelve
   `Result<T, StorageError>`, no lanza. Un `throw` no sale en ninguna firma, así que quien llama
   no se entera. **El `try/catch` no desaparece, se confina:** vive sólo en las funciones frontera
-  que hablan con lo que lanza —**ocho en todo el código de producción**: una en el adaptador de
-  memoria, **cuatro** en el de fichero (`JSON.parse`, `TextDecoder` y `encodeURIComponent`
-  lanzan), **una en cada `BlobStore`** y **una en `runMigrations`**, que ejecuta la migración
-  ajena— y las traduce; por encima de esa línea nada lanza —y
-  eso incluye el código ajeno: una excepción dentro de `transaction` **no escapa**, se traduce
-  a `io`. Ojo: **ausencia no es fallo** — `get` de algo que no está es `ok(null)`. El tipo, la
-  taxonomía y el porqué, en `ARCHITECTURE.md` §6.5.
+  que hablan con lo que lanza —**trece en todo el código de producción**: **cinco** en
+  `FileStorageAdapter` (`caminoDe`, `aBytes`, `parsear`, `transaction` y el aviso `onCorrupt`),
+  una en `writeBehind` (el aviso `onError`), una en `MemoryStorageAdapter`, una en cada
+  `BlobStore`, una en `runMigrations` (la migración ajena), **dos** en `LocalStorageWindows`
+  (leer y escribir) y una en `main.ts` (`window.localStorage` lanza si el navegador bloquea los
+  datos del sitio)— y las traduce. Por encima de esa línea nada lanza, **y eso incluye el código
+  ajeno**: una excepción dentro de `transaction`, de una migración o de un aviso **no escapa**.
+  Ojo: **ausencia no es fallo** — `get` de algo que no está es `ok(null)`. El porqué, en §6.5.
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** No hay ni un `throw` en el
-  repo y aun así se escapaban dos excepciones, las dos encontradas y medidas:
-  `encodeURIComponent` dentro de `caminoDe` —lanza `URIError` con un surrogate suelto— y
-  `paso.migrate()` en el runner, que es código ajeno. Un guardián que buscara `throw` habría
-  dado verde con las dos ahí. **Antes de llamar a algo de plataforma, pregúntate si lanza**, y
-  si lanza, que esté dentro de un `try`, de `frontera()`/`transaction()`, o de un ayudante al
-  que sólo se llame desde dentro de una frontera. Eso último es **frágil a propósito de
-  reconocer**: seis ayudantes están a salvo sólo por dónde se les llama, y `caminoDe` era el
-  séptimo hasta que dejó de estarlo. Lo vigila `npm run check:fronteras`.
+  repo y aun así se escaparon dos excepciones (`encodeURIComponent` en `caminoDe` y
+  `paso.migrate()`). **Antes de llamar a algo de plataforma o a un aviso ajeno, pregúntate si
+  lanza**, y si lanza, que esté dentro de un `try`, de `frontera()`/`transaction()`, o de un
+  ayudante al que sólo se llame desde dentro de una frontera —esto último es **frágil a
+  propósito de reconocer**—. Lo vigila `npm run check:fronteras`, que mira los cuatro módulos,
+  pero **su lista de lo peligroso se mantiene a mano**: si llamas a una API nueva que lanza,
+  añádela ahí.
 - **Un error es una entidad del dominio: nace en `src/core/domain/errors/`**, no en el módulo
-  que da la casualidad de producirlo. Ahí están `StorageError` y `MigrationError`, y ahí va el
-  siguiente. La carpeta **no lleva `index.ts`** —`domain/` tampoco— porque la API pública del
-  módulo es `src/core/index.ts`. **`Result.ts` se queda suelto en `domain/`, fuera de
-  `errors/`:** es el sobre, no lo que va dentro. El porqué, en `ARCHITECTURE.md` §6.5.
+  que da la casualidad de producirlo. La carpeta **no lleva `index.ts`** —`domain/` tampoco—
+  porque la API pública del módulo es `src/core/index.ts`. **`Result.ts` se queda suelto en
+  `domain/`, fuera de `errors/`:** es el sobre, no lo que va dentro. §6.5.
 - **`setChecked`, no `toggleChecked`.** Un `toggle` no puede ser nunca un no-op; el nombre
-  sostiene la invariante de identidad. Vale como criterio general al nombrar operaciones.
+  sostiene la invariante de identidad. Vale como criterio general al nombrar operaciones del
+  dominio. *(En `ui/editor.ts` sí hay un `toggleChecked`: es el gesto del usuario, y por debajo
+  llama a `setChecked` con el valor ya decidido.)*
 - **Integridad referencial:** no se deja una referencia apuntando a algo inexistente. Borrar
   una nota tiene que quitarla de los contextos que la listaban; añadir a un contexto una
-  referencia a algo que no existe es un no-op.
+  referencia a algo que no existe es un no-op. Fuera del core, la lista de ventanas la
+  sostiene una guarda pura (`guardWindows`, §7.4).
 - **`noUncheckedIndexedAccess` está activo.** Indexar `Record<NoteId, Note>` devuelve
   `Note | undefined`; hay que tratar el caso "ese id no existe".
 - **TODO lleva tipo explícito, aunque TypeScript lo infiera**, y "todo" son tres cosas: las
@@ -244,54 +219,39 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
   )
   ```
   El porqué es el mismo en los tres: cuando un tipo cambia, **se ve en el diff** en vez de que
-  la inferencia lo absorba en silencio.
-
-  **Rige en `src/` Y en `test/`.** No hay una regla para el código y otra para las pruebas: una
-  prueba es código, y la inferencia se lo traga igual de callada.
+  la inferencia lo absorba en silencio. **Rige en `src/` Y en `test/`.**
 
   **CUATRO excepciones, y sólo la primera no es una elección:**
-  1. **`for (const x of …)`** — `error TS2483: The left-hand side of a 'for...of' statement
-     cannot use a type annotation`. Lo prohíbe el lenguaje, no el criterio;
+  1. **`for (const x of …)`** — `error TS2483`: lo prohíbe el lenguaje, no el criterio;
   2. **la constante que ES una función** (`const setText = (…): X => …`) — ese trabajo lo hace
-     el tipo de retorno, y anotar además la constante obliga a escribir la firma dos veces.
-     Ojo: los **parámetros y el retorno de esa función sí van anotados**;
+     el tipo de retorno. Ojo: los **parámetros y el retorno de esa función sí van anotados**;
   3. **`as const`** — la anotación ensancha justo lo que `as const` estrecha;
   4. **destructuring** — no hay dónde ponerlo sin repetir la forma del objeto entero.
 
-  **Estado, que es lo que evita discutirlo cada vez:** `src/` **la cumple entero** — 330
-  anotaciones, y no queda ni una variable, ni un parámetro, ni un retorno sin tipo fuera de las
-  cuatro excepciones; las **11** declaraciones que quedan sin anotar son las once `for…of`.
-  **Las pruebas ya escritas NO la cumplen, y se quedan así a propósito:** son **942**
-  anotaciones —423 variables, 412 retornos y 107 parámetros, medido— de trabajo mecánico que no
-  arregla ningún fallo ni caza ninguno. Pero **lo que escribas o toques en `test/` a partir de
-  ahora sí la cumple**, sin excepción. Una prueba vieja sin
-  anotar no es un precedente ni una autorización: es deuda conocida y anotada en `TAREAS.md`.
+  **Estado:** `src/` **la cumple entero**, comprobado el 2026-09-29 con una sonda sobre el AST
+  —ni una declaración, parámetro o retorno sin tipo fuera de las cuatro excepciones—. **Las
+  pruebas viejas de `test/core/` y `test/storage/` NO la cumplen, y se quedan así a propósito:**
+  es deuda conocida y medida en `TAREAS.md`, no un precedente. **Lo que escribas o toques en
+  `test/` sí la cumple.**
 
-  **No hay comprobación automática, y es deliberado.** Se evaluó y se descartó un guardián para
-  `tools/`: esta regla **no caza ningún fallo** —el compilador ya dice si un tipo está mal— y lo
-  único que añade es que un cambio de tipo se vea en el diff. Es legibilidad, no corrección, y
-  los cuatro guardianes que sí existen tapan cosas que **funcionan mal en silencio**. Se aplica
-  al escribir, y punto. El razonamiento entero, en `TAREAS.md`. **No lo vuelvas a proponer.**
+  **No hay comprobación automática, y es deliberado:** esta regla es legibilidad, no
+  corrección —el compilador ya dice si un tipo está mal—, y los guardianes que existen tapan
+  cosas que **funcionan mal en silencio**. El razonamiento, en `TAREAS.md`. **No lo vuelvas a
+  proponer.**
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Plan)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
   memoria, **nunca** en localStorage. En desktop, keychain del sistema.
 - **Los comentarios del código van en castellano**, igual que la documentación.
 - **La cabecera de un fichero responde a «¿para qué sirve esto?» y para ahí.** De tres a ocho
   líneas, en lenguaje que entienda quien no programa: qué hace y, si lo tiene, el precio. **El
-  porqué NO va en el código**, va en `ARCHITECTURE.md`. Una cabecera que argumenta una decisión
-  es esa sección copiada, y las copias se separan del original sin que nadie lo note. Se midió
-  antes de escribir esta regla: **1035 de las 4416 líneas de `src/core` y `src/storage` eran
-  cabecera** —31 de media, y `BlobStore.ts` tenía 89 para 8 de código—, y las 29 primeras líneas
-  ya respondían a la pregunta ellas solas. Lo que sobraba iba debajo.
+  porqué NO va en el código**, va en `ARCHITECTURE.md`: una cabecera que argumenta una decisión
+  es esa sección copiada, y las copias se separan del original sin que nadie lo note.
 - **⚠️ NADA de `§` en el código, ni en cabecera ni dentro.** Apunta a un número que se renumera
-  solo, nada comprueba esos punteros y había **123**. La frase casi siempre sobrevive sin él
-  porque ya lleva dentro lo que hay que saber: «sale `corrupt` y no `io` por el criterio de
-  §6.5» es «sale `corrupt` y no `io`: reintentar no arregla un fichero ilegible». Si de verdad
-  hay que señalar un documento, se nombra el **fichero**, que no se renumera.
+  solo y nada comprueba esos punteros. La frase casi siempre sobrevive sin él. Si de verdad hay
+  que señalar un documento, se nombra el **fichero**, que no se renumera.
 - **Los comentarios de dentro se quedan: son los que pagan su sitio.** Cortos, pegados a la
-  línea que explican y diciendo lo que el código no dice —«alguien se nos adelantó», «el error
-  viaja INTACTO»—. La verbosidad estaba en las cabeceras, no en ellos. Al quitar una cabecera,
-  **lo que explicara y no esté ya en `ARCHITECTURE.md` se mueve allí**, no se borra.
+  línea que explican y diciendo lo que el código no dice. Al quitar una cabecera, **lo que
+  explicara y no esté ya en `ARCHITECTURE.md` se mueve allí**, no se borra.
 
 ## Dependencias
 
@@ -300,14 +260,15 @@ deja de usarse. Cero `dependencies` de runtime. Antes de añadir un paquete, com
 TypeScript o el navegador ya lo hacen nativamente.
 
 Estado actual: **`typescript` y `@types/node`. Nada más** — el árbol entero son **tres
-paquetes** (los dos, más el `undici-types` que arrastra `@types/node`), 27M y 0
-vulnerabilidades, y conviene que siga así. Ojo si cuentas carpetas de `node_modules`: quedan
-directorios vacíos de desinstalaciones viejas y salen diecisiete. Lo que cuenta es el
-`package-lock.json`.
+paquetes** (los dos, más el `undici-types` que arrastra `@types/node`) y 0 vulnerabilidades.
+**La Fase 4 entera —UI incluida— se hizo sin instalar ni un paquete.** Lo que cuenta es el
+`package-lock.json`, no las carpetas de `node_modules`, donde quedan directorios vacíos de
+desinstalaciones viejas.
 
-Webpack y su cadena están desinstalados, así que **`npm run build` y `npm run serve` no
-existen**. **Y la Fase 4 no los reinstala:** arranca con el `<script type="importmap">` ya probado
-en el repo, sin bundler (decisión cerrada abajo). Uno entra sólo cuando algo concreto lo exija.
+**No hay bundler ni servidor de desarrollo, y no se echan en falta:** `npm run build:web`
+compila con `tsc` y la página se sirve con cualquier servidor estático (ver *Comandos*).
+Webpack y `webpack.config.js` ya no están en el repo. Un bundler entra sólo cuando algo concreto
+lo exija.
 
 ## Decisiones cerradas — no volver a proponer alternativas
 
@@ -316,251 +277,201 @@ duda**; no la cambies por tu cuenta.
 
 - **Carpetas con límites por `tsconfig`**, no monorepo con workspaces.
 - **UI vanilla**, no React/Svelte/Solid — **ni Angular, ni Redux, ni htmx**. Reconfirmada el
-  2026-09-20 al preguntarse de nuevo, y hoy el motivo es más concreto que cuando se tomó:
-  **`Store.ts` ya es Redux** (65 líneas, con la invariante de identidad que Redux no da), y el
-  DOM virtual es débil justo donde esta app es difícil —`contenteditable`—. Las dos únicas
-  alternativas que sobrevivieron al examen están aparcadas con su disparador en `TAREAS.md`:
-  **Snabbdom** (*diffing* sin estado) y un **motor de edición** (ProseMirror/Lexical), que
-  sustituiría al núcleo en vez de complementarlo. Si vuelve a surgir, se lee esa tabla.
+  2026-09-20: **`Store.ts` ya es Redux** (65 líneas, con la invariante de identidad que Redux no
+  da), y el DOM virtual es débil justo donde esta app es difícil —`contenteditable`—. Las dos
+  alternativas que sobrevivieron están aparcadas con su disparador en `TAREAS.md`: **Snabbdom**
+  y un **motor de edición** (ProseMirror/Lexical). Si vuelve a surgir, se lee esa tabla.
 - **Estado normalizado con `ItemRef`**, no entidades anidadas.
 - **`Versioned` con `revision` como token opaco**, no `version: number` ni "gana el último".
 - **Marcar una casilla NO arrastra a sus hijas.** La cascada se compone en la UI.
 - **Espejo con local como primario**, no sync bidireccional.
 - **File System Access API** para el fichero local en web, con OPFS como fallback.
 - **Un fichero por entidad** (`notes/<id>.json`) más un `manifest.json`.
-- **`node:test` como runner**, no vitest ni jest (se evaluó vitest: ~64M para algo que Node ya
-  trae).
+- **`node:test` como runner**, no vitest ni jest (vitest: ~64M para algo que Node ya trae).
 - **Las pruebas viven en `test/`, espejo de `src/` y partido por capa**, no junto al fichero que
-  prueban. Se movieron las 314 de golpe, y el criterio es que `src/` sea sólo código: la
-  separación deja de depender del sufijo `.test` y pasa a depender de la carpeta, que es lo que
-  ya usan el `tsconfig` de la app y la verja del core para no mirar dentro. Precio asumido:
-  desde `test/` se importa por alias profundo, y el `rootDir` de `tsconfig.test.json` es la raíz
-  del repo, así que la salida compilada lleva `tmp-test/src/…` y la condición `compiled` de
-  `package.json` apunta ahí. §8.5.
+  prueban: que `src/` sea sólo código, separado por carpeta y no por sufijo. Precio asumido: el
+  alias profundo desde `test/`, y que la condición `compiled` de `package.json` apunte a
+  `tmp-test/src/…`. §8.5.
 - **Alias por el campo `imports` de package.json**, no `paths` ni `resolve.alias`.
 - **Dependencias solo cuando la fase las necesita.** No instalar "para tenerlo listo".
 - **La Fase 1 termina por el criterio de `Versioned`:** lo que opera por debajo de `Versioned`
   es Fase 1; producir entidades es Fase 2.
 - **El helper de copia por camino son DOS primitivas:** A (transformar un nodo) y B
-  (transformar el array contenedor). La A va parametrizada por `onText`/`onCheckBox` con la
-  recursión escrita **una sola vez**, no dos funciones raíz/profundidad. §5.4.
-- **`Position` tiene tres casos** —`root-end`, `after`, `last-child-of`— **y ninguno más**. Uno
-  por cada cosa que el editor puede querer al pulsar Intro, y su único consumidor es `insert`.
-  ⚠️ **No los justifiques por la forma que tenga hoy la barra de edición**, que es lo que hacía
-  este documento y quedó falso al rediseñarla: atar una pieza del dominio a la UI es atarla a lo
-  que más cambia. §9.4.
-- **Las operaciones de contenido son OCHO** y ninguna pasa de dificultad media: `setText`,
-  `setChecked`, `insert`, `remove`, `split`, `merge`, `convertToCheckBox`, `convertToText`.
-  §9.3.
-- **Tampoco existe `move`.** Nadie la usa: no hay gesto de arrastrar hasta la Fase 4, y aquí no
-  se construye lo que no tiene consumidor. Consecuencia asumida: **una lista se queda en el
-  orden en que se escribió**; reordenar es borrar y reescribir. Aparcada en `TAREAS.md`. §9.3.
-- **No existen `indent` ni `outdent`.** En el teclado de un móvil no hay Tabulador, y la app es
-  multiplataforma. El nivel de una línea **se elige al nacer**, con el modo activo de
-  `WritingMode` y con el disparador de anidar si está armado; el Tabulador solo mete un
-  carácter. Precio aceptado: una línea en el nivel equivocado se borra y se reescribe.
-  ⚠️ **El botón de anidar NO es `indent` disfrazado**: actúa sobre la línea siguiente, no sobre
-  la actual. Si alguna vez bajara de nivel una línea ya escrita, sería esta decisión reabierta.
-  §9.3 y §7.2.
+  (transformar el array contenedor), con la recursión de la A escrita **una sola vez**. §5.4.
+- **`Position` tiene tres casos** —`root-end`, `after`, `last-child-of`— **y ninguno más**, y su
+  único consumidor es `insert`. ⚠️ **No los justifiques por la forma que tenga la barra de
+  edición**: atar una pieza del dominio a la UI es atarla a lo que más cambia, y ya quedó falso
+  una vez. §9.4.
+- **Las operaciones de contenido son OCHO**: `setText`, `setChecked`, `insert`, `remove`,
+  `split`, `merge`, `convertToCheckBox`, `convertToText`. §9.3.
+- **Tampoco existe `move`.** Consecuencia asumida: **una lista se queda en el orden en que se
+  escribió**; reordenar es borrar y reescribir. Aparcada en `TAREAS.md`. §9.3.
+- **No existen `indent` ni `outdent`.** En el teclado de un móvil no hay Tabulador. El nivel de
+  una línea **se elige al nacer**, con el interruptor de casilla y con el disparador de anidar;
+  el Tabulador solo mete un carácter. ⚠️ **El botón de anidar NO es `indent` disfrazado**: actúa
+  sobre la línea siguiente, no sobre la actual. §9.3 y §7.2.
 - **Retroceso al principio de una casilla hace DOS cosas, en dos pulsaciones:** la primera
-  quita la casilla (`convertToText`), la segunda une con la línea de arriba (`merge`). Cada
-  pulsación, una sola cosa. §7.3.
-- **`WritingMode` es un objeto auxiliar de la nota abierta**, y son **dos modos estables
-  (*Texto* ⇄ *Casilla*) más un disparador de anidar** que se arma, actúa una vez y se desarma
-  solo. **No se persiste** y muere al salir de la nota: no va dentro de `Note`, no va en el core
-  —al núcleo le llega `insert` con la `Position` ya elegida— y no necesita fichero de
-  preferencias. El nombre va en inglés y en singular porque es un tipo **público** de `ui/`; la
-  convención real del repo es *público en inglés, maquinaria interna en castellano*. §7.2.
-  - *Decidido el 2026-09-20, y sustituye al ciclo de tres estados (`ModosEscritura`) que decía
-    este documento.* Con un tercer modo persistente, cada Intro anidaba otro nivel y sin
-    `outdent` no había vuelta; y volver a anidar costaba tres pulsaciones. Separando el
-    disparador se caen los dos problemas, y **el núcleo no se tocó**: los tres casos de
-    `Position` siguen intactos, sólo cambió quién elige `last-child-of`.
-- **Los adaptadores de navegador de la Fase 3 se verifican A MANO, no con Playwright.** Todo lo
-  que tiene lógica —`FileStorageAdapter`— pasa la suite de contratos en Node con un `BlobStore`
-  falso; lo único sin automatizar es `DirectoryHandleBlobStore` (**156 líneas de código, no las
-  «~50» que decía este documento**, y la decisión no cambia: lo que creció es el clasificador de
-  excepciones, §6.3). Un doble ahí prueba lo que **tú crees** que hace la API, no lo que hace.
-  **No propongas instalar un runner de navegador**; qué lo reabriría está en `TAREAS.md`.
-  Su red de seguridad es `test/storage/blobs/VERIFICACION-MANUAL.md`: **si tocas ese fichero, se
-  vuelve a pasar la lista y se anota el resultado.**
+  quita la casilla (`convertToText`), la segunda une con la línea de arriba (`merge`). §7.3.
+- **`WritingMode` es un interruptor «☐ Casilla» más un disparador de anidar**
+  (`{ checkbox: boolean, nestArmed: boolean }`), con el texto como lo normal. *Decidido con el
+  usuario el 2026-09-29*, y **sustituye a los dos modos con nombre (*Texto* ⇄ *Casilla*)** del
+  2026-09-20; el comportamiento no cambió. **Anidar sólo se arma con la casilla encendida**,
+  actúa una vez y se desarma solo, y **cambiar el interruptor lo desarma**. Es un objeto de la
+  nota abierta: **no se persiste**, no va en `Note` ni en el core —al núcleo le llega `insert`
+  con la `Position` ya elegida— y muere al salir de la nota. Nombre en inglés por ser público
+  (*público en inglés, maquinaria interna en castellano*). §7.2.
+- **Intro al final de un texto crea la línea con `after`, DEBAJO de la actual**, no con
+  `root-end`; y desde una casilla anidada con la casilla apagada, el texto nace **debajo de su
+  casilla de la raíz** (un texto sólo cabe en la raíz). `root-end` queda para la primera línea
+  de una nota vacía. *Decidido con el usuario el 2026-09-29.* El core no se tocó. §7.3.
+- **Los cuatro huecos de §7.3, cerrados con el usuario el 2026-09-29:** anidar armado en un
+  **texto** crea una casilla hermana y **sigue armado**; partir una casilla **anidada** con el
+  interruptor apagado deja la mitad nueva **como casilla**; **`split` no anida** y anidar sigue
+  armado; **marcar con el teclado es Ctrl/Cmd+Intro** (y Tab + Espacio sobre el ☐).
+- **Los adaptadores de navegador se verifican A MANO, no con Playwright**, y la UI también.
+  Un doble prueba lo que **tú crees** que hace la API, no lo que hace. **No propongas instalar
+  un runner de navegador**; qué lo reabriría está en `TAREAS.md`. Las listas viven en
+  `test/storage/blobs/` y `test/ui/`, y **si tocas `DirectoryHandleBlobStore.ts`, se vuelve a
+  pasar la suya.**
 - **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
-  (`TS2304`: no está en `lib.es2020` ni con `"types": []`). *Qué está sucio* es puro y va en
-  `core/app/`; *cuándo se escribe* va en `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
-- **En la Fase 2 los Planes se persisten, pero no se operan.** `StorageAdapter` lleva su
-  `Repository<Plan>` y ni una acción de Plan entra en el catálogo: el editor de grafos está
-  aparcado y no habría quien las despachara. §9.7.
-- **Una acción, una operación.** Ninguna acción pliega varias llamadas en la Fase 2. Las
-  compuestas —cascada de `setChecked`, borrar una rama— se diseñan en la Fase 4, con el editor
-  delante.
-- **Los casos de uso devuelven la entidad que tocan, o `null` si no aplicó.** Construido: las
-  dieciocho con el mismo tipo, sin excepción ni aserción —`create-note` con un id repetido
-  también es no-op, así que `null` es alcanzable hasta al crear—. **No un `Result`:** un no-op
-  **no es un fallo**, así que meterlo en el canal `err` desharía esa regla, y además no hay `E`
-  posible sin inventar una taxonomía de errores para cosas que no lo son. El no-op **no hay que
-  calcularlo**: es la invariante de identidad, y los cuatro caminos salen de una expresión
-  (`cambio`, en `useCases.ts`). ⚠️ El retorno es **la entidad protagonista, no todo lo que
-  cambió**, así que **no sirve de undo** — `delete-note` también limpia los contextos que la
-  listaban. El razonamiento entero, en `TAREAS.md`. §9.7.
+  (`TS2304`). *Qué está sucio* es puro y va en `core/app/`; *cuándo se escribe* va en
+  `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
+- **Los Planes se persisten, pero no se operan** hasta la Fase 5. §9.7.
+- **Una acción, una operación.** Crear una nota en un contexto y «Mover a…» encadenan dos casos
+  de uso desde la UI. Las compuestas sobre contenido —cascada de `setChecked`, borrar una rama—
+  siguen sin construir, y cuando lleguen se pliegan en **una sola** acción. §9.7.
+- **Los casos de uso devuelven la entidad que tocan, o `null` si no aplicó.** Las dieciocho con
+  el mismo tipo. **No un `Result`:** un no-op **no es un fallo**. El no-op sale de la invariante
+  de identidad (`cambio`, en `useCases.ts`). ⚠️ Es **la entidad protagonista, no todo lo que
+  cambió**, así que **no sirve de undo**. El razonamiento, en `TAREAS.md`. §9.7.
 - **`schemaVersion` vive en `StorageAdapter`, no en `AppState`.** Es propiedad de lo guardado.
-  Y llega con el runner que lo consume, porque **es** el mecanismo de migración. §9.7.
-- **El arranque de la app está partido en dos fases:** `hydrate` y las migraciones son puras y
-  van en la Fase 2; quién abre el storage y qué se ve sin nada guardado es Fase 4. §9.7.
-- **Los errores se devuelven, no se lanzan.** `Result<T, E>` a mano (~20 líneas, cero
-  dependencias), y `StorageError` con **cinco casos elegidos por "¿reintentar sirve de algo?"**
-  —`permission-denied`, `not-found`, `quota-exceeded`, `corrupt`, `io`—, no por qué mensaje sale
-  en pantalla. `corrupt` **no** se mete dentro de `io`: es la diferencia entre perder una nota y
-  creer que las has perdido todas. Se aplicó **antes** del adaptador de fichero de la Fase 3,
-  porque después habría dos adaptadores y una suite de contratos que convertir en vez de una.
-  §6.5.
-- **Un error es una entidad del dominio.** `StorageError` y `MigrationError` viven juntos en
-  `core/domain/errors/`, al mismo nivel que `Note` o `Context`, no en el módulo que los emite.
-  `Result.ts` se queda fuera de `errors/`: es el sobre. §6.5.
-- **`transaction` lleva el `Result` dentro y fuera.** Su `fn` devuelve
-  `Promise<Result<T, StorageError>>` porque el cuerpo real hace `put` tras `put` y cada uno ya
-  devuelve uno; con una `T` pelada saldrían dos sobres para un solo fallo. Un `err` de `fn`
-  corta y sale **sin reempaquetar**, y una excepción de `fn` se traduce a `io`. §6.5.
-- **`BlobStore` también devuelve `Result`.** Cada implementación traduce los errores de **su**
-  plataforma —cada una sabe cuál es su excepción de cuota o de permisos— y `FileStorageAdapter`
-  traduce sólo lo suyo, la serialización. Si la traducción de plataforma subiera al adaptador,
-  tendría que conocer las excepciones de los cuatro backends. §6.5.
-- **Ante un fallo no reintentable el write-behind SE DETIENE, y no se puede reanudar.** Retiene
-  el error, cancela la espera y lo devuelve en cada `flush()` sin tocar el almacén; lo pendiente
-  se conserva. Reanudar es volver a pedir la carpeta, que es plataforma: Fase 4. §6.5.
-- **El `manifest.json` lleva SÓLO `{ schemaVersion }`, sin índice de ids.** `getAll` se resuelve
-  con `list(prefijo)` más N lecturas. Un índice sería una **segunda fuente de verdad** que puede
-  esconder una nota que está intacta en disco. Si algún día el coste duele: **una caché, no un
-  índice**. Y **manifiesto ausente = versión 0**, que es "nunca se ha escrito nada". §6.2.
-- **`transaction` sobre ficheros NO es atómica, y lo único que añade a lo de arriba es que no
-  reordena ni agrupa las escrituras** — de eso depende el orden `put`-antes-que-`delete` del
-  write-behind. No hay rollback, ni cerrojo, ni lecturas consistentes. §6.2.
-- **⚠️ Un fichero corrupto tumba el `getAll` entero, y se acepta hasta la Fase 4.** Contradice a
-  §6.5 —que pide aislar esa entidad— y hoy significa que **una nota ilegible impide abrir la
-  app**. El arreglo es un `onCorrupt`, y va en el mismo paquete que el `onError` del
-  write-behind: hoy no hay a quién avisar. **No lo "arregles" saltándote la entidad en
-  silencio**, que es peor. El porqué completo, en §6.5; la tarea, en `TAREAS.md`.
+  Y **en un almacén vacío `boot` apunta ya la versión actual**: si no, uno con notas seguiría
+  diciendo «0» y la primera migración se lo saltaría. §9.7.
+- **Los errores se devuelven, no se lanzan.** `Result<T, E>` a mano, cero dependencias, y
+  `StorageError` con **cinco casos elegidos por "¿reintentar sirve de algo?"**
+  —`permission-denied`, `not-found`, `quota-exceeded`, `corrupt`, `io`—. `corrupt` **no** se
+  mete dentro de `io`: es la diferencia entre perder una nota y creer que las has perdido
+  todas. §6.5.
+- **Un error es una entidad del dominio**, en `core/domain/errors/`; `Result.ts`, fuera. §6.5.
+- **`transaction` lleva el `Result` dentro y fuera.** Un `err` de `fn` sale **sin
+  reempaquetar**, y una excepción de `fn` se traduce a `io`. §6.5.
+- **`BlobStore` también devuelve `Result`**, y cada implementación traduce los errores de **su**
+  plataforma; `FileStorageAdapter` traduce sólo la serialización. §6.5.
+- **El sobre es del `BlobStore`; el contenido, de `FileStorageAdapter`.** Un base64 ilegible de
+  `localStorage` es `corrupt` y nace abajo; una entidad que no parsea, arriba. §6.1.
+- **Ante un fallo no reintentable el write-behind SE DETIENE, no se reanuda, y avisa UNA vez
+  por `onError`.** Un `io` se sigue reintentando sin avisar. El aviso en pantalla **sólo
+  informa** («No se están guardando los cambios»): reanudar es volver a pedir la carpeta, y el
+  «reintentar» está aparcado. §6.5.
+- **Un fichero ilegible se salta y se avisa, con `onCorrupt`; sin `onCorrupt`, `getAll` sigue
+  siendo todo o nada.** Sólo se salta `corrupt`: cualquier otro fallo corta. **Nunca en
+  silencio.** ⚠️ **Riesgo residual que el usuario ha decidido DEJAR ABIERTO:** `hydrate` quita de
+  los contextos la referencia a la nota saltada, y si ese contexto se guarda después, la pierde
+  aunque el fichero siga intacto. En `TAREAS.md` → *Sin decidir*. §6.5.
+- **La forma de lo leído se valida en `storage/file/schema.ts`, no en el core**: la forma en
+  disco es del adaptador. Lo que no la tiene es `corrupt` con el motivo y va por `onCorrupt`.
+  §6.2.
+- **El `manifest.json` lleva SÓLO `{ schemaVersion }`, sin índice de ids.** Un índice sería una
+  **segunda fuente de verdad**. Si algún día el coste duele: **una caché, no un índice**.
+  **Manifiesto ausente = versión 0**, «nunca se ha escrito nada». §6.2.
+- **`transaction` sobre ficheros NO es atómica**; sólo garantiza que no reordena ni agrupa. §6.2.
 - **Las implementaciones de `BlobStore` van en `src/storage/blobs/`, no dentro de `file/`.**
-  `memory/` y `file/` nombran formas de guardar **entidades**; `BlobStore` es otro puerto y es un
-  **parámetro** de `FileStorageAdapter`, no algo debajo de `Repository`. §6.1.
-- **El sobre es del `BlobStore`; el contenido, de `FileStorageAdapter`.** Si falla la codificación
-  que el propio blob aplicó (el base64 de `localStorage`) es `corrupt` y nace abajo; si lo que no
-  parsea es la entidad, es del adaptador. No cambia el reparto de §6.1, lo precisa.
+  §6.1.
 - **Un tipo de plataforma que falte se declara a mano** —local, sin exportar— antes que instalar
-  `@types` o activar una `lib` más en un `tsconfig`. Y **antes de declararlo, comprueba si la
-  versión de TypeScript instalada ya lo trae**: la Fase 3 se escribió con **cero dependencias
-  nuevas**. §8.4.
-- **`remove` NO borra una casilla con hijas: es no-op.** Se borra de abajo arriba. Ninguna
-  operación del dominio hace desaparecer contenido que el usuario no esté mirando; la cascada
-  se compone, como la de `setChecked`. **La regla se propaga a `merge` y a `convertToText`**:
-  todo lo que hace desaparecer una línea se niega si tiene hijas. §9.3.
+  `@types` o activar una `lib` más. Y **antes, comprueba si el TypeScript instalado ya lo trae**.
+  §8.4.
+- **`remove` NO borra una casilla con hijas: es no-op**, y la regla se propaga a `merge` y a
+  `convertToText`: todo lo que hace desaparecer una línea se niega si tiene hijas. §9.3.
+- **Sin bundler: `index.html` con un `importmap` para los alias, y `.js` en todos los imports
+  relativos de `src/`.** *Decidido con el usuario el 2026-09-29 (opción A)*: el `importmap`
+  solo no bastaba. Descartados reescribir el JS emitido y un servidor que añada `.js`. §8.6.
 
-**De la navegación y el alcance de la Fase 4, cerradas el 2026-09-27** (el porqué, en §7.4 salvo
-que se diga otra cosa):
+**De la navegación y el alcance de la Fase 4** (el porqué, en §7.4 salvo que se diga otra cosa):
 
 - **Cuatro vistas: ventanas (la principal y la única que enseña contextos), nota, plan y
   configuración.** De ventanas se entra a las demás **a un solo nivel**, y de una secundaria sólo
-  se sale con **exit** (o el atrás del navegador, que equivale), a **la misma ventana** de la que
-  se entró. ◀ ▶ no son circulares. En la vista nota no hay ◀ ▶ ni ⚙: así no se puede borrar el
-  contexto de debajo. El estado de navegación son **dos datos**: ventana activa y vista encima.
-- **Una ventana es una referencia** (`{ tipo, id }`) y **la lista se guarda FUERA del core, en
-  `localStorage`**. Riesgo aceptado: no viaja con las notas. La entidad en el core está aparcada.
-  Junto a ella se guarda **la ventana activa, como referencia y no como índice**: al recargar se
-  vuelve a ella; lo que hubiera encima no se recuerda.
-- **Las ventanas visibles se calculan siempre** como la lista guardada menos las referencias
-  rotas, y si la activa ya no está, se abre la primera: función pura, con pruebas y verificada
-  rompiéndola. Quitar una ventana no borra nada.
+  se sale con **exit** (o el atrás del navegador, que es lo mismo), a **la misma ventana**. ◀ ▶
+  no son circulares. En la vista nota no hay ◀ ▶ ni ⚙.
+- **Una ventana es una referencia** (`WindowRef`: General, contexto o nota) y **la lista se
+  guarda FUERA del core, en `localStorage`** (`elnotas:windows`), con la activa **como
+  referencia y no como índice**. Riesgo aceptado: no viaja con las notas.
+- **Las ventanas visibles se calculan siempre** (`guardWindows`): la lista guardada menos las
+  rotas, y si la activa ya no está, la primera. Quitar una ventana no borra nada.
+- **Sin nada guardado se ve una ventana, el General; se permite el mismo contexto en dos
+  ventanas** (la activa es la primera que coincide); **y un fallo al guardar la lista no avisa**:
+  sólo se pierde el orden. *Decidido con el usuario el 2026-09-29.*
 - **El General** enseña todas las notas, no se renombra, y su papelera **borra de verdad**; en un
-  contexto la papelera **sólo quita de ese contexto**. Confirman sólo los dos borrados sin vuelta
-  atrás: borrar un contexto y la papelera del General.
-- **Selección por pulsación larga** (más clic derecho, Ctrl/Cmd+clic y teclado), sin casilla de
-  selección y sin dependencias. Su barra lleva la papelera y **«Mover a…»**, que **mueve**
-  (`remove-item` + `add-item`; desde el General sólo `add-item`) y no confirma. No es `move`.
+  contexto la papelera **sólo quita de ese contexto**. Confirman sólo borrar un contexto y la
+  papelera del General.
+- **Selección por pulsación larga** (más clic derecho, Ctrl/Cmd+clic y teclado). «Mover a…»
+  **mueve** (`remove-item` + `add-item`; desde el General sólo `add-item`) y no confirma.
 - **Una nota nace en el contexto donde se crea**, como «Nueva Nota», y **una nota vacía se
-  mantiene** (rectificado en la misma sesión: primero se iba a descartar; ver `TAREAS.md`).
+  mantiene**. **Puede haber varias notas con el mismo nombre**: lo que las distingue es el id, y
+  el selector no enseña nada más. *Decidido con el usuario el 2026-09-29.*
 - **El título, sólo en la cabecera, y se renombra tocándolo.** Una nota que es ventana usa **el
-  mismo editor en dos marcos**. `defaultView` queda sin uso, y no se toca.
-- **La barra de modo admite también el exit de la vista nota** (§7.2). Las otras tres candidatas
-  de esa barra, aparcadas.
-- **La Fase 4 es sólo web y se parte en Fase 4 · Contextos y Fase 4 · Notas**, en ese orden y sin
-  tocar el core; **los Planes son la Fase 5**. §9.10.
-- **Sin bundler de entrada: el `importmap`.** §9.10.
-- **El aviso de `onError` sólo informa**, y llega con la validación de esquema al final de Fase 4
-  · Notas. El «reintentar» espera a la carpeta del usuario. §9.10.
+  mismo editor en dos marcos**, sin exit. `defaultView` queda sin uso, y no se toca.
+- **La Fase 4 es sólo web y se partió en Fase 4 · Contextos y Fase 4 · Notas**, sin tocar el
+  core; **los Planes son la Fase 5**. §9.10.
 
 ## Fuera de alcance por ahora
 
 No empezar nada de esto sin pedirlo explícitamente. El motivo de cada uno y qué lo
 desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 
-- **Reordenar y re-anidar líneas** (`move`, `indent`, `outdent`) — *lo único de esta lista con
-  fecha de revisión*: dos de las tres preguntas de §9.10 se contestan usando el editor de Fase 4
-  · Notas, y un «no se aguanta» las reabre. Hasta entonces, siguen fuera
-- Las tres candidatas extra de la barra de modo (cascada al marcar, esconder las marcadas,
-  mandarlas al final) · el «reintentar» del aviso de `onError` · las ventanas como entidad del
-  core
+- **Reordenar y re-anidar líneas** (`move`, `indent`, `outdent`) — *pendiente de las tres
+  preguntas de §9.10*, que se contestan usando el editor varios días. Un «no se aguanta» las
+  reabre; hasta entonces, siguen fuera
+- Las tres candidatas extra de la barra (cascada al marcar, esconder las marcadas, mandarlas al
+  final) · el «reintentar» del aviso de `onError` · las ventanas como entidad del core
+- La carpeta del usuario y OPFS como destino de la app, con su botón de «reconectar carpeta»
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
-- El editor de grafos de los **Planes** — ya tiene fase, la 5, pero sigue fuera de la 4
-- Shells de desktop y móvil (Tauri / Capacitor) — la Fase 4 es sólo web
+- El editor de grafos de los **Planes** — es la Fase 5
+- Shells de desktop y móvil (Tauri / Capacitor)
 - Sync entre dispositivos, CRDTs, colaboración en tiempo real
 
 ## Plan por fases
 
 - **Fase 0 — Andamiaje. ✅ HECHA.**
-- **Fase 1 — Dominio puro. ✅ HECHA.** Los seis puntos del criterio de cierre (§9.5),
-  cumplidos, con **99 pruebas**. El helper con sus dos primitivas, `Position`, las ocho
-  operaciones, los puertos y la rebanada vertical.
-- **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los seis puntos del criterio de
-  cierre (§9.8), cumplidos, con **216 pruebas al cerrarla**. Los tres puertos, `MemoryStorageAdapter` con
-  su suite de contratos, el write-behind en sus dos mitades (§6.4), **las diecisiete acciones**
-  y la parte pura del arranque. Se atacó **de abajo arriba** —la persistencia primero,
-  verificada con la única acción que ya existía— por el mismo motivo que la rebanada vertical
-  de la Fase 1: descubrir un fallo con un candidato, no con diecisiete.
-- **Fase 3 — Fichero local. ✅ HECHA.** Los **siete** puntos del criterio de cierre (§9.9),
-  cumplidos, con **314 pruebas al cerrarla**. Hechos el **paso 0** (§6.5, 232 pruebas),
-  **`FileStorageAdapter`** con el formato en disco de §6.2 (274) y **las dos implementaciones de
-  `BlobStore`** en `blobs/` (**314**, y el contrato corriendo tres veces, no dos como preveía el
-  punto 7). El punto 5 —la lista de verificación manual— se cerró el **2026-09-13**, que es lo
-  que separaba «el código está» de «la fase está terminada»; su resultado, arriba. §9.9 lleva
-  además la lista explícita de lo que **no** entra en la fase, y tres cosas que quedan vivas y
-  anotadas: el `onError` del write-behind, el `onCorrupt` de `getAll` y la validación de esquema
-  al leer del disco. Las tres van a la Fase 4, porque hoy no hay a quién avisar.
-- **Fase 4 — UI. ⏳ EN CURSO, en su plan.** Sólo web, incluido el navegador del móvil. Nace
-  `src/ui/` y nace `src/platform/`, que traerá las **primeras implementaciones reales de `Clock`
-  e `IdGenerator`** — hoy no hay ninguna. Arranca guardando en `LocalStorageBlobStore`, decidido
-  para salir del paso. **Partida en dos, en este orden, y ninguna toca el core** (§9.10, cada una
-  con su criterio de cierre y su «no entra»):
-  - **Fase 4 · Contextos** — la rebanada vertical, `onCorrupt`, la vista ventanas, la lista de
-    ventanas con su guarda, la vista configuración y las listas de notas. Nueve puntos.
-  - **Fase 4 · Notas** — la vista nota, el editor con checkboxes anidados (el corazón de la app),
-    las ventanas de tipo nota, `onError` y la validación de esquema al final, y fuera
-    `src/scripts/`. Once puntos, más **las tres preguntas que sólo se contestan con el editor
-    delante** (si se aguanta no tener `move`, no tener `indent`/`outdent`, y si el disparador de
-    anidar se entiende solo).
+- **Fase 1 — Dominio puro. ✅ HECHA**, con **99 pruebas** al cerrarla (§9.5).
+- **Fase 2 — Acciones, persistencia y memory. ✅ HECHA**, con **216** (§9.8).
+- **Fase 3 — Fichero local. ✅ HECHA**, con **314**, y la lista manual pasada el 2026-09-13
+  (§9.9).
+- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 489 pruebas. Partida en dos (§9.10):
+  - **Fase 4 · Contextos** — puntos 1–7 y 9 hechos. **El 8, la lista manual
+    (`test/ui/VERIFICACION-MANUAL.md`), escrita y SIN PASAR entera**: hubo una revisión parcial
+    que el usuario no confirma. No cerrada.
+  - **Fase 4 · Notas** — puntos 1–9 y 11 hechos. **El 10, la lista del editor
+    (`test/ui/VERIFICACION-MANUAL-EDITOR.md`), escrita y SIN PASAR.** Y **las tres preguntas**
+    —si se aguanta no tener `move`, no tener `indent`/`outdent`, y si el disparador de anidar se
+    entiende solo— **sin contestar**: piden usar la app varios días. No cerrada.
+  - **Para cerrar la Fase 4 falta:** pasar las dos listas en escritorio y en móvil, anotar el
+    resultado, y contestar por escrito las tres preguntas en `TAREAS.md`.
 - **Fase 5 — Planes.** El editor de grafos. Se planifica cuando cierre la 4.
 
-**Las decisiones de las fases 1, 2 y 3 están CERRADAS**, y las tres fases están escritas. **De
-la Fase 4 se cerraron siete el 2026-09-20**, todas del editor, y **el 2026-09-27 la navegación,
-las pantallas y el alcance** (§7.4, §9.10): entre ellas el bundler —no, de entrada— y cuándo
-entran `onError` y la validación de esquema —al final de Fase 4 · Notas—. Lo que queda abierto es
-**la escritura condicional** —el conflicto entre dos pestañas, que `revision` sabe detectar pero
-que nadie puede disparar todavía, y fuera de la Fase 4—, **si OPFS entra en juego** —§9.9 no lo
-exigía y hoy el destino es `localStorage`— y **qué pasa con lo guardado en `localStorage` el día
-que cambie el destino**, que desde el 2026-09-27 incluye la lista de ventanas. Las respuestas y
-su porqué están en `TAREAS.md` → *Sin decidir*, que se conserva como registro.
+**Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: la **escritura
+condicional** (dos pestañas; `revision` sabe detectarlo, nadie lo dispara), **si OPFS entra en
+juego**, **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
+cambie el destino, y **la referencia que pierde un contexto** cuando `onCorrupt` se salta una
+nota.
 
 ## Comandos
 
 ```bash
-npm run check            # las cinco de abajo, en orden. Esto antes de commit.
+npm run check              # las seis de abajo, en orden. Esto antes de commit.
 
-npm test                 # limpia tmp-test/, compila src/ y test/, EXIGE que haya pruebas,
-                         # y lanza node --test sobre tmp-test/test
-npm run typecheck        # tsc de la app: sólo src/, que es donde vive el código
-npm run typecheck:core   # LA VERJA: falla si el core toca plataforma
-npm run check:purity     # GUARDIÁN: falla si el core lee el reloj o el azar
-npm run check:fronteras  # GUARDIÁN: falla si una excepción puede escaparse de su frontera
+npm run typecheck          # tsc de la app: sólo src/, que es donde vive el código
+npm run typecheck:core     # LA VERJA: falla si el core toca plataforma
+npm run check:purity       # GUARDIÁN: falla si el core lee el reloj o el azar
+npm run check:fronteras    # GUARDIÁN: falla si una excepción puede escaparse de su frontera
+npm run check:extensiones  # GUARDIÁN: falla si un import relativo de src/ no lleva .js
+npm test                   # limpia tmp-test/, compila src/ y test/, EXIGE que haya pruebas,
+                           # y lanza node --test sobre tmp-test/test
+
+npm run build:web          # compila src/ a dist/web/ en ESM, para el navegador
+python3 -m http.server 8000                # y se abre http://localhost:8000
+python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000
 ```
 
-No hay `build` ni `serve`, y la Fase 4 no trae webpack (ver *Dependencias*). `npm audit` da 0
-vulnerabilidades.
+`?depurar` en la dirección deja `window.elnotas = { store, useCases }` en la consola; sin él no
+existe. `npm audit` da 0 vulnerabilidades.

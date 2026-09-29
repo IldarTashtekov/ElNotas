@@ -68,8 +68,9 @@ demás se apoya en ella.
       verificada **rompiéndola a propósito** para comprobar que la prueba salta.
 - [x] **`core/ports/Clock.ts` y `core/ports/IdGenerator.ts`** — ✅ Hechos: sólo las interfaces,
       y exportadas por `index.ts` porque quien las implementa vive fuera del core. Sin
-      implementaciones, a propósito: vivirían en `src/platform/`, que no nace hasta la Fase 4,
-      y una prueba se fabrica su reloj en una línea. `IdGenerator` devuelve un `string` pelado
+      implementaciones, a propósito: vivirían en `src/platform/`, que no nació hasta la Fase 4
+      (`473f566`: `SystemClock` y `CryptoIdGenerator`), y una prueba se fabrica su reloj en una
+      línea. `IdGenerator` devuelve un `string` pelado
       y quien llama lo marca con el constructor que toque: el generador no sabe qué clase de
       id estás creando. **Sin pruebas propias**: son interfaces, no hay comportamiento que
       comprobar. Lo que sí se verificó a mano es la verja (ver la tarea de abajo).
@@ -243,9 +244,9 @@ fue el 5 —la lista de verificación manual—, el **2026-09-13**: era lo que s
 está entero» de «la fase está terminada», y no lo podía cerrar un agente. Su casilla, con el
 resultado de las dos pasadas, está más abajo.
 
-**Lo que queda vivo de esta fase y va a la Fase 4**, anotado y no arreglado: el `onError` del
-write-behind, el `onCorrupt` de `getAll` —hoy **una nota corrupta impide abrir la app**— y la
-validación de esquema al leer del disco. Los tres tienen su casilla aquí abajo.
+**Lo que quedó vivo de esta fase y fue a la Fase 4**: el `onError` del write-behind, el
+`onCorrupt` de `getAll` —entonces **una nota corrupta impedía abrir la app**— y la validación de
+esquema al leer del disco. **Los tres están hechos desde la Fase 4**; sus casillas, aquí abajo.
 
 **El paso 0 iba antes que el adaptador, y el orden era la decisión.** Convertir los puertos a
 `Result` después de escribir el adaptador de fichero habría sido escribirlo dos veces: es **lo
@@ -357,23 +358,21 @@ validación de esquema, y la escritura condicional.
         señala **esos dos y ninguno más, en su línea exacta**; y caza una regresión nueva (un
         `JSON.parse` suelto en un método público). Recorre el AST, así que **no necesita** el
         escáner que borra comentarios y cadenas que sí necesitó `check-core-purity.mjs`.
-        Hoy son **ocho `try` y cero `throw`**.
+        Entonces eran **ocho `try` y cero `throw`**; el 2026-09-29, con la Fase 4, son **trece**
+        y siguen cero `throw` (`ARCHITECTURE.md` §6).
 
       **Lo que NO se tocó, y así sigue:** que `get` de algo que no está guardado devuelva
       `ok(null)`, y que borrar lo que no existe no sea un error. **Ausencia no es fallo**, y
       ahora son además dos casos del contrato.
 
-- [ ] **Un `onError` para el write-behind, aplazado a la Fase 4.** El agujero es concreto:
-      cuando falla un flush **automático** —el del temporizador— **nadie mira su resultado**, así
-      que entre el fallo y la siguiente llamada manual a `flush()` no se entera nadie. Lo que
-      falta es un `onError?: (e: StorageError) => void` en `WriteBehindDeps`, que se llame cuando
-      el escritor se detiene: unas cinco líneas y una prueba.
-      **Por qué no ahora:** no hay UI a la que avisar, y aquí no se construye lo que no tiene
-      consumidor — la misma regla que quitó `move` y el puerto `Scheduler`.
-      **Qué lo desbloquea:** la Fase 4, que es cuando hay a quién avisar. Va en el mismo paquete
-      que el botón de "reconectar carpeta": **no se puede reanudar un escritor detenido**, y
-      reanudarlo significa volver a pedir la carpeta, que es plataforma. Hoy, en consecuencia, un
-      `permission-denied` deja el escritor muerto para el resto de la sesión.
+- [x] **Un `onError` para el write-behind, aplazado a la Fase 4.** ✅ **Hecho en la Fase 4,
+      `f406d96`.** El agujero era que cuando fallaba un flush **automático** —el del
+      temporizador— **nadie miraba su resultado**. Hoy `onError` es una opción de
+      `WriteBehindDeps` que se llama **una vez**, cuando un fallo no reintentable detiene al
+      escritor; un `io` se sigue reintentando sin avisar; el aviso va en frontera. La UI lo
+      enseña arriba en cualquier vista y **sólo informa**. Lo que **no** llegó, y sigue fuera de
+      la Fase 4: el botón de «reconectar carpeta» —**un escritor detenido no se reanuda**, y un
+      `permission-denied` lo deja muerto para el resto de la sesión—. → `ARCHITECTURE.md` §6.5
 
 - [x] **`FileStorageAdapter` sobre `BlobStore`** — ✅ Hecho, en `src/storage/file/`, y con él
       **`npm run check` en verde con 274 pruebas** (eran 232 al cerrar el paso 0): **17 del
@@ -399,35 +398,25 @@ validación de esquema, y la escritura condicional.
     regla: el contrato está escrito contra la interfaz y **no sabe que existe un `BlobStore`**,
     así que no puede hacer fallar a la plataforma ni mirar el nombre del fichero. La regla
     afinada está en `ARCHITECTURE.md` §6.3.
-  - **⚠️ Un fichero corrupto tumba el `getAll` entero**, lo que **contradice a §6.5**. Decidido
-    aceptarlo y aplazar el arreglo a la Fase 4 — la casilla del `onCorrupt`, justo aquí abajo.
+  - **⚠️ Un fichero corrupto tumbaba el `getAll` entero**, lo que **contradecía a §6.5**. Se
+    aceptó y se aplazó el arreglo a la Fase 4 — la casilla del `onCorrupt`, justo aquí abajo.
 
-- [ ] **Un `onCorrupt` para `FileStorageAdapter`, aplazado a la Fase 4.** Va en el mismo paquete
-      que el `onError` de arriba, y por el mismo motivo. **El agujero es concreto y hoy está
-      vivo:** `getAll` corta al primer fichero ilegible, así que **una sola nota corrupta impide
-      abrir la app** — justo el «creer que las has perdido todas» que la taxonomía de §6.5 existe
-      para evitar, y que esa misma sección promete resolver aislando la entidad.
-      Lo que falta es un `onCorrupt?: (e: StorageError) => void` en las dependencias del
-      adaptador: saltar esa entidad y avisar de cuál.
-      **Por qué no ahora, y por qué no de otra forma:** saltársela **en silencio** es peor que el
-      fallo actual —deja `ItemRef` colgando y, sobre todo, el write-behind vería esa nota como
-      borrada y acabaría limpiándola de los contextos, convirtiendo un fichero recuperable en una
-      pérdida de verdad—; y cambiar la firma de `getAll` es deshacer lo que el paso 0 acaba de
-      estabilizar, ahora con un adaptador escrito encima.
-      **Qué lo desbloquea:** la Fase 4, que es cuando hay a quién avisar.
-      La prueba que fija el comportamiento de hoy está marcada con ⚠️ en
-      `FileStorageAdapter.errors.test.ts`, para que el cambio se vea en el diff.
-      → `ARCHITECTURE.md` §6.5.
+- [x] **Un `onCorrupt` para `FileStorageAdapter`, aplazado a la Fase 4.** ✅ **Hecho con la
+      primera rebanada de la Fase 4, `473f566`.** El agujero era que `getAll` cortaba al primer
+      fichero ilegible, así que **una sola nota corrupta impedía abrir la app**. Hoy es una opción
+      `{ onCorrupt }` del adaptador: `getAll` se salta **sólo** los `corrupt` y avisa de cuál;
+      cualquier otro fallo sigue cortando; **sin `onCorrupt` sigue siendo todo o nada**; y un
+      aviso que lanza sale como `io`. La UI enseña qué fichero. Lo que se descartó entonces sigue
+      descartado: saltarse la entidad **en silencio**, y cambiar la firma de `getAll`.
+      ⚠️ **Queda un riesgo residual, abierto por decisión del usuario**: la referencia que un
+      contexto puede perder. En *Sin decidir*. → `ARCHITECTURE.md` §6.5.
 
-- [ ] **Validar el esquema de lo que se lee del disco.** Hoy, al leer una entidad sólo se
-      comprueba que lo parseado sea **un objeto con un `id` de texto**. Un `notes/x.json` con un
-      `content` inventado se acepta y entra en `AppState` tal cual.
-      **Por qué no se hizo de paso:** validar campo a campo **es un validador, no una frontera**,
-      no hay hoy en el repo nada que lo haga, y escribirlo a mano para tres entidades con
-      contenido recursivo es una pieza con entidad propia — no un `if` más dentro de `parsear`.
-      **Qué hay que decidir el día que se haga:** si se escribe a mano o si es el primer caso que
-      justifica una dependencia (y entonces, la política de dependencias manda comprobar antes si
-      Node o TypeScript ya lo hacen). → `ARCHITECTURE.md` §6.2.
+- [x] **Validar el esquema de lo que se lee del disco.** ✅ **Hecho al final de Fase 4 · Notas,
+      `8e2dba3`**, en `src/storage/file/schema.ts` —**no en el core**: la forma en disco es del
+      adaptador—, **a mano y sin dependencias**, que era lo que había que decidir. Nota, plan y
+      contexto campo a campo; en una nota, además, ningún texto dentro de una casilla y ningún id
+      de línea repetido en ningún nivel; los campos de más se ignoran. Lo que no tiene forma es
+      `corrupt` con el motivo y va por el mismo camino que `onCorrupt`. → `ARCHITECTURE.md` §6.2.
 
 - [x] **`LocalStorageBlobStore`** — ✅ Hecho, en `src/storage/blobs/`, **108 líneas de código y
       22 pruebas propias**. Es el de desarrollo y el de emergencia, y tiene pruebas porque tiene
@@ -522,96 +511,124 @@ validación de esquema, y la escritura condicional.
     ningún `tsconfig`, comprobado, así que los comentarios **viajan al emitido** y un cambio
     sólo en el comentario también movería bytes. Dentro de un comentario, pero los movería.
 
-      **Qué lo desbloquea:** cualquier trabajo de la Fase 4 que abra ese fichero de todas
-      formas — el botón de «reconectar carpeta», el `onError` o el `onCorrupt`, que pasan los
-      tres por aquí. Ese día la lista se repasa igualmente y este refactor viaja gratis.
+      **Qué lo desbloquea:** cualquier trabajo que abra ese fichero de todas formas, porque ese
+      día la lista se repasa igualmente y este refactor viaja gratis. *(Aquí decía que el
+      `onError` y el `onCorrupt` pasarían por este fichero, y **no pasaron**: los dos se hicieron
+      en la Fase 4 sin tocarlo, y tampoco lo tocó el `.js` de los imports, porque sólo importa
+      por alias. Así que sigue pendiente, y lo único previsto que lo abriría es el botón de
+      «reconectar carpeta», que está fuera de la Fase 4.)*
       **Mientras tanto, y cuesta cero:** el daño de hoy no es el código muerto sino que el
       comentario **miente** y alguien se lo va a creer. Eso se tapa sin tocar el fichero, con
       una línea en la decisión cerrada de `CLAUDE.md` sobre declarar tipos de plataforma a mano
       —que es donde mira quien se plantee declarar otro— diciendo que el que hay ya es un caso
       de eso y está aquí anotado.
 
-### Fase 4 — UI ⏳ EN CURSO
+### Fase 4 — UI ⏳ CÓDIGO HECHO, SIN CERRAR
+
+**Estado el 2026-09-29:** todo el código de las dos partes está hecho y commiteado en la rama
+`rediseno-arquitectura`, con `npm run check` en verde y **489 pruebas** (la fase empezó con
+**329**; al terminar el código de Contextos eran **423**). **Ningún paquete nuevo en toda la
+fase**, y el core no se tocó salvo por los `.js` de sus imports. Los commits, en
+`git log --oneline 0656d91..HEAD`.
+
+**Lo que falta para cerrar la Fase 4 entera, y es todo lo que falta:**
+
+1. **pasar las dos listas manuales** —`test/ui/VERIFICACION-MANUAL.md` y
+   `test/ui/VERIFICACION-MANUAL-EDITOR.md`— **en escritorio y en móvil**, y anotar el resultado
+   en sus hojas, que hoy están vacías;
+2. **contestar por escrito las tres preguntas del editor**, tras usar la app varios días.
 
 **Partida en dos desde el 2026-09-27**: **Fase 4 · Contextos** y después **Fase 4 · Notas**, cada
 una con su criterio de cierre en `ARCHITECTURE.md` §9.10 y la navegación que las dos construyen
-en §7.4. Las siete decisiones del editor se cerraron el 2026-09-20 y las de navegación el
-2026-09-27 (abajo, en *Sin decidir*). Dentro de cada parte el orden es **de abajo arriba y en
-rebanada vertical**, como en las fases 1 y 2 y por el mismo motivo: que el primer fallo aparezca
-con una pieza delante y no con quince. **Ninguna de las dos toca el core.**
+en §7.4. Dentro de cada parte el orden fue **de abajo arriba y en rebanada vertical**, como en las
+fases 1 y 2. **Ninguna de las dos tocó el core.**
 
-#### Fase 4 · Contextos
+#### Fase 4 · Contextos — código hecho, lista manual sin pasar
 
-⚠️ **Las tres primeras van juntas y no se separan.** Hasta que la 2 pase, no hay ninguna prueba
-de que el núcleo entero arranque fuera de un test.
-
-- [ ] **`src/platform/` nace: `Clock` e `IdGenerator` reales, y la composición.** Es el único
-      sitio que inyecta adaptadores. Hoy **no existe ninguna implementación de los dos puertos
-      de la Fase 1**, así que esto es literalmente lo primero que puede ejecutarse. Monta
-      `LocalStorageBlobStore` sobre `FileStorageAdapter`, y arranca con `hydrate` +
-      `runMigrations`. Carga con el `importmap`, sin bundler (cerrado, abajo).
-- [ ] **La rebanada vertical mínima: crear un contexto y que sobreviva al recargar.** Sin
-      ventanas bonitas ni configuración. Es el punto 1 del criterio y el que dice si la pila
-      encaja; que caiga sobre contextos y no sobre el editor es justo el motivo del orden.
-- [ ] **`onCorrupt` en `getAll`, y algo en pantalla que lo diga.** Entra aquí y no después:
-      hoy un solo fichero ilegible tumba el `getAll` entero y con él la app. Punto 2.
-- [ ] **La lista de ventanas en `localStorage` y su guarda de integridad**: función pura, con
-      pruebas, **verificada rompiéndola**. Una ventana de un contexto borrado desaparece en la
-      misma sesión. Incluye volver a la ventana activa al recargar, guardada como referencia y
-      con «si ya no existe, la primera» dentro de la guarda. Punto 4.
-- [ ] **La vista ventanas**: ◀ ▶ no circulares, renombrar tocando el título (salvo el General),
-      el General con todas las notas, pantalla vacía sin ventanas. Punto 3.
-- [ ] **La vista configuración**: las dos secciones, el selector, borrar contexto con
-      confirmación, y exit y atrás del navegador —también en el móvil— volviendo a la misma
-      ventana. Punto 5.
-- [ ] **La lista de un contexto**: «+ Nota» que crea sin abrir, selección por pulsación larga
-      (y clic derecho, Ctrl/Cmd+clic, teclado), la papelera con sus dos significados y
-      «Mover a…» (mueve entre contextos; desde el General sólo añade). Punto 6.
-- [ ] **Reconciliación de listas por `data-id`**, comprobada: seleccionar o renombrar no recrea
-      filas que no cambiaron. Punto 7.
+- [x] **`src/platform/` nace: `Clock` e `IdGenerator` reales, y la composición.** ✅ `473f566`.
+      `SystemClock`, `CryptoIdGenerator` (con `getRandomValues`, **no `randomUUID`**, que sólo
+      existe en contexto seguro y el móvil por la IP de la red local no lo es), `boot.ts` y
+      `main.ts`. Nacen el alias `#platform/*` y `test/platform/`. **En un almacén vacío `boot`
+      apunta ya la versión del formato**; si no, uno con notas seguiría diciendo «0» y la primera
+      migración futura se lo saltaría. Anotado para ese día: con migraciones que cambien datos,
+      `boot` tendría que escribir lo migrado antes de subir la versión.
+- [x] **La rebanada vertical mínima: crear un contexto y que sobreviva al recargar.** ✅
+      `473f566`. Punto 1. Antes hizo falta el `.js` en los imports relativos, porque **el
+      `importmap` solo no bastaba**: casilla en *Infraestructura*.
+- [x] **`onCorrupt` en `getAll`, y algo en pantalla que lo diga.** ✅ `473f566`. Punto 2. Su
+      casilla de la Fase 3, arriba.
+- [x] **La lista de ventanas en `localStorage` y su guarda de integridad.** ✅ `8b96c70`. Punto 4.
+      `windows.ts` (`guardWindows`, pura, con pruebas y verificada rompiéndola) y
+      `LocalStorageWindows.ts` (clave `elnotas:windows`). Tres decisiones con el usuario el
+      2026-09-29, en *Sin decidir*: sin nada guardado se ve el General, se permite el mismo
+      contexto en dos ventanas, y un fallo al guardar la lista no avisa.
+- [x] **La vista ventanas.** ✅ `c17f5c1`. Punto 3. El General ordena sus notas por nombre; un
+      contexto, en el orden de sus `items`.
+- [x] **La vista configuración.** ✅ `ba27135`. Punto 5. Con «+ Ventana» cuando la lista está
+      vacía, «+ Contexto nuevo» que crea «Nuevo contexto», y `window.confirm` inyectada.
+- [x] **La lista de un contexto.** ✅ `11c3291`. Punto 6. Pulsación larga de 500 ms, anulada si el
+      dedo se mueve más de 10 px.
+- [x] **Reconciliación de listas por clave**, comprobada. ✅ `296dd1b`. Punto 7. Contra una
+      interfaz mínima de contenedor, probada en Node. La lista de ventanas de la configuración va
+      por **posición + contenido** porque se permiten duplicados. → `ARCHITECTURE.md` §7.5
 - [ ] **La lista de verificación manual, escrita y pasada** en escritorio y en móvil. Punto 8.
+      **Escrita** (`test/ui/VERIFICACION-MANUAL.md`, `70aeeb6`). **Sin pasar entera**: el usuario
+      hizo una revisión parcial y no la confirma, y la hoja de resultados está vacía. **Esto es
+      lo que tiene abierta Fase 4 · Contextos.**
+- [x] **`npm run check` en verde y el recuento anotado.** Punto 9: **423** al terminar el código de
+      esta parte.
 
-#### Fase 4 · Notas
+#### Fase 4 · Notas — código hecho, lista manual y preguntas pendientes
 
-- [ ] **La vista nota**: se abre tocando una nota o con «+ Nota», que ya crea y entra; exit y
-      atrás vuelven a la misma ventana. Punto 1.
-- [ ] **Las casillas.** `setChecked`, `convertToCheckBox` y `convertToText` desde el teclado y
-      desde el ratón, con el modo *Casilla* de la barra.
-- [ ] **El anidamiento: el disparador de anidar.** Arma la línea **siguiente**, se consume al
-      usarse y **el armado se ve en pantalla** (§7.2). No toca la línea actual: eso sería
-      `indent`, que está cerrado que no existe.
-- [ ] **Los bordes del teclado: `split`, `merge` y las cuatro esquinas de §7.3.** Incluye el
-      Retroceso al principio en sus dos pulsaciones. Punto 3, y es donde un editor que
-      «funciona» se siente roto.
-- [ ] **Un `set-checked` redundante no redibuja.** Tercer eslabón de la cadena que empezó en
-      §9.5 y siguió en §9.8: no notifica → no escribe → **no toca el DOM**. Es el único que el
-      usuario nota, porque un re-render con el cursor dentro le borra lo que escribe.
-- [ ] **Las ventanas de tipo nota**: el mismo editor en otro marco, y la guarda sabiendo de
-      notas, con pruebas y verificada rompiéndola. Punto 7.
-- [ ] **`src/scripts/` fuera del repo**, con lo que arrastre (`webpack.config.js`, `public/`).
-      Punto 9: mientras siga ahí, `CLAUDE.md` gasta un párrafo por sesión en explicar que no se
-      imite.
-- [ ] **El `onError` del write-behind** — al **final** de esta parte. El aviso **sólo informa**
-      («No se están guardando los cambios»): un escritor detenido no se reanuda, y el botón de
-      «reintentar» está aparcado para cuando el destino sea la carpeta del usuario. Punto 8.
-- [ ] **Validar el esquema de lo que se lee del disco** — también al final, y por el mismo
-      camino que `onCorrupt`. Lo que hay es una comprobación de forma mínima. Punto 8.
+- [x] **La vista nota**: se abre tocando una nota o con «+ Nota», que ya crea y entra; exit y
+      atrás vuelven a la misma ventana. ✅ `6fd2667`. Punto 1. El atrás lo comparten la vista
+      nota, la configuración y el modo selección (`backStack`), y `close()` es idempotente.
+- [x] **Las casillas**, desde el teclado y desde el ratón, con el **interruptor «☐ Casilla»** de
+      la barra —hasta el 2026-09-29 eran dos modos, *Texto* ⇄ *Casilla*—. ✅ `c95664d` (la lógica,
+      pura y probada contra las tablas del teclado) y `9fab349` (la pantalla). **Marcar con el
+      teclado es Ctrl/Cmd+Intro.**
+- [x] **El anidamiento: el disparador de anidar.** Arma la línea **siguiente**, se consume al
+      usarse y **el armado se ve en pantalla**. Sólo se arma con la casilla encendida, y cambiar
+      el interruptor lo desarma. ✅ `c95664d` + `9fab349`.
+- [x] **Los bordes del teclado: `split`, `merge` y las cuatro esquinas de §7.3**, con el
+      Retroceso al principio en sus dos pulsaciones. ✅ `c95664d` + `9fab349`. Punto 3. Y los
+      cuatro huecos que salieron al construirlo, cerrados con el usuario el 2026-09-29 (en *Sin
+      decidir*). **Comportamiento conocido, no un fallo:** Retroceso al principio de un texto que
+      va justo debajo de una casilla **con hijas** lo une a esa casilla, no a su última hija —la
+      regla de `merge`—. Si no se aguanta, se suma a las tres preguntas.
+- [x] **Un `set-checked` redundante no redibuja.** ✅ `56d838c`. Punto 4, y el tercer eslabón de
+      la cadena de §9.5 y §9.8 queda **demostrado**: medido en el navegador con `?depurar`, un
+      `set-checked` redundante da **0 avisos, 0 escrituras y 0 cambios en el DOM**, frente a
+      **1, 1 y 7** de un cambio de verdad.
+- [x] **Las ventanas de tipo nota**: el mismo editor en otro marco, y la guarda sabiendo de
+      notas, con pruebas y verificada rompiéndola. ✅ `a0ed6ea`. Punto 7.
+- [x] **`src/scripts/` fuera del repo**, con `webpack.config.js` y `public/` entero. ✅ `cdfb816`.
+      Punto 9. Su CSS no se aprovechó.
+- [x] **El `onError` del write-behind**, al final de esta parte. ✅ `f406d96`. Punto 8. El aviso
+      (`MountedApp.showSaveError`) sale arriba en cualquier vista, dice el motivo y que lo que se
+      ve se perderá al cerrar, y **sólo informa**. `main.ts` lo guarda si llega antes de montar
+      la UI.
+- [x] **Validar el esquema de lo que se lee del disco**, también al final. ✅ `8e2dba3`. Punto 8.
 - [ ] **La lista de verificación manual del editor, escrita y pasada** en escritorio y en móvil.
-      Sigue sin haber runner de navegador, y el tacto del teclado no lo prueba `node --test`.
+      Punto 10. **Escrita** (`test/ui/VERIFICACION-MANUAL-EDITOR.md`, `9eec14d`). **Sin pasar**,
+      con la hoja de resultados vacía.
 - [ ] **Contestar por escrito las tres preguntas de §9.10** —`move`, `indent`/`outdent`, y si el
       disparador de anidar se entiende solo— **después de usar la app de verdad varios días**,
       no tras una demo. Un «no se aguanta» reabre la decisión correspondiente, y es un resultado
-      válido.
+      válido. **Sin contestar el 2026-09-29.**
+- [x] **`npm run check` en verde y el recuento anotado.** Punto 11: **489**.
 
 #### De las dos partes
 
-- [x] ~~**Decidir si la fase instala un bundler.**~~ ✅ **Cerrada el 2026-09-27: de entrada, no.**
-      Se arranca con el `<script type="importmap">` de
-      `test/storage/blobs/verificacion-manual.html`, cero dependencias; el bundler entra sólo si
-      algo concreto lo exige. Registro, abajo en *Sin decidir*.
-- [ ] **Acordar la definición del `frontend-agent`.** Su ficha está sin escribir a propósito y
-      lo dice ella misma: hay que acordarla antes de usarlo. Es andamiaje de `.claude/`, no
-      documentación.
+- [x] ~~**Decidir si la fase instala un bundler.**~~ ✅ **Cerrada el 2026-09-27: de entrada, no**,
+      y la fase se hizo sin él. ⚠️ El `importmap` solo **no bastó**: hizo falta el `.js` en los
+      imports relativos (casilla en *Infraestructura*). Registro, abajo en *Sin decidir*.
+- [ ] **Acordar la definición del `frontend-agent`.** **Sin hacer, y la fase se hizo sin él.**
+      Su ficha (`.claude/agents/frontend-agent.md`) sigue siendo el stub que dice «si te han
+      invocado, para». Se redactó una ficha nueva que no se aplicó: **el usuario dijo que no
+      hacía falta**. Queda abierta porque la ficha dice cosas que ya no son verdad —que «hoy no
+      existen ni `src/ui/` ni `src/platform/`», que el CSS del prototipo se reutiliza, que llega
+      webpack o Vite—, y eso es de `.claude/`, que es del usuario. Ver *Sin decidir*.
 - [ ] **Qué pasa con las notas de `localStorage` al cambiar de destino.** Arrancar en
       `LocalStorageBlobStore` fue decidido «para salir del paso», y es barato de revertir porque
       el destino se inyecta en un solo sitio. Lo que **no** es gratis son las notas ya escritas:
@@ -626,6 +643,39 @@ de que el núcleo entero arranque fuera de un test.
 Todas son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
 documentación**.
 
+- [x] **Los imports relativos de `src/` llevan `.js`, y un guardián lo vigila** — ✅ `1037ea1`,
+      el primer commit de la fase, antes de la rebanada. **El `importmap` resuelve los alias pero
+      no los imports relativos sin extensión**, y el navegador pide
+      `./domain/Note` tal cual y recibe un 404. La verificación manual de la Fase 3 lo había
+      esquivado compilando dos ficheros con `--noResolve`. **Decidido con el usuario el
+      2026-09-29, opción A**: `.js` en todos los relativos de `src/` —115 líneas de import,
+      medidas en ese commit, y sólo líneas de import—; `DirectoryHandleBlobStore.ts` sólo importa
+      por alias y no se tocó, así que su lista manual sigue valiendo. **Descartadas:** un script
+      que reescriba el JS emitido, y un servidor propio que añada `.js`. **El guardián,
+      `npm run check:extensiones`** (`tools/check-extensiones.mjs`), entra en `npm run check`,
+      que pasa a tener **seis** pasos: sin él, un import sin `.js` pasa todas las pruebas —compilan
+      a CommonJS— y sólo se nota al abrir la app. → `ARCHITECTURE.md` §8.6
+- [x] **`npm run build:web` e `index.html`** — ✅ `473f566`. `tools/clean-dist.mjs` +
+      `tsconfig.web.json` compilan `src/` a `dist/web/` en ESM; `index.html`, en la raíz, lleva el
+      `importmap` que calca el campo `imports` y la hoja de estilos. Se sirve con
+      `python3 -m http.server 8000`. Sin bundler y sin ningún paquete nuevo. Nacen los alias
+      `#platform/*` y `#ui/*`, y `tools/check-fronteras.mjs` pasa a mirar también `src/platform` y
+      `src/ui`, con `onCorrupt` en su lista de peligrosas (código ajeno); `onError` entró en ella
+      con `f406d96`.
+- [ ] **Una declaración sin tipo en una prueba nueva** *(de `back-dev-agent`)*:
+      `test/ui/editor.test.ts:51`, `const NOTA = noteId("nota")`. Encontrada en este pase con una
+      sonda sobre el AST; es la única en `test/platform/` y `test/ui/`, que por lo demás cumplen la
+      regla entera. Una línea.
+- [ ] **Comentarios y textos que se quedaron atrás** *(de `back-dev-agent`; la documentación no
+      toca `src/` ni `test/`)*. Encontrados en este pase, y todos dicen algo que ya no es verdad:
+  - `src/storage/index.ts`: dos comentarios dicen que `platform/` «no nace hasta la Fase 4»;
+  - `test/storage/blobs/VERIFICACION-MANUAL.md`, en su preparación: explica el `--noResolve`
+    por «un montón de imports sin extensión que el navegador no sabe resolver», y desde
+    `1037ea1` ya no los hay. ⚠️ **Tocar ese procedimiento no obliga a repasar la lista** —es el
+    `.md`, no `DirectoryHandleBlobStore.ts`—, pero conviene no cambiar los pasos al corregirlo;
+  - `test/ui/VERIFICACION-MANUAL-EDITOR.md`, en *Comportamientos conocidos*: llama a `move` e
+    `indent`/`outdent` «preguntas del punto 11», y en `ARCHITECTURE.md` §9.10 el punto 11 es el
+    recuento de pruebas; las preguntas no llevan número.
 - [x] **Las pruebas se mudan a `test/`, partido por capa** — ✅ Hecho. Las **21** que había
       repartidas por `src/` (18 de pruebas y 3 ayudantes) pasan a `test/core/…` y
       `test/storage/…`, en un árbol que calca el de `src/`. Sale del hecho de que `src/` mezclaba
@@ -651,7 +701,11 @@ documentación**.
 - [x] **Anotar el tipo en toda declaración de valor, parámetro y retorno** — ✅ Hecho en
       `src/`, **330 anotaciones en 14 ficheros**, y `npm run check` en verde con las **314**
       pruebas de siempre. El porqué: cuando un tipo cambia, se ve **en el diff** en vez de que
-      la inferencia lo absorba en silencio.
+      la inferencia lo absorba en silencio. *(Cifras de aquel día, sobre `core/` y `storage/`.
+      **Recomprobado el 2026-09-29, tras la Fase 4**, con una sonda sobre el AST de los cuatro
+      módulos: `src/` sigue cumpliéndola entera, y las declaraciones sin anotar son **22**, todas
+      `for…of`. La sonda cuenta distinto que la medición original, así que sus totales no se
+      comparan con el 330.)*
       **La regla se ensanchó al aplicarla**, y ése es el cambio de fondo: no son sólo las
       declaraciones de valor, son también **los parámetros y el tipo de retorno de toda función
       o método, incluidos los callbacks de una línea** de un `.map` o un `.filter`. La versión
@@ -684,10 +738,14 @@ documentación**.
     —se anotan sus parámetros y su retorno, no la constante—, el `as const` de
     `src/core/app/diffState.ts:52` y los dos destructuring de `src/core/app/reduce.ts:227`
     y `:267`.
-  - [ ] **Las pruebas — 942 anotaciones** (423 variables, 412 retornos, 107 parámetros),
-        **deuda aceptada a sabiendas y no un olvido.** Es trabajo mecánico que no arregla ni
-        caza ningún fallo, y el diff sería irrevisable. **Lo que se escriba o se toque en
-        `test/` a partir de ahora sí cumple la regla**, que es lo que impide que esto crezca.
+  - [ ] **Las pruebas viejas — 942 anotaciones** (423 variables, 412 retornos, 107 parámetros,
+        medido el 2026-09-19), **deuda aceptada a sabiendas y no un olvido.** Es trabajo mecánico
+        que no arregla ni caza ningún fallo, y el diff sería irrevisable. **Lo que se escriba o se
+        toque en `test/` a partir de ahora sí cumple la regla**, que es lo que impide que esto
+        crezca. **Recomprobado el 2026-09-29** con la sonda de arriba, que cuenta distinto: la
+        deuda sigue en `test/core/` y `test/storage/` (981 huecos con su recuento, no comparables
+        con los 942), y **`test/platform/` y `test/ui/`, escritas en la Fase 4, la cumplen** salvo
+        una línea, anotada como tarea más arriba.
   - ~~*(Opcional)* **Un guardián en `tools/`** que sostuviera esta regla~~ — ❌ **DESCARTADO, y
         el motivo vale como criterio para la próxima vez que alguien proponga un guardián.**
 
@@ -695,7 +753,7 @@ documentación**.
         único que añade la anotación es que **un cambio de tipo se vea en el diff** en vez de
         que la inferencia se lo trague. Es legibilidad, no corrección.
 
-        Y eso la pone en otra liga que los cuatro guardianes que sí existen. Compáralas por lo
+        Y eso la pone en otra liga que los guardianes que sí existen. Compáralas por lo
         que pasa **si se rompe la regla**:
 
         | Guardián | Qué pasa si se incumple |
@@ -704,9 +762,10 @@ documentación**.
         | `check:purity` | el core lee el reloj → las pruebas dejan de ser deterministas |
         | `require-tests` | `npm test` pasa en verde **sin ejecutar nada** |
         | `check:fronteras` | una excepción se escapa por una firma que prometía `Result` |
+        | `check:extensiones` *(desde la Fase 4)* | la app no carga en el navegador, y las pruebas siguen en verde |
         | *(el de tipos)* | **un diff se lee peor** |
 
-        Los cuatro primeros tapan agujeros donde algo **funciona mal en silencio**. Éste tapa
+        Los cinco primeros tapan agujeros donde algo **funciona mal en silencio**. Éste tapa
         una molestia de revisión, y un script en `npm run check` para eso es maquinaria de más.
         **La regla se queda** —está en `CLAUDE.md` y se aplica al escribir—; lo que se descarta
         es comprobarla automáticamente.
@@ -757,7 +816,7 @@ documentación**.
       seguía ejecutándola. Pruebas fantasma de código que ya no existe, y pruebas renombradas
       corriendo dos veces.
 - [x] ✅ **`npm run check` vuelve a estar en verde**, y ahora significa algo: 9 pruebas
-      ejecutándose de verdad. Hoy van 314.
+      ejecutándose de verdad. El 2026-09-29 van 489.
 - [x] **Que `npm run check` falle ante `Date.now()`, `Math.random()` o `new Date(` en
       `src/core`.** ✅ Hecho: `tools/check-core-purity.mjs`, enchufado como `npm run
       check:purity`. Tapa el único hueco de la verja — `Date` y `Math` están en `lib.es5.d.ts`,
@@ -814,9 +873,11 @@ cerraron juntas.
   como *Casilla*, o sea **lo que ves deja de ser lo que hace**. Consumirlo mata el escalón
   infinito **por construcción**: armado o no, y armar dos veces no baja dos niveles.
 - **Cómo se baja un segundo nivel** — ✅ **un botón «anidar» aparte, fuera del ciclo.** La barra
-  queda en dos modos estables (*Texto* ⇄ *Casilla*) más el disparador. Volver a anidar es una
+  quedó en dos modos estables (*Texto* ⇄ *Casilla*) más el disparador. Volver a anidar es una
   pulsación en vez de tres, y anidar con soltura es justo lo que distingue esta app de un bloc
-  de notas.
+  de notas. ⚠️ ***Texto* ⇄ *Casilla* se reabrió el 2026-09-29** y hoy es un interruptor
+  «☐ Casilla» (entrada de abajo, *Al construir el editor y las ventanas*); el disparador no
+  cambió.
 - **Sobre qué actúa «anidar»** — ✅ **sobre la línea SIGUIENTE, nunca sobre la actual.** Duda que
   no estaba apuntada y apareció al juntar las dos de arriba: §7.3 dice que el botón de modo *sí*
   toca la línea donde estás, así que lo simétrico habría sido que anidar bajara de nivel la línea
@@ -833,7 +894,7 @@ cerraron juntas.
   `ModosEscritura` era el nombre provisional del diseño y se retira. **La premisa de la duda era
   falsa** y conviene no reutilizarla: decía que «todo lo demás está en inglés», y el repo está
   mezclado con un patrón que nadie había escrito — **público en inglés** (`Note`, `CheckBox`,
-  `createFileRepository`), **maquinaria interna en castellano** (`cambio`, `caminoDe`,
+  `createFileStorageAdapter`), **maquinaria interna en castellano** (`cambio`, `caminoDe`,
   `clasificar`, `esReintentable`, `frontera`). Va en inglés por ser público, no por el repo.
 - **El alcance de los tres pendientes de la Fase 3** — ✅ **`onCorrupt` entra con la primera
   rebanada; `onError` y la validación de esquema, dentro de la fase pero después del editor.**
@@ -861,7 +922,10 @@ y sus dos criterios); aquí queda el registro de lo que estaba abierto y cómo s
   type="importmap">` ya probado en `test/storage/blobs/verificacion-manual.html`, que carga el
   código de producción compilado a ESM y funcionó en Brave y en Firefox. Cero dependencias; el
   bundler entra sólo cuando algo concreto lo exija. Se aplica desde Fase 4 · Contextos, que es
-  la que escribe la primera línea de `ui/`.
+  la que escribe la primera línea de `ui/`. ⚠️ ***Corregido el 2026-09-29:*** «ya probado» era
+  verdad a medias —ese andamio sólo cargaba dos ficheros compilados con `--noResolve`—, y para
+  el core entero **hizo falta además el `.js` en los imports relativos** (entrada de abajo). La
+  decisión no cambió: la fase se hizo sin bundler.
 - **Cuándo entran `onError` y la validación de esquema** — ✅ **al final de Fase 4 · Notas.** La
   decisión del 2026-09-20 decía «después del editor»; con la fase partida, eso cae ahí.
 - **Qué hace el aviso de `onError`** — ✅ **sólo informa** («No se están guardando los cambios»).
@@ -893,6 +957,108 @@ y sus dos criterios); aquí queda el registro de lo que estaba abierto y cómo s
   **vaciar una nota existente que es ventana la borraría de verdad al salir**. Precio: un «+» sin
   querer deja una «Nueva Nota» vacía, que se quita con selección y papelera. Si alguien vuelve a
   proponer el descarte, ése es el argumento que lo tumbó.
+
+### Al construir el editor y las ventanas (Fase 4) — ✅ **decididas el 2026-09-29**
+
+Salieron al escribir el código, con la app delante. **Las de este primer bloque las decidió el
+usuario una a una**; el diseño y su porqué, en `ARCHITECTURE.md` §7.2–§7.4 y §8.6.
+
+- **Cómo se carga la app sin bundler** — ✅ **opción A: `.js` en todos los imports relativos de
+  `src/`**, vigilado por `npm run check:extensiones`. El `importmap` solo resolvía los alias y no
+  los relativos. Descartadas: un script que reescriba el JS emitido, y un servidor que añada
+  `.js`. → §8.6
+- **`WritingMode` reabre §7.2** — ✅ **un interruptor «☐ Casilla»** (`{ checkbox, nestArmed }`),
+  con el texto como lo normal, **en vez de dos modos con nombre** (*Texto* ⇄ *Casilla*). El
+  argumento que sostenía los dos modos —«un apagado obliga a preguntarse qué significa»— no
+  aplica: apagado es texto normal. **El comportamiento no cambia**: encender es lo que era «pasar
+  a *Casilla*», apagar lo que era «pasar a *Texto*». Anidar sólo se arma con la casilla
+  encendida, y cambiar el interruptor lo desarma. → §7.2
+- **Intro en un texto** — ✅ **crea la línea con `after`, debajo de la actual**, y no con
+  `root-end` como decía la tabla de §7.3: con `root-end`, una línea escrita en medio de la nota
+  aparecía al final. `root-end` se queda para la primera línea de una nota vacía. Desde una
+  casilla anidada con la casilla apagada, el texto nace **debajo de su casilla de la raíz**. Los
+  mismos tres casos de `Position`, y el core sin tocar. *(El usuario lo aprobó con un
+  «adelante» que al principio se interpretó como sí; el uso posterior lo ha confirmado, y queda
+  registrado como decidido.)* → §7.3, §9.4
+- **Los cuatro huecos de §7.3** — ✅ **(a)** con anidar armado en un **texto**, Intro crea una
+  casilla hermana y anidar **sigue armado**; **(b)** partir una casilla **anidada** con el
+  interruptor apagado deja la mitad nueva **como casilla**; **(c)** `split` **no anida**, y anidar
+  sigue armado; **(d)** marcar con el teclado es **Ctrl/Cmd+Intro** (y el ☐ es un botón: Espacio
+  con el foco encima). → §7.3
+- **Ventanas** — ✅ **sin nada guardado se ve una ventana, el General**; **se permite el mismo
+  contexto en dos ventanas** (la activa, por referencia, es la primera que coincide); y **un fallo
+  al guardar la lista de ventanas no avisa**: sólo se pierde el orden. → §7.4
+- **Varias notas con el mismo nombre** — ✅ **se deja así.** Toda nota nace como «Nueva Nota», y
+  varias se veían iguales en el selector de ventanas. **No es un problema**: lo que las distingue
+  es su id, que siempre es distinto, y el selector **no enseña nada más** —ni el principio del
+  contenido, ni la fecha, ni el id—. → §7.4
+
+**Y un bloque de decisiones de implementación**, tomadas al escribir el código y **aceptadas por
+el usuario en bloque**, no cerradas una a una. Están descritas en `ARCHITECTURE.md` §7.4 y §7.5;
+aquí, sólo la lista para que nadie las tome por accidentes:
+
+- el General ordena sus notas **por nombre**; un contexto, en el orden de sus `items`;
+- en la configuración: **«+ Ventana»** con la lista vacía, **«+ Contexto nuevo»** crea «Nuevo
+  contexto», la confirmación es `window.confirm` **inyectada**, y lo que se deja a medias **no se
+  recuerda** al salir;
+- **`backStack`**: configuración, vista nota y modo selección comparten el historial del
+  navegador, así que el atrás cierra los tres y el exit **es** ir atrás; `close()` es idempotente
+  (un segundo `back()` sacaba de la página: cazado probando);
+- **reconciliación por clave** contra una interfaz mínima de contenedor, probada en Node: notas y
+  contextos por `data-id`, líneas del editor por `tipo:id`, y **la lista de ventanas de la
+  configuración por posición + contenido** —no tiene id estable porque se permiten duplicados; un
+  id por ventana obligaría a cambiar el formato guardado, y se descartó—, con el foco llevado a su
+  sitio en cada paso. Precio: al quitar o añadir en medio, las filas de detrás se recrean;
+- **selección**: pulsación larga de 500 ms, anulada si el dedo se mueve más de 10 px; cada
+  pulsación empieza limpia (el primer toque tras una pulsación larga se perdía: cazado probando);
+- **editor**: un `contenteditable` (`plaintext-only`, con respaldo) por línea; `setText` en cada
+  tecla, porque el write-behind ya agrupa; **el campo con el foco no se repinta, salvo durante
+  una orden del editor** (partir la línea con foco la dejaba con el texto viejo: cazado
+  probando); los botones de la barra no roban el foco y leen la selección en vivo (usaban un
+  cursor viejo: cazado probando); Intro y Retroceso por `keydown` con `beforeinput` de respaldo
+  para Android; las flechas saltan de línea; Tab mete un carácter;
+- **ventanas de tipo nota**: `WindowRef` gana `note`; **el mismo `NoteEditor`** en la ventana, con
+  ◀ ▶ ⚙ y la barra sin exit; la guarda sabe de notas; el selector las ofrece tras un rótulo
+  «Notas:».
+
+### Abiertas al cerrar el código de la Fase 4
+
+**No las resuelva por su cuenta quien implemente.** Las dos primeras son abiertas **por decisión
+del usuario**; la tercera es de `.claude/`, que es suyo; las dos últimas salieron en el pase de
+documentación del 2026-09-29.
+
+- **La referencia que pierde un contexto cuando `onCorrupt` se salta una nota** — **abierta por
+  decisión del usuario.** `hydrate` quita de los contextos las referencias a notas que no
+  existen, y la nota saltada cuenta como inexistente. Si ese contexto se guarda después por
+  cualquier otro cambio, **pierde esa referencia para siempre**, aunque el fichero siga intacto
+  en disco: arreglado el fichero, la nota volvería, pero sólo en el General. **Arreglarlo tocaría
+  el core.** → `ARCHITECTURE.md` §6.5
+- **Cuatro reglas `deny` de `.claude/settings.json` protegen carpetas que ya no existen**
+  —`Edit`/`Write` sobre `./src/scripts/**` y sobre `./public/js/**`—. **Abierta por decisión del
+  usuario.** `.claude/` es suyo: aquí sólo se anota.
+- **Las fichas de agentes están desfasadas**, y también son del usuario. `frontend-agent.md` sigue
+  siendo el stub que dice «si te han invocado, para» y que `src/ui/` y `src/platform/` no
+  existen; se redactó una ficha nueva que no se aplicó, porque **el usuario dijo que no hacía
+  falta**. `infra-agent.md` todavía manda reinstalar webpack en la Fase 4 y habla de
+  `webpack.config.js`, que ya no está. Por eso la casilla «Acordar la definición del
+  `frontend-agent`» sigue **sin hacer**.
+- **Borrar una rama de casillas** *(detectado en el pase)*. `ARCHITECTURE.md` §9.3 decía que en la
+  Fase 4 «hace falta una forma explícita de borrar una rama», plegada en una sola acción. **No se
+  construyó**, y hoy no falla nada —el editor no tiene selección de varias líneas, así que no hay
+  un «Supr» que no haga nada—: una casilla con hijas se borra de abajo arriba, a mano. Queda por
+  decidir si se echa en falta; es de la misma familia que las tres preguntas de §9.10.
+- **El disparador de Snabbdom, por tamaño, está pasado** *(detectado en el pase)*. La fila de
+  *Ideas aparcadas* dice que se reabre si el render escrito a mano «pasa de ~600 líneas o empieza
+  a tener bugs propios». **Medido el 2026-09-29:** los ocho ficheros de DOM de `src/ui/` más
+  `reconcile.ts` son 1493 líneas, **~1170 sin comentarios ni líneas en blanco**. No se ha
+  reabierto nada: queda para que el usuario decida si la cifra del disparador sigue valiendo. Para
+  la segunda mitad, «bugs propios», el dato es que `ARCHITECTURE.md` §7.5 anota cuatro fallos
+  cazados probando —el atrás, el primer toque tras una pulsación larga, el repintado del campo con
+  foco y el cursor viejo de la barra—, todos arreglados; si cuentan como tales, también es suyo.
+
+**Y las que ya estaban abiertas siguen igual:** la **escritura condicional** (abajo), **si OPFS
+entra en juego** (abajo, *Tres huecos…*) y **qué pasa con lo guardado en `localStorage` al cambiar
+de destino**, que desde el 2026-09-27 incluye la lista de ventanas (arriba, en *Pendiente*).
 
 ### Qué devuelven los casos de uso — ✅ **cerrada y CONSTRUIDA: la entidad protagonista, o `null`**
 
@@ -1023,7 +1189,8 @@ exista. Tres cosas que habrá que decidir ese día, y conviene que estén escrit
 
 **Qué lo desbloquearía:** que la app se use de verdad en dos pestañas, o llegar a la Fase 4 con
 el editor delante. No antes: sin un segundo escritor real, no hay forma de probar que el
-mecanismo funciona.
+mecanismo funciona. *(El 2026-09-29 el editor ya existe y esto sigue abierto: la escritura
+condicional quedó fuera de la Fase 4, y sigue sin haber un segundo escritor real.)*
 
 ### Tres huecos que salieron al escribir el criterio de la Fase 3 — queda uno
 
@@ -1125,7 +1292,8 @@ llega con el runner que lo consume.
 
 De paso se cierra dónde vive: **en `StorageAdapter`, no en `AppState`**. Es una propiedad de lo
 guardado; en el estado en memoria no significaría nada y cada acción tendría que arrastrarla.
-Queda pendiente **corregir el comentario de `AppState.ts`**, que hoy dice que falta ahí.
+El comentario de `AppState.ts` que decía que faltaba ahí **ya está corregido** (comprobado el
+2026-09-29).
 → `ARCHITECTURE.md` §9.7
 
 ### ~~El arranque de la app no tiene fase asignada~~ — ✅ **cerrada: tenía dos**
@@ -1136,7 +1304,9 @@ Por eso no encajaba en ninguna. **Se parte**, por la misma costura que el write-
   De datos a datos: se prueban sin navegador y sin temporizadores.
 - **la parte impura, en la Fase 4** — quién abre el storage y en qué orden, y qué se le enseña
   al usuario si no hay nada guardado (¿nota de bienvenida? ¿contexto vacío?). Eso es
-  composición y decisión de producto, y vive en `platform/web/`, que no nace hasta entonces.
+  composición y decisión de producto, y vive en `platform/web/`. **Construida en `473f566`**:
+  `boot.ts`, y sin nada guardado se ve la ventana del General —ni nota de bienvenida ni contexto
+  vacío—, decidido con el usuario el 2026-09-29.
 
 → `ARCHITECTURE.md` §9.7
 
@@ -1155,9 +1325,9 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **`CompositeStorage` y outbox durable** | Sin consumidor mientras haya un solo backend. La semántica (local primario + réplicas con reintentos) ya está decidida. | Que exista un segundo backend real. Ni un día antes: es infraestructura para un problema que aún no se tiene. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
 | **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. |
-| **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. **No confundir con el caso que sí queda vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo ve nadie — ése no se arregla con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo es el `onError` ya especificado más arriba. |
+| **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. ⚠️ **Desde la Fase 4 hay dos suscriptores** —la UI y el write-behind— y esto **no se ha reabierto**: la UI se escribió con el `Listener` tal cual. **No confundir con el caso que quedaba vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo veía nadie — no se arreglaba con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo fue el `onError`, **hecho en la Fase 4** (`f406d96`). |
 | **El editor de grafos de los Planes** — *desde el 2026-09-27, tiene fase: la 5* | Los tipos de `Plan` están, pero no hay ni una operación. Es una app dentro de la app, y el boceto del usuario dice él mismo que aún no sabe cómo plantear la interfaz de los diagramas. | **Que cierre la Fase 4**: entonces se planifica la 5. Ya no es una idea sin dueño, pero se deja aquí porque sigue sin diseño. Anotado: si llega, `Plan.nodes` probablemente deba pasar de array a `Record`, porque las aristas se guardan por id y con array toda búsqueda es lineal. |
-| **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web; no hay build web todavía. | Una Fase 4 terminada. Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
+| **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web. Ese build existe desde la Fase 4 (`npm run build:web`, a `dist/web/`), pero la fase no está cerrada. | Una Fase 4 terminada. Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
 | **Sync entre dispositivos, CRDTs, colaboración en tiempo real** | Salto enorme de complejidad. `revision` ya deja la puerta abierta a detectar conflictos, que es el 10% que sí hacía falta desde el principio. | Uso real en dos dispositivos y una política de conflictos elegida a conciencia. "Gana el último" ya está descartada. |
 | **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, 156 líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** `BlobStore` sobre navegador con lógica de verdad —el de Drive, con su OAuth y sus reintentos— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | ⚠️ **Superada el 2026-09-27:** webpack ya **no** es el bundler previsto para la Fase 4 — la fase arranca con el `importmap`, sin bundler. La elección entre bundlers no afecta a la arquitectura, así que no urge. | Que algo concreto exija un bundler. Ese día se comparan los que haya, no sólo estos dos; y se reinstala **sólo** el elegido. |
@@ -1165,7 +1335,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Revisar `Context.defaultView`** (y su acción `set-default-view`) | Se queda sin consumidor en la Fase 4: «abrir directamente una nota» lo hace ahora una ventana de tipo nota. No se quita porque el dominio está cerrado y quitarlo toca modelo, reducer, pruebas y formato en disco por algo que no molesta. | Lo mismo que la fila anterior: cuando lleguen las entidades «meta» de UX. Ahí se decide si se elimina o si recupera un sentido. |
 | **Tres candidatas más para la barra de modo**: «al marcar una casilla, marcar también sus hijas», «esconder las marcadas», «mandar las marcadas al final» | Fuera de la Fase 4. Cumplen la regla de la barra (`ARCHITECTURE.md` §7.2), pero nadie las ha echado de menos todavía con un editor delante. | El mismo disparador que las tres preguntas de §9.10: **si usando el editor se echan en falta**, se reabren. La primera es además donde se compondría la cascada de `setChecked`, que irá plegada en una sola acción (§9.3). |
 | **Un botón «reintentar» en el aviso de `onError`** | Con `localStorage` como destino no hay nada que reanudar, y está cerrado que un write-behind detenido no se reanuda. El aviso sólo informa. | Que el destino sea **la carpeta del usuario**: ahí reanudar sí significa algo —volver a pedir la carpeta— y va con el botón de «reconectar carpeta» (§6.1, §6.5). |
-| **Prototipo desechable del editor** (solo DOM, sin core y sin persistencia) | Es trabajo que se tira. ⚠️ **Matizada el 2026-09-20**, al plantearse hacerlo en una carpeta `/frontend-temporal`: lo desechable no sale gratis aquí. `src/scripts/` es la prueba —el prototipo viejo sigue en el repo, no se construye, y `CLAUDE.md` gasta un párrafo por sesión diciendo que no se imite—, y para arrancar cualquier cosa hacen falta `Clock`, `IdGenerator` y un arranque, que **son** `src/platform/`, o sea Fase 4 literal: se escribirían para tirarlos y se reescribirían igual. | **Partida en dos, que es lo que la resuelve.** *(a)* Para «¿encaja la pila entera?» un **script de Node** de ~100 líneas, sin navegador, ejecutable ya con `node --conditions=compiled`: ése sí es desechable de verdad. *(b)* Para «¿cómo se siente escribir?» **no vale código de usar y tirar**, porque lo que se descubre son las tres preguntas de §9.10 y una respuesta obtenida con un juguete no cierra ninguna. Eso es el editor de Fase 4 · Notas, feo al principio pero en `src/ui/` y `src/platform/`. *(Hasta el 2026-09-27 decía «la primera rebanada vertical de la Fase 4»; desde que la fase se parte, esa rebanada es la de Contextos y no toca el editor.)* |
-| **Snabbdom, o cualquier DOM virtual mínimo** | Preguntado el 2026-09-20. Es el **único candidato honesto** de todos los que se plantearon, porque aporta sólo *diffing* (~3 KB) y no duplica nada: el estado ya está resuelto. Aun así no ahora, y el motivo es el mismo que hace difícil a esta app — lo que describe §7, *reconciliar por `data-id`* y **saltarse el nodo enfocado**, es un vdom a mano recortado alrededor de la única excepción que un vdom genérico expresa mal. Daría el 90% y habría que pelearse con él justo en el 10% que decide si la app se siente bien. Sería además la **primera dependencia de runtime** del proyecto. | Que el render escrito a mano **pase de ~600 líneas o empiece a tener bugs propios**, no de dominio. Ese es el momento en que el *diffing* se paga solo. ⚠️ Ese día se evalúa **Snabbdom, no React ni Svelte ni Angular**: los frameworks traen estado, y el estado ya está construido. |
-| **Un motor de edición** (ProseMirror, Lexical, CodeMirror) | Preguntado el 2026-09-20, y es **lo único que ahorraría semanas de verdad**: resuelven cursor, selección, deshacer y anidamiento, que es literalmente la Fase 4. Por eso mismo es lo más caro: **traen su propio modelo de documento**. `Note`, `Content`, las ocho operaciones y buena parte de las 329 pruebas pasarían a ser redundantes. No complementan el core, **lo sustituyen**. | Querer **texto rico** — negritas, enlaces, tablas. Hoy `Content` es `Text \| CheckBox` con cadenas planas y no hay nada que ganar. Ese día la pregunta ya no es «qué librería de vistas», es **«¿se rehace el núcleo?»**, y es una decisión de otro tamaño: conviene no llegar a ella por accidente, añadiendo formato poco a poco. |
+| **Prototipo desechable del editor** (solo DOM, sin core y sin persistencia) | Es trabajo que se tira. ⚠️ **Matizada el 2026-09-20**, al plantearse hacerlo en una carpeta `/frontend-temporal`: lo desechable no sale gratis aquí. `src/scripts/` fue la prueba —el prototipo viejo siguió en el repo sin construirse hasta la Fase 4, y `CLAUDE.md` gastaba un párrafo por sesión diciendo que no se imitara—, y para arrancar cualquier cosa hacen falta `Clock`, `IdGenerator` y un arranque, que **son** `src/platform/`, o sea Fase 4 literal: se escribirían para tirarlos y se reescribirían igual. | **Partida en dos, que es lo que la resuelve.** *(a)* Para «¿encaja la pila entera?» un **script de Node** de ~100 líneas, sin navegador, ejecutable ya con `node --conditions=compiled`: ése sí es desechable de verdad. *(b)* Para «¿cómo se siente escribir?» **no vale código de usar y tirar**, porque lo que se descubre son las tres preguntas de §9.10 y una respuesta obtenida con un juguete no cierra ninguna. Eso es el editor de Fase 4 · Notas, feo al principio pero en `src/ui/` y `src/platform/`. *(Hasta el 2026-09-27 decía «la primera rebanada vertical de la Fase 4»; desde que la fase se parte, esa rebanada es la de Contextos y no toca el editor.)* |
+| **Snabbdom, o cualquier DOM virtual mínimo** | Preguntado el 2026-09-20. Es el **único candidato honesto** de todos los que se plantearon, porque aporta sólo *diffing* (~3 KB) y no duplica nada: el estado ya está resuelto. Aun así no ahora, y el motivo es el mismo que hace difícil a esta app — lo que describe §7, *reconciliar por `data-id`* y **saltarse el nodo enfocado**, es un vdom a mano recortado alrededor de la única excepción que un vdom genérico expresa mal. Daría el 90% y habría que pelearse con él justo en el 10% que decide si la app se siente bien. Sería además la **primera dependencia de runtime** del proyecto. | Que el render escrito a mano **pase de ~600 líneas o empiece a tener bugs propios**, no de dominio. Ese es el momento en que el *diffing* se paga solo. ⚠️ Ese día se evalúa **Snabbdom, no React ni Svelte ni Angular**: los frameworks traen estado, y el estado ya está construido. ⚠️ **El 2026-09-29, la primera mitad está pasada:** el DOM de `src/ui/` son ~1170 líneas sin comentarios. No se ha reabierto; está en *Sin decidir* → *Abiertas al cerrar el código de la Fase 4*. |
+| **Un motor de edición** (ProseMirror, Lexical, CodeMirror) | Preguntado el 2026-09-20, y es **lo único que ahorraría semanas de verdad**: resuelven cursor, selección, deshacer y anidamiento, que es literalmente la Fase 4. Por eso mismo es lo más caro: **traen su propio modelo de documento**. `Note`, `Content`, las ocho operaciones, la lógica del editor de `src/ui/` y buena parte de las pruebas pasarían a ser redundantes. No complementan el core, **lo sustituyen**. | Querer **texto rico** — negritas, enlaces, tablas. Hoy `Content` es `Text \| CheckBox` con cadenas planas y no hay nada que ganar. Ese día la pregunta ya no es «qué librería de vistas», es **«¿se rehace el núcleo?»**, y es una decisión de otro tamaño: conviene no llegar a ella por accidente, añadiendo formato poco a poco. |
 | **Un framework con estado dentro** (React, Angular, Svelte, Redux) · **htmx** | Preguntados el 2026-09-20 y descartados en bloque, para no volver a discutirlos de uno en uno. **Redux ya está construido**: `Store.ts` son 65 líneas con `getState`/`dispatch`/`subscribe` sobre un reducer puro, más lo que Redux no da —la invariante de identidad, en `if (next === state) return`—. **React** es débil exactamente donde esta app es difícil: el vdom y `contenteditable` se llevan mal porque el navegador muta el DOM mientras se escribe (Facebook abandonó Draft.js; ProseMirror, CodeMirror y Lexical gestionan el DOM ellos mismos), así que §7 obligaría a salirse de React justo en el componente que importa. **Angular** es de otra escala. **Svelte** es el mejor de los cuatro, pero sus *stores* compiten con el `Store` que ya existe y exige compilador. **htmx** es de otro paradigma: vive de que un servidor devuelva HTML, y esta app no tiene servidor. | Nada previsible. Si algún día se reabre, se reabre por la fila de **Snabbdom** —diffing sin estado—, que es la única necesidad real que podría aparecer. |
