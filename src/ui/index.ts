@@ -5,8 +5,10 @@
  * no sabe dónde se guarda nada. Quien la monta es `platform/`.
  */
 
-export type { ContextsScreenDeps } from "./ContextsScreen.js"
-export { mountContextsScreen } from "./ContextsScreen.js"
+export type { WindowsViewDeps } from "./WindowsView.js"
+export { mountWindowsView } from "./WindowsView.js"
+export type { WindowView } from "./windowView.js"
+export { GENERAL_TITLE, windowView } from "./windowView.js"
 export { describeBootError, describeMigrationError, describeStorageError } from "./messages.js"
 export type { WindowRef, WindowsLayout } from "./windows.js"
 export { DEFAULT_LAYOUT, GENERAL, guardWindows, parseWindowsLayout, sameWindow } from "./windows.js"

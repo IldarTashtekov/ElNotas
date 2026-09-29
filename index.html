@@ -32,28 +32,55 @@
         max-width: 40rem;
         padding: 1rem;
       }
-      form {
+      button {
+        font: inherit;
+        white-space: nowrap;
+      }
+      .cabecera {
+        align-items: center;
         display: flex;
         gap: 0.5rem;
       }
-      input {
-        flex: 1;
-        min-width: 0;
-        font: inherit;
-        padding: 0.5rem;
+      .cabecera[hidden] {
+        display: none;
       }
-      button {
-        font: inherit;
-        padding: 0.5rem 1rem;
+      .flecha {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: 0.5rem 0.75rem;
+      }
+      .titulo {
+        flex: 1;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        text-align: center;
+        text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .contextos {
+      input.titulo {
+        font-family: inherit;
+        padding: 0.25rem;
+      }
+      .titulo.renombrable {
+        cursor: text;
+      }
+      .notas {
         list-style: none;
         padding: 0;
       }
-      .contextos li {
+      .notas li {
         border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
         padding: 0.75rem 0;
+      }
+      .vacia {
+        opacity: 0.6;
+        text-align: center;
       }
       .aviso {
         border: 1px solid #c77700;
