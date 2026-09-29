@@ -3,8 +3,7 @@
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
  * navegador, las notas y las ventanas en `localStorage`—, arranca y monta la
- * app. Si no
- * arranca, lo dice en pantalla en vez de quedarse en blanco.
+ * app. Si no arranca, lo dice en pantalla en vez de quedarse en blanco.
  */
 
 import type { Result, StorageError } from "#core/index"
@@ -59,6 +58,11 @@ const iniciar = async (): Promise<void> => {
   }
 
   const app: App = arrancada.value
+  /* Sólo con `?depurar` en la dirección: deja el estado a mano en la consola,
+     para las comprobaciones de la lista manual. Sin él, no existe. */
+  if (new URLSearchParams(window.location.search).has("depurar")) {
+    Object.assign(window, { elnotas: { store: app.store, useCases: app.useCases } })
+  }
   const windows: WindowsModel = createWindowsModel({
     store: app.store,
     persistence: createLocalStorageWindows(almacen),
