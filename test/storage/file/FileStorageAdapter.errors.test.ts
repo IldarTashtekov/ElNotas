@@ -305,12 +305,9 @@ test("FileStorageAdapter: bytes que no son UTF-8 válido son corrupt", async () 
   assert.equal(fallo.kind, "corrupt")
 })
 
-test("FileStorageAdapter: ⚠️ un fichero corrupto tumba el getAll ENTERO (decisión 3)", async () => {
-  /* Está puesto por escrito porque CONTRADICE lo que se pide del `corrupt`: aislar esa
-     entidad y seguir con el resto. La firma del puerto es todo o nada, y las
-     otras salidas son peores: saltárselo en silencio dejaría `ItemRef`
-     colgando. Si algún día se añade el `onCorrupt` del adaptador, esta prueba
-     es la que hay que cambiar — y se verá en el diff, que es el objetivo. */
+test("FileStorageAdapter: ⚠️ SIN onCorrupt, un fichero corrupto tumba el getAll ENTERO", async () => {
+  /* Sin nadie a quien avisar, saltárselo sería hacerlo en silencio, y eso es
+     peor que no arrancar. Con `onCorrupt`, las pruebas de abajo. */
   const { blobs, s } = montar()
   await s.notes.put(COMPRA)
   blobs.escribirTexto("notes/rota.json", "no")
@@ -367,4 +364,85 @@ test("FileStorageAdapter: un fichero ajeno en la carpeta no rompe getAll", async
   blobs.escribirTexto("notes/sub/anidada.json", "{\"id\":\"x\"}")
 
   assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
+})
+
+/* ═══════════════ onCorrupt: saltar el fichero ilegible y avisar ═══════════ */
+
+interface MontajeConAviso extends Montaje {
+  readonly avisos: () => ReadonlyArray<StorageError>
+}
+
+const montarConAviso = (): MontajeConAviso => {
+  const blobs: FakeBlobStore = createFakeBlobStore()
+  let avisos: ReadonlyArray<StorageError> = []
+  const s: StorageAdapter = createFileStorageAdapter(blobs, {
+    onCorrupt: (fallo: StorageError): void => {
+      avisos = [...avisos, fallo]
+    },
+  })
+  return { blobs, s, avisos: (): ReadonlyArray<StorageError> => avisos }
+}
+
+test("FileStorageAdapter: con onCorrupt, getAll se salta el ilegible y avisa de cuál", async (): Promise<void> => {
+  const { blobs, s, avisos } = montarConAviso()
+  await s.notes.put(COMPRA)
+  blobs.escribirTexto("notes/rota.json", "no")
+
+  const notas: ReadonlyArray<Note> = valorDe(await s.notes.getAll())
+
+  assert.deepEqual(notas, [COMPRA])
+  assert.equal(avisos().length, 1)
+  const aviso: StorageError | undefined = avisos()[0]
+  if (aviso?.kind !== "corrupt") assert.fail(`se esperaba un aviso corrupt y vino ${aviso?.kind}`)
+  assert.equal(aviso.path, "notes/rota.json")
+})
+
+test("FileStorageAdapter: con onCorrupt, también se salta un corrupt que nace en el BlobStore", async (): Promise<void> => {
+  const { blobs, s, avisos } = montarConAviso()
+  await s.notes.put(COMPRA)
+  const SOBRE_ROTO: StorageError = { kind: "corrupt", path: "notes/compra.json", cause: "base64" }
+  blobs.fallarEn("read", SOBRE_ROTO)
+
+  const notas: ReadonlyArray<Note> = valorDe(await s.notes.getAll())
+
+  assert.deepEqual(notas, [])
+  // El error del BlobStore llega al aviso INTACTO, sin reempaquetar.
+  assert.equal(avisos().length, 1)
+  assert.strictEqual(avisos()[0], SOBRE_ROTO)
+})
+
+test("FileStorageAdapter: con onCorrupt, un fallo que NO es corrupt sigue cortando", async (): Promise<void> => {
+  /* Un permiso denegado no dice nada de ese fichero: saltarlo haría creer que
+     no existe. */
+  const { blobs, s, avisos } = montarConAviso()
+  await s.notes.put(COMPRA)
+  blobs.fallarEn("read", SIN_PERMISO)
+
+  assert.strictEqual(errorDe(await s.notes.getAll()), SIN_PERMISO)
+  assert.deepEqual(avisos(), [])
+})
+
+test("FileStorageAdapter: con onCorrupt, get de un ilegible sigue devolviendo corrupt", async (): Promise<void> => {
+  /* Saltar sólo tiene sentido al leerlas todas: quien pide una concreta
+     necesita saber que está rota. */
+  const { blobs, s, avisos } = montarConAviso()
+  blobs.escribirTexto("notes/compra.json", "no")
+
+  assert.equal(errorDe(await s.notes.get(COMPRA.id)).kind, "corrupt")
+  assert.deepEqual(avisos(), [])
+})
+
+test("FileStorageAdapter: un onCorrupt que lanza sale como io, no lanzando", async (): Promise<void> => {
+  const blobs: FakeBlobStore = createFakeBlobStore()
+  const REVIENTA: Error = new Error("el aviso revienta")
+  const s: StorageAdapter = createFileStorageAdapter(blobs, {
+    onCorrupt: (): void => {
+      throw REVIENTA
+    },
+  })
+  blobs.escribirTexto("notes/rota.json", "no")
+
+  const fallo: StorageError = errorDe(await s.notes.getAll())
+  if (fallo.kind !== "io") assert.fail(`se esperaba io y vino ${fallo.kind}`)
+  assert.strictEqual(fallo.cause, REVIENTA)
 })

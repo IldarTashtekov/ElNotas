@@ -1,5 +1,6 @@
 {
-  // Configuración de la APP: aquí sí hay DOM. La usa ts-loader para el build.
+  // Configuración de la APP: aquí sí hay DOM. La usan el typecheck y, heredándola,
+  // el build del navegador (tsconfig.web.json).
   // La pureza del core NO se comprueba aquí, sino con `npm run typecheck:core`
   // (ver src/core/tsconfig.json).
   "extends": "./tsconfig.base.json",

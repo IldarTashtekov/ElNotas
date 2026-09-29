@@ -11,6 +11,14 @@
     "#storage/*": {
       "compiled": "./tmp-test/src/storage/*.js",
       "default": "./src/storage/*.ts"
+    },
+    "#platform/*": {
+      "compiled": "./tmp-test/src/platform/*.js",
+      "default": "./src/platform/*.ts"
+    },
+    "#ui/*": {
+      "compiled": "./tmp-test/src/ui/*.js",
+      "default": "./src/ui/*.ts"
     }
   },
   "scripts": {
@@ -20,6 +28,7 @@
     "check:purity": "node tools/check-core-purity.mjs",
     "check:fronteras": "node tools/check-fronteras.mjs",
     "check:extensiones": "node tools/check-extensiones.mjs",
+    "build:web": "node tools/clean-dist.mjs && tsc -p tsconfig.web.json",
     "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm run check:fronteras && npm run check:extensiones && npm test"
   },
   "repository": {

@@ -6,8 +6,9 @@
  * se llama su fichero. Dónde acaban esos bytes —el navegador, una carpeta tuya,
  * OPFS, Drive— lo pone el `BlobStore` que reciba.
  *
- * ⚠️ Un solo fichero ilegible tumba la lectura entera: hoy una nota rota impide
- * abrir la app. Arreglarlo es de la Fase 4.
+ * Un fichero ilegible se salta al leerlos todos, y se avisa de cuál con
+ * `onCorrupt`. ⚠️ Sin ese aviso, tumba la lectura entera: saltarlo en silencio
+ * sería peor.
  */
 
 import type {
@@ -187,7 +188,48 @@ const entidadDe = <T>(camino: string, bytes: Uint8Array): Result<T, StorageError
   return ok(parsed.value as T)
 }
 
+/** Camino → entidad, o `null` si ese fichero no está. */
+const leerEntidad = async <T>(
+  blobs: BlobStore,
+  camino: string,
+): Promise<Result<T | null, StorageError>> => {
+  const leido: Result<Uint8Array | null, StorageError> = await blobs.read(camino)
+
+  // El err del BlobStore, TAL CUAL. Envolverlo perdería el `kind` de origen.
+  if (!leido.ok) return leido
+  // AUSENCIA NO ES FALLO: ese camino no existe, y eso es una respuesta.
+  if (leido.value === null) return ok(null)
+
+  return entidadDe<T>(camino, leido.value)
+}
+
 /* ════════════════════════════ Un repositorio ══════════════════════════════ */
+
+/** A quién se avisa de un fichero que no se entiende. */
+export type OnCorrupt = (fallo: StorageError) => void
+
+export interface FileStorageOptions {
+  /**
+   * Con él, `getAll` se salta los ficheros ilegibles y avisa de cada uno; sin
+   * él, el primero corta la lectura entera.
+   */
+  readonly onCorrupt?: OnCorrupt
+}
+
+/**
+ * Pasa el aviso a quien lo pidió. **Frontera**: el aviso es código ajeno, y si
+ * lanzara se escaparía por un `getAll` que promete no lanzar. Sale `io`, como
+ * cualquier excepción ajena.
+ */
+const avisar = (onCorrupt: OnCorrupt, fallo: StorageError): Result<void, StorageError> => {
+  try {
+    onCorrupt(fallo)
+    return ok(undefined)
+  } catch (excepcion: unknown) {
+    const avisoRoto: StorageError = { kind: "io", cause: excepcion }
+    return err(avisoRoto)
+  }
+}
 
 /**
  * Los tres repositorios son este mismo código con otra carpeta, igual que en el
@@ -197,36 +239,22 @@ const entidadDe = <T>(camino: string, bytes: Uint8Array): Result<T, StorageError
 const createFileRepository = <T extends { readonly id: TId }, TId extends string>(
   blobs: BlobStore,
   carpeta: string,
+  onCorrupt: OnCorrupt | undefined,
 ): Repository<T, TId> => ({
   get: async (id: TId): Promise<Result<T | null, StorageError>> => {
     const destino: Result<string, StorageError> = caminoDe(carpeta, id)
     if (!destino.ok) return destino
 
-    const camino: string = destino.value
-    const leido: Result<Uint8Array | null, StorageError> = await blobs.read(camino)
-
-    // El err del BlobStore, TAL CUAL. Envolverlo perdería el `kind` de origen.
-    if (!leido.ok) return leido
-    // AUSENCIA NO ES FALLO: ese camino no existe, y eso es una respuesta.
-    if (leido.value === null) return ok(null)
-
-    return entidadDe<T>(camino, leido.value)
+    return leerEntidad<T>(blobs, destino.value)
   },
 
   /**
-   * ⚠️ **Un fichero ilegible tumba la lectura entera**, y hoy eso significa que
-   * una sola nota rota impide abrir la app.
+   * Con `onCorrupt`, un fichero ilegible **se salta y se avisa de cuál**: una
+   * nota rota ya no impide abrir la app. Sólo se salta `corrupt`; cualquier otro
+   * fallo sigue cortando, porque ahí no se sabe qué hay en disco.
    *
-   * La firma es todo o nada —no hay dónde poner «estas nueve, y la décima está
-   * rota»—, así que al primer `corrupt` se corta y sale el `path` del culpable.
-   * Saltárselo en silencio sería peor: el write-behind daría esa nota por borrada
-   * y la limpiaría de los contextos, convirtiendo un fichero recuperable en una
-   * pérdida de verdad.
-   *
-   * El arreglo está decidido y aplazado a la Fase 4 (`onCorrupt`, anotado en
-   * `TAREAS.md`): saltar la entidad y avisar de cuál, sin tocar el puerto. La
-   * prueba que fija esto lleva ⚠️ en `FileStorageAdapter.errors.test.ts`, y la
-   * marca se queda para que el día que cambie se vea en el diff.
+   * ⚠️ Sin `onCorrupt`, el primer `corrupt` corta la lectura entera, con el `path`
+   * del culpable. Saltárselo en silencio sería peor: nadie sabría que falta.
    */
   getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> => {
     const listado: Result<ReadonlyArray<string>, StorageError> = await blobs.list(carpeta)
@@ -241,15 +269,20 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
     for (const camino of listado.value) {
       if (!esEntidadDe(carpeta, camino)) continue
 
-      const leido: Result<Uint8Array | null, StorageError> = await blobs.read(camino)
-      if (!leido.ok) return leido
+      /* El `corrupt` puede nacer abajo —el sobre del blob— o aquí, al parsear. */
+      const entidad: Result<T | null, StorageError> = await leerEntidad<T>(blobs, camino)
+
+      if (!entidad.ok) {
+        if (entidad.error.kind !== "corrupt" || onCorrupt === undefined) return entidad
+        const avisado: Result<void, StorageError> = avisar(onCorrupt, entidad.error)
+        if (!avisado.ok) return avisado
+        continue
+      }
+
       /* Estaba en el listado y ya no está: lo han borrado entre el `list` y el
          `read`. No es un fallo — es exactamente lo que `getAll` habría
          devuelto si el borrado hubiera llegado un instante antes. */
-      if (leido.value === null) continue
-
-      const entidad: Result<T, StorageError> = entidadDe<T>(camino, leido.value)
-      if (!entidad.ok) return entidad
+      if (entidad.value === null) continue
 
       entidades.push(entidad.value)
     }
@@ -282,18 +315,24 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
 
 /* ═════════════════════════════ El adaptador ═══════════════════════════════ */
 
-export const createFileStorageAdapter = (blobs: BlobStore): StorageAdapter => {
+export const createFileStorageAdapter = (
+  blobs: BlobStore,
+  { onCorrupt }: FileStorageOptions = {},
+): StorageAdapter => {
   const notes: Repository<Note, NoteId> = createFileRepository<Note, NoteId>(
     blobs,
     CARPETA_NOTAS,
+    onCorrupt,
   )
   const plans: Repository<Plan, PlanId> = createFileRepository<Plan, PlanId>(
     blobs,
     CARPETA_PLANES,
+    onCorrupt,
   )
   const contexts: Repository<Context, ContextId> = createFileRepository<Context, ContextId>(
     blobs,
     CARPETA_CONTEXTOS,
+    onCorrupt,
   )
 
   return {

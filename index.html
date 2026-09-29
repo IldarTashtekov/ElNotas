@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ElNotas</title>
+
+    <!--
+      La app se carga sin bundler: el JavaScript que emite `npm run build:web` en
+      dist/web/, tal cual. Este mapa resuelve los alias entre módulos y tiene que
+      calcar el campo "imports" de package.json.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "#core/index": "/dist/web/core/index.js",
+          "#storage/index": "/dist/web/storage/index.js",
+          "#platform/index": "/dist/web/platform/index.js",
+          "#ui/index": "/dist/web/ui/index.js"
+        }
+      }
+    </script>
+    <script type="module" src="/dist/web/platform/web/main.js"></script>
+
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0 auto;
+        max-width: 40rem;
+        padding: 1rem;
+      }
+      form {
+        display: flex;
+        gap: 0.5rem;
+      }
+      input {
+        flex: 1;
+        min-width: 0;
+        font: inherit;
+        padding: 0.5rem;
+      }
+      button {
+        font: inherit;
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+      .contextos {
+        list-style: none;
+        padding: 0;
+      }
+      .contextos li {
+        border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        padding: 0.75rem 0;
+      }
+      .aviso {
+        border: 1px solid #c77700;
+        border-radius: 0.5rem;
+        padding: 0 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app"><p>Cargando…</p></main>
+  </body>
+</html>

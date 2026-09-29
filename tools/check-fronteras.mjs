@@ -47,7 +47,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import ts from "typescript"
 
-const DIRECTORIOS = ["src/core", "src/storage"]
+const DIRECTORIOS = ["src/core", "src/storage", "src/platform", "src/ui"]
 
 /** Lo que puede lanzar. Se mantiene a mano: el tipo no lo dice. */
 const PELIGROSAS = [
@@ -67,6 +67,7 @@ const PELIGROSAS = [
   [/\.arrayBuffer$/, "lectura del File"],
   [/^flujo\.(write|close)$/, "escritura del fichero"],
   [/^paso\.migrate$/, "CÓDIGO AJENO: la migración"],
+  [/^onCorrupt$/, "CÓDIGO AJENO: el aviso de un fichero ilegible"],
 ]
 
 /** Envoltorios que llevan el `try` dentro: cubren la función que reciben. */

@@ -1,0 +1,14 @@
+{
+  // Compila la app para el NAVEGADOR: ESM a dist/web/, que carga index.html con
+  // su importmap, sin bundler. Se lanza con `npm run build:web`.
+  //
+  // Hereda del tsconfig de la app (con DOM) y sólo cambia qué entra y adónde va:
+  // el prototipo viejo de src/scripts/ se queda fuera, que no se construye.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "dist/web"
+  },
+  "include": ["src/core", "src/storage", "src/platform", "src/ui"],
+  "exclude": ["src/core/tsconfig.json"]
+}

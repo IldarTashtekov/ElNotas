@@ -15,6 +15,7 @@ export { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter.js"
    constructor. Quién es ese `BlobStore` —localStorage, la carpeta del usuario,
    OPFS— lo decide `platform/` en la Fase 4; el falso de las pruebas no sale por
    esta puerta. */
+export type { FileStorageOptions, OnCorrupt } from "./file/FileStorageAdapter.js"
 export { createFileStorageAdapter } from "./file/FileStorageAdapter.js"
 
 /* Las implementaciones de `BlobStore`, en `blobs/`: son lo de abajo del reparto
