@@ -140,6 +140,46 @@
       .secundario {
         opacity: 0.7;
       }
+      .notas li {
+        cursor: default;
+        /* La pulsación larga es de la app: ni selección de texto ni el menú de iOS. */
+        -webkit-touch-callout: none;
+        touch-action: manipulation;
+        user-select: none;
+      }
+      .notas li.seleccionada {
+        background: color-mix(in srgb, #3b82f6 25%, transparent);
+      }
+      .mas {
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+      }
+      .barra {
+        align-items: center;
+        background: Canvas;
+        border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        bottom: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+        position: sticky;
+      }
+      .barra[hidden] {
+        display: none;
+      }
+      .barra > span {
+        flex: 1;
+      }
+      .barra button {
+        padding: 0.5rem 1rem;
+      }
+      .barra .selector {
+        flex-basis: 100%;
+      }
+      .apagado {
+        opacity: 0.3;
+      }
       .aviso {
         border: 1px solid #c77700;
         border-radius: 0.5rem;

@@ -6,8 +6,11 @@
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
 
-import type { AppState, ContextId, Note, StorageError, Store, UseCases } from "#core/index"
+import type { AppState, ContextId, StorageError, Store, UseCases } from "#core/index"
+import type { BackStack } from "./backStack.js"
 import { corruptNotice, elemento } from "./dom.js"
+import type { NoteList } from "./NoteList.js"
+import { createNoteList } from "./NoteList.js"
 import type { WindowView } from "./windowView.js"
 import { windowView } from "./windowView.js"
 import type { WindowsLayout } from "./windows.js"
@@ -20,6 +23,8 @@ export interface WindowsViewDeps {
   /** Los ficheros que no se pudieron leer al arrancar. Vacío es lo normal. */
   readonly corrupt: ReadonlyArray<StorageError>
   readonly onOpenSettings: () => void
+  readonly back: BackStack
+  readonly confirm: (pregunta: string) => boolean
 }
 
 /** Lo que está a medio renombrar: mientras dure, el título no se repinta. */
@@ -44,7 +49,7 @@ const mostrar = (el: HTMLElement, visible: boolean): void => {
 
 export const mountWindowsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, corrupt, onOpenSettings }: WindowsViewDeps,
+  { store, useCases, windows, corrupt, onOpenSettings, back, confirm }: WindowsViewDeps,
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
   const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
@@ -57,12 +62,23 @@ export const mountWindowsView = (
     boton.addEventListener("click", onOpenSettings)
     return boton
   }
-  cabecera.append(anterior, titulo, siguiente, engranaje())
+  const ajustes: HTMLButtonElement = engranaje()
+  cabecera.append(anterior, titulo, siguiente, ajustes)
 
-  const notas: HTMLUListElement = elemento("ul")
-  notas.className = "notas"
-  const sinNotas: HTMLParagraphElement = elemento("p", "Esta ventana no tiene notas.")
-  sinNotas.className = "vacia"
+  /* Mientras se selecciona se apagan ◀ ▶ y ⚙: no se sale de la lista a medias. */
+  const apagar = (seleccionando: boolean): void => {
+    for (const b of [anterior, siguiente, ajustes]) {
+      b.disabled = seleccionando
+      b.classList.toggle("apagado", seleccionando)
+    }
+  }
+  const notas: NoteList = createNoteList({
+    store,
+    useCases,
+    back,
+    confirm,
+    onSelectingChange: apagar,
+  })
   /* Sin ventanas no hay cabecera, pero el ⚙ tiene que seguir: es la salida. */
   const sinVentanas: HTMLElement = elemento("div")
   sinVentanas.className = "vacia"
@@ -134,8 +150,7 @@ export const mountWindowsView = (
 
     if (vista.kind === "empty") {
       cabecera.hidden = true
-      notas.replaceChildren()
-      sinNotas.hidden = true
+      notas.update(null, [])
       sinVentanas.hidden = false
       return
     }
@@ -155,21 +170,13 @@ export const mountWindowsView = (
       else titulo.removeAttribute("role")
     }
 
-    notas.replaceChildren(
-      ...vista.notes.map((nota: Note): HTMLLIElement => {
-        const fila: HTMLLIElement = elemento("li", nota.name)
-        fila.dataset["id"] = nota.id
-        return fila
-      }),
-    )
-    sinNotas.hidden = vista.notes.length > 0
+    notas.update(vista.ref, vista.notes)
   }
 
   raiz.replaceChildren(
     ...(corrupt.length > 0 ? [corruptNotice(corrupt)] : []),
     cabecera,
-    notas,
-    sinNotas,
+    notas.element,
     sinVentanas,
   )
   pintar()

@@ -5,6 +5,21 @@
  * no sabe dónde se guarda nada. Quien la monta es `platform/`.
  */
 
+export type { BackStack } from "./backStack.js"
+export { createBackStack } from "./backStack.js"
+export type { NoteList, NoteListDeps } from "./NoteList.js"
+export { createNoteList } from "./NoteList.js"
+export {
+  NEW_NOTE_NAME,
+  createNoteIn,
+  deleteQuestion,
+  moveNotes,
+  moveTargets,
+  trashDeletes,
+  trashNotes,
+} from "./noteActions.js"
+export type { Selection } from "./selection.js"
+export { NO_SELECTION, pruneSelected, toggleSelected } from "./selection.js"
 export type { AppDeps } from "./App.js"
 export { mountApp } from "./App.js"
 export type { SettingsViewDeps } from "./SettingsView.js"
