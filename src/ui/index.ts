@@ -5,6 +5,10 @@
  * no sabe dónde se guarda nada. Quien la monta es `platform/`.
  */
 
+export type { EditableTitle } from "./editableTitle.js"
+export { createEditableTitle } from "./editableTitle.js"
+export type { NoteViewDeps } from "./NoteView.js"
+export { mountNoteView } from "./NoteView.js"
 export type { KeyedContainer, ReconcileSteps } from "./reconcile.js"
 export { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 export type { BackStack } from "./backStack.js"

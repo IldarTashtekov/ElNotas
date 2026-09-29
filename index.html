@@ -180,6 +180,32 @@
       .apagado {
         opacity: 0.3;
       }
+      .vista-nota {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100dvh - 2rem);
+      }
+      .contenido {
+        flex: 1;
+        padding: 0.5rem 0 1rem;
+      }
+      .linea {
+        padding: 0.25rem 0;
+        white-space: pre-wrap;
+      }
+      .linea.casilla > .marca {
+        margin-right: 0.5rem;
+      }
+      .linea.marcada > span:not(.marca) {
+        opacity: 0.6;
+        text-decoration: line-through;
+      }
+      .hijas {
+        padding-left: 1.5rem;
+      }
+      .barra-modo {
+        justify-content: flex-end;
+      }
       .aviso {
         border: 1px solid #c77700;
         border-radius: 0.5rem;

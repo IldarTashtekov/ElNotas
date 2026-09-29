@@ -6,9 +6,11 @@
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
 
-import type { AppState, ContextId, StorageError, Store, UseCases } from "#core/index"
+import type { AppState, NoteId, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { corruptNotice, elemento } from "./dom.js"
+import type { EditableTitle } from "./editableTitle.js"
+import { createEditableTitle } from "./editableTitle.js"
 import type { NoteList } from "./NoteList.js"
 import { createNoteList } from "./NoteList.js"
 import type { WindowView } from "./windowView.js"
@@ -25,12 +27,7 @@ export interface WindowsViewDeps {
   readonly onOpenSettings: () => void
   readonly back: BackStack
   readonly confirm: (pregunta: string) => boolean
-}
-
-/** Lo que está a medio renombrar: mientras dure, el título no se repinta. */
-interface Renombrado {
-  readonly id: ContextId
-  readonly campo: HTMLInputElement
+  readonly onOpenNote: (id: NoteId) => void
 }
 
 const flecha = (texto: string, etiqueta: string): HTMLButtonElement => {
@@ -49,12 +46,14 @@ const mostrar = (el: HTMLElement, visible: boolean): void => {
 
 export const mountWindowsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, corrupt, onOpenSettings, back, confirm }: WindowsViewDeps,
+  { store, useCases, windows, corrupt, onOpenSettings, back, confirm, onOpenNote }: WindowsViewDeps,
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
   const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
-  const titulo: HTMLHeadingElement = elemento("h1")
-  titulo.className = "titulo"
+  const titulo: EditableTitle = createEditableTitle("Nombre del contexto", (nombre: string): void => {
+    /* Se lee al guardar: es el contexto de la ventana en la que se empezó a escribir. */
+    if (vista.kind === "window" && vista.renames !== null) useCases.renameContext(vista.renames, nombre)
+  })
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"
   const engranaje = (): HTMLButtonElement => {
@@ -63,7 +62,7 @@ export const mountWindowsView = (
     return boton
   }
   const ajustes: HTMLButtonElement = engranaje()
-  cabecera.append(anterior, titulo, siguiente, ajustes)
+  cabecera.append(anterior, titulo.element, siguiente, ajustes)
 
   /* Mientras se selecciona se apagan ◀ ▶ y ⚙: no se sale de la lista a medias. */
   const apagar = (seleccionando: boolean): void => {
@@ -78,6 +77,7 @@ export const mountWindowsView = (
     back,
     confirm,
     onSelectingChange: apagar,
+    onOpenNote,
   })
   /* Sin ventanas no hay cabecera, pero el ⚙ tiene que seguir: es la salida. */
   const sinVentanas: HTMLElement = elemento("div")
@@ -85,46 +85,6 @@ export const mountWindowsView = (
   sinVentanas.append(elemento("p", "No hay ninguna ventana."), engranaje())
 
   let vista: WindowView = { kind: "empty" }
-  let renombrado: Renombrado | null = null
-
-  /* ── Renombrar tocando el título ── */
-
-  const terminarRenombrado = (guardar: boolean): void => {
-    if (renombrado === null) return
-    const { id, campo }: Renombrado = renombrado
-    /* Se suelta ANTES de tocar el DOM: quitar el campo dispara su `blur`, que
-       vuelve a llamar aquí y tiene que encontrarse con que ya no hay nada. */
-    renombrado = null
-    const nombre: string = campo.value.trim()
-    campo.replaceWith(titulo)
-    if (guardar && nombre !== "") useCases.renameContext(id, nombre)
-    pintar(true)
-  }
-
-  const empezarRenombrado = (): void => {
-    if (vista.kind !== "window" || vista.renames === null || renombrado !== null) return
-    const campo: HTMLInputElement = elemento("input")
-    campo.className = "titulo"
-    campo.value = vista.title
-    campo.setAttribute("aria-label", "Nombre del contexto")
-    campo.addEventListener("keydown", (evento: KeyboardEvent): void => {
-      if (evento.key === "Enter") terminarRenombrado(true)
-      if (evento.key === "Escape") terminarRenombrado(false)
-    })
-    campo.addEventListener("blur", (): void => terminarRenombrado(true))
-    renombrado = { id: vista.renames, campo }
-    titulo.replaceWith(campo)
-    campo.focus()
-    campo.select()
-  }
-
-  titulo.addEventListener("click", empezarRenombrado)
-  titulo.addEventListener("keydown", (evento: KeyboardEvent): void => {
-    if (evento.key === "Enter" || evento.key === " ") {
-      evento.preventDefault()
-      empezarRenombrado()
-    }
-  })
 
   anterior.addEventListener("click", (): void => {
     if (vista.kind === "window" && vista.prev !== null) windows.setActive(vista.prev)
@@ -160,15 +120,7 @@ export const mountWindowsView = (
     mostrar(anterior, vista.prev !== null)
     mostrar(siguiente, vista.next !== null)
 
-    /* El título que se está editando no se toca: ahí manda lo que se teclea. */
-    if (renombrado === null) {
-      titulo.textContent = vista.title
-      const renombrable: boolean = vista.renames !== null
-      titulo.classList.toggle("renombrable", renombrable)
-      titulo.tabIndex = renombrable ? 0 : -1
-      if (renombrable) titulo.setAttribute("role", "button")
-      else titulo.removeAttribute("role")
-    }
+    titulo.show(vista.title, vista.renames !== null)
 
     notas.update(vista.ref, vista.notes)
   }

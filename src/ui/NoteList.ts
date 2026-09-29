@@ -32,6 +32,7 @@ export interface NoteListDeps {
   readonly confirm: (pregunta: string) => boolean
   /** Para que la cabecera apague ◀ ▶ y ⚙ mientras se selecciona. */
   readonly onSelectingChange: (seleccionando: boolean) => void
+  readonly onOpenNote: (id: NoteId) => void
 }
 
 export interface NoteList {
@@ -58,6 +59,7 @@ export const createNoteList = ({
   back,
   confirm,
   onSelectingChange,
+  onOpenNote,
 }: NoteListDeps): NoteList => {
   let ventana: WindowRef | null = null
   let notas: ReadonlyArray<Note> = []
@@ -71,8 +73,10 @@ export const createNoteList = ({
   lista.setAttribute("aria-multiselectable", "true")
   const sinNotas: HTMLParagraphElement = elemento("p", "Esta ventana no tiene notas.")
   sinNotas.className = "vacia"
+  /* «+ Nota» crea y entra: la nota nueva se abre para escribir en ella. */
   const mas: HTMLButtonElement = boton("+ Nota", (): void => {
-    if (ventana !== null) createNoteIn(useCases, ventana)
+    const nueva: Note | null = ventana === null ? null : createNoteIn(useCases, ventana)
+    if (nueva !== null) onOpenNote(nueva.id)
   }, "mas")
 
   const cuenta: HTMLSpanElement = elemento("span")
@@ -189,7 +193,7 @@ export const createNoteList = ({
     if (id === null) return
     if (seleccionando) alternar(id)
     else if (evento.ctrlKey || evento.metaKey) empezar(id)
-    /* Un toque normal abrirá la nota: llega con el editor. */
+    else onOpenNote(id)
   })
 
   lista.addEventListener("contextmenu", (evento: MouseEvent): void => {
@@ -202,7 +206,10 @@ export const createNoteList = ({
 
   lista.addEventListener("keydown", (evento: KeyboardEvent): void => {
     const id: NoteId | null = idDe(evento.target)
-    if (id === null || evento.key !== " ") return
+    if (id === null) return
+    /* Intro abre, como el toque; Espacio selecciona, como la pulsación larga. */
+    if (evento.key === "Enter" && !seleccionando) onOpenNote(id)
+    if (evento.key !== " ") return
     evento.preventDefault()
     elegida(id)
   })
