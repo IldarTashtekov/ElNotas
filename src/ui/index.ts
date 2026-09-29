@@ -5,6 +5,8 @@
  * no sabe dónde se guarda nada. Quien la monta es `platform/`.
  */
 
+export type { KeyedContainer, ReconcileSteps } from "./reconcile.js"
+export { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 export type { BackStack } from "./backStack.js"
 export { createBackStack } from "./backStack.js"
 export type { NoteList, NoteListDeps } from "./NoteList.js"

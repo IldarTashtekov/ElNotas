@@ -8,6 +8,7 @@
 
 import type { AppState, Context, Unsubscribe, Store, UseCases } from "#core/index"
 import { elemento } from "./dom.js"
+import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent, WindowRow } from "./settingsContent.js"
 import { settingsContent } from "./settingsContent.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
@@ -72,6 +73,31 @@ export const mountSettingsView = (
     campo.value = ""
   })
 
+  /* ── El foco, que no se pierde al repintar ── */
+
+  /** Adónde va el foco tras el próximo repintado. `-1` es la lista vacía. */
+  interface Foco {
+    readonly fila: number
+    readonly en: "fila" | "opcion"
+  }
+  let foco: Foco | null = null
+
+  const ol: HTMLOListElement = elemento("ol")
+  ol.className = "ajustes"
+  /* Lo de la lista vacía: el «+ Ventana» o su selector. */
+  const sinVentanas: HTMLElement = elemento("div")
+  listaVentanas.append(ol, sinVentanas)
+
+  const aplicarFoco = (): void => {
+    if (foco === null) return
+    const { fila, en }: Foco = foco
+    foco = null
+    const caja: Element | null | undefined = fila === -1 ? sinVentanas : ol.children[fila]
+    const objetivo: Element | null | undefined =
+      en === "fila" ? caja?.querySelector("button") : caja?.querySelector(".selector button")
+    if (objetivo instanceof HTMLElement) objetivo.focus()
+  }
+
   /* ── Aplicar lo elegido ── */
 
   const aplicar = (e: Eleccion, ref: WindowRef): void => {
@@ -79,6 +105,8 @@ export const mountSettingsView = (
     else windows.insertAfter(e.i, ref)
     tocada = null
     eleccion = null
+    /* A la ventana que se ha cambiado o añadido. */
+    foco = { fila: e.modo === "cambiar" ? e.i : e.i + 1, en: "fila" }
     pintar(true)
   }
 
@@ -95,6 +123,7 @@ export const mountSettingsView = (
       }),
       boton("Cancelar", (): void => {
         eleccion = null
+        foco = { fila: e.i, en: "fila" }
         pintar(true)
       }, "secundario"),
     )
@@ -107,16 +136,21 @@ export const mountSettingsView = (
     caja.append(
       boton("Cambiar contenido", (): void => {
         eleccion = { modo: "cambiar", i }
+        foco = { fila: i, en: "opcion" }
         pintar(true)
       }),
       boton("Añadir detrás", (): void => {
         eleccion = { modo: "añadir", i }
+        foco = { fila: i, en: "opcion" }
         pintar(true)
       }),
       /* Quitar no confirma: sólo quita la referencia, y se vuelve a añadir. */
       boton("Quitar", (): void => {
+        const quedan: number = windows.getLayout().windows.length - 1
         windows.removeAt(i)
         tocada = null
+        /* A la que ocupa su sitio, a la de antes si era la última, o al «+ Ventana». */
+        foco = { fila: quedan === 0 ? -1 : Math.min(i, quedan - 1), en: "fila" }
         pintar(true)
       }),
     )
@@ -128,6 +162,15 @@ export const mountSettingsView = (
   let pintadoEstado: AppState | null = null
   let pintadoLayout: WindowsLayout | null = null
 
+  /** Una fila de la lista de ventanas, con su posición: es lo que la identifica. */
+  interface FilaVentana {
+    readonly ventana: WindowRow
+    readonly i: number
+  }
+
+  const claveDe = (ref: WindowRef): string =>
+    ref.kind === "general" ? "general" : `context:${ref.id}`
+
   const pintar = (forzar: boolean = false): void => {
     const estado: AppState = store.getState()
     const layout: WindowsLayout = windows.getLayout()
@@ -135,57 +178,92 @@ export const mountSettingsView = (
     pintadoEstado = estado
     pintadoLayout = layout
     const vista: SettingsContent = settingsContent(layout, estado)
+    /* Si cambian las opciones con un selector abierto, ése se rehace. */
+    const firmaOpciones: string = vista.choices
+      .map((o: WindowRow): string => `${claveDe(o.ref)}=${o.title}`)
+      .join("|")
 
-    const filas: ReadonlyArray<HTMLLIElement> = vista.windows.map(
-      (ventana: WindowRow, i: number): HTMLLIElement => {
-        const li: HTMLLIElement = elemento("li")
-        const abierta: boolean = tocada === i
-        const fila: HTMLButtonElement = boton(ventana.title, (): void => {
-          tocada = abierta ? null : i
-          eleccion = null
-          pintar(true)
-        }, "fila")
-        fila.setAttribute("aria-expanded", abierta ? "true" : "false")
-        li.append(fila)
-        if (eleccion !== null && eleccion.i === i) li.append(selector(eleccion, vista))
-        else if (abierta) li.append(acciones(i))
-        return li
+    /* Por posición y contenido: sin ventanas duplicadas que confundir, y lo que
+       no cambió —la fila que tiene el foco incluida— se queda como estaba. */
+    reconcile<FilaVentana, Element>(
+      ol,
+      vista.windows.map((ventana: WindowRow, i: number): FilaVentana => ({ ventana, i })),
+      {
+        key: ({ ventana, i }: FilaVentana): string => `${i}:${claveDe(ventana.ref)}`,
+        keyOf: (el: Element): string | null => el.getAttribute("data-key"),
+        create: ({ ventana, i }: FilaVentana): Element => {
+          const li: HTMLLIElement = elemento("li")
+          li.dataset["key"] = `${i}:${claveDe(ventana.ref)}`
+          li.append(
+            boton("", (): void => {
+              tocada = tocada === i ? null : i
+              eleccion = null
+              pintar(true)
+            }, "fila"),
+          )
+          return li
+        },
+        update: (li: Element, { ventana, i }: FilaVentana): void => {
+          const fila: Element | null = li.firstElementChild
+          if (fila !== null) {
+            setTextIfChanged(fila, ventana.title)
+            setAttrIfChanged(fila, "aria-expanded", tocada === i ? "true" : "false")
+          }
+          const e: Eleccion | null = eleccion !== null && eleccion.i === i ? eleccion : null
+          const deseado: string =
+            e !== null ? `selector:${e.modo}:${firmaOpciones}` : tocada === i ? "acciones" : ""
+          if (li.getAttribute("data-extra") === deseado) return
+          li.querySelector(":scope > .acciones, :scope > .selector")?.remove()
+          if (e !== null) li.append(selector(e, vista))
+          else if (tocada === i) li.append(acciones(i))
+          li.setAttribute("data-extra", deseado)
+        },
       },
     )
-    const ol: HTMLOListElement = elemento("ol")
-    ol.className = "ajustes"
-    ol.append(...filas)
 
     /* Sin ventanas no hay fila que tocar: se añade la primera desde aquí. */
-    const primera: ReadonlyArray<HTMLElement> =
-      vista.windows.length > 0
+    const vacia: Eleccion | null = eleccion !== null && eleccion.i === -1 ? eleccion : null
+    sinVentanas.replaceChildren(
+      ...(vista.windows.length > 0
         ? []
-        : eleccion !== null && eleccion.i === -1
-          ? [selector(eleccion, vista)]
+        : vacia !== null
+          ? [selector(vacia, vista)]
           : [
               boton("+ Ventana", (): void => {
                 eleccion = { modo: "añadir", i: -1 }
+                foco = { fila: -1, en: "opcion" }
                 pintar(true)
               }),
-            ]
-    listaVentanas.replaceChildren(ol, ...primera)
+            ]),
+    )
 
-    listaContextos.replaceChildren(
-      ...vista.contexts.map((ctx: Context): HTMLLIElement => {
+    /* Por `data-id`: renombrar un contexto no rehace las demás filas. */
+    reconcile<Context, Element>(listaContextos, vista.contexts, {
+      key: (ctx: Context): string => ctx.id,
+      keyOf: (el: Element): string | null => el.getAttribute("data-id"),
+      create: (ctx: Context): Element => {
         const li: HTMLLIElement = elemento("li")
         li.dataset["id"] = ctx.id
         li.append(
-          elemento("span", ctx.name),
+          elemento("span"),
           boton("Borrar", (): void => {
+            /* El nombre se lee al pulsar: la fila sobrevive a los renombrados. */
+            const nombre: string = store.getState().contexts[ctx.id]?.name ?? ctx.name
             /* Una de las dos únicas confirmaciones de la app: no tiene vuelta atrás. */
-            if (confirm(`¿Borrar «${ctx.name}»? Sus notas seguirán en General.`)) {
+            if (confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`)) {
               useCases.deleteContext(ctx.id)
             }
           }, "secundario"),
         )
         return li
-      }),
-    )
+      },
+      update: (li: Element, ctx: Context): void => {
+        const nombre: Element | null = li.firstElementChild
+        if (nombre !== null) setTextIfChanged(nombre, ctx.name)
+      },
+    })
+
+    aplicarFoco()
   }
 
   const seccion = (nombre: string, ...hijos: ReadonlyArray<HTMLElement>): HTMLElement => {

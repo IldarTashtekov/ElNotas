@@ -11,6 +11,7 @@ import type { AppState, Context, Note, NoteId, Store, UseCases } from "#core/ind
 import { noteId } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { elemento } from "./dom.js"
+import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import {
   createNoteIn,
   deleteQuestion,
@@ -213,18 +214,26 @@ export const createNoteList = ({
   /* ── Pintar ── */
 
   const pintar = (): void => {
-    lista.replaceChildren(
-      ...notas.map((nota: Note): HTMLLIElement => {
-        const fila: HTMLLIElement = elemento("li", nota.name)
+    /* Por `data-id`: seleccionar una fila no rehace las demás. */
+    reconcile<Note, Element>(lista, notas, {
+      key: (nota: Note): string => nota.id,
+      keyOf: (el: Element): string | null => el.getAttribute("data-id"),
+      create: (nota: Note): Element => {
+        const fila: HTMLLIElement = elemento("li")
         fila.dataset["id"] = nota.id
         fila.tabIndex = 0
         fila.setAttribute("role", "option")
-        const marcada: boolean = seleccion.has(nota.id)
-        fila.setAttribute("aria-selected", marcada ? "true" : "false")
-        fila.classList.toggle("seleccionada", marcada)
         return fila
-      }),
-    )
+      },
+      update: (fila: Element, nota: Note): void => {
+        const marcada: boolean = seleccion.has(nota.id)
+        setTextIfChanged(fila, nota.name)
+        setAttrIfChanged(fila, "aria-selected", marcada ? "true" : "false")
+        if (fila.classList.contains("seleccionada") !== marcada) {
+          fila.classList.toggle("seleccionada", marcada)
+        }
+      },
+    })
     sinNotas.hidden = notas.length > 0 || ventana === null
     mas.hidden = seleccionando || ventana === null
 
