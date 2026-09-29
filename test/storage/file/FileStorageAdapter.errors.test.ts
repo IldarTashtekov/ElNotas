@@ -16,7 +16,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Context, Note, Plan, StorageAdapter, StorageError } from "#core/index"
-import { contextId, noteId, planId, revision } from "#core/index"
+import { checkBox, contentId, contextId, noteId, planId, revision, text } from "#core/index"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
 import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"
@@ -445,4 +445,124 @@ test("FileStorageAdapter: un onCorrupt que lanza sale como io, no lanzando", asy
   const fallo: StorageError = errorDe(await s.notes.getAll())
   if (fallo.kind !== "io") assert.fail(`se esperaba io y vino ${fallo.kind}`)
   assert.strictEqual(fallo.cause, REVIENTA)
+})
+
+/* ═══════════ La forma: JSON válido que no es una nota tampoco se lee ════════ */
+
+/** Una nota como la escribiría la app, para romperle un campo cada vez. */
+const NOTA_BIEN = {
+  id: "compra",
+  name: "Compra",
+  updatedAt: 0,
+  revision: "r",
+  content: [
+    { type: "text", id: "t1", text: "Hoy" },
+    { type: "checkbox", id: "c1", text: "Pan", checked: false, children: [] },
+  ],
+}
+
+const escribirJson = (blobs: FakeBlobStore, camino: string, valor: unknown): void =>
+  blobs.escribirTexto(camino, JSON.stringify(valor))
+
+test("FileStorageAdapter: una nota bien formada, con campos de más, se lee", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "notes/compra.json", { ...NOTA_BIEN, deOtraVersion: true })
+  assert.equal(valorDe(await s.notes.get(COMPRA.id))?.name, "Compra")
+})
+
+/** Cada forma rota, con lo que tiene que decir el motivo. */
+const NOTAS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
+  ["sin contenido", { ...NOTA_BIEN, content: undefined }, /content/],
+  ["contenido que no es lista", { ...NOTA_BIEN, content: "hola" }, /content/],
+  ["sin nombre", { ...NOTA_BIEN, name: 7 }, /name/],
+  ["sin revisión", { ...NOTA_BIEN, revision: undefined }, /revision/],
+  ["updatedAt que no es número", { ...NOTA_BIEN, updatedAt: "ayer" }, /updatedAt/],
+  ["una línea de tipo desconocido", { ...NOTA_BIEN, content: [{ type: "imagen", id: "x", text: "" }] }, /ni texto ni casilla/],
+  [
+    "una casilla sin checked",
+    { ...NOTA_BIEN, content: [{ type: "checkbox", id: "c", text: "", children: [] }] },
+    /checked/,
+  ],
+  [
+    "un texto dentro de una casilla",
+    {
+      ...NOTA_BIEN,
+      content: [{ type: "checkbox", id: "c", text: "", checked: false, children: [{ type: "text", id: "t", text: "" }] }],
+    },
+    /texto dentro de una casilla/,
+  ],
+  [
+    "un id de línea repetido, aunque sea en otro nivel",
+    {
+      ...NOTA_BIEN,
+      content: [
+        { type: "checkbox", id: "x", text: "", checked: false, children: [{ type: "checkbox", id: "x", text: "", checked: false, children: [] }] },
+      ],
+    },
+    /repetida/,
+  ],
+]
+
+for (const [caso, rota, motivo] of NOTAS_SIN_FORMA) {
+  test(`FileStorageAdapter: una nota ${caso} es corrupt, y dice por qué`, async (): Promise<void> => {
+    const { blobs, s } = montar()
+    escribirJson(blobs, "notes/compra.json", rota)
+
+    const fallo: StorageError = errorDe(await s.notes.get(COMPRA.id))
+    if (fallo.kind !== "corrupt") assert.fail(`se esperaba corrupt y vino ${fallo.kind}`)
+    assert.equal(fallo.path, "notes/compra.json")
+    assert.match(String(fallo.cause), motivo)
+  })
+}
+
+test("FileStorageAdapter: con onCorrupt, una nota sin forma se salta y se avisa, como una ilegible", async (): Promise<void> => {
+  const { blobs, s, avisos } = montarConAviso()
+  await s.notes.put(COMPRA)
+  escribirJson(blobs, "notes/rota.json", { ...NOTA_BIEN, id: "rota", content: "hola" })
+
+  const notas: ReadonlyArray<Note> = valorDe(await s.notes.getAll())
+
+  assert.deepEqual(notas, [COMPRA])
+  assert.equal(avisos().length, 1)
+  const aviso: StorageError | undefined = avisos()[0]
+  if (aviso?.kind !== "corrupt") assert.fail("se esperaba un aviso corrupt")
+  assert.equal(aviso.path, "notes/rota.json")
+})
+
+test("FileStorageAdapter: un contexto con una referencia rota de forma es corrupt", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "contexts/casa.json", { ...CASA, items: [{ kind: "carpeta", id: "x" }] })
+  assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
+})
+
+test("FileStorageAdapter: un contexto sin defaultView es corrupt", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "contexts/casa.json", { ...CASA, defaultView: undefined })
+  assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
+})
+
+test("FileStorageAdapter: un plan con un nodo al que le falta la X es corrupt", async (): Promise<void> => {
+  /* Sólo falta la X: con las dos ausentes, quitar una comprobación no se notaría. */
+  const { blobs, s } = montar()
+  escribirJson(blobs, "plans/mudanza.json", {
+    ...MUDANZA,
+    nodes: [{ type: "simple-node", id: "n", text: "", positionY: 0, parents: [], children: [] }],
+  })
+  assert.equal(errorDe(await s.plans.get(MUDANZA.id)).kind, "corrupt")
+})
+
+test("FileStorageAdapter: lo que escribe put vuelve a leerse: el validador acepta su propia salida", async (): Promise<void> => {
+  const { s } = montar()
+  const conTodo: Note = {
+    ...COMPRA,
+    content: [
+      text(contentId("t"), "Hoy"),
+      checkBox(contentId("c"), "Compra", {
+        checked: true,
+        children: [checkBox(contentId("c1"), "Pan")],
+      }),
+    ],
+  }
+  valorDe(await s.notes.put(conTodo))
+  assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), conTodo)
 })

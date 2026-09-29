@@ -25,6 +25,8 @@ import type {
   StorageError,
 } from "#core/index"
 import { err, ok } from "#core/index"
+import type { Problem } from "./schema.js"
+import { contextProblem, noteProblem, planProblem } from "./schema.js"
 
 /* ════════════════════════════ El esquema en disco ══════════════════════════ */
 
@@ -133,10 +135,8 @@ const aBytes = (valor: unknown): Result<Uint8Array, StorageError> => {
  * camino no serviría para nada de eso.
  *
  * Se exige además que lo parseado sea un objeto: un fichero con `42`, `null` o
- * `[]` dentro es JSON válido y no es una entidad. Lo que **no** se hace es
- * validar el esquema campo a campo —que `content` sea un array de `Content`,
- * etc.—; eso es un validador, no cabe en una frontera, y no hay dependencia que
- * lo haga. Anotado como lo que es: un agujero conocido.
+ * `[]` dentro es JSON válido y no es una entidad. La forma campo a campo no se
+ * mira aquí, sino en `entidadDe`, con los validadores de `schema.ts`.
  */
 const parsear = (
   camino: string,
@@ -164,12 +164,20 @@ const parsear = (
   }
 }
 
+/** Qué le falta a un objeto para ser la entidad de esa carpeta. */
+type Validador = (o: Record<string, unknown>) => Problem
+
 /**
- * Bytes → entidad. `parsear` más la única comprobación que se puede hacer sin
- * un validador: que lleve un `id` de texto, que es lo único que el `Repository`
- * necesita de ella (lo dice su `put`: «la entidad ya lleva su id dentro»).
+ * Bytes → entidad. `parsear`, que lleve un `id` de texto —lo único que el
+ * `Repository` necesita de ella— y que tenga la forma de su clase, campo a campo.
+ * Lo que no la tenga es `corrupt`, con el motivo: un fichero que parsea pero no
+ * es una nota no se puede leer como nota.
  */
-const entidadDe = <T>(camino: string, bytes: Uint8Array): Result<T, StorageError> => {
+const entidadDe = <T>(
+  camino: string,
+  bytes: Uint8Array,
+  valida: Validador,
+): Result<T, StorageError> => {
   const parsed: Result<Record<string, unknown>, StorageError> = parsear(camino, bytes)
   if (!parsed.ok) return parsed
 
@@ -182,9 +190,14 @@ const entidadDe = <T>(camino: string, bytes: Uint8Array): Result<T, StorageError
     return err(sinId)
   }
 
-  /* El único casting del fichero, y es inevitable: `JSON.parse` devuelve `any`
-     y nadie puede demostrarle a TypeScript que esos bytes son una `Note`. Lo
-     que se ha comprobado antes es lo que se puede comprobar sin validador. */
+  const problema: Problem = valida(parsed.value)
+  if (problema !== null) {
+    const sinForma: StorageError = { kind: "corrupt", path: camino, cause: problema }
+    return err(sinForma)
+  }
+
+  /* El único casting del fichero: `JSON.parse` devuelve `any`, y aunque el
+     validador acaba de comprobar la forma, no se lo puede demostrar a TypeScript. */
   return ok(parsed.value as T)
 }
 
@@ -192,6 +205,7 @@ const entidadDe = <T>(camino: string, bytes: Uint8Array): Result<T, StorageError
 const leerEntidad = async <T>(
   blobs: BlobStore,
   camino: string,
+  valida: Validador,
 ): Promise<Result<T | null, StorageError>> => {
   const leido: Result<Uint8Array | null, StorageError> = await blobs.read(camino)
 
@@ -200,7 +214,7 @@ const leerEntidad = async <T>(
   // AUSENCIA NO ES FALLO: ese camino no existe, y eso es una respuesta.
   if (leido.value === null) return ok(null)
 
-  return entidadDe<T>(camino, leido.value)
+  return entidadDe<T>(camino, leido.value, valida)
 }
 
 /* ════════════════════════════ Un repositorio ══════════════════════════════ */
@@ -239,13 +253,14 @@ const avisar = (onCorrupt: OnCorrupt, fallo: StorageError): Result<void, Storage
 const createFileRepository = <T extends { readonly id: TId }, TId extends string>(
   blobs: BlobStore,
   carpeta: string,
+  valida: Validador,
   onCorrupt: OnCorrupt | undefined,
 ): Repository<T, TId> => ({
   get: async (id: TId): Promise<Result<T | null, StorageError>> => {
     const destino: Result<string, StorageError> = caminoDe(carpeta, id)
     if (!destino.ok) return destino
 
-    return leerEntidad<T>(blobs, destino.value)
+    return leerEntidad<T>(blobs, destino.value, valida)
   },
 
   /**
@@ -270,7 +285,7 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
       if (!esEntidadDe(carpeta, camino)) continue
 
       /* El `corrupt` puede nacer abajo —el sobre del blob— o aquí, al parsear. */
-      const entidad: Result<T | null, StorageError> = await leerEntidad<T>(blobs, camino)
+      const entidad: Result<T | null, StorageError> = await leerEntidad<T>(blobs, camino, valida)
 
       if (!entidad.ok) {
         if (entidad.error.kind !== "corrupt" || onCorrupt === undefined) return entidad
@@ -322,16 +337,19 @@ export const createFileStorageAdapter = (
   const notes: Repository<Note, NoteId> = createFileRepository<Note, NoteId>(
     blobs,
     CARPETA_NOTAS,
+    noteProblem,
     onCorrupt,
   )
   const plans: Repository<Plan, PlanId> = createFileRepository<Plan, PlanId>(
     blobs,
     CARPETA_PLANES,
+    planProblem,
     onCorrupt,
   )
   const contexts: Repository<Context, ContextId> = createFileRepository<Context, ContextId>(
     blobs,
     CARPETA_CONTEXTOS,
+    contextProblem,
     onCorrupt,
   )
 
