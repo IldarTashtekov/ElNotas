@@ -5,6 +5,8 @@
  * no sabe dónde se guarda nada. Quien la monta es `platform/`.
  */
 
+export type { NoteEditor, NoteEditorDeps } from "./NoteEditor.js"
+export { createNoteEditor } from "./NoteEditor.js"
 export type { Caret, EditResult, EditorDeps } from "./editor.js"
 export {
   pressBackspaceAtStart,
