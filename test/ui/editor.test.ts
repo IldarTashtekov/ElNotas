@@ -21,6 +21,7 @@ import type {
   ContentId,
   IdGenerator,
   Note,
+  NoteId,
   Store,
   UseCases,
 } from "#core/index"
@@ -48,7 +49,7 @@ import {
 
 /* ─────────────────────────────── El escenario ───────────────────────────── */
 
-const NOTA = noteId("nota")
+const NOTA: NoteId = noteId("nota")
 
 const APAGADA: WritingMode = INITIAL_MODE
 const ENCENDIDA: WritingMode = { checkbox: true, nestArmed: false }

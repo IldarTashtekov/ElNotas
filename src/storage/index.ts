@@ -6,14 +6,14 @@
  * que esto existe.
  *
  * Quién elige cuál de los adaptadores se usa de verdad no es este módulo, es
- * `platform/`, que no nace hasta la Fase 4.
+ * `platform/`: hoy, `platform/web/boot.ts`.
  */
 
 export { createMemoryStorageAdapter } from "./memory/MemoryStorageAdapter.js"
 
 /* El de ficheros JSON, parametrizado por un `BlobStore` que le llega por
    constructor. Quién es ese `BlobStore` —localStorage, la carpeta del usuario,
-   OPFS— lo decide `platform/` en la Fase 4; el falso de las pruebas no sale por
+   OPFS— lo decide `platform/`; el falso de las pruebas no sale por
    esta puerta. */
 export type { FileStorageOptions, OnCorrupt } from "./file/FileStorageAdapter.js"
 export { createFileStorageAdapter } from "./file/FileStorageAdapter.js"
@@ -28,7 +28,7 @@ export { createFileStorageAdapter } from "./file/FileStorageAdapter.js"
 
    Las dos reciben por constructor lo que las conecta con la plataforma —un
    `Storage`, un `FileSystemDirectoryHandle`—, porque conseguirlo es composición
-   y eso vive en `platform/`, que no nace hasta la Fase 4. */
+   y eso vive en `platform/`. */
 export { createLocalStorageBlobStore } from "./blobs/LocalStorageBlobStore.js"
 export { createDirectoryHandleBlobStore } from "./blobs/DirectoryHandleBlobStore.js"
 

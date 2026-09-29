@@ -91,7 +91,7 @@ Para cada sección, una nota nueva con **+ Nota** vale: nace vacía y se entra e
   casilla (un texto no cabe ahí), pero el interruptor se apaga.
 - **E3.** Con la casilla apagada, **↳ Anidar** está desactivado.
 - **E4.** Armado, el botón **se ve distinto** y dice «la próxima, dentro». ¿Se entiende sin que
-  nadie lo explique? *(Anotar la impresión: es una de las tres preguntas del punto 11.)*
+  nadie lo explique? *(Anotar la impresión: es una de las tres preguntas de §9.10.)*
 - **E5.** Pulsar los botones de la barra **no cambia de línea** el cursor, y en el móvil **no cierra
   el teclado**.
 
@@ -177,9 +177,10 @@ No son fallos; se anotan para que no se marquen como tales, y para decidir si se
 - **Retroceso bajo una casilla con hijas.** Al principio de un texto que va justo debajo de una
   casilla **con hijas**, Retroceso une el texto a **esa casilla**, no a su última hija —aunque la
   línea que se ve encima sea la hija—. Es la regla de `merge`.
-- **Varias «Nueva Nota» iguales** en el selector de ventanas: toda nota nace con ese nombre.
+- **Varias «Nueva Nota» iguales** en el selector de ventanas: toda nota nace con ese nombre. Es
+  decisión (2026-09-29): pueden existir notas con el mismo nombre; lo que las distingue es su id.
 - **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y
-  **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas del punto 11.
+  **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas de §9.10.
 
 ---
 
