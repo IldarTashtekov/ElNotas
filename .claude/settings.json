@@ -18,6 +18,12 @@
       "Bash(wc:*)",
       "Bash(rg:*)",
       "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run:*)",
+      "Bash(node tools/*)",
+      "Bash(node --conditions=compiled:*)",
+      "Bash(node node_modules/typescript/bin/tsc:*)",
+      "Bash(python3 -m http.server:*)",
       "WebFetch(domain:nodejs.org)",
       "WebFetch(domain:typescriptlang.org)"
     ],
