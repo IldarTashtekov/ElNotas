@@ -4,7 +4,8 @@
  * nota entera no es viable.
  *
  * Si algo falla y reintentar no serviría de nada —permiso revocado, disco lleno—
- * se detiene en vez de insistir. Lo no guardado se queda en memoria: no se pierde.
+ * se detiene en vez de insistir, y avisa con `onError`. Lo no guardado se queda
+ * en memoria: no se pierde mientras la página siga abierta.
  *
  * ⚠️ Lo que no da: si la app se cierra antes de que toque escribir, ese cambio se
  * pierde. Se paga llamando a `flush()` al cerrar, y eso es de la Fase 4.
@@ -25,6 +26,9 @@ export type Cancel = () => void
 /** Cómo se programa la espera. Inyectable para poder probar sin esperas reales. */
 export type Schedule = (fn: () => void, ms: number) => Cancel
 
+/** A quién se avisa cuando el escritor se detiene. */
+export type OnError = (fallo: StorageError) => void
+
 export interface WriteBehindDeps {
   readonly adapter: StorageAdapter
   /**
@@ -36,6 +40,12 @@ export interface WriteBehindDeps {
   /** Milisegundos de calma antes de escribir. */
   readonly delayMs?: number
   readonly schedule?: Schedule
+  /**
+   * Se llama UNA vez, cuando un fallo que no se arregla reintentando detiene al
+   * escritor. Sin esto, el fallo de un guardado automático no lo vería nadie:
+   * nadie mira lo que devuelve el temporizador.
+   */
+  readonly onError?: OnError
 }
 
 export interface WriteBehind {
@@ -64,6 +74,19 @@ const DEMORA_POR_DEFECTO_MS: number = 500
  */
 const esReintentable = (fallo: StorageError): boolean => fallo.kind === "io"
 
+/**
+ * Pasa el aviso. **Frontera**: es código ajeno. Si revienta, el fallo sigue
+ * saliendo por `flush()`, así que tragarse aquí la excepción no esconde nada.
+ */
+const avisar = (onError: OnError | undefined, fallo: StorageError): void => {
+  if (onError === undefined) return
+  try {
+    onError(fallo)
+  } catch {
+    /* El aviso no puede tumbar al escritor: lo que tenía que decir, ya lo dice flush. */
+  }
+}
+
 const porSetTimeout: Schedule = (fn: () => void, ms: number): Cancel => {
   const id: ReturnType<typeof setTimeout> = setTimeout(fn, ms)
   return (): void => clearTimeout(id)
@@ -74,6 +97,7 @@ export const createWriteBehind = ({
   initial,
   delayMs = DEMORA_POR_DEFECTO_MS,
   schedule = porSetTimeout,
+  onError,
 }: WriteBehindDeps): WriteBehind => {
   /** El último estado que se sabe guardado. El diff siempre se hace contra éste. */
   let escrito: AppState = initial
@@ -169,6 +193,8 @@ export const createWriteBehind = ({
           cancelarEspera()
           cancelarEspera = null
         }
+        /* Sólo aquí: una vez detenido, `flush` sale antes y ya no llega. */
+        avisar(onError, resultado.error)
       }
 
       // El error viaja INTACTO: quien lo reciba necesita el `kind` de origen.

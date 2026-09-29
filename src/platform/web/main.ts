@@ -8,7 +8,7 @@
 
 import type { Result, StorageError } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
-import type { WindowsModel } from "#ui/index"
+import type { MountedApp, WindowsModel } from "#ui/index"
 import { createWindowsModel, describeBootError, mountApp } from "#ui/index"
 import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
@@ -44,6 +44,12 @@ const iniciar = async (): Promise<void> => {
   }
 
   let ilegibles: ReadonlyArray<StorageError> = []
+  /* El guardado puede detenerse antes de que haya UI a la que avisar: se guarda
+     el fallo y se enseña al montarla. */
+  let sinGuardar: StorageError | null = null
+  let avisarDeGuardado: (fallo: StorageError) => void = (fallo: StorageError): void => {
+    sinGuardar = fallo
+  }
   const arrancada: Result<App, BootError> = await boot({
     blobs: createLocalStorageBlobStore(almacen),
     clock: systemClock,
@@ -51,6 +57,7 @@ const iniciar = async (): Promise<void> => {
     onCorrupt: (fallo: StorageError): void => {
       ilegibles = [...ilegibles, fallo]
     },
+    onError: (fallo: StorageError): void => avisarDeGuardado(fallo),
   })
   if (!arrancada.ok) {
     mostrarFallo(raiz, describeBootError(arrancada.error))
@@ -67,13 +74,15 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     persistence: createLocalStorageWindows(almacen),
   })
-  mountApp(raiz, {
+  const montada: MountedApp = mountApp(raiz, {
     store: app.store,
     useCases: app.useCases,
     windows,
     corrupt: ilegibles,
     confirm: (pregunta: string): boolean => window.confirm(pregunta),
   })
+  avisarDeGuardado = montada.showSaveError
+  if (sinGuardar !== null) montada.showSaveError(sinGuardar)
 
   /* Lo pendiente se escribe al salir. En el móvil `pagehide` no siempre llega,
      y pasar a segundo plano es la última ocasión segura. */

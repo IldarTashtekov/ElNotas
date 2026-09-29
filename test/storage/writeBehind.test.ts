@@ -397,3 +397,93 @@ test("el StorageError llega INTACTO a quien llamó a flush", async () => {
 
   assert.strictEqual(errorDe(await s.flush()), sinPermiso)
 })
+
+/* ────────── onError: que el fallo de un guardado automático se vea ────────── */
+
+interface ConAviso {
+  readonly onState: (state: AppState) => void
+  readonly flush: () => Promise<Result<void, StorageError>>
+  readonly correr: () => void
+  readonly avisos: () => ReadonlyArray<StorageError>
+}
+
+const montarConAviso = (fallo: () => StorageError | null): ConAviso => {
+  const reloj: ReturnType<typeof relojDeMentira> = relojDeMentira()
+  const almacen: ReturnType<typeof fallandoAlEscribir> = fallandoAlEscribir(fallo)
+  let avisos: ReadonlyArray<StorageError> = []
+  const wb: ReturnType<typeof createWriteBehind> = createWriteBehind({
+    adapter: almacen.adapter,
+    initial: VACIO,
+    schedule: reloj.schedule,
+    onError: (e: StorageError): void => {
+      avisos = [...avisos, e]
+    },
+  })
+  return { ...wb, correr: reloj.correr, avisos: (): ReadonlyArray<StorageError> => avisos }
+}
+
+/** Deja correr el guardado automático y lo que encadene, sin llamar a flush a mano. */
+const dejarCorrer = async (s: ConAviso): Promise<void> => {
+  s.correr()
+  await new Promise<void>((listo: () => void): void => {
+    setImmediate(listo)
+  })
+}
+
+test("onError avisa cuando el GUARDADO AUTOMÁTICO se detiene, sin que nadie llame a flush", async (): Promise<void> => {
+  const lleno: StorageError = { kind: "quota-exceeded" }
+  const s: ConAviso = montarConAviso((): StorageError => lleno)
+
+  s.onState(conNota(nota("Compra")))
+  await dejarCorrer(s)
+
+  assert.equal(s.avisos().length, 1)
+  assert.strictEqual(s.avisos()[0], lleno, "el error no ha llegado intacto")
+})
+
+test("onError avisa UNA sola vez: detenido, los flush siguientes no repiten el aviso", async (): Promise<void> => {
+  const s: ConAviso = montarConAviso((): StorageError => ({ kind: "permission-denied" }))
+
+  s.onState(conNota(nota("Compra")))
+  errorDe(await s.flush())
+  s.onState(conNota(nota("Compra del mes")))
+  errorDe(await s.flush())
+  errorDe(await s.flush())
+
+  assert.equal(s.avisos().length, 1)
+})
+
+test("un fallo de io NO avisa: se reintenta, no se ha detenido nada", async (): Promise<void> => {
+  const s: ConAviso = montarConAviso((): StorageError => ({ kind: "io", cause: "x" }))
+
+  s.onState(conNota(nota("Compra")))
+  errorDe(await s.flush())
+
+  assert.deepEqual(s.avisos(), [])
+})
+
+test("si todo va bien, onError no se llama nunca", async (): Promise<void> => {
+  const s: ConAviso = montarConAviso((): null => null)
+
+  s.onState(conNota(nota("Compra")))
+  await dejarCorrer(s)
+  valorDe(await s.flush())
+
+  assert.deepEqual(s.avisos(), [])
+})
+
+test("un onError que lanza no tumba al escritor: el fallo sigue saliendo por flush", async (): Promise<void> => {
+  const sinPermiso: StorageError = { kind: "permission-denied" }
+  const wb: ReturnType<typeof createWriteBehind> = createWriteBehind({
+    adapter: fallandoAlEscribir((): StorageError => sinPermiso).adapter,
+    initial: VACIO,
+    schedule: relojDeMentira().schedule,
+    onError: (): void => {
+      throw new Error("el aviso revienta")
+    },
+  })
+
+  wb.onState(conNota(nota("Compra")))
+
+  assert.strictEqual(errorDe(await wb.flush()), sinPermiso)
+})

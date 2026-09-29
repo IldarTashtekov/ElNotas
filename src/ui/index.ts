@@ -47,7 +47,7 @@ export {
 } from "./noteActions.js"
 export type { Selection } from "./selection.js"
 export { NO_SELECTION, pruneSelected, toggleSelected } from "./selection.js"
-export type { AppDeps } from "./App.js"
+export type { AppDeps, MountedApp } from "./App.js"
 export { mountApp } from "./App.js"
 export type { SettingsViewDeps } from "./SettingsView.js"
 export { NEW_CONTEXT_NAME, mountSettingsView } from "./SettingsView.js"

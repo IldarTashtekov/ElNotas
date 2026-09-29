@@ -5,12 +5,15 @@
  * Lo de encima y el modo selección se cierran también con el atrás del
  * navegador —el del móvil incluido—, y comparten para eso un mismo historial.
  * Pasar de ventana no se apunta: el atrás no recorre ventanas.
+ *
+ * Arriba de todo, en cualquier vista, el aviso de que no se está guardando.
  */
 
 import type { NoteId, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { createBackStack } from "./backStack.js"
 import { elemento } from "./dom.js"
+import { describeStorageError } from "./messages.js"
 import { mountNoteView } from "./NoteView.js"
 import { mountSettingsView } from "./SettingsView.js"
 import { mountWindowsView } from "./WindowsView.js"
@@ -24,8 +27,18 @@ export interface AppDeps {
   readonly confirm: (pregunta: string) => boolean
 }
 
-export const mountApp = (raiz: HTMLElement, deps: AppDeps): void => {
+/** Lo que la app ofrece a quien la monta. */
+export interface MountedApp {
+  /** Avisa de que el guardado se ha detenido. Sólo informa: no se reanuda. */
+  readonly showSaveError: (fallo: StorageError) => void
+}
+
+export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   const back: BackStack = createBackStack()
+  const aviso: HTMLElement = elemento("div")
+  aviso.className = "aviso aviso-guardado"
+  aviso.setAttribute("role", "alert")
+  aviso.hidden = true
   const principal: HTMLElement = elemento("div")
   const encima: HTMLElement = elemento("div")
   encima.hidden = true
@@ -54,11 +67,21 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): void => {
       mountNoteView(raiz, { ...deps, noteId, onExit: back.close }),
     )
 
-  raiz.replaceChildren(principal, encima)
+  raiz.replaceChildren(aviso, principal, encima)
   mountWindowsView(principal, {
     ...deps,
     back,
     onOpenSettings: abrirConfiguracion,
     onOpenNote: abrirNota,
   })
+
+  return {
+    showSaveError: (fallo: StorageError): void => {
+      aviso.replaceChildren(
+        elemento("p", `No se están guardando los cambios. ${describeStorageError(fallo)}`),
+        elemento("p", "Lo que ves sigue aquí, pero se perderá al cerrar la página."),
+      )
+      aviso.hidden = false
+    },
+  }
 }

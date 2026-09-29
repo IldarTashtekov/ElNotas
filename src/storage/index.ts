@@ -34,5 +34,5 @@ export { createDirectoryHandleBlobStore } from "./blobs/DirectoryHandleBlobStore
 
 /* El escritor diferido: la mitad impura del write-behind. La otra mitad
    —`diffState`, que decide qué está sucio— es pura y vive en el core. */
-export type { Cancel, Schedule, WriteBehind, WriteBehindDeps } from "./writeBehind.js"
+export type { Cancel, OnError, Schedule, WriteBehind, WriteBehindDeps } from "./writeBehind.js"
 export { createWriteBehind } from "./writeBehind.js"

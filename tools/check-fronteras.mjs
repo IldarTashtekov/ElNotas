@@ -68,6 +68,7 @@ const PELIGROSAS = [
   [/^flujo\.(write|close)$/, "escritura del fichero"],
   [/^paso\.migrate$/, "CÓDIGO AJENO: la migración"],
   [/^onCorrupt$/, "CÓDIGO AJENO: el aviso de un fichero ilegible"],
+  [/^onError$/, "CÓDIGO AJENO: el aviso de que no se guarda"],
 ]
 
 /** Envoltorios que llevan el `try` dentro: cubren la función que reciben. */

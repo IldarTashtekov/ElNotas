@@ -35,7 +35,7 @@ import {
   ok,
   runMigrations,
 } from "#core/index"
-import type { OnCorrupt, Schedule, WriteBehind } from "#storage/index"
+import type { OnCorrupt, OnError, Schedule, WriteBehind } from "#storage/index"
 import { createFileStorageAdapter, createWriteBehind } from "#storage/index"
 
 export interface BootDeps {
@@ -47,6 +47,8 @@ export interface BootDeps {
    * arranca con el resto; sin él, no arranca.
    */
   readonly onCorrupt?: OnCorrupt
+  /** A quién avisar si el guardado se detiene. Sin él, sólo se entera `flush`. */
+  readonly onError?: OnError
   /** Para las pruebas: en producción se usan los del write-behind. */
   readonly delayMs?: number
   readonly schedule?: Schedule
@@ -67,6 +69,7 @@ export const boot = async ({
   clock,
   ids,
   onCorrupt,
+  onError,
   delayMs,
   schedule,
 }: BootDeps): Promise<Result<App, BootError>> => {
@@ -115,6 +118,7 @@ export const boot = async ({
     initial: estado,
     delayMs,
     schedule,
+    onError,
   })
   store.subscribe(writer.onState)
 
