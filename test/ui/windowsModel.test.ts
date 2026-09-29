@@ -147,3 +147,63 @@ test("setActive a la que ya es activa, o a una que no está, no hace nada", (): 
   assert.strictEqual(model.getLayout(), antes)
   assert.deepEqual(guardado.guardados(), [])
 })
+
+/* ─────────────────── Las ediciones, pasando por la guarda ───────────────── */
+
+test("quitar la ventana activa pasa la activa a la primera que quede", (): void => {
+  const { store, creado } = escenario()
+  const casa: ContextId = creado("Casa")
+  const model: WindowsModel = createWindowsModel({
+    store,
+    persistence: almacen(ok({ windows: [GENERAL, ventana(casa)], active: ventana(casa) })),
+  })
+
+  model.removeAt(1)
+
+  assert.deepEqual(model.getLayout(), { windows: [GENERAL], active: GENERAL })
+})
+
+test("quitar la última deja la pantalla vacía, y se permite", (): void => {
+  const { store } = escenario()
+  const model: WindowsModel = createWindowsModel({ store, persistence: almacen() })
+  model.removeAt(0)
+  assert.deepEqual(model.getLayout(), { windows: [], active: null })
+})
+
+test("añadir la primera a una lista vacía la deja activa", (): void => {
+  const { store, creado } = escenario()
+  const casa: ContextId = creado("Casa")
+  const model: WindowsModel = createWindowsModel({
+    store,
+    persistence: almacen(ok({ windows: [], active: null })),
+  })
+
+  model.insertAfter(-1, ventana(casa))
+
+  assert.deepEqual(model.getLayout(), { windows: [ventana(casa)], active: ventana(casa) })
+})
+
+test("una edición que apunta a un contexto inexistente no hace nada, ni guarda", (): void => {
+  const { store } = escenario()
+  const guardado: AlmacenFalso = almacen()
+  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const antes: WindowsLayout = model.getLayout()
+
+  model.insertAfter(0, { kind: "context", id: "no-existe" as ContextId })
+
+  assert.strictEqual(model.getLayout(), antes)
+  assert.deepEqual(guardado.guardados(), [])
+})
+
+test("con Casa en las dos ventanas, borrar Casa deja la pantalla vacía", (): void => {
+  const { store, useCases, creado } = escenario()
+  const casa: ContextId = creado("Casa")
+  const model: WindowsModel = createWindowsModel({ store, persistence: almacen() })
+
+  model.insertAfter(0, ventana(casa))
+  model.replaceAt(0, ventana(casa)) // el General pasa a enseñar Casa: dos ventanas de Casa
+  assert.deepEqual(model.getLayout().windows, [ventana(casa), ventana(casa)])
+
+  useCases.deleteContext(casa)
+  assert.deepEqual(model.getLayout(), { windows: [], active: null })
+})

@@ -30,7 +30,8 @@ export const DEFAULT_LAYOUT: WindowsLayout = { windows: [GENERAL], active: GENER
 export const sameWindow = (a: WindowRef, b: WindowRef): boolean =>
   a.kind === "general" ? b.kind === "general" : b.kind === "context" && a.id === b.id
 
-const existe = (ref: WindowRef, state: AppState): boolean =>
+/** Si lo que enseña esa ventana existe. El General, siempre: no es un contexto. */
+export const windowExists = (ref: WindowRef, state: AppState): boolean =>
   ref.kind === "general" || state.contexts[ref.id] !== undefined
 
 /**
@@ -42,11 +43,11 @@ const existe = (ref: WindowRef, state: AppState): boolean =>
  */
 export const guardWindows = (layout: WindowsLayout, state: AppState): WindowsLayout => {
   const siguenTodas: boolean = layout.windows.every((ref: WindowRef): boolean =>
-    existe(ref, state),
+    windowExists(ref, state),
   )
   const windows: ReadonlyArray<WindowRef> = siguenTodas
     ? layout.windows
-    : layout.windows.filter((ref: WindowRef): boolean => existe(ref, state))
+    : layout.windows.filter((ref: WindowRef): boolean => windowExists(ref, state))
 
   const activaSigue: boolean =
     layout.active !== null &&
@@ -54,6 +55,52 @@ export const guardWindows = (layout: WindowsLayout, state: AppState): WindowsLay
   const active: WindowRef | null = activaSigue ? layout.active : (windows[0] ?? null)
 
   return windows === layout.windows && active === layout.active ? layout : { windows, active }
+}
+
+/* ─────────────── Editar la lista, desde la vista configuración ───────────── */
+
+/*
+    Las tres ediciones van por posición, porque es lo que se toca en la lista.
+    Ninguna comprueba que el contenido exista —lo mira el modelo antes de
+    llamarlas, y la guarda después— y todas devuelven el MISMO objeto si no
+    cambian nada.
+*/
+
+/** Cambia lo que enseña la ventana `i`. Si era la activa, la activa la sigue. */
+export const replaceWindowAt = (layout: WindowsLayout, i: number, ref: WindowRef): WindowsLayout => {
+  const actual: WindowRef | undefined = layout.windows[i]
+  if (actual === undefined || sameWindow(actual, ref)) return layout
+
+  const windows: ReadonlyArray<WindowRef> = layout.windows.map(
+    (w: WindowRef, j: number): WindowRef => (j === i ? ref : w),
+  )
+  const eraActiva: boolean = layout.active !== null && sameWindow(actual, layout.active)
+  return { windows, active: eraActiva ? ref : layout.active }
+}
+
+/** Mete una ventana detrás de la `i`. Con `-1`, la primera: es como se añade a una lista vacía. */
+export const insertWindowAfter = (
+  layout: WindowsLayout,
+  i: number,
+  ref: WindowRef,
+): WindowsLayout => {
+  if (i < -1 || i >= layout.windows.length) return layout
+  const windows: ReadonlyArray<WindowRef> = [
+    ...layout.windows.slice(0, i + 1),
+    ref,
+    ...layout.windows.slice(i + 1),
+  ]
+  return { windows, active: layout.active }
+}
+
+/** Quita la ventana `i`. Sólo la referencia: lo que enseñaba sigue en el almacén. */
+export const removeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout => {
+  if (layout.windows[i] === undefined) return layout
+  const windows: ReadonlyArray<WindowRef> = layout.windows.filter(
+    (_: WindowRef, j: number): boolean => j !== i,
+  )
+  /* La activa no se toca aquí: si era ésta, la guarda elige otra. */
+  return { windows, active: layout.active }
 }
 
 /* ───────────────────── De lo guardado a una lista válida ─────────────────── */

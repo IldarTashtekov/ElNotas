@@ -79,8 +79,66 @@
         padding: 0.75rem 0;
       }
       .vacia {
-        opacity: 0.6;
         text-align: center;
+      }
+      .vacia p {
+        opacity: 0.6;
+      }
+      h2 {
+        font-size: 1rem;
+        margin: 1.5rem 0 0.5rem;
+        opacity: 0.7;
+        text-transform: uppercase;
+      }
+      .crear {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .crear input {
+        flex: 1;
+        font: inherit;
+        min-width: 0;
+        padding: 0.5rem;
+      }
+      .crear button,
+      .acciones button,
+      .selector button,
+      .vacia button,
+      section > div > button {
+        padding: 0.5rem 1rem;
+      }
+      .ajustes {
+        list-style: none;
+        padding: 0;
+      }
+      .ajustes > li {
+        border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        padding: 0.5rem 0;
+      }
+      ul.ajustes > li {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .fila {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 0.25rem 0;
+        text-align: left;
+        width: 100%;
+      }
+      .acciones,
+      .selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+      }
+      .secundario {
+        opacity: 0.7;
       }
       .aviso {
         border: 1px solid #c77700;

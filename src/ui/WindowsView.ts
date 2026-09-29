@@ -1,7 +1,7 @@
 /**
  * La vista ventanas, la principal: una ventana cada vez, con ◀ ▶ para pasar a la
- * de al lado, el título —que en un contexto se renombra tocándolo— y sus notas.
- * Sin ventanas, una pantalla vacía.
+ * de al lado, el título —que en un contexto se renombra tocándolo—, sus notas y
+ * el ⚙ de la configuración. Sin ventanas, una pantalla vacía con el ⚙.
  *
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
@@ -19,6 +19,7 @@ export interface WindowsViewDeps {
   readonly windows: WindowsModel
   /** Los ficheros que no se pudieron leer al arrancar. Vacío es lo normal. */
   readonly corrupt: ReadonlyArray<StorageError>
+  readonly onOpenSettings: () => void
 }
 
 /** Lo que está a medio renombrar: mientras dure, el título no se repinta. */
@@ -43,7 +44,7 @@ const mostrar = (el: HTMLElement, visible: boolean): void => {
 
 export const mountWindowsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, corrupt }: WindowsViewDeps,
+  { store, useCases, windows, corrupt, onOpenSettings }: WindowsViewDeps,
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
   const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
@@ -51,14 +52,21 @@ export const mountWindowsView = (
   titulo.className = "titulo"
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"
-  cabecera.append(anterior, titulo, siguiente)
+  const engranaje = (): HTMLButtonElement => {
+    const boton: HTMLButtonElement = flecha("⚙", "Configuración")
+    boton.addEventListener("click", onOpenSettings)
+    return boton
+  }
+  cabecera.append(anterior, titulo, siguiente, engranaje())
 
   const notas: HTMLUListElement = elemento("ul")
   notas.className = "notas"
   const sinNotas: HTMLParagraphElement = elemento("p", "Esta ventana no tiene notas.")
   sinNotas.className = "vacia"
-  const sinVentanas: HTMLParagraphElement = elemento("p", "No hay ninguna ventana.")
+  /* Sin ventanas no hay cabecera, pero el ⚙ tiene que seguir: es la salida. */
+  const sinVentanas: HTMLElement = elemento("div")
   sinVentanas.className = "vacia"
+  sinVentanas.append(elemento("p", "No hay ninguna ventana."), engranaje())
 
   let vista: WindowView = { kind: "empty" }
   let renombrado: Renombrado | null = null

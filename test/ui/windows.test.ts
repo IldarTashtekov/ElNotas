@@ -12,7 +12,15 @@ import assert from "node:assert/strict"
 import type { AppState, Context } from "#core/index"
 import { contextId, emptyAppState, revision } from "#core/index"
 import type { WindowRef, WindowsLayout } from "#ui/index"
-import { DEFAULT_LAYOUT, GENERAL, guardWindows, parseWindowsLayout } from "#ui/index"
+import {
+  DEFAULT_LAYOUT,
+  GENERAL,
+  guardWindows,
+  insertWindowAfter,
+  parseWindowsLayout,
+  removeWindowAt,
+  replaceWindowAt,
+} from "#ui/index"
 
 const contexto = (id: string): Context => ({
   id: contextId(id),
@@ -115,4 +123,60 @@ test("una activa sin forma de ventana se lee como ninguna", (): void => {
 test("lo guardado pasa por JSON y vuelve igual", (): void => {
   const layout: WindowsLayout = { windows: [ventana("casa"), GENERAL], active: GENERAL }
   assert.deepEqual(parseWindowsLayout(JSON.parse(JSON.stringify(layout))), layout)
+})
+
+/* ─────────────────── Las ediciones de la configuración ──────────────────── */
+
+const TRES: WindowsLayout = {
+  windows: [ventana("casa"), GENERAL, ventana("trabajo")],
+  active: GENERAL,
+}
+
+test("replaceWindowAt cambia sólo esa ventana", (): void => {
+  const editado: WindowsLayout = replaceWindowAt(TRES, 2, ventana("compra"))
+  assert.deepEqual(editado.windows, [ventana("casa"), GENERAL, ventana("compra")])
+  assert.deepEqual(editado.active, GENERAL)
+})
+
+test("replaceWindowAt de la activa: la activa sigue a la ventana, no a lo que enseñaba", (): void => {
+  /* Se entró a configuración desde esa ventana, y al salir se vuelve a ella. */
+  const editado: WindowsLayout = replaceWindowAt(TRES, 1, ventana("compra"))
+  assert.deepEqual(editado.active, ventana("compra"))
+})
+
+test("replaceWindowAt por lo mismo que ya enseña, o fuera de rango, devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(replaceWindowAt(TRES, 0, ventana("casa")), TRES)
+  assert.strictEqual(replaceWindowAt(TRES, 3, ventana("casa")), TRES)
+  assert.strictEqual(replaceWindowAt(TRES, -1, ventana("casa")), TRES)
+})
+
+test("insertWindowAfter mete detrás de esa, y no toca la activa", (): void => {
+  const editado: WindowsLayout = insertWindowAfter(TRES, 0, ventana("compra"))
+  assert.deepEqual(editado.windows, [ventana("casa"), ventana("compra"), GENERAL, ventana("trabajo")])
+  assert.deepEqual(editado.active, GENERAL)
+})
+
+test("insertWindowAfter la última, y con -1 la primera", (): void => {
+  const detras: ReadonlyArray<WindowRef> = insertWindowAfter(TRES, 2, ventana("x")).windows
+  assert.deepEqual(detras[detras.length - 1], ventana("x"))
+  assert.deepEqual(insertWindowAfter(TRES, -1, ventana("x")).windows[0], ventana("x"))
+})
+
+test("insertWindowAfter en una lista vacía, con -1", (): void => {
+  const vacia: WindowsLayout = { windows: [], active: null }
+  assert.deepEqual(insertWindowAfter(vacia, -1, GENERAL).windows, [GENERAL])
+})
+
+test("insertWindowAfter fuera de rango devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(insertWindowAfter(TRES, 3, GENERAL), TRES)
+  assert.strictEqual(insertWindowAfter(TRES, -2, GENERAL), TRES)
+})
+
+test("removeWindowAt quita sólo esa", (): void => {
+  assert.deepEqual(removeWindowAt(TRES, 0).windows, [GENERAL, ventana("trabajo")])
+})
+
+test("removeWindowAt fuera de rango devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(removeWindowAt(TRES, 3), TRES)
+  assert.strictEqual(removeWindowAt(TRES, -1), TRES)
 })

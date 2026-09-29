@@ -3,14 +3,14 @@
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
  * navegador, las notas y las ventanas en `localStorage`—, arranca y monta la
- * vista ventanas. Si no
+ * app. Si no
  * arranca, lo dice en pantalla en vez de quedarse en blanco.
  */
 
 import type { Result, StorageError } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type { WindowsModel } from "#ui/index"
-import { createWindowsModel, describeBootError, mountWindowsView } from "#ui/index"
+import { createWindowsModel, describeBootError, mountApp } from "#ui/index"
 import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
@@ -63,7 +63,13 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     persistence: createLocalStorageWindows(almacen),
   })
-  mountWindowsView(raiz, { store: app.store, useCases: app.useCases, windows, corrupt: ilegibles })
+  mountApp(raiz, {
+    store: app.store,
+    useCases: app.useCases,
+    windows,
+    corrupt: ilegibles,
+    confirm: (pregunta: string): boolean => window.confirm(pregunta),
+  })
 
   /* Lo pendiente se escribe al salir. En el móvil `pagehide` no siempre llega,
      y pasar a segundo plano es la última ocasión segura. */

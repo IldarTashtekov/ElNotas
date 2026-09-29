@@ -28,6 +28,10 @@ export type WindowView =
 
 const VACIA: WindowView = { kind: "empty" }
 
+/** Cómo se llama lo que enseña una ventana. Vacío si ya no existe: la guarda lo quita. */
+export const windowTitle = (ref: WindowRef, state: AppState): string =>
+  ref.kind === "general" ? GENERAL_TITLE : (state.contexts[ref.id]?.name ?? "")
+
 /** El General enseña todas, por nombre: no hay otro orden que sea suyo. */
 const todasLasNotas = (state: AppState): ReadonlyArray<Note> =>
   [...Object.values<Note>(state.notes)].sort((a: Note, b: Note): number =>

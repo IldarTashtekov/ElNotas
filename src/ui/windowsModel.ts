@@ -8,7 +8,16 @@
 
 import type { AppState, Result, StorageError, Store, Unsubscribe } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
-import { DEFAULT_LAYOUT, guardWindows, parseWindowsLayout, sameWindow } from "./windows.js"
+import {
+  DEFAULT_LAYOUT,
+  guardWindows,
+  insertWindowAfter,
+  parseWindowsLayout,
+  removeWindowAt,
+  replaceWindowAt,
+  sameWindow,
+  windowExists,
+} from "./windows.js"
 
 /** Dónde se guarda la lista. Lo pone `platform/`. Ninguno de los dos lanza. */
 export interface WindowsPersistence {
@@ -23,6 +32,10 @@ export interface WindowsModel {
   readonly getLayout: () => WindowsLayout
   /** No hace nada si esa ventana no está entre las visibles o ya era la activa. */
   readonly setActive: (ref: WindowRef) => void
+  /** Las tres ediciones de la configuración. Pasan por la guarda antes de quedarse. */
+  readonly replaceAt: (i: number, ref: WindowRef) => void
+  readonly insertAfter: (i: number, ref: WindowRef) => void
+  readonly removeAt: (i: number) => void
   readonly subscribe: (listener: WindowsListener) => Unsubscribe
 }
 
@@ -57,6 +70,9 @@ export const createWindowsModel = ({ store, persistence }: WindowsModelDeps): Wi
 
   store.subscribe((state: AppState): void => cambiar(guardWindows(layout, state)))
 
+  const editar = (siguiente: WindowsLayout): void =>
+    cambiar(guardWindows(siguiente, store.getState()))
+
   return {
     getLayout: (): WindowsLayout => layout,
 
@@ -68,6 +84,16 @@ export const createWindowsModel = ({ store, persistence }: WindowsModelDeps): Wi
       if (layout.active !== null && sameWindow(layout.active, visible)) return
       cambiar({ ...layout, active: visible })
     },
+
+    /* Una ventana a algo que no existe no se llega a meter: la guarda la
+       quitaría, pero devolviendo una lista nueva, y se guardaría sin cambios. */
+    replaceAt: (i: number, ref: WindowRef): void => {
+      if (windowExists(ref, store.getState())) editar(replaceWindowAt(layout, i, ref))
+    },
+    insertAfter: (i: number, ref: WindowRef): void => {
+      if (windowExists(ref, store.getState())) editar(insertWindowAfter(layout, i, ref))
+    },
+    removeAt: (i: number): void => editar(removeWindowAt(layout, i)),
 
     subscribe: (listener: WindowsListener): Unsubscribe => {
       listeners = [...listeners, listener]
