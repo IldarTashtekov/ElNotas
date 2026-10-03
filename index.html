@@ -268,6 +268,30 @@
       .aviso-guardado[hidden] {
         display: none;
       }
+      /* El de ficheros ilegibles flota arriba y se difumina solo. */
+      .aviso-temporal {
+        animation: bajar 0.25s ease-out;
+        box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
+        cursor: pointer;
+        left: 50%;
+        max-width: calc(min(40rem, 100vw) - 2rem);
+        position: fixed;
+        top: 0.75rem;
+        transform: translateX(-50%);
+        transition: opacity 0.6s ease;
+        width: 100%;
+        z-index: 20;
+      }
+      .aviso-temporal.fuera {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @keyframes bajar {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -1rem);
+        }
+      }
 
       /* ── La configuración ── */
       h2 {

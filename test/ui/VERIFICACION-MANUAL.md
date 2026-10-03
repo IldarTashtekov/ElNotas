@@ -173,8 +173,9 @@ el navegador **resalta en color los nodos que cambian**.
   localStorage.setItem("elnotas:blob:notes/rota.json", btoa("no es json"))
   ```
 
-  y recargar. La app **arranca**, con un aviso arriba que nombra `notes/rota.json`, y el resto
-  de notas está.
+  y recargar. La app **arranca**, con un aviso **flotando arriba** que nombra `notes/rota.json`
+  —y dice «Sigue guardado», en singular—, y el resto de notas está. A los **6 segundos se
+  difumina** solo; **tocarlo** lo quita antes.
 - **G2.** Quitarla (`localStorage.removeItem("elnotas:blob:notes/rota.json")`) y recargar: el
   aviso desaparece.
 
