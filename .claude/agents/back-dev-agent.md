@@ -53,7 +53,7 @@ Los dos están dentro de `npm run check`.
 **Las fases 1 y 2 están hechas.** No te fíes de este párrafo: `find src -name '*.ts' | sort`
 y `npm run check`.
 
-En `src/core/`: el modelo (`Note`, `Plan`, `Context`, `Text | CheckBox`, IDs marcados,
+En `src/core/`: el modelo (`Note`, `Diagram`, `Context`, `Text | CheckBox`, IDs marcados,
 `ItemRef`, `AppState` normalizado), `Position` con sus tres casos, el helper de copia por
 camino con sus **dos primitivas** (`updateContent.ts` y `updateContainerOf.ts`, que son
 **maquinaria interna y NO salen por `index.ts`**), las **ocho** operaciones de contenido,
@@ -71,7 +71,7 @@ es lo que se le exige a cualquier backend, y el de la Fase 3 tendrá un fichero 
 corto. Si algún día hace falta probar algo que sólo vale para memoria, es la señal de que te
 estás apoyando en un detalle que los demás adaptadores no cumplen.
 
-**No existe todavía:** la UI, las operaciones de Planes, ninguna implementación de
+**No existe todavía:** la UI, las operaciones de Diagramas, ninguna implementación de
 `BlobStore`, ni las de `Clock` e `IdGenerator` (vivirán en `src/platform/`, Fase 4).
 
 ## Reglas del dominio que no se negocian
@@ -95,7 +95,7 @@ tiene inyectados `Clock` e `IdGenerator`. Así los tests salen deterministas sin
 
 **4. Integridad referencial.** Borrar una nota la quita de los contextos que la listaban;
 añadir a un contexto una referencia a algo que no existe es un no-op.
-**`Context.items` es `ItemRef[]`, nunca `(Note | Plan)[]`.**
+**`Context.items` es `ItemRef[]`, nunca `(Note | Diagram)[]`.**
 
 **5. Inmutabilidad.** `filter` / `map` / spread, **nunca** `push` / `splice`. Los tipos
 `readonly` ya lo fuerzan.
@@ -182,7 +182,7 @@ duda**; no la cambies por tu cuenta.
   único consumidor es `insert`. §9.4.
 - **Una acción, una operación.** Ninguna acción pliega varias llamadas; las compuestas se
   diseñan en la Fase 4, con el editor delante. §9.7.
-- **Los Planes se persisten, pero no se operan.** Ni una acción de Plan entra en el catálogo.
+- **Los Diagramas se persisten, pero no se operan.** Ni una acción de Diagrama entra en el catálogo.
 - **`ModosEscritura` no vive en el core**: al núcleo le llega `insert` con la `Position` ya
   elegida. §7.2.
 
