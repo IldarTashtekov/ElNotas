@@ -1,6 +1,7 @@
 /**
- * Las acciones sobre las notas de una ventana, compuestas con los casos de uso de
- * verdad: crear en el contexto, la papelera con sus dos significados y «Mover a…».
+ * Las acciones sobre lo que lista una ventana, compuestas con los casos de uso de
+ * verdad: crear en el contexto, la papelera con sus dos significados y «Mover a…»,
+ * con notas y con diagramas.
  */
 
 import { test } from "node:test"
@@ -10,6 +11,8 @@ import type {
   AppState,
   Context,
   ContextId,
+  Diagram,
+  DiagramId,
   IdGenerator,
   ItemRef,
   Note,
@@ -17,17 +20,19 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
-import { createStore, createUseCases, emptyAppState, noteId } from "#core/index"
-import type { WindowRef } from "#ui/index"
+import { createStore, createUseCases, diagramRef, emptyAppState, noteId, noteRef } from "#core/index"
+import type { ListItem, WindowRef } from "#ui/index"
 import {
   GENERAL,
+  NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
+  createDiagramIn,
   createNoteIn,
   deleteQuestion,
-  moveNotes,
+  moveItems,
   moveTargets,
   trashDeletes,
-  trashNotes,
+  trashItems,
 } from "#ui/index"
 
 interface Escenario {
@@ -81,7 +86,7 @@ test("+ Nota desde el General la crea sin contexto", (): void => {
 test("la papelera de un contexto QUITA de él, y la nota sigue existiendo", (): void => {
   const { store, useCases, compra, leche, pan } = escenario()
   assert.equal(trashDeletes({ kind: "context", id: compra }), false)
-  trashNotes(useCases, { kind: "context", id: compra }, [leche])
+  trashItems(useCases, { kind: "context", id: compra }, [noteRef(leche)])
 
   assert.deepEqual(itemsDe(store.getState(), compra), [pan])
   assert.notEqual(store.getState().notes[leche], undefined)
@@ -90,7 +95,7 @@ test("la papelera de un contexto QUITA de él, y la nota sigue existiendo", (): 
 test("la papelera del General BORRA de verdad, y de todos los contextos", (): void => {
   const { store, useCases, compra, leche, pan } = escenario()
   assert.equal(trashDeletes(GENERAL), true)
-  trashNotes(useCases, GENERAL, [leche])
+  trashItems(useCases, GENERAL, [noteRef(leche)])
 
   assert.equal(store.getState().notes[leche], undefined)
   assert.deepEqual(itemsDe(store.getState(), compra), [pan])
@@ -98,7 +103,7 @@ test("la papelera del General BORRA de verdad, y de todos los contextos", (): vo
 
 test("Mover a… desde un contexto MUEVE: quita de éste y añade al destino", (): void => {
   const { store, useCases, compra, casa, leche, pan } = escenario()
-  moveNotes(useCases, { kind: "context", id: compra }, casa, [leche])
+  moveItems(useCases, { kind: "context", id: compra }, casa, [noteRef(leche)])
 
   assert.deepEqual(itemsDe(store.getState(), compra), [pan])
   assert.deepEqual(itemsDe(store.getState(), casa), [leche])
@@ -106,7 +111,7 @@ test("Mover a… desde un contexto MUEVE: quita de éste y añade al destino", (
 
 test("Mover a… desde el General sólo añade: no toca donde ya estuviera", (): void => {
   const { store, useCases, compra, casa, leche, pan } = escenario()
-  moveNotes(useCases, GENERAL, casa, [leche])
+  moveItems(useCases, GENERAL, casa, [noteRef(leche)])
 
   assert.deepEqual(itemsDe(store.getState(), compra), [leche, pan])
   assert.deepEqual(itemsDe(store.getState(), casa), [leche])
@@ -114,8 +119,8 @@ test("Mover a… desde el General sólo añade: no toca donde ya estuviera", ():
 
 test("Mover a… una nota que ya estaba en el destino no la duplica", (): void => {
   const { store, useCases, compra, casa, leche } = escenario()
-  moveNotes(useCases, GENERAL, casa, [leche])
-  moveNotes(useCases, { kind: "context", id: compra }, casa, [leche])
+  moveItems(useCases, GENERAL, casa, [noteRef(leche)])
+  moveItems(useCases, { kind: "context", id: compra }, casa, [noteRef(leche)])
 
   assert.deepEqual(itemsDe(store.getState(), casa), [leche])
 })
@@ -129,11 +134,76 @@ test("los destinos: ni el General ni el contexto actual, por nombre", (): void =
   assert.deepEqual(nombres(GENERAL), ["Casa", "Compra"])
 })
 
-test("la pregunta de borrar nombra la nota, o cuenta cuántas", (): void => {
-  const { store, leche, pan } = escenario()
-  const notas: ReadonlyArray<Note> = [leche, pan]
-    .map((id: NoteId): Note | undefined => store.getState().notes[id])
-    .filter((n: Note | undefined): n is Note => n !== undefined)
-  assert.match(deleteQuestion(notas.slice(0, 1)), /«Nueva Nota»/)
-  assert.match(deleteQuestion(notas), /2 notas/)
+const filaNota = (name: string): ListItem => ({ ref: noteRef(noteId(name)), name })
+const filaDiagrama = (name: string, d: DiagramId): ListItem => ({ ref: diagramRef(d), name })
+
+test("la pregunta de borrar nombra lo que borra, o cuenta cuántas notas", (): void => {
+  assert.match(deleteQuestion([filaNota("Leche")]), /«Leche»/)
+  assert.match(deleteQuestion([filaNota("Leche"), filaNota("Pan")]), /2 notas/)
+})
+
+/* ──────────────────────────────── Diagramas ──────────────────────────────── */
+
+/** Un diagrama creado en Compra, para las pruebas de abajo. */
+const conDiagrama = (): Escenario & { readonly mudanza: DiagramId } => {
+  const e: Escenario = escenario()
+  const d: Diagram | null = createDiagramIn(e.useCases, { kind: "context", id: e.compra })
+  if (d === null) assert.fail("el diagrama tenía que crearse")
+  return { ...e, mudanza: d.id }
+}
+
+const refsDe = (state: AppState, id: ContextId): ReadonlyArray<ItemRef> =>
+  state.contexts[id]?.items ?? []
+
+test("+ Diagrama en un contexto crea un «Nuevo diagrama» DENTRO de él, detrás de las notas", (): void => {
+  const { store, compra, leche, pan, mudanza } = conDiagrama()
+  assert.equal(store.getState().diagrams[mudanza]?.name, NEW_DIAGRAM_NAME)
+  assert.deepEqual(refsDe(store.getState(), compra), [
+    noteRef(leche),
+    noteRef(pan),
+    diagramRef(mudanza),
+  ])
+})
+
+test("+ Diagrama desde el General lo crea sin contexto", (): void => {
+  const { store, useCases, compra, casa } = escenario()
+  const suelto: Diagram | null = createDiagramIn(useCases, GENERAL)
+  assert.notEqual(suelto, null)
+  assert.equal(refsDe(store.getState(), compra).length, 2)
+  assert.equal(refsDe(store.getState(), casa).length, 0)
+})
+
+test("la papelera de un contexto QUITA el diagrama de él, y sigue existiendo", (): void => {
+  const { store, useCases, compra, mudanza } = conDiagrama()
+  trashItems(useCases, { kind: "context", id: compra }, [diagramRef(mudanza)])
+  assert.equal(refsDe(store.getState(), compra).length, 2)
+  assert.notEqual(store.getState().diagrams[mudanza], undefined)
+})
+
+test("la papelera del General BORRA el diagrama de verdad, y lo quita de los contextos", (): void => {
+  const { store, useCases, compra, mudanza } = conDiagrama()
+  trashItems(useCases, GENERAL, [diagramRef(mudanza)])
+  assert.equal(store.getState().diagrams[mudanza], undefined)
+  assert.equal(refsDe(store.getState(), compra).length, 2)
+})
+
+test("la papelera del General con una nota y un diagrama borra los dos", (): void => {
+  const { store, useCases, leche, mudanza } = conDiagrama()
+  trashItems(useCases, GENERAL, [noteRef(leche), diagramRef(mudanza)])
+  assert.equal(store.getState().notes[leche], undefined)
+  assert.equal(store.getState().diagrams[mudanza], undefined)
+})
+
+test("Mover a… mueve un diagrama igual que una nota", (): void => {
+  const { store, useCases, compra, casa, mudanza } = conDiagrama()
+  moveItems(useCases, { kind: "context", id: compra }, casa, [diagramRef(mudanza)])
+  assert.deepEqual(refsDe(store.getState(), casa), [diagramRef(mudanza)])
+  assert.equal(refsDe(store.getState(), compra).length, 2)
+})
+
+test("la pregunta de borrar cuenta diagramas, o elementos si van mezclados", (): void => {
+  const d: DiagramId = conDiagrama().mudanza
+  assert.match(deleteQuestion([filaDiagrama("Mudanza", d)]), /«Mudanza»/)
+  assert.match(deleteQuestion([filaDiagrama("A", d), filaDiagrama("B", d)]), /2 diagramas/)
+  assert.match(deleteQuestion([filaNota("Leche"), filaDiagrama("Mudanza", d)]), /2 elementos/)
 })

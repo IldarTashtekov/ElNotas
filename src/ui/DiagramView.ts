@@ -18,6 +18,8 @@ export interface DiagramViewDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly diagramId: DiagramId
+  /** Recién creado: llega con el nombre a punto de escribirse. */
+  readonly editName: boolean
   readonly onExit: () => void
 }
 
@@ -36,7 +38,7 @@ interface Pellizco {
 /** Devuelve la función que la desmonta. */
 export const mountDiagramView = (
   raiz: HTMLElement,
-  { store, useCases, diagramId, onExit }: DiagramViewDeps,
+  { store, useCases, diagramId, editName, onExit }: DiagramViewDeps,
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -172,6 +174,7 @@ export const mountDiagramView = (
   raiz.replaceChildren(vistaDiagrama)
   aplicar()
   pintar()
+  if (editName) titulo.edit()
   const baja: Unsubscribe = store.subscribe((): void => pintar())
 
   return (): void => {

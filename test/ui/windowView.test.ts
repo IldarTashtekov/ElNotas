@@ -1,14 +1,14 @@
 /**
  * Lo que enseña la vista ventanas, calculado sin DOM: título, si se renombra, las
- * notas de cada ventana, y las flechas que no dan la vuelta.
+ * notas y diagramas de cada ventana, y las flechas que no dan la vuelta.
  */
 
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, Context, ItemRef, Note } from "#core/index"
-import { contextId, emptyAppState, noteId, noteRef, revision } from "#core/index"
-import type { WindowRef, WindowView, WindowsLayout } from "#ui/index"
+import type { AppState, Context, Diagram, ItemRef, Note } from "#core/index"
+import { contextId, diagramId, diagramRef, emptyAppState, noteId, noteRef, revision } from "#core/index"
+import type { ListItem, WindowRef, WindowView, WindowsLayout } from "#ui/index"
 import { GENERAL, GENERAL_TITLE, windowView } from "#ui/index"
 
 const nota = (id: string, name: string): Note => ({
@@ -51,8 +51,8 @@ const ventanaDe = (layout: WindowsLayout): Extract<WindowView, { kind: "window" 
   return vista
 }
 
-const nombres = (notas: ReadonlyArray<Note>): ReadonlyArray<string> =>
-  notas.map((n: Note): string => n.name)
+const nombres = (items: ReadonlyArray<ListItem>): ReadonlyArray<string> =>
+  items.map((i: ListItem): string => i.name)
 
 test("sin ventana activa, la pantalla vacía", (): void => {
   assert.deepEqual(windowView({ windows: [], active: null }, ESTADO), { kind: "empty" })
@@ -92,12 +92,12 @@ test("el General no se renombra", (): void => {
 
 test("un contexto enseña SUS notas, en el orden en que las lista", (): void => {
   const vista: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: TRES, active: COMPRA })
-  assert.deepEqual(nombres(vista.notes), ["Leche", "Aceite"])
+  assert.deepEqual(nombres(vista.items), ["Leche", "Aceite"])
 })
 
 test("el General enseña TODAS las notas, por nombre", (): void => {
   const vista: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: TRES, active: GENERAL })
-  assert.deepEqual(nombres(vista.notes), ["Aceite", "Informe", "Leche"])
+  assert.deepEqual(nombres(vista.items), ["Aceite", "Informe", "Leche"])
 })
 
 test("el General enseña también las notas que no están en ningún contexto", (): void => {
@@ -105,7 +105,7 @@ test("el General enseña también las notas que no están en ningún contexto", 
   const estado: AppState = { ...ESTADO, notes: { ...ESTADO.notes, [huerfana.id]: huerfana } }
   const vista: WindowView = windowView({ windows: [GENERAL], active: GENERAL }, estado)
   if (vista.kind !== "window") assert.fail("tenía que enseñar una ventana")
-  assert.ok(vista.notes.includes(huerfana))
+  assert.ok(nombres(vista.items).includes("Suelta"))
 })
 
 test("una activa que ya no está en la lista enseña la pantalla vacía, no otra", (): void => {
@@ -119,11 +119,67 @@ test("una ventana de nota: se titula con la nota, la renombra, y no lleva lista"
   assert.equal(vista.title, "Leche")
   assert.equal(vista.editsNote, LECHE.id)
   assert.equal(vista.renames, null)
-  assert.deepEqual(vista.notes, [])
+  assert.deepEqual(vista.items, [])
   assert.deepEqual(vista.prev, GENERAL)
 })
 
 test("en una ventana de contexto o del General no se edita ninguna nota", (): void => {
   assert.equal(ventanaDe({ windows: TRES, active: COMPRA }).editsNote, null)
   assert.equal(ventanaDe({ windows: TRES, active: GENERAL }).editsNote, null)
+})
+
+/* ──────────────────────────────── Diagramas ──────────────────────────────── */
+
+const diagrama = (id: string, name: string): Diagram => ({
+  id: diagramId(id),
+  name,
+  nodes: {},
+  relations: {},
+  updatedAt: 0,
+  revision: revision(`rev-${id}`),
+})
+
+const BODA: Diagram = diagrama("boda", "Boda")
+const MUDANZA: Diagram = diagrama("mudanza", "Mudanza")
+
+/** Compra lista Leche, Mudanza y Aceite, en ese orden; Boda no está en ningún contexto. */
+const CON_DIAGRAMAS: AppState = {
+  ...ESTADO,
+  diagrams: { [BODA.id]: BODA, [MUDANZA.id]: MUDANZA },
+  contexts: {
+    ...ESTADO.contexts,
+    [contextId("compra")]: contexto("compra", "Compra", [
+      noteRef(LECHE.id),
+      diagramRef(MUDANZA.id),
+      noteRef(ACEITE.id),
+    ]),
+  },
+}
+
+const ventanaCon = (estado: AppState, activa: WindowRef): Extract<WindowView, { kind: "window" }> => {
+  const vista: WindowView = windowView({ windows: TRES, active: activa }, estado)
+  if (vista.kind !== "window") assert.fail("tenía que enseñar una ventana")
+  return vista
+}
+
+test("un contexto enseña sus diagramas entre sus notas, en el orden en que los lista", (): void => {
+  const vista: Extract<WindowView, { kind: "window" }> = ventanaCon(CON_DIAGRAMAS, COMPRA)
+  assert.deepEqual(nombres(vista.items), ["Leche", "Mudanza", "Aceite"])
+  assert.deepEqual(vista.items[1]?.ref, diagramRef(MUDANZA.id))
+})
+
+test("el General enseña notas y diagramas mezclados por nombre, también los que no están en ningún contexto", (): void => {
+  const vista: Extract<WindowView, { kind: "window" }> = ventanaCon(CON_DIAGRAMAS, GENERAL)
+  assert.deepEqual(nombres(vista.items), ["Aceite", "Boda", "Informe", "Leche", "Mudanza"])
+})
+
+test("una referencia a un diagrama que no está en el estado no se enseña", (): void => {
+  const estado: AppState = {
+    ...CON_DIAGRAMAS,
+    contexts: {
+      ...CON_DIAGRAMAS.contexts,
+      [contextId("compra")]: contexto("compra", "Compra", [diagramRef(diagramId("ilegible"))]),
+    },
+  }
+  assert.deepEqual(ventanaCon(estado, COMPRA).items, [])
 })

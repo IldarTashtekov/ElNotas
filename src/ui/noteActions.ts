@@ -1,6 +1,6 @@
 /**
- * Lo que se hace sobre las notas de una ventana: crear una, la papelera y
- * «Mover a…».
+ * Lo que se hace sobre lo que lista una ventana: crear una nota o un diagrama, la
+ * papelera y «Mover a…».
  *
  * Cada una compone casos de uso que ya existen —crear y añadir, quitar y
  * añadir—, así que el core no se toca y cada acción sigue siendo una operación.
@@ -8,11 +8,13 @@
  * General, que no tiene de dónde quitar, BORRA de verdad.
  */
 
-import type { AppState, Context, ContextId, Note, NoteId, UseCases } from "#core/index"
-import { noteRef } from "#core/index"
+import type { AppState, Context, ContextId, Diagram, ItemRef, Note, UseCases } from "#core/index"
+import { diagramRef, noteRef } from "#core/index"
+import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
 
 export const NEW_NOTE_NAME: string = "Nueva Nota"
+export const NEW_DIAGRAM_NAME: string = "Nuevo diagrama"
 
 /** Una «Nueva Nota» en la ventana: dentro del contexto, o sin contexto desde el General. */
 export const createNoteIn = (useCases: UseCases, ventana: WindowRef): Note | null => {
@@ -21,18 +23,30 @@ export const createNoteIn = (useCases: UseCases, ventana: WindowRef): Note | nul
   return nota
 }
 
+/** Un «Nuevo diagrama» en la ventana, igual que una nota. */
+export const createDiagramIn = (useCases: UseCases, ventana: WindowRef): Diagram | null => {
+  const diagrama: Diagram | null = useCases.createDiagram(NEW_DIAGRAM_NAME)
+  if (diagrama !== null && ventana.kind === "context") {
+    useCases.addItem(ventana.id, diagramRef(diagrama.id))
+  }
+  return diagrama
+}
+
 /** Si la papelera de esta ventana borra de verdad, que es cuando hay que confirmar. */
 export const trashDeletes = (ventana: WindowRef): boolean => ventana.kind === "general"
 
-export const trashNotes = (
+export const trashItems = (
   useCases: UseCases,
   ventana: WindowRef,
-  ids: ReadonlyArray<NoteId>,
+  refs: ReadonlyArray<ItemRef>,
 ): void => {
-  for (const id of ids) {
-    if (ventana.kind === "general") useCases.deleteNote(id)
+  for (const ref of refs) {
+    if (ventana.kind === "general") {
+      if (ref.kind === "note") useCases.deleteNote(ref.id)
+      else useCases.deleteDiagram(ref.id)
+    }
     /* Una ventana de nota no tiene lista, así que no hay nada que tirar. */
-    else if (ventana.kind === "context") useCases.removeItem(ventana.id, noteRef(id))
+    else if (ventana.kind === "context") useCases.removeItem(ventana.id, ref)
   }
 }
 
@@ -41,15 +55,15 @@ export const trashNotes = (
  * General sólo añade —no es un contexto—, y es como se devuelve a un contexto
  * una nota que se quitó. Si ya estaba en el destino, añadirla no hace nada.
  */
-export const moveNotes = (
+export const moveItems = (
   useCases: UseCases,
   desde: WindowRef,
   destino: ContextId,
-  ids: ReadonlyArray<NoteId>,
+  refs: ReadonlyArray<ItemRef>,
 ): void => {
-  for (const id of ids) {
-    useCases.addItem(destino, noteRef(id))
-    if (desde.kind === "context") useCases.removeItem(desde.id, noteRef(id))
+  for (const ref of refs) {
+    useCases.addItem(destino, ref)
+    if (desde.kind === "context") useCases.removeItem(desde.id, ref)
   }
 }
 
@@ -59,10 +73,18 @@ export const moveTargets = (state: AppState, desde: WindowRef): ReadonlyArray<Co
     .filter((ctx: Context): boolean => desde.kind !== "context" || ctx.id !== desde.id)
     .sort((a: Context, b: Context): number => a.name.localeCompare(b.name))
 
-/** La pregunta de la papelera del General, con una nota o con varias. */
-export const deleteQuestion = (notas: ReadonlyArray<Note>): string => {
-  const [una] = notas
-  return notas.length === 1 && una !== undefined
-    ? `¿Borrar «${una.name}»? No se puede deshacer.`
-    : `¿Borrar ${notas.length} notas? No se puede deshacer.`
+/** Cómo se cuentan varios: notas, diagramas, o elementos si van mezclados. */
+const cuantos = (items: ReadonlyArray<ListItem>): string => {
+  const notas: number = items.filter((i: ListItem): boolean => i.ref.kind === "note").length
+  if (notas === items.length) return `${items.length} notas`
+  if (notas === 0) return `${items.length} diagramas`
+  return `${items.length} elementos`
+}
+
+/** La pregunta de la papelera del General, con uno o con varios. */
+export const deleteQuestion = (items: ReadonlyArray<ListItem>): string => {
+  const [uno] = items
+  return items.length === 1 && uno !== undefined
+    ? `¿Borrar «${uno.name}»? No se puede deshacer.`
+    : `¿Borrar ${cuantos(items)}? No se puede deshacer.`
 }

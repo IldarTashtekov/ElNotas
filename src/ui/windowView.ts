@@ -1,17 +1,24 @@
 /**
  * Qué enseña la vista ventanas ahora mismo: la ventana activa, su título, si se
- * puede renombrar, sus notas —o la nota que se edita, si es una ventana de nota—
- * y si hay ventana antes y después.
+ * puede renombrar, sus notas y diagramas —o la nota que se edita, si es una
+ * ventana de nota— y si hay ventana antes y después.
  *
  * Es un cálculo puro sobre el estado y la lista de ventanas, así que todo lo que
  * decide la pantalla se prueba en Node; al DOM sólo le queda pintarlo.
  */
 
-import type { AppState, Context, ContextId, ItemRef, Note, NoteId } from "#core/index"
+import type { AppState, Context, ContextId, Diagram, ItemRef, Note, NoteId } from "#core/index"
+import { diagramRef, noteRef } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { sameWindow } from "./windows.js"
 
 export const GENERAL_TITLE: string = "General"
+
+/** Una fila de la lista de una ventana: una nota o un diagrama, con su nombre. */
+export interface ListItem {
+  readonly ref: ItemRef
+  readonly name: string
+}
 
 export type WindowView =
   | { readonly kind: "empty" }
@@ -24,7 +31,7 @@ export type WindowView =
       /** La nota que se edita en la ventana, si es de tipo nota. Su título la renombra. */
       readonly editsNote: NoteId | null
       /** La lista de la ventana. Vacía en una ventana de nota: ahí va el editor. */
-      readonly notes: ReadonlyArray<Note>
+      readonly items: ReadonlyArray<ListItem>
       /** Sin anterior en la primera ni siguiente en la última: no es circular. */
       readonly prev: WindowRef | null
       readonly next: WindowRef | null
@@ -44,19 +51,29 @@ export const windowTitle = (ref: WindowRef, state: AppState): string => {
   }
 }
 
-/** El General enseña todas, por nombre: no hay otro orden que sea suyo. */
-const todasLasNotas = (state: AppState): ReadonlyArray<Note> =>
-  [...Object.values<Note>(state.notes)].sort((a: Note, b: Note): number =>
-    a.name.localeCompare(b.name),
-  )
+const deNota = (n: Note): ListItem => ({ ref: noteRef(n.id), name: n.name })
+const deDiagrama = (d: Diagram): ListItem => ({ ref: diagramRef(d.id), name: d.name })
 
-/** Un contexto enseña las suyas en el orden en que las lista. */
-const notasDe = (ctx: Context, state: AppState): ReadonlyArray<Note> =>
-  ctx.items
-    .map((item: ItemRef): Note | undefined =>
-      item.kind === "note" ? state.notes[item.id] : undefined,
-    )
-    .filter((nota: Note | undefined): nota is Note => nota !== undefined)
+/** El General enseña todo, notas y diagramas mezclados, por nombre: no hay otro orden suyo. */
+const todo = (state: AppState): ReadonlyArray<ListItem> =>
+  [
+    ...Object.values<Note>(state.notes).map(deNota),
+    ...Object.values<Diagram>(state.diagrams).map(deDiagrama),
+  ].sort((a: ListItem, b: ListItem): number => a.name.localeCompare(b.name))
+
+/** Lo que una referencia señala, si se puede enseñar: una nota ilegible no. */
+const fila = (item: ItemRef, state: AppState): ReadonlyArray<ListItem> => {
+  if (item.kind === "note") {
+    const n: Note | undefined = state.notes[item.id]
+    return n === undefined ? [] : [deNota(n)]
+  }
+  const d: Diagram | undefined = state.diagrams[item.id]
+  return d === undefined ? [] : [deDiagrama(d)]
+}
+
+/** Un contexto enseña lo suyo en el orden en que lo lista. */
+const deContexto = (ctx: Context, state: AppState): ReadonlyArray<ListItem> =>
+  ctx.items.flatMap((item: ItemRef): ReadonlyArray<ListItem> => fila(item, state))
 
 export const windowView = (layout: WindowsLayout, state: AppState): WindowView => {
   const activa: WindowRef | null = layout.active
@@ -76,7 +93,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       title: GENERAL_TITLE,
       renames: null,
       editsNote: null,
-      notes: todasLasNotas(state),
+      items: todo(state),
       ...vecinas,
     }
   }
@@ -90,7 +107,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       title: nota.name,
       renames: null,
       editsNote: nota.id,
-      notes: [],
+      items: [],
       ...vecinas,
     }
   }
@@ -105,7 +122,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     title: ctx.name,
     renames: ctx.id,
     editsNote: null,
-    notes: notasDe(ctx, state),
+    items: deContexto(ctx, state),
     ...vecinas,
   }
 }

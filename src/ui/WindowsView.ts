@@ -7,7 +7,16 @@
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
 
-import type { AppState, Context, Note, NoteId, StorageError, Store, UseCases } from "#core/index"
+import type {
+  AppState,
+  Context,
+  DiagramId,
+  Note,
+  NoteId,
+  StorageError,
+  Store,
+  UseCases,
+} from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { corruptNotice, elemento } from "./dom.js"
@@ -36,6 +45,7 @@ export interface WindowsViewDeps {
   readonly back: BackStack
   readonly confirm: Confirm
   readonly onOpenNote: (id: NoteId) => void
+  readonly onOpenDiagram: (id: DiagramId, editName: boolean) => void
 }
 
 const flecha = (texto: string, etiqueta: string): HTMLButtonElement => {
@@ -54,7 +64,17 @@ const mostrar = (el: HTMLElement, visible: boolean): void => {
 
 export const mountWindowsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, corrupt, onOpenSettings, back, confirm, onOpenNote }: WindowsViewDeps,
+  {
+    store,
+    useCases,
+    windows,
+    corrupt,
+    onOpenSettings,
+    back,
+    confirm,
+    onOpenNote,
+    onOpenDiagram,
+  }: WindowsViewDeps,
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
   const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
@@ -91,6 +111,7 @@ export const mountWindowsView = (
     confirm,
     onSelectingChange: apagar,
     onOpenNote,
+    onOpenDiagram,
   })
   /* Sin ventanas no hay cabecera, pero el ⚙ tiene que seguir: es la salida. */
   const sinVentanas: HTMLElement = elemento("div")
@@ -221,7 +242,7 @@ export const mountWindowsView = (
     } else {
       soltarEditor()
       notas.element.hidden = false
-      notas.update(vista.ref, vista.notes)
+      notas.update(vista.ref, vista.items)
     }
   }
 

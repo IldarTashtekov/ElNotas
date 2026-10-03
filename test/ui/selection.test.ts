@@ -6,9 +6,9 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { NoteId } from "#core/index"
-import { noteId } from "#core/index"
+import { diagramId, diagramRef, noteId, noteRef } from "#core/index"
 import type { Selection } from "#ui/index"
-import { NO_SELECTION, pruneSelected, toggleSelected } from "#ui/index"
+import { NO_SELECTION, itemKey, pruneSelected, toggleSelected } from "#ui/index"
 
 const A: NoteId = noteId("a")
 const B: NoteId = noteId("b")
@@ -38,4 +38,9 @@ test("podar quita las que ya no están, y sin ninguna da la vacía", (): void =>
   const dos: Selection = toggleSelected(toggleSelected(NO_SELECTION, A), B)
   assert.deepEqual([...pruneSelected(dos, [B])], [B])
   assert.strictEqual(pruneSelected(dos, []), NO_SELECTION)
+})
+
+test("la clave de una fila distingue una nota de un diagrama con el mismo id", (): void => {
+  assert.notEqual(itemKey(noteRef(noteId("x"))), itemKey(diagramRef(diagramId("x"))))
+  assert.equal(itemKey(noteRef(noteId("x"))), itemKey(noteRef(noteId("x"))))
 })

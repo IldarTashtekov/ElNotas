@@ -1,6 +1,6 @@
 /*
- * Lo que va pegado abajo: el «+» flotante de nota nueva, la barra de la
- * selección y la del modo de escritura de la nota.
+ * Lo que va pegado abajo: el «+» flotante de nota nueva y el de diagrama nuevo,
+ * la barra de la selección y la del modo de escritura de la nota.
  */
 
 /* ── «+»: el botón flotante de nota nueva ── */
@@ -19,6 +19,17 @@
   right: max(1.25rem, calc((100vw - 40rem) / 2 + 1.25rem));
   width: 3.25rem;
   z-index: 1;
+}
+/* El de diagrama nuevo: azul, más pequeño y a la izquierda, montado un poco sobre
+   el verde. Va antes en el DOM, así que el verde queda encima. */
+.mas-diagrama {
+  background: var(--accent);
+  bottom: 1.625rem;
+  color: var(--accent-ink);
+  font-size: 1.3rem;
+  height: 2.5rem;
+  right: calc(max(1.25rem, calc((100vw - 40rem) / 2 + 1.25rem)) + 2.75rem);
+  width: 2.5rem;
 }
 
 /* ── Las barras: selección y modo de escritura ── */

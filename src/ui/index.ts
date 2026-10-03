@@ -41,16 +41,18 @@ export { createConfirm, createSheet } from "./sheet.js"
 export type { NoteList, NoteListDeps } from "./NoteList.js"
 export { createNoteList } from "./NoteList.js"
 export {
+  NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
+  createDiagramIn,
   createNoteIn,
   deleteQuestion,
-  moveNotes,
+  moveItems,
   moveTargets,
   trashDeletes,
-  trashNotes,
+  trashItems,
 } from "./noteActions.js"
 export type { Selection } from "./selection.js"
-export { NO_SELECTION, pruneSelected, toggleSelected } from "./selection.js"
+export { NO_SELECTION, itemKey, pruneSelected, toggleSelected } from "./selection.js"
 export type { AppDeps, MountedApp } from "./App.js"
 export { mountApp } from "./App.js"
 export type { SettingsViewDeps } from "./SettingsView.js"
@@ -81,7 +83,7 @@ export {
 } from "./gestures.js"
 export type { WindowsViewDeps } from "./WindowsView.js"
 export { mountWindowsView } from "./WindowsView.js"
-export type { WindowView } from "./windowView.js"
+export type { ListItem, WindowView } from "./windowView.js"
 export { GENERAL_TITLE, windowTitle, windowView } from "./windowView.js"
 export { describeBootError, describeMigrationError, describeStorageError } from "./messages.js"
 export type { WindowRef, WindowsLayout } from "./windows.js"

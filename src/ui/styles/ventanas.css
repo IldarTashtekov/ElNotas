@@ -94,6 +94,10 @@ input.titulo {
     outline-offset: 1px;
   }
 }
+/* Un diagrama se distingue de una nota por la raya azul de la izquierda. */
+.notas li.diagrama {
+  border-left: 4px solid var(--accent);
+}
 /* En selección: un círculo en cada fila, y el tick en las elegidas. */
 .notas.seleccionando li::before {
   border: 1.5px solid var(--dim);

@@ -1,6 +1,6 @@
 /**
- * La app entera: la vista ventanas siempre montada y, encima, la configuración o
- * una nota cuando se abren. Un solo nivel: de lo de encima no se abre otra cosa.
+ * La app entera: la vista ventanas siempre montada y, encima, la configuración,
+ * una nota o un diagrama cuando se abren. De lo de encima no se abre otra cosa.
  *
  * Lo de encima y el modo selección se cierran también con el atrás del
  * navegador —el del móvil incluido—, y comparten para eso un mismo historial.
@@ -10,9 +10,10 @@
  * encima de todo, la hoja que pregunta antes de borrar.
  */
 
-import type { NoteId, StorageError, Store, UseCases } from "#core/index"
+import type { DiagramId, NoteId, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { createBackStack } from "./backStack.js"
+import { mountDiagramView } from "./DiagramView.js"
 import { elemento } from "./dom.js"
 import { describeStorageError } from "./messages.js"
 import { mountNoteView } from "./NoteView.js"
@@ -51,9 +52,11 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   /** Monta algo encima de la ventana. `montar` devuelve cómo se desmonta. */
   const abrirEncima = (montar: (raiz: HTMLElement) => () => void): void => {
     if (back.isOpen()) return
-    const desmontar: () => void = montar(encima)
+    /* Se enseña ANTES de montar: lo que se monte puede querer el foco, y un
+       elemento oculto no lo coge. */
     principal.hidden = true
     encima.hidden = false
+    const desmontar: () => void = montar(encima)
     window.scrollTo(0, 0)
     back.open((): void => {
       desmontar()
@@ -72,6 +75,11 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
       mountNoteView(raiz, { ...deps, noteId, onExit: back.close }),
     )
 
+  const abrirDiagrama = (diagramId: DiagramId, editName: boolean): void =>
+    abrirEncima((raiz: HTMLElement): (() => void) =>
+      mountDiagramView(raiz, { ...deps, diagramId, editName, onExit: back.close }),
+    )
+
   raiz.replaceChildren(aviso, principal, encima, pregunta.element)
   mountWindowsView(principal, {
     ...deps,
@@ -79,6 +87,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     confirm,
     onOpenSettings: abrirConfiguracion,
     onOpenNote: abrirNota,
+    onOpenDiagram: abrirDiagrama,
   })
 
   return {
