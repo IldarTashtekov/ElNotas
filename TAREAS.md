@@ -574,7 +574,10 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
 - [ ] **La lista de verificación manual, escrita y pasada** en escritorio y en móvil. Punto 8.
       **Escrita** (`test/ui/VERIFICACION-MANUAL.md`, `70aeeb6`). **Sin pasar entera**: el usuario
       hizo una revisión parcial y no la confirma, y la hoja de resultados está vacía. **Esto es
-      lo que tiene abierta Fase 4 · Contextos.**
+      lo que tiene abierta Fase 4 · Contextos.** *Puesta al día el 2026-10-03* con lo construido
+      ese día —la D pasa a ser reordenar arrastrando, y hay secciones nuevas: I, el «+» de la
+      última ventana, y J, dos pestañas—, y **G1 y G2 ya se vieron en escritorio**. **Sigue
+      pendiente, por decisión del usuario el 2026-10-03.**
 - [x] **`npm run check` en verde y el recuento anotado.** Punto 9: **423** al terminar el código de
       esta parte.
 
@@ -595,7 +598,8 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       cuatro huecos que salieron al construirlo, cerrados con el usuario el 2026-09-29 (en *Sin
       decidir*). Y un cambio pedido al usarlo, el 2026-10-03: **Retroceso une con la línea que
       se ve encima** —la última hija de la casilla de arriba, por honda que esté—, no con la
-      casilla. Cambia la regla de `merge` en el core (§9.3), la única vez que la Fase 4 lo toca.
+      casilla. Cambia la regla de `merge` en el core (§9.3), una de las dos veces que la Fase 4 lo
+      toca —la otra, conservar las referencias a lo ilegible en `hydrate`—.
 - [x] **Un `set-checked` redundante no redibuja.** ✅ `56d838c`. Punto 4, y el tercer eslabón de
       la cadena de §9.5 y §9.8 queda **demostrado**: medido en el navegador con `?depurar`, un
       `set-checked` redundante da **0 avisos, 0 escrituras y 0 cambios en el DOM**, frente a
@@ -611,11 +615,12 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
 - [x] **Validar el esquema de lo que se lee del disco**, también al final. ✅ `8e2dba3`. Punto 8.
 - [ ] **La lista de verificación manual del editor, escrita y pasada** en escritorio y en móvil.
       Punto 10. **Escrita** (`test/ui/VERIFICACION-MANUAL-EDITOR.md`, `9eec14d`). **Sin pasar**,
-      con la hoja de resultados vacía.
+      con la hoja de resultados vacía. *Puesta al día el 2026-10-03* (C7b, D4b). **Sigue
+      pendiente, por decisión del usuario el 2026-10-03.**
 - [ ] **Contestar por escrito las tres preguntas de §9.10** —`move`, `indent`/`outdent`, y si el
       disparador de anidar se entiende solo— **después de usar la app de verdad varios días**,
       no tras una demo. Un «no se aguanta» reabre la decisión correspondiente, y es un resultado
-      válido. **Sin contestar el 2026-09-29.**
+      válido. **Sin contestar el 2026-09-29, y sigue pendiente el 2026-10-03.**
 - [x] **`npm run check` en verde y el recuento anotado.** Punto 11: **489**.
 
 #### De las dos partes
