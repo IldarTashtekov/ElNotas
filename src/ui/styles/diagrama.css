@@ -1,0 +1,44 @@
+/*
+ * El diagrama: el lienzo con su rejilla de puntos, que se mueve y se acerca con
+ * lo que hay encima, y la barra de abajo.
+ */
+
+.vista-diagrama {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  /* El relleno de abajo del body haría que la página entera se desplazara. */
+  margin-bottom: -1rem;
+
+  & .cabecera {
+    margin-bottom: 0;
+  }
+}
+.lienzo {
+  background-image: radial-gradient(circle, var(--dim) 1.25px, transparent 1.75px);
+  cursor: grab;
+  flex: 1;
+  margin: 0 -1rem;
+  overflow: hidden;
+  position: relative;
+  /* Los gestos son del lienzo: ni desplazar la página ni el zoom del navegador. */
+  touch-action: none;
+  user-select: none;
+
+  &.moviendo {
+    cursor: grabbing;
+  }
+}
+.capa {
+  left: 0;
+  position: absolute;
+  top: 0;
+  transform-origin: 0 0;
+}
+.barra-diagrama {
+  margin-top: 0;
+
+  & .salir {
+    margin-left: auto;
+  }
+}
