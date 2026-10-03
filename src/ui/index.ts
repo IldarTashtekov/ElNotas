@@ -75,6 +75,15 @@ export {
   zoomAround,
 } from "./viewport.js"
 export { paintOrder, raise } from "./paintOrder.js"
+export type { Box, FanItem, RelationCurve } from "./relationGeometry.js"
+export {
+  FAN_SPACING,
+  borderPoint,
+  curvePath,
+  fanOffsets,
+  labelPath,
+  relationCurve,
+} from "./relationGeometry.js"
 export type { Tap } from "./gestures.js"
 export {
   DOUBLE_TAP_DISTANCE_PX,
