@@ -6,7 +6,7 @@
  * acción llega a su operación, que se estampa `meta` **sólo** si algo cambió, que
  * sobre un diagrama que no existe nada pasa, y las tres que tienen lógica propia
  * —crear, borrar (que limpia los contextos) y añadir un nodo-nota, que mira si la
- * nota existe—.
+ * nota existe—. Al final, lo que `delete-note` hace a los diagramas.
  */
 
 import { test } from "node:test"
@@ -331,4 +331,62 @@ test("delete-diagram NO borra notas", (): void => {
 test("delete-diagram sobre un diagrama que no existe devuelve el MISMO estado", (): void => {
   const s: AppState = estado()
   assert.strictEqual(reduce(s, { type: "delete-diagram", diagramId: ID_FANTASMA, meta: META }), s)
+})
+
+/* ────────────────────── delete-note, del lado de los diagramas ──────────────
+    Borrar una nota pasa sus nodos-nota a «Nota perdida» en TODOS los diagramas,
+    con el mismo meta, y deja por referencia los que no la usaban. */
+
+/** Mudanza y Viaje apuntan a Compra; Obra, no. */
+const conNodosNota = (): AppState => {
+  const s: AppState = estado()
+  const mudanza: Diagram = mudanzaDe(s)
+  const obra: Diagram = diagrama(diagramId("obra"), "Obra", { [ID_CAJAS]: texto(ID_CAJAS, "Yeso") }, {})
+  return {
+    ...s,
+    diagrams: {
+      ...s.diagrams,
+      [ID_MUDANZA]: {
+        ...mudanza,
+        nodes: { ...mudanza.nodes, [ID_LLAVES]: { ...nodoNota(ID_COMPRA), id: ID_LLAVES } },
+      },
+      [ID_VIAJE]: diagrama(ID_VIAJE, "Viaje", { [ID_NODO_NUEVO]: nodoNota(ID_COMPRA) }, {}),
+      [obra.id]: obra,
+    },
+  }
+}
+
+const borrarCompra = (s: AppState): AppState =>
+  reduce(s, { type: "delete-note", noteId: ID_COMPRA, meta: META })
+
+test("delete-note pasa su nodo-nota a «Nota perdida» y conserva sus relaciones", (): void => {
+  const s: AppState = conNodosNota()
+  const r: AppState = borrarCompra(s)
+  const m: Diagram = mudanzaDe(r)
+  const llaves: DiagramNode | undefined = m.nodes[ID_LLAVES]
+
+  assert.equal(llaves?.type === "simple-node" && llaves.text, "Nota perdida")
+  assert.strictEqual(m.relations, mudanzaDe(s).relations)
+  assert.strictEqual(m.nodes[ID_CAJAS], mudanzaDe(s).nodes[ID_CAJAS])
+})
+
+test("delete-note toca TODOS los diagramas que la usaban, con el MISMO meta", (): void => {
+  const r: AppState = borrarCompra(conNodosNota())
+  const viaje: Diagram | undefined = r.diagrams[ID_VIAJE]
+
+  assert.equal(viaje?.nodes[ID_NODO_NUEVO]?.type, "simple-node")
+  assert.strictEqual(mudanzaDe(r).revision, META.revision)
+  assert.strictEqual(viaje?.revision, META.revision)
+  assert.equal(viaje?.updatedAt, META.now)
+})
+
+test("delete-note deja INTACTOS, por referencia, los diagramas que no la usaban", (): void => {
+  const s: AppState = conNodosNota()
+  const obra: DiagramId = diagramId("obra")
+  assert.strictEqual(borrarCompra(s).diagrams[obra], s.diagrams[obra])
+})
+
+test("delete-note de una nota que ningún diagrama usa deja el MISMO objeto diagrams", (): void => {
+  const s: AppState = estado() // Compra existe, pero ningún nodo la usa
+  assert.strictEqual(borrarCompra(s).diagrams, s.diagrams)
 })
