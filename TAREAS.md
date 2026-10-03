@@ -649,14 +649,28 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       clave de `localStorage`, fuera del almacén, así que **no viaja con las notas** — un cambio
       de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado).
 
-### Fase 5 — Diagramas: Modelo ✅ HECHA; Lienzo, código hecho y lista sin pasar; lo siguiente, Relaciones
+### Fase 5 — Diagramas: TODO el código hecho; Lienzo y Relaciones, sin cerrar; lo siguiente, la sentada de las cuatro listas
 
 **Planificada con el usuario el 2026-10-03.** El diseño entero, sus porqués y los criterios de
 cierre de cada parte, en `ARCHITECTURE.md` §9.11; lo que cambia en la navegación, en §7.4.
 **Partida en tres, en este orden:** Modelo → Lienzo → Relaciones. **Fase 5 · Modelo, hecha el
 2026-10-03** con **643 pruebas** (532 al empezar). **Fase 5 · Lienzo, código hecho el 2026-10-04**
-con **693** y **sin cerrar**: su lista manual está escrita y sin pasar. **Lo siguiente: Fase 5 ·
-Relaciones.**
+con **693**, y **Fase 5 · Relaciones, código hecho el mismo día** con **712**; **las dos sin
+cerrar**, con su lista manual escrita y sin pasar.
+
+**Lo siguiente es UNA tarea: la sentada de las cuatro listas.** Qué cierra cada una:
+
+| Lista | Dónde | Al pasarla se cierra |
+|---|---|---|
+| `test/ui/VERIFICACION-MANUAL.md` | sobre todo en el móvil; la hoja de escritorio también está vacía | la lista de Fase 4 · Contextos |
+| `test/ui/VERIFICACION-MANUAL-EDITOR.md` | ídem | la lista de Fase 4 · Notas; las tres preguntas siguen aparte |
+| `test/ui/VERIFICACION-MANUAL-LIENZO.md` | en escritorio y en el móvil | Fase 5 · Lienzo |
+| `test/ui/VERIFICACION-MANUAL-RELACIONES.md` | en escritorio y en el móvil | Fase 5 · Relaciones |
+
+**Pasadas la del lienzo y la de las relaciones, se cierra la Fase 5 entera.**
+
+Las tres preguntas del editor (*Fase 4 · Notas*, arriba) **no se contestan en la sentada**: piden
+usar la app varios días.
 
 **Todas las listas manuales pendientes se pasan juntas, al final, en una sentada** —*decidido por
 el usuario el 2026-10-04*—: la del lienzo, la de las relaciones y la deuda móvil de la Fase 4 (sus
@@ -726,21 +740,29 @@ tarea propia**.
       (arriba). **Esto es lo que tiene abierta Fase 5 · Lienzo.**
 - [x] **`npm run check` en verde y el recuento anotado**: **693** (643 al empezar).
 
-#### Fase 5 · Relaciones — las líneas
+#### Fase 5 · Relaciones — las líneas: código hecho, lista manual sin pasar
 
-- [ ] **Conectar**: *Conectar* en el menú, aviso «Toca el nodo de destino», clic en el destino; el
-      fondo cancela.
-- [ ] **La flecha al borde medido del pósit**, y **el abanico** de curvas cuando hay varias entre
-      el mismo par; con una, recta.
-- [ ] **El menú de la línea**: invertir (`set-relation-ends`), sin dirección / con dirección,
-      borrar; y el trazo invisible grueso para el dedo.
-- [ ] **El texto a lo largo de la línea** (`<textPath>`), sin salir boca abajo y editado con un
-      campo encima. El último paso.
-- [ ] **Las cuentas en funciones puras con pruebas en Node**: corte con el borde, abanico,
-      orientación del texto.
-- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil**, en la
-      misma sentada que la del lienzo y la deuda móvil de la Fase 4.
-- [ ] **`npm run check` en verde y el recuento anotado.**
+Cómo quedó, el fallo que salió al probarlo y las decisiones tomadas al construirlo, en
+`ARCHITECTURE.md` §9.11 → *Fase 5 · Relaciones: código hecho, sin cerrar*. Sin tocar el core ni
+`storage/`. En el orden en que se hicieron:
+
+- [x] **Las cuentas en funciones puras con pruebas en Node**: corte con el borde, abanico,
+      orientación del texto. ✅ `c45f122` (`relationGeometry.ts`); el punto medio, `curveMidpoint`,
+      llegó con el texto en `4ad85ba`. Al romper sus guardas salió un hueco —doblar la separación
+      del control sólo estaba probado en horizontal— y se añadió la prueba en vertical.
+- [x] **La flecha al borde medido del pósit**, y **el abanico** de curvas cuando hay varias entre
+      el mismo par; con una, recta. ✅ `7e2ebca`. Con el arreglo de las líneas que salían del
+      centro: un `ResizeObserver` por pósit.
+- [x] **Conectar**: *Conectar* en el menú, aviso «Toca el nodo de destino», clic en el destino; el
+      fondo cancela —y el propio origen, el clic derecho, una línea y el atrás—. ✅ `54dc2c6`.
+- [x] **El menú de la línea**: invertir (`set-relation-ends`), sin dirección / con dirección,
+      borrar; y el trazo invisible grueso para el dedo. ✅ `e362682`.
+- [x] **El texto a lo largo de la línea** (`<textPath>`), sin salir boca abajo y editado con un
+      campo encima. El último paso. ✅ `4ad85ba`.
+- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil.**
+      **Escrita** (`test/ui/VERIFICACION-MANUAL-RELACIONES.md`, `74c356e`). **Sin pasar**: va en la
+      sentada de las cuatro listas (arriba). **Esto es lo que tiene abierta Fase 5 · Relaciones.**
+- [x] **`npm run check` en verde y el recuento anotado**: **712** (693 al empezar).
 
 #### De la fase, sin parte asignada
 
@@ -1181,7 +1203,7 @@ documentación del 2026-09-29.
 entra en juego** (abajo, *Tres huecos…*) y **qué pasa con lo guardado en `localStorage` al cambiar
 de destino**, que desde el 2026-09-27 incluye la lista de ventanas (arriba, en *Pendiente*).
 
-### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03; construidos Modelo y el código de Lienzo**
+### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03; construidos Modelo y el código de Lienzo y Relaciones**
 
 Salieron de planificar la fase con el usuario. El diseño y sus porqués, en `ARCHITECTURE.md`
 §9.11 (y §7.4 para la navegación); aquí, sólo el registro de lo que estaba abierto.

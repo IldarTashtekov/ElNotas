@@ -12,10 +12,11 @@ puerto, copia por camino—, está explicado ahí con ejemplos de notas y casill
 > lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
 > usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
 > (§9.10). De la Fase 5, los Diagramas (§9.11), está construida **Fase 5 · Modelo** —el core y
-> `storage/`, el 2026-10-03— y **el código de Fase 5 · Lienzo** —la vista y los pósits, el
-> 2026-10-04—, éste **sin cerrar**: su lista manual está sin pasar. **Las relaciones en pantalla
-> siguen siendo sólo diseño**, como la carpeta del usuario como destino y la semántica
-> multi-backend. Cada sección dice si lo que describe existe o está planificado.
+> `storage/`, el 2026-10-03— y tiene **todo el código de la pantalla**: **Fase 5 · Lienzo** —la
+> vista y los pósits— y **Fase 5 · Relaciones** —las líneas—, las dos del 2026-10-04 y **sin
+> cerrar**: sus listas manuales están sin pasar. Siguen siendo sólo diseño la carpeta del usuario
+> como destino y la semántica multi-backend. Cada sección dice si lo que describe existe o está
+> planificado.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
 **Índice**
@@ -698,8 +699,8 @@ Tres entidades, más nociones de agrupación:
   (`DiagramRelation`) une dos nodos, con o sin flecha y con un texto opcional, y entre dos nodos
   puede haber **cualquier número** (multigrafo). En el código, `Diagram` (público, en inglés).
   **El modelo y sus operaciones están construidos** (Fase 5 · Modelo, 2026-10-03), y **la
-  pantalla, salvo las relaciones**, tiene código sin verificar (Fase 5 · Lienzo, 2026-10-04);
-  **dibujar las relaciones está planificado y sin construir** (§9.11).
+  pantalla entera, relaciones incluidas, tiene código sin verificar a mano** (Fase 5 · Lienzo y
+  Fase 5 · Relaciones, 2026-10-04; §9.11).
 
   **Se llamó *Plan* hasta el 2026-10-03**, y se renombró con el usuario antes de planificar la
   Fase 5, por dos motivos: «plan» chocaba con *el plan por fases* y con *planificar*, y daba por
@@ -729,10 +730,10 @@ Tres entidades, más nociones de agrupación:
 
 ### 5.1 Lo que existe hoy en el repo
 
-**Las fases 1 a 4, Fase 5 · Modelo y el código de Fase 5 · Lienzo.** Medido el **2026-10-04**,
-tras `12be692`, en líneas de `.ts`: `src/core` 3148, `src/storage` 1687, `src/platform` 339,
-`src/ui` 3954, y `test/` 9294. `npm run check` en verde con **693 pruebas** (532 al cerrar la Fase
-4, 643 al cerrar Fase 5 · Modelo). Las cifras se quedan viejas solas: antes de afirmar nada,
+**Las fases 1 a 4, Fase 5 · Modelo y el código de Fase 5 · Lienzo y Fase 5 · Relaciones.** Medido
+el **2026-10-04**, tras `74c356e`, en líneas de `.ts`: `src/core` 3148, `src/storage` 1687,
+`src/platform` 339, `src/ui` 4372, y `test/` 9435. `npm run check` en verde con **712 pruebas**
+(532 al cerrar la Fase 4, 643 al cerrar Fase 5 · Modelo, 693 al acabar el código de Lienzo). Las cifras se quedan viejas solas: antes de afirmar nada,
 `find src test -name '*.ts' | sort` y `npm run check`.
 
 La tabla ya no lleva líneas por fichero, a propósito: la columna que tenía estaba sin re-medir
@@ -749,11 +750,11 @@ está en §6.3, y ese fichero no ha cambiado desde que se midió.
 | **`core/migrations/`** | `hydrate.ts` (de listas a mapas, limpiando `ItemRef` rotas y los diagramas) · `runMigrations.ts` (**puro y total**; `MIGRATIONS` **vacía a propósito**) |
 | **`storage/`** | `memory/MemoryStorageAdapter.ts` · `file/FileStorageAdapter.ts` (§6.2, con `onCorrupt`) · `file/schema.ts` (la validación al leer) · `blobs/LocalStorageBlobStore.ts` · `blobs/DirectoryHandleBlobStore.ts` (**sin pruebas a propósito**, §6.3) · `writeBehind.ts` (la mitad impura, con el estado *detenido* y `onError`) |
 | **`platform/web/`** | `SystemClock.ts` · `CryptoIdGenerator.ts` · `boot.ts` (la composición) · `LocalStorageWindows.ts` (la lista de ventanas) · `main.ts` (la entrada del navegador). Detalle en §7.5 |
-| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` · `viewport.ts` + `gestures.ts` + `paintOrder.ts` (las cuentas del lienzo) |
+| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` · `viewport.ts` + `gestures.ts` + `paintOrder.ts` (las cuentas del lienzo) · `relationGeometry.ts` (las de las líneas) |
 | **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` (lista notas **y diagramas**; el nombre está pendiente de cambiar) · `NoteView.ts` · `NoteEditor.ts` · `DiagramView.ts` · `DiagramCanvas.ts` · `editableTitle.ts` · `sheet.ts` · `dragReorder.ts` · `backStack.ts` · `dom.ts` |
 | **`ui/styles/`** | un CSS por vista, enlazados desde `index.html` en este orden: `base` · `ventanas` · `ajustes` · `hojas` · `barras` · `editor` · `diagrama` |
 | **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 22 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
-| **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · `test/ui/VERIFICACION-MANUAL.md`, `test/ui/VERIFICACION-MANUAL-EDITOR.md` y `test/ui/VERIFICACION-MANUAL-LIENZO.md`, **escritas y sin pasar**. No son TypeScript y no entran en `npm run check` |
+| **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · las cuatro de `test/ui/`, **escritas y sin pasar**: `VERIFICACION-MANUAL.md` y `VERIFICACION-MANUAL-EDITOR.md` (Fase 4), `VERIFICACION-MANUAL-LIENZO.md` y `VERIFICACION-MANUAL-RELACIONES.md` (Fase 5). No son TypeScript y no entran en `npm run check` |
 
 Las pruebas son más líneas que el código que vigilan, y eso es lo esperado en un repo donde
 cada invariante se verifica rompiéndola a propósito. Desde que viven en `test/` (§8.5) la cuenta
@@ -1875,7 +1876,8 @@ la sincronización entre dispositivos.
 
 **Construido en la Fase 4, en `src/ui/`, cerrada el 2026-10-03 con deuda** (§9.10): siguen
 pendientes sus dos listas manuales y las tres preguntas del editor. **La vista diagrama, con su
-lienzo, se añadió en Fase 5 · Lienzo** (código hecho el 2026-10-04, sin cerrar; §9.11). El diseño de la navegación y las pantallas
+lienzo, se añadió en Fase 5 · Lienzo, y sus líneas en Fase 5 · Relaciones** (código hecho el
+2026-10-04, las dos sin cerrar; §9.11). El diseño de la navegación y las pantallas
 (§7.4) se cerró el **2026-09-27** a partir de un boceto en PDF del usuario; el del editor (§7.2 y
 §7.3), el 2026-09-20, y **se reabrió y precisó al construirlo, el 2026-09-29**. Cómo está hecho
 por dentro, en §7.5.
@@ -2508,7 +2510,7 @@ pero **sin verificar a mano**: la lista del lienzo está sin pasar.
   ese contexto** (`remove-item`), sin confirmar. **Borrar un diagrama no borra las notas** a las
   que apuntan sus nodos.
 
-### 7.5 Cómo está construida *(Fase 4, y la vista diagrama de Fase 5 · Lienzo)*
+### 7.5 Cómo está construida *(Fase 4, y la vista diagrama de Fase 5 · Lienzo y Relaciones)*
 
 Lo de arriba es el diseño; esto es cómo quedó el código y lo que se decidió al escribirlo. Casi
 todo son **decisiones de implementación, aceptadas por el usuario** en bloque, no cerradas una a
@@ -2517,12 +2519,13 @@ una como las de §7.2–§7.4.
 #### El patrón: lo que decide es puro; el DOM, delgado
 
 **Lo que decide qué se ve y qué pasa es una función pura, con pruebas en Node; el DOM de encima
-es delgado y se verifica en el navegador**, con las tres listas manuales de `test/ui/`. Por eso
+es delgado y se verifica en el navegador**, con las cuatro listas manuales de `test/ui/`. Por eso
 cada pantalla va en dos ficheros: `windowView.ts` decide qué enseña una ventana y `WindowsView.ts`
 lo pinta; `settingsContent.ts` y `SettingsView.ts`; `noteActions.ts` + `selection.ts` y
 `NoteList.ts`; `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor entero, sin DOM, probado
 fila a fila contra las tablas de §7.3) y `NoteEditor.ts`; `viewport.ts` + `gestures.ts` +
-`paintOrder.ts` (las cuentas del lienzo) y `DiagramCanvas.ts`.
+`paintOrder.ts` + `relationGeometry.ts` (las cuentas del lienzo y de sus líneas) y
+`DiagramCanvas.ts`.
 
 **Lo que se monta en dos marcos va aparte de su vista.** `NoteEditor` es el editor y `NoteView` el
 marco de la vista nota; una ventana de nota monta el mismo `NoteEditor` con otro marco (§7.4).
@@ -2939,9 +2942,10 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   Lienzo y Fase 5 · Relaciones** (§9.11). **Fase 5 · Modelo, ✅ HECHA el 2026-10-03**, con **643
   pruebas** (532 al empezar): los Diagramas ya se operan en el core. **Fase 5 · Lienzo, código
   hecho el 2026-10-04 y sin cerrar**, con **693**: la vista, el corcho, los pósits y los
-  nodos-nota; su lista manual, escrita y sin pasar. **Lo siguiente: Fase 5 · Relaciones.** **Al
-  final, todas las listas manuales pendientes en una sentada** —lienzo, relaciones y la deuda
-  móvil de la Fase 4— (§9.11).
+  nodos-nota. **Fase 5 · Relaciones, código hecho el 2026-10-04 y sin cerrar**, con **712**: las
+  líneas, *Conectar*, su menú y su texto. Las dos tienen su lista manual escrita y sin pasar.
+  **Lo siguiente: todas las listas manuales pendientes en una sentada** —lienzo, relaciones y la
+  deuda móvil de la Fase 4—, que cierra las tres cosas y la fase (§9.11).
 
 ### 9.3 Las operaciones de contenido
 
@@ -3695,16 +3699,16 @@ entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si
 sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
 decisión aunque la fase esté cerrada.
 
-### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo, código hecho y sin cerrar)*
+### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo y Relaciones, código hecho y sin cerrar)*
 
 Al estilo de §9.10, y **escrito antes de que existiera una línea de código de diagramas**. ⚠️ **Hoy
 está construido Fase 5 · Modelo** —el modelo, sus operaciones, acciones y casos de uso,
 `delete-note`, `hydrate` y `schema.ts`— **y el código de Fase 5 · Lienzo** —la vista, el corcho,
-los pósits, los nodos-nota y sus gestos—, éste **sin verificar a mano**; los dos, al final, en sus
-apartados *construida* y *código hecho*. **El dibujo de las relaciones y su menú siguen siendo
-diseño.** Todas las decisiones de aquí se tomaron **con el usuario el 2026-10-03**; lo que no lleve
-otra fecha, lleva ésa. Donde el código se apartó de lo de aquí, lo dice *Fase 5 · Lienzo: código
-hecho*.
+los pósits, los nodos-nota y sus gestos— **y de Fase 5 · Relaciones** —las líneas, *Conectar*, su
+menú y su texto—, éstos dos **sin verificar a mano**; los tres, al final, en sus apartados
+*construida* y *código hecho*. Todas las decisiones de aquí se tomaron **con el usuario el
+2026-10-03**; lo que no lleve otra fecha, lleva ésa. Donde el código se apartó de lo de aquí, lo
+dicen los apartados *código hecho*.
 
 #### Qué es un diagrama: un lienzo libre
 
@@ -3956,7 +3960,8 @@ la Fase 4.
   menús y el clic que espera. **Código hecho el 2026-10-04; sin cerrar**, porque su lista manual
   está sin pasar.
 - **Relaciones** — conectar, la flecha al borde, el abanico, sin dirección, invertir, el menú de
-  la línea y, al final, el texto a lo largo.
+  la línea y, al final, el texto a lo largo. **Código hecho el 2026-10-04; sin cerrar**, por lo
+  mismo.
 
 **Por qué ese orden:** las relaciones son la parte con más geometría. Separarlas deja **probar el
 lienzo en el móvil antes**, y si los gestos se atascan se ve pronto —que es cuando entra el plan
@@ -4091,7 +4096,7 @@ no está verificado en un navegador de verdad**, y menos en el móvil.
   *Texto* nace vacío y en edición. *Nota nueva* usa **`createNoteForDiagram`** —la nota en todos
   los contextos del diagrama, apoyado en `contextsWith`— y entra en ella.
 - **El menú de un pósit**: *Editar · Marcar hecho* (o *Desmarcar*) *· Borrar*; el nodo-nota, sin
-  *Editar*. *Conectar* llega con Relaciones.
+  *Editar*. *Conectar*, que llegó con Relaciones, los encabeza (abajo).
 - **Un nodo-nota enseña el título en directo**; si la nota no está cargada, «Nota ilegible», y
   **una ilegible no se abre**. Si llega el segundo toque antes de los 250 ms, menú en vez de
   entrar.
@@ -4135,6 +4140,90 @@ sin probar—, y **si la espera de 250 ms se nota** al abrir un nodo-nota.
    orientación.
 7. **Su lista manual, pasada en escritorio Y en el móvil**, con el resultado anotado.
 8. **`npm run check` en verde y el recuento anotado.**
+
+#### Fase 5 · Relaciones: código hecho, sin cerrar *(2026-10-04)*
+
+En `c45f122`, `7e2ebca`, `54dc2c6`, `e362682`, `4ad85ba` y `74c356e`, con **712 pruebas** en verde
+(693 al empezar), **sin tocar el core ni `storage/`** —las relaciones ya se operaban desde Fase 5 ·
+Modelo— y sin instalar nada. Los puntos 1 a 6 y el 8 tienen código; **el 7 no se cumple**: la
+lista (`test/ui/VERIFICACION-MANUAL-RELACIONES.md`) está escrita y **sin pasar**, y va en la misma
+sentada que la del lienzo y la deuda móvil de la Fase 4 (arriba, *Partida en tres*). Con esto
+**todo el código de la Fase 5 está hecho**; lo de este apartado **existe pero no está verificado en
+un navegador de verdad**.
+
+**Las piezas:**
+
+- **`relationGeometry.ts`, puro: dónde va cada línea.** Lo primero que se hizo, con 19 pruebas.
+  `Box` es un pósit en unidades del corcho, por su centro y sus medidas. `borderPoint` da dónde
+  corta el borde la recta que sale del centro; hacia su propio centro, el centro, sin dividir
+  entre cero. `fanOffsets` agrupa por **par de nodos sin sentido** —A→B y B→A son del mismo par—,
+  ordena por id y reparte las curvaturas alrededor de cero, separadas `FAN_SPACING` (28); una
+  sola, cero: recta. `relationCurve` es una **cuadrática**: el lado hacia el que se curva se mide
+  siempre **del nodo de id menor al mayor**, así que A→B y B→A con curvaturas opuestas no se
+  pisan; el control se separa **el doble** de la curvatura, porque el vértice de una cuadrática
+  queda a mitad de camino del control; y **cada extremo sale hacia el control, no hacia el otro
+  centro**, para que la línea nazca en el borde por donde de verdad sale. Con los dos centros en
+  el mismo sitio no hay lado y no divide entre cero. `curvePath` da el trazado; `labelPath`, el
+  mismo **al revés si la línea va hacia la izquierda**, para que el texto no salga boca abajo; y
+  `curveMidpoint`, el punto de la curva a mitad de camino.
+- **El dibujo, en `DiagramCanvas.ts`.** Una capa SVG **debajo** de los pósits, dentro de la capa
+  que se mueve: **los pósits pasaron a su propio contenedor** para que su `reconcile` no mueva la
+  capa SVG. **Una sola punta de flecha definida por lienzo**, con un id distinto en cada uno,
+  porque puede haber dos montados —la ventana y el diagrama abierto encima—. Cada pósit se mide
+  **una vez por repintado** (`offsetWidth`/`offsetHeight`, que no cuentan la escala: ya son
+  unidades del corcho). Mientras se arrastra un pósit cuenta la posición del dedo, así que **sus
+  líneas lo siguen**, no sólo al soltar.
+- **`diagrama.css`** gana las líneas (`--muted`, azul al pasar el ratón), el trazo invisible, el
+  texto con su halo, el aviso de conectar y la marca del origen.
+
+**El fallo que salió al probarlo, y se arregló:** las líneas salían del **centro** de los pósits y
+las puntas quedaban tapadas por ellos. Se pintaban antes de que los pósits tuvieran tamaño —al
+montarse miden cero, como el lienzo (*Fase 5 · Lienzo: código hecho*)—, y `borderPoint` con una
+caja de tamaño cero da el centro. Ahora **un `ResizeObserver` por pósit** repinta las líneas
+cuando aparece o crece, también mientras se escribe en él.
+
+**Cómo quedó:**
+
+| | Ratón | Dedo |
+|---|---|---|
+| Conectar | *Conectar* en el menú del pósit, y clic en el de destino | igual, con toques |
+| Menú de una línea | doble clic o clic derecho sobre ella | doble toque |
+| Mover el corcho | arrastrar empezando en una línea, como en el fondo | igual |
+
+- **Conectar** encabeza el menú del pósit, también del nodo-nota. Sale el aviso «Toca el nodo de
+  destino» y el origen se marca; tocar otro pósit crea la relación, con flecha (`addRelation`).
+  **Cancelan** el fondo, el propio origen, el clic derecho, una línea y **el atrás**: el modo es
+  **una capa del `backStack`**, como una hoja, y funciona al elegir *Conectar* desde la hoja
+  gracias al arreglo de las capas pendientes de Fase 5 · Lienzo. Si el origen se borra mientras se
+  conecta, se cancela. Conectando, un toque en un nodo-nota **no abre la nota**: lo une.
+- **El menú de la línea**, titulado «A → B» o «A — B». Con flecha: *Invertir dirección · Sin
+  dirección · Texto · Borrar*; sin flecha: *Con dirección · Texto · Borrar*. *Invertir* es
+  `setRelationEnds` con los extremos cambiados, decidido en la UI; *Con dirección* devuelve el
+  sentido que tenía, porque `from`/`to` no se tocaron. **Un trazo invisible de 16 de grosor**
+  debajo de cada línea (`pointer-events: stroke`) es el que recibe el dedo.
+- **El texto** va por `<textPath>` sobre un trazado guía (`labelPath`), centrado y por encima de
+  la línea, con **un halo del color del fondo** (`paint-order: stroke`) para leerse si cruza otra.
+  *Texto* pone un campo en `curveMidpoint`: Intro o tocar fuera guardan, Escape descarta, y vacío
+  quita el texto. Un texto más largo que la línea **se corta**.
+
+**Decisiones de implementación** —mías, al construirlo; el usuario las ha visto y no las ha
+rechazado, pero **no se decidieron con él**:
+
+- **Borrar una línea no pide confirmación**, como borrar un pósit.
+- **Con el modo de conectar activo, «✕ Salir» primero cancela el modo** y hay que pulsarlo otra
+  vez. Es la consecuencia de que el modo sea una capa del atrás; el usuario lo ha visto y no lo ha
+  cambiado. La lista lo anota como conocido.
+- **Tocar el propio origen cancela**, en vez de no hacer nada: una relación de un nodo a sí mismo
+  no existe (arriba).
+- **Una línea se pone azul al pasar el ratón**, para saber que se puede tocar.
+
+**Una guarda rota a propósito destapó un hueco:** que el control se separe el doble de la
+curvatura sólo estaba probado con los pósits en horizontal; se añadió la prueba en vertical.
+
+**Lo que queda sin verificar de verdad**, y es lo que la lista tiene que mirar: **acertar una
+línea con el dedo** —el trazo invisible está, sin probar en un móvil—, **el atrás del sistema en el
+modo de conectar** —que cancele el modo y no cierre el diagrama—, y **escribir el texto de una
+línea en el móvil**, con su teclado.
 
 #### Lo que NO entra en la Fase 5
 

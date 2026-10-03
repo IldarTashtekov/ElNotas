@@ -20,16 +20,18 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-04, tras `12be692`:** `npm run check` en verde —sus seis pasos— con **693
-pruebas** (643 al cerrar Fase 5 · Modelo). Líneas de `.ts` (`find <dir> -name '*.ts' | xargs cat |
-wc -l`): `src/core` 3148, `src/storage` 1687, `src/platform` 339, `src/ui` 3954; `test/` 9294.
+**Medido el 2026-10-04, tras `74c356e`:** `npm run check` en verde —sus seis pasos— con **712
+pruebas** (693 al acabar el código de Lienzo). Líneas de `.ts` (`find <dir> -name '*.ts' | xargs cat |
+wc -l`): `src/core` 3148, `src/storage` 1687, `src/platform` 339, `src/ui` 4372; `test/` 9435.
 *(Las cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
 **Fases 1 a 4 cerradas. La 4, por decisión del usuario el 2026-10-03, con deuda de
 verificación:** las dos listas manuales y las tres preguntas del editor quedan pendientes en
-`TAREAS.md` (ver *Plan por fases*). **Fase 5 · Modelo, hecha el 2026-10-03. Fase 5 · Lienzo, código
-hecho el 2026-10-04 y SIN CERRAR:** su lista manual está escrita y sin pasar. **Lo siguiente: Fase
-5 · Relaciones.**
+`TAREAS.md` (ver *Plan por fases*). **De la Fase 5, TODO el código está hecho**: Modelo, cerrada el
+2026-10-03; **Lienzo y Relaciones, código hecho el 2026-10-04 y SIN CERRAR**, con sus listas
+escritas y sin pasar. **Lo siguiente: la sentada de las cuatro listas** —las dos de la Fase 4 en
+el móvil, y la del lienzo y la de las relaciones en escritorio y en móvil—, que cierra la deuda de
+la Fase 4, Lienzo, Relaciones y la Fase 5 entera.
 
 Lo que hay en `src/`, de dentro afuera:
 
@@ -53,17 +55,17 @@ Lo que hay en `src/`, de dentro afuera:
   implementaciones de `Clock` e `IdGenerator`; `boot.ts`, que monta la pila entera;
   `LocalStorageWindows.ts`, la lista de ventanas; y `main.ts`, la entrada que carga
   `index.html`. Hoy se guarda en `LocalStorageBlobStore`.
-- **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 —la de diagrama, con su lienzo de pósits y
-  nodos-nota, sin las relaciones—, el editor con casillas anidadas y los avisos de `onCorrupt` y
-  `onError`. Cómo está construida, en §7.5.
+- **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 —la de diagrama, con su lienzo de pósits,
+  nodos-nota y las relaciones entre ellos—, el editor con casillas anidadas y los avisos de
+  `onCorrupt` y `onError`. Cómo está construida, en §7.5.
 
 **Qué se prueba dónde:** *lo que exige la interfaz va en el contrato; lo que sólo tiene una
 implementación, en un fichero aparte*. Por eso el adaptador de memoria no tiene ni una prueba
 propia y el de fichero sí (§6.3). Si una prueba pudiera escribirse contra la interfaz, su sitio
 es el contrato. **En la UI, lo que decide la pantalla es una función pura con pruebas en Node;
-el DOM de encima es delgado y se verifica a mano** con las tres listas de `test/ui/`
-(`VERIFICACION-MANUAL.md`, `-EDITOR.md` y `-LIENZO.md`). No hay pruebas automáticas del DOM, a
-propósito.
+el DOM de encima es delgado y se verifica a mano** con las cuatro listas de `test/ui/`
+(`VERIFICACION-MANUAL.md`, `-EDITOR.md`, `-LIENZO.md` y `-RELACIONES.md`). No hay pruebas
+automáticas del DOM, a propósito.
 
 **`DirectoryHandleBlobStore` se verificó a mano el 2026-09-13** (`test/storage/blobs/
 VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). ⚠️ Se pasó sobre
@@ -71,9 +73,8 @@ VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). �
 vuelve a pasar la lista**; la única excepción registrada —mismo código una vez quitados los
 comentarios— está en `TAREAS.md`.
 
-**Lo que NO existe todavía:** las relaciones en pantalla —las líneas entre nodos, *Conectar* y su
-menú: Fase 5 · Relaciones; en el core ya existen—, la carpeta del usuario y OPFS como destino de
-la app y el botón de «reconectar carpeta».
+**Lo que NO existe todavía:** la carpeta del usuario y OPFS como destino de la app y el botón de
+«reconectar carpeta».
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
 encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
@@ -112,7 +113,7 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 ├── core/          # ← domain/ (+ errors/) · app/ · migrations/
 ├── storage/       # ← contract-tests/ · memory/ · file/ · blobs/
 ├── platform/web/
-└── ui/            # ← incluye las tres listas de verificación manual: dos de la Fase 4 y la del lienzo
+└── ui/            # ← incluye las cuatro listas de verificación manual: dos de la Fase 4 y dos de la 5
 
 index.html         # la página: carga dist/web/ con un importmap y los estilos, sin bundler (§8.6)
 ```
@@ -363,7 +364,7 @@ duda**; no la cambies por tu cuenta.
   (`TS2304`). *Qué está sucio* es puro y va en `core/app/`; *cuándo se escribe* va en
   `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
 - **Los Diagramas se operan en el core desde Fase 5 · Modelo (2026-10-03)**; hasta entonces sólo
-  se persistían. La pantalla, con Lienzo (código hecho) y Relaciones. §9.7 y §9.11.
+  se persistían. La pantalla, con Lienzo y Relaciones (código hecho, sin verificar). §9.7 y §9.11.
 - **La entidad se llama Diagrama (`Diagram` en el código), no Plan.** *Renombrada con el usuario
   el 2026-10-03*: «plan» chocaba con el plan por fases y daba por hecho para qué sirve. Sin
   migración: no había ninguno guardado. §5.
@@ -469,10 +470,10 @@ duda**; no la cambies por tu cuenta.
   core salvo la regla de `merge` y conservar las referencias a lo ilegible (2026-10-03,
   arriba); **los Diagramas son la Fase 5**. §9.10.
 
-**De los Diagramas, la Fase 5** — *decididas con el usuario el 2026-10-03*. **Construido, lo que
-toca al core** —en Fase 5 · Modelo— **y el código del lienzo** —en Fase 5 · Lienzo, sin
-verificar—; **las relaciones en pantalla, SIN CONSTRUIR**. El porqué, las alternativas
-descartadas y las decisiones de implementación del lienzo, en §9.11:
+**De los Diagramas, la Fase 5** — *decididas con el usuario el 2026-10-03*. **Todo construido**:
+lo que toca al core, en Fase 5 · Modelo; la pantalla, en Fase 5 · Lienzo y Fase 5 · Relaciones,
+**sin verificar a mano**. El porqué, las alternativas descartadas y las decisiones de
+implementación del lienzo y de las relaciones, en §9.11:
 
 - **Un lienzo libre** (como Miro/Excalidraw): los nodos se colocan arrastrando. Ni mapa mental,
   ni colocación automática, ni texto que se dibuja. Al abrir se ve el origen; el encuadre no se
@@ -502,7 +503,7 @@ descartadas y las decisiones de implementación del lienzo, en §9.11:
 - **Partida en tres: Fase 5 · Modelo → Lienzo → Relaciones**, y **la deuda móvil de la Fase 4 va
   DESPUÉS** de las tres.
 - **Las listas manuales pendientes se pasan TODAS JUNTAS, al final, en una sentada**: la del
-  lienzo, la de las relaciones y la deuda móvil de la Fase 4. *Decidido por el usuario el
+  lienzo, la de las relaciones y la deuda móvil de la Fase 4 (sus dos listas). *Decidido por el usuario el
   2026-10-04*, sabiendo el riesgo: si los gestos fallan en su móvil se descubre con las
   relaciones construidas encima, que usan los mismos gestos. §9.11.
 
@@ -540,11 +541,12 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   y el teclado de Android.
 - **Fase 5 — Diagramas** (§9.11). Partida en tres, en este orden: **Fase 5 · Modelo** (core y
   `storage/`, sin pantalla) **✅ HECHA el 2026-10-03, con 643 pruebas**; **Fase 5 · Lienzo**
-  (todo menos las líneas) **con el código hecho el 2026-10-04 y 693 pruebas, SIN CERRAR**:
-  `test/ui/VERIFICACION-MANUAL-LIENZO.md` escrita y sin pasar; y **Fase 5 · Relaciones**. Cada
-  una cierra con su lista pasada **en escritorio y en el móvil**. **Lo siguiente: Fase 5 ·
-  Relaciones.** Al final, **todas las listas pendientes en una sentada** (lienzo, relaciones y
-  la deuda móvil de la Fase 4).
+  (todo menos las líneas) **con el código hecho el 2026-10-04 y 693 pruebas, SIN CERRAR**; y
+  **Fase 5 · Relaciones**, **con el código hecho el 2026-10-04 y 712 pruebas, SIN CERRAR**. Las
+  dos tienen su lista escrita y sin pasar (`test/ui/VERIFICACION-MANUAL-LIENZO.md` y
+  `-RELACIONES.md`), y cada una cierra con la suya pasada **en escritorio y en el móvil**.
+  **Lo siguiente: la sentada de las cuatro listas** (lienzo, relaciones y las dos de la Fase 4 en
+  el móvil). Pasadas, se cierran la deuda móvil de la Fase 4, Lienzo, Relaciones y la Fase 5.
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que

@@ -11,9 +11,9 @@ framework y sin dependencias de runtime. El código vive en `src/` —`core/` (e
 ventanas, contextos, configuración y el editor con casillas anidadas funcionan, y quedan
 pendientes pasar a mano sus dos listas de verificación (`test/ui/VERIFICACION-MANUAL.md` y
 `test/ui/VERIFICACION-MANUAL-EDITOR.md`) y usarla unos días. Hoy guarda en el `localStorage` del
-navegador. **La Fase 5, los Diagramas** —un lienzo libre con notas y relaciones—, tiene hecho el
-modelo y el lienzo con sus pósits, éste sin verificar todavía a mano; las líneas entre nodos
-están por hacer.
+navegador. **La Fase 5, los Diagramas** —un lienzo libre con notas y relaciones—, tiene todo el
+código hecho: el modelo, el lienzo con sus pósits y las líneas entre ellos. Falta verificar a
+mano el lienzo y las líneas, en escritorio y en el móvil, junto con la parte móvil de la Fase 4.
 
 La cuenta de arriba envejece sola: lo que manda es `npm run check` y `CLAUDE.md`.
 
