@@ -3026,8 +3026,8 @@ haya pedido).
    estampa `updatedAt`, notifica al `Store` y escribe a disco (§3). Lo mismo vale para la
    cascada de `setChecked`. ⚠️ **La Fase 4 no lo construyó:** el editor no tiene selección de
    varias líneas, así que no hay un «Supr» sobre una rama que pueda fallar en silencio, y una
-   casilla con hijas se borra de abajo arriba a mano. Si al usar el editor se echa en falta, se
-   diseña entonces (`TAREAS.md` → *Sin decidir*).
+   casilla con hijas se borra de abajo arriba a mano. ✅ **Y así se queda, decidido con el
+   usuario el 2026-10-03:** no hay borrar una rama; las casillas se borran **una a una**.
 
 Tampoco vale colar un borrado con hijas por la puerta de atrás de `merge`: es una operación
 distinta y responde por lo suyo — y responde igual, porque absorber una línea que tiene hijas

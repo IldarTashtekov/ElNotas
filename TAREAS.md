@@ -1053,11 +1053,11 @@ documentación del 2026-09-29.
   falta**. `infra-agent.md` todavía manda reinstalar webpack en la Fase 4 y habla de
   `webpack.config.js`, que ya no está. Por eso la casilla «Acordar la definición del
   `frontend-agent`» sigue **sin hacer**.
-- **Borrar una rama de casillas** *(detectado en el pase)*. `ARCHITECTURE.md` §9.3 decía que en la
-  Fase 4 «hace falta una forma explícita de borrar una rama», plegada en una sola acción. **No se
-  construyó**, y hoy no falla nada —el editor no tiene selección de varias líneas, así que no hay
-  un «Supr» que no haga nada—: una casilla con hijas se borra de abajo arriba, a mano. Queda por
-  decidir si se echa en falta; es de la misma familia que las tres preguntas de §9.10.
+- ~~**Borrar una rama de casillas**~~ *(detectado en el pase)* — ✅ **cerrada el 2026-10-03: no se
+  construye.** `ARCHITECTURE.md` §9.3 decía que en la Fase 4 «hace falta una forma explícita de
+  borrar una rama». El usuario prefiere que se quede como está: **una casilla con hijas se borra
+  una a una**, de abajo arriba. Hoy no falla nada —el editor no tiene selección de varias
+  líneas, así que no hay un «Supr» que no haga nada—.
 - **El disparador de Snabbdom, por tamaño, está pasado** *(detectado en el pase)*. La fila de
   *Ideas aparcadas* dice que se reabre si el render escrito a mano «pasa de ~600 líneas o empieza
   a tener bugs propios». **Medido el 2026-09-29:** los ocho ficheros de DOM de `src/ui/` más

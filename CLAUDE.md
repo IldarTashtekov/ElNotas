@@ -348,8 +348,10 @@ duda**; no la cambies por tu cuenta.
   `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
 - **Los Planes se persisten, pero no se operan** hasta la Fase 5. §9.7.
 - **Una acción, una operación.** Crear una nota en un contexto y «Mover a…» encadenan dos casos
-  de uso desde la UI. Las compuestas sobre contenido —cascada de `setChecked`, borrar una rama—
-  siguen sin construir, y cuando lleguen se pliegan en **una sola** acción. §9.7.
+  de uso desde la UI. La cascada de `setChecked` sigue sin construir, y si llega se pliega en
+  **una sola** acción. §9.7.
+- **No existe «borrar una rama» de casillas**: una casilla con hijas se borra **una a una**, de
+  abajo arriba. *Decidido con el usuario el 2026-10-03.* §9.3.
 - **Los casos de uso devuelven la entidad que tocan, o `null` si no aplicó.** Las dieciocho con
   el mismo tipo. **No un `Result`:** un no-op **no es un fallo**. El no-op sale de la invariante
   de identidad (`cambio`, en `useCases.ts`). ⚠️ Es **la entidad protagonista, no todo lo que
