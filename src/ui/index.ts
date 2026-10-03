@@ -56,6 +56,27 @@ export { NEW_CONTEXT_NAME, mountSettingsView } from "./SettingsView.js"
 export type { SettingsContent, WindowRow } from "./settingsContent.js"
 export { addWindowChoices, settingsContent } from "./settingsContent.js"
 export { dropIndex } from "./dropIndex.js"
+export type { Point, Viewport } from "./viewport.js"
+export {
+  MAX_SCALE,
+  MIN_SCALE,
+  centeredViewport,
+  panBy,
+  pinch,
+  toCanvas,
+  toScreen,
+  wheelFactor,
+  zoomAround,
+} from "./viewport.js"
+export type { Tap } from "./gestures.js"
+export {
+  DOUBLE_TAP_DISTANCE_PX,
+  DOUBLE_TAP_MS,
+  LONG_PRESS_MS,
+  MOVE_TOLERANCE_PX,
+  isDoubleTap,
+  movedBeyondTolerance,
+} from "./gestures.js"
 export type { WindowsViewDeps } from "./WindowsView.js"
 export { mountWindowsView } from "./WindowsView.js"
 export type { WindowView } from "./windowView.js"
