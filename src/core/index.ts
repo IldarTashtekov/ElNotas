@@ -89,7 +89,7 @@ export { NO_CHANGES, diffState } from "./app/diffState.js"
 
 /* El arranque, en su mitad pura: de lo guardado al estado, y las migraciones.
    La otra mitad —quién abre el storage, qué se ve sin nada guardado— es Fase 4. */
-export type { StoredEntities } from "./migrations/hydrate.js"
+export type { StoredEntities, Unreadable } from "./migrations/hydrate.js"
 export { hydrate } from "./migrations/hydrate.js"
 export type { Migration, MigrationOptions, MigrationResult } from "./migrations/runMigrations.js"
 export {

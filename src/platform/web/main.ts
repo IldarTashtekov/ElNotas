@@ -43,7 +43,6 @@ const iniciar = async (): Promise<void> => {
     return
   }
 
-  let ilegibles: ReadonlyArray<StorageError> = []
   /* El guardado puede detenerse antes de que haya UI a la que avisar: se guarda
      el fallo y se enseña al montarla. */
   let sinGuardar: StorageError | null = null
@@ -54,9 +53,7 @@ const iniciar = async (): Promise<void> => {
     blobs: createLocalStorageBlobStore(almacen),
     clock: systemClock,
     ids: createCryptoIdGenerator(window.crypto),
-    onCorrupt: (fallo: StorageError): void => {
-      ilegibles = [...ilegibles, fallo]
-    },
+    skipCorrupt: true,
     onError: (fallo: StorageError): void => avisarDeGuardado(fallo),
   })
   if (!arrancada.ok) {
@@ -78,7 +75,7 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     useCases: app.useCases,
     windows,
-    corrupt: ilegibles,
+    corrupt: app.corrupt,
   })
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)

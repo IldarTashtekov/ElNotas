@@ -15,6 +15,7 @@ import type {
   Clock,
   Context,
   IdGenerator,
+  ItemRef,
   MigrationError,
   MigrationResult,
   Note,
@@ -36,17 +37,17 @@ import {
   runMigrations,
 } from "#core/index"
 import type { OnCorrupt, OnError, Schedule, WriteBehind } from "#storage/index"
-import { createFileStorageAdapter, createWriteBehind } from "#storage/index"
+import { createFileStorageAdapter, createWriteBehind, pathOf } from "#storage/index"
 
 export interface BootDeps {
   readonly blobs: BlobStore
   readonly clock: Clock
   readonly ids: IdGenerator
   /**
-   * A quién avisar de un fichero ilegible. Con él, ese fichero se salta y la app
-   * arranca con el resto; sin él, no arranca.
+   * Si un fichero ilegible se salta —y la app arranca con el resto, diciendo
+   * cuáles en `App.corrupt`— o impide arrancar. Por defecto, lo impide.
    */
-  readonly onCorrupt?: OnCorrupt
+  readonly skipCorrupt?: boolean
   /** A quién avisar si el guardado se detiene. Sin él, sólo se entera `flush`. */
   readonly onError?: OnError
   /** Para las pruebas: en producción se usan los del write-behind. */
@@ -59,6 +60,8 @@ export interface App {
   readonly store: Store
   readonly useCases: UseCases
   readonly flush: () => Promise<Result<void, StorageError>>
+  /** Los ficheros que no se pudieron leer y se saltaron. Vacío es lo normal. */
+  readonly corrupt: ReadonlyArray<StorageError>
 }
 
 /** Los dos orígenes posibles del fallo. Sus `kind` no se solapan. */
@@ -68,12 +71,21 @@ export const boot = async ({
   blobs,
   clock,
   ids,
-  onCorrupt,
+  skipCorrupt = false,
   onError,
   delayMs,
   schedule,
 }: BootDeps): Promise<Result<App, BootError>> => {
-  const adapter: StorageAdapter = createFileStorageAdapter(blobs, { onCorrupt })
+  /* Los ficheros que se saltan: para decirlo, y para que sus referencias no se
+     pierdan. Sin `skipCorrupt` no se salta ninguno: se corta la lectura. */
+  let saltados: ReadonlyArray<StorageError> = []
+  const apuntar: OnCorrupt = (fallo: StorageError): void => {
+    saltados = [...saltados, fallo]
+  }
+  const adapter: StorageAdapter = createFileStorageAdapter(
+    blobs,
+    skipCorrupt ? { onCorrupt: apuntar } : {},
+  )
 
   const version: Result<number, StorageError> = await adapter.getSchemaVersion()
   if (!version.ok) return version
@@ -110,7 +122,16 @@ export const boot = async ({
   /* El único casting del arranque: lo que sale de las migraciones es `unknown`.
      Con la lista vacía es literalmente `guardado`; validar la forma de lo leído
      es otra tarea, la de la validación de esquema. */
-  const estado: AppState = hydrate(migrado.value.data as StoredEntities)
+  const ilegibles: ReadonlySet<string> = new Set<string>(
+    saltados.flatMap((f: StorageError): ReadonlyArray<string> => (f.kind === "corrupt" ? [f.path] : [])),
+  )
+  const estado: AppState = hydrate(
+    migrado.value.data as StoredEntities,
+    (item: ItemRef): boolean => {
+      const camino: string | null = pathOf(item)
+      return camino !== null && ilegibles.has(camino)
+    },
+  )
 
   const store: Store = createStore(estado)
   const writer: WriteBehind = createWriteBehind({
@@ -126,6 +147,7 @@ export const boot = async ({
     store,
     useCases: createUseCases({ clock, ids, store }),
     flush: writer.flush,
+    corrupt: saltados,
   }
   return ok(app)
 }

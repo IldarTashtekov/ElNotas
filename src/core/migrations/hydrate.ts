@@ -9,6 +9,9 @@
  * Por eso aquí se limpian, en silencio, las referencias que apuntan a algo que ya
  * no existe. Fallar al arrancar y dejar al usuario sin sus notas porque sobra una
  * referencia sería mucho peor que la basura que se tira.
+ *
+ * Lo que existe pero no se pudo leer es otra cosa: su referencia se conserva,
+ * para que arreglar el fichero lo devuelva a su contexto.
  */
 
 import type { AppState } from "../domain/AppState.js"
@@ -29,12 +32,19 @@ const porId = <TId extends string, T extends { readonly id: TId }>(
 ): Readonly<Record<TId, T>> =>
   Object.fromEntries(xs.map((x: T): readonly [TId, T] => [x.id, x])) as Record<TId, T>
 
-export const hydrate = (stored: StoredEntities): AppState => {
+/** Si una referencia apunta a algo que está guardado pero no se pudo leer. */
+export type Unreadable = (item: ItemRef) => boolean
+
+const nadaIlegible: Unreadable = (): boolean => false
+
+export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegible): AppState => {
   const notes: AppState["notes"] = porId(stored.notes)
   const plans: AppState["plans"] = porId(stored.plans)
 
+  /* Se queda lo que está, y lo que está pero no se pudo leer. */
   const existe = (item: ItemRef): boolean =>
-    item.kind === "note" ? notes[item.id] !== undefined : plans[item.id] !== undefined
+    (item.kind === "note" ? notes[item.id] !== undefined : plans[item.id] !== undefined) ||
+    ilegible(item)
 
   const contexts: AppState["contexts"] = porId(
     stored.contexts.map((ctx: Context): Context => {

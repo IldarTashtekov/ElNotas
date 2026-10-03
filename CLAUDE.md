@@ -20,7 +20,7 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-03:** `npm run check` en verde —sus seis pasos— con **505 pruebas** (la Fase
+**Medido el 2026-10-03:** `npm run check` en verde —sus seis pasos— con **513 pruebas** (la Fase
 4 empezó con 329; al terminar el código de Fase 4 · Contextos eran 423). Líneas de `.ts`:
 `src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442; `test/` 7195. *(Las
 cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
@@ -203,7 +203,9 @@ index.html         # la página: carga dist/web/ con un importmap, sin bundler (
   sostiene la invariante de identidad. Vale como criterio general al nombrar operaciones del
   dominio. *(En `ui/editor.ts` sí hay un `toggleChecked`: es el gesto del usuario, y por debajo
   llama a `setChecked` con el valor ya decidido.)*
-- **Integridad referencial:** no se deja una referencia apuntando a algo inexistente. Borrar
+- **Integridad referencial:** no se deja una referencia apuntando a algo que **no está en el
+  almacén** —una nota **ilegible** sí está: su referencia se conserva aunque no se cargue, y
+  quien recorra `items` tiene que tolerar una sin nota—. Borrar
   una nota tiene que quitarla de los contextos que la listaban; añadir a un contexto una
   referencia a algo que no existe es un no-op. Fuera del core, la lista de ventanas la
   sostiene una guarda pura (`guardWindows`, §7.4).
@@ -373,9 +375,11 @@ duda**; no la cambies por tu cuenta.
   «reintentar» está aparcado. §6.5.
 - **Un fichero ilegible se salta y se avisa, con `onCorrupt`; sin `onCorrupt`, `getAll` sigue
   siendo todo o nada.** Sólo se salta `corrupt`: cualquier otro fallo corta. **Nunca en
-  silencio.** ⚠️ **Riesgo residual que el usuario ha decidido DEJAR ABIERTO:** `hydrate` quita de
-  los contextos la referencia a la nota saltada, y si ese contexto se guarda después, la pierde
-  aunque el fichero siga intacto. En `TAREAS.md` → *Sin decidir*. §6.5.
+  silencio.** `boot` lo pide con `skipCorrupt` y devuelve los saltados en `App.corrupt`.
+  **Las referencias a lo saltado se conservan** (`hydrate(stored, ilegible)`, que las reconoce
+  con `pathOf`): arreglado el fichero, la nota vuelve **a su contexto**. *Cerrado con el usuario
+  el 2026-10-03 (opción A); era el riesgo residual que se dejó abierto el 2026-09-29.* Es la
+  segunda vez que la Fase 4 toca el core. §6.5.
 - **La forma de lo leído se valida en `storage/file/schema.ts`, no en el core**: la forma en
   disco es del adaptador. Lo que no la tiene es `corrupt` con el motivo y va por `onCorrupt`.
   §6.2.
@@ -428,7 +432,8 @@ duda**; no la cambies por tu cuenta.
 - **El título, sólo en la cabecera, y se renombra tocándolo.** Una nota que es ventana usa **el
   mismo editor en dos marcos**, sin exit. `defaultView` queda sin uso, y no se toca.
 - **La Fase 4 es sólo web y se partió en Fase 4 · Contextos y Fase 4 · Notas**, sin tocar el
-  core salvo la regla de `merge` (2026-10-03, arriba); **los Planes son la Fase 5**. §9.10.
+  core salvo la regla de `merge` y conservar las referencias a lo ilegible (2026-10-03,
+  arriba); **los Planes son la Fase 5**. §9.10.
 
 ## Fuera de alcance por ahora
 
@@ -454,7 +459,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 2 — Acciones, persistencia y memory. ✅ HECHA**, con **216** (§9.8).
 - **Fase 3 — Fichero local. ✅ HECHA**, con **314**, y la lista manual pasada el 2026-09-13
   (§9.9).
-- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 505 pruebas. Partida en dos (§9.10):
+- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 513 pruebas. Partida en dos (§9.10):
   - **Fase 4 · Contextos** — puntos 1–7 y 9 hechos. **El 8, la lista manual
     (`test/ui/VERIFICACION-MANUAL.md`), escrita y SIN PASAR entera**: hubo una revisión parcial
     que el usuario no confirma. No cerrada.
@@ -469,8 +474,8 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: la **escritura
 condicional** (dos pestañas; `revision` sabe detectarlo, nadie lo dispara), **si OPFS entra en
 juego**, **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
-cambie el destino, y **la referencia que pierde un contexto** cuando `onCorrupt` se salta una
-nota.
+cambie el destino. *(La escritura condicional está decidida —opción c, el 2026-10-03— y sin
+construir: falta elegir qué hace la app ante un conflicto.)*
 
 ## Comandos
 

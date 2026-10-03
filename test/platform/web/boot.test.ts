@@ -21,7 +21,7 @@ import type {
   Result,
   StorageError,
 } from "#core/index"
-import { CURRENT_SCHEMA_VERSION } from "#core/index"
+import { CURRENT_SCHEMA_VERSION, noteRef } from "#core/index"
 import type { Cancel } from "#storage/index"
 import { createFileStorageAdapter, createLocalStorageBlobStore } from "#storage/index"
 import type { App, BootError } from "#platform/index"
@@ -43,16 +43,13 @@ const idsSecuenciales = (): IdGenerator => ({ next: (): string => `id-${siguient
 const nuncaSalta = (): Cancel => (): void => undefined
 
 /** Arranca como lo haría la página, sobre el almacén que se le pase. */
-const arrancar = (
-  almacen: Storage,
-  onCorrupt?: (fallo: StorageError) => void,
-): Promise<Result<App, BootError>> =>
+const arrancar = (almacen: Storage, skipCorrupt: boolean = false): Promise<Result<App, BootError>> =>
   boot({
     blobs: createLocalStorageBlobStore(almacen),
     clock: reloj,
     ids: idsSecuenciales(),
     schedule: nuncaSalta,
-    onCorrupt,
+    skipCorrupt,
   })
 
 const appDe = (r: Result<App, BootError>): App => {
@@ -178,7 +175,7 @@ test("un manifiesto ilegible no arranca, y no se toca", async (): Promise<void> 
   assert.equal(almacen.getItem(clave), btoa("esto no es json"))
 })
 
-/* ─────────────── onCorrupt: una nota rota no impide abrir la app ─────────── */
+/* ──────────── skipCorrupt: una nota rota no impide abrir la app ──────────── */
 
 /** Un almacén con una nota buena, «Compra», y el fichero de otra, ilegible. */
 const conUnaNotaRota = async (): Promise<FakeStorage> => {
@@ -190,18 +187,14 @@ const conUnaNotaRota = async (): Promise<FakeStorage> => {
   return almacen
 }
 
-test("sin onCorrupt, una nota ilegible impide arrancar", async (): Promise<void> => {
+test("sin skipCorrupt, una nota ilegible impide arrancar", async (): Promise<void> => {
   const fallo: BootError = errorDe(await arrancar(await conUnaNotaRota()))
   assert.equal(fallo.kind, "corrupt")
 })
 
-test("con onCorrupt, una nota ilegible se salta, se avisa, y la app arranca con el resto", async (): Promise<void> => {
-  let avisos: ReadonlyArray<StorageError> = []
-  const app: App = appDe(
-    await arrancar(await conUnaNotaRota(), (fallo: StorageError): void => {
-      avisos = [...avisos, fallo]
-    }),
-  )
+test("con skipCorrupt, una nota ilegible se salta, se dice cuál, y la app arranca con el resto", async (): Promise<void> => {
+  const app: App = appDe(await arrancar(await conUnaNotaRota(), true))
+  const avisos: ReadonlyArray<StorageError> = app.corrupt
 
   const nombres: ReadonlyArray<string> = Object.values<Note>(app.store.getState().notes).map(
     (nota: Note): string => nota.name,
@@ -216,9 +209,43 @@ test("con onCorrupt, una nota ilegible se salta, se avisa, y la app arranca con 
 test("el fichero ilegible que se saltó sigue en disco, intacto", async (): Promise<void> => {
   /* Saltarlo es no cargarlo, no borrarlo: si alguien lo arregla a mano, vuelve. */
   const almacen: FakeStorage = await conUnaNotaRota()
-  const app: App = appDe(await arrancar(almacen, (): void => undefined))
+  const app: App = appDe(await arrancar(almacen, true))
   app.useCases.createContext("Casa")
   escrituraOk(await app.flush())
 
   assert.equal(almacen.getItem("elnotas:blob:notes/rota.json"), btoa("no es json"))
+})
+
+test("un arranque sin ficheros rotos no dice ninguno", async (): Promise<void> => {
+  const app: App = appDe(await arrancar(createFakeStorage(), true))
+  assert.deepEqual(app.corrupt, [])
+})
+
+test("LA REFERENCIA NO SE PIERDE: tocar el contexto de una nota ilegible no la saca de él", async (): Promise<void> => {
+  /* Lista, dentro de Compra, guardadas. */
+  const almacen: FakeStorage = createFakeStorage()
+  const primera: App = appDe(await arrancar(almacen))
+  const lista: Note | null = primera.useCases.createNote("Lista")
+  const compra: Context | null = primera.useCases.createContext("Compra")
+  if (lista === null || compra === null) assert.fail("tenían que crearse")
+  primera.useCases.addItem(compra.id, noteRef(lista.id))
+  escrituraOk(await primera.flush())
+
+  /* Se rompe el fichero de Lista; con él roto, se renombra Compra y se guarda. */
+  const clave: string = `elnotas:blob:notes/${lista.id}.json`
+  const sano: string | null = almacen.getItem(clave)
+  if (sano === null) assert.fail("Lista tenía que estar guardada")
+  almacen.escribirCrudo(clave, btoa("no es json"))
+  const segunda: App = appDe(await arrancar(almacen, true))
+  assert.deepEqual(segunda.store.getState().contexts[compra.id]?.items, [noteRef(lista.id)])
+  segunda.useCases.renameContext(compra.id, "Compra semanal")
+  escrituraOk(await segunda.flush())
+
+  /* Se arregla el fichero: Lista vuelve, y vuelve DENTRO de Compra. */
+  almacen.escribirCrudo(clave, sano)
+  const tercera: App = appDe(await arrancar(almacen, true))
+  const ctx: Context | undefined = tercera.store.getState().contexts[compra.id]
+  assert.equal(ctx?.name, "Compra semanal")
+  assert.deepEqual(ctx?.items, [noteRef(lista.id)])
+  assert.equal(tercera.store.getState().notes[lista.id]?.name, "Lista")
 })

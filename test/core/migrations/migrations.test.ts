@@ -12,6 +12,7 @@ import assert from "node:assert/strict"
 
 import type { Context } from "#core/domain/Context"
 import type { MigrationError } from "#core/domain/errors/MigrationError"
+import type { ItemRef } from "#core/domain/Ids"
 import { contextId, noteId, noteRef, planId, planRef, revision } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import type { Result } from "#core/domain/Result"
@@ -124,6 +125,35 @@ test("un arranque NORMAL devuelve los contextos INTACTOS, por referencia", () =>
 
   assert.strictEqual(state.contexts[ID_CASA], sano)
   assert.strictEqual(state.contexts[ID_VACIO], vacio)
+})
+
+/* La nota rota: existe en el almacén, pero no se pudo leer y no está en `notes`. */
+const ID_ROTA = noteId("rota")
+const esRota = (item: ItemRef): boolean => item.kind === "note" && item.id === ID_ROTA
+
+test("hydrate CONSERVA la referencia a una nota ilegible, y tira la inexistente", (): void => {
+  const stored: StoredEntities = {
+    notes: [COMPRA],
+    plans: [],
+    contexts: [contexto(ID_CASA, [noteRef(ID_ROTA), noteRef(ID_COMPRA), noteRef(ID_FANTASMA)])],
+  }
+
+  const items: ReadonlyArray<ItemRef> | undefined = hydrate(stored, esRota).contexts[ID_CASA]?.items
+  assert.deepEqual(items, [noteRef(ID_ROTA), noteRef(ID_COMPRA)])
+})
+
+test("con sólo una ilegible de más, el contexto queda INTACTO, por referencia", (): void => {
+  const conRota: Context = contexto(ID_CASA, [noteRef(ID_COMPRA), noteRef(ID_ROTA)])
+  const state = hydrate({ notes: [COMPRA], plans: [], contexts: [conRota] }, esRota)
+  assert.strictEqual(state.contexts[ID_CASA], conRota)
+})
+
+test("la nota ilegible NO entra en el estado: sólo se conserva su referencia", (): void => {
+  const state = hydrate(
+    { notes: [COMPRA], plans: [], contexts: [contexto(ID_CASA, [noteRef(ID_ROTA)])] },
+    esRota,
+  )
+  assert.equal(state.notes[ID_ROTA], undefined)
 })
 
 /* ───────────────────────────── runMigrations ──────────────────────────────── */

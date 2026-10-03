@@ -408,8 +408,8 @@ validación de esquema, y la escritura condicional.
       cualquier otro fallo sigue cortando; **sin `onCorrupt` sigue siendo todo o nada**; y un
       aviso que lanza sale como `io`. La UI enseña qué fichero. Lo que se descartó entonces sigue
       descartado: saltarse la entidad **en silencio**, y cambiar la firma de `getAll`.
-      ⚠️ **Queda un riesgo residual, abierto por decisión del usuario**: la referencia que un
-      contexto puede perder. En *Sin decidir*. → `ARCHITECTURE.md` §6.5.
+      ✅ **El riesgo residual —la referencia que un contexto podía perder— se cerró el
+      2026-10-03** con la opción A. → `ARCHITECTURE.md` §6.5.
 
 - [x] **Validar el esquema de lo que se lee del disco.** ✅ **Hecho al final de Fase 4 · Notas,
       `8e2dba3`**, en `src/storage/file/schema.ts` —**no en el core**: la forma en disco es del
@@ -1030,12 +1030,14 @@ aquí, sólo la lista para que nadie las tome por accidentes:
 del usuario**; la tercera es de `.claude/`, que es suyo; las dos últimas salieron en el pase de
 documentación del 2026-09-29.
 
-- **La referencia que pierde un contexto cuando `onCorrupt` se salta una nota** — **abierta por
-  decisión del usuario.** `hydrate` quita de los contextos las referencias a notas que no
-  existen, y la nota saltada cuenta como inexistente. Si ese contexto se guarda después por
-  cualquier otro cambio, **pierde esa referencia para siempre**, aunque el fichero siga intacto
-  en disco: arreglado el fichero, la nota volvería, pero sólo en el General. **Arreglarlo tocaría
-  el core.** → `ARCHITECTURE.md` §6.5
+- ~~**La referencia que pierde un contexto cuando `onCorrupt` se salta una nota**~~ — ✅
+  **cerrada el 2026-10-03 con la opción A**, de cuatro que se pusieron sobre la mesa: **A**,
+  conservar las referencias a lo ilegible (`hydrate(stored, ilegible)`, `pathOf`, `skipCorrupt`
+  + `App.corrupt`); **B**, devolverlas al guardar —descartada: el almacén tendría que saber de
+  contextos—; **C**, una nota de relleno sólo de lectura —descartada: habría que impedir escribir
+  encima del fichero roto desde cualquier sitio—; **D**, no guardar el contexto en esa sesión
+  —descartada: cambios que no se guardan—. La A arregla la causa (confundir «ilegible» con «no
+  existe») y no la consecuencia. → `ARCHITECTURE.md` §6.5
 - **Cuatro reglas `deny` de `.claude/settings.json` protegen carpetas que ya no existen**
   —`Edit`/`Write` sobre `./src/scripts/**` y sobre `./public/js/**`—. **Abierta por decisión del
   usuario.** `.claude/` es suyo: aquí sólo se anota.
@@ -1167,7 +1169,18 @@ aislamiento de lo primero.
 
 ### Escritura condicional y conflicto entre dos pestañas
 
-**Abierta a conciencia, no por olvido.** Salió al cerrar la taxonomía de `StorageError` (§6.5) y
+**✅ Decidida con el usuario el 2026-10-03: la opción c, escritura condicional, y SIN CONSTRUIR
+todavía.** Se pusieron sobre la mesa cuatro: **a**, una sola pestaña activa con Web Locks;
+**b**, recargar al enterarse por el evento `storage`; **c**, escritura condicional con
+`revision`; **d**, b + c. Ganó la c **porque es la que se reutilizará cuando haya sincronización
+entre dispositivos**. Precio asumido: una pestaña no se entera de lo que cambió la otra hasta que
+intenta guardar —enseña lo viejo—, pero **nunca pisa**. Propuesto para las tres cosas de abajo:
+`put(entidad, revisionEsperada)` (y lo mismo `delete`), que el `writeBehind` ya puede dar porque
+conoce el estado anterior; el caso `stale`; y **qué hace la app, aún por elegir** entre *avisar y
+recargar* (lo más sencillo; se pierde lo escrito en esa pestaña desde el último guardado) y
+*guardar como copia en conflicto* (no se pierde nada). Va **después** de la 8A.
+
+**Antes de decidirse estuvo abierta a conciencia, no por olvido.** Salió al cerrar la taxonomía de `StorageError` (§6.5) y
 es el único caso que se dejó fuera a propósito.
 
 El problema es real y va a pasar: **dos pestañas abiertas sobre la misma nota**, y la segunda

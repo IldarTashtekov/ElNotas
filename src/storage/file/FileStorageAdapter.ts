@@ -15,6 +15,7 @@ import type {
   BlobStore,
   Context,
   ContextId,
+  ItemRef,
   Note,
   NoteId,
   Plan,
@@ -75,6 +76,19 @@ const caminoDe = (carpeta: string, id: string): Result<string, StorageError> => 
     }
     return err(idImposible)
   }
+}
+
+/**
+ * El camino en el que se guarda lo que señala una referencia, o `null` si su id
+ * no se puede nombrar. Es lo que dice `onCorrupt` de un fichero ilegible, así que
+ * sirve para saber si una referencia apunta a uno de ellos.
+ */
+export const pathOf = (item: ItemRef): string | null => {
+  const camino: Result<string, StorageError> = caminoDe(
+    item.kind === "note" ? CARPETA_NOTAS : CARPETA_PLANES,
+    item.id,
+  )
+  return camino.ok ? camino.value : null
 }
 
 /**

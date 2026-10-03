@@ -1720,12 +1720,25 @@ corrupta impedía abrir la app**. Se aceptó a conciencia y se aplazó, porque l
   principio 2);
 - la UI enseña **qué fichero** no se ha podido leer.
 
-⚠️ **Riesgo residual, que el usuario ha decidido DEJAR ABIERTO (2026-09-29).** `hydrate` quita de
-los contextos las `ItemRef` a notas que no existen (§9.7), y **la nota saltada cuenta como
-inexistente**. Si después ese contexto se guarda por cualquier otro cambio, **pierde esa
-referencia para siempre**, aunque el fichero siga intacto en disco: la nota reaparecería
-arreglándola, pero sólo en el General. Es la pérdida de arriba en pequeño —una referencia, no una
-nota— y arreglarlo tocaría el core. Registrado en `TAREAS.md` → *Sin decidir*.
+✅ **El riesgo residual, cerrado el 2026-10-03 (opción A).** Era éste: `hydrate` quitaba de los
+contextos las `ItemRef` a notas que no existen (§9.7), y **la nota saltada contaba como
+inexistente**; si después ese contexto se guardaba, perdía la referencia para siempre, y arreglado
+el fichero la nota volvía sólo al General. **La causa era confundir «ilegible» con «no existe»**,
+y eso es lo que se arregló:
+
+- `boot` ya no recibe un aviso ajeno: con **`skipCorrupt`** salta los ilegibles y los devuelve en
+  **`App.corrupt`**, para que la UI diga cuáles. Así no hay código ajeno al que proteger;
+- **`hydrate(stored, ilegible)`** recibe qué referencias apuntan a algo guardado pero ilegible, y
+  **las conserva**; las que apuntan a algo que no existe se siguen quitando, y sin nada ilegible
+  devuelve los contextos intactos, como antes;
+- las reconoce **`pathOf(item)`**, del adaptador de fichero: el mismo camino que dice
+  `onCorrupt`. Se compara camino con camino, sin descodificar, porque `decodeURIComponent` lanza;
+- **la regla de integridad cambia de forma**: no hay referencias a algo que **no esté en el
+  almacén**. Una a una nota ilegible puede estar en `items` sin estar en `notes`, y quien recorre
+  `items` lo tolera —`notasDe` en `windowView.ts` ya lo hacía—.
+
+Lo prueba de punta a punta `boot.test.ts`: nota rota, renombrar su contexto, guardar, arreglar el
+fichero, y la nota vuelve **dentro** del contexto.
 
 #### El estado *detenido* del write-behind
 
@@ -3401,8 +3414,8 @@ lo único que cambió en `src/core/` fueron los `.js` de los imports relativos, 
    *(`473f566`.)*
 2. ✅ **`onCorrupt`: una nota ilegible ya no impide abrir la app.** Es lo único de la deuda de la
    Fase 3 que entra **con la primera rebanada** y no después, porque no es deuda interna: un solo
-   fichero roto tumbaba el `getAll` entero y con él la app (§6.5). *(`473f566`; queda un riesgo
-   residual abierto, en §6.5.)*
+   fichero roto tumbaba el `getAll` entero y con él la app (§6.5). *(`473f566`; el riesgo
+   residual que quedó abierto se cerró el 2026-10-03, en §6.5.)*
 3. ✅ **La vista ventanas se comporta como está diseñada** (§7.4): ◀ ▶ sin anterior en la primera ni
    siguiente en la última; renombrar tocando el título, salvo el General; el General enseña todas
    las notas; pantalla vacía sin ventanas. En esta parte, **sólo ventanas de contexto y del
