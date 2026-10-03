@@ -104,4 +104,6 @@ export const createConfirm = (sheet: Sheet): Confirm =>
       alAceptar()
     })
     sheet.open("", [texto, hacer])
+    /* El foco, en «Cancelar»: un Intro sin mirar no borra nada. */
+    sheet.element.querySelector<HTMLElement>(".hoja-cancelar")?.focus()
   }
