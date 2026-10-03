@@ -5,8 +5,9 @@
  * al montarse enseña su origen en el centro, y dónde se miraba no se recuerda.
  *
  * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, o
- * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo: editar,
- * hecho, borrar. Un toque en un nodo-nota entra en su nota, tras esperar un
+ * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo:
+ * conectar, editar, hecho, borrar. *Conectar* espera a que se toque el nodo de
+ * destino, y el fondo lo cancela. Un toque en un nodo-nota entra en su nota, tras esperar un
  * instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
  * ratón, o manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez,
  * al soltar.
@@ -144,6 +145,12 @@ export const createDiagramCanvas = ({
   /* Transparente para la columna: el lienzo es el que ocupa el sitio. */
   const marco: HTMLElement = elemento("div")
   marco.className = "lienzo-marco"
+  /* El aviso de *Conectar*, sobre el lienzo y fuera de la capa: no se mueve con el corcho. */
+  const avisoConectar: HTMLElement = elemento("p", "Toca el nodo de destino")
+  avisoConectar.className = "aviso-conectar"
+  avisoConectar.setAttribute("role", "status")
+  avisoConectar.hidden = true
+  lienzo.append(avisoConectar)
   marco.append(lienzo, menu.element)
 
   /* ── El encuadre ── */
@@ -232,6 +239,9 @@ export const createDiagramCanvas = ({
       },
     })
     pintarRelaciones()
+    /* Si el nodo de origen se borra mientras se conecta, no hay de dónde salir. */
+    if (conectando !== null && actual.nodes[conectando] === undefined) terminarDeConectar(null)
+    else marcarOrigen()
   }
 
   /* ── Las líneas ── */
@@ -445,11 +455,43 @@ export const createDiagramCanvas = ({
     menu.open("Añadir al diagrama", [caja])
   }
 
+  /* ── Conectar: el nodo de origen espera al de destino ── */
+
+  /** El nodo del que sale la relación que se está tirando, o `null` si no se tira ninguna. */
+  let conectando: DiagramNodeId | null = null
+
+  const marcarOrigen = (): void => {
+    for (const el of nodosCapa.querySelectorAll(".posit.origen")) el.classList.remove("origen")
+    if (conectando !== null) positDe(conectando)?.classList.add("origen")
+    avisoConectar.hidden = conectando === null
+  }
+
+  /* Como el resto de capas, se sale con el atrás: el modo es la capa, y salir es ir atrás. */
+  const empezarAConectar = (desde: DiagramNodeId): void => {
+    conectando = desde
+    marcarOrigen()
+    back.open((): void => {
+      conectando = null
+      marcarOrigen()
+    })
+  }
+
+  /** Termina el modo: con un destino, une; sin él, sólo cancela. */
+  const terminarDeConectar = (hasta: DiagramNodeId | null): void => {
+    const desde: DiagramNodeId | null = conectando
+    if (desde === null) return
+    conectando = null
+    marcarOrigen()
+    back.close()
+    if (hasta !== null && hasta !== desde) useCases.addRelation(diagramId, desde, hasta)
+  }
+
   const menuNodo = (id: DiagramNodeId): void => {
     const nodo: DiagramNode | undefined = diagrama()?.nodes[id]
     if (nodo === undefined) return
     const titulo: string = textoDe(nodo, store.getState())
     menu.open(titulo === "" ? "Nodo" : titulo, acciones(
+      opcion("Conectar", (): void => empezarAConectar(id)),
       ...(nodo.type === "simple-node" ? [opcion("Editar", (): void => editar(id))] : []),
       opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
         useCases.setNodeDone(diagramId, id, !nodo.done)
@@ -593,6 +635,13 @@ export const createDiagramCanvas = ({
 
   /** Un toque suelto, sin moverse: puede ser el segundo de un doble toque. */
   const tocado = (g: Gesto, donde: Point, cuando: number): void => {
+    /* Conectando, un toque es el destino —el fondo cancela— y nada más: ni abre la
+       nota ni cuenta para un doble toque. */
+    if (conectando !== null) {
+      toqueAnterior = null
+      terminarDeConectar(g.nodo)
+      return
+    }
     const toque: Tap = { x: donde.x, y: donde.y, time: cuando, target: g.nodo ?? FONDO }
     if (isDoubleTap(toqueAnterior, toque)) {
       toqueAnterior = null
@@ -653,6 +702,11 @@ export const createDiagramCanvas = ({
     if (gesto?.levantado === true) return
     const nodo: DiagramNodeId | null = nodoDe(evento.target)
     cancelarApertura()
+    /* Conectando, el clic derecho cancela, como un toque en el fondo. */
+    if (conectando !== null) {
+      terminarDeConectar(null)
+      return
+    }
     if (nodo === null) menuFondo(enLienzo(evento))
     else menuNodo(nodo)
   })
