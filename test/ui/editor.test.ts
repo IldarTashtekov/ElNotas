@@ -160,9 +160,21 @@ test("Intro en medio de una casilla de la raíz, casilla apagada: la mitad nueva
   assert.deepEqual(dibujo(e, r.caret), ["C Leche ", "T |pan"])
 })
 
-test("Intro en medio de una casilla ANIDADA, casilla apagada: la mitad nueva sigue casilla", (): void => {
-  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche pan")])])
+test("Intro en medio de una casilla ANIDADA, casilla apagada: la mitad nueva es texto bajo su casilla de la raíz", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche pan")]), t("b", "Fin")])
   const r: EditResult = pressEnter(e.deps, en("a1", 6), APAGADA)
+  assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche ", "T |pan", "T Fin"])
+})
+
+test("partir una casilla anidada con hermanas detrás, casilla apagada: el texto sale debajo de todas", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche pan"), c("a2", "Huevos", [c("a21", "Docena")])])])
+  const r: EditResult = pressEnter(e.deps, en("a1", 6), APAGADA)
+  assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche ", "  C Huevos", "    C Docena", "T |pan"])
+})
+
+test("Intro en medio de una casilla ANIDADA, casilla encendida: la mitad nueva es su hermana", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche pan")])])
+  const r: EditResult = pressEnter(e.deps, en("a1", 6), ENCENDIDA)
   assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche ", "  C |pan"])
 })
 
@@ -200,6 +212,12 @@ test("Retroceso en una casilla anidada: une directamente con la hermana de arrib
   const e: Editor = editor([c("a", "Compra", [c("a1", "Leche"), c("a2", "Pan")])])
   const r: EditResult = pressBackspaceAtStart(e.deps, en("a2", 0), APAGADA)
   assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche|Pan"])
+})
+
+test("Retroceso en un texto bajo una casilla con hijas: une con la ÚLTIMA hija, la que se ve encima", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche"), c("a2", "Pan")]), t("b", " integral")])
+  const r: EditResult = pressBackspaceAtStart(e.deps, en("b", 0), APAGADA)
+  assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche", "  C Pan| integral"])
 })
 
 test("Retroceso en la primera hija: une con su madre", (): void => {

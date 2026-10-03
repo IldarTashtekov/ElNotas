@@ -309,18 +309,21 @@ export const split = (
   })
 }
 
+/** Todas las líneas en el orden en que se leen: cada casilla y, detrás, sus hijas. */
+const enOrdenDeLectura = (content: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+  content.flatMap((line: Content): ReadonlyArray<Content> =>
+    isCheckBox(line) ? [line, ...enOrdenDeLectura(line.children)] : [line],
+  )
+
 /**
  * Une una línea con la de arriba: la línea desaparece y su texto sube.
  *
- * **Quién recibe el texto depende de dónde estuviera**:
+ * **La de arriba es la que se ve encima**, leyendo de arriba abajo:
  *
- *     tiene una hermana encima  →  esa hermana anterior
+ *     tiene una hermana encima  →  la última línea de esa hermana, por honda que
+ *                                  esté (ella misma si no tiene hijas)
  *     es la primera hija        →  su madre, y las demás hijas se quedan donde estaban
  *     es la primera de la nota  →  nadie: no hace nada
- *
- * El segundo caso es el que no se ve venir, y es el que obligó a que el
- * "contenedor" de la primitiva B fuese **la madre entera** y no su lista de
- * hijas: ahí la madre cambia de texto **y** pierde una hija a la vez.
  *
  * La línea que recibe **conserva su clase, su marca y sus hijas**; lo único que
  * le cambia es el texto. Y los textos se pegan **sin añadir espacio**, para que
@@ -333,47 +336,15 @@ export const split = (
 export const merge = (
   content: ReadonlyArray<Content>,
   id: ContentId,
-): ReadonlyArray<Content> =>
-  updateContainerOf(content, id, {
-    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> => {
-      const index: number = items.findIndex((item: Content): boolean => item.id === id)
-      if (index <= 0) return items // 0 = la primera de la nota, no hay nada encima
-      const target: Content | undefined = items[index]
-      const receiver: Content | undefined = items[index - 1]
-      if (target === undefined || receiver === undefined) return items
-      if (isCheckBox(target) && target.children.length > 0) return items
+): ReadonlyArray<Content> => {
+  const lineas: ReadonlyArray<Content> = enOrdenDeLectura(content)
+  const index: number = lineas.findIndex((line: Content): boolean => line.id === id)
+  const target: Content | undefined = lineas[index]
+  const receiver: Content | undefined = lineas[index - 1]
+  /* No existe, o es la primera de la nota: no hay nada encima. */
+  if (target === undefined || receiver === undefined) return content
+  if (isCheckBox(target) && target.children.length > 0) return content
 
-      const merged: Content = { ...receiver, text: receiver.text + target.text }
-      return [...items.slice(0, index - 1), merged, ...items.slice(index + 1)]
-    },
-
-    onParent: (parent: CheckBox): CheckBox => {
-      const index: number = parent.children.findIndex(
-        (child: CheckBox): boolean => child.id === id,
-      )
-      const target: CheckBox | undefined = parent.children[index]
-      if (target === undefined) return parent
-      if (target.children.length > 0) return parent
-
-      // Primera hija: la absorbe su madre, y las demás hijas ni se mueven.
-      if (index === 0) {
-        return {
-          ...parent,
-          text: parent.text + target.text,
-          children: parent.children.filter((child: CheckBox): boolean => child.id !== id),
-        }
-      }
-
-      const receiver: CheckBox | undefined = parent.children[index - 1]
-      if (receiver === undefined) return parent
-      const merged: CheckBox = { ...receiver, text: receiver.text + target.text }
-      return {
-        ...parent,
-        children: [
-          ...parent.children.slice(0, index - 1),
-          merged,
-          ...parent.children.slice(index + 1),
-        ],
-      }
-    },
-  })
+  /* Las dos operaciones conservan lo que no tocan, y `remove` ya se niega con hijas. */
+  return setText(remove(content, id), receiver.id, receiver.text + target.text)
+}

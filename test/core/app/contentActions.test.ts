@@ -232,8 +232,8 @@ test("split con el punto de corte fuera de la línea es no-op", () => {
 
 /* ────────────────────────────────── merge ─────────────────────────────────── */
 
-test("merge sube el texto a la línea de arriba", () => {
-  const s = reduce(estado(), {
+test("merge sube el texto a la línea que se ve encima: la última hija de la casilla de arriba", (): void => {
+  const s: AppState = reduce(estado(), {
     type: "merge",
     noteId: ID_NOTA,
     contentId: ID_PAN,
@@ -241,8 +241,10 @@ test("merge sube el texto a la línea de arriba", () => {
   })
 
   assert.equal(buscar(s, ID_PAN), undefined)
-  const fruta = buscar(s, ID_FRUTA)
-  assert.equal(fruta !== undefined && isCheckBox(fruta) && fruta.text, "FrutaPan")
+  const fruta: Content | undefined = buscar(s, ID_FRUTA)
+  if (fruta === undefined || !isCheckBox(fruta)) assert.fail("«Fruta» tenía que seguir siendo casilla")
+  assert.equal(fruta.text, "Fruta", "la casilla de arriba no recibe nada")
+  assert.equal(fruta.children[0]?.text, "PerasPan")
 })
 
 test("merge sobre la primera línea de la nota es no-op", () => {

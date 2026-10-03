@@ -52,8 +52,9 @@ test("la casilla de la raíz de una anidada, por hondo que esté", (): void => {
   assert.equal(rootAncestor(NOTA, contentId("fin"))?.id, "fin")
 })
 
-test("quién recibe el texto al unir: la hermana de arriba, o la madre si es la primera", (): void => {
-  assert.equal(mergeTarget(NOTA, contentId("pan"))?.id, "leche")
+test("quién recibe el texto al unir: la línea que se ve encima, o la madre si es la primera", (): void => {
+  /* Encima de «Pan» se ve «Entera», la hija de «Leche»: es ella, no «Leche». */
+  assert.equal(mergeTarget(NOTA, contentId("pan"))?.id, "entera")
   assert.equal(mergeTarget(NOTA, contentId("leche"))?.id, "compra")
   assert.equal(mergeTarget(NOTA, contentId("intro")), null)
 })

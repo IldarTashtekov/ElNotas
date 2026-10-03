@@ -45,12 +45,19 @@ const ultimaHija = (content: ReadonlyArray<Content>, id: ContentId): Content | n
 
 /** Parte la línea y deja la mitad nueva de la clase que diga el interruptor. */
 const partir = (deps: EditorDeps, linea: Content, offset: number, casilla: boolean): Caret | null => {
+  const raiz: Content | null = rootAncestor(contenido(deps), linea.id)
+  if (!casilla && raiz !== null) {
+    /* Un texto sólo cabe en la raíz: la mitad nueva va debajo de su línea de la raíz. */
+    deps.useCases.setText(deps.noteId, linea.id, linea.text.slice(0, offset))
+    const nota: Note | null = deps.useCases.insertText(deps.noteId, linea.text.slice(offset), after(raiz.id))
+    const fuera: Content | null = nota === null ? null : nextSibling(nota.content, raiz.id)
+    return fuera === null ? null : { line: fuera.id, offset: 0 }
+  }
+  /* Encendido: casilla de hermana, al mismo nivel. */
   deps.useCases.split(deps.noteId, linea.id, offset)
   const nueva: Content | null = nextSibling(contenido(deps), linea.id)
   if (nueva === null) return null
-  /* Si no cabe —un texto anidado—, la conversión no hace nada y sigue casilla. */
-  if (casilla && !isCheckBox(nueva)) deps.useCases.convertToCheckBox(deps.noteId, nueva.id)
-  if (!casilla && isCheckBox(nueva)) deps.useCases.convertToText(deps.noteId, nueva.id)
+  if (!isCheckBox(nueva)) deps.useCases.convertToCheckBox(deps.noteId, nueva.id)
   return { line: nueva.id, offset: 0 }
 }
 

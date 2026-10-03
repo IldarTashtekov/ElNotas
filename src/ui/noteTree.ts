@@ -66,12 +66,9 @@ export const nextSibling = (content: ReadonlyArray<Content>, id: ContentId): Con
 }
 
 /**
- * Quién se queda con el texto al unir esta línea con la de arriba: la hermana
- * anterior, o la madre si es la primera hija. `null` si es la primera de la nota.
- * Es la regla de `merge`, leída antes de ejecutarlo para saber adónde va el cursor.
+ * Quién se queda con el texto al unir esta línea con la de arriba: la que se ve
+ * encima, leyendo de arriba abajo. `null` si es la primera de la nota. Es la
+ * regla de `merge`, leída antes de ejecutarlo para saber adónde va el cursor.
  */
-export const mergeTarget = (content: ReadonlyArray<Content>, id: ContentId): Content | null => {
-  const donde: Located | null = locate(content, id)
-  if (donde === null) return null
-  return donde.siblings[donde.index - 1] ?? donde.parent
-}
+export const mergeTarget = (content: ReadonlyArray<Content>, id: ContentId): Content | null =>
+  lineBeside(content, id, "prev")

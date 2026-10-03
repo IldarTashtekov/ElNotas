@@ -612,18 +612,55 @@ test("merge: si es la primera hija, el texto sube a la MADRE", () => {
   assert.equal(hijaEn(fruta.children, 0).text, "Peras", "las demás hijas se quedan donde estaban")
 })
 
-test("merge: el receptor conserva su clase, su marca y sus hijas", () => {
-  const marcada = setChecked(listaDeLaCompra(), ID_FRUTA, true)
-  // Un texto suelto detrás de "Fruta", para unirlo a una casilla marcada.
-  const conTexto = insert(marcada, text(ID_NUEVO, "y verdura"), after(ID_FRUTA))
+test("merge: el receptor conserva su clase, su marca y sus hijas", (): void => {
+  /* «Fruta» marcada absorbe a su primera hija: sigue casilla, marcada y con «Peras». */
+  const marcada: ReadonlyArray<Content> = setChecked(listaDeLaCompra(), ID_FRUTA, true)
 
-  const despues = merge(conTexto, ID_NUEVO)
+  const despues: ReadonlyArray<Content> = merge(marcada, ID_MANZANAS)
 
-  const fruta = casillaEn(despues, 1)
-  assert.equal(fruta.type, "checkbox", "una casilla que absorbe un texto sigue siendo casilla")
+  const fruta: CheckBox = casillaEn(despues, 1)
+  assert.equal(fruta.type, "checkbox")
   assert.equal(fruta.checked, true)
-  assert.equal(fruta.children.length, 2)
-  assert.equal(fruta.text, "Frutay verdura")
+  assert.deepEqual(
+    fruta.children.map((h: CheckBox): string => h.text),
+    ["Peras"],
+  )
+})
+
+test("merge: una casilla que absorbe un texto sigue siendo casilla", (): void => {
+  const antes: ReadonlyArray<Content> = [
+    checkBox(ID_COMPRA, "Pan", { checked: true }),
+    text(ID_NUEVO, " integral"),
+  ]
+
+  const despues: ReadonlyArray<Content> = merge(antes, ID_NUEVO)
+
+  assert.equal(despues.length, 1)
+  const pan: Content = bloqueEn(despues, 0)
+  assert.equal(pan.type, "checkbox")
+  assert.equal(pan.text, "Pan integral")
+  assert.equal(isCheckBox(pan) && pan.checked, true)
+})
+
+test("merge: sube a la ÚLTIMA línea de la hermana de arriba, por honda que esté", (): void => {
+  /* Lo que se ve encima de «Fin» es «Entera», dos niveles dentro: ahí va el texto. */
+  const antes: ReadonlyArray<Content> = [
+    checkBox(ID_FRUTA, "Fruta", {
+      children: [
+        checkBox(ID_MANZANAS, "Manzanas"),
+        checkBox(ID_PERAS, "Peras", { children: [checkBox(ID_FREGONA, "Entera")] }),
+      ],
+    }),
+    text(ID_NUEVO, "Fin"),
+  ]
+
+  const despues: ReadonlyArray<Content> = merge(antes, ID_NUEVO)
+
+  assert.equal(despues.length, 1)
+  const peras: CheckBox = hijaEn(casillaEn(despues, 0).children, 1)
+  assert.equal(hijaEn(peras.children, 0).text, "EnteraFin")
+  assert.equal(casillaEn(despues, 0).text, "Fruta", "ni la casilla de la raíz…")
+  assert.equal(peras.text, "Peras", "…ni la intermedia reciben nada")
 })
 
 test("merge: no hace nada si el id no existe", () => {
@@ -649,14 +686,16 @@ test("merge: NO absorbe una línea que tiene hijas", () => {
   )
 })
 
-test("merge: sí absorbe la línea una vez vaciada de hijas", () => {
-  const sinFregona = remove(listaDeLaCompra(), ID_FREGONA)
+test("merge: sí absorbe la línea una vez vaciada de hijas", (): void => {
+  const sinFregona: ReadonlyArray<Content> = remove(listaDeLaCompra(), ID_FREGONA)
 
-  const despues = merge(sinFregona, ID_LIMPIEZA)
+  const despues: ReadonlyArray<Content> = merge(sinFregona, ID_LIMPIEZA)
 
+  /* «Limpieza» va justo debajo de «Peras», la última hija de «Fruta»: ahí sube. */
   assert.equal(despues.length, 2)
-  assert.equal(casillaEn(despues, 1).text, "FrutaLimpieza")
-  assert.equal(casillaEn(despues, 1).children.length, 2, "'Fruta' conserva sus hijas")
+  const fruta: CheckBox = casillaEn(despues, 1)
+  assert.equal(fruta.text, "Fruta")
+  assert.equal(hijaEn(fruta.children, 1).text, "PerasLimpieza")
 })
 
 test("merge: no toca las ramas que no van en el camino", () => {
