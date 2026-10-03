@@ -12,9 +12,10 @@ puerto, copia por camino—, está explicado ahí con ejemplos de notas y casill
 > lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
 > usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
 > (§9.10). De la Fase 5, los Diagramas (§9.11), está construida **Fase 5 · Modelo** —el core y
-> `storage/`, el 2026-10-03—; **su pantalla sigue siendo sólo diseño**, como la carpeta del
-> usuario como destino y la semántica multi-backend. Cada sección dice si lo que describe existe
-> o está planificado.
+> `storage/`, el 2026-10-03— y **el código de Fase 5 · Lienzo** —la vista y los pósits, el
+> 2026-10-04—, éste **sin cerrar**: su lista manual está sin pasar. **Las relaciones en pantalla
+> siguen siendo sólo diseño**, como la carpeta del usuario como destino y la semántica
+> multi-backend. Cada sección dice si lo que describe existe o está planificado.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
 **Índice**
@@ -696,8 +697,9 @@ Tres entidades, más nociones de agrupación:
   tocarlo entras en una Nota, y enseña su título **en directo**, sin guardar copia. Una relación
   (`DiagramRelation`) une dos nodos, con o sin flecha y con un texto opcional, y entre dos nodos
   puede haber **cualquier número** (multigrafo). En el código, `Diagram` (público, en inglés).
-  **El modelo y sus operaciones están construidos** (Fase 5 · Modelo, 2026-10-03); **la pantalla
-  está planificada y sin construir** (§9.11).
+  **El modelo y sus operaciones están construidos** (Fase 5 · Modelo, 2026-10-03), y **la
+  pantalla, salvo las relaciones**, tiene código sin verificar (Fase 5 · Lienzo, 2026-10-04);
+  **dibujar las relaciones está planificado y sin construir** (§9.11).
 
   **Se llamó *Plan* hasta el 2026-10-03**, y se renombró con el usuario antes de planificar la
   Fase 5, por dos motivos: «plan» chocaba con *el plan por fases* y con *planificar*, y daba por
@@ -709,8 +711,8 @@ Tres entidades, más nociones de agrupación:
   directamente una nota» lo hace ahora una ventana de tipo nota (§7.4). Sigue en el modelo, con
   su acción `set-default-view`, porque el dominio está cerrado; se revisa con las entidades
   «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
-- **ContextoGeneral** — **vista derivada** de todas las notas (y, desde la Fase 5, de los
-  diagramas, mezclados con ellas: planificado, §9.11).
+- **ContextoGeneral** — **vista derivada** de todas las notas (y, desde Fase 5 · Lienzo, de los
+  diagramas, mezclados con ellas por nombre, §7.4).
   No es una entidad y no se persiste: guardarlo sería duplicar datos que se pueden calcular. Ahí
   aparecen las notas **huérfanas**, las que no están en ningún contexto. Como no es un contexto,
   se comporta distinto en tres cosas (§7.4): su título **no se renombra**, su papelera **borra
@@ -727,11 +729,11 @@ Tres entidades, más nociones de agrupación:
 
 ### 5.1 Lo que existe hoy en el repo
 
-**Las fases 1 a 4 y Fase 5 · Modelo.** Medido el **2026-10-03**, tras `a87e012`, en líneas de
-`.ts`: `src/core` 3148, `src/storage` 1687, `src/platform` 339, `src/ui` 2820, y `test/` 8808.
-`npm run check` en verde con **643 pruebas** (532 al cerrar la Fase 4). Las cifras se quedan
-viejas solas —las que había aquí antes ya no cuadraban antes de la Fase 5—: antes de afirmar
-nada, `find src test -name '*.ts' | sort` y `npm run check`.
+**Las fases 1 a 4, Fase 5 · Modelo y el código de Fase 5 · Lienzo.** Medido el **2026-10-04**,
+tras `12be692`, en líneas de `.ts`: `src/core` 3148, `src/storage` 1687, `src/platform` 339,
+`src/ui` 3954, y `test/` 9294. `npm run check` en verde con **693 pruebas** (532 al cerrar la Fase
+4, 643 al cerrar Fase 5 · Modelo). Las cifras se quedan viejas solas: antes de afirmar nada,
+`find src test -name '*.ts' | sort` y `npm run check`.
 
 La tabla ya no lleva líneas por fichero, a propósito: la columna que tenía estaba sin re-medir
 desde que se adelgazaron las cabeceras y no decidía nada. La única cifra por fichero que sí
@@ -747,10 +749,11 @@ está en §6.3, y ese fichero no ha cambiado desde que se midió.
 | **`core/migrations/`** | `hydrate.ts` (de listas a mapas, limpiando `ItemRef` rotas y los diagramas) · `runMigrations.ts` (**puro y total**; `MIGRATIONS` **vacía a propósito**) |
 | **`storage/`** | `memory/MemoryStorageAdapter.ts` · `file/FileStorageAdapter.ts` (§6.2, con `onCorrupt`) · `file/schema.ts` (la validación al leer) · `blobs/LocalStorageBlobStore.ts` · `blobs/DirectoryHandleBlobStore.ts` (**sin pruebas a propósito**, §6.3) · `writeBehind.ts` (la mitad impura, con el estado *detenido* y `onError`) |
 | **`platform/web/`** | `SystemClock.ts` · `CryptoIdGenerator.ts` · `boot.ts` (la composición) · `LocalStorageWindows.ts` (la lista de ventanas) · `main.ts` (la entrada del navegador). Detalle en §7.5 |
-| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` |
-| **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` · `NoteView.ts` · `NoteEditor.ts` · `editableTitle.ts` · `sheet.ts` · `dragReorder.ts` · `backStack.ts` · `dom.ts` |
+| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` · `viewport.ts` + `gestures.ts` + `paintOrder.ts` (las cuentas del lienzo) |
+| **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` (lista notas **y diagramas**; el nombre está pendiente de cambiar) · `NoteView.ts` · `NoteEditor.ts` · `DiagramView.ts` · `DiagramCanvas.ts` · `editableTitle.ts` · `sheet.ts` · `dragReorder.ts` · `backStack.ts` · `dom.ts` |
+| **`ui/styles/`** | un CSS por vista, enlazados desde `index.html` en este orden: `base` · `ventanas` · `ajustes` · `hojas` · `barras` · `editor` · `diagrama` |
 | **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 22 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
-| **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · `test/ui/VERIFICACION-MANUAL.md` y `test/ui/VERIFICACION-MANUAL-EDITOR.md`, **escritas y sin pasar**. No son TypeScript y no entran en `npm run check` |
+| **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · `test/ui/VERIFICACION-MANUAL.md`, `test/ui/VERIFICACION-MANUAL-EDITOR.md` y `test/ui/VERIFICACION-MANUAL-LIENZO.md`, **escritas y sin pasar**. No son TypeScript y no entran en `npm run check` |
 
 Las pruebas son más líneas que el código que vigilan, y eso es lo esperado en un repo donde
 cada invariante se verifica rompiéndola a propósito. Desde que viven en `test/` (§8.5) la cuenta
@@ -1871,7 +1874,8 @@ la sincronización entre dispositivos.
 ## 7. La UI
 
 **Construido en la Fase 4, en `src/ui/`, cerrada el 2026-10-03 con deuda** (§9.10): siguen
-pendientes sus dos listas manuales y las tres preguntas del editor. El diseño de la navegación y las pantallas
+pendientes sus dos listas manuales y las tres preguntas del editor. **La vista diagrama, con su
+lienzo, se añadió en Fase 5 · Lienzo** (código hecho el 2026-10-04, sin cerrar; §9.11). El diseño de la navegación y las pantallas
 (§7.4) se cerró el **2026-09-27** a partir de un boceto en PDF del usuario; el del editor (§7.2 y
 §7.3), el 2026-09-20, y **se reabrió y precisó al construirlo, el 2026-09-29**. Cómo está hecho
 por dentro, en §7.5.
@@ -1895,7 +1899,7 @@ agrupa es el write-behind, no el editor, así que el disco no se entera de cada 
 El CSS del prototipo **no** se aprovechó: se escribió de nuevo, primero en un `<style>` de
 `index.html` y, desde el 2026-10-03, en **`src/ui/styles/`**, un fichero por vista —`base`,
 `ventanas`, `ajustes`, `hojas`, `barras` y `editor`— que `index.html` enlaza **en el orden del
-`<style>` original**. Ese orden es parte del diseño: con la misma especificidad gana la regla de
+`<style>` original**; la Fase 5 añadió `diagrama`, enlazado el último. Ese orden es parte del diseño: con la misma especificidad gana la regla de
 después, y hay choques reales —un botón de «Mover a…» casa con `.barra button` y con
 `.selector button`—, así que agrupar las reglas por tema en vez de por tramo habría cambiado la
 pantalla. Sin dependencias: **anidamiento nativo** donde no altera la especificidad —nunca bajo
@@ -2191,8 +2195,9 @@ se elige **al nacer**: con el interruptor, y con el disparador de anidar si est�
 
 ### 7.4 La navegación: cuatro vistas y una lista de ventanas
 
-**Construido en la Fase 4**, salvo la vista diagrama (Fase 5: lo que cambia aquí con ella está
-**planificado y sin construir**, en el último apartado de esta sección). Cerrado con el usuario el
+**Construido en la Fase 4**, salvo la vista diagrama, que llegó con **Fase 5 · Lienzo** (código
+hecho el 2026-10-04, sin cerrar): lo que cambió aquí con ella, en el último apartado de esta
+sección. Cerrado con el usuario el
 **2026-09-27** a partir de su boceto en PDF, y precisado al construirlo el **2026-09-29**. Todo lo
 de aquí es **web**, incluido el navegador del móvil —por eso importan la pulsación
 larga y el atrás de Android—. Los shells nativos, cuando lleguen, envuelven esta misma UI: lo que
@@ -2201,8 +2206,9 @@ cambia entonces es plataforma (el atrás nativo, el destino de los datos, el key
 #### Cuatro vistas, con la de ventanas en el centro
 
 - **Vista ventanas** — la principal. Es **la única forma de ver contextos**, y una ventana
-  también puede mostrar una nota (y, en la Fase 5, un diagrama).
-- **Vista nota**, **vista diagrama** (Fase 5) y **vista configuración** — las secundarias.
+  también puede mostrar una nota o, desde la Fase 5, un diagrama.
+- **Vista nota**, **vista diagrama** (desde Fase 5 · Lienzo) y **vista configuración** — las
+  secundarias.
 
 ```
             ◀   ventana 1 · ventana 2 · … · ventana n   ▶          ← vista ventanas
@@ -2217,9 +2223,9 @@ cambia entonces es plataforma (el atrás nativo, el destino de los datos, el key
 Las reglas, que son pocas y se sostienen entre sí:
 
 - **Un solo nivel.** De la vista ventanas se entra a una secundaria, y de una secundaria no se
-  entra a otra. No hay pila ni historial entre vistas secundarias. ⚠️ **Cambia con la Fase 5**
-  *(decidido con el usuario el 2026-10-03, sin construir)*: de un diagrama se entra a una nota,
-  así que hay **un nivel más** —ventana → diagrama → nota—. Ver el último apartado.
+  entra a otra. ⚠️ **Cambiado con la Fase 5** *(decidido con el usuario el 2026-10-03,
+  construido el 2026-10-04 en `1997ace`)*: de un diagrama se entra a una nota, así que hay **un
+  nivel más** —ventana → diagrama → nota— y lo de encima **se apila**. Ver el último apartado.
 - **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
   ▶.
 - **En la última, en el sitio de ▶, un «+» verde añade una ventana detrás** *(decidido con el
@@ -2237,10 +2243,10 @@ Las reglas, que son pocas y se sostienen entre sí:
   cuando la ventana muestra una nota.
 
 **Todo el estado de navegación son dos datos: qué ventana está activa y qué vista hay encima, si
-hay alguna.** El efecto buscado, y es el motivo de que no haya más niveles: **desde una nota no se
+hay alguna** —desde la Fase 5, qué vistas, apiladas—. El efecto buscado, y es el motivo de que no haya más niveles: **desde una nota no se
 llega a configuración**, así que no se puede borrar el contexto de debajo mientras estás dentro de
-una nota suya. El caso raro no se trata: no se puede producir. *(Con la Fase 5 lo de encima puede
-ser un diagrama con una nota sobre él; el efecto se conserva, ver el último apartado.)*
+una nota suya. El caso raro no se trata: no se puede producir. *(Desde la Fase 5 «lo de encima»
+es una pila —un diagrama con una nota sobre él—; el efecto se conserva, ver el último apartado.)*
 
 **Al recargar, vuelves a la ventana en la que estabas; lo que hubiera encima, no.** *(Decidido el
 2026-09-27.)* La ventana activa se guarda junto a la lista de ventanas, en `localStorage` y fuera
@@ -2271,7 +2277,8 @@ Una ventana es **una referencia en una lista ordenada** (`src/ui/windows.ts`):
 type WindowRef =
   | { readonly kind: "general" }
   | { readonly kind: "context"; readonly id: ContextId }
-  | { readonly kind: "note"; readonly id: NoteId }        // y "diagram", planificado en la Fase 5
+  | { readonly kind: "note"; readonly id: NoteId }
+  | { readonly kind: "diagram"; readonly id: DiagramId }  // desde Fase 5 · Lienzo
 
 interface WindowsLayout {
   readonly windows: ReadonlyArray<WindowRef>
@@ -2343,8 +2350,9 @@ Lo que no es la guarda, sino gestión de la lista:
 - **«Mover a…»**, la otra acción de la barra de selección *(decidida el 2026-09-27)*. Semántica:
   **mover**, no copiar.
   - **Desde un contexto:** quita las notas seleccionadas de éste (`remove-item`) y las añade al
-    elegido (`add-item`). Son dos acciones que encadena la UI (`moveNotes`, en
-    `src/ui/noteActions.ts`: primero añade y luego quita), así que *una acción, una operación* se
+    elegido (`add-item`). Son dos acciones que encadena la UI (`moveItems` —`moveNotes` hasta
+    la Fase 5, que lo extendió a diagramas—, en `src/ui/noteActions.ts`: primero añade y luego
+    quita), así que *una acción, una operación* se
     respeta. Si una nota ya estaba en el destino, `add-item` es no-op y sólo cuenta el
     `remove-item`.
   - **Desde el General**, que no es un contexto: sólo añade al elegido (`add-item`), sin tocar los
@@ -2365,7 +2373,7 @@ Lo que no es la guarda, sino gestión de la lista:
   desaparecen los botones «+», y ◀ ▶ y ⚙ se apagan (color más apagado).
 - **Descartada la casilla de selección manual** que el boceto ponía a la derecha de cada fila:
   allí era simbólica, y la pulsación larga ocupa su lugar.
-- **«+ Diagrama» no aparece en la Fase 4.** Llega con la Fase 5 (último apartado).
+- **«+ Diagrama» no aparecía en la Fase 4.** Llegó con Fase 5 · Lienzo (último apartado).
 - **El orden de la lista** *(decisión de implementación, aceptada por el usuario)*: **el General
   ordena sus notas por nombre** —no tiene `items` propios—; **un contexto, en el orden de sus
   `items`**. Las cifras de la pulsación larga, en §7.5.
@@ -2394,8 +2402,10 @@ Lo que no es la guarda, sino gestión de la lista:
   Crear un contexto aquí **no le añade ventana**.
 
 **El selector de contenido** (al añadir detrás o al cambiar contenido) ofrece el General, los
-contextos existentes, las notas existentes —tras un rótulo «Notas:»— y el atajo **«+ Contexto
-nuevo»**.
+contextos existentes, las notas existentes —tras un rótulo «Notas:»—, desde la Fase 5 los
+diagramas —tras «Diagramas:»— y el atajo **«+ Contexto nuevo»**. Qué rótulo va delante de cada
+opción lo decide `choiceGroupLabel`, pura y compartida con la hoja del «+» verde (antes, esa
+lógica estaba duplicada en las dos vistas).
 
 *Decisiones de implementación, tomadas al construirla y aceptadas por el usuario:*
 
@@ -2460,32 +2470,45 @@ Existía para que un contexto «abriera directamente» una nota o un diagrama. E
 consumidor**. No se eliminan —el dominio está cerrado, y quitarlos tocaría modelo, reducer,
 pruebas y formato en disco por algo que no molesta—; se anotan como candidatos a revisar cuando
 lleguen las entidades «meta» de UX (`TAREAS.md` → *Ideas aparcadas*). La Fase 5 tampoco les da
-uso: abrir directamente un diagrama lo hará una ventana de tipo diagrama.
+uso: abrir directamente un diagrama lo hace una ventana de tipo diagrama.
 
-#### Lo que cambia con la Fase 5 *(planificado el 2026-10-03, sin construir)*
+#### Lo que cambia con la Fase 5 *(planificado el 2026-10-03; construido en Fase 5 · Lienzo, sin cerrar)*
 
 Decidido con el usuario al planificar los Diagramas; el resto del diseño de la fase, en §9.11.
+**Todo lo de este apartado tiene código desde el 2026-10-04** (`c8a37db`, `ede620f`, `1997ace`),
+pero **sin verificar a mano**: la lista del lienzo está sin pasar.
 
 - **La vista diagrama es la cuarta.** Se entra tocando un diagrama en la lista de un contexto o
   del General —donde salen **mezclados con las notas**—, y su cabecera es como la de la nota:
   exit y el nombre, que se renombra tocándolo.
+- **Las listas enseñan elementos, no notas.** Una ventana de contexto o del General enseña
+  `ListItem { ref, name }` —una `ItemRef` y su nombre—: el General, todo mezclado y por nombre;
+  un contexto, en el orden de sus `items`; una referencia a lo que no está no se pinta. La
+  selección va por una clave con el tipo (`itemKey`: `note:x`, `diagram:x`), porque una nota y
+  un diagrama podrían compartir id. La papelera y «Mover a…» son `trashItems` y `moveItems`, y la
+  pregunta de borrar cuenta «notas», «diagramas» o «elementos» si van mezclados. **Una fila de
+  diagrama lleva una raya azul a la izquierda** *(decisión de implementación)*.
 - **Un nivel más de navegación: ventana → diagrama → nota.** Tocar un nodo-nota, o crear una
   nota desde el lienzo, entra en la nota; **exit vuelve paso a paso**: de la nota al diagrama, y
   del diagrama a la ventana. **Si el diagrama es ventana**, diagrama → nota es un solo nivel,
-  como hoy ventana → nota. No hace falta maquinaria nueva: el `backStack` ya es una pila (§7.5).
-  Lo que sostenía «un solo nivel» —que desde una nota no se llega a configuración— **sigue en
-  pie**: ni la vista diagrama ni la nota abierta desde él llevan ⚙.
-- **«+ Diagrama»**, un botón azul algo más pequeño junto a «+ Nota», solapándose un poco, en
-  cada contexto. El diagrama **nace en ese contexto** —como una nota: `create-diagram` +
-  `add-item`— y llega con el nombre, «Nuevo diagrama», **ya en edición**.
-- **Un diagrama puede ser ventana**: `WindowRef` gana el caso `diagram`, el selector lo ofrece,
-  y **la guarda lo sabe**: un diagrama borrado se quita de las ventanas en la misma sesión.
+  como ventana → nota. **Construido apilando lo de encima** en `App.ts` (§7.5); el `backStack` ya
+  era una pila, pero hubo que arreglarle una carrera. Lo que sostenía «un solo nivel» —que desde
+  una nota no se llega a configuración— **sigue en pie**: ni la vista diagrama ni la nota
+  abierta desde él llevan ⚙.
+- **«+ Diagrama»**, un botón azul algo más pequeño a la izquierda del «+» verde, montado un poco
+  sobre él, en cada contexto. El diagrama **nace en ese contexto** —como una nota:
+  `create-diagram` + `add-item`, en `createDiagramIn`— y llega con el nombre, «Nuevo diagrama»,
+  **ya en edición**.
+- **Un diagrama puede ser ventana**: `WindowRef` gana el caso `diagram`, el selector lo ofrece
+  —tras las notas—, y **la guarda lo sabe**: un diagrama borrado se quita de las ventanas en la
+  misma sesión. También lo sabe `parseWindowsLayout`: sin ese caso, una ventana de diagrama se
+  descartaba en silencio al recargar. La ventana monta **el mismo lienzo** que la vista.
 - **Borrar un diagrama sigue las reglas de una nota**: en el General la papelera **borra de
   verdad** (`delete-diagram`) y confirma con la hoja propia; en un contexto **sólo lo quita de
   ese contexto** (`remove-item`), sin confirmar. **Borrar un diagrama no borra las notas** a las
   que apuntan sus nodos.
 
-### 7.5 Cómo está construida *(Fase 4)*
+### 7.5 Cómo está construida *(Fase 4, y la vista diagrama de Fase 5 · Lienzo)*
 
 Lo de arriba es el diseño; esto es cómo quedó el código y lo que se decidió al escribirlo. Casi
 todo son **decisiones de implementación, aceptadas por el usuario** en bloque, no cerradas una a
@@ -2494,11 +2517,17 @@ una como las de §7.2–§7.4.
 #### El patrón: lo que decide es puro; el DOM, delgado
 
 **Lo que decide qué se ve y qué pasa es una función pura, con pruebas en Node; el DOM de encima
-es delgado y se verifica en el navegador**, con las dos listas manuales de `test/ui/`. Por eso
+es delgado y se verifica en el navegador**, con las tres listas manuales de `test/ui/`. Por eso
 cada pantalla va en dos ficheros: `windowView.ts` decide qué enseña una ventana y `WindowsView.ts`
 lo pinta; `settingsContent.ts` y `SettingsView.ts`; `noteActions.ts` + `selection.ts` y
 `NoteList.ts`; `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor entero, sin DOM, probado
-fila a fila contra las tablas de §7.3) y `NoteEditor.ts`.
+fila a fila contra las tablas de §7.3) y `NoteEditor.ts`; `viewport.ts` + `gestures.ts` +
+`paintOrder.ts` (las cuentas del lienzo) y `DiagramCanvas.ts`.
+
+**Lo que se monta en dos marcos va aparte de su vista.** `NoteEditor` es el editor y `NoteView` el
+marco de la vista nota; una ventana de nota monta el mismo `NoteEditor` con otro marco (§7.4).
+**`DiagramCanvas` y `DiagramView` siguen el mismo patrón**: el lienzo es uno, y lo montan la vista
+diagrama —cabecera con el nombre renombrable y barra con ✕ Salir— y la ventana de diagrama.
 
 **No hay pruebas automáticas del DOM, a propósito, y no se instaló nada para tenerlas.** Encaja
 con lo decidido para los adaptadores de navegador (§6.3) —un doble prueba lo que uno cree que
@@ -2549,6 +2578,17 @@ cierra primero la de arriba. `close()` pide cerrar la de arriba; llamarlo otra v
 pregunta y la selección—, pero **nunca más capas de las que hay**, y los `back()` salen de uno en
 uno: dos seguidos antes del `popstate` sacaban de la página (fallo cazado probando). Escape en
 una hoja no llega al Escape del modo selección.
+
+**Una carrera, arreglada en Fase 5 · Lienzo** (`1997ace`): al elegir en una hoja algo que abre
+otra capa —«Nota nueva» en el menú del lienzo—, el `popstate` pendiente del cierre de la hoja
+llegaba después de apuntar la capa nueva, y la cerraba a ella. **Ahora una capa que se abre con
+cierres pendientes espera a que lleguen** antes de su `pushState`.
+
+**Lo de encima se apila** (`App.ts`, desde el mismo commit). Antes había una sola capa encima de
+la ventana, y una guarda —`if (back.isOpen()) return`— que existía justamente para impedir el
+segundo nivel; se quitó, y ahora cada vista abierta encima es una capa más y sólo se ve la de
+arriba. `abrirEncima` esconde lo de debajo **antes** de montar lo nuevo, porque lo nuevo puede
+querer el foco —el nombre en edición— y en algo que se va a esconder no se quedaría.
 
 #### La selección
 
@@ -2733,7 +2773,7 @@ test/
 │   ├── file/
 │   └── blobs/       # incluye VERIFICACION-MANUAL.md
 ├── platform/web/    # desde la Fase 4
-└── ui/              # desde la Fase 4, con sus dos VERIFICACION-MANUAL*.md
+└── ui/              # desde la Fase 4, con sus tres VERIFICACION-MANUAL*.md (la del lienzo, de la 5)
 ```
 
 **Lo que se gana no es estética, aunque la razón de partida fuera esa.** Es que la separación
@@ -2897,8 +2937,11 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
 - **Fase 5 — Diagramas. Planificada el 2026-10-03 con el usuario.** Un lienzo libre con nodos y
   relaciones, y la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo, Fase 5 ·
   Lienzo y Fase 5 · Relaciones** (§9.11). **Fase 5 · Modelo, ✅ HECHA el 2026-10-03**, con **643
-  pruebas** (532 al empezar): los Diagramas ya se operan en el core, sin pantalla todavía.
-  **Lo siguiente: Fase 5 · Lienzo.** **Después de las tres, la deuda móvil de la Fase 4.**
+  pruebas** (532 al empezar): los Diagramas ya se operan en el core. **Fase 5 · Lienzo, código
+  hecho el 2026-10-04 y sin cerrar**, con **693**: la vista, el corcho, los pósits y los
+  nodos-nota; su lista manual, escrita y sin pasar. **Lo siguiente: Fase 5 · Relaciones.** **Al
+  final, todas las listas manuales pendientes en una sentada** —lienzo, relaciones y la deuda
+  móvil de la Fase 4— (§9.11).
 
 ### 9.3 Las operaciones de contenido
 
@@ -3652,13 +3695,16 @@ entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si
 sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
 decisión aunque la fase esté cerrada.
 
-### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Fase 5 · Modelo, construida)*
+### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo, código hecho y sin cerrar)*
 
 Al estilo de §9.10, y **escrito antes de que existiera una línea de código de diagramas**. ⚠️ **Hoy
-está construido sólo Fase 5 · Modelo** —el modelo, sus operaciones, acciones y casos de uso,
-`delete-note`, `hydrate` y `schema.ts`; ver *Fase 5 · Modelo: construida*, al final—. **La vista,
-los gestos y el dibujo de las relaciones siguen siendo diseño.** Todas las decisiones de aquí se
-tomaron **con el usuario el 2026-10-03**; lo que no lleve otra fecha, lleva ésa.
+está construido Fase 5 · Modelo** —el modelo, sus operaciones, acciones y casos de uso,
+`delete-note`, `hydrate` y `schema.ts`— **y el código de Fase 5 · Lienzo** —la vista, el corcho,
+los pósits, los nodos-nota y sus gestos—, éste **sin verificar a mano**; los dos, al final, en sus
+apartados *construida* y *código hecho*. **El dibujo de las relaciones y su menú siguen siendo
+diseño.** Todas las decisiones de aquí se tomaron **con el usuario el 2026-10-03**; lo que no lleve
+otra fecha, lleva ésa. Donde el código se apartó de lo de aquí, lo dice *Fase 5 · Lienzo: código
+hecho*.
 
 #### Qué es un diagrama: un lienzo libre
 
@@ -3907,7 +3953,8 @@ la Fase 4.
   2026-10-03.**
 - **Lienzo** — todo **menos las líneas**: «+ Diagrama», el diagrama como ventana, la vista con el
   corcho, los pósits y todo lo que se les hace, los nodos-nota con su nivel de navegación, los
-  menús y el clic que espera.
+  menús y el clic que espera. **Código hecho el 2026-10-04; sin cerrar**, porque su lista manual
+  está sin pasar.
 - **Relaciones** — conectar, la flecha al borde, el abanico, sin dirección, invertir, el menú de
   la línea y, al final, el texto a lo largo.
 
@@ -3918,6 +3965,14 @@ B de la librería de mover y acercar—, no con todo encima.
 **Después de las tres va la deuda móvil de la Fase 4** —sus dos listas manuales en el móvil—, por
 decisión del usuario. **Riesgo asumido:** si la base móvil falla, se descubre con el lienzo
 encima. **A cambio**, se verifican juntas en el mismo teléfono.
+
+⚠️ **Precisado el 2026-10-04, y esto deja sin efecto la mitad de «por qué ese orden»:** el usuario
+decidió **no pasar todavía la lista del lienzo** y pasar **todas las pendientes juntas, al final,
+en una sentada** —la del lienzo, la de las relaciones y la deuda móvil de la Fase 4—. Se le
+explicó el riesgo y lo eligió frente a pasarla ya: **si los gestos fallan en su móvil, se descubre
+con las relaciones construidas encima, y las relaciones usan los mismos gestos**. Separar Lienzo
+de Relaciones sigue sirviendo para construir por partes; lo que ya no da es probar el lienzo en el
+móvil antes de las relaciones.
 
 #### Fase 5 · Modelo: los criterios
 
@@ -3982,6 +4037,89 @@ llena, que caía por la comprobación de clave y no por la de «es un mapa»; ah
 8. **Su lista de verificación manual, nueva en `test/ui/`, pasada en escritorio Y en el móvil del
    usuario**, con el resultado anotado.
 9. **`npm run check` en verde y el recuento anotado.**
+
+#### Fase 5 · Lienzo: código hecho, sin cerrar *(2026-10-04)*
+
+En `446b26b`, `57663f2`, `c8a37db`, `ede620f`, `0f33c6a`, `1997ace` y `12be692`, con **693
+pruebas** en verde (643 al empezar), **sin tocar el core ni `storage/`** y sin instalar nada. Los
+puntos 1 a 7 y el 9 tienen código; **el 8 no se cumple**: la lista
+(`test/ui/VERIFICACION-MANUAL-LIENZO.md`) está escrita y **sin pasar**, y se pasa al final de la
+fase con las demás (arriba, *Partida en tres*). Hasta entonces, lo de este apartado **existe pero
+no está verificado en un navegador de verdad**, y menos en el móvil.
+
+**Las piezas:**
+
+- **`viewport.ts`, puro: el encuadre.** `Viewport { offsetX, offsetY, scale }`: un punto del
+  corcho se ve en `corcho × scale + offset`. `toCanvas`/`toScreen`; `panBy` (sin desplazamiento,
+  el mismo objeto); `zoomAround`, que deja quieto el punto, con topes `MIN_SCALE` 0,25 y
+  `MAX_SCALE` 4 —en el tope, el mismo objeto—; `wheelFactor` para la rueda; `centeredViewport`
+  para abrir. **`pinch` se calcula siempre desde el encuadre que había al poner el segundo
+  dedo**, no paso a paso: así no acumula error de redondeo durante el pellizco.
+- **`gestures.ts`, puro: qué ha hecho el dedo.** `LONG_PRESS_MS` 500 y `MOVE_TOLERANCE_PX` 10,
+  **los mismos que el arrastre de fichas** (§7.4), para que los dos gestos se sientan igual;
+  `DOUBLE_TAP_MS` 250, que es también lo que espera un nodo-nota antes de abrirse;
+  `DOUBLE_TAP_DISTANCE_PX` 25, porque un dedo no repite el sitio exacto. `isDoubleTap` exige
+  **mismo objetivo**, a tiempo y cerca.
+- **`paintOrder.ts`, puro: los solapes.** `raise` sube el último pósit movido o creado y
+  `paintOrder` da el orden de pintado; **no se guarda**, como estaba decidido.
+- **`DiagramCanvas.ts`: el lienzo**, separado de la vista igual que `NoteEditor` de `NoteView`,
+  para montarse en la vista y en la ventana (§7.5). Pósits en HTML dentro de una capa con
+  transformación CSS, sobre una rejilla de puntos (`--dim`). Gestos con Pointer Events, sin
+  librería. Los menús son la hoja de `sheet.ts`. **Centra el encuadre la primera vez que tiene
+  tamaño**, con un `ResizeObserver`: al montarse todavía no se ve y mide cero.
+- **`DiagramView.ts`**: cabecera con el nombre renombrable (`createEditableTitle`; `editName`
+  para el recién creado), el lienzo y una barra con ✕ Salir. **`diagrama.css`**, enlazado el
+  último en `index.html`.
+- **Las listas, las ventanas y la navegación**: `ListItem`, `itemKey`, `trashItems`/`moveItems`,
+  `WindowRef` con `diagram` en `sameWindow`, `windowExists` y `parseWindowsLayout`,
+  `choiceGroupLabel`, y lo de encima apilado, con el arreglo de la carrera del `backStack`. Todo
+  eso, en §7.4 y §7.5.
+
+**Los gestos y los menús, como quedaron:**
+
+| | Ratón | Dedo |
+|---|---|---|
+| Mover el corcho | arrastrar el fondo | arrastrar **sin esperar**, también empezando sobre un pósit |
+| Mover un pósit | arrastrarlo, directamente | **mantener 500 ms** y arrastrar |
+| Acercar | rueda | pellizco |
+| Menú del fondo | doble clic o clic derecho | doble toque |
+| Menú de un pósit | doble clic o clic derecho | doble toque |
+| Entrar en un nodo-nota | clic, que espera 250 ms | toque, igual |
+
+- **El menú del fondo, «Añadir al diagrama»**: *Texto · Nota existente · Nota nueva*. *Nota
+  existente* sólo sale si hay notas, y **su lista sustituye a las opciones en la misma hoja**.
+  *Texto* nace vacío y en edición. *Nota nueva* usa **`createNoteForDiagram`** —la nota en todos
+  los contextos del diagrama, apoyado en `contextsWith`— y entra en ella.
+- **El menú de un pósit**: *Editar · Marcar hecho* (o *Desmarcar*) *· Borrar*; el nodo-nota, sin
+  *Editar*. *Conectar* llega con Relaciones.
+- **Un nodo-nota enseña el título en directo**; si la nota no está cargada, «Nota ilegible», y
+  **una ilegible no se abre**. Si llega el segundo toque antes de los 250 ms, menú en vez de
+  entrar.
+- **Mover guarda con `setNodePosition` una vez, al soltar.**
+
+**Decisiones de implementación** —mías, al construirlo; el usuario las ha visto y no las ha
+rechazado, pero **no se decidieron con él**:
+
+- **La posición de un nodo es su centro.**
+- **El origen, en el centro del lienzo al abrir.** «Se abre en el origen» podía ser también la
+  esquina; el centro deja sitio alrededor.
+- **Borrar un pósit no pide confirmación.**
+- **Editar: Intro guarda, Mayúsculas+Intro hace otra línea**; salir del campo también guarda, y
+  Escape descarta. **Precio:** en el móvil, sin Mayúsculas a mano, un pósit no puede tener varias
+  líneas.
+- **Un pósit vacío se queda**, y enseña «Sin texto».
+- **Los menús son la hoja de abajo**, la misma de ⋮ en la configuración, **no un menú flotante**.
+- **Una raya azul a la izquierda** distingue una fila de diagrama en las listas, y la llevan
+  también los nodos-nota.
+
+**Cambio de plan, aceptado por el usuario:** los menús de nodo y de fondo entraron en la tarea de
+los pósits —sin ellos no se crea, edita ni borra nada— y el clic que espera, en la de los
+nodos-nota; la tarea «Los menús y el clic que espera» desapareció como tarea propia.
+
+**Lo que queda sin verificar de verdad**, y es lo que la lista tiene que mirar: **el pellizco**,
+**la pulsación larga para levantar un pósit** frente a arrastrar el corcho, **el teclado del
+móvil** —que no tape el pósit que se edita: hay código que sube el corcho con `visualViewport`,
+sin probar—, y **si la espera de 250 ms se nota** al abrir un nodo-nota.
 
 #### Fase 5 · Relaciones: los criterios
 

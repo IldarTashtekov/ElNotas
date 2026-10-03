@@ -528,7 +528,8 @@ validación de esquema, y la escritura condicional.
 **Cerrada sin cumplir su criterio entero** (`ARCHITECTURE.md` §9.10): quedan **las dos listas
 manuales sin pasar** y **las tres preguntas sin contestar**, abajo, como pendientes. No se
 marcan como hechas. **532 pruebas** al cerrarla. **La parte móvil de esa deuda se pasa DESPUÉS de
-la Fase 5**, por decisión del usuario el 2026-10-03 (ver *Fase 5*, abajo).
+la Fase 5**, por decisión del usuario el 2026-10-03, y desde el 2026-10-04 **en la misma sentada
+que las listas del lienzo y de las relaciones** (ver *Fase 5*, abajo).
 
 **Estado el 2026-09-29:** todo el código de las dos partes está hecho y commiteado en la rama
 `rediseno-arquitectura`, con `npm run check` en verde y **489 pruebas** (la fase empezó con
@@ -648,16 +649,21 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       clave de `localStorage`, fuera del almacén, así que **no viaja con las notas** — un cambio
       de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado).
 
-### Fase 5 — Diagramas: Fase 5 · Modelo ✅ HECHA; lo siguiente, Fase 5 · Lienzo
+### Fase 5 — Diagramas: Modelo ✅ HECHA; Lienzo, código hecho y lista sin pasar; lo siguiente, Relaciones
 
 **Planificada con el usuario el 2026-10-03.** El diseño entero, sus porqués y los criterios de
 cierre de cada parte, en `ARCHITECTURE.md` §9.11; lo que cambia en la navegación, en §7.4.
 **Partida en tres, en este orden:** Modelo → Lienzo → Relaciones. **Fase 5 · Modelo, hecha el
-2026-10-03** con **643 pruebas** (532 al empezar). **Lo siguiente: Fase 5 · Lienzo.**
+2026-10-03** con **643 pruebas** (532 al empezar). **Fase 5 · Lienzo, código hecho el 2026-10-04**
+con **693** y **sin cerrar**: su lista manual está escrita y sin pasar. **Lo siguiente: Fase 5 ·
+Relaciones.**
 
-**Después de las tres, la deuda móvil de la Fase 4**: pasar en el móvil sus dos listas manuales
-(arriba). Decidido con el usuario el 2026-10-03; riesgo asumido, que si la base móvil falla se
-descubre con el lienzo encima; a cambio, se verifican juntas en el mismo teléfono.
+**Todas las listas manuales pendientes se pasan juntas, al final, en una sentada** —*decidido por
+el usuario el 2026-10-04*—: la del lienzo, la de las relaciones y la deuda móvil de la Fase 4 (sus
+dos listas, arriba). Ya el 2026-10-03 se había decidido que la deuda móvil iba después de las tres
+partes. **Riesgo asumido, explicado y elegido frente a pasar la del lienzo ya:** si los gestos
+fallan en su móvil se descubre con las relaciones construidas encima, y **las relaciones usan los
+mismos gestos**. A cambio, todo se verifica en el mismo teléfono y de una vez.
 
 #### Fase 5 · Modelo — el core y `storage/`, sin pantalla ✅ HECHA el 2026-10-03
 
@@ -686,29 +692,39 @@ descubre con el lienzo encima; a cambio, se verifican juntas en el mismo teléfo
       **643**. Una no se puede romper —`setNodeText` sobre un nodo-nota: quitarla no compila—, y
       una prueba se corrigió al romperla (`nodes: []`). `ARCHITECTURE.md` §9.11.
 
-#### Fase 5 · Lienzo — todo menos las líneas
+#### Fase 5 · Lienzo — todo menos las líneas: código hecho, lista manual sin pasar
 
-- [ ] **«+ Diagrama»** en cada contexto: nace ahí, como «Nuevo diagrama» y con el nombre en
+Cómo quedó, y las decisiones tomadas al construirlo, en `ARCHITECTURE.md` §9.11 → *Fase 5 ·
+Lienzo: código hecho, sin cerrar*. **Cambio de plan aceptado por el usuario:** los menús de nodo y
+de fondo entraron en la tarea de los pósits —sin ellos no se crea, edita ni borra nada— y el clic
+que espera, en la de los nodos-nota, así que **«Los menús y el clic que espera» desapareció como
+tarea propia**.
+
+- [x] **Las cuentas en funciones puras con pruebas en Node**: pantalla ↔ corcho, acercar alrededor
+      de un punto, el pellizco, toque / doble toque / pulsación larga. ✅ `446b26b` (`viewport.ts`
+      y `gestures.ts`); el orden de pintado, `paintOrder.ts`, en `0f33c6a`.
+- [x] **La vista diagrama**: cabecera como la de la nota, y el corcho —pósits en HTML dentro de una
+      capa con transformación CSS— que se mueve y se acerca. Al abrir, el origen, **en el centro**.
+      ✅ `57663f2`.
+- [x] **«+ Diagrama»** en cada contexto: nace ahí, como «Nuevo diagrama» y con el nombre en
       edición. En el General, los diagramas mezclados con las notas. La papelera, con las reglas
-      de una nota.
-- [ ] **El diagrama como ventana**: `WindowRef` gana `diagram`, el selector lo ofrece y la guarda
-      lo sabe. Con pruebas, y rota a propósito. ⚠️ **También `parseWindowsLayout`** (en
-      `src/ui/windows.ts`): hoy sólo lee `general`, `context` y `note`, y **descarta en silencio**
-      cualquier otra ventana guardada, así que sin el caso `diagram` una ventana de diagrama
-      desaparecería al recargar.
-- [ ] **La vista diagrama**: cabecera como la de la nota, y el corcho —pósits en HTML dentro de una
-      capa con transformación CSS— que se mueve y se acerca. Al abrir, el origen.
-- [ ] **Los pósits**: crear con doble clic/toque, editar dentro, hecho, borrar, mover guardando una
-      vez al soltar, solapes, y el teclado virtual sin tapar el que se edita.
-- [ ] **Los nodos-nota**: de nota existente o de nota nueva —ésta, en todos los contextos del
-      diagrama, y entrando en ella—; título en directo; «Nota perdida»; y el nivel extra de
-      navegación ventana → diagrama → nota.
-- [ ] **Los menús y el clic que espera ~250 ms** en el nodo-nota.
-- [ ] **Las cuentas en funciones puras con pruebas en Node**: pantalla ↔ corcho, acercar alrededor
-      del pellizco, clic / doble / pulsación larga.
-- [ ] **Su lista de verificación manual**, nueva en `test/ui/`, **escrita y pasada en escritorio Y
-      en el móvil del usuario**.
-- [ ] **`npm run check` en verde y el recuento anotado.**
+      de una nota. ✅ `c8a37db`.
+- [x] **El diagrama como ventana**: `WindowRef` gana `diagram`, el selector lo ofrece y la guarda
+      lo sabe, con pruebas y rota a propósito. **También `parseWindowsLayout`**, que sin el caso
+      `diagram` tiraba la ventana al recargar. El lienzo sale a `DiagramCanvas.ts` para montarse
+      en los dos marcos. ✅ `ede620f`.
+- [x] **Los pósits, con sus menús**: crear con doble clic/toque o clic derecho, editar dentro,
+      hecho, borrar, mover guardando una vez al soltar, solapes, y el teclado virtual sin tapar el
+      que se edita. ✅ `0f33c6a`.
+- [x] **Los nodos-nota, con el clic que espera ~250 ms**: de nota existente o de nota nueva —ésta,
+      en todos los contextos del diagrama, y entrando en ella—; título en directo; «Nota perdida»;
+      y el nivel extra de navegación ventana → diagrama → nota, con lo de encima apilado y el
+      arreglo de la carrera del `backStack`. ✅ `1997ace`.
+- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil del
+      usuario.** **Escrita** (`test/ui/VERIFICACION-MANUAL-LIENZO.md`, `12be692`). **Sin pasar**:
+      se pasa al final de la Fase 5 junto a las demás, por decisión del usuario el 2026-10-04
+      (arriba). **Esto es lo que tiene abierta Fase 5 · Lienzo.**
+- [x] **`npm run check` en verde y el recuento anotado**: **693** (643 al empezar).
 
 #### Fase 5 · Relaciones — las líneas
 
@@ -722,7 +738,8 @@ descubre con el lienzo encima; a cambio, se verifican juntas en el mismo teléfo
       campo encima. El último paso.
 - [ ] **Las cuentas en funciones puras con pruebas en Node**: corte con el borde, abanico,
       orientación del texto.
-- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil.**
+- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil**, en la
+      misma sentada que la del lienzo y la deuda móvil de la Fase 4.
 - [ ] **`npm run check` en verde y el recuento anotado.**
 
 #### De la fase, sin parte asignada
@@ -1164,7 +1181,7 @@ documentación del 2026-09-29.
 entra en juego** (abajo, *Tres huecos…*) y **qué pasa con lo guardado en `localStorage` al cambiar
 de destino**, que desde el 2026-09-27 incluye la lista de ventanas (arriba, en *Pendiente*).
 
-### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03; construido lo del core (Fase 5 · Modelo)**
+### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03; construidos Modelo y el código de Lienzo**
 
 Salieron de planificar la fase con el usuario. El diseño y sus porqués, en `ARCHITECTURE.md`
 §9.11 (y §7.4 para la navegación); aquí, sólo el registro de lo que estaba abierto.
@@ -1182,8 +1199,9 @@ Salieron de planificar la fase con el usuario. El diseño y sus porqués, en `AR
 - **Dónde nace una nota creada desde el lienzo** — ✅ **en todos los contextos del diagrama**, o
   sólo en el General si no está en ninguno.
 - **La navegación** — ✅ **un nivel más, ventana → diagrama → nota.** ⚠️ Cambia la decisión de la
-  Fase 4 de «un solo nivel».
-- **Cuándo se pasa la deuda móvil de la Fase 4** — ✅ **después de la Fase 5.**
+  Fase 4 de «un solo nivel». Construida en `1997ace`: lo de encima se apila.
+- **Cuándo se pasa la deuda móvil de la Fase 4** — ✅ **después de la Fase 5.** Precisada el
+  2026-10-04: **todas las listas pendientes juntas, al final, en una sentada** (arriba, *Fase 5*).
 - **Cómo se parte la fase** — ✅ **Modelo → Lienzo → Relaciones.**
 
 ### Qué devuelven los casos de uso — ✅ **cerrada y CONSTRUIDA: la entidad protagonista, o `null`**
@@ -1466,7 +1484,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. |
 | **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. ⚠️ **Desde la Fase 4 hay dos suscriptores** —la UI y el write-behind— y esto **no se ha reabierto**: la UI se escribió con el `Listener` tal cual. **No confundir con el caso que quedaba vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo veía nadie — no se arreglaba con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo fue el `onError`, **hecho en la Fase 4** (`f406d96`). |
 | ~~**El editor de grafos de los Diagramas**~~ — ✅ **ya no está aparcado: planificado el 2026-10-03** | Estaba aquí porque no tenía diseño: el boceto del usuario decía que aún no sabía cómo plantear la interfaz. | **Desbloqueada:** cerró la Fase 4 y se planificó la 5 —un lienzo libre, partido en Modelo, Lienzo y Relaciones— en `ARCHITECTURE.md` §9.11 y en *Pendiente*. Lo que estaba anotado aquí, que `Diagram.nodes` pasara de array a `Record`, entra en Fase 5 · Modelo. |
-| **Una librería pequeña sólo para mover y acercar el lienzo** (pan/zoom, sin dependencias propias) | Decidido el 2026-10-03 hacer el lienzo **desde cero**: las librerías de lienzo completas exigen React o guardan su propio estado (`ARCHITECTURE.md` §9.11), y mover y acercar son unas pocas cuentas puras que se prueban en Node. | **Que el pellizco o el arrastre no se dejen domar en el móvil real** durante Fase 5 · Lienzo. Ese día se evalúa una que haga **sólo** eso y no guarde estado; sería la primera dependencia de runtime, así que con el mismo cuidado que Snabbdom. |
+| **Una librería pequeña sólo para mover y acercar el lienzo** (pan/zoom, sin dependencias propias) | Decidido el 2026-10-03 hacer el lienzo **desde cero**: las librerías de lienzo completas exigen React o guardan su propio estado (`ARCHITECTURE.md` §9.11), y mover y acercar son unas pocas cuentas puras que se prueban en Node. | **Que el pellizco o el arrastre no se dejen domar en el móvil real.** El lienzo se hizo sin ella, y **aún no se ha probado en el móvil**: se sabrá al pasar su lista, que desde el 2026-10-04 va al final de la Fase 5, con las relaciones ya encima. Ese día se evalúa una que haga **sólo** eso y no guarde estado; sería la primera dependencia de runtime, así que con el mismo cuidado que Snabbdom. |
 | **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web. Ese build existe desde la Fase 4 (`npm run build:web`, a `dist/web/`), pero la fase no está cerrada. | Una Fase 4 terminada. Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
 | **Sync entre dispositivos, CRDTs, colaboración en tiempo real** | Salto enorme de complejidad. `revision` ya deja la puerta abierta a detectar conflictos, que es el 10% que sí hacía falta desde el principio. | Uso real en dos dispositivos y una política de conflictos elegida a conciencia. "Gana el último" ya está descartada. |
 | **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, 156 líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** `BlobStore` sobre navegador con lógica de verdad —el de Drive, con su OAuth y sus reintentos— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
