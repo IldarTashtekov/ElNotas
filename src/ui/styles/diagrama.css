@@ -1,6 +1,6 @@
 /*
  * El diagrama: el lienzo con su rejilla de puntos, que se mueve y se acerca con
- * lo que hay encima, y la barra de abajo.
+ * los pósits encima, y la barra de abajo.
  */
 
 .vista-diagrama {
@@ -38,11 +38,64 @@
     cursor: grabbing;
   }
 }
+/* El lienzo y su hoja de menús: para la columna, sólo cuenta el lienzo. */
+.lienzo-marco {
+  display: contents;
+}
 .capa {
   left: 0;
   position: absolute;
   top: 0;
   transform-origin: 0 0;
+}
+
+/* ── Los pósits: su posición es su centro ── */
+.posit {
+  background: var(--screen);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+  cursor: default;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  padding: 0.5rem 0.65rem;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: pre-wrap;
+  width: 10rem;
+
+  /* Un nodo-nota, con la misma raya azul que un diagrama en la lista. */
+  &.nota {
+    border-left: 4px solid var(--accent);
+  }
+  &.hecho .texto {
+    opacity: 0.55;
+    text-decoration: line-through;
+  }
+  &.levantado {
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.25);
+    cursor: grabbing;
+  }
+  & .texto:empty::before {
+    color: var(--muted);
+    content: "Sin texto";
+  }
+}
+.posit-campo {
+  border: none;
+  display: block;
+  font: inherit;
+  line-height: inherit;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  resize: none;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+  }
 }
 .barra-diagrama {
   margin-top: 0;

@@ -72,6 +72,7 @@ export {
   wheelFactor,
   zoomAround,
 } from "./viewport.js"
+export { paintOrder, raise } from "./paintOrder.js"
 export type { Tap } from "./gestures.js"
 export {
   DOUBLE_TAP_DISTANCE_PX,

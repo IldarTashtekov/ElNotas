@@ -77,7 +77,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
 
   const abrirDiagrama = (diagramId: DiagramId, editName: boolean): void =>
     abrirEncima((raiz: HTMLElement): (() => void) =>
-      mountDiagramView(raiz, { ...deps, diagramId, editName, onExit: back.close }),
+      mountDiagramView(raiz, { ...deps, back, diagramId, editName, onExit: back.close }),
     )
 
   raiz.replaceChildren(aviso, principal, encima, pregunta.element)

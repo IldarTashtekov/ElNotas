@@ -7,6 +7,7 @@
  */
 
 import type { Diagram, DiagramId, Store, Unsubscribe, UseCases } from "#core/index"
+import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import { createDiagramCanvas } from "./DiagramCanvas.js"
 import { elemento } from "./dom.js"
@@ -16,6 +17,7 @@ import { createEditableTitle } from "./editableTitle.js"
 export interface DiagramViewDeps {
   readonly store: Store
   readonly useCases: UseCases
+  readonly back: BackStack
   readonly diagramId: DiagramId
   /** Recién creado: llega con el nombre a punto de escribirse. */
   readonly editName: boolean
@@ -25,7 +27,7 @@ export interface DiagramViewDeps {
 /** Devuelve la función que la desmonta. */
 export const mountDiagramView = (
   raiz: HTMLElement,
-  { store, useCases, diagramId, editName, onExit }: DiagramViewDeps,
+  { store, useCases, back, diagramId, editName, onExit }: DiagramViewDeps,
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -39,7 +41,7 @@ export const mountDiagramView = (
   cabecera.className = "cabecera"
   cabecera.append(titulo.element)
 
-  const lienzo: DiagramCanvas = createDiagramCanvas({ store, diagramId })
+  const lienzo: DiagramCanvas = createDiagramCanvas({ store, useCases, back, diagramId })
 
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")
   salir.type = "button"
