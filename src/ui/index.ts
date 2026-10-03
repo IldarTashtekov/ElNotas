@@ -79,6 +79,7 @@ export type { Box, FanItem, RelationCurve } from "./relationGeometry.js"
 export {
   FAN_SPACING,
   borderPoint,
+  curveMidpoint,
   curvePath,
   fanOffsets,
   labelPath,

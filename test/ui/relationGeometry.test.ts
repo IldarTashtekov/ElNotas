@@ -7,7 +7,15 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Box, FanItem, Point, RelationCurve } from "#ui/index"
-import { FAN_SPACING, borderPoint, curvePath, fanOffsets, labelPath, relationCurve } from "#ui/index"
+import {
+  FAN_SPACING,
+  borderPoint,
+  curveMidpoint,
+  curvePath,
+  fanOffsets,
+  labelPath,
+  relationCurve,
+} from "#ui/index"
 
 /** Un pósit de 100 × 40 centrado en el origen, y otro igual 300 a su derecha. */
 const A: Box = { x: 0, y: 0, width: 100, height: 40 }
@@ -116,4 +124,18 @@ test("el texto de una línea que va hacia la derecha sigue el mismo trazado", ()
 
 test("el texto de una línea que va hacia la izquierda va al revés, para no salir boca abajo", (): void => {
   assert.equal(labelPath(relationCurve(B, A, "b", "a", 0)), "M 50 0 Q 150 0 250 0")
+})
+
+/* ───────────────────────────── curveMidpoint ───────────────────────────── */
+
+test("el punto medio de una recta es su mitad", (): void => {
+  cerca(curveMidpoint(relationCurve(A, B, "a", "b", 0)), { x: 150, y: 0 })
+})
+
+test("el punto medio de una curva está a mitad de camino del control: en la curva, no en él", (): void => {
+  const c: RelationCurve = relationCurve(A, B, "a", "b", 10)
+  const m: Point = curveMidpoint(c)
+  assert.ok(Math.abs(m.x - 150) < 1e-9, `se esperaba x = 150 y es ${m.x}`)
+  assert.ok(m.y > 0, "tendría que estar hacia el lado de la curva")
+  assert.ok(m.y < c.control.y, "está en el control, no en la curva")
 })

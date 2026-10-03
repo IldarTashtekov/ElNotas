@@ -97,6 +97,29 @@
   &:hover .linea {
     stroke: var(--accent);
   }
+  & .guia {
+    fill: none;
+    stroke: none;
+  }
+  /* El texto, centrado sobre la línea y con un halo del fondo para leerse si cruza otra. */
+  & .etiqueta {
+    fill: var(--ink);
+    font: 500 0.8rem var(--ui);
+    paint-order: stroke;
+    stroke: var(--screen);
+    stroke-linejoin: round;
+    stroke-width: 4;
+    text-anchor: middle;
+  }
+}
+/* El campo para escribir el texto de una línea, en su punto medio. */
+.etiqueta-campo {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 10rem;
+  z-index: 1;
 }
 
 /* ── Los pósits: su posición es su centro ── */

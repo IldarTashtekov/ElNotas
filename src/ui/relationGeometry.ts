@@ -117,3 +117,9 @@ export const labelPath = (c: RelationCurve): string =>
   c.end.x < c.start.x
     ? `M ${punto(c.end)} Q ${punto(c.control)} ${punto(c.start)}`
     : curvePath(c)
+
+/** El punto de la curva que queda a mitad de camino: donde se escribe su texto. */
+export const curveMidpoint = (c: RelationCurve): Point => ({
+  x: 0.25 * c.start.x + 0.5 * c.control.x + 0.25 * c.end.x,
+  y: 0.25 * c.start.y + 0.5 * c.control.y + 0.25 * c.end.y,
+})

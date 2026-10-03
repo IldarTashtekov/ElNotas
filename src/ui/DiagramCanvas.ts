@@ -8,7 +8,8 @@
  * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo:
  * conectar, editar, hecho, borrar. *Conectar* espera a que se toque el nodo de
  * destino, y el fondo lo cancela. Doble toque —o clic derecho— en una línea abre
- * el suyo: invertir, con o sin dirección, borrar. Un toque en un nodo-nota entra en su nota, tras esperar un
+ * el suyo: invertir, con o sin dirección, texto, borrar. El texto de una línea
+ * la sigue, sin salir nunca boca abajo. Un toque en un nodo-nota entra en su nota, tras esperar un
  * instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
  * ratón, o manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez,
  * al soltar.
@@ -40,7 +41,13 @@ import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
 import type { Box, RelationCurve } from "./relationGeometry.js"
-import { curvePath, fanOffsets, relationCurve } from "./relationGeometry.js"
+import {
+  curveMidpoint,
+  curvePath,
+  fanOffsets,
+  labelPath,
+  relationCurve,
+} from "./relationGeometry.js"
 import type { Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import type { Point, Viewport } from "./viewport.js"
@@ -118,6 +125,8 @@ export const createDiagramCanvas = ({
   /* La punta de flecha, una sola definida, que usan todas las líneas con dirección. */
   lienzosCreados += 1
   const idFlecha: string = `flecha-${lienzosCreados}`
+  /** El id del trazado que sigue el texto de una relación, único en la página. */
+  const idGuia = (relacion: string): string => `guia-${lienzosCreados}-${relacion}`
   const punta: SVGPathElement = svg("path")
   punta.setAttribute("d", "M 0 0 L 10 5 L 0 10 z")
   const marcador: SVGMarkerElement = svg("marker")
@@ -250,6 +259,9 @@ export const createDiagramCanvas = ({
 
   /* ── Las líneas ── */
 
+  /** Cómo se dibujó cada relación la última vez: de ahí sale dónde se edita su texto. */
+  let trazadas: Map<string, RelationCurve> = new Map<string, RelationCurve>()
+
   /* Las líneas salen del borde de cada pósit, y un pósit no mide nada hasta que se
      ve: al montarse, al cambiar su texto o al crecer mientras se escribe, se
      vuelven a pintar. */
@@ -280,6 +292,7 @@ export const createDiagramCanvas = ({
       actual.relations,
     )
     const curvas: ReadonlyMap<string, number> = fanOffsets(relaciones)
+    trazadas = new Map<string, RelationCurve>()
     /* Una caja por nodo y no por relación: un nodo con muchas se mide una vez. */
     const cajas: Map<string, Box | null> = new Map<string, Box | null>()
     const caja = (id: DiagramNodeId): Box | null => {
@@ -301,7 +314,18 @@ export const createDiagramCanvas = ({
         /* Debajo, el mismo trazo, invisible y grueso: es el que recibe el dedo. */
         const toque: SVGPathElement = svg("path")
         toque.classList.add("toque")
-        grupo.append(toque, linea)
+        /* El texto sigue su propio trazado, que va al revés si la línea va a la izquierda. */
+        const guia: SVGPathElement = svg("path")
+        guia.classList.add("guia")
+        guia.id = idGuia(r.id)
+        const recorrido: SVGTextPathElement = svg("textPath")
+        recorrido.setAttribute("href", `#${idGuia(r.id)}`)
+        recorrido.setAttribute("startOffset", "50%")
+        const etiqueta: SVGTextElement = svg("text")
+        etiqueta.classList.add("etiqueta")
+        etiqueta.setAttribute("dy", "-5")
+        etiqueta.append(recorrido)
+        grupo.append(toque, linea, guia, etiqueta)
         return grupo
       },
       update: (grupo: Element, r: DiagramRelation): void => {
@@ -311,8 +335,12 @@ export const createDiagramCanvas = ({
         const hasta: Box | null = caja(r.to)
         if (linea === null || toque === null || desde === null || hasta === null) return
         const c: RelationCurve = relationCurve(desde, hasta, r.from, r.to, curvas.get(r.id) ?? 0)
+        trazadas.set(r.id, c)
         linea.setAttribute("d", curvePath(c))
         toque.setAttribute("d", curvePath(c))
+        grupo.querySelector(".guia")?.setAttribute("d", labelPath(c))
+        const recorrido: Element | null = grupo.querySelector("textPath")
+        if (recorrido !== null && recorrido.textContent !== r.label) recorrido.textContent = r.label
         if (r.directed) linea.setAttribute("marker-end", `url(#${idFlecha})`)
         else linea.removeAttribute("marker-end")
       },
@@ -495,6 +523,37 @@ export const createDiagramCanvas = ({
     if (hasta !== null && hasta !== desde) useCases.addRelation(diagramId, desde, hasta)
   }
 
+  /** Escribir el texto de una línea: un campo en su punto medio. Vacío, sin texto. */
+  const editarTexto = (id: DiagramRelationId): void => {
+    const r: DiagramRelation | undefined = diagrama()?.relations[id]
+    const c: RelationCurve | undefined = trazadas.get(id)
+    if (r === undefined || c === undefined) return
+    const campo: HTMLInputElement = elemento("input")
+    campo.className = "etiqueta-campo"
+    campo.value = r.label
+    campo.setAttribute("aria-label", "Texto de la relación")
+    const medio: Point = curveMidpoint(c)
+    campo.style.left = `${medio.x}px`
+    campo.style.top = `${medio.y}px`
+    let hecho: boolean = false
+    const terminar = (guardar: boolean): void => {
+      if (hecho) return
+      /* Antes de tocar el DOM: quitar el campo dispara su `blur`, que vuelve aquí. */
+      hecho = true
+      const valor: string = campo.value.trim()
+      campo.remove()
+      if (guardar) useCases.setRelationLabel(diagramId, id, valor)
+    }
+    campo.addEventListener("keydown", (evento: KeyboardEvent): void => {
+      if (evento.key === "Enter") terminar(true)
+      if (evento.key === "Escape") terminar(false)
+    })
+    campo.addEventListener("blur", (): void => terminar(true))
+    nodosCapa.append(campo)
+    campo.focus()
+    campo.select()
+  }
+
   /** El menú de una línea: lo que se puede cambiar de ella, según tenga o no flecha. */
   const menuRelacion = (id: DiagramRelationId): void => {
     const actual: Diagram | undefined = diagrama()
@@ -520,6 +579,7 @@ export const createDiagramCanvas = ({
               useCases.setRelationDirected(diagramId, id, true)
             }),
           ]),
+      opcion("Texto", (): void => editarTexto(id)),
       opcion("Borrar", (): void => {
         useCases.removeRelation(diagramId, id)
       }, "peligro"),
@@ -596,7 +656,12 @@ export const createDiagramCanvas = ({
   lienzo.addEventListener("pointerdown", (evento: PointerEvent): void => {
     if (evento.pointerType === "mouse" && evento.button !== 0) return
     /* Dentro del campo que se edita, el dedo es del campo. */
-    if (evento.target instanceof Element && evento.target.closest(".posit-campo") !== null) return
+    if (
+      evento.target instanceof Element &&
+      evento.target.closest(".posit-campo, .etiqueta-campo") !== null
+    ) {
+      return
+    }
     const donde: Point = enLienzo(evento)
     punteros.set(evento.pointerId, donde)
 
