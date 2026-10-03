@@ -5,14 +5,14 @@
  * tentación es no probarla. Pero es la **única** que lee el mundo, y hay tres
  * cosas que sólo pasan aquí y que ninguna prueba del reducer puede ver:
  *
- *   1. **el cableado**: diecisiete bloques casi idénticos uno debajo de otro son
+ *   1. **el cableado**: treinta y dos bloques casi idénticos uno debajo de otro son
  *      justo donde se cuela un copy-paste, y un `renameNote` que despachara
  *      `delete-note` borraría notas al renombrarlas sin que fallara nada en el
  *      reducer, que haría exactamente lo que le piden;
- *   2. **los ids que se generan aquí**: `createNote` y `createContext` devuelven
- *      el suyo, y `insert` y `split` piden **dos** al generador —uno para la
- *      línea y otro para la revisión—, así que hay que comprobar que cada uno se
- *      queda con el que le toca;
+ *   2. **los ids que se generan aquí**: los tres `create` devuelven el suyo, y
+ *      `insert`, `split` y los que añaden nodos o relaciones piden **dos** al
+ *      generador —uno para lo nuevo y otro para la revisión—, así que hay que
+ *      comprobar que cada uno se queda con el que le toca;
  *   3. **que el reloj se lea una sola vez por acción**, que es lo que hace que
  *      todas las entidades que toca reciban la misma marca de tiempo.
  *
@@ -27,8 +27,18 @@ import type { AppState } from "#core/domain/AppState"
 import type { Content } from "#core/domain/Content"
 import { checkBox, isCheckBox, isText, text } from "#core/domain/Content"
 import type { Context } from "#core/domain/Context"
-import type { ContextId, ItemRef, NoteId } from "#core/domain/Ids"
-import { contentId, contextId, noteId, noteRef, revision } from "#core/domain/Ids"
+import type { Diagram, DiagramNode, DiagramRelation } from "#core/domain/Diagram"
+import type { ContextId, DiagramId, DiagramNodeId, DiagramRelationId, ItemRef, NoteId } from "#core/domain/Ids"
+import {
+  contentId,
+  contextId,
+  diagramId,
+  diagramNodeId,
+  diagramRelationId,
+  noteId,
+  noteRef,
+  revision,
+} from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import { after, rootEnd } from "#core/domain/Position"
 import type { Clock } from "#core/ports/Clock"
@@ -54,6 +64,10 @@ import { createUseCases } from "#core/app/useCases"
 const ID_NOTA = noteId("compra")
 const ID_LINEA = contentId("fruta")
 const ID_CONTEXTO = contextId("casa")
+const ID_DIAGRAMA: DiagramId = diagramId("mudanza")
+const ID_NODO: DiagramNodeId = diagramNodeId("cajas")
+const ID_OTRO_NODO: DiagramNodeId = diagramNodeId("llaves")
+const ID_RELACION: DiagramRelationId = diagramRelationId("r1")
 
 const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {} }
 
@@ -133,14 +147,14 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
   contexts: Object.fromEntries(ctxs.map((c: Context): [ContextId, Context] => [c.id, c])),
 })
 
-/* ──────────────────── (1) El cableado: los diecisiete ─────────────────────── */
+/* ──────────────────── (1) El cableado: los treinta y dos ──────────────────── */
 
 /**
  * Cada caso de uso con el `type` que tiene que despachar. Si alguien añade uno y
  * no lo mete aquí, la última prueba del bloque lo canta.
  */
 const CABLEADO: ReadonlyArray<
-  readonly [string, (u: UseCases) => Note | Context | null]
+  readonly [string, (u: UseCases) => Note | Context | Diagram | null]
 > = [
   ["set-checked", (u) => u.setChecked(ID_NOTA, ID_LINEA, true)],
   ["set-text", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
@@ -160,6 +174,39 @@ const CABLEADO: ReadonlyArray<
   ["add-item", (u) => u.addItem(ID_CONTEXTO, noteRef(ID_NOTA))],
   ["remove-item", (u) => u.removeItem(ID_CONTEXTO, noteRef(ID_NOTA))],
   ["set-default-view", (u) => u.setDefaultView(ID_CONTEXTO, { type: "context" })],
+  ["create-diagram", (u: UseCases): Diagram | null => u.createDiagram("Mudanza")],
+  ["rename-diagram", (u: UseCases): Diagram | null => u.renameDiagram(ID_DIAGRAMA, "Otro")],
+  ["delete-diagram", (u: UseCases): Diagram | null => u.deleteDiagram(ID_DIAGRAMA)],
+  ["add-node", (u: UseCases): Diagram | null => u.addTextNode(ID_DIAGRAMA, "Cajas", 0, 0)],
+  ["add-node", (u: UseCases): Diagram | null => u.addNoteNode(ID_DIAGRAMA, ID_NOTA, 0, 0)],
+  ["set-node-text", (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "x")],
+  [
+    "set-node-position",
+    (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 1, 2),
+  ],
+  ["set-node-done", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true)],
+  ["remove-node", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO)],
+  [
+    "add-relation",
+    (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_OTRO_NODO),
+  ],
+  [
+    "set-relation-ends",
+    (u: UseCases): Diagram | null =>
+      u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
+  ],
+  [
+    "set-relation-directed",
+    (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, false),
+  ],
+  [
+    "set-relation-label",
+    (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "antes"),
+  ],
+  [
+    "remove-relation",
+    (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, ID_RELACION),
+  ],
 ]
 
 test("cada caso de uso despacha la acción que le corresponde", () => {
@@ -186,17 +233,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **dieciocho casos de uso para diecisiete acciones**: `insert` tiene dos
+      Son **treinta y dos casos de uso para treinta acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
-      capa y hay que saber qué clase de línea se está creando.
+      capa y hay que saber qué clase de línea se está creando; y por lo mismo
+      `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 18, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 18, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 32, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 32, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 17, "el catálogo son DIECISIETE acciones: 8 + 3 + 6")
+  assert.equal(tipos.size, 30, "el catálogo son TREINTA acciones: 8 + 3 + 6 + 13")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */
@@ -230,14 +278,14 @@ test("dos notas seguidas reciben ids DISTINTOS", () => {
 
 /* ────────── (2b) Qué devuelven: los cuatro caminos, uno por uno ──────────── */
 
-test("⚠️ los DIECISÉIS que no crean devuelven null si no hay a qué aplicarlos", () => {
+test("⚠️ los VEINTINUEVE que no crean devuelven null si no hay a qué aplicarlos", () => {
   /*
       Barrido sobre la lista entera, y por la misma razón que existe la lista:
-      son dieciocho líneas casi idénticas, que es donde se cuela un copy-paste.
+      son treinta y dos líneas casi idénticas, que es donde se cuela un copy-paste.
       Los tipos marcados impiden equivocarse de ayudante —`trasNota` no acepta un
       `ContextId`— pero no impiden olvidarse de pasar por él.
 
-      Las dos de crear quedan fuera porque crear sobre un estado vacío SÍ aplica;
+      Las tres de crear quedan fuera porque crear sobre un estado vacío SÍ aplica;
       van en la prueba de debajo, que es la otra mitad del barrido.
   */
   for (const [tipo, llamar] of CABLEADO) {
@@ -247,7 +295,7 @@ test("⚠️ los DIECISÉIS que no crean devuelven null si no hay a qué aplicar
   }
 })
 
-test("y los DOS que crean devuelven la entidad recién creada", () => {
+test("y los TRES que crean devuelven la entidad recién creada", () => {
   for (const [tipo, llamar] of CABLEADO) {
     if (!tipo.startsWith("create-")) continue
     const { useCases } = montarDeVerdad()
@@ -325,6 +373,156 @@ test("deleteContext devuelve el contexto BORRADO, igual que deleteNote", () => {
 
   assert.strictEqual(useCases.deleteContext(ID_CONTEXTO), ctx)
   assert.equal(store.getState().contexts[ID_CONTEXTO], undefined)
+})
+
+/* ─────────────────────────── Del lado del Diagrama ────────────────────────── */
+
+/**
+ *   Mudanza: Cajas ──r1──▶ Llaves, sin marcar y sin texto.
+ */
+const mudanza = (): Diagram => ({
+  id: ID_DIAGRAMA,
+  name: "Mudanza",
+  nodes: {
+    [ID_NODO]: { type: "simple-node", id: ID_NODO, text: "Cajas", positionX: 0, positionY: 0, done: false },
+    [ID_OTRO_NODO]: {
+      type: "simple-node",
+      id: ID_OTRO_NODO,
+      text: "Llaves",
+      positionX: 0,
+      positionY: 0,
+      done: false,
+    },
+  },
+  relations: {
+    [ID_RELACION]: { id: ID_RELACION, from: ID_NODO, to: ID_OTRO_NODO, directed: true, label: "" },
+  },
+  updatedAt: 0,
+  revision: revision("r0"),
+})
+
+const conDiagrama = (d: Diagram): AppState => ({ ...VACIO, diagrams: { [d.id]: d } })
+
+/** Los que pueden no aplicar con el diagrama presente: el mismo agujero que arriba. */
+const NO_OP_CON_DIAGRAMA: ReadonlyArray<readonly [string, (u: UseCases) => Diagram | null]> = [
+  ["renameDiagram", (u: UseCases): Diagram | null => u.renameDiagram(ID_DIAGRAMA, "Mudanza")],
+  ["addTextNode", (u: UseCases): Diagram | null => u.addTextNode(ID_DIAGRAMA, "x", Number.NaN, 0)],
+  // La nota no existe: es lo que mira el reducer antes de la operación.
+  ["addNoteNode", (u: UseCases): Diagram | null => u.addNoteNode(ID_DIAGRAMA, ID_NOTA, 0, 0)],
+  ["setNodeText", (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "Cajas")],
+  ["setNodePosition", (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 0, 0)],
+  ["setNodeDone", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, false)],
+  ["removeNode", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, diagramNodeId("fantasma"))],
+  ["addRelation", (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_NODO)],
+  [
+    "setRelationEnds",
+    (u: UseCases): Diagram | null =>
+      u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_NODO, ID_OTRO_NODO),
+  ],
+  [
+    "setRelationDirected",
+    (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, true),
+  ],
+  ["setRelationLabel", (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "")],
+  [
+    "removeRelation",
+    (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, diagramRelationId("fantasma")),
+  ],
+]
+
+test("⚠️ un no-op devuelve null AUNQUE el diagrama exista — los doce", (): void => {
+  for (const [nombre, llamar] of NO_OP_CON_DIAGRAMA) {
+    const d: Diagram = mudanza()
+    const { store, useCases } = montarDeVerdad(conDiagrama(d))
+
+    assert.equal(llamar(useCases), null, `${nombre} devolvió algo sin haber cambiado nada`)
+    assert.strictEqual(store.getState().diagrams[ID_DIAGRAMA], d, `${nombre} tocó el diagrama`)
+  }
+})
+
+test("createDiagram devuelve EL diagrama que acaba de crear", (): void => {
+  const { store, useCases } = montarDeVerdad()
+  const creado: Diagram | null = useCases.createDiagram("Mudanza")
+
+  assert.ok(creado !== null)
+  assert.strictEqual(creado, store.getState().diagrams[creado.id])
+})
+
+test("deleteDiagram devuelve el diagrama BORRADO", (): void => {
+  const d: Diagram = mudanza()
+  const { store, useCases } = montarDeVerdad(conDiagrama(d))
+
+  assert.strictEqual(useCases.deleteDiagram(ID_DIAGRAMA), d)
+  assert.equal(store.getState().diagrams[ID_DIAGRAMA], undefined)
+})
+
+test("setNodeDone devuelve el diagrama YA ACTUALIZADO, el que está en el estado", (): void => {
+  const { store, useCases } = montarDeVerdad(conDiagrama(mudanza()))
+  const despues: Diagram | null = useCases.setNodeDone(ID_DIAGRAMA, ID_NODO, true)
+
+  assert.ok(despues !== null)
+  assert.equal(despues.nodes[ID_NODO]?.done, true)
+  assert.strictEqual(despues, store.getState().diagrams[ID_DIAGRAMA])
+})
+
+/** El único nodo o relación que trae una acción, para mirar con qué id nació. */
+const unicoNodo = (accion: Action): DiagramNode => {
+  if (accion.type !== "add-node") assert.fail(`se esperaba add-node y salió ${accion.type}`)
+  return accion.node
+}
+
+test("addTextNode da al nodo su propio id, nace sin marcar y donde se le dice", (): void => {
+  const app = montar()
+  app.useCases.addTextNode(ID_DIAGRAMA, "Cajas", -4, 7)
+  const accion: Action = app.ultima()
+  const nodo: DiagramNode = unicoNodo(accion)
+
+  assert.equal(app.idsGenerados(), 2, "hacen falta dos ids: el del nodo y el de la revisión")
+  assert.notEqual(nodo.id, accion.meta.revision)
+  assert.deepEqual(nodo, {
+    type: "simple-node",
+    id: nodo.id,
+    text: "Cajas",
+    positionX: -4,
+    positionY: 7,
+    done: false,
+  })
+})
+
+test("addNoteNode mete un nodo-nota, no uno de texto", (): void => {
+  const app = montar()
+  app.useCases.addNoteNode(ID_DIAGRAMA, ID_NOTA, 3, 4)
+  const accion: Action = app.ultima()
+  const nodo: DiagramNode = unicoNodo(accion)
+
+  assert.equal(app.idsGenerados(), 2)
+  assert.notEqual(nodo.id, accion.meta.revision)
+  assert.deepEqual(nodo, {
+    type: "note-node",
+    id: nodo.id,
+    noteId: ID_NOTA,
+    positionX: 3,
+    positionY: 4,
+    done: false,
+  })
+})
+
+test("addRelation nace con flecha y sin texto, y con su propio id", (): void => {
+  const app = montar()
+  app.useCases.addRelation(ID_DIAGRAMA, ID_NODO, ID_OTRO_NODO)
+  const accion: Action = app.ultima()
+  if (accion.type !== "add-relation") assert.fail(`salió ${accion.type}`)
+  const relacion: DiagramRelation = accion.relation
+
+  assert.equal(app.idsGenerados(), 2)
+  assert.notEqual(relacion.id, accion.meta.revision)
+  assert.deepEqual(relacion, {
+    id: relacion.id,
+    from: ID_NODO,
+    to: ID_OTRO_NODO,
+    directed: true,
+    label: "",
+  })
 })
 
 test("una acción que cambia algo devuelve la entidad YA ACTUALIZADA", () => {
@@ -425,6 +623,17 @@ test("las acciones que NO crean nada piden un solo id: el de la revisión", () =
     (u) => u.convertToText(ID_NOTA, ID_LINEA),
     (u) => u.renameNote(ID_NOTA, "x"),
     (u) => u.deleteNote(ID_NOTA),
+    (u: UseCases): Diagram | null => u.renameDiagram(ID_DIAGRAMA, "x"),
+    (u: UseCases): Diagram | null => u.deleteDiagram(ID_DIAGRAMA),
+    (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "x"),
+    (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 1, 1),
+    (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true),
+    (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO),
+    (u: UseCases): Diagram | null =>
+      u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
+    (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, false),
+    (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "x"),
+    (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, ID_RELACION),
   ]
 
   for (const llamar of sinIdNuevo) {

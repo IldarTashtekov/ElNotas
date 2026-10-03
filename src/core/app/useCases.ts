@@ -19,8 +19,25 @@
 
 import { checkBox, text } from "../domain/Content.js"
 import type { Context, DefaultView } from "../domain/Context.js"
-import type { ContentId, ContextId, ItemRef, NoteId } from "../domain/Ids.js"
-import { contentId, contextId, noteId, revision } from "../domain/Ids.js"
+import type { Diagram } from "../domain/Diagram.js"
+import type {
+  ContentId,
+  ContextId,
+  DiagramId,
+  DiagramNodeId,
+  DiagramRelationId,
+  ItemRef,
+  NoteId,
+} from "../domain/Ids.js"
+import {
+  contentId,
+  contextId,
+  diagramId,
+  diagramNodeId,
+  diagramRelationId,
+  noteId,
+  revision,
+} from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Position } from "../domain/Position.js"
 import type { Action, ActionMeta } from "./Action.js"
@@ -90,6 +107,72 @@ export interface UseCases {
     contextId: ContextId,
     view: DefaultView,
   ) => Context | null
+
+  /** Crea un diagrama vacío y lo devuelve, con su id dentro, como `createNote`. */
+  readonly createDiagram: (name: string) => Diagram | null
+  readonly renameDiagram: (diagramId: DiagramId, name: string) => Diagram | null
+  /** Como `deleteNote`: devuelve el borrado, y tampoco sirve de undo. */
+  readonly deleteDiagram: (diagramId: DiagramId) => Diagram | null
+  /**
+   * Pone un nodo en el lienzo, sin marcar. El id lo genera aquí, y por eso hay
+   * dos, uno por clase de nodo, como `insertText` e `insertCheckBox`.
+   */
+  readonly addTextNode: (
+    diagramId: DiagramId,
+    text: string,
+    positionX: number,
+    positionY: number,
+  ) => Diagram | null
+  /** `null` también si la nota no existe. */
+  readonly addNoteNode: (
+    diagramId: DiagramId,
+    noteId: NoteId,
+    positionX: number,
+    positionY: number,
+  ) => Diagram | null
+  readonly setNodeText: (
+    diagramId: DiagramId,
+    nodeId: DiagramNodeId,
+    text: string,
+  ) => Diagram | null
+  readonly setNodePosition: (
+    diagramId: DiagramId,
+    nodeId: DiagramNodeId,
+    positionX: number,
+    positionY: number,
+  ) => Diagram | null
+  readonly setNodeDone: (
+    diagramId: DiagramId,
+    nodeId: DiagramNodeId,
+    done: boolean,
+  ) => Diagram | null
+  readonly removeNode: (diagramId: DiagramId, nodeId: DiagramNodeId) => Diagram | null
+  /** Une `from` con `to`, con flecha y sin texto. El id se genera aquí. */
+  readonly addRelation: (
+    diagramId: DiagramId,
+    from: DiagramNodeId,
+    to: DiagramNodeId,
+  ) => Diagram | null
+  readonly setRelationEnds: (
+    diagramId: DiagramId,
+    relationId: DiagramRelationId,
+    from: DiagramNodeId,
+    to: DiagramNodeId,
+  ) => Diagram | null
+  readonly setRelationDirected: (
+    diagramId: DiagramId,
+    relationId: DiagramRelationId,
+    directed: boolean,
+  ) => Diagram | null
+  readonly setRelationLabel: (
+    diagramId: DiagramId,
+    relationId: DiagramRelationId,
+    label: string,
+  ) => Diagram | null
+  readonly removeRelation: (
+    diagramId: DiagramId,
+    relationId: DiagramRelationId,
+  ) => Diagram | null
 }
 
 export interface UseCaseDeps {
@@ -113,6 +196,12 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
     const antes: Context | undefined = store.getState().contexts[id]
     store.dispatch(action)
     return cambio(antes, store.getState().contexts[id])
+  }
+
+  const trasDiagrama = (id: DiagramId, action: Action): Diagram | null => {
+    const antes: Diagram | undefined = store.getState().diagrams[id]
+    store.dispatch(action)
+    return cambio(antes, store.getState().diagrams[id])
   }
 
   return {
@@ -220,6 +309,135 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         view,
         meta: meta(),
       }),
+
+    /* ── Diagrama ── */
+
+    createDiagram: (name: string): Diagram | null => {
+      const id: DiagramId = diagramIdNuevo(ids)
+      return trasDiagrama(id, { type: "create-diagram", diagramId: id, name, meta: meta() })
+    },
+
+    renameDiagram: (diagramId: DiagramId, name: string): Diagram | null =>
+      trasDiagrama(diagramId, { type: "rename-diagram", diagramId, name, meta: meta() }),
+
+    deleteDiagram: (diagramId: DiagramId): Diagram | null =>
+      trasDiagrama(diagramId, { type: "delete-diagram", diagramId, meta: meta() }),
+
+    addTextNode: (
+      diagramId: DiagramId,
+      text: string,
+      positionX: number,
+      positionY: number,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "add-node",
+        diagramId,
+        node: {
+          type: "simple-node",
+          id: diagramNodeIdNuevo(ids),
+          text,
+          positionX,
+          positionY,
+          done: false,
+        },
+        meta: meta(),
+      }),
+
+    addNoteNode: (
+      diagramId: DiagramId,
+      noteId: NoteId,
+      positionX: number,
+      positionY: number,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "add-node",
+        diagramId,
+        node: {
+          type: "note-node",
+          id: diagramNodeIdNuevo(ids),
+          noteId,
+          positionX,
+          positionY,
+          done: false,
+        },
+        meta: meta(),
+      }),
+
+    setNodeText: (diagramId: DiagramId, nodeId: DiagramNodeId, text: string): Diagram | null =>
+      trasDiagrama(diagramId, { type: "set-node-text", diagramId, nodeId, text, meta: meta() }),
+
+    setNodePosition: (
+      diagramId: DiagramId,
+      nodeId: DiagramNodeId,
+      positionX: number,
+      positionY: number,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "set-node-position",
+        diagramId,
+        nodeId,
+        positionX,
+        positionY,
+        meta: meta(),
+      }),
+
+    setNodeDone: (diagramId: DiagramId, nodeId: DiagramNodeId, done: boolean): Diagram | null =>
+      trasDiagrama(diagramId, { type: "set-node-done", diagramId, nodeId, done, meta: meta() }),
+
+    removeNode: (diagramId: DiagramId, nodeId: DiagramNodeId): Diagram | null =>
+      trasDiagrama(diagramId, { type: "remove-node", diagramId, nodeId, meta: meta() }),
+
+    addRelation: (diagramId: DiagramId, from: DiagramNodeId, to: DiagramNodeId): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "add-relation",
+        diagramId,
+        relation: { id: diagramRelationIdNuevo(ids), from, to, directed: true, label: "" },
+        meta: meta(),
+      }),
+
+    setRelationEnds: (
+      diagramId: DiagramId,
+      relationId: DiagramRelationId,
+      from: DiagramNodeId,
+      to: DiagramNodeId,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "set-relation-ends",
+        diagramId,
+        relationId,
+        from,
+        to,
+        meta: meta(),
+      }),
+
+    setRelationDirected: (
+      diagramId: DiagramId,
+      relationId: DiagramRelationId,
+      directed: boolean,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "set-relation-directed",
+        diagramId,
+        relationId,
+        directed,
+        meta: meta(),
+      }),
+
+    setRelationLabel: (
+      diagramId: DiagramId,
+      relationId: DiagramRelationId,
+      label: string,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, {
+        type: "set-relation-label",
+        diagramId,
+        relationId,
+        label,
+        meta: meta(),
+      }),
+
+    removeRelation: (diagramId: DiagramId, relationId: DiagramRelationId): Diagram | null =>
+      trasDiagrama(diagramId, { type: "remove-relation", diagramId, relationId, meta: meta() }),
   }
 }
 
@@ -244,8 +462,12 @@ const cambio = <T>(antes: T | undefined, despues: T | undefined): T | null =>
 /*
     El generador devuelve una cadena pelada: no sabe ni le importa qué clase de
     id estás creando. Quien lo marca es quien llama, que sí lo sabe. De ahí estos
-    tres envoltorios de una línea en vez de un método por tipo en el puerto.
+    envoltorios de una línea en vez de un método por tipo en el puerto.
 */
 const contentIdNuevo = (ids: IdGenerator): ContentId => contentId(ids.next())
 const noteIdNuevo = (ids: IdGenerator): NoteId => noteId(ids.next())
 const contextIdNuevo = (ids: IdGenerator): ContextId => contextId(ids.next())
+const diagramIdNuevo = (ids: IdGenerator): DiagramId => diagramId(ids.next())
+const diagramNodeIdNuevo = (ids: IdGenerator): DiagramNodeId => diagramNodeId(ids.next())
+const diagramRelationIdNuevo = (ids: IdGenerator): DiagramRelationId =>
+  diagramRelationId(ids.next())
