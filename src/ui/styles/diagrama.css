@@ -49,6 +49,26 @@
   transform-origin: 0 0;
 }
 
+/* ── Las líneas, debajo de los pósits: el SVG no mide nada y deja ver lo que se sale ── */
+.relaciones {
+  height: 1px;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 1px;
+
+  & marker path {
+    fill: var(--muted);
+  }
+}
+.relacion .linea {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
 /* ── Los pósits: su posición es su centro ── */
 .posit {
   background: var(--screen);

@@ -1,5 +1,6 @@
 /**
- * El lienzo de un diagrama: un corcho con los pósits encima. El corcho se
+ * El lienzo de un diagrama: un corcho con los pósits encima, y por debajo las
+ * líneas de sus relaciones, que los siguen cuando se mueven. El corcho se
  * arrastra con un dedo o con el ratón y se acerca con dos dedos o con la rueda;
  * al montarse enseña su origen en el centro, y dónde se miraba no se recuerda.
  *
@@ -20,6 +21,7 @@ import type {
   DiagramId,
   DiagramNode,
   DiagramNodeId,
+  DiagramRelation,
   Note,
   NoteId,
   Store,
@@ -34,6 +36,8 @@ import { DOUBLE_TAP_MS, LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from 
 import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
+import type { Box, RelationCurve } from "./relationGeometry.js"
+import { curvePath, fanOffsets, relationCurve } from "./relationGeometry.js"
 import type { Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import type { Point, Viewport } from "./viewport.js"
@@ -61,6 +65,13 @@ const REJILLA: number = 24
 const MARGEN_TECLADO_PX: number = 16
 /** El `target` de un toque en el fondo, para distinguirlo de uno en un pósit. */
 const FONDO: string = "fondo"
+
+/** Un elemento SVG: `elemento` crea los de HTML, y éstos van en otro espacio de nombres. */
+const svg = <K extends keyof SVGElementTagNameMap>(etiqueta: K): SVGElementTagNameMap[K] =>
+  document.createElementNS("http://www.w3.org/2000/svg", etiqueta)
+
+/** Para que la punta de flecha de cada lienzo tenga su id: puede haber dos montados. */
+let lienzosCreados: number = 0
 
 /** Dos dedos en el lienzo: cómo estaba todo al poner el segundo. */
 interface Pellizco {
@@ -99,8 +110,32 @@ export const createDiagramCanvas = ({
 }: DiagramCanvasDeps): DiagramCanvas => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
+  /* La punta de flecha, una sola definida, que usan todas las líneas con dirección. */
+  lienzosCreados += 1
+  const idFlecha: string = `flecha-${lienzosCreados}`
+  const punta: SVGPathElement = svg("path")
+  punta.setAttribute("d", "M 0 0 L 10 5 L 0 10 z")
+  const marcador: SVGMarkerElement = svg("marker")
+  marcador.id = idFlecha
+  marcador.setAttribute("viewBox", "0 0 10 10")
+  marcador.setAttribute("refX", "10")
+  marcador.setAttribute("refY", "5")
+  marcador.setAttribute("markerWidth", "9")
+  marcador.setAttribute("markerHeight", "9")
+  marcador.setAttribute("orient", "auto")
+  marcador.append(punta)
+  const definiciones: SVGDefsElement = svg("defs")
+  definiciones.append(marcador)
+  /* Las líneas, debajo de los pósits, en su propia capa: el `reconcile` de los
+     pósits no la mueve de sitio. */
+  const lineas: SVGSVGElement = svg("svg")
+  lineas.classList.add("relaciones")
+  lineas.append(definiciones)
+  const nodosCapa: HTMLElement = elemento("div")
+
   const capa: HTMLElement = elemento("div")
   capa.className = "capa"
+  capa.append(lineas, nodosCapa)
   const lienzo: HTMLElement = elemento("div")
   lienzo.className = "lienzo"
   lienzo.setAttribute("aria-label", "Lienzo del diagrama")
@@ -169,7 +204,7 @@ export const createDiagramCanvas = ({
         return nodo === undefined ? [] : [nodo]
       },
     )
-    reconcile<DiagramNode, Element>(capa, nodos, {
+    reconcile<DiagramNode, Element>(nodosCapa, nodos, {
       key: (nodo: DiagramNode): string => nodo.id,
       keyOf: (el: Element): string | null => el.getAttribute("data-id"),
       create: (nodo: DiagramNode): Element => {
@@ -178,6 +213,7 @@ export const createDiagramCanvas = ({
         el.dataset["id"] = nodo.id
         el.append(elemento("div"))
         el.firstElementChild?.classList.add("texto")
+        tamanos.observe(el)
         return el
       },
       update: (el: Element, nodo: DiagramNode): void => {
@@ -195,6 +231,75 @@ export const createDiagramCanvas = ({
         }
       },
     })
+    pintarRelaciones()
+  }
+
+  /* ── Las líneas ── */
+
+  /* Las líneas salen del borde de cada pósit, y un pósit no mide nada hasta que se
+     ve: al montarse, al cambiar su texto o al crecer mientras se escribe, se
+     vuelven a pintar. */
+  const tamanos: ResizeObserver = new ResizeObserver((): void => pintarRelaciones())
+
+  /**
+   * El pósit tal como se ve: su centro —el del dedo, si se está arrastrando— y lo
+   * que mide. Las medidas de `offset*` no cuentan la escala del corcho: son ya
+   * unidades del corcho. `null` si todavía no está pintado.
+   */
+  const cajaDe = (nodo: DiagramNode): Box | null => {
+    const el: HTMLElement | null = positDe(nodo.id)
+    if (el === null) return null
+    const arrastrado: Point | null =
+      gesto !== null && gesto.nodo === nodo.id && gesto.levantado ? gesto.destino : null
+    return {
+      x: arrastrado?.x ?? nodo.positionX,
+      y: arrastrado?.y ?? nodo.positionY,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+    }
+  }
+
+  const pintarRelaciones = (): void => {
+    const actual: Diagram | undefined = diagrama()
+    if (actual === undefined) return
+    const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(
+      actual.relations,
+    )
+    const curvas: ReadonlyMap<string, number> = fanOffsets(relaciones)
+    /* Una caja por nodo y no por relación: un nodo con muchas se mide una vez. */
+    const cajas: Map<string, Box | null> = new Map<string, Box | null>()
+    const caja = (id: DiagramNodeId): Box | null => {
+      if (!cajas.has(id)) {
+        const nodo: DiagramNode | undefined = actual.nodes[id]
+        cajas.set(id, nodo === undefined ? null : cajaDe(nodo))
+      }
+      return cajas.get(id) ?? null
+    }
+    reconcile<DiagramRelation, Element>(lineas, relaciones, {
+      key: (r: DiagramRelation): string => r.id,
+      keyOf: (el: Element): string | null => el.getAttribute("data-id"),
+      create: (r: DiagramRelation): Element => {
+        const grupo: SVGGElement = svg("g")
+        grupo.classList.add("relacion")
+        grupo.setAttribute("data-id", r.id)
+        const linea: SVGPathElement = svg("path")
+        linea.classList.add("linea")
+        grupo.append(linea)
+        return grupo
+      },
+      update: (grupo: Element, r: DiagramRelation): void => {
+        const linea: Element | null = grupo.querySelector(".linea")
+        const desde: Box | null = caja(r.from)
+        const hasta: Box | null = caja(r.to)
+        if (linea === null || desde === null || hasta === null) return
+        const c: RelationCurve = relationCurve(desde, hasta, r.from, r.to, curvas.get(r.id) ?? 0)
+        linea.setAttribute("d", curvePath(c))
+        if (r.directed) linea.setAttribute("marker-end", `url(#${idFlecha})`)
+        else linea.removeAttribute("marker-end")
+      },
+    })
+    /* `reconcile` deja las definiciones donde estaban, al final: se vuelven arriba. */
+    if (lineas.firstChild !== definiciones) lineas.prepend(definiciones)
   }
 
   /* ── Editar el texto dentro del pósit ── */
@@ -479,6 +584,7 @@ export const createDiagramCanvas = ({
       }
       const el: HTMLElement | null = positDe(g.nodo)
       if (el !== null) colocar(el, g.destino)
+      pintarRelaciones()
     } else if (g.arrastraFondo) {
       vista = panBy(vista, ahora.x - antes.x, ahora.y - antes.y)
       aplicar()
@@ -574,6 +680,7 @@ export const createDiagramCanvas = ({
       cancelarEspera()
       cancelarApertura()
       medida.disconnect()
+      tamanos.disconnect()
       window.visualViewport?.removeEventListener("resize", asomar)
       window.removeEventListener("pointermove", mover)
       window.removeEventListener("pointerup", soltar)
