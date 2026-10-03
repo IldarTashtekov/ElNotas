@@ -16,7 +16,20 @@
 import type { AppState } from "../domain/AppState.js"
 import type { Content } from "../domain/Content.js"
 import type { Context, DefaultView } from "../domain/Context.js"
-import type { ContextId, ItemRef, NoteId } from "../domain/Ids.js"
+import type { Diagram } from "../domain/Diagram.js"
+import {
+  addNode,
+  addRelation,
+  removeNode,
+  removeRelation,
+  setNodeDone,
+  setNodePosition,
+  setNodeText,
+  setRelationDirected,
+  setRelationEnds,
+  setRelationLabel,
+} from "../domain/diagramOperations.js"
+import type { ContextId, DiagramId, ItemRef, NoteId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Versioned } from "../domain/Versioned.js"
 import {
@@ -91,6 +104,29 @@ const onContext = (
   return {
     ...state,
     contexts: { ...state.contexts, [id]: { ...siguiente, ...stamp(meta) } },
+  }
+}
+
+/**
+ * La versión para diagramas: misma disciplina, misma comparación escrita una sola
+ * vez. `transformar` es una operación de `diagramOperations.ts`, que devuelve el
+ * diagrama de entrada si no aplica.
+ */
+const onDiagram = (
+  state: AppState,
+  id: DiagramId,
+  meta: ActionMeta,
+  transformar: (diagram: Diagram) => Diagram,
+): AppState => {
+  const diagram: Diagram | undefined = state.diagrams[id]
+  if (diagram === undefined) return state
+
+  const siguiente: Diagram = transformar(diagram)
+  if (siguiente === diagram) return state
+
+  return {
+    ...state,
+    diagrams: { ...state.diagrams, [id]: { ...siguiente, ...stamp(meta) } },
   }
 }
 
@@ -314,6 +350,97 @@ export const reduce = (state: AppState, action: Action): AppState => {
         mismaVista(ctx.defaultView, action.view)
           ? ctx
           : { ...ctx, defaultView: action.view },
+      )
+
+    /* ─────────────────────────── Diagrama ─────────────────────────── */
+
+    case "create-diagram": {
+      if (state.diagrams[action.diagramId] !== undefined) return state // id repetido
+
+      const nuevo: Diagram = {
+        id: action.diagramId,
+        name: action.name,
+        nodes: {},
+        relations: {},
+        updatedAt: action.meta.now,
+        revision: action.meta.revision,
+      }
+      return { ...state, diagrams: { ...state.diagrams, [action.diagramId]: nuevo } }
+    }
+
+    case "rename-diagram":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        d.name === action.name ? d : { ...d, name: action.name },
+      )
+
+    case "delete-diagram": {
+      if (state.diagrams[action.diagramId] === undefined) return state
+
+      const { [action.diagramId]: _fuera, ...quedan } = state.diagrams
+      return {
+        ...state,
+        diagrams: quedan,
+        // Integridad referencial, como al borrar una nota. Sus notas se quedan.
+        contexts: sinReferenciasA(
+          state.contexts,
+          { kind: "diagram", id: action.diagramId },
+          action.meta,
+        ),
+      }
+    }
+
+    case "add-node":
+      // Lo único que la operación no puede mirar: que la nota exista.
+      if (action.node.type === "note-node" && state.notes[action.node.noteId] === undefined) {
+        return state
+      }
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        addNode(d, action.node),
+      )
+
+    case "set-node-text":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        setNodeText(d, action.nodeId, action.text),
+      )
+
+    case "set-node-position":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        setNodePosition(d, action.nodeId, action.positionX, action.positionY),
+      )
+
+    case "set-node-done":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        setNodeDone(d, action.nodeId, action.done),
+      )
+
+    case "remove-node":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        removeNode(d, action.nodeId),
+      )
+
+    case "add-relation":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        addRelation(d, action.relation),
+      )
+
+    case "set-relation-ends":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        setRelationEnds(d, action.relationId, action.from, action.to),
+      )
+
+    case "set-relation-directed":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        setRelationDirected(d, action.relationId, action.directed),
+      )
+
+    case "set-relation-label":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        setRelationLabel(d, action.relationId, action.label),
+      )
+
+    case "remove-relation":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        removeRelation(d, action.relationId),
       )
 
     default: {

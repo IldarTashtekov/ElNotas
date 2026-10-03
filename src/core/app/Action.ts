@@ -5,14 +5,25 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son diecisiete. Aquí están las ocho de contenido; las de Nota y Contexto, abajo.
+ * Son treinta. Aquí están las ocho de contenido; las de Nota, Contexto y
+ * Diagrama, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
  */
 
 import type { Content } from "../domain/Content.js"
 import type { DefaultView } from "../domain/Context.js"
-import type { ContentId, ContextId, ItemRef, NoteId, Revision } from "../domain/Ids.js"
+import type { DiagramNode, DiagramRelation } from "../domain/Diagram.js"
+import type {
+  ContentId,
+  ContextId,
+  DiagramId,
+  DiagramNodeId,
+  DiagramRelationId,
+  ItemRef,
+  NoteId,
+  Revision,
+} from "../domain/Ids.js"
 import type { Position } from "../domain/Position.js"
 
 /**
@@ -215,5 +226,127 @@ export type ContextAction =
   | RemoveItem
   | SetDefaultView
 
-/** El catálogo entero: 8 + 3 + 6 = **diecisiete**. */
-export type Action = ContentAction | NoteAction | ContextAction
+/* ────────────────────────── Las trece de Diagrama ─────────────────────────── */
+
+/** «Se creó un diagrama vacío». El id llega hecho, del `IdGenerator`. */
+export interface CreateDiagram {
+  readonly type: "create-diagram"
+  readonly diagramId: DiagramId
+  readonly name: string
+  readonly meta: ActionMeta
+}
+
+export interface RenameDiagram {
+  readonly type: "rename-diagram"
+  readonly diagramId: DiagramId
+  readonly name: string
+  readonly meta: ActionMeta
+}
+
+/** «Se borró el diagrama». Como `delete-note`: también sale de los contextos. */
+export interface DeleteDiagram {
+  readonly type: "delete-diagram"
+  readonly diagramId: DiagramId
+  readonly meta: ActionMeta
+}
+
+/** «Se puso un nodo en el lienzo». Llega construido, con su id, como el bloque de `insert`. */
+export interface AddNode {
+  readonly type: "add-node"
+  readonly diagramId: DiagramId
+  readonly node: DiagramNode
+  readonly meta: ActionMeta
+}
+
+export interface SetNodeText {
+  readonly type: "set-node-text"
+  readonly diagramId: DiagramId
+  readonly nodeId: DiagramNodeId
+  readonly text: string
+  readonly meta: ActionMeta
+}
+
+/** «Se soltó el nodo aquí». Una vez al soltar, no mientras se arrastra. */
+export interface SetNodePosition {
+  readonly type: "set-node-position"
+  readonly diagramId: DiagramId
+  readonly nodeId: DiagramNodeId
+  readonly positionX: number
+  readonly positionY: number
+  readonly meta: ActionMeta
+}
+
+export interface SetNodeDone {
+  readonly type: "set-node-done"
+  readonly diagramId: DiagramId
+  readonly nodeId: DiagramNodeId
+  readonly done: boolean
+  readonly meta: ActionMeta
+}
+
+/** «Se borró el nodo», y con él sus relaciones. */
+export interface RemoveNode {
+  readonly type: "remove-node"
+  readonly diagramId: DiagramId
+  readonly nodeId: DiagramNodeId
+  readonly meta: ActionMeta
+}
+
+/** «Se unieron dos nodos». Llega construida, con su id. */
+export interface AddRelation {
+  readonly type: "add-relation"
+  readonly diagramId: DiagramId
+  readonly relation: DiagramRelation
+  readonly meta: ActionMeta
+}
+
+/** Lo que hay debajo de «invertir»: los extremos llegan ya decididos. */
+export interface SetRelationEnds {
+  readonly type: "set-relation-ends"
+  readonly diagramId: DiagramId
+  readonly relationId: DiagramRelationId
+  readonly from: DiagramNodeId
+  readonly to: DiagramNodeId
+  readonly meta: ActionMeta
+}
+
+export interface SetRelationDirected {
+  readonly type: "set-relation-directed"
+  readonly diagramId: DiagramId
+  readonly relationId: DiagramRelationId
+  readonly directed: boolean
+  readonly meta: ActionMeta
+}
+
+export interface SetRelationLabel {
+  readonly type: "set-relation-label"
+  readonly diagramId: DiagramId
+  readonly relationId: DiagramRelationId
+  readonly label: string
+  readonly meta: ActionMeta
+}
+
+export interface RemoveRelation {
+  readonly type: "remove-relation"
+  readonly diagramId: DiagramId
+  readonly relationId: DiagramRelationId
+  readonly meta: ActionMeta
+}
+
+export type DiagramAction =
+  | CreateDiagram
+  | RenameDiagram
+  | DeleteDiagram
+  | AddNode
+  | SetNodeText
+  | SetNodePosition
+  | SetNodeDone
+  | RemoveNode
+  | AddRelation
+  | SetRelationEnds
+  | SetRelationDirected
+  | SetRelationLabel
+  | RemoveRelation
+
+/** El catálogo entero: 8 + 3 + 6 + 13 = **treinta**. */
+export type Action = ContentAction | NoteAction | ContextAction | DiagramAction

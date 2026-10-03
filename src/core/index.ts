@@ -79,6 +79,21 @@ export type {
   RemoveItem,
   RenameContext,
   SetDefaultView,
+  /* Las trece de Diagrama */
+  AddNode,
+  AddRelation,
+  CreateDiagram,
+  DeleteDiagram,
+  DiagramAction,
+  RemoveNode,
+  RemoveRelation,
+  RenameDiagram,
+  SetNodeDone,
+  SetNodePosition,
+  SetNodeText,
+  SetRelationDirected,
+  SetRelationEnds,
+  SetRelationLabel,
 } from "./app/Action.js"
 export type { Listener, Store, Unsubscribe } from "./app/Store.js"
 export { createStore } from "./app/Store.js"
