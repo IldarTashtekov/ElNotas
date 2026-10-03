@@ -20,15 +20,16 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-03:** `npm run check` en verde —sus seis pasos— con **532 pruebas** (la Fase
-4 empezó con 329; al terminar el código de Fase 4 · Contextos eran 423). Líneas de `.ts`:
-`src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442; `test/` 7195. *(Las
-cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
+**Medido el 2026-10-03, tras `a87e012`:** `npm run check` en verde —sus seis pasos— con **643
+pruebas** (532 al empezar la Fase 5). Líneas de `.ts` (`find <dir> -name '*.ts' | xargs cat |
+wc -l`): `src/core` 3148, `src/storage` 1687, `src/platform` 339, `src/ui` 2820; `test/` 8808.
+Las que había aquí antes ya no cuadraban **antes** de la Fase 5. *(Las cifras envejecen solas:
+si no cuadran, manda `npm test`, no este párrafo.)*
 
 **Fases 1 a 4 cerradas. La 4, por decisión del usuario el 2026-10-03, con deuda de
 verificación:** las dos listas manuales y las tres preguntas del editor quedan pendientes en
-`TAREAS.md` (ver *Plan por fases*). **La Fase 5 (Diagramas) está planificada desde el 2026-10-03 y
-sin una línea de código: lo siguiente es empezar Fase 5 · Modelo.**
+`TAREAS.md` (ver *Plan por fases*). **Fase 5 · Modelo, hecha el 2026-10-03** (core y `storage/`,
+sin pantalla). **Lo siguiente: Fase 5 · Lienzo.**
 
 Lo que hay en `src/`, de dentro afuera:
 
@@ -36,11 +37,12 @@ Lo que hay en `src/`, de dentro afuera:
   (`Note`, `Diagram`, `Context`, `Text` | `CheckBox`, IDs marcados, `ItemRef`, `AppState`
   normalizado), `Position` (tres casos), el helper de copia por camino en dos primitivas
   (`updateContent.ts` y `updateContainerOf.ts`, **maquinaria interna: no salen por
-  `index.ts`**), **las ocho operaciones** en `operations.ts`, `Result<T, E>` y las dos
+  `index.ts`**), **las ocho operaciones** en `operations.ts` y las de diagrama en
+  `diagramOperations.ts` (**éstas no salen por `index.ts`**), `Result<T, E>` y las dos
   taxonomías de error en `domain/errors/`, **los cinco puertos** (sólo interfaces), **las
-  diecisiete acciones** con `reduce` (que no sale por `index.ts`), `createStore` (una función,
-  no una clase), `createUseCases` y `diffState`, y la mitad pura del arranque (`hydrate`,
-  `runMigrations`; `MIGRATIONS` **vacía a propósito**). Ni un `throw`.
+  treinta acciones** con `reduce` (que no sale por `index.ts`), `createStore` (una función,
+  no una clase), `createUseCases` (treinta y dos) y `diffState`, y la mitad pura del arranque
+  (`hydrate`, `runMigrations`; `MIGRATIONS` **vacía a propósito**). Ni un `throw`.
 - **`src/storage/` — implementa los puertos de persistencia.** `MemoryStorageAdapter`,
   `FileStorageAdapter` (formato en disco de §6.2, con **`onCorrupt`** y la **validación de
   esquema** de `file/schema.ts`), las dos de `BlobStore` en `blobs/` —`LocalStorageBlobStore` y
@@ -67,9 +69,9 @@ VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). �
 vuelve a pasar la lista**; la única excepción registrada —mismo código una vez quitados los
 comentarios— está en `TAREAS.md`.
 
-**Lo que NO existe todavía:** todo lo de Diagramas salvo sus tipos —y ésos, con la forma vieja
-(`parents`/`children`, `nodes` como array) que la Fase 5 sustituye—, la carpeta del usuario
-y OPFS como destino de la app y el botón de «reconectar carpeta».
+**Lo que NO existe todavía:** la UI de los Diagramas —«+ Diagrama», la vista, el diagrama como
+ventana: Fase 5 · Lienzo y Relaciones—, la carpeta del usuario y OPFS como destino de la app y
+el botón de «reconectar carpeta».
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
 encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
@@ -86,10 +88,10 @@ pruebas caen. Una prueba de identidad que no salta al romper lo que vigila no va
 ```
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
-│   ├── domain/    # ← modelo + Position + helper + las 8 operaciones + Result
+│   ├── domain/    # ← modelo + Position + helper + las 8 operaciones + las de diagrama + Result
 │   │   └── errors/#   ← StorageError y MigrationError. Sin index.ts, como domain/
 │   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
-│   ├── app/       # ← las 17 acciones + reduce + Store + useCases + diffState
+│   ├── app/       # ← las 30 acciones + reduce + Store + useCases + diffState
 │   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← implementa los puertos de persistencia. Conoce al core; él a ella no.
@@ -358,8 +360,8 @@ duda**; no la cambies por tu cuenta.
 - **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
   (`TS2304`). *Qué está sucio* es puro y va en `core/app/`; *cuándo se escribe* va en
   `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
-- **Los Diagramas se persisten, pero no se operan** — vigente **hasta que se construya Fase 5 ·
-  Modelo**, que trae sus trece acciones. §9.7.
+- **Los Diagramas se operan en el core desde Fase 5 · Modelo (2026-10-03)**; hasta entonces sólo
+  se persistían. La pantalla llega con Lienzo y Relaciones. §9.7 y §9.11.
 - **La entidad se llama Diagrama (`Diagram` en el código), no Plan.** *Renombrada con el usuario
   el 2026-10-03*: «plan» chocaba con el plan por fases y daba por hecho para qué sirve. Sin
   migración: no había ninguno guardado. §5.
@@ -368,8 +370,8 @@ duda**; no la cambies por tu cuenta.
   **una sola** acción. §9.7.
 - **No existe «borrar una rama» de casillas**: una casilla con hijas se borra **una a una**, de
   abajo arriba. *Decidido con el usuario el 2026-10-03.* §9.3.
-- **Los casos de uso devuelven la entidad que tocan, o `null` si no aplicó.** Las dieciocho con
-  el mismo tipo. **No un `Result`:** un no-op **no es un fallo**. El no-op sale de la invariante
+- **Los casos de uso devuelven la entidad que tocan, o `null` si no aplicó.** Los treinta y dos
+  con el mismo tipo. **No un `Result`:** un no-op **no es un fallo**. El no-op sale de la invariante
   de identidad (`cambio`, en `useCases.ts`). ⚠️ Es **la entidad protagonista, no todo lo que
   cambió**, así que **no sirve de undo**. El razonamiento, en `TAREAS.md`. §9.7.
 - **`schemaVersion` vive en `StorageAdapter`, no en `AppState`.** Es propiedad de lo guardado.
@@ -464,8 +466,9 @@ duda**; no la cambies por tu cuenta.
   core salvo la regla de `merge` y conservar las referencias a lo ilegible (2026-10-03,
   arriba); **los Diagramas son la Fase 5**. §9.10.
 
-**De los Diagramas, la Fase 5** — *decididas con el usuario el 2026-10-03* y **SIN CONSTRUIR**;
-el porqué y las alternativas descartadas, en §9.11:
+**De los Diagramas, la Fase 5** — *decididas con el usuario el 2026-10-03*. **Construido, lo que
+toca al core** —las relaciones, el modelo y «Nota perdida», en Fase 5 · Modelo—; **la pantalla,
+SIN CONSTRUIR**. El porqué y las alternativas descartadas, en §9.11:
 
 - **Un lienzo libre** (como Miro/Excalidraw): los nodos se colocan arrastrando. Ni mapa mental,
   ni colocación automática, ni texto que se dibuja. Al abrir se ve el origen; el encuadre no se
@@ -475,7 +478,8 @@ el porqué y las alternativas descartadas, en §9.11:
   mismo, no-op**. Flecha y texto opcionales; sin flecha **conserva `from`/`to`**. *Invertir* es
   `set-relation-ends` con los extremos ya decididos por la UI, como `toggleChecked` → `setChecked`.
 - **El modelo pierde `parents`/`children`**: `nodes` y `relations` son `Record`, y cada nodo
-  lleva `done`. **Trece acciones nuevas (17 → 30)**, envueltas por `onDiagram`.
+  lleva `done`. **Trece acciones nuevas (17 → 30)**, envueltas por `onDiagram`, y **catorce casos
+  de uso** —`add-node` tiene dos, `addTextNode` y `addNoteNode`, como `insert`—.
 - **El nodo-nota enseña el título EN DIRECTO, sin copia. Sin nota, pasa a nodo de texto «Nota
   perdida»**: una sola regla para `delete-note` y para `hydrate`, que conserva id, posición,
   hecho y relaciones. Una nota ilegible **no** está perdida. Precio: un literal en castellano en
@@ -526,11 +530,11 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   entiende solo), sin contestar. Siguen en `TAREAS.md` como pendientes, **no como hechas**. Lo
   que queda sin verificar de verdad es sobre todo **el móvil**: arrastrar las fichas con el dedo
   y el teclado de Android.
-- **Fase 5 — Diagramas. PLANIFICADA el 2026-10-03, sin código** (§9.11). Partida en tres, en
-  este orden: **Fase 5 · Modelo** (core y `storage/`, sin pantalla), **Fase 5 · Lienzo** (todo
-  menos las líneas) y **Fase 5 · Relaciones**. Lienzo y Relaciones cierran con su lista manual
-  pasada **en escritorio y en el móvil**. **Lo siguiente: empezar Fase 5 · Modelo.** Después, la
-  deuda móvil de la Fase 4.
+- **Fase 5 — Diagramas** (§9.11). Partida en tres, en este orden: **Fase 5 · Modelo** (core y
+  `storage/`, sin pantalla) **✅ HECHA el 2026-10-03, con 643 pruebas**; **Fase 5 · Lienzo**
+  (todo menos las líneas) y **Fase 5 · Relaciones**, que cierran con su lista manual pasada **en
+  escritorio y en el móvil**. **Lo siguiente: Fase 5 · Lienzo.** Después, la deuda móvil de la
+  Fase 4.
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que

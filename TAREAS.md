@@ -648,36 +648,43 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       clave de `localStorage`, fuera del almacén, así que **no viaja con las notas** — un cambio
       de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado).
 
-### Fase 5 — Diagramas: planificada el 2026-10-03, SIN EMPEZAR
+### Fase 5 — Diagramas: Fase 5 · Modelo ✅ HECHA; lo siguiente, Fase 5 · Lienzo
 
-**Planificada con el usuario el 2026-10-03; no hay ni una línea de código.** Hoy sólo existen los
-tipos viejos de `src/core/domain/Diagram.ts`. El diseño entero, sus porqués y los criterios de
+**Planificada con el usuario el 2026-10-03.** El diseño entero, sus porqués y los criterios de
 cierre de cada parte, en `ARCHITECTURE.md` §9.11; lo que cambia en la navegación, en §7.4.
-**Partida en tres, en este orden:** Modelo → Lienzo → Relaciones. **Lo siguiente: empezar Fase 5 ·
-Modelo.**
+**Partida en tres, en este orden:** Modelo → Lienzo → Relaciones. **Fase 5 · Modelo, hecha el
+2026-10-03** con **643 pruebas** (532 al empezar). **Lo siguiente: Fase 5 · Lienzo.**
 
 **Después de las tres, la deuda móvil de la Fase 4**: pasar en el móvil sus dos listas manuales
 (arriba). Decidido con el usuario el 2026-10-03; riesgo asumido, que si la base móvil falla se
 descubre con el lienzo encima; a cambio, se verifican juntas en el mismo teléfono.
 
-#### Fase 5 · Modelo — el core y `storage/`, sin pantalla
+#### Fase 5 · Modelo — el core y `storage/`, sin pantalla ✅ HECHA el 2026-10-03
 
-- [ ] **El modelo nuevo de `Diagram`**: fuera `parents` y `children`; `done` en cada nodo;
-      `nodes` y `relations` como `Record`; nace `DiagramRelation` con su id marcado. Sin
-      migración: no hay diagramas guardados.
-- [ ] **`schema.ts` valida la forma nueva**, y que la clave de cada `Record` coincida con el id de
-      dentro.
-- [ ] **Las operaciones puras de diagrama**, en un fichero propio del dominio, gemelo de
-      `operations.ts`, cada no-op de la tabla de §9.11 con su prueba `strictEqual`.
-- [ ] **Las trece acciones (17 → 30)** con su caso de reducer por `onDiagram`, gemelo de
-      `onContent`/`onContext`: la comparación escrita una vez y la estampa sólo si cambió.
-- [ ] **Los trece casos de uso**, cada uno devuelve el diagrama o `null`.
-- [ ] **`delete-note` convierte sus nodos-nota en «Nota perdida»** en todos los diagramas, con el
-      mismo `meta`; los que no la usaban, por referencia. ⚠️ Toca el core fuera de los diagramas.
-- [ ] **`hydrate`, las dos limpiezas**: relaciones rotas o de un nodo a sí mismo, fuera; nodo-nota
-      sin nota —y no ilegible—, a «Nota perdida». Por referencia lo que no cambie. ⚠️ También
-      fuera de los diagramas.
-- [ ] **Cada guarda rota a propósito**, y `npm run check` en verde con el recuento anotado.
+- [x] **El modelo nuevo de `Diagram`**: fuera `parents` y `children`; `done` en cada nodo;
+      `nodes` y `relations` como `Record`; nace `DiagramRelation` con su id marcado
+      (`DiagramRelationId`, `diagramRelationId`, exportados). Sin migración: no hay diagramas
+      guardados. ✅ `b14df06`.
+- [x] **`schema.ts` valida la forma nueva**, y que la clave de cada `Record` coincida con el id de
+      dentro (`cadaEntrada`). Un `nodes: []` de la forma vieja es `corrupt`. No mira que los
+      extremos existan: eso lo limpia `hydrate`. ✅ `b14df06`.
+- [x] **Las operaciones puras de diagrama**, en `diagramOperations.ts`, gemelo de `operations.ts`,
+      cada no-op de la tabla de §9.11 con su prueba `strictEqual`. Diez, más `loseNote` y
+      `LOST_NOTE_TEXT`; **no salen por `index.ts`**. ✅ `1a13700`.
+- [x] **Las trece acciones (17 → 30)** con su caso de reducer por `onDiagram`, gemelo de
+      `onContent`/`onContext`: la comparación escrita una vez y la estampa sólo si cambió. ✅
+      `bb05a0b`.
+- [x] **Los casos de uso, cada uno devuelve el diagrama o `null`.** ✅ `b38b4f8`. ⚠️ **Catorce, no
+      trece**: `add-node` tiene dos, `addTextNode` y `addNoteNode`, como `insert`, porque el id
+      del nodo se genera en esa capa. **32 casos de uso para 30 acciones.**
+- [x] **`delete-note` convierte sus nodos-nota en «Nota perdida»** en todos los diagramas, con el
+      mismo `meta`; los que no la usaban, por referencia (`sinNotaEnDiagramas`). ✅ `adc6b1a`.
+- [x] **`hydrate`, las dos limpiezas**: relaciones rotas o de un nodo a sí mismo, fuera; nodo-nota
+      sin nota —y no ilegible—, a «Nota perdida» (`diagramaLimpio`, con `loseNote`). Por
+      referencia lo que no cambie. ✅ `a87e012`.
+- [x] **Cada guarda rota a propósito**, y `npm run check` en verde con el recuento anotado:
+      **643**. Una no se puede romper —`setNodeText` sobre un nodo-nota: quitarla no compila—, y
+      una prueba se corrigió al romperla (`nodes: []`). `ARCHITECTURE.md` §9.11.
 
 #### Fase 5 · Lienzo — todo menos las líneas
 
@@ -685,7 +692,10 @@ descubre con el lienzo encima; a cambio, se verifican juntas en el mismo teléfo
       edición. En el General, los diagramas mezclados con las notas. La papelera, con las reglas
       de una nota.
 - [ ] **El diagrama como ventana**: `WindowRef` gana `diagram`, el selector lo ofrece y la guarda
-      lo sabe. Con pruebas, y rota a propósito.
+      lo sabe. Con pruebas, y rota a propósito. ⚠️ **También `parseWindowsLayout`** (en
+      `src/ui/windows.ts`): hoy sólo lee `general`, `context` y `note`, y **descarta en silencio**
+      cualquier otra ventana guardada, así que sin el caso `diagram` una ventana de diagrama
+      desaparecería al recargar.
 - [ ] **La vista diagrama**: cabecera como la de la nota, y el corcho —pósits en HTML dentro de una
       capa con transformación CSS— que se mueve y se acerca. Al abrir, el origen.
 - [ ] **Los pósits**: crear con doble clic/toque, editar dentro, hecho, borrar, mover guardando una
@@ -1149,7 +1159,7 @@ documentación del 2026-09-29.
 entra en juego** (abajo, *Tres huecos…*) y **qué pasa con lo guardado en `localStorage` al cambiar
 de destino**, que desde el 2026-09-27 incluye la lista de ventanas (arriba, en *Pendiente*).
 
-### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03, sin construir**
+### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03; construido lo del core (Fase 5 · Modelo)**
 
 Salieron de planificar la fase con el usuario. El diseño y sus porqués, en `ARCHITECTURE.md`
 §9.11 (y §7.4 para la navegación); aquí, sólo el registro de lo que estaba abierto.
@@ -1172,6 +1182,9 @@ Salieron de planificar la fase con el usuario. El diseño y sus porqués, en `AR
 - **Cómo se parte la fase** — ✅ **Modelo → Lienzo → Relaciones.**
 
 ### Qué devuelven los casos de uso — ✅ **cerrada y CONSTRUIDA: la entidad protagonista, o `null`**
+
+*Desde Fase 5 · Modelo (2026-10-03) son **treinta y dos**, todos con la misma forma: los catorce de
+Diagrama devuelven `Diagram | null`. Lo de abajo es el registro de cuando eran dieciocho.*
 
 **Decidida y construida el 2026-09-19**, con **329 pruebas** en verde (eran 319: tres reescritas
 y diez nuevas). Salió al hacer inventario de las funciones que

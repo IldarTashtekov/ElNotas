@@ -11,8 +11,10 @@ puerto, copia por camino—, está explicado ahí con ejemplos de notas y casill
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy
 > lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
 > usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
-> (§9.10). Siguen siendo sólo diseño los Diagramas —la Fase 5, **planificada el 2026-10-03 y sin
-> una línea de código** (§9.11)—, la carpeta del usuario como destino y la semántica multi-backend. Cada sección dice si lo que describe existe o está planificado.
+> (§9.10). De la Fase 5, los Diagramas (§9.11), está construida **Fase 5 · Modelo** —el core y
+> `storage/`, el 2026-10-03—; **su pantalla sigue siendo sólo diseño**, como la carpeta del
+> usuario como destino y la semántica multi-backend. Cada sección dice si lo que describe existe
+> o está planificado.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
 **Índice**
@@ -641,7 +643,7 @@ importa nada de nadie.
 ```
 src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma.
-│   ├── domain/    # ← modelo + Position + helper + las 8 operaciones + Result
+│   ├── domain/    # ← modelo + Position + helper + las 8 operaciones + las de diagrama + Result
 │   │   └── errors/#   ← StorageError y MigrationError (§6.5). Sin index.ts
 │   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
 │   ├── app/       # ← Action + reduce + Store + useCases + diffState
@@ -694,9 +696,8 @@ Tres entidades, más nociones de agrupación:
   tocarlo entras en una Nota, y enseña su título **en directo**, sin guardar copia. Una relación
   (`DiagramRelation`) une dos nodos, con o sin flecha y con un texto opcional, y entre dos nodos
   puede haber **cualquier número** (multigrafo). En el código, `Diagram` (público, en inglés).
-  ⚠️ **Hoy en el repo sólo están los tipos, y con la forma VIEJA** —aristas en `parents` +
-  `children` de cada nodo, `nodes` como array—; **el modelo nuevo y todo lo demás está planificado
-  y sin construir** (§9.11, decidido con el usuario el 2026-10-03).
+  **El modelo y sus operaciones están construidos** (Fase 5 · Modelo, 2026-10-03); **la pantalla
+  está planificada y sin construir** (§9.11).
 
   **Se llamó *Plan* hasta el 2026-10-03**, y se renombró con el usuario antes de planificar la
   Fase 5, por dos motivos: «plan» chocaba con *el plan por fases* y con *planificar*, y daba por
@@ -726,11 +727,11 @@ Tres entidades, más nociones de agrupación:
 
 ### 5.1 Lo que existe hoy en el repo
 
-**Las fases 1, 2 y 3 enteras y el código de la Fase 4.** Medido el **2026-09-29**, en líneas de
-`.ts`: `src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442, y `test/` 7195.
-`npm run check` en verde con **489 pruebas** (329 al empezar la Fase 4, 423 al terminar el código
-de Fase 4 · Contextos). Las cifras se quedan viejas solas: antes de afirmar nada, `find src test
--name '*.ts' | sort` y `npm run check`.
+**Las fases 1 a 4 y Fase 5 · Modelo.** Medido el **2026-10-03**, tras `a87e012`, en líneas de
+`.ts`: `src/core` 3148, `src/storage` 1687, `src/platform` 339, `src/ui` 2820, y `test/` 8808.
+`npm run check` en verde con **643 pruebas** (532 al cerrar la Fase 4). Las cifras se quedan
+viejas solas —las que había aquí antes ya no cuadraban antes de la Fase 5—: antes de afirmar
+nada, `find src test -name '*.ts' | sort` y `npm run check`.
 
 La tabla ya no lleva líneas por fichero, a propósito: la columna que tenía estaba sin re-medir
 desde que se adelgazaron las cabeceras y no decidía nada. La única cifra por fichero que sí
@@ -740,14 +741,14 @@ está en §6.3, y ese fichero no ha cambiado desde que se midió.
 | Dónde | Qué hay |
 |---|---|
 | **`core/domain/` — el modelo** | `Ids.ts` (IDs marcados, `Revision`, `ItemRef`) · `Content.ts` (`Text` \| `CheckBox`) · `Versioned.ts` · `Note.ts` · `Diagram.ts` · `Context.ts` · `AppState.ts` · `Position.ts` (tres casos) · `Result.ts` (el sobre, **fuera de `errors/`**) · `errors/` con `StorageError` y `MigrationError` (**sin `index.ts`**) |
-| **`core/domain/` — la maquinaria** | `updateContent.ts` (primitiva **A**) y `updateContainerOf.ts` (**B**), que **no salen por `index.ts`**; `operations.ts`, **las ocho operaciones**, todas exportadas |
+| **`core/domain/` — la maquinaria** | `updateContent.ts` (primitiva **A**) y `updateContainerOf.ts` (**B**), que **no salen por `index.ts`**; `operations.ts`, **las ocho operaciones**, todas exportadas; `diagramOperations.ts`, **las diez de diagrama más `loseNote`** (§9.11), que **no salen por `index.ts`** |
 | **`core/ports/`** | cinco interfaces: `Clock`, `IdGenerator`, `Repository`, `StorageAdapter`, `BlobStore`. Los tres de persistencia devuelven `Result` en todos sus métodos |
-| **`core/app/`** | `Action.ts` (**diecisiete**: 8 de contenido, 3 de Nota, 6 de Contexto) · `reduce.ts` (**no sale por `index.ts`**) · `Store.ts` (una **función**) · `useCases.ts` · `diffState.ts` (la mitad pura del write-behind) |
-| **`core/migrations/`** | `hydrate.ts` (de listas a mapas, limpiando `ItemRef` rotas) · `runMigrations.ts` (**puro y total**; `MIGRATIONS` **vacía a propósito**) |
+| **`core/app/`** | `Action.ts` (**treinta**: 8 de contenido, 3 de Nota, 6 de Contexto, 13 de Diagrama) · `reduce.ts` (**no sale por `index.ts`**) · `Store.ts` (una **función**) · `useCases.ts` (**treinta y dos**) · `diffState.ts` (la mitad pura del write-behind) |
+| **`core/migrations/`** | `hydrate.ts` (de listas a mapas, limpiando `ItemRef` rotas y los diagramas) · `runMigrations.ts` (**puro y total**; `MIGRATIONS` **vacía a propósito**) |
 | **`storage/`** | `memory/MemoryStorageAdapter.ts` · `file/FileStorageAdapter.ts` (§6.2, con `onCorrupt`) · `file/schema.ts` (la validación al leer) · `blobs/LocalStorageBlobStore.ts` · `blobs/DirectoryHandleBlobStore.ts` (**sin pruebas a propósito**, §6.3) · `writeBehind.ts` (la mitad impura, con el estado *detenido* y `onError`) |
 | **`platform/web/`** | `SystemClock.ts` · `CryptoIdGenerator.ts` · `boot.ts` (la composición) · `LocalStorageWindows.ts` (la lista de ventanas) · `main.ts` (la entrada del navegador). Detalle en §7.5 |
 | **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` |
-| **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` · `NoteView.ts` · `NoteEditor.ts` · `editableTitle.ts` · `dom.ts` |
+| **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` · `NoteView.ts` · `NoteEditor.ts` · `editableTitle.ts` · `sheet.ts` · `dragReorder.ts` · `backStack.ts` · `dom.ts` |
 | **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 22 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
 | **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · `test/ui/VERIFICACION-MANUAL.md` y `test/ui/VERIFICACION-MANUAL-EDITOR.md`, **escritas y sin pasar**. No son TypeScript y no entran en `npm run check` |
 
@@ -1297,6 +1298,10 @@ tal cual. **Hoy lo cierra `src/storage/file/schema.ts`**, escrito a mano y sin d
 - en una nota, además, **ningún texto dentro de una casilla** —un texto sólo cabe en la raíz— y
   **ningún id de línea repetido en ningún nivel**, porque con dos iguales toda operación actuaría
   siempre sobre la primera;
+- en un diagrama *(desde Fase 5 · Modelo)*, **`nodes` y `relations` tienen que ser mapas** —un
+  `nodes: []` de la forma vieja es `corrupt`— y **la clave de cada entrada tiene que ser su id**:
+  si no, el reducer buscaría por una clave y escribiría con otra. **No mira que los extremos de
+  una relación existan**: eso no es forma, es integridad, y lo limpia `hydrate` (§9.11);
 - **los campos de más se ignoran**: se comprueba lo que la app necesita, no que no haya nada más.
 
 Lo que no tiene forma sale como **`corrupt` con el motivo** («la línea «x» está repetida») y va
@@ -2889,11 +2894,11 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   ilegible (§6.5). **Queda como deuda**, no como hecho: pasar las dos listas manuales y contestar
   las tres preguntas del editor (§9.10).
 
-- **Fase 5 — Diagramas. Planificada el 2026-10-03 con el usuario; sin código.** Un lienzo libre
-  con nodos y relaciones, y la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo,
-  Fase 5 · Lienzo y Fase 5 · Relaciones** (§9.11). Hasta que se construya Fase 5 · Modelo, los
-  Diagramas siguen persistiéndose sin operarse (§9.7). **Después de las tres, la deuda móvil de la
-  Fase 4.**
+- **Fase 5 — Diagramas. Planificada el 2026-10-03 con el usuario.** Un lienzo libre con nodos y
+  relaciones, y la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo, Fase 5 ·
+  Lienzo y Fase 5 · Relaciones** (§9.11). **Fase 5 · Modelo, ✅ HECHA el 2026-10-03**, con **643
+  pruebas** (532 al empezar): los Diagramas ya se operan en el core, sin pantalla todavía.
+  **Lo siguiente: Fase 5 · Lienzo.** **Después de las tres, la deuda móvil de la Fase 4.**
 
 ### 9.3 Las operaciones de contenido
 
@@ -3214,8 +3219,9 @@ nota en un contexto (`create-note` + `add-item`) y «Mover a…» (`add-item` + 
 
 #### Los Diagramas se persisten, pero no se operan
 
-> **Vigente hasta que se construya Fase 5 · Modelo**, que trae trece acciones de Diagrama
-> (§9.11). Planificado el 2026-10-03; hoy, en el repo, esto sigue siendo verdad tal cual.
+> ⚠️ **Ya no es así: desde Fase 5 · Modelo (2026-10-03) los Diagramas se operan**, con trece
+> acciones de Diagrama (17 → 30) y catorce casos de uso (§9.11), aún sin pantalla. Lo de abajo
+> se queda como el porqué de la Fase 2.
 
 `AppState.diagrams` existe y `StorageAdapter` lleva su `Repository<Diagram>`, así que un Diagrama se
 guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Diagrama** en el
@@ -3608,8 +3614,8 @@ derecho a cambiar de opinión después sin que parezca una rendición.
 
 Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas de arriba no cabe:
 
-- **Los Diagramas y su editor de grafos: son la Fase 5.** Se persisten desde la Fase 2 y siguen sin
-  operarse; planificada el 2026-10-03, en §9.11.
+- **Los Diagramas y su editor de grafos: son la Fase 5.** Se persistían desde la Fase 2 sin
+  operarse; desde Fase 5 · Modelo se operan en el core (§9.11).
 - **`move`, `indent` y `outdent`**, salvo que las preguntas de arriba los reabran.
 - **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con
   `LocalStorageBlobStore` para salir del paso. Es barato de revertir —`BlobStore` es un puerto,
@@ -3646,12 +3652,13 @@ entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si
 sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
 decisión aunque la fase esté cerrada.
 
-### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03, sin construir)*
+### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Fase 5 · Modelo, construida)*
 
-Al estilo de §9.10, y **escrito antes de que exista una línea de código de diagramas**. ⚠️ **Nada
-de esta sección está en el repo**: hoy sólo existen los tipos viejos de `Diagram.ts` (§5). Todas
-las decisiones de aquí se tomaron **con el usuario el 2026-10-03**; lo que no lleve otra fecha,
-lleva ésa.
+Al estilo de §9.10, y **escrito antes de que existiera una línea de código de diagramas**. ⚠️ **Hoy
+está construido sólo Fase 5 · Modelo** —el modelo, sus operaciones, acciones y casos de uso,
+`delete-note`, `hydrate` y `schema.ts`; ver *Fase 5 · Modelo: construida*, al final—. **La vista,
+los gestos y el dibujo de las relaciones siguen siendo diseño.** Todas las decisiones de aquí se
+tomaron **con el usuario el 2026-10-03**; lo que no lleve otra fecha, lleva ésa.
 
 #### Qué es un diagrama: un lienzo libre
 
@@ -3739,9 +3746,10 @@ interface Diagram extends Versioned {
 }
 ```
 
-Lo que cambia respecto a lo que hay hoy, y por qué:
+Así está hoy en `Diagram.ts`, con `DiagramRelationId` y su constructor `diagramRelationId`
+exportados por `index.ts`. Lo que cambió respecto al modelo viejo, y por qué:
 
-- **Las aristas salen de los nodos.** Hoy van en `parents` + `children` de cada nodo: **dos
+- **Las aristas salen de los nodos.** Iban en `parents` + `children` de cada nodo: **dos
   fuentes de verdad** de la misma arista, que se pueden contradecir. Y con el multigrafo no
   bastarían: una lista de ids no distingue dos relaciones entre el mismo par, ni lleva su
   dirección ni su texto.
@@ -3754,10 +3762,14 @@ Lo que cambia respecto a lo que hay hoy, y por qué:
 
 #### Las acciones: trece nuevas, de 17 a 30
 
-**Las operaciones puras van en un fichero propio del dominio**, gemelo de `operations.ts`, y el
-reducer las envuelve con **`onDiagram`**, gemelo de `onContent` y `onContext`: **la comparación
-de identidad escrita una vez**, y la estampa de `meta` sólo si cambió algo. **Trece casos de uso
-más, y cada uno devuelve el diagrama o `null`** (§9.7, la regla de siempre).
+**Las operaciones puras van en un fichero propio del dominio**, `diagramOperations.ts`, gemelo de
+`operations.ts`, y el reducer las envuelve con **`onDiagram`**, gemelo de `onContent` y
+`onContext`: **la comparación de identidad escrita una vez**, y la estampa de `meta` sólo si
+cambió algo. **Catorce casos de uso más —se planificaron trece—, y cada uno devuelve el diagrama
+o `null`** (§9.7, la regla de siempre). El de más sale de `add-node`, que tiene **dos**,
+`addTextNode` y `addNoteNode`, igual que `insert` tiene `insertText` e `insertCheckBox`: el id del
+nodo se genera en la capa de casos de uso, y ahí hay que saber qué clase de nodo se construye.
+Quedan **treinta y dos casos de uso para treinta acciones**.
 
 | Acción | No-op si… |
 |---|---|
@@ -3891,7 +3903,8 @@ orientación del texto— y **el DOM se verifica a mano**, con listas nuevas en 
 la Fase 4.
 
 - **Modelo** — el core y `storage/`, **sin pantalla**: los tipos, las trece acciones con sus
-  operaciones, los casos de uso, `delete-note`, `hydrate` y `schema.ts`.
+  operaciones, los casos de uso, `delete-note`, `hydrate` y `schema.ts`. **✅ Construida el
+  2026-10-03.**
 - **Lienzo** — todo **menos las líneas**: «+ Diagrama», el diagrama como ventana, la vista con el
   corcho, los pósits y todo lo que se les hace, los nodos-nota con su nivel de navegación, los
   menús y el clic que espera.
@@ -3918,9 +3931,41 @@ encima. **A cambio**, se verifican juntas en el mismo teléfono.
    `strictEqual`.
 5. **`hydrate` hace sus dos limpiezas**, conserva como nodo-nota el de una nota ilegible y
    devuelve por referencia lo que no cambia.
-6. **Los trece casos de uso** devuelven el diagrama o `null`.
+6. **Los trece casos de uso** devuelven el diagrama o `null`. *(Salieron catorce: arriba, en
+   *Las acciones*.)*
 7. **Cada guarda, rota a propósito**, y las pruebas caen.
 8. **`npm run check` en verde y el recuento anotado.**
+
+#### Fase 5 · Modelo: construida *(2026-10-03)*
+
+Los ocho puntos, cumplidos, en `b14df06`, `1a13700`, `bb05a0b`, `b38b4f8`, `adc6b1a` y
+`a87e012`, con **643 pruebas** en verde (532 al empezar) y **sin tocar `ui/` ni `platform/`**.
+Cómo quedó lo que el plan no fijaba:
+
+- **`diagramOperations.ts`**: las diez operaciones de la tabla —`addNode`, `setNodeText`,
+  `setNodePosition`, `setNodeDone`, `removeNode`, `addRelation`, `setRelationEnds`,
+  `setRelationDirected`, `setRelationLabel`, `removeRelation`— y **`loseNote`**, con la constante
+  **`LOST_NOTE_TEXT`** («Nota perdida»). La comparación de identidad está escrita una vez en dos
+  ayudantes, `enNodo` y `enRelacion`. **No salen por `index.ts`**: hoy sólo las usa el core, y se
+  abren el día que la UI las necesite.
+- **`loseNote` es la regla de «Nota perdida» escrita una sola vez**, y la usan los dos caminos:
+  `delete-note`, por **`sinNotaEnDiagramas`** en `reduce.ts` —gemelo de `sinReferenciasA`: mismo
+  `meta` para todos los diagramas tocados, los demás por referencia, y si no tocó ninguno, el
+  mismo objeto `diagrams`—; y `hydrate`, por **`diagramaLimpio`**, que además tira las relaciones
+  con un extremo ausente o de un nodo a sí mismo, devuelve el diagrama por referencia si no había
+  nada que limpiar y, como con los contextos, **no estampa**.
+- **El reducer**: `onDiagram` envuelve las once que actúan sobre un diagrama existente. Lógica
+  propia sólo en tres: `create-diagram` (id repetido, no-op), `delete-diagram` (lo quita de los
+  contextos con `sinReferenciasA` y **no borra sus notas**) y `add-node` de un nodo-nota, que
+  mira que la nota exista.
+- **Los casos de uso**: `trasDiagrama`, gemelo de `trasNota` y `trasContexto`. Un nodo nace con
+  `done: false`; una relación, con `directed: true` y `label: ""`. Crean tres: `createNote`,
+  `createContext` y `createDiagram`.
+
+**Una guarda no se puede romper:** `setNodeText` sobre un nodo-nota es no-op, y quitar esa
+comprobación **no compila** —un `NoteNode` no tiene `text`—, así que la vigila el compilador. Y
+**una prueba se corrigió al romper lo que vigilaba**: la de «`nodes` como lista» usaba una lista
+llena, que caía por la comprobación de clave y no por la de «es un mapa»; ahora usa `nodes: []`.
 
 #### Fase 5 · Lienzo: los criterios
 
