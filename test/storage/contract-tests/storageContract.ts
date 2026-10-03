@@ -73,6 +73,8 @@ const COMPRA = nota("compra", "Compra semanal")
 const DIARIO = nota("diario", "Diario")
 const MUDANZA = plan("mudanza", "Mudanza")
 const CASA = contexto("casa", "Casa")
+/** Otra nota que, por lo que sea, llega con el id de Compra: un choque de ids. */
+const DIARIO_CON_ID_DE_COMPRA: Note = { ...DIARIO, id: COMPRA.id }
 
 /** `getAll` no promete orden, así que se compara ordenado. */
 const porId = <T extends { readonly id: string }>(
@@ -99,14 +101,14 @@ export const runStorageContract = (
   })
 
   caso("lo que se guarda se recupera igual", async (s) => {
-    assert.deepEqual(await s.notes.put(COMPRA), ok(undefined))
+    assert.deepEqual(await s.notes.put(COMPRA, null), ok(undefined))
     assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), COMPRA)
   })
 
   caso("put con un id que ya estaba REEMPLAZA, no duplica", async (s) => {
-    await s.notes.put(COMPRA)
-    const renombrada: Note = { ...COMPRA, name: "Compra del mes" }
-    await s.notes.put(renombrada)
+    await s.notes.put(COMPRA, null)
+    const renombrada: Note = { ...COMPRA, name: "Compra del mes", revision: revision("rev-2") }
+    await s.notes.put(renombrada, COMPRA.revision)
 
     assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), renombrada)
     assert.equal(valorDe(await s.notes.getAll()).length, 1)
@@ -117,15 +119,15 @@ export const runStorageContract = (
   })
 
   caso("getAll devuelve todas las guardadas", async (s) => {
-    await s.notes.put(COMPRA)
-    await s.notes.put(DIARIO)
+    await s.notes.put(COMPRA, null)
+    await s.notes.put(DIARIO, null)
     assert.deepEqual(porId(valorDe(await s.notes.getAll())), porId([COMPRA, DIARIO]))
   })
 
   caso("delete quita la entidad de get y de getAll", async (s) => {
-    await s.notes.put(COMPRA)
-    await s.notes.put(DIARIO)
-    assert.deepEqual(await s.notes.delete(COMPRA.id), ok(undefined))
+    await s.notes.put(COMPRA, null)
+    await s.notes.put(DIARIO, null)
+    assert.deepEqual(await s.notes.delete(COMPRA.id, COMPRA.revision), ok(undefined))
 
     assert.deepEqual(await s.notes.get(COMPRA.id), ok(null))
     assert.deepEqual(valorDe(await s.notes.getAll()), [DIARIO])
@@ -133,8 +135,47 @@ export const runStorageContract = (
 
   caso("delete de algo que no está guardado devuelve ok", async (s) => {
     // Ni lanza ni devuelve `err`: no había nada que hacer, y eso no es fracasar.
-    assert.deepEqual(await s.notes.delete(COMPRA.id), ok(undefined))
+    assert.deepEqual(await s.notes.delete(COMPRA.id, null), ok(undefined))
     assert.deepEqual(valorDe(await s.notes.getAll()), [])
+  })
+
+  /* ── Escritura condicional ──
+     Guardar y borrar dicen qué revisión esperan encontrar. Si lo guardado es
+     otra cosa, alguien más lo cambió —otra pestaña—: sale `stale` y NO se
+     escribe. Es lo que impide que dos pestañas se pisen. */
+
+  const OTRA = revision("rev-de-otra-pestaña")
+
+  caso("put esperando una revisión que no es la guardada: stale, y no escribe", async (s) => {
+    await s.notes.put(COMPRA, null)
+    const mia: Note = { ...COMPRA, name: "Mía", revision: revision("rev-mia") }
+
+    assert.deepEqual(errorDe(await s.notes.put(mia, OTRA)), { kind: "stale", id: COMPRA.id })
+    assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), COMPRA)
+  })
+
+  caso("put de algo nuevo cuando ya hay uno guardado con ese id: stale", async (s) => {
+    await s.notes.put(COMPRA, null)
+    assert.deepEqual(errorDe(await s.notes.put(DIARIO_CON_ID_DE_COMPRA, null)), {
+      kind: "stale",
+      id: COMPRA.id,
+    })
+    assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), COMPRA)
+  })
+
+  caso("put esperando algo que otro ya borró: stale, y no lo resucita", async (s) => {
+    assert.deepEqual(errorDe(await s.notes.put(COMPRA, OTRA)), { kind: "stale", id: COMPRA.id })
+    assert.deepEqual(await s.notes.get(COMPRA.id), ok(null))
+  })
+
+  caso("delete esperando otra revisión: stale, y no borra", async (s) => {
+    await s.notes.put(COMPRA, null)
+    assert.deepEqual(errorDe(await s.notes.delete(COMPRA.id, OTRA)), { kind: "stale", id: COMPRA.id })
+    assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), COMPRA)
+  })
+
+  caso("delete de algo que otro ya borró: ok, se esperara lo que se esperara", async (s) => {
+    assert.deepEqual(await s.notes.delete(COMPRA.id, COMPRA.revision), ok(undefined))
   })
 
   /* ── Repository: los tres están aislados ──
@@ -143,9 +184,9 @@ export const runStorageContract = (
      mismo id, y uno de los dos desaparece. */
 
   caso("los tres repositorios no se pisan entre sí", async (s) => {
-    await s.notes.put(COMPRA)
-    await s.plans.put(MUDANZA)
-    await s.contexts.put(CASA)
+    await s.notes.put(COMPRA, null)
+    await s.plans.put(MUDANZA, null)
+    await s.contexts.put(CASA, null)
 
     assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
     assert.deepEqual(valorDe(await s.plans.getAll()), [MUDANZA])
@@ -153,9 +194,9 @@ export const runStorageContract = (
   })
 
   caso("borrar en un repositorio no toca a los otros", async (s) => {
-    await s.notes.put(COMPRA)
-    await s.plans.put(MUDANZA)
-    await s.notes.delete(COMPRA.id)
+    await s.notes.put(COMPRA, null)
+    await s.plans.put(MUDANZA, null)
+    await s.notes.delete(COMPRA.id, COMPRA.revision)
 
     assert.deepEqual(valorDe(await s.plans.getAll()), [MUDANZA])
   })
@@ -170,7 +211,7 @@ export const runStorageContract = (
       items: [noteRef(COMPRA.id)],
       defaultView: { type: "note", id: COMPRA.id },
     }
-    await s.contexts.put(conNota)
+    await s.contexts.put(conNota, null)
     assert.deepEqual(valorDe(await s.contexts.get(CASA.id)), conNota)
   })
 
@@ -201,8 +242,8 @@ export const runStorageContract = (
 
   caso("las escrituras de dentro de transaction quedan aplicadas", async (s) => {
     await s.transaction(async () => {
-      await s.notes.put(COMPRA)
-      await s.contexts.put(CASA)
+      await s.notes.put(COMPRA, null)
+      await s.contexts.put(CASA, null)
       return ok(undefined)
     })
 

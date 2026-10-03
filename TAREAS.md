@@ -1169,16 +1169,15 @@ aislamiento de lo primero.
 
 ### Escritura condicional y conflicto entre dos pestañas
 
-**✅ Decidida con el usuario el 2026-10-03: la opción c, escritura condicional, y SIN CONSTRUIR
-todavía.** Se pusieron sobre la mesa cuatro: **a**, una sola pestaña activa con Web Locks;
+**✅ Decidida con el usuario y CONSTRUIDA el 2026-10-03: la opción c, escritura condicional, con
+«avisar y recargar».** El detalle de lo construido, en `ARCHITECTURE.md` §6.5. Se pusieron sobre la mesa cuatro: **a**, una sola pestaña activa con Web Locks;
 **b**, recargar al enterarse por el evento `storage`; **c**, escritura condicional con
 `revision`; **d**, b + c. Ganó la c **porque es la que se reutilizará cuando haya sincronización
 entre dispositivos**. Precio asumido: una pestaña no se entera de lo que cambió la otra hasta que
-intenta guardar —enseña lo viejo—, pero **nunca pisa**. Propuesto para las tres cosas de abajo:
-`put(entidad, revisionEsperada)` (y lo mismo `delete`), que el `writeBehind` ya puede dar porque
-conoce el estado anterior; el caso `stale`; y **qué hace la app, aún por elegir** entre *avisar y
-recargar* (lo más sencillo; se pierde lo escrito en esa pestaña desde el último guardado) y
-*guardar como copia en conflicto* (no se pierde nada). Va **después** de la 8A.
+intenta guardar —enseña lo viejo—, pero **nunca pisa**. Las tres cosas de abajo quedaron así:
+`put(entidad, esperada)` y `delete(id, esperada)`; el caso `stale`, con el id; y la app **avisa
+y ofrece Recargar** —lo más sencillo; se pierde lo escrito en esa pestaña desde el último
+guardado—. Descartada, *guardar como copia en conflicto*, que no perdía nada.
 
 **Antes de decidirse estuvo abierta a conciencia, no por olvido.** Salió al cerrar la taxonomía de `StorageError` (§6.5) y
 es el único caso que se dejó fuera a propósito.

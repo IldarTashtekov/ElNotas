@@ -114,12 +114,18 @@ const contando = (
  * Monta la app entera: puertos, store, escritor y almacén, todos enchufados.
  * El `schedule` no espera nada — las pruebas llaman a `flush()` cuando quieren.
  */
-const montar = () => {
+const montar = async () => {
   const clock: Clock = { now: () => HORA_DEL_RELOJ }
   let n = 0
   const ids: IdGenerator = { next: () => `rev-${(n += 1)}` }
 
-  const { adapter, escrituras } = contando(createMemoryStorageAdapter())
+  /* Lo que el escritor da por guardado tiene que estarlo de verdad: con la
+     escritura condicional, guardar espera encontrar su revisión. Se guarda por
+     debajo del contador, para que no cuente como escritura de la prueba. */
+  const base: StorageAdapter = createMemoryStorageAdapter()
+  const sembrada: Result<void, StorageError> = await base.notes.put(NOTA, null)
+  if (!sembrada.ok) assert.fail("la nota inicial tenía que guardarse")
+  const { adapter, escrituras } = contando(base)
   const store = createStore(ESTADO_INICIAL)
 
   let avisos = 0
@@ -158,7 +164,7 @@ const estaMarcada = (nota: Note | undefined | null): boolean => {
 /* ───────────────── El criterio de cierre: el eslabón que faltaba ─────────── */
 
 test("marcar una casilla YA marcada no llega a disco", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, true)
   await app.flush()
@@ -173,7 +179,7 @@ test("marcar una casilla YA marcada no llega a disco", async () => {
 })
 
 test("tres marcados redundantes seguidos siguen sin llegar a disco", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, true)
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, true)
@@ -185,7 +191,7 @@ test("tres marcados redundantes seguidos siguen sin llegar a disco", async () =>
 })
 
 test("una acción sobre una nota que no existe tampoco llega a disco", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(noteId("no-existe"), ID_FRUTA, true)
   await app.flush()
@@ -194,7 +200,7 @@ test("una acción sobre una nota que no existe tampoco llega a disco", async () 
 })
 
 test("marcar una línea que no existe tampoco", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, contentId("no-existe"), true)
   await app.flush()
@@ -205,7 +211,7 @@ test("marcar una línea que no existe tampoco", async () => {
 /* ────────────────── Y la otra mitad: un cambio de verdad SÍ llega ─────────── */
 
 test("desmarcar una casilla marcada sí llega a disco, con su updatedAt", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, false)
   await app.flush()
@@ -220,7 +226,7 @@ test("desmarcar una casilla marcada sí llega a disco, con su updatedAt", async 
 })
 
 test("un cambio de verdad seguido de dos redundantes escribe UNA vez", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, false) // cambia
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, false) // ya está así
@@ -232,7 +238,7 @@ test("un cambio de verdad seguido de dos redundantes escribe UNA vez", async () 
 })
 
 test("marcar y desmarcar en la misma ráfaga escribe una vez, con el valor final", async () => {
-  const app = montar()
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, false)
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, true)
@@ -247,12 +253,14 @@ test("marcar y desmarcar en la misma ráfaga escribe una vez, con el valor final
 
 /* ──────────────────────────── El enchufe en sí ────────────────────────────── */
 
-test("sin flush no hay nada en el almacén: el disco va POR DETRÁS", async () => {
-  const app = montar()
+test("sin flush el almacén sigue con lo viejo: el disco va POR DETRÁS", async () => {
+  const app = await montar()
 
   app.useCases.setChecked(ID_NOTA, ID_FRUTA, false)
 
   assert.equal(app.avisos(), 1, "el Store avisa en el acto…")
   assert.equal(app.escrituras(), 0, "…pero el disco todavía no")
-  assert.equal(await app.notaGuardada(), null)
+  const guardada: Note | null = await app.notaGuardada()
+  assert.equal(estaMarcada(guardada), true, "en el disco sigue marcada")
+  assert.equal(guardada?.revision, revision("rev-inicial"))
 })

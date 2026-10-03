@@ -20,7 +20,7 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-03:** `npm run check` en verde —sus seis pasos— con **513 pruebas** (la Fase
+**Medido el 2026-10-03:** `npm run check` en verde —sus seis pasos— con **532 pruebas** (la Fase
 4 empezó con 329; al terminar el código de Fase 4 · Contextos eran 423). Líneas de `.ts`:
 `src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442; `test/` 7195. *(Las
 cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
@@ -43,7 +43,7 @@ Lo que hay en `src/`, de dentro afuera:
   `FileStorageAdapter` (formato en disco de §6.2, con **`onCorrupt`** y la **validación de
   esquema** de `file/schema.ts`), las dos de `BlobStore` en `blobs/` —`LocalStorageBlobStore` y
   `DirectoryHandleBlobStore`, ésta **sin pruebas a propósito** (§6.3)— y el `writeBehind`, con
-  su **`onError`**. La suite de contratos (17 casos, `test/storage/contract-tests/`) corre tres
+  su **`onError`**. La suite de contratos (22 casos, `test/storage/contract-tests/`) corre tres
   veces: memoria · fichero + `BlobStore` falso · fichero + `LocalStorageBlobStore` real.
 - **`src/platform/web/` — la composición.** `SystemClock` y `CryptoIdGenerator`, las únicas
   implementaciones de `Clock` e `IdGenerator`; `boot.ts`, que monta la pila entera;
@@ -66,7 +66,7 @@ vuelve a pasar la lista**; la única excepción registrada —mismo código una 
 comentarios— está en `TAREAS.md`.
 
 **Lo que NO existe todavía:** todo lo de Planes salvo sus tipos (Fase 5), la carpeta del usuario
-y OPFS como destino de la app, el botón de «reconectar carpeta» y la escritura condicional.
+y OPFS como destino de la app y el botón de «reconectar carpeta».
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
 encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
@@ -358,10 +358,19 @@ duda**; no la cambies por tu cuenta.
   Y **en un almacén vacío `boot` apunta ya la versión actual**: si no, uno con notas seguiría
   diciendo «0» y la primera migración se lo saltaría. §9.7.
 - **Los errores se devuelven, no se lanzan.** `Result<T, E>` a mano, cero dependencias, y
-  `StorageError` con **cinco casos elegidos por "¿reintentar sirve de algo?"**
-  —`permission-denied`, `not-found`, `quota-exceeded`, `corrupt`, `io`—. `corrupt` **no** se
-  mete dentro de `io`: es la diferencia entre perder una nota y creer que las has perdido
-  todas. §6.5.
+  `StorageError` con **seis casos elegidos por "¿reintentar sirve de algo?"**
+  —`permission-denied`, `not-found`, `quota-exceeded`, `corrupt`, `stale`, `io`—. `corrupt`
+  **no** se mete dentro de `io`: es la diferencia entre perder una nota y creer que las has
+  perdido todas. Y `stale` tampoco: reintentar volvería a pisar. §6.5.
+- **La escritura es CONDICIONAL**: `Repository.put(entidad, esperada)` y `delete(id, esperada)`
+  dicen qué `revision` esperan encontrar —`null`, nada—; si lo guardado es otra cosa, sale
+  **`stale`** y no se escribe. El `writeBehind` pasa la de lo que tiene por guardado, y apunta
+  cada escritura hecha en el momento, para que un `io` a mitad de tanda no dé un `stale` falso
+  al reintentar. Ante `stale` se **detiene y avisa** con un botón **Recargar**; lo escrito en esa
+  pestaña desde el último guardado se pierde. *Decidido con el usuario el 2026-10-03 (opción c,
+  «avisar y recargar»)*, porque es la pieza que reutilizará la sincronización. Precio asumido:
+  una pestaña no se entera de lo que cambia la otra hasta que intenta guardar, y cada guardado
+  lee antes. §6.5.
 - **Un error es una entidad del dominio**, en `core/domain/errors/`; `Result.ts`, fuera. §6.5.
 - **`transaction` lleva el `Result` dentro y fuera.** Un `err` de `fn` sale **sin
   reempaquetar**, y una excepción de `fn` se traduce a `io`. §6.5.
@@ -459,7 +468,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 2 — Acciones, persistencia y memory. ✅ HECHA**, con **216** (§9.8).
 - **Fase 3 — Fichero local. ✅ HECHA**, con **314**, y la lista manual pasada el 2026-09-13
   (§9.9).
-- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 513 pruebas. Partida en dos (§9.10):
+- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 532 pruebas. Partida en dos (§9.10):
   - **Fase 4 · Contextos** — puntos 1–7 y 9 hechos. **El 8, la lista manual
     (`test/ui/VERIFICACION-MANUAL.md`), escrita y SIN PASAR entera**: hubo una revisión parcial
     que el usuario no confirma. No cerrada.
@@ -471,11 +480,9 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
     resultado, y contestar por escrito las tres preguntas en `TAREAS.md`.
 - **Fase 5 — Planes.** El editor de grafos. Se planifica cuando cierre la 4.
 
-**Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: la **escritura
-condicional** (dos pestañas; `revision` sabe detectarlo, nadie lo dispara), **si OPFS entra en
-juego**, **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
-cambie el destino. *(La escritura condicional está decidida —opción c, el 2026-10-03— y sin
-construir: falta elegir qué hace la app ante un conflicto.)*
+**Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
+juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
+cambie el destino.
 
 ## Comandos
 

@@ -87,6 +87,15 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
         elemento("p", `No se están guardando los cambios. ${describeStorageError(fallo)}`),
         elemento("p", "Lo que ves sigue aquí, pero se perderá al cerrar la página."),
       )
+      /* Otra pestaña cambió lo mismo: lo que hay en el almacén es lo bueno, y
+         recargar trae esa versión. Lo escrito aquí desde el último guardado se pierde. */
+      if (fallo.kind === "stale") {
+        const recargar: HTMLButtonElement = elemento("button", "Recargar")
+        recargar.type = "button"
+        recargar.className = "recargar"
+        recargar.addEventListener("click", (): void => window.location.reload())
+        aviso.append(recargar)
+      }
       aviso.hidden = false
     },
   }

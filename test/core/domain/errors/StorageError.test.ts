@@ -30,6 +30,8 @@ const merecePenaReintentar = (fallo: StorageError): boolean => {
       return false
     case "corrupt":
       return false
+    case "stale":
+      return false
     case "io":
       return true
     default: {
@@ -45,18 +47,19 @@ const TODOS: ReadonlyArray<StorageError> = [
   { kind: "not-found", path: "notes/compra.json" },
   { kind: "quota-exceeded" },
   { kind: "corrupt", path: "notes/compra.json", cause: new Error("JSON roto") },
+  { kind: "stale", id: "compra" },
   { kind: "io", cause: new Error("el disco tosió") },
 ]
 
-test("StorageError tiene CINCO casos y ninguno más", () => {
-  assert.equal(TODOS.length, 5)
+test("StorageError tiene SEIS casos y ninguno más", () => {
+  assert.equal(TODOS.length, 6)
   assert.deepEqual(
     TODOS.map((f) => f.kind),
-    ["permission-denied", "not-found", "quota-exceeded", "corrupt", "io"],
+    ["permission-denied", "not-found", "quota-exceeded", "corrupt", "stale", "io"],
   )
 })
 
-test("sólo `io` se reintenta: los otros cuatro no tienen arreglo por insistir", () => {
+test("sólo `io` se reintenta: los otros cinco no tienen arreglo por insistir", () => {
   const reintentables: ReadonlyArray<StorageError["kind"]> = TODOS.filter(
     merecePenaReintentar,
   ).map((f) => f.kind)
@@ -75,4 +78,9 @@ test("`corrupt` NO es `io`: perder una nota no es creer que las has perdido toda
 
   assert.equal(merecePenaReintentar(roto), false)
   assert.equal(roto.path, "notes/compra.json")
+})
+
+test("`stale` NO es `io`: reintentar a ciegas volvería a pisar lo de otra pestaña", (): void => {
+  const pisaria: StorageError = { kind: "stale", id: "compra" }
+  assert.equal(merecePenaReintentar(pisaria), false)
 })

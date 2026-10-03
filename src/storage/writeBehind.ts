@@ -67,10 +67,11 @@ const DEMORA_POR_DEFECTO_MS: number = 500
  * La línea que este paso 0 existe para poder escribir.
  *
  * `io` es "cualquier otra cosa" —un fallo transitorio del que no se sabe más—, y
- * ahí volver a intentarlo es exactamente lo correcto. Los otros cuatro casos
+ * ahí volver a intentarlo es exactamente lo correcto. Los otros cinco casos
  * describen situaciones que **no cambian solas**: el permiso seguirá revocado, la
- * carpeta seguirá sin existir, el disco seguirá lleno y el fichero seguirá
- * ilegible. Insistir sobre ellos no arregla nada y tapa el problema.
+ * carpeta seguirá sin existir, el disco seguirá lleno, el fichero seguirá
+ * ilegible y lo que cambió otra pestaña seguirá cambiado. Insistir sobre ellos no
+ * arregla nada y tapa el problema —en el último, además, pisaría—.
  */
 const esReintentable = (fallo: StorageError): boolean => fallo.kind === "io"
 
@@ -86,6 +87,12 @@ const avisar = (onError: OnError | undefined, fallo: StorageError): void => {
     /* El aviso no puede tumbar al escritor: lo que tenía que decir, ya lo dice flush. */
   }
 }
+
+/** El mismo mapa sin esa entidad. */
+const sin = <TId extends string, T>(mapa: Readonly<Record<TId, T>>, id: TId): Readonly<Record<TId, T>> =>
+  Object.fromEntries(
+    Object.entries<T>(mapa).filter(([clave]: [string, T]): boolean => clave !== id),
+  ) as Record<TId, T>
 
 const porSetTimeout: Schedule = (fn: () => void, ms: number): Cancel => {
   const id: ReturnType<typeof setTimeout> = setTimeout(fn, ms)
@@ -148,30 +155,42 @@ export const createWriteBehind = ({
     */
     const resultado: Result<void, StorageError> = await adapter.transaction<void>(
       async (): Promise<Result<void, StorageError>> => {
+        /* Cada escritura dice qué espera encontrar: la revisión de lo que se
+           tiene por guardado, o `null` si es nuevo. Si otra pestaña lo cambió
+           entretanto, sale `stale` y no se pisa. Y cada una que sale bien se
+           apunta YA en `escrito`: si la tanda se corta a medias y se reintenta,
+           lo ya escrito no se vuelve a escribir esperando la revisión vieja,
+           que daría un `stale` falso. */
         for (const n of cambios.notes.upserted) {
-          const r: Result<void, StorageError> = await adapter.notes.put(n)
+          const r: Result<void, StorageError> = await adapter.notes.put(n, escrito.notes[n.id]?.revision ?? null)
           if (!r.ok) return r
+          escrito = { ...escrito, notes: { ...escrito.notes, [n.id]: n } }
         }
         for (const p of cambios.plans.upserted) {
-          const r: Result<void, StorageError> = await adapter.plans.put(p)
+          const r: Result<void, StorageError> = await adapter.plans.put(p, escrito.plans[p.id]?.revision ?? null)
           if (!r.ok) return r
+          escrito = { ...escrito, plans: { ...escrito.plans, [p.id]: p } }
         }
         for (const c of cambios.contexts.upserted) {
-          const r: Result<void, StorageError> = await adapter.contexts.put(c)
+          const r: Result<void, StorageError> = await adapter.contexts.put(c, escrito.contexts[c.id]?.revision ?? null)
           if (!r.ok) return r
+          escrito = { ...escrito, contexts: { ...escrito.contexts, [c.id]: c } }
         }
 
         for (const id of cambios.notes.deleted) {
-          const r: Result<void, StorageError> = await adapter.notes.delete(id)
+          const r: Result<void, StorageError> = await adapter.notes.delete(id, escrito.notes[id]?.revision ?? null)
           if (!r.ok) return r
+          escrito = { ...escrito, notes: sin(escrito.notes, id) }
         }
         for (const id of cambios.plans.deleted) {
-          const r: Result<void, StorageError> = await adapter.plans.delete(id)
+          const r: Result<void, StorageError> = await adapter.plans.delete(id, escrito.plans[id]?.revision ?? null)
           if (!r.ok) return r
+          escrito = { ...escrito, plans: sin(escrito.plans, id) }
         }
         for (const id of cambios.contexts.deleted) {
-          const r: Result<void, StorageError> = await adapter.contexts.delete(id)
+          const r: Result<void, StorageError> = await adapter.contexts.delete(id, escrito.contexts[id]?.revision ?? null)
           if (!r.ok) return r
+          escrito = { ...escrito, contexts: sin(escrito.contexts, id) }
         }
 
         return ok(undefined)
@@ -179,10 +198,10 @@ export const createWriteBehind = ({
     )
 
     if (!resultado.ok) {
-      /* `escrito` NO se actualiza, así que el disco se queda oficialmente
-         atrasado y el siguiente intento vuelve a traer estos cambios. Se
-         restaura el pendiente sólo si nadie ha puesto otro más nuevo mientras
-         tanto: si lo hay, ya incluye lo de éste. */
+      /* `escrito` sólo tiene lo que llegó a escribirse, así que el siguiente
+         intento trae lo que faltó, y nada más. Se restaura el pendiente sólo si
+         nadie ha puesto otro más nuevo mientras tanto: si lo hay, ya incluye
+         lo de éste. */
       pendiente = pendiente ?? objetivo
 
       if (!esReintentable(resultado.error)) {

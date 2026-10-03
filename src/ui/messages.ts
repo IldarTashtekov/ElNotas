@@ -17,6 +17,8 @@ export const describeStorageError = (fallo: StorageError): string => {
       return "No se encuentra dónde se guardan las notas."
     case "quota-exceeded":
       return "No queda sitio para guardar más."
+    case "stale":
+      return "Otra pestaña ha cambiado lo mismo que esta. Para no pisarlo, aquí se ha dejado de guardar."
     case "io":
       return "Algo ha fallado al leer o guardar."
   }

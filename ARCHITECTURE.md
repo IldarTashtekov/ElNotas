@@ -735,7 +735,7 @@ está en §6.3, y ese fichero no ha cambiado desde que se midió.
 | **`platform/web/`** | `SystemClock.ts` · `CryptoIdGenerator.ts` · `boot.ts` (la composición) · `LocalStorageWindows.ts` (la lista de ventanas) · `main.ts` (la entrada del navegador). Detalle en §7.5 |
 | **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` |
 | **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` · `NoteView.ts` · `NoteEditor.ts` · `editableTitle.ts` · `dom.ts` |
-| **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 17 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
+| **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 22 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
 | **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · `test/ui/VERIFICACION-MANUAL.md` y `test/ui/VERIFICACION-MANUAL-EDITOR.md`, **escritas y sin pasar**. No son TypeScript y no entran en `npm run check` |
 
 Las pruebas son más líneas que el código que vigilan, y eso es lo esperado en un repo donde
@@ -1399,7 +1399,7 @@ cada implementación. Un adaptador está terminado **cuando pasa el contrato**, 
 comporta distinto, el contrato lo cantea.
 
 **Hoy corre TRES veces en cada `npm test`**, no dos, que es lo que anticipaba el punto 7 de
-§9.9. Son **17 casos**, así que 51 de las pruebas salen de aquí:
+§9.9. Son **22 casos** —17 hasta la escritura condicional del 2026-10-03—, así que 66 de las pruebas salen de aquí:
 
 | Pasada | Qué monta | Qué añade sobre la anterior |
 |---|---|---|
@@ -1623,6 +1623,7 @@ Aquí está la razón de que sean casos separados y no un error genérico. La pr
 | `not-found` — la carpeta o el fichero han desaparecido | **no** | avisa de que la carpeta ya no existe y ofrece elegir otra |
 | `quota-exceeded` — disco lleno o cuota excedida | **no** | deja de intentarlo y avisa de que hay que hacer hueco |
 | `corrupt` — el contenido de un fichero no se entiende | **no** | **aísla esa entidad y sigue con el resto**, diciendo cuál |
+| `stale` — lo guardado no es lo que se leyó: otra pestaña lo cambió *(2026-10-03)* | **no** | **no pisa**: el escritor se detiene y avisa con un botón Recargar |
 | `io` — cualquier otra cosa | **sí** | reintenta en silencio; si persiste, avisa |
 
 ```ts
@@ -1815,17 +1816,37 @@ Dos razones, las dos de coste, y las dos se confirmaron al hacerlo:
   habría dos, y el contrato es precisamente lo que ambos comparten. A partir de aquí
   `FileStorageAdapter` la reusa **sin tocarla**.
 
-#### Lo que queda abierto: la escritura condicional
+#### La escritura condicional: dos pestañas no se pisan *(construida el 2026-10-03)*
 
-Falta un caso que **va a hacer falta y hoy no se puede escribir**: dos pestañas abiertas sobre
-la misma nota, y la segunda pisando lo que guardó la primera. El modelo ya tiene la pieza para
-detectarlo —`revision` existe justo para eso (§5.3)— pero el mecanismo de «escribe sólo si
-nadie lo ha tocado» **no está construido**: `Repository.put` no recibe revisión.
+**El problema:** cada pestaña lee las notas al abrirse y trabaja con su copia. Si A guarda y luego
+B guarda la misma nota, B pisaba lo de A sin que nadie se enterara. `revision` existía justo para
+detectarlo (§5.3), pero nadie lo usaba.
 
-Añadir hoy un caso de error para eso sería inventar un aviso que nadie puede disparar, y choca
-con la regla del proyecto de no construir lo que no tiene consumidor. Queda anotado en
-`TAREAS.md` → *Sin decidir* como **lo primero que se añadirá a `StorageError`** el día que el
-mecanismo exista.
+**Lo construido (opción c, decidida con el usuario):**
+
+- **`Repository.put(entidad, esperada)` y `delete(id, esperada)`.** `esperada` es la `revision`
+  que se espera encontrar guardada, o `null` si se espera que no haya nada. Si lo guardado no
+  coincide, sale **`stale`** con el id y **no se escribe**. Borrar algo que ya no está es `ok`
+  se esperara lo que se esperara: si otro lo borró, queríais lo mismo. Lo exige el contrato, con
+  cinco casos que corren contra los tres montajes.
+- **El adaptador de fichero lee antes de escribir.** No es atómico —entre leer y escribir cabe
+  otra escritura— y sobre ficheros sueltos no se puede cerrar ese hueco; es pequeño. **Precio:**
+  cada guardado lee una vez más; en `localStorage` no se nota, con la carpeta habrá que medirlo.
+- **El `writeBehind` pasa como `esperada` la revisión de lo que tiene por guardado** —que, por
+  construcción, es lo que hay en el disco— y **apunta cada escritura hecha en el momento**, no al
+  final de la tanda. Sin eso, una tanda cortada por un `io` a mitad, al reintentarse, volvería a
+  escribir lo ya escrito esperando la revisión vieja, y daría un `stale` falso.
+- **Ante `stale`, el escritor se detiene y avisa** como con cualquier fallo que no sea `io`, y el
+  aviso lleva un botón **Recargar**: lo guardado es lo bueno, y recargar lo trae. Lo escrito en
+  esa pestaña desde su último guardado **se pierde** —es el precio de «avisar y recargar», la
+  opción más sencilla; la descartada, *guardar como copia en conflicto*, no perdía nada—.
+
+**Descartadas:** **a**, una sola pestaña activa con Web Locks —muy poco código, pero no sirve
+para la sincronización—; **b**, recargar al enterarse por el evento `storage` —una pestaña puede
+pisar a la otra si escriben a la vez—; **d**, b + c, la más completa y la más trabajosa.
+**Precio asumido de la c sola:** una pestaña no se entera de lo que cambia la otra hasta que
+intenta guardar; mientras tanto enseña lo viejo, pero **nunca pisa**. Es la pieza que reutilizará
+la sincronización entre dispositivos.
 
 ---
 
@@ -3534,8 +3555,7 @@ Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas
   2026-09-27— que **la lista de ventanas no viaja** con las notas (§7.4).
 - **El botón «reintentar» del aviso de `onError`.** Aparcado para cuando el destino sea la carpeta
   del usuario: ahí reanudar tiene sentido, porque es volver a pedir la carpeta.
-- **La escritura condicional** (§6.5). Sigue sin poder dispararla nadie hasta que haya dos
-  pestañas de verdad.
+- ~~**La escritura condicional**~~ — construida el 2026-10-03 (§6.5).
 - **Los shells de desktop y móvil, y el sync entre dispositivos.**
 
 **El bundler, cerrado el 2026-09-27: de entrada no se instala**, y la fase entera se hizo sin él.

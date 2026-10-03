@@ -22,6 +22,7 @@ import type {
   PlanId,
   Repository,
   Result,
+  Revision,
   StorageAdapter,
   StorageError,
 } from "#core/index"
@@ -264,12 +265,36 @@ const avisar = (onCorrupt: OnCorrupt, fallo: StorageError): Result<void, Storage
  * adaptador de memoria. Lo único que necesita saber de la entidad es que lleva
  * su `id` dentro.
  */
-const createFileRepository = <T extends { readonly id: TId }, TId extends string>(
+const createFileRepository = <
+  T extends { readonly id: TId; readonly revision: Revision },
+  TId extends string,
+>(
   blobs: BlobStore,
   carpeta: string,
   valida: Validador,
   onCorrupt: OnCorrupt | undefined,
-): Repository<T, TId> => ({
+): Repository<T, TId> => {
+  /**
+   * Lee lo que hay en `camino` y dice si es lo esperado: lo que había —o `null`—
+   * si lo es, y `stale` si no. Se lee antes de cada escritura, y no es atómico:
+   * entre leer y escribir cabe otra escritura. El hueco es pequeño, y sobre
+   * ficheros sueltos no se puede cerrar.
+   */
+  const comprobar = async (
+    camino: string,
+    id: TId,
+    expected: Revision | null,
+  ): Promise<Result<T | null, StorageError>> => {
+    const actual: Result<T | null, StorageError> = await leerEntidad<T>(blobs, camino, valida)
+    if (!actual.ok) return actual
+    if ((actual.value?.revision ?? null) !== expected) {
+      const choque: StorageError = { kind: "stale", id }
+      return err(choque)
+    }
+    return actual
+  }
+
+  return {
   get: async (id: TId): Promise<Result<T | null, StorageError>> => {
     const destino: Result<string, StorageError> = caminoDe(carpeta, id)
     if (!destino.ok) return destino
@@ -319,9 +344,12 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
     return ok(entidades)
   },
 
-  put: async (entity: T): Promise<Result<void, StorageError>> => {
+  put: async (entity: T, expected: Revision | null): Promise<Result<void, StorageError>> => {
     const destino: Result<string, StorageError> = caminoDe(carpeta, entity.id)
     if (!destino.ok) return destino
+
+    const esperado: Result<T | null, StorageError> = await comprobar(destino.value, entity.id, expected)
+    if (!esperado.ok) return esperado
 
     const bytes: Result<Uint8Array, StorageError> = aBytes(entity)
     if (!bytes.ok) return bytes
@@ -332,15 +360,24 @@ const createFileRepository = <T extends { readonly id: TId }, TId extends string
     return blobs.write(destino.value, bytes.value)
   },
 
-  /* Borrar lo que no está no es un error, y aquí no hay nada que hacer para
-     conseguirlo: el propio `BlobStore` promete lo mismo en su puerto. */
-  delete: async (id: TId): Promise<Result<void, StorageError>> => {
+  /* Borrar lo que no está no es un error, se esperara lo que se esperara: si no
+     hay nada, no se mira. Y el propio `BlobStore` promete lo mismo en su puerto. */
+  delete: async (id: TId, expected: Revision | null): Promise<Result<void, StorageError>> => {
     const destino: Result<string, StorageError> = caminoDe(carpeta, id)
     if (!destino.ok) return destino
 
+    const actual: Result<T | null, StorageError> = await leerEntidad<T>(blobs, destino.value, valida)
+    if (!actual.ok) return actual
+    if (actual.value === null) return ok(undefined)
+    if (actual.value.revision !== expected) {
+      const choque: StorageError = { kind: "stale", id }
+      return err(choque)
+    }
+
     return blobs.delete(destino.value)
   },
-})
+  }
+}
 
 /* ═════════════════════════════ El adaptador ═══════════════════════════════ */
 

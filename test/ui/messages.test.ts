@@ -22,6 +22,7 @@ test("cada fallo de almacén tiene una frase distinta", (): void => {
     { kind: "permission-denied" },
     { kind: "not-found", path: "notes/" },
     { kind: "quota-exceeded" },
+    { kind: "stale", id: "compra" },
     { kind: "io", cause: "x" },
   ]
   const frases: ReadonlyArray<string> = fallos.map(describeStorageError)

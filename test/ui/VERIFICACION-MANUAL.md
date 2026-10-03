@@ -192,6 +192,14 @@ el navegador **resalta en color los nodos que cambian**.
   y con el **atrás** (en Android, el del sistema), y en ningún caso se sale de la app.
 - **I6.** Durante el modo selección, el + se apaga como ◀ ▶ y ⚙.
 
+## J. Dos pestañas no se pisan *(sólo escritorio)*
+
+- **J1.** Abrir la app en **dos pestañas**, A y B. En A, renombrar una nota a «Desde A» y esperar
+  un segundo. En B —que no se ha enterado—, renombrar la misma nota a «Desde B».
+- **J2.** En B sale arriba, en rojo, **«No se están guardando los cambios. Otra pestaña ha
+  cambiado lo mismo que esta…»** con un botón **Recargar**. En A, la nota sigue «Desde A».
+- **J3.** **Recargar** en B: la nota dice «Desde A» y el aviso desaparece.
+
 ## H. No se pierde nada al salir
 
 - **H1.** Crear una nota y **cerrar la pestaña enseguida**, sin esperar. Al volver a abrir, está.
@@ -225,6 +233,7 @@ qué.
 | G1–G2 | |
 | H1 | |
 | I1–I6 | |
+| J1–J3 | |
 
 ### Pasada 2 — móvil
 

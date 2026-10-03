@@ -232,7 +232,7 @@ test("cambiar una nota no reescribe el resto del estado", async () => {
 
 test("borrar una entidad llega al almacén", async () => {
   const s = montar(conNota(nota("Compra")))
-  await s.adapter.notes.put(nota("Compra")) // que exista de verdad en el almacén
+  await s.adapter.notes.put(nota("Compra"), null) // que exista de verdad en el almacén
 
   s.onState(VACIO)
   await s.flush()
@@ -297,10 +297,10 @@ const fallandoAlEscribir = (
       ...base,
       notes: {
         ...base.notes,
-        put: async (n) => {
+        put: async (n, esperada) => {
           intentos += 1
           const esteFallo: StorageError | null = fallo()
-          return esteFallo === null ? base.notes.put(n) : err(esteFallo)
+          return esteFallo === null ? base.notes.put(n, esperada) : err(esteFallo)
         },
       },
     },
@@ -337,9 +337,9 @@ test("un fallo de io NO se da por guardado, y el siguiente intento lo reescribe"
 })
 
 /**
- * Los otros cuatro casos de la taxonomía, enteros y uno por uno.
+ * Los otros cinco casos de la taxonomía, enteros y uno por uno.
  *
- * Están los cuatro y no un representante porque la taxonomía entera **es** la
+ * Están los cinco y no un representante porque la taxonomía entera **es** la
  * especificación: mover un `kind` de lado —que `corrupt` pase por reintentable,
  * pongamos— tiene que tumbar una prueba, y con un solo ejemplo no la tumbaría.
  */
@@ -348,6 +348,7 @@ const NO_REINTENTABLES: ReadonlyArray<StorageError> = [
   { kind: "not-found", path: "notes/compra.json" },
   { kind: "quota-exceeded" },
   { kind: "corrupt", path: "notes/compra.json", cause: new Error("JSON a medias") },
+  { kind: "stale", id: "compra" },
 ]
 
 for (const noReintentable of NO_REINTENTABLES) {
@@ -486,4 +487,80 @@ test("un onError que lanza no tumba al escritor: el fallo sigue saliendo por flu
   wb.onState(conNota(nota("Compra")))
 
   assert.strictEqual(errorDe(await wb.flush()), sinPermiso)
+})
+
+/* ──────────────── La escritura condicional: dos pestañas ──────────────── */
+
+/** Un almacén compartido por dos escritores, como dos pestañas sobre el mismo `localStorage`. */
+const dosPestanas = (): {
+  readonly almacen: StorageAdapter
+  readonly crear: (onError?: (fallo: StorageError) => void) => ReturnType<typeof createWriteBehind>
+} => {
+  const almacen: StorageAdapter = createMemoryStorageAdapter()
+  return {
+    almacen,
+    crear: (onError?: (fallo: StorageError) => void): ReturnType<typeof createWriteBehind> =>
+      createWriteBehind({
+        adapter: almacen,
+        initial: conNota(nota("Compra")),
+        schedule: (): (() => void) => (): void => undefined,
+        onError,
+      }),
+  }
+}
+
+test("DOS PESTAÑAS: la segunda en guardar NO pisa a la primera, se detiene y avisa", async (): Promise<void> => {
+  const { almacen, crear } = dosPestanas()
+  const sembrada: Result<void, StorageError> = await almacen.notes.put(nota("Compra"), null)
+  if (!sembrada.ok) assert.fail("la nota inicial tenía que guardarse")
+  let avisos: ReadonlyArray<StorageError> = []
+  const a = crear()
+  const b = crear((fallo: StorageError): void => {
+    avisos = [...avisos, fallo]
+  })
+
+  /* Las dos partieron de la misma Compra; A guarda primero. */
+  a.onState(conNota(nota("De la pestaña A")))
+  valorDe(await a.flush())
+  b.onState(conNota(nota("De la pestaña B")))
+
+  assert.deepEqual(errorDe(await b.flush()), { kind: "stale", id: ID_COMPRA })
+  assert.equal(valorDe(await almacen.notes.get(ID_COMPRA))?.name, "De la pestaña A")
+  assert.deepEqual(avisos, [{ kind: "stale", id: ID_COMPRA }])
+})
+
+test("una tanda cortada por io a mitad: al reintentar, lo ya escrito NO da un stale falso", async (): Promise<void> => {
+  /* Dos notas en una tanda; la segunda falla una vez con io. Si el escritor no
+     apuntara que la primera ya está en disco, al reintentar la volvería a
+     escribir esperando su revisión vieja, y el almacén diría `stale`. */
+  const base: StorageAdapter = createMemoryStorageAdapter()
+  const OTRA = noteId("otra")
+  let fallar: boolean = true
+  const adapter: StorageAdapter = {
+    ...base,
+    notes: {
+      ...base.notes,
+      put: async (n: Note, esperada: ReturnType<typeof revision> | null): Promise<Result<void, StorageError>> => {
+        if (n.id === OTRA && fallar) {
+          fallar = false
+          const tos: StorageError = { kind: "io", cause: new Error("el disco tosió") }
+          return err(tos)
+        }
+        return base.notes.put(n, esperada)
+      },
+    },
+  }
+  const wb = createWriteBehind({
+    adapter,
+    initial: VACIO,
+    schedule: (): (() => void) => (): void => undefined,
+  })
+  const otra: Note = { ...nota("Otra"), id: OTRA }
+
+  wb.onState({ ...VACIO, notes: { [ID_COMPRA]: nota("Compra"), [OTRA]: otra } })
+  assert.equal(errorDe(await wb.flush()).kind, "io")
+  valorDe(await wb.flush())
+
+  assert.equal(valorDe(await base.notes.get(ID_COMPRA))?.name, "Compra")
+  assert.equal(valorDe(await base.notes.get(OTRA))?.name, "Otra")
 })

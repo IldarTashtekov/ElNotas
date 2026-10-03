@@ -20,6 +20,7 @@ import type {
   Plan,
   PlanId,
   Repository,
+  Revision,
   StorageAdapter,
   Result,
   StorageError,
@@ -32,10 +33,14 @@ import { err, ok } from "#core/index"
  * pide `Repository.put`.
  */
 const createMemoryRepository = <
-  T extends { readonly id: TId },
+  T extends { readonly id: TId; readonly revision: Revision },
   TId extends string,
 >(): Repository<T, TId> => {
   const guardadas: Map<TId, T> = new Map<TId, T>()
+
+  /** `stale` si lo guardado no es lo que se esperaba; `null` si se puede seguir. */
+  const comprobar = (id: TId, expected: Revision | null): StorageError | null =>
+    (guardadas.get(id)?.revision ?? null) === expected ? null : { kind: "stale", id }
 
   return {
     /* `ok(null)` y no un error: preguntar por algo que no está guardado es una
@@ -47,13 +52,17 @@ const createMemoryRepository = <
     // Map, quien lo recibe podría manosear el almacén sin pasar por `put`.
     getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> =>
       ok([...guardadas.values()]),
-    put: async (entity: T): Promise<Result<void, StorageError>> => {
+    put: async (entity: T, expected: Revision | null): Promise<Result<void, StorageError>> => {
+      const choque: StorageError | null = comprobar(entity.id, expected)
+      if (choque !== null) return err(choque)
       guardadas.set(entity.id, entity)
       return ok(undefined)
     },
-    // `Map.delete` sobre una clave que no está devuelve false y no lanza, que es
-    // exactamente lo que el puerto promete: borrar lo que no existe no es error.
-    delete: async (id: TId): Promise<Result<void, StorageError>> => {
+    // Borrar lo que no está no es error, se esperara lo que se esperara.
+    delete: async (id: TId, expected: Revision | null): Promise<Result<void, StorageError>> => {
+      if (!guardadas.has(id)) return ok(undefined)
+      const choque: StorageError | null = comprobar(id, expected)
+      if (choque !== null) return err(choque)
       guardadas.delete(id)
       return ok(undefined)
     },

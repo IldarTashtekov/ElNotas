@@ -66,16 +66,16 @@ const SIN_PERMISO: StorageError = { kind: "permission-denied" }
 
 test("FileStorageAdapter: una nota se guarda en notes/<id>.json", async () => {
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
 
   assert.deepEqual(blobs.caminos(), ["notes/compra.json"])
 })
 
 test("FileStorageAdapter: cada clase de entidad va a su carpeta", async () => {
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
-  await s.plans.put(MUDANZA)
-  await s.contexts.put(CASA)
+  await s.notes.put(COMPRA, null)
+  await s.plans.put(MUDANZA, null)
+  await s.contexts.put(CASA, null)
 
   assert.deepEqual([...blobs.caminos()].sort(), [
     "contexts/casa.json",
@@ -86,7 +86,7 @@ test("FileStorageAdapter: cada clase de entidad va a su carpeta", async () => {
 
 test("FileStorageAdapter: el JSON va indentado, que es para lo que se parte por entidad", async () => {
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
 
   const texto: string | null = blobs.leerTexto("notes/compra.json")
   if (texto === null) throw new Error("no se escribió el fichero")
@@ -99,7 +99,7 @@ test("FileStorageAdapter: el JSON va indentado, que es para lo que se parte por 
 
 test("FileStorageAdapter: un id con barra dentro NO escapa de su carpeta", async () => {
   const { blobs, s } = montar()
-  await s.notes.put({ ...COMPRA, id: noteId("../secretos/x") })
+  await s.notes.put({ ...COMPRA, id: noteId("../secretos/x") }, null)
 
   const caminos: ReadonlyArray<string> = blobs.caminos()
   assert.equal(caminos.length, 1)
@@ -140,7 +140,7 @@ test("FileStorageAdapter: un id que no se puede codificar sale por Result, no la
 test("FileStorageAdapter: put con un id no codificable devuelve corrupt y NO escribe", async () => {
   const { blobs, s } = montar()
 
-  const escrito = await s.notes.put({ ...COMPRA, id: noteId(ID_IMPOSIBLE) })
+  const escrito = await s.notes.put({ ...COMPRA, id: noteId(ID_IMPOSIBLE) }, null)
   assert.equal(escrito.ok, false)
   assert.equal(errorDe(escrito).kind, "corrupt")
   // Lo que de verdad importa: no se quedó medio escrito por ahí.
@@ -150,15 +150,15 @@ test("FileStorageAdapter: put con un id no codificable devuelve corrupt y NO esc
 test("FileStorageAdapter: delete con un id no codificable devuelve corrupt", async () => {
   const { s } = montar()
 
-  const borrado = await s.notes.delete(noteId(ID_IMPOSIBLE))
+  const borrado = await s.notes.delete(noteId(ID_IMPOSIBLE), null)
   assert.equal(borrado.ok, false)
   assert.equal(errorDe(borrado).kind, "corrupt")
 })
 
 test("FileStorageAdapter: delete borra el fichero, no lo deja vacío", async () => {
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
-  await s.notes.delete(COMPRA.id)
+  await s.notes.put(COMPRA, null)
+  await s.notes.delete(COMPRA.id, COMPRA.revision)
 
   assert.deepEqual(blobs.caminos(), [])
 })
@@ -191,14 +191,16 @@ test("FileStorageAdapter: put propaga el err de write intacto", async () => {
   const { blobs, s } = montar()
   blobs.fallarEn("write", SIN_PERMISO)
 
-  assert.strictEqual(errorDe(await s.notes.put(COMPRA)), SIN_PERMISO)
+  assert.strictEqual(errorDe(await s.notes.put(COMPRA, null)), SIN_PERMISO)
 })
 
 test("FileStorageAdapter: delete propaga el err de delete intacto", async () => {
   const { blobs, s } = montar()
+  /* Que esté: sin nada guardado, borrar no llega a tocar el BlobStore. */
+  await s.notes.put(COMPRA, null)
   blobs.fallarEn("delete", SIN_PERMISO)
 
-  assert.strictEqual(errorDe(await s.notes.delete(COMPRA.id)), SIN_PERMISO)
+  assert.strictEqual(errorDe(await s.notes.delete(COMPRA.id, COMPRA.revision)), SIN_PERMISO)
 })
 
 test("FileStorageAdapter: getAll propaga el err de list intacto", async () => {
@@ -210,7 +212,7 @@ test("FileStorageAdapter: getAll propaga el err de list intacto", async () => {
 
 test("FileStorageAdapter: getAll propaga el err del read de una entidad", async () => {
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   blobs.fallarEn("read", SIN_PERMISO)
 
   assert.strictEqual(errorDe(await s.notes.getAll()), SIN_PERMISO)
@@ -239,7 +241,7 @@ test("FileStorageAdapter: un quota-exceeded tampoco se convierte en io", async (
   const discoLleno: StorageError = { kind: "quota-exceeded" }
   blobs.fallarEn("write", discoLleno)
 
-  assert.strictEqual(errorDe(await s.notes.put(COMPRA)), discoLleno)
+  assert.strictEqual(errorDe(await s.notes.put(COMPRA, null)), discoLleno)
 })
 
 /* ════════════ 3. Lo que este adaptador SÍ inventa: corrupt ═══════════════ */
@@ -309,7 +311,7 @@ test("FileStorageAdapter: ⚠️ SIN onCorrupt, un fichero corrupto tumba el get
   /* Sin nadie a quien avisar, saltárselo sería hacerlo en silencio, y eso es
      peor que no arrancar. Con `onCorrupt`, las pruebas de abajo. */
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   blobs.escribirTexto("notes/rota.json", "no")
 
   const fallo: StorageError = errorDe(await s.notes.getAll())
@@ -348,7 +350,7 @@ test("FileStorageAdapter: el ok(null) del read NO se convierte en not-found", as
 
 test("FileStorageAdapter: un fichero que desaparece entre el list y el read no rompe getAll", async () => {
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   blobs.fantasma("notes/borrada-en-medio.json")
 
   assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
@@ -359,7 +361,7 @@ test("FileStorageAdapter: un fichero ajeno en la carpeta no rompe getAll", async
      `.DS_Store` convirtiera el arranque en un `corrupt`, la app sería
      inservible en medio equipo. */
   const { blobs, s } = montar()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   blobs.escribirTexto("notes/.DS_Store", "basura del sistema")
   blobs.escribirTexto("notes/sub/anidada.json", "{\"id\":\"x\"}")
 
@@ -385,7 +387,7 @@ const montarConAviso = (): MontajeConAviso => {
 
 test("FileStorageAdapter: con onCorrupt, getAll se salta el ilegible y avisa de cuál", async (): Promise<void> => {
   const { blobs, s, avisos } = montarConAviso()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   blobs.escribirTexto("notes/rota.json", "no")
 
   const notas: ReadonlyArray<Note> = valorDe(await s.notes.getAll())
@@ -399,7 +401,7 @@ test("FileStorageAdapter: con onCorrupt, getAll se salta el ilegible y avisa de 
 
 test("FileStorageAdapter: con onCorrupt, también se salta un corrupt que nace en el BlobStore", async (): Promise<void> => {
   const { blobs, s, avisos } = montarConAviso()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   const SOBRE_ROTO: StorageError = { kind: "corrupt", path: "notes/compra.json", cause: "base64" }
   blobs.fallarEn("read", SOBRE_ROTO)
 
@@ -415,7 +417,7 @@ test("FileStorageAdapter: con onCorrupt, un fallo que NO es corrupt sigue cortan
   /* Un permiso denegado no dice nada de ese fichero: saltarlo haría creer que
      no existe. */
   const { blobs, s, avisos } = montarConAviso()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   blobs.fallarEn("read", SIN_PERMISO)
 
   assert.strictEqual(errorDe(await s.notes.getAll()), SIN_PERMISO)
@@ -517,7 +519,7 @@ for (const [caso, rota, motivo] of NOTAS_SIN_FORMA) {
 
 test("FileStorageAdapter: con onCorrupt, una nota sin forma se salta y se avisa, como una ilegible", async (): Promise<void> => {
   const { blobs, s, avisos } = montarConAviso()
-  await s.notes.put(COMPRA)
+  await s.notes.put(COMPRA, null)
   escribirJson(blobs, "notes/rota.json", { ...NOTA_BIEN, id: "rota", content: "hola" })
 
   const notas: ReadonlyArray<Note> = valorDe(await s.notes.getAll())
@@ -563,6 +565,6 @@ test("FileStorageAdapter: lo que escribe put vuelve a leerse: el validador acept
       }),
     ],
   }
-  valorDe(await s.notes.put(conTodo))
+  valorDe(await s.notes.put(conTodo, null))
   assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), conTodo)
 })
