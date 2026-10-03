@@ -7,11 +7,12 @@ framework y sin dependencias de runtime. El código vive en `src/` —`core/` (e
 `storage/` (la persistencia), `platform/` (la composición) y `ui/`— y las pruebas aparte, en
 `test/`, en un árbol que calca el de `src/`.
 
-**Estado:** fases 1, 2 y 3 terminadas. **La Fase 4, la UI web, tiene el código hecho y está sin
-cerrar**: ventanas, contextos, configuración y el editor con casillas anidadas funcionan, y
-faltan pasar a mano sus dos listas de verificación (`test/ui/VERIFICACION-MANUAL.md` y
+**Estado:** fases 1, 2 y 3 terminadas. **La Fase 4, la UI web, está cerrada con deuda**:
+ventanas, contextos, configuración y el editor con casillas anidadas funcionan, y quedan
+pendientes pasar a mano sus dos listas de verificación (`test/ui/VERIFICACION-MANUAL.md` y
 `test/ui/VERIFICACION-MANUAL-EDITOR.md`) y usarla unos días. Hoy guarda en el `localStorage` del
-navegador. Los Diagramas son la Fase 5.
+navegador. **La Fase 5, los Diagramas** —un lienzo libre con notas y relaciones—, está planificada
+y sin empezar.
 
 La cuenta de arriba envejece sola: lo que manda es `npm run check` y `CLAUDE.md`.
 

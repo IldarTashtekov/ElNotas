@@ -11,8 +11,8 @@ puerto, copia por camino—, está explicado ahí con ejemplos de notas y casill
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy
 > lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
 > usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
-> (§9.10). Siguen siendo sólo diseño los Diagramas (Fase 5), la carpeta del usuario como destino y
-> la semántica multi-backend. Cada sección dice si lo que describe existe o está planificado.
+> (§9.10). Siguen siendo sólo diseño los Diagramas —la Fase 5, **planificada el 2026-10-03 y sin
+> una línea de código** (§9.11)—, la carpeta del usuario como destino y la semántica multi-backend. Cada sección dice si lo que describe existe o está planificado.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
 **Índice**
@@ -688,20 +688,28 @@ Tres entidades, más nociones de agrupación:
 
 - **Note** — lista de contenido heterogéneo (`Text` | `CheckBox`). Los checkboxes son
   **recursivos** (tienen hijos), para TODOs anidados.
-- **Diagrama** — un **grafo** de nodos (`SimpleNode` | `NoteNode`) con posición X/Y y aristas
-  por ID, para esquematizar tareas. Un `NoteNode` es el puente: al pincharlo entras en una
-  Nota. En el código, `Diagram` (público, en inglés). **Se llamó *Plan* hasta el
-  2026-10-03**, y se renombró con el usuario antes de planificar la Fase 5, por dos motivos:
-  «plan» chocaba con *el plan por fases* y con *planificar*, y daba por hecho para qué sirve,
-  que es justo lo que está sin decidir; «diagrama» nombra la forma, no el uso. Se hizo
-  entonces porque salía gratis: no había manera de crear uno, así que no había nada guardado
-  con el nombre viejo ni hizo falta migración.
+- **Diagrama** — un **lienzo libre** (como Miro o Excalidraw) con **nodos** que el usuario coloca
+  arrastrando y **relaciones** entre ellos. Los nodos son pósits iguales por fuera y de dos
+  clases por dentro: de texto (`SimpleNode`) y nodo-nota (`NoteNode`), que es el puente: al
+  tocarlo entras en una Nota, y enseña su título **en directo**, sin guardar copia. Una relación
+  (`DiagramRelation`) une dos nodos, con o sin flecha y con un texto opcional, y entre dos nodos
+  puede haber **cualquier número** (multigrafo). En el código, `Diagram` (público, en inglés).
+  ⚠️ **Hoy en el repo sólo están los tipos, y con la forma VIEJA** —aristas en `parents` +
+  `children` de cada nodo, `nodes` como array—; **el modelo nuevo y todo lo demás está planificado
+  y sin construir** (§9.11, decidido con el usuario el 2026-10-03).
+
+  **Se llamó *Plan* hasta el 2026-10-03**, y se renombró con el usuario antes de planificar la
+  Fase 5, por dos motivos: «plan» chocaba con *el plan por fases* y con *planificar*, y daba por
+  hecho para qué sirve; «diagrama» nombra la forma, no el uso. Se hizo entonces porque salía
+  gratis: no había manera de crear uno, así que no había nada guardado con el nombre viejo ni
+  hizo falta migración.
 - **Context** — agrupa notas y diagramas, y decide su `defaultView` (la lista, o entrar directo
   a una nota o diagrama concreto). ⚠️ **`defaultView` se queda sin uso en la Fase 4**: «abrir
   directamente una nota» lo hace ahora una ventana de tipo nota (§7.4). Sigue en el modelo, con
   su acción `set-default-view`, porque el dominio está cerrado; se revisa con las entidades
   «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
-- **ContextoGeneral** — **vista derivada** de todas las notas (y de los diagramas, cuando los haya).
+- **ContextoGeneral** — **vista derivada** de todas las notas (y, desde la Fase 5, de los
+  diagramas, mezclados con ellas: planificado, §9.11).
   No es una entidad y no se persiste: guardarlo sería duplicar datos que se pueden calcular. Ahí
   aparecen las notas **huérfanas**, las que no están en ningún contexto. Como no es un contexto,
   se comporta distinto en tres cosas (§7.4): su título **no se renombra**, su papelera **borra
@@ -2178,7 +2186,8 @@ se elige **al nacer**: con el interruptor, y con el disparador de anidar si est�
 
 ### 7.4 La navegación: cuatro vistas y una lista de ventanas
 
-**Construido en la Fase 4**, salvo la vista diagrama (Fase 5). Cerrado con el usuario el
+**Construido en la Fase 4**, salvo la vista diagrama (Fase 5: lo que cambia aquí con ella está
+**planificado y sin construir**, en el último apartado de esta sección). Cerrado con el usuario el
 **2026-09-27** a partir de su boceto en PDF, y precisado al construirlo el **2026-09-29**. Todo lo
 de aquí es **web**, incluido el navegador del móvil —por eso importan la pulsación
 larga y el atrás de Android—. Los shells nativos, cuando lleguen, envuelven esta misma UI: lo que
@@ -2187,7 +2196,7 @@ cambia entonces es plataforma (el atrás nativo, el destino de los datos, el key
 #### Cuatro vistas, con la de ventanas en el centro
 
 - **Vista ventanas** — la principal. Es **la única forma de ver contextos**, y una ventana
-  también puede mostrar una nota (y, cuando lleguen, un diagrama).
+  también puede mostrar una nota (y, en la Fase 5, un diagrama).
 - **Vista nota**, **vista diagrama** (Fase 5) y **vista configuración** — las secundarias.
 
 ```
@@ -2203,7 +2212,9 @@ cambia entonces es plataforma (el atrás nativo, el destino de los datos, el key
 Las reglas, que son pocas y se sostienen entre sí:
 
 - **Un solo nivel.** De la vista ventanas se entra a una secundaria, y de una secundaria no se
-  entra a otra. No hay pila ni historial entre vistas secundarias.
+  entra a otra. No hay pila ni historial entre vistas secundarias. ⚠️ **Cambia con la Fase 5**
+  *(decidido con el usuario el 2026-10-03, sin construir)*: de un diagrama se entra a una nota,
+  así que hay **un nivel más** —ventana → diagrama → nota—. Ver el último apartado.
 - **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
   ▶.
 - **En la última, en el sitio de ▶, un «+» verde añade una ventana detrás** *(decidido con el
@@ -2223,7 +2234,8 @@ Las reglas, que son pocas y se sostienen entre sí:
 **Todo el estado de navegación son dos datos: qué ventana está activa y qué vista hay encima, si
 hay alguna.** El efecto buscado, y es el motivo de que no haya más niveles: **desde una nota no se
 llega a configuración**, así que no se puede borrar el contexto de debajo mientras estás dentro de
-una nota suya. El caso raro no se trata: no se puede producir.
+una nota suya. El caso raro no se trata: no se puede producir. *(Con la Fase 5 lo de encima puede
+ser un diagrama con una nota sobre él; el efecto se conserva, ver el último apartado.)*
 
 **Al recargar, vuelves a la ventana en la que estabas; lo que hubiera encima, no.** *(Decidido el
 2026-09-27.)* La ventana activa se guarda junto a la lista de ventanas, en `localStorage` y fuera
@@ -2254,7 +2266,7 @@ Una ventana es **una referencia en una lista ordenada** (`src/ui/windows.ts`):
 type WindowRef =
   | { readonly kind: "general" }
   | { readonly kind: "context"; readonly id: ContextId }
-  | { readonly kind: "note"; readonly id: NoteId }        // y "diagram", en la Fase 5
+  | { readonly kind: "note"; readonly id: NoteId }        // y "diagram", planificado en la Fase 5
 
 interface WindowsLayout {
   readonly windows: ReadonlyArray<WindowRef>
@@ -2348,7 +2360,7 @@ Lo que no es la guarda, sino gestión de la lista:
   desaparecen los botones «+», y ◀ ▶ y ⚙ se apagan (color más apagado).
 - **Descartada la casilla de selección manual** que el boceto ponía a la derecha de cada fila:
   allí era simbólica, y la pulsación larga ocupa su lugar.
-- **«+ Diagrama» no aparece en la Fase 4.**
+- **«+ Diagrama» no aparece en la Fase 4.** Llega con la Fase 5 (último apartado).
 - **El orden de la lista** *(decisión de implementación, aceptada por el usuario)*: **el General
   ordena sus notas por nombre** —no tiene `items` propios—; **un contexto, en el orden de sus
   `items`**. Las cifras de la pulsación larga, en §7.5.
@@ -2442,7 +2454,31 @@ Existía para que un contexto «abriera directamente» una nota o un diagrama. E
 **ventana de tipo nota**, así que en la Fase 4 **ni `defaultView` ni `set-default-view` tienen
 consumidor**. No se eliminan —el dominio está cerrado, y quitarlos tocaría modelo, reducer,
 pruebas y formato en disco por algo que no molesta—; se anotan como candidatos a revisar cuando
-lleguen las entidades «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
+lleguen las entidades «meta» de UX (`TAREAS.md` → *Ideas aparcadas*). La Fase 5 tampoco les da
+uso: abrir directamente un diagrama lo hará una ventana de tipo diagrama.
+
+#### Lo que cambia con la Fase 5 *(planificado el 2026-10-03, sin construir)*
+
+Decidido con el usuario al planificar los Diagramas; el resto del diseño de la fase, en §9.11.
+
+- **La vista diagrama es la cuarta.** Se entra tocando un diagrama en la lista de un contexto o
+  del General —donde salen **mezclados con las notas**—, y su cabecera es como la de la nota:
+  exit y el nombre, que se renombra tocándolo.
+- **Un nivel más de navegación: ventana → diagrama → nota.** Tocar un nodo-nota, o crear una
+  nota desde el lienzo, entra en la nota; **exit vuelve paso a paso**: de la nota al diagrama, y
+  del diagrama a la ventana. **Si el diagrama es ventana**, diagrama → nota es un solo nivel,
+  como hoy ventana → nota. No hace falta maquinaria nueva: el `backStack` ya es una pila (§7.5).
+  Lo que sostenía «un solo nivel» —que desde una nota no se llega a configuración— **sigue en
+  pie**: ni la vista diagrama ni la nota abierta desde él llevan ⚙.
+- **«+ Diagrama»**, un botón azul algo más pequeño junto a «+ Nota», solapándose un poco, en
+  cada contexto. El diagrama **nace en ese contexto** —como una nota: `create-diagram` +
+  `add-item`— y llega con el nombre, «Nuevo diagrama», **ya en edición**.
+- **Un diagrama puede ser ventana**: `WindowRef` gana el caso `diagram`, el selector lo ofrece,
+  y **la guarda lo sabe**: un diagrama borrado se quita de las ventanas en la misma sesión.
+- **Borrar un diagrama sigue las reglas de una nota**: en el General la papelera **borra de
+  verdad** (`delete-diagram`) y confirma con la hoja propia; en un contexto **sólo lo quita de
+  ese contexto** (`remove-item`), sin confirmar. **Borrar un diagrama no borra las notas** a las
+  que apuntan sus nodos.
 
 ### 7.5 Cómo está construida *(Fase 4)*
 
@@ -2847,15 +2883,17 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   arranque de verdad— y `src/ui/`: la navegación por ventanas (§7.4), el editor con casillas
   anidadas (§7.2 y §7.3), `onCorrupt`, `onError` y la validación de esquema (§6.2, §6.5). Sale el
   prototipo viejo. **Partida en dos desde el 2026-09-27**: **Fase 4 · Contextos** y **Fase 4 ·
-  Notas**. **489 pruebas** (329 al empezar, 423 al terminar el código de Contextos), **ninguna
-  dependencia nueva**, y **el core no se tocó** salvo por los `.js` de sus imports (§8.6). **Falta
-  para cerrarla**: pasar las dos listas manuales y contestar las tres preguntas del editor
-  (§9.10).
+  Notas**. **532 pruebas** al cerrarla (329 al empezar, 423 al terminar el código de Contextos,
+  489 al terminar el de Notas), **ninguna dependencia nueva**, y el core sólo se tocó por los
+  `.js` de sus imports (§8.6), la regla de `merge` (§9.3) y conservar las referencias a lo
+  ilegible (§6.5). **Queda como deuda**, no como hecho: pasar las dos listas manuales y contestar
+  las tres preguntas del editor (§9.10).
 
-- **Fase 5 — Diagramas.** El editor de grafos y la vista diagrama. **Sin planificar a propósito:** se
-  planifica cuando la Fase 4 haya cerrado. El boceto del usuario dice él mismo que aún no sabe
-  cómo plantear la interfaz de los diagramas, y hasta entonces los Diagramas siguen persistiéndose
-  sin operarse (§9.7).
+- **Fase 5 — Diagramas. Planificada el 2026-10-03 con el usuario; sin código.** Un lienzo libre
+  con nodos y relaciones, y la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo,
+  Fase 5 · Lienzo y Fase 5 · Relaciones** (§9.11). Hasta que se construya Fase 5 · Modelo, los
+  Diagramas siguen persistiéndose sin operarse (§9.7). **Después de las tres, la deuda móvil de la
+  Fase 4.**
 
 ### 9.3 Las operaciones de contenido
 
@@ -3176,12 +3214,15 @@ nota en un contexto (`create-note` + `add-item`) y «Mover a…» (`add-item` + 
 
 #### Los Diagramas se persisten, pero no se operan
 
+> **Vigente hasta que se construya Fase 5 · Modelo**, que trae trece acciones de Diagrama
+> (§9.11). Planificado el 2026-10-03; hoy, en el repo, esto sigue siendo verdad tal cual.
+
 `AppState.diagrams` existe y `StorageAdapter` lleva su `Repository<Diagram>`, así que un Diagrama se
 guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Diagrama** en el
 catálogo, ni siquiera `create-diagram`.
 
 Es la misma regla que quitó `move` (§9.3): no se construye lo que no tiene consumidor. El
-editor de grafos es la Fase 5 —sin planificar hasta que cierre la 4 (§9.2)—, así que una acción de Diagrama no tendría quien la
+editor de grafos es la Fase 5, así que en la Fase 2 una acción de Diagrama no tendría quien la
 despachara ni forma de comprobarse contra un uso real. **La consecuencia asumida y visible:**
 `add-item` acepta un `ItemRef` de tipo `diagram` —el tipo lo permite y sería raro mutilarlo— pero
 en la Fase 2 no hay manera de crear un Diagrama que referenciar, así que ese camino queda muerto
@@ -3568,7 +3609,7 @@ derecho a cambiar de opinión después sin que parezca una rendición.
 Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas de arriba no cabe:
 
 - **Los Diagramas y su editor de grafos: son la Fase 5.** Se persisten desde la Fase 2 y siguen sin
-  operarse; se planifican cuando la 4 haya cerrado.
+  operarse; planificada el 2026-10-03, en §9.11.
 - **`move`, `indent` y `outdent`**, salvo que las preguntas de arriba los reabran.
 - **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con
   `LocalStorageBlobStore` para salir del paso. Es barato de revertir —`BlobStore` es un puerto,
@@ -3604,6 +3645,321 @@ sistema. El escritorio sí se ha usado a diario durante la fase, aunque la lista
 entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si al pasarlas
 sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
 decisión aunque la fase esté cerrada.
+
+### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03, sin construir)*
+
+Al estilo de §9.10, y **escrito antes de que exista una línea de código de diagramas**. ⚠️ **Nada
+de esta sección está en el repo**: hoy sólo existen los tipos viejos de `Diagram.ts` (§5). Todas
+las decisiones de aquí se tomaron **con el usuario el 2026-10-03**; lo que no lleve otra fecha,
+lleva ésa.
+
+#### Qué es un diagrama: un lienzo libre
+
+**Un lienzo libre**, como Miro, Excalidraw o tldraw: el usuario **coloca los nodos arrastrando**
+donde quiere, y los une con relaciones. Es como el usuario se lo imaginó desde el principio.
+**Descartados:**
+
+- **un mapa mental**: es un árbol, y obliga a que cada nodo cuelgue de uno solo;
+- **un diagrama de dependencias con colocación automática** —era la recomendación que se le
+  hizo—: quita justo lo que el usuario quería, decidir dónde va cada cosa;
+- **texto que se dibuja** (estilo Mermaid): el diagrama se escribe, no se toca.
+
+**Al abrir un diagrama siempre se ve el origen** (0, 0) de un mapa X/Y que el usuario no ve. **El
+encuadre no se recuerda.**
+
+#### Las relaciones: un multigrafo con flecha opcional
+
+Se llaman **relaciones** —`DiagramRelation` en el código—. Descartados **«edge»**, jerga de
+grafos, y **«connection»**, que suena a red o a servidor.
+
+- **Conectar A y luego B crea A→B.**
+- **Multigrafo**: entre dos nodos puede haber **cualquier número** de relaciones, en cualquier
+  sentido, **repetidas incluidas** —también creadas conectando dos veces—. **El core no pone
+  límite**: el límite es la legibilidad, y eso lo juzga quien dibuja.
+- **Ciclos permitidos.** La app no da sentido a la flecha; el sentido lo pone quien escribe.
+- **Una relación de un nodo a sí mismo no existe**: es un no-op.
+- **Cómo se dibujan:** una sola entre un par, **recta**; varias, **en abanico de curvas**
+  (Bézier cuadráticas con curvaturas distintas), para que no se tapen.
+- **Su menú.** Con flecha: *Invertir dirección · Sin dirección · Texto · Borrar*. Sin dirección:
+  *Con dirección · Texto · Borrar* —«Con dirección» devuelve la flecha que tenía, porque una
+  relación sin dirección **sigue guardando `from` y `to`**; *Invertir* desaparece, porque no
+  significa nada—. **Invertir cuando ya hay otra igual** en el otro sentido no hace nada especial:
+  **conviven**, como cualquier repetida.
+- **Texto opcional a lo largo de la línea** (`<textPath>` de SVG), **girado para no salir boca
+  abajo**, y editado con un campo que aparece encima. **Entra en la Fase 5**, como último paso.
+
+#### Los nodos: pósits iguales, de dos clases
+
+**Todos se ven igual: una caja, un pósit, de ancho fijo, que crece hacia abajo con el texto.**
+Por dentro hay dos clases:
+
+- **de texto** (`SimpleNode`), con su texto;
+- **nodo-nota** (`NoteNode`), que apunta a una nota y **enseña en directo su título actual**. **No
+  guarda copia del título**: el usuario no quiere entidades con copias de nombres que haya que
+  mantener al día, y una copia sería una segunda fuente de verdad que se separa en cuanto se
+  renombra la nota.
+
+**Cualquier nodo se puede marcar como hecho** (`set-node-done`), y se ve tachado o atenuado. **No
+toca las casillas de la nota** a la que apunte: es del nodo.
+
+**Un nodo-nota cuya nota no existe se convierte en un nodo de texto «Nota perdida».** Una sola
+regla para los dos caminos por los que puede pasar: **borrar la nota desde la app**
+(`delete-note`, abajo) y **perderla por fuera** —su fichero ya no está al arrancar— (`hydrate`,
+abajo). Conserva **id, posición, hecho y relaciones**: el dibujo no se rompe, y se ve dónde
+estaba. ⚠️ **Una nota ilegible no está perdida**: su nodo sigue siendo nodo-nota, igual que se
+conservan las referencias de los contextos a lo ilegible (§6.5); arreglado el fichero, vuelve.
+**Precio asumido:** «Nota perdida» es un literal en castellano **dentro del core**, y se guarda
+en el fichero.
+
+#### El modelo
+
+```ts
+interface DiagramNodeBase {
+  readonly id: DiagramNodeId
+  readonly positionX: number
+  readonly positionY: number
+  readonly done: boolean
+}                                    // fuera parents y children
+interface SimpleNode extends DiagramNodeBase { readonly type: "simple-node"; readonly text: string }
+interface NoteNode   extends DiagramNodeBase { readonly type: "note-node";   readonly noteId: NoteId }
+
+interface DiagramRelation {
+  readonly id: DiagramRelationId
+  readonly from: DiagramNodeId
+  readonly to: DiagramNodeId
+  readonly directed: boolean         // false = sin punta, pero conserva from y to
+  readonly label: string             // "" = sin texto
+}
+
+interface Diagram extends Versioned {
+  readonly id: DiagramId
+  readonly name: string
+  readonly nodes: Readonly<Record<DiagramNodeId, DiagramNode>>
+  readonly relations: Readonly<Record<DiagramRelationId, DiagramRelation>>
+}
+```
+
+Lo que cambia respecto a lo que hay hoy, y por qué:
+
+- **Las aristas salen de los nodos.** Hoy van en `parents` + `children` de cada nodo: **dos
+  fuentes de verdad** de la misma arista, que se pueden contradecir. Y con el multigrafo no
+  bastarían: una lista de ids no distingue dos relaciones entre el mismo par, ni lleva su
+  dirección ni su texto.
+- **`nodes` pasa de array a `Record`**, que ya estaba anotado: las relaciones apuntan por id, y
+  con un array toda búsqueda es lineal. Igual `relations`, por lo mismo que las entidades de
+  `AppState` (§5.2).
+- **Sin migración**: no hay ningún diagrama guardado, porque no había forma de crearlo.
+- **`schema.ts` valida la forma nueva**, y además que **la clave de cada `Record` coincida con
+  el id de dentro**: si no, el reducer buscaría por una clave y escribiría con otra.
+
+#### Las acciones: trece nuevas, de 17 a 30
+
+**Las operaciones puras van en un fichero propio del dominio**, gemelo de `operations.ts`, y el
+reducer las envuelve con **`onDiagram`**, gemelo de `onContent` y `onContext`: **la comparación
+de identidad escrita una vez**, y la estampa de `meta` sólo si cambió algo. **Trece casos de uso
+más, y cada uno devuelve el diagrama o `null`** (§9.7, la regla de siempre).
+
+| Acción | No-op si… |
+|---|---|
+| `create-diagram` (vacío, con nombre) | el id ya existe |
+| `rename-diagram` | no existe · mismo nombre |
+| `delete-diagram` (lo quita también de todos los contextos) | no existe |
+| `add-node` (llega construido, con id) | no existe el diagrama · id repetido · nodo-nota a una nota inexistente · posición no finita |
+| `set-node-text` | no existe · es nodo-nota · mismo texto |
+| `set-node-position` (al soltar) | no existe · misma posición · no finita |
+| `set-node-done` | no existe · mismo valor |
+| `remove-node` (se lleva sus relaciones en la misma acción) | no existe |
+| `add-relation` (llega construida, con id) | no existe el diagrama o algún extremo · `from === to` · id repetido. **Las repetidas, sí** |
+| `set-relation-ends` | no existe · mismos extremos · `from === to` · extremo inexistente |
+| `set-relation-directed` | no existe · mismo valor |
+| `set-relation-label` | no existe · mismo texto |
+| `remove-relation` | no existe |
+
+Tres que piden explicación:
+
+- **`set-relation-ends` y no `invert-relation`**: es lo que hay debajo de *Invertir*, y **la UI
+  decide los extremos**, igual que `toggleChecked` del editor llama a `setChecked` con el valor ya
+  decidido. Un «invertir» nunca podría ser no-op, y el nombre sostiene la invariante de identidad
+  (la regla de `setChecked`, §3).
+- **`remove-node` se lleva sus relaciones en la misma acción**, y no es plegar dos: dejarlas sería
+  una relación apuntando a un nodo que no está, que es justo lo que prohíbe la integridad
+  referencial.
+- **Nodos y relaciones llegan construidos, con su id**: el reducer no genera ids (`CLAUDE.md`).
+
+#### Lo que toca del core fuera de los diagramas
+
+⚠️ **La Fase 5 toca dos piezas del core que ya existen y no son de diagramas**, y conviene
+decirlo antes de que nadie lo descubra en un diff:
+
+- **`delete-note` cambia.** Además de quitar la nota de los contextos, **en todos los diagramas
+  convierte sus nodos-nota en nodos de texto «Nota perdida»** —mismo id, posición, hecho y
+  relaciones—, **con el mismo `meta`** que el resto de la acción. **Los diagramas que no la usaban
+  se devuelven por referencia**, como los contextos que no la listaban (§9.7). No lee el título de
+  la nota.
+- **`hydrate` gana dos limpiezas silenciosas**: las relaciones a nodos que no están en su
+  diagrama, o de un nodo a sí mismo, **se tiran**; y un nodo-nota cuya nota no existe —y no es
+  ilegible— **pasa a «Nota perdida»**. Las dos **devuelven por referencia lo que no cambie**,
+  como hoy con los contextos.
+
+Lo que **no** cambia: `add-item` ya acepta diagramas y `diffState` ya los cubre.
+
+#### La vista: un corcho con pósits e hilos
+
+**Técnica: «vista mixta».** Los pósits son **HTML**; las líneas, **una capa SVG por debajo**; y
+las dos van dentro de **una capa que se mueve y se escala entera con una transformación CSS**. Es
+la arquitectura de React Flow y Svelte Flow, sin React. Dicho como se le explicó al usuario: **un
+corcho con pósits, y los hilos en una lámina transparente debajo**; mover o acercar el lienzo es
+mover el corcho entero.
+
+**Descartados:**
+
+- **todo en `<canvas>`**: acertar con el dedo, editar texto y la accesibilidad, todo a mano.
+  Compensa con miles de elementos, y aquí no los habrá;
+- **todo en SVG**: el texto de SVG **no se parte en líneas solo**, y un pósit es sobre todo texto.
+
+**Precio:** hay que **medir el tamaño real de cada pósit** para que la flecha acabe en su borde y
+no en su centro.
+
+**Desde cero, sin librería**, y no por principio:
+
+- **React Flow, tldraw y Excalidraw exigen React**, y la UI vanilla es decisión cerrada. tldraw,
+  además, pide licencia de pago o su marca en producción;
+- **Drawflow y JointJS** están pensadas para bloques con puertos y **guardan su propio estado**:
+  serían dos fuentes de verdad con el `Store`;
+- **Cytoscape** es para visualizar grafos, no para dibujarlos a mano.
+
+**Plan B, aparcado en `TAREAS.md`:** una librería pequeña y sin dependencias **sólo para mover y
+acercar**, si el pellizco o el arrastre no se dejan domar en el móvil real. Mismo trato que
+Snabbdom y los motores de edición: con su disparador escrito.
+
+#### Los gestos: «doble = menú o crear»
+
+**El móvil tiene que ir igual de bien que el escritorio, con los mismos gestos.** Pointer Events,
+y `touch-action` para quitar al navegador sus gestos sobre el lienzo.
+
+| Gesto | Escritorio | Móvil |
+|---|---|---|
+| Mover el lienzo | arrastrar el fondo | arrastrar con un dedo, **también empezando sobre un nodo** |
+| Acercar y alejar | rueda, o pellizco en el trackpad | pellizco con dos dedos |
+| Mover un nodo | arrastrarlo | **mantener pulsado** y arrastrar, como las fichas de ventanas |
+| Crear un nodo | doble clic en el fondo → *Texto · Nota existente · Nota nueva* | doble toque, igual |
+| Menú de un nodo | doble clic, o clic derecho | doble toque |
+| Menú de una relación | doble clic en la línea, o clic derecho | doble toque |
+| Abrir un nodo-nota | clic | toque |
+| Tirar una relación | *Conectar* en el menú del nodo, y clic en el de destino | igual, con toques |
+
+Las reglas que salen de la tabla:
+
+- **«Doble = menú o crear».** **No hay concepto de selección.** Un clic en un nodo de texto no
+  hace nada.
+- **El clic en un nodo-nota espera unos 250 ms** antes de abrir, para distinguirlo del doble
+  clic. Descartados **abrir al instante** —el doble clic abriría la nota y nunca el menú— y
+  **quitarle el menú** al nodo-nota.
+- **Modo conectar:** tras *Conectar* aparece un aviso visible, «Toca el nodo de destino»; el
+  siguiente clic en un nodo —también en un nodo-nota, que esta vez no se abre— crea la relación,
+  y un clic en el fondo cancela.
+- **Cada línea lleva debajo un trazo invisible y grueso**, para acertar con el dedo.
+- **Menús de nodo:** el de texto, *Conectar · Editar · Hecho · Borrar*; el nodo-nota, *Conectar ·
+  Hecho · Borrar* —su título se cambia dentro de la nota—.
+- **Editar el texto, dentro del pósit**, que se vuelve campo; **al salir se guarda**. Un nodo de
+  texto nuevo **nace vacío, con el cursor dentro**. **El teclado virtual no debe tapar el pósit
+  que se edita.**
+- **Mover un nodo guarda UNA vez, al soltar** (`set-node-position`), no en cada píxel.
+- **Solapes:** el último nodo movido o creado queda encima. **Ese orden no se guarda**: al abrir,
+  el de creación.
+- **Pendiente: manejar el lienzo con teclado**, como reordenar las fichas con teclado (§7.4).
+
+#### Crear nodos-nota
+
+- **De una nota existente**, con el selector —el mismo de «Mover a…»—.
+- **De una nota nueva, creada desde el lienzo**: la nota se referencia en **todos los contextos
+  donde está el diagrama**, y si el diagrama no está en ninguno, sólo se ve en el General. La UI
+  encadena `create-note` + un `add-item` por contexto + `add-node`, **sin acción nueva**: es la
+  misma forma que crear una nota en un contexto (§9.7). Crearla **te lleva dentro de la nota**, y
+  al salir vuelves al lienzo.
+
+#### Lo que se prueba en Node y lo que se verifica a mano
+
+El patrón de §7.5, sin cambios: **las cuentas van en funciones puras con pruebas en Node** —pasar
+de pantalla a corcho y de vuelta, acercar alrededor del punto del pellizco, distinguir clic,
+doble clic y pulsación larga, el punto donde la línea corta el borde del pósit, el abanico, la
+orientación del texto— y **el DOM se verifica a mano**, con listas nuevas en `test/ui/`.
+
+#### Partida en tres, en este orden
+
+**Fase 5 · Modelo → Fase 5 · Lienzo → Fase 5 · Relaciones**, nombradas por contenido como las de
+la Fase 4.
+
+- **Modelo** — el core y `storage/`, **sin pantalla**: los tipos, las trece acciones con sus
+  operaciones, los casos de uso, `delete-note`, `hydrate` y `schema.ts`.
+- **Lienzo** — todo **menos las líneas**: «+ Diagrama», el diagrama como ventana, la vista con el
+  corcho, los pósits y todo lo que se les hace, los nodos-nota con su nivel de navegación, los
+  menús y el clic que espera.
+- **Relaciones** — conectar, la flecha al borde, el abanico, sin dirección, invertir, el menú de
+  la línea y, al final, el texto a lo largo.
+
+**Por qué ese orden:** las relaciones son la parte con más geometría. Separarlas deja **probar el
+lienzo en el móvil antes**, y si los gestos se atascan se ve pronto —que es cuando entra el plan
+B de la librería de mover y acercar—, no con todo encima.
+
+**Después de las tres va la deuda móvil de la Fase 4** —sus dos listas manuales en el móvil—, por
+decisión del usuario. **Riesgo asumido:** si la base móvil falla, se descubre con el lienzo
+encima. **A cambio**, se verifican juntas en el mismo teléfono.
+
+#### Fase 5 · Modelo: los criterios
+
+1. **El modelo nuevo**: sin `parents` ni `children`, `nodes` y `relations` como `Record`, `done`
+   en todo nodo. `schema.ts` valida la forma nueva y que cada clave coincida con su id.
+2. **Las trece acciones existen**, con su caso de reducer por `onDiagram`, y el `switch` sigue
+   siendo exhaustivo por el compilador.
+3. **Cada no-op de la tabla tiene su prueba con `strictEqual`.**
+4. **`delete-note` deja los diagramas consistentes**: sus nodos-nota pasan a «Nota perdida» con
+   el mismo `meta`, y **los diagramas que no la usaban salen intactos**, comprobado con
+   `strictEqual`.
+5. **`hydrate` hace sus dos limpiezas**, conserva como nodo-nota el de una nota ilegible y
+   devuelve por referencia lo que no cambia.
+6. **Los trece casos de uso** devuelven el diagrama o `null`.
+7. **Cada guarda, rota a propósito**, y las pruebas caen.
+8. **`npm run check` en verde y el recuento anotado.**
+
+#### Fase 5 · Lienzo: los criterios
+
+1. **«+ Diagrama»** crea en el contexto, con el nombre en edición; en el General los diagramas
+   salen mezclados con las notas; la papelera sigue las reglas de una nota.
+2. **El diagrama como ventana**, con la guarda sabiéndolo: con pruebas y rota a propósito.
+3. **El corcho**: mover y acercar con ratón, trackpad y dedos; al abrir, el origen.
+4. **Los pósits**: crear, editar, marcar hecho, borrar y mover —guardando una vez al soltar—, con
+   los solapes como se describen y el teclado virtual sin tapar el que se edita.
+5. **Los nodos-nota**: título en directo, «Nota perdida», el nivel extra de navegación, y la nota
+   nueva creada desde el lienzo en todos los contextos del diagrama.
+6. **«Doble = menú o crear»** y el clic que espera en el nodo-nota.
+7. **Las cuentas, en funciones puras con pruebas en Node.**
+8. **Su lista de verificación manual, nueva en `test/ui/`, pasada en escritorio Y en el móvil del
+   usuario**, con el resultado anotado.
+9. **`npm run check` en verde y el recuento anotado.**
+
+#### Fase 5 · Relaciones: los criterios
+
+1. **Conectar**: *Conectar*, el aviso, clic en el destino —también un nodo-nota—, y el fondo
+   cancela.
+2. **La flecha acaba en el borde medido del pósit.**
+3. **El abanico**: una relación, recta; varias entre el mismo par, curvas que no se tapan.
+4. **El menú de la línea**: invertir, sin dirección y con dirección de vuelta, borrar; invertir con
+   otra igual existente, conviven; y el trazo invisible para el dedo.
+5. **El texto a lo largo de la línea**, que no sale boca abajo y se edita con un campo encima. El
+   último paso.
+6. **Las cuentas, en funciones puras con pruebas en Node**: corte con el borde, abanico,
+   orientación.
+7. **Su lista manual, pasada en escritorio Y en el móvil**, con el resultado anotado.
+8. **`npm run check` en verde y el recuento anotado.**
+
+#### Lo que NO entra en la Fase 5
+
+- **Manejar el lienzo con teclado** — pendiente en `TAREAS.md`.
+- **Recordar el encuadre**, el orden de los solapes, o **seleccionar** varios nodos.
+- **Una librería de mover y acercar**, salvo que salte su disparador (`TAREAS.md`).
+- **Todo lo que ya estaba fuera de la Fase 4** y sigue fuera: `move`/`indent`/`outdent`, la
+  carpeta del usuario y OPFS, los shells y el sync.
 
 ---
 

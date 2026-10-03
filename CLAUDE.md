@@ -27,7 +27,8 @@ cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
 **Fases 1 a 4 cerradas. La 4, por decisión del usuario el 2026-10-03, con deuda de
 verificación:** las dos listas manuales y las tres preguntas del editor quedan pendientes en
-`TAREAS.md` (ver *Plan por fases*). **Lo siguiente es planificar la Fase 5.**
+`TAREAS.md` (ver *Plan por fases*). **La Fase 5 (Diagramas) está planificada desde el 2026-10-03 y
+sin una línea de código: lo siguiente es empezar Fase 5 · Modelo.**
 
 Lo que hay en `src/`, de dentro afuera:
 
@@ -66,7 +67,8 @@ VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). �
 vuelve a pasar la lista**; la única excepción registrada —mismo código una vez quitados los
 comentarios— está en `TAREAS.md`.
 
-**Lo que NO existe todavía:** todo lo de Diagramas salvo sus tipos (Fase 5), la carpeta del usuario
+**Lo que NO existe todavía:** todo lo de Diagramas salvo sus tipos —y ésos, con la forma vieja
+(`parents`/`children`, `nodes` como array) que la Fase 5 sustituye—, la carpeta del usuario
 y OPFS como destino de la app y el botón de «reconectar carpeta».
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
@@ -356,7 +358,8 @@ duda**; no la cambies por tu cuenta.
 - **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
   (`TS2304`). *Qué está sucio* es puro y va en `core/app/`; *cuándo se escribe* va en
   `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
-- **Los Diagramas se persisten, pero no se operan** hasta la Fase 5. §9.7.
+- **Los Diagramas se persisten, pero no se operan** — vigente **hasta que se construya Fase 5 ·
+  Modelo**, que trae sus trece acciones. §9.7.
 - **La entidad se llama Diagrama (`Diagram` en el código), no Plan.** *Renombrada con el usuario
   el 2026-10-03*: «plan» chocaba con el plan por fases y daba por hecho para qué sirve. Sin
   migración: no había ninguno guardado. §5.
@@ -425,9 +428,11 @@ duda**; no la cambies por tu cuenta.
 **De la navegación y el alcance de la Fase 4** (el porqué, en §7.4 salvo que se diga otra cosa):
 
 - **Cuatro vistas: ventanas (la principal y la única que enseña contextos), nota, diagrama y
-  configuración.** De ventanas se entra a las demás **a un solo nivel**, y de una secundaria sólo
-  se sale con **exit** (o el atrás del navegador, que es lo mismo), a **la misma ventana**. ◀ ▶
-  no son circulares. En la vista nota no hay ◀ ▶ ni ⚙.
+  configuración.** De ventanas se entra a las demás, y de una secundaria sólo se sale con **exit**
+  (o el atrás del navegador, que es lo mismo), a **la misma ventana**. ◀ ▶ no son circulares. En
+  la vista nota no hay ◀ ▶ ni ⚙. ⚠️ **Era «a un solo nivel»; *cambiado con el usuario el
+  2026-10-03* para la Fase 5, sin construir:** ventana → diagrama → nota, y exit vuelve paso a
+  paso. Si el diagrama es ventana, diagrama → nota es un nivel.
 - **Las ventanas en ⚙ son una fila de fichas que se desliza**: mantener pulsada una la levanta
   para **arrastrarla y reordenar** (`moveWindow`), **⋮ abre la hoja** con *Cambiar contenido*,
   *Añadir detrás* y *Quitar*, un toque corto no hace nada, y una ficha «+» añade al final.
@@ -459,6 +464,36 @@ duda**; no la cambies por tu cuenta.
   core salvo la regla de `merge` y conservar las referencias a lo ilegible (2026-10-03,
   arriba); **los Diagramas son la Fase 5**. §9.10.
 
+**De los Diagramas, la Fase 5** — *decididas con el usuario el 2026-10-03* y **SIN CONSTRUIR**;
+el porqué y las alternativas descartadas, en §9.11:
+
+- **Un lienzo libre** (como Miro/Excalidraw): los nodos se colocan arrastrando. Ni mapa mental,
+  ni colocación automática, ni texto que se dibuja. Al abrir se ve el origen; el encuadre no se
+  recuerda.
+- **Relaciones, `DiagramRelation`** —no «edge» ni «connection»—, en un **multigrafo**: cualquier
+  número entre dos nodos, en cualquier sentido, repetidas y ciclos incluidos; **de un nodo a sí
+  mismo, no-op**. Flecha y texto opcionales; sin flecha **conserva `from`/`to`**. *Invertir* es
+  `set-relation-ends` con los extremos ya decididos por la UI, como `toggleChecked` → `setChecked`.
+- **El modelo pierde `parents`/`children`**: `nodes` y `relations` son `Record`, y cada nodo
+  lleva `done`. **Trece acciones nuevas (17 → 30)**, envueltas por `onDiagram`.
+- **El nodo-nota enseña el título EN DIRECTO, sin copia. Sin nota, pasa a nodo de texto «Nota
+  perdida»**: una sola regla para `delete-note` y para `hydrate`, que conserva id, posición,
+  hecho y relaciones. Una nota ilegible **no** está perdida. Precio: un literal en castellano en
+  el core. ⚠️ **Toca `delete-note` y `hydrate`**, que no son de diagramas.
+- **Vista mixta, desde cero, sin librería**: pósits en HTML, líneas en una capa SVG debajo, y las
+  dos en una capa con transformación CSS. Ni todo canvas, ni todo SVG, ni React Flow/tldraw
+  (React), ni Drawflow/JointJS (su propio estado). La librería de mover y acercar, aparcada con
+  disparador en `TAREAS.md`.
+- **Gestos: «doble = menú o crear»**, sin selección; el clic de un nodo-nota espera ~250 ms;
+  mover un nodo guarda **una vez, al soltar**. **El móvil, igual de bien que el escritorio**,
+  con los mismos gestos. Las cuentas, en funciones puras con pruebas en Node.
+- **Una nota nueva creada desde el lienzo va a TODOS los contextos del diagrama** (si no está en
+  ninguno, sólo al General), encadenando casos de uso desde la UI, sin acción nueva.
+- **«+ Diagrama» nace en el contexto donde se crea; un diagrama puede ser ventana; borrarlo sigue
+  las reglas de una nota** y no borra sus notas.
+- **Partida en tres: Fase 5 · Modelo → Lienzo → Relaciones**, y **la deuda móvil de la Fase 4 va
+  DESPUÉS** de las tres.
+
 ## Fuera de alcance por ahora
 
 No empezar nada de esto sin pedirlo explícitamente. El motivo de cada uno y qué lo
@@ -472,7 +507,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - La carpeta del usuario y OPFS como destino de la app, con su botón de «reconectar carpeta»
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
-- El editor de grafos de los **Diagramas** — es la Fase 5
+- Una librería para mover y acercar el lienzo de los Diagramas (el lienzo se hace desde cero)
 - Shells de desktop y móvil (Tauri / Capacitor)
 - Sync entre dispositivos, CRDTs, colaboración en tiempo real
 
@@ -491,7 +526,11 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   entiende solo), sin contestar. Siguen en `TAREAS.md` como pendientes, **no como hechas**. Lo
   que queda sin verificar de verdad es sobre todo **el móvil**: arrastrar las fichas con el dedo
   y el teclado de Android.
-- **Fase 5 — Diagramas.** El editor de grafos. **Lo siguiente: planificarla.**
+- **Fase 5 — Diagramas. PLANIFICADA el 2026-10-03, sin código** (§9.11). Partida en tres, en
+  este orden: **Fase 5 · Modelo** (core y `storage/`, sin pantalla), **Fase 5 · Lienzo** (todo
+  menos las líneas) y **Fase 5 · Relaciones**. Lienzo y Relaciones cierran con su lista manual
+  pasada **en escritorio y en el móvil**. **Lo siguiente: empezar Fase 5 · Modelo.** Después, la
+  deuda móvil de la Fase 4.
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
