@@ -15,8 +15,18 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context, Diagram, Note, StorageAdapter, StorageError } from "#core/index"
-import { checkBox, contentId, contextId, diagramId, noteId, revision, text } from "#core/index"
+import type { Context, Diagram, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import {
+  checkBox,
+  contentId,
+  contextId,
+  diagramId,
+  diagramNodeId,
+  diagramRelationId,
+  noteId,
+  revision,
+  text,
+} from "#core/index"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
 import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"
@@ -35,7 +45,8 @@ const COMPRA: Note = {
 const MUDANZA: Diagram = {
   id: diagramId("mudanza"),
   name: "Mudanza",
-  nodes: [],
+  nodes: {},
+  relations: {},
   updatedAt: 0,
   revision: revision("rev-mudanza"),
 }
@@ -543,14 +554,88 @@ test("FileStorageAdapter: un contexto sin defaultView es corrupt", async (): Pro
   assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
 })
 
+/* Un diagrama con un nodo de cada clase y una relación, todo bien formado: cada
+   prueba de abajo estropea UNA sola cosa, para que quitar una comprobación se note. */
+const NODO_TEXTO: Readonly<Record<string, unknown>> = {
+  type: "simple-node",
+  id: "a",
+  text: "Cajas",
+  positionX: 0,
+  positionY: 0,
+  done: false,
+}
+const NODO_NOTA: Readonly<Record<string, unknown>> = {
+  type: "note-node",
+  id: "b",
+  noteId: "compra",
+  positionX: 10,
+  positionY: 20,
+  done: true,
+}
+const RELACION: Readonly<Record<string, unknown>> = {
+  id: "r",
+  from: "a",
+  to: "b",
+  directed: true,
+  label: "",
+}
+
+const diagramaCon = (
+  nodes: Readonly<Record<string, unknown>>,
+  relations: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> => ({ ...MUDANZA, nodes, relations })
+
+const esCorrupt = async (diagrama: Readonly<Record<string, unknown>>): Promise<boolean> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "diagrams/mudanza.json", diagrama)
+  const leido: Result<Diagram | null, StorageError> = await s.diagrams.get(MUDANZA.id)
+  return !leido.ok && leido.error.kind === "corrupt"
+}
+
+test("FileStorageAdapter: un diagrama bien formado se lee", async (): Promise<void> => {
+  assert.equal(
+    await esCorrupt(diagramaCon({ a: NODO_TEXTO, b: NODO_NOTA }, { r: RELACION })),
+    false,
+  )
+})
+
 test("FileStorageAdapter: un diagrama con un nodo al que le falta la X es corrupt", async (): Promise<void> => {
   /* Sólo falta la X: con las dos ausentes, quitar una comprobación no se notaría. */
-  const { blobs, s } = montar()
-  escribirJson(blobs, "diagrams/mudanza.json", {
-    ...MUDANZA,
-    nodes: [{ type: "simple-node", id: "n", text: "", positionY: 0, parents: [], children: [] }],
-  })
-  assert.equal(errorDe(await s.diagrams.get(MUDANZA.id)).kind, "corrupt")
+  assert.equal(await esCorrupt(diagramaCon({ a: { ...NODO_TEXTO, positionX: undefined } }, {})), true)
+})
+
+test("FileStorageAdapter: un nodo sin «done» es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({ a: { ...NODO_TEXTO, done: undefined } }, {})), true)
+})
+
+test("FileStorageAdapter: los nodos como lista, la forma vieja, son corrupt", async (): Promise<void> => {
+  /* Vacía a propósito: con un nodo dentro ya saltaría que su clave («0») no es su
+     id, y esta prueba no vigilaría que «nodes» tenga que ser un mapa. */
+  assert.equal(await esCorrupt({ ...diagramaCon({}, {}), nodes: [] }), true)
+})
+
+test("FileStorageAdapter: un nodo guardado bajo una clave que no es su id es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({ otro: NODO_TEXTO }, {})), true)
+})
+
+test("FileStorageAdapter: un diagrama sin «relations» es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt({ ...diagramaCon({}, {}), relations: undefined }), true)
+})
+
+test("FileStorageAdapter: una relación sin «directed» es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({}, { r: { ...RELACION, directed: undefined } })), true)
+})
+
+test("FileStorageAdapter: una relación sin «label» es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({}, { r: { ...RELACION, label: undefined } })), true)
+})
+
+test("FileStorageAdapter: una relación guardada bajo una clave que no es su id es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({}, { otra: RELACION })), true)
+})
+
+test("FileStorageAdapter: una relación a un nodo que no está se lee igual: la limpia el arranque", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({}, { r: RELACION })), false)
 })
 
 test("FileStorageAdapter: lo que escribe put vuelve a leerse: el validador acepta su propia salida", async (): Promise<void> => {
@@ -567,4 +652,40 @@ test("FileStorageAdapter: lo que escribe put vuelve a leerse: el validador acept
   }
   valorDe(await s.notes.put(conTodo, null))
   assert.deepEqual(valorDe(await s.notes.get(COMPRA.id)), conTodo)
+})
+
+test("FileStorageAdapter: un diagrama escrito por put vuelve a leerse: el validador acepta su propia salida", async (): Promise<void> => {
+  const { s } = montar()
+  const conTodo: Diagram = {
+    ...MUDANZA,
+    nodes: {
+      [diagramNodeId("a")]: {
+        type: "simple-node",
+        id: diagramNodeId("a"),
+        text: "Cajas",
+        positionX: -5,
+        positionY: 2.5,
+        done: true,
+      },
+      [diagramNodeId("b")]: {
+        type: "note-node",
+        id: diagramNodeId("b"),
+        noteId: noteId("compra"),
+        positionX: 0,
+        positionY: 0,
+        done: false,
+      },
+    },
+    relations: {
+      [diagramRelationId("r")]: {
+        id: diagramRelationId("r"),
+        from: diagramNodeId("a"),
+        to: diagramNodeId("b"),
+        directed: false,
+        label: "antes",
+      },
+    },
+  }
+  valorDe(await s.diagrams.put(conTodo, null))
+  assert.deepEqual(valorDe(await s.diagrams.get(MUDANZA.id)), conTodo)
 })

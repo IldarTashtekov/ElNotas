@@ -55,7 +55,8 @@ const nota = (id: string, name: string): Note => ({
 const diagrama = (id: string, name: string): Diagram => ({
   id: diagramId(id),
   name,
-  nodes: [],
+  nodes: {},
+  relations: {},
   updatedAt: 0,
   revision: revision(`rev-${id}`),
 })

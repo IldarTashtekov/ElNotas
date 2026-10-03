@@ -51,7 +51,8 @@ const CASA: Context = {
 const MUDANZA: Diagram = {
   id: ID_MUDANZA,
   name: "Mudanza",
-  nodes: [],
+  nodes: {},
+  relations: {},
   updatedAt: 0,
   revision: revision("rev-mudanza"),
 }

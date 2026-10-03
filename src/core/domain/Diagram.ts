@@ -1,24 +1,20 @@
 /**
- * Diagramas: grafos de nodos para esquematizar tareas.
+ * Diagramas: un lienzo libre con nodos que se colocan a mano y relaciones entre
+ * ellos.
  *
- * Aquí sólo están los TIPOS, porque el editor de grafos está fuera de alcance
- * por ahora. Existen porque AppState y Context los referencian. No hay ninguna
- * operación sobre ellos todavía, y no hay que escribirla hasta que se pida.
- *
- * Cuando llegue el editor habrá que decidir si `nodes` pasa a ser un
- * Record<DiagramNodeId, DiagramNode>: las aristas se guardan por id, así que
- * con un array toda búsqueda es O(n).
+ * Un nodo es una caja con texto o una que lleva a una nota; una relación une dos
+ * nodos, con flecha o sin ella, y puede llevar un texto. Entre dos nodos puede
+ * haber tantas relaciones como se quiera.
  */
 
 import type { Versioned } from "./Versioned.js"
-import type { DiagramId, DiagramNodeId, NoteId } from "./Ids.js"
+import type { DiagramId, DiagramNodeId, DiagramRelationId, NoteId } from "./Ids.js"
 
 interface DiagramNodeBase {
   readonly id: DiagramNodeId
   readonly positionX: number
   readonly positionY: number
-  readonly parents: ReadonlyArray<DiagramNodeId>
-  readonly children: ReadonlyArray<DiagramNodeId>
+  readonly done: boolean
 }
 
 /** Nodo con una etiqueta de texto. */
@@ -27,7 +23,7 @@ export interface SimpleNode extends DiagramNodeBase {
   readonly text: string
 }
 
-/** Nodo que al pincharlo abre una Nota. Es el puente entre diagramas y notas. */
+/** Nodo que al pincharlo abre una Nota. Enseña el título de la nota, no guarda copia. */
 export interface NoteNode extends DiagramNodeBase {
   readonly type: "note-node"
   readonly noteId: NoteId
@@ -35,8 +31,21 @@ export interface NoteNode extends DiagramNodeBase {
 
 export type DiagramNode = SimpleNode | NoteNode
 
+/**
+ * Una relación de `from` a `to`. Sin flecha (`directed: false`) conserva los dos
+ * extremos, para que la flecha vuelva como estaba. `label` vacío es sin texto.
+ */
+export interface DiagramRelation {
+  readonly id: DiagramRelationId
+  readonly from: DiagramNodeId
+  readonly to: DiagramNodeId
+  readonly directed: boolean
+  readonly label: string
+}
+
 export interface Diagram extends Versioned {
   readonly id: DiagramId
   readonly name: string
-  readonly nodes: ReadonlyArray<DiagramNode>
+  readonly nodes: Readonly<Record<DiagramNodeId, DiagramNode>>
+  readonly relations: Readonly<Record<DiagramRelationId, DiagramRelation>>
 }

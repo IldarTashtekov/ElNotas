@@ -107,8 +107,27 @@ export const contextProblem = (o: Registro): Problem =>
 
 /* ────────────────────────────── Diagramas ──────────────────────────────── */
 
-const listaDeTextos = (o: Registro, campo: string): Problem =>
-  cadaUno(o, campo, (x: unknown): Problem => (esTexto(x) ? null : `«${campo}» no es una lista de ids`))
+const booleano = (o: Registro, campo: string): Problem =>
+  typeof o[campo] === "boolean" ? null : `«${campo}» no es verdadero o falso`
+
+/**
+ * Comprueba cada valor de un mapa por id con `cada`, y que su clave sea su propio
+ * id: con otra clave, quien lo busque por id no lo encontraría.
+ */
+const cadaEntrada = (
+  o: Registro,
+  campo: string,
+  cada: (x: unknown) => Problem,
+): Problem => {
+  const mapa: unknown = o[campo]
+  if (!esRegistro(mapa)) return `«${campo}» no es un mapa por id`
+  for (const [clave, valor] of Object.entries(mapa)) {
+    const problema: Problem = cada(valor)
+    if (problema !== null) return problema
+    if (esRegistro(valor) && valor["id"] !== clave) return `en «${campo}», «${clave}» no es su id`
+  }
+  return null
+}
 
 const nodo = (x: unknown): Problem => {
   if (!esRegistro(x)) return "un nodo no es un objeto"
@@ -116,8 +135,7 @@ const nodo = (x: unknown): Problem => {
     (): Problem => texto(x, "id"),
     (): Problem => numero(x, "positionX"),
     (): Problem => numero(x, "positionY"),
-    (): Problem => listaDeTextos(x, "parents"),
-    (): Problem => listaDeTextos(x, "children"),
+    (): Problem => booleano(x, "done"),
   )
   if (base !== null) return base
   if (x["type"] === "simple-node") return texto(x, "text")
@@ -125,8 +143,21 @@ const nodo = (x: unknown): Problem => {
   return "un nodo no es de un tipo conocido"
 }
 
+/* Que los extremos existan no se mira aquí: eso lo limpia el arranque. */
+const relacion = (x: unknown): Problem => {
+  if (!esRegistro(x)) return "una relación no es un objeto"
+  return primero(
+    (): Problem => texto(x, "id"),
+    (): Problem => texto(x, "from"),
+    (): Problem => texto(x, "to"),
+    (): Problem => booleano(x, "directed"),
+    (): Problem => texto(x, "label"),
+  )
+}
+
 export const diagramProblem = (o: Registro): Problem =>
   primero(
     (): Problem => versionada(o),
-    (): Problem => cadaUno(o, "nodes", nodo),
+    (): Problem => cadaEntrada(o, "nodes", nodo),
+    (): Problem => cadaEntrada(o, "relations", relacion),
   )

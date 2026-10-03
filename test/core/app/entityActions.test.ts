@@ -51,7 +51,8 @@ const nota = (id: typeof ID_COMPRA, name: string): Note => ({
 const MUDANZA: Diagram = {
   id: ID_MUDANZA,
   name: "Mudanza",
-  nodes: [],
+  nodes: {},
+  relations: {},
   updatedAt: HORA_INICIAL,
   revision: revision("rev-mudanza"),
 }

@@ -15,6 +15,7 @@ export type {
   ContextId,
   DiagramId,
   DiagramNodeId,
+  DiagramRelationId,
   ItemRef,
   NoteId,
   Revision,
@@ -25,6 +26,7 @@ export {
   diagramId,
   diagramNodeId,
   diagramRef,
+  diagramRelationId,
   noteId,
   noteRef,
   revision,
@@ -123,7 +125,13 @@ export {
 /* Entidades */
 export type { Versioned } from "./domain/Versioned.js"
 export type { Note } from "./domain/Note.js"
-export type { Diagram, DiagramNode, NoteNode, SimpleNode } from "./domain/Diagram.js"
+export type {
+  Diagram,
+  DiagramNode,
+  DiagramRelation,
+  NoteNode,
+  SimpleNode,
+} from "./domain/Diagram.js"
 export type { Context, DefaultView } from "./domain/Context.js"
 export type { AppState } from "./domain/AppState.js"
 export { emptyAppState } from "./domain/AppState.js"
