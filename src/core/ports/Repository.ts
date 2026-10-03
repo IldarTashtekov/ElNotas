@@ -1,5 +1,5 @@
 /**
- * Guardar y recuperar entidades de una clase —las notas, los planes, los
+ * Guardar y recuperar entidades de una clase —las notas, los diagramas, los
  * contextos—, sin decir dónde ni cómo se guardan.
  *
  * Es sólo la forma que tiene que cumplir quien guarde de verdad. Debajo hay otro

@@ -64,7 +64,7 @@ const estado = (): AppState => ({
       revision: revision("rev-inicial"),
     },
   },
-  plans: {},
+  diagrams: {},
   contexts: {},
 })
 

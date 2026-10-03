@@ -11,7 +11,7 @@ puerto, copia por camino—, está explicado ahí con ejemplos de notas y casill
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy
 > lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
 > usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
-> (§9.10). Siguen siendo sólo diseño los Planes (Fase 5), la carpeta del usuario como destino y
+> (§9.10). Siguen siendo sólo diseño los Diagramas (Fase 5), la carpeta del usuario como destino y
 > la semántica multi-backend. Cada sección dice si lo que describe existe o está planificado.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
@@ -41,7 +41,7 @@ Siete mecanismos, una sola filosofía:
 |---|---|---|
 | **Verja de pureza** (`src/core/tsconfig.json` sin `DOM` y con `types: []`) | el core no toca la plataforma | un `document.` acaba en el dominio y no te enteras |
 | **`readonly` / `ReadonlyArray`** en todo el dominio | inmutabilidad | un `push` silencioso rompe la detección de cambios |
-| **Tipos marcados** (`NoteId`, `PlanId`…) | no confundir un id con otro | pasas un `PlanId` donde va un `NoteId` y falla en runtime |
+| **Tipos marcados** (`NoteId`, `DiagramId`…) | no confundir un id con otro | pasas un `DiagramId` donde va un `NoteId` y falla en runtime |
 | **Unión discriminada** (`Content = Text \| CheckBox`) | tratar todos los casos | añades un tipo de bloque y nada te avisa de dónde falta |
 | **`noUncheckedIndexedAccess`** | tratar el "ese id no existe" | `undefined` se cuela por un lookup en un estado normalizado |
 | **Alias no declarado** (mientras `#ui/*` no existía) | el core no importa de fuera | una dependencia al revés pasa desapercibida |
@@ -83,12 +83,12 @@ dominio real de la app: notas, bloques de texto y casillas anidadas.
 #### Estado
 
 **Una sola foto de todos los datos de la app, en un solo objeto.** Aquí se llama
-`AppState`, y contiene todas las notas, todos los planes y todos los contextos:
+`AppState`, y contiene todas las notas, todos los diagramas y todos los contextos:
 
 ```ts
 interface AppState {
   readonly notes:    Readonly<Record<NoteId, Note>>
-  readonly plans:    Readonly<Record<PlanId, Plan>>
+  readonly diagrams: Readonly<Record<DiagramId, Diagram>>
   readonly contexts: Readonly<Record<ContextId, Context>>
 }
 ```
@@ -478,11 +478,11 @@ declare const brand: unique symbol
 type Branded<T, B extends string> = T & { readonly [brand]: B }
 
 export type NoteId = Branded<string, "NoteId">
-export type PlanId = Branded<string, "PlanId">
+export type DiagramId = Branded<string, "DiagramId">
 ```
 
 El problema que resuelve: con estado normalizado **todo** se referencia por id y todos los
-ids son strings. Sin marcarlos, pasar un `PlanId` donde se espera un `NoteId` compila
+ids son strings. Sin marcarlos, pasar un `DiagramId` donde se espera un `NoteId` compila
 perfectamente, y el fallo aparece mucho después en runtime como "esa nota no existe".
 
 El truco es que `brand` es un `unique symbol` **declarado pero nunca creado**: la propiedad
@@ -688,15 +688,20 @@ Tres entidades, más nociones de agrupación:
 
 - **Note** — lista de contenido heterogéneo (`Text` | `CheckBox`). Los checkboxes son
   **recursivos** (tienen hijos), para TODOs anidados.
-- **Plan** — un **grafo** de nodos (`SimpleNode` | `NoteNode`) con posición X/Y y aristas
+- **Diagrama** — un **grafo** de nodos (`SimpleNode` | `NoteNode`) con posición X/Y y aristas
   por ID, para esquematizar tareas. Un `NoteNode` es el puente: al pincharlo entras en una
-  Nota.
-- **Context** — agrupa notas y planes, y decide su `defaultView` (la lista, o entrar directo
-  a una nota o plan concreto). ⚠️ **`defaultView` se queda sin uso en la Fase 4**: «abrir
+  Nota. En el código, `Diagram` (público, en inglés). **Se llamó *Plan* hasta el
+  2026-10-03**, y se renombró con el usuario antes de planificar la Fase 5, por dos motivos:
+  «plan» chocaba con *el plan por fases* y con *planificar*, y daba por hecho para qué sirve,
+  que es justo lo que está sin decidir; «diagrama» nombra la forma, no el uso. Se hizo
+  entonces porque salía gratis: no había manera de crear uno, así que no había nada guardado
+  con el nombre viejo ni hizo falta migración.
+- **Context** — agrupa notas y diagramas, y decide su `defaultView` (la lista, o entrar directo
+  a una nota o diagrama concreto). ⚠️ **`defaultView` se queda sin uso en la Fase 4**: «abrir
   directamente una nota» lo hace ahora una ventana de tipo nota (§7.4). Sigue en el modelo, con
   su acción `set-default-view`, porque el dominio está cerrado; se revisa con las entidades
   «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
-- **ContextoGeneral** — **vista derivada** de todas las notas (y de los planes, cuando los haya).
+- **ContextoGeneral** — **vista derivada** de todas las notas (y de los diagramas, cuando los haya).
   No es una entidad y no se persiste: guardarlo sería duplicar datos que se pueden calcular. Ahí
   aparecen las notas **huérfanas**, las que no están en ningún contexto. Como no es un contexto,
   se comporta distinto en tres cosas (§7.4): su título **no se renombra**, su papelera **borra
@@ -726,7 +731,7 @@ está en §6.3, y ese fichero no ha cambiado desde que se midió.
 
 | Dónde | Qué hay |
 |---|---|
-| **`core/domain/` — el modelo** | `Ids.ts` (IDs marcados, `Revision`, `ItemRef`) · `Content.ts` (`Text` \| `CheckBox`) · `Versioned.ts` · `Note.ts` · `Plan.ts` · `Context.ts` · `AppState.ts` · `Position.ts` (tres casos) · `Result.ts` (el sobre, **fuera de `errors/`**) · `errors/` con `StorageError` y `MigrationError` (**sin `index.ts`**) |
+| **`core/domain/` — el modelo** | `Ids.ts` (IDs marcados, `Revision`, `ItemRef`) · `Content.ts` (`Text` \| `CheckBox`) · `Versioned.ts` · `Note.ts` · `Diagram.ts` · `Context.ts` · `AppState.ts` · `Position.ts` (tres casos) · `Result.ts` (el sobre, **fuera de `errors/`**) · `errors/` con `StorageError` y `MigrationError` (**sin `index.ts`**) |
 | **`core/domain/` — la maquinaria** | `updateContent.ts` (primitiva **A**) y `updateContainerOf.ts` (**B**), que **no salen por `index.ts`**; `operations.ts`, **las ocho operaciones**, todas exportadas |
 | **`core/ports/`** | cinco interfaces: `Clock`, `IdGenerator`, `Repository`, `StorageAdapter`, `BlobStore`. Los tres de persistencia devuelven `Result` en todos sus métodos |
 | **`core/app/`** | `Action.ts` (**diecisiete**: 8 de contenido, 3 de Nota, 6 de Contexto) · `reduce.ts` (**no sale por `index.ts`**) · `Store.ts` (una **función**) · `useCases.ts` · `diffState.ts` (la mitad pura del write-behind) |
@@ -750,17 +755,17 @@ de datos, y los contextos guardan **referencias**:
 ```ts
 export type ItemRef =
   | { readonly kind: "note"; readonly id: NoteId }
-  | { readonly kind: "plan"; readonly id: PlanId }
+  | { readonly kind: "diagram"; readonly id: DiagramId }
 ```
 
-`Context.items` es `ItemRef[]`, **nunca** `(Note | Plan)[]`. Tres razones independientes,
+`Context.items` es `ItemRef[]`, **nunca** `(Note | Diagram)[]`. Tres razones independientes,
 cada una suficiente por sí sola:
 
 1. **Una nota puede estar en varios contextos.** Con entidades embebidas, cada nota vive
    dentro de un contexto y solo uno — lo que hace imposible el ContextoCompuesto.
 2. **Guardar un contexto no reescribe sus notas.** Con las entidades dentro, cualquier
    adaptador de persistencia serio queda condenado a leer y escribir el árbol entero.
-3. **`ItemRef` es discriminable en runtime.** `Note` y `Plan` son ambos `{ id, name, ... }`:
+3. **`ItemRef` es discriminable en runtime.** `Note` y `Diagram` son ambos `{ id, name, ... }`:
    dado un elemento de la lista no hay forma fiable de saber cuál es. El `kind` lo resuelve.
 
 Dos cambios más respecto al modelo del prototipo, ambos deliberados: **`Content` es una
@@ -811,7 +816,7 @@ como una frase verdadera: "una Nota está versionada".
 
 **No lleva `id`** a propósito. Con `Entity` la herencia empujaría a meter el id dentro, y un
 `id: string` heredado tiraría por tierra todo el marcado de `Ids.ts`. Cada entidad declara el
-suyo con su tipo propio (`NoteId`, `PlanId`, `ContextId`).
+suyo con su tipo propio (`NoteId`, `DiagramId`, `ContextId`).
 
 **`revision` es un token opaco, no un contador.** Lo único que se puede preguntar es si sigue
 siendo el mismo. Sirve para escribir condicionalmente ("actualiza esto solo si la revisión
@@ -1000,8 +1005,8 @@ prueba, `test/storage/chain.test.ts`, que sigue ahí.
         │                            escrito = objetivo, y el almacén sin tocar
         ▼
   adapter.transaction(…)
-        │   put     notes · plans · contexts     ← primero TODO lo que se guarda
-        │   delete  notes · plans · contexts     ← después lo que se borra
+        │   put     notes · diagrams · contexts  ← primero TODO lo que se guarda
+        │   delete  notes · diagrams · contexts  ← después lo que se borra
         │
         ├── err io ──────→ pendiente se conserva · escrito NO avanza  →  REINTENTA
         ├── err lo demás ─→ detenido = error · cancela la espera      →  SE DETIENE (sin vuelta atrás)
@@ -1074,7 +1079,7 @@ export interface Repository<T, TId extends string> {
 
 export interface StorageAdapter {
   readonly notes:    Repository<Note, NoteId>
-  readonly plans:    Repository<Plan, PlanId>
+  readonly diagrams: Repository<Diagram, DiagramId>
   readonly contexts: Repository<Context, ContextId>
   // best-effort. El Result va DENTRO y FUERA — el porqué, abajo
   readonly transaction: <T>(
@@ -1202,7 +1207,7 @@ FASE 2 — MemoryStorageAdapter                FASE 3 — FileStorageAdapter
 ─────────────────────────────                ──────────────────────────────
 StorageAdapter                               StorageAdapter
 ├── notes    ──→ Map<NoteId, Note>           ├── notes    ─┐
-├── plans    ──→ Map<PlanId, Plan>           ├── plans    ─┼─→ serializa a JSON
+├── diagrams ──→ Map<DiagramId, Diagram>     ├── diagrams ─┼─→ serializa a JSON
 ├── contexts ──→ Map<ContextId, Context>     ├── contexts ─┘   y traduce id → camino
 └── schemaVersion ──→ un number              └── schemaVersion       │
                                                                      ▼
@@ -1255,7 +1260,7 @@ este esquema: cambiarlo —o dejar JSON por otro formato— se toca ahí y en ni
 ```
 manifest.json          { "schemaVersion": 1 }
 notes/<id>.json        una Note
-plans/<id>.json        un Plan
+diagrams/<id>.json     un Diagram
 contexts/<id>.json     un Context
 ```
 
@@ -1272,7 +1277,7 @@ Los detalles que no se deducen de esas cuatro líneas, y por qué:
   sistema operativo y el usuario dejan ahí sus cosas, y un `.DS_Store` no puede convertir la
   lectura entera en un `corrupt`.
 - **Las tres clases no comparten carpeta**, que es lo que hace que un `getAll` de notas no
-  tenga que mirar dentro de los planes para descartarlos.
+  tenga que mirar dentro de los diagramas para descartarlos.
 
 #### Lo que se lee se valida campo a campo *(Fase 4, construido)*
 
@@ -1280,7 +1285,7 @@ Hasta la Fase 4 era **un agujero conocido**: al leer sólo se comprobaba que lo 
 objeto con un `id` de texto, y un `notes/x.json` con un `content` inventado entraba en `AppState`
 tal cual. **Hoy lo cierra `src/storage/file/schema.ts`**, escrito a mano y sin dependencias:
 
-- **nota, plan y contexto, campo a campo**, con el contenido recursivo de la nota incluido;
+- **nota, diagrama y contexto, campo a campo**, con el contenido recursivo de la nota incluido;
 - en una nota, además, **ningún texto dentro de una casilla** —un texto sólo cabe en la raíz— y
   **ningún id de línea repetido en ningún nivel**, porque con dos iguales toda operación actuaría
   siempre sobre la primera;
@@ -2173,7 +2178,7 @@ se elige **al nacer**: con el interruptor, y con el disparador de anidar si est�
 
 ### 7.4 La navegación: cuatro vistas y una lista de ventanas
 
-**Construido en la Fase 4**, salvo la vista plan (Fase 5). Cerrado con el usuario el
+**Construido en la Fase 4**, salvo la vista diagrama (Fase 5). Cerrado con el usuario el
 **2026-09-27** a partir de su boceto en PDF, y precisado al construirlo el **2026-09-29**. Todo lo
 de aquí es **web**, incluido el navegador del móvil —por eso importan la pulsación
 larga y el atrás de Android—. Los shells nativos, cuando lleguen, envuelven esta misma UI: lo que
@@ -2182,8 +2187,8 @@ cambia entonces es plataforma (el atrás nativo, el destino de los datos, el key
 #### Cuatro vistas, con la de ventanas en el centro
 
 - **Vista ventanas** — la principal. Es **la única forma de ver contextos**, y una ventana
-  también puede mostrar una nota (y, cuando lleguen, un plan).
-- **Vista nota**, **vista plan** (Fase 5) y **vista configuración** — las secundarias.
+  también puede mostrar una nota (y, cuando lleguen, un diagrama).
+- **Vista nota**, **vista diagrama** (Fase 5) y **vista configuración** — las secundarias.
 
 ```
             ◀   ventana 1 · ventana 2 · … · ventana n   ▶          ← vista ventanas
@@ -2249,7 +2254,7 @@ Una ventana es **una referencia en una lista ordenada** (`src/ui/windows.ts`):
 type WindowRef =
   | { readonly kind: "general" }
   | { readonly kind: "context"; readonly id: ContextId }
-  | { readonly kind: "note"; readonly id: NoteId }        // y "plan", en la Fase 5
+  | { readonly kind: "note"; readonly id: NoteId }        // y "diagram", en la Fase 5
 
 interface WindowsLayout {
   readonly windows: ReadonlyArray<WindowRef>
@@ -2343,7 +2348,7 @@ Lo que no es la guarda, sino gestión de la lista:
   desaparecen los botones «+», y ◀ ▶ y ⚙ se apagan (color más apagado).
 - **Descartada la casilla de selección manual** que el boceto ponía a la derecha de cada fila:
   allí era simbólica, y la pulsación larga ocupa su lugar.
-- **«+ Plan» no aparece en la Fase 4.**
+- **«+ Diagrama» no aparece en la Fase 4.**
 - **El orden de la lista** *(decisión de implementación, aceptada por el usuario)*: **el General
   ordena sus notas por nombre** —no tiene `items` propios—; **un contexto, en el orden de sus
   `items`**. Las cifras de la pulsación larga, en §7.5.
@@ -2433,7 +2438,7 @@ desde el General una nota que es ventana la quita en la misma sesión—.
 
 #### Lo que se queda sin uso: `Context.defaultView`
 
-Existía para que un contexto «abriera directamente» una nota o un plan. Eso lo hace ahora una
+Existía para que un contexto «abriera directamente» una nota o un diagrama. Eso lo hace ahora una
 **ventana de tipo nota**, así que en la Fase 4 **ni `defaultView` ni `set-default-view` tienen
 consumidor**. No se eliminan —el dominio está cerrado, y quitarlos tocaría modelo, reducer,
 pruebas y formato en disco por algo que no molesta—; se anotan como candidatos a revisar cuando
@@ -2847,9 +2852,9 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   para cerrarla**: pasar las dos listas manuales y contestar las tres preguntas del editor
   (§9.10).
 
-- **Fase 5 — Planes.** El editor de grafos y la vista plan. **Sin planificar a propósito:** se
+- **Fase 5 — Diagramas.** El editor de grafos y la vista diagrama. **Sin planificar a propósito:** se
   planifica cuando la Fase 4 haya cerrado. El boceto del usuario dice él mismo que aún no sabe
-  cómo plantear la interfaz de los diagramas, y hasta entonces los Planes siguen persistiéndose
+  cómo plantear la interfaz de los diagramas, y hasta entonces los Diagramas siguen persistiéndose
   sin operarse (§9.7).
 
 ### 9.3 Las operaciones de contenido
@@ -3169,17 +3174,17 @@ aparcada con las candidatas de la barra (§7.2) y el borrar rama, en §9.3—. L
 son **dos casos de uso desde la UI** en dos gestos que tocan entidades y no contenido: crear una
 nota en un contexto (`create-note` + `add-item`) y «Mover a…» (`add-item` + `remove-item`), §7.4.
 
-#### Los Planes se persisten, pero no se operan
+#### Los Diagramas se persisten, pero no se operan
 
-`AppState.plans` existe y `StorageAdapter` lleva su `Repository<Plan>`, así que un Plan se
-guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Plan** en el
-catálogo, ni siquiera `create-plan`.
+`AppState.diagrams` existe y `StorageAdapter` lleva su `Repository<Diagram>`, así que un Diagrama se
+guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Diagrama** en el
+catálogo, ni siquiera `create-diagram`.
 
 Es la misma regla que quitó `move` (§9.3): no se construye lo que no tiene consumidor. El
-editor de grafos es la Fase 5 —sin planificar hasta que cierre la 4 (§9.2)—, así que una acción de Plan no tendría quien la
+editor de grafos es la Fase 5 —sin planificar hasta que cierre la 4 (§9.2)—, así que una acción de Diagrama no tendría quien la
 despachara ni forma de comprobarse contra un uso real. **La consecuencia asumida y visible:**
-`add-item` acepta un `ItemRef` de tipo `plan` —el tipo lo permite y sería raro mutilarlo— pero
-en la Fase 2 no hay manera de crear un Plan que referenciar, así que ese camino queda muerto
+`add-item` acepta un `ItemRef` de tipo `diagram` —el tipo lo permite y sería raro mutilarlo— pero
+en la Fase 2 no hay manera de crear un Diagrama que referenciar, así que ese camino queda muerto
 hasta que alguien lo despierte. Añadirlas luego es puramente aditivo.
 
 #### Lo que de verdad tiene enjundia: la integridad referencial
@@ -3488,7 +3493,7 @@ lo único que cambió en `src/core/` fueron los `.js` de los imports relativos, 
    código de esta parte, **423**.
 
 **Lo que NO entra en Fase 4 · Contextos:** abrir y editar notas, las ventanas de tipo nota y
-borrar `src/scripts/` (las tres, a Fase 4 · Notas); los Planes (Fase 5); la carpeta del usuario y
+borrar `src/scripts/` (las tres, a Fase 4 · Notas); los Diagramas (Fase 5); la carpeta del usuario y
 OPFS como destino, la escritura condicional, los shells, y `move`/`indent`/`outdent`.
 
 #### Fase 4 · Notas: los criterios
@@ -3535,7 +3540,7 @@ OPFS como destino, la escritura condicional, los shells, y `move`/`indent`/`outd
 
 **Y las tres preguntas de abajo son de esta parte**: es la que pone el editor delante.
 
-**Lo que NO entra en Fase 4 · Notas:** los Planes (Fase 5); la escritura condicional; la carpeta
+**Lo que NO entra en Fase 4 · Notas:** los Diagramas (Fase 5); la escritura condicional; la carpeta
 del usuario y OPFS; los shells; `move`, `indent` y `outdent` salvo que las preguntas los reabran;
 y las tres candidatas extra de la barra (§7.2).
 
@@ -3562,7 +3567,7 @@ derecho a cambiar de opinión después sin que parezca una rendición.
 
 Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas de arriba no cabe:
 
-- **Los Planes y su editor de grafos: son la Fase 5.** Se persisten desde la Fase 2 y siguen sin
+- **Los Diagramas y su editor de grafos: son la Fase 5.** Se persisten desde la Fase 2 y siguen sin
   operarse; se planifican cuando la 4 haya cerrado.
 - **`move`, `indent` y `outdent`**, salvo que las preguntas de arriba los reabran.
 - **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con

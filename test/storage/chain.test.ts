@@ -72,7 +72,7 @@ const NOTA: Note = {
 
 const ESTADO_INICIAL: AppState = {
   notes: { [ID_NOTA]: NOTA },
-  plans: {},
+  diagrams: {},
   contexts: {},
 }
 

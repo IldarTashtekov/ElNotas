@@ -15,8 +15,8 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context, Note, Plan, StorageAdapter, StorageError } from "#core/index"
-import { checkBox, contentId, contextId, noteId, planId, revision, text } from "#core/index"
+import type { Context, Diagram, Note, StorageAdapter, StorageError } from "#core/index"
+import { checkBox, contentId, contextId, diagramId, noteId, revision, text } from "#core/index"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
 import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"
@@ -32,8 +32,8 @@ const COMPRA: Note = {
   revision: revision("rev-compra"),
 }
 
-const MUDANZA: Plan = {
-  id: planId("mudanza"),
+const MUDANZA: Diagram = {
+  id: diagramId("mudanza"),
   name: "Mudanza",
   nodes: [],
   updatedAt: 0,
@@ -74,13 +74,13 @@ test("FileStorageAdapter: una nota se guarda en notes/<id>.json", async () => {
 test("FileStorageAdapter: cada clase de entidad va a su carpeta", async () => {
   const { blobs, s } = montar()
   await s.notes.put(COMPRA, null)
-  await s.plans.put(MUDANZA, null)
+  await s.diagrams.put(MUDANZA, null)
   await s.contexts.put(CASA, null)
 
   assert.deepEqual([...blobs.caminos()].sort(), [
     "contexts/casa.json",
+    "diagrams/mudanza.json",
     "notes/compra.json",
-    "plans/mudanza.json",
   ])
 })
 
@@ -543,14 +543,14 @@ test("FileStorageAdapter: un contexto sin defaultView es corrupt", async (): Pro
   assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
 })
 
-test("FileStorageAdapter: un plan con un nodo al que le falta la X es corrupt", async (): Promise<void> => {
+test("FileStorageAdapter: un diagrama con un nodo al que le falta la X es corrupt", async (): Promise<void> => {
   /* Sólo falta la X: con las dos ausentes, quitar una comprobación no se notaría. */
   const { blobs, s } = montar()
-  escribirJson(blobs, "plans/mudanza.json", {
+  escribirJson(blobs, "diagrams/mudanza.json", {
     ...MUDANZA,
     nodes: [{ type: "simple-node", id: "n", text: "", positionY: 0, parents: [], children: [] }],
   })
-  assert.equal(errorDe(await s.plans.get(MUDANZA.id)).kind, "corrupt")
+  assert.equal(errorDe(await s.diagrams.get(MUDANZA.id)).kind, "corrupt")
 })
 
 test("FileStorageAdapter: lo que escribe put vuelve a leerse: el validador acepta su propia salida", async (): Promise<void> => {

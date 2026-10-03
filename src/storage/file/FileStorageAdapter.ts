@@ -1,5 +1,5 @@
 /**
- * Guarda cada nota, plan y contexto en su propio fichero JSON, más un
+ * Guarda cada nota, diagrama y contexto en su propio fichero JSON, más un
  * `manifest.json` con la versión del formato.
  *
  * Es la pieza que sabe de formato: convierte una entidad en texto y decide cómo
@@ -15,11 +15,11 @@ import type {
   BlobStore,
   Context,
   ContextId,
+  Diagram,
+  DiagramId,
   ItemRef,
   Note,
   NoteId,
-  Plan,
-  PlanId,
   Repository,
   Result,
   Revision,
@@ -28,7 +28,7 @@ import type {
 } from "#core/index"
 import { err, ok } from "#core/index"
 import type { Problem } from "./schema.js"
-import { contextProblem, noteProblem, planProblem } from "./schema.js"
+import { contextProblem, diagramProblem, noteProblem } from "./schema.js"
 
 /* ════════════════════════════ El esquema en disco ══════════════════════════ */
 
@@ -38,7 +38,7 @@ import { contextProblem, noteProblem, planProblem } from "./schema.js"
 */
 
 const CARPETA_NOTAS: string = "notes/"
-const CARPETA_PLANES: string = "plans/"
+const CARPETA_DIAGRAMAS: string = "diagrams/"
 const CARPETA_CONTEXTOS: string = "contexts/"
 const CAMINO_MANIFEST: string = "manifest.json"
 const EXTENSION: string = ".json"
@@ -86,7 +86,7 @@ const caminoDe = (carpeta: string, id: string): Result<string, StorageError> => 
  */
 export const pathOf = (item: ItemRef): string | null => {
   const camino: Result<string, StorageError> = caminoDe(
-    item.kind === "note" ? CARPETA_NOTAS : CARPETA_PLANES,
+    item.kind === "note" ? CARPETA_NOTAS : CARPETA_DIAGRAMAS,
     item.id,
   )
   return camino.ok ? camino.value : null
@@ -391,10 +391,10 @@ export const createFileStorageAdapter = (
     noteProblem,
     onCorrupt,
   )
-  const plans: Repository<Plan, PlanId> = createFileRepository<Plan, PlanId>(
+  const diagrams: Repository<Diagram, DiagramId> = createFileRepository<Diagram, DiagramId>(
     blobs,
-    CARPETA_PLANES,
-    planProblem,
+    CARPETA_DIAGRAMAS,
+    diagramProblem,
     onCorrupt,
   )
   const contexts: Repository<Context, ContextId> = createFileRepository<Context, ContextId>(
@@ -406,7 +406,7 @@ export const createFileStorageAdapter = (
 
   return {
     notes,
-    plans,
+    diagrams,
     contexts,
 
     /**

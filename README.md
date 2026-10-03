@@ -11,7 +11,7 @@ framework y sin dependencias de runtime. El código vive en `src/` —`core/` (e
 cerrar**: ventanas, contextos, configuración y el editor con casillas anidadas funcionan, y
 faltan pasar a mano sus dos listas de verificación (`test/ui/VERIFICACION-MANUAL.md` y
 `test/ui/VERIFICACION-MANUAL-EDITOR.md`) y usarla unos días. Hoy guarda en el `localStorage` del
-navegador. Los Planes son la Fase 5.
+navegador. Los Diagramas son la Fase 5.
 
 La cuenta de arriba envejece sola: lo que manda es `npm run check` y `CLAUDE.md`.
 

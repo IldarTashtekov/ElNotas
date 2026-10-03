@@ -15,10 +15,10 @@
 import type {
   Context,
   ContextId,
+  Diagram,
+  DiagramId,
   Note,
   NoteId,
-  Plan,
-  PlanId,
   Repository,
   Revision,
   StorageAdapter,
@@ -71,7 +71,7 @@ const createMemoryRepository = <
 
 export const createMemoryStorageAdapter = (): StorageAdapter => {
   const notes: Repository<Note, NoteId> = createMemoryRepository<Note, NoteId>()
-  const plans: Repository<Plan, PlanId> = createMemoryRepository<Plan, PlanId>()
+  const diagrams: Repository<Diagram, DiagramId> = createMemoryRepository<Diagram, DiagramId>()
   const contexts: Repository<Context, ContextId> = createMemoryRepository<
     Context,
     ContextId
@@ -84,7 +84,7 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
 
   return {
     notes,
-    plans,
+    diagrams,
     contexts,
 
     /*

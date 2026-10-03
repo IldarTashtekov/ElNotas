@@ -16,14 +16,14 @@
 
 import type { AppState } from "../domain/AppState.js"
 import type { Context } from "../domain/Context.js"
+import type { Diagram } from "../domain/Diagram.js"
 import type { ItemRef } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
-import type { Plan } from "../domain/Plan.js"
 
 /** Lo que devuelve el almacén: tres listas. */
 export interface StoredEntities {
   readonly notes: ReadonlyArray<Note>
-  readonly plans: ReadonlyArray<Plan>
+  readonly diagrams: ReadonlyArray<Diagram>
   readonly contexts: ReadonlyArray<Context>
 }
 
@@ -39,11 +39,11 @@ const nadaIlegible: Unreadable = (): boolean => false
 
 export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegible): AppState => {
   const notes: AppState["notes"] = porId(stored.notes)
-  const plans: AppState["plans"] = porId(stored.plans)
+  const diagrams: AppState["diagrams"] = porId(stored.diagrams)
 
   /* Se queda lo que está, y lo que está pero no se pudo leer. */
   const existe = (item: ItemRef): boolean =>
-    (item.kind === "note" ? notes[item.id] !== undefined : plans[item.id] !== undefined) ||
+    (item.kind === "note" ? notes[item.id] !== undefined : diagrams[item.id] !== undefined) ||
     ilegible(item)
 
   const contexts: AppState["contexts"] = porId(
@@ -58,5 +58,5 @@ export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegi
     }),
   )
 
-  return { notes, plans, contexts }
+  return { notes, diagrams, contexts }
 }

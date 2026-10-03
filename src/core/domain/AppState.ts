@@ -1,14 +1,14 @@
 import type { Context } from "./Context.js"
-import type { ContextId, NoteId, PlanId } from "./Ids.js"
+import type { Diagram } from "./Diagram.js"
+import type { ContextId, DiagramId, NoteId } from "./Ids.js"
 import type { Note } from "./Note.js"
-import type { Plan } from "./Plan.js"
 
 /**
  * Estado raíz de la aplicación: plano y normalizado, como una mini base de datos.
  *
  * Las entidades no se anidan unas dentro de otras; los Contextos guardan
  * referencias. El "ContextoGeneral" no está aquí porque no es una entidad: es
- * una vista derivada de `notes` y `plans`.
+ * una vista derivada de `notes` y `diagrams`.
  *
  * El estado de navegación (las "Ventanas") tampoco vive aquí: es estado de
  * vista, no de dominio, y mezclarlos llenaría la persistencia de basura de UI.
@@ -21,12 +21,12 @@ import type { Plan } from "./Plan.js"
  */
 export interface AppState {
   readonly notes: Readonly<Record<NoteId, Note>>
-  readonly plans: Readonly<Record<PlanId, Plan>>
+  readonly diagrams: Readonly<Record<DiagramId, Diagram>>
   readonly contexts: Readonly<Record<ContextId, Context>>
 }
 
 export const emptyAppState = (): AppState => ({
   notes: {},
-  plans: {},
+  diagrams: {},
   contexts: {},
 })

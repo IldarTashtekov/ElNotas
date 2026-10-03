@@ -13,7 +13,7 @@ import assert from "node:assert/strict"
 import type { Context } from "#core/domain/Context"
 import type { MigrationError } from "#core/domain/errors/MigrationError"
 import type { ItemRef } from "#core/domain/Ids"
-import { contextId, noteId, noteRef, planId, planRef, revision } from "#core/domain/Ids"
+import { contextId, diagramId, diagramRef, noteId, noteRef, revision } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import type { Result } from "#core/domain/Result"
 import type { StoredEntities } from "#core/migrations/hydrate"
@@ -76,7 +76,7 @@ const contexto = (id: typeof ID_CASA, items: Context["items"]): Context => ({
 test("hydrate pasa de listas a mapas por id", () => {
   const stored: StoredEntities = {
     notes: [COMPRA],
-    plans: [],
+    diagrams: [],
     contexts: [contexto(ID_CASA, [noteRef(ID_COMPRA)])],
   }
 
@@ -86,14 +86,14 @@ test("hydrate pasa de listas a mapas por id", () => {
 })
 
 test("hydrate de un almacén vacío da un estado vacío", () => {
-  const state = hydrate({ notes: [], plans: [], contexts: [] })
-  assert.deepEqual(state, { notes: {}, plans: {}, contexts: {} })
+  const state = hydrate({ notes: [], diagrams: [], contexts: [] })
+  assert.deepEqual(state, { notes: {}, diagrams: {}, contexts: {} })
 })
 
 test("hydrate tira las ItemRef que apuntan a algo que ya no está", () => {
   const stored: StoredEntities = {
     notes: [COMPRA],
-    plans: [],
+    diagrams: [],
     contexts: [contexto(ID_CASA, [noteRef(ID_COMPRA), noteRef(ID_FANTASMA)])],
   }
 
@@ -101,11 +101,11 @@ test("hydrate tira las ItemRef que apuntan a algo que ya no está", () => {
   assert.deepEqual(state.contexts[ID_CASA]?.items, [noteRef(ID_COMPRA)])
 })
 
-test("hydrate tira también las referencias a planes inexistentes", () => {
+test("hydrate tira también las referencias a diagramas inexistentes", () => {
   const stored: StoredEntities = {
     notes: [],
-    plans: [],
-    contexts: [contexto(ID_CASA, [planRef(planId("no-existe"))])],
+    diagrams: [],
+    contexts: [contexto(ID_CASA, [diagramRef(diagramId("no-existe"))])],
   }
 
   assert.deepEqual(hydrate(stored).contexts[ID_CASA]?.items, [])
@@ -121,7 +121,7 @@ test("un arranque NORMAL devuelve los contextos INTACTOS, por referencia", () =>
   const sano = contexto(ID_CASA, [noteRef(ID_COMPRA)])
   const vacio = contexto(ID_VACIO, [])
 
-  const state = hydrate({ notes: [COMPRA], plans: [], contexts: [sano, vacio] })
+  const state = hydrate({ notes: [COMPRA], diagrams: [], contexts: [sano, vacio] })
 
   assert.strictEqual(state.contexts[ID_CASA], sano)
   assert.strictEqual(state.contexts[ID_VACIO], vacio)
@@ -134,7 +134,7 @@ const esRota = (item: ItemRef): boolean => item.kind === "note" && item.id === I
 test("hydrate CONSERVA la referencia a una nota ilegible, y tira la inexistente", (): void => {
   const stored: StoredEntities = {
     notes: [COMPRA],
-    plans: [],
+    diagrams: [],
     contexts: [contexto(ID_CASA, [noteRef(ID_ROTA), noteRef(ID_COMPRA), noteRef(ID_FANTASMA)])],
   }
 
@@ -144,13 +144,13 @@ test("hydrate CONSERVA la referencia a una nota ilegible, y tira la inexistente"
 
 test("con sólo una ilegible de más, el contexto queda INTACTO, por referencia", (): void => {
   const conRota: Context = contexto(ID_CASA, [noteRef(ID_COMPRA), noteRef(ID_ROTA)])
-  const state = hydrate({ notes: [COMPRA], plans: [], contexts: [conRota] }, esRota)
+  const state = hydrate({ notes: [COMPRA], diagrams: [], contexts: [conRota] }, esRota)
   assert.strictEqual(state.contexts[ID_CASA], conRota)
 })
 
 test("la nota ilegible NO entra en el estado: sólo se conserva su referencia", (): void => {
   const state = hydrate(
-    { notes: [COMPRA], plans: [], contexts: [contexto(ID_CASA, [noteRef(ID_ROTA)])] },
+    { notes: [COMPRA], diagrams: [], contexts: [contexto(ID_CASA, [noteRef(ID_ROTA)])] },
     esRota,
   )
   assert.equal(state.notes[ID_ROTA], undefined)

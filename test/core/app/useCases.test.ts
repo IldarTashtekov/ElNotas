@@ -55,7 +55,7 @@ const ID_NOTA = noteId("compra")
 const ID_LINEA = contentId("fruta")
 const ID_CONTEXTO = contextId("casa")
 
-const VACIO: AppState = { notes: {}, plans: {}, contexts: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {} }
 
 const HORA = 1000
 

@@ -165,7 +165,7 @@ test("list devuelve los caminos SIN prefijo y sólo los del prefijo pedido", asy
   const { blobs } = montar()
   await blobs.write("notes/a.json", bytes(1))
   await blobs.write("notes/b.json", bytes(2))
-  await blobs.write("plans/c.json", bytes(3))
+  await blobs.write("diagrams/c.json", bytes(3))
   await blobs.write("manifest.json", bytes(4))
 
   assert.deepEqual([...valorDe(await blobs.list("notes/"))].sort(), [
@@ -176,7 +176,7 @@ test("list devuelve los caminos SIN prefijo y sólo los del prefijo pedido", asy
 
 test("list de un prefijo sin nada devuelve una lista vacía, no un error", async () => {
   const { blobs } = montar()
-  assert.deepEqual(await blobs.list("plans/"), ok([]))
+  assert.deepEqual(await blobs.list("diagrams/"), ok([]))
 })
 
 /* ═══════════ La traducción de excepciones: uno por uno, no un ejemplo ══════ */

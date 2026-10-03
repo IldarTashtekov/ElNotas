@@ -13,9 +13,9 @@
 
 import type { AppState } from "../domain/AppState.js"
 import type { Context } from "../domain/Context.js"
-import type { ContextId, NoteId, PlanId } from "../domain/Ids.js"
+import type { Diagram } from "../domain/Diagram.js"
+import type { ContextId, DiagramId, NoteId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
-import type { Plan } from "../domain/Plan.js"
 
 /** Lo que hay que hacerle a una clase de entidad para poner el disco al día. */
 export interface EntityChanges<T, TId extends string> {
@@ -27,7 +27,7 @@ export interface EntityChanges<T, TId extends string> {
 
 export interface StateDiff {
   readonly notes: EntityChanges<Note, NoteId>
-  readonly plans: EntityChanges<Plan, PlanId>
+  readonly diagrams: EntityChanges<Diagram, DiagramId>
   readonly contexts: EntityChanges<Context, ContextId>
 }
 
@@ -41,7 +41,7 @@ const NADA = { upserted: [], deleted: [] } as const
  */
 export const NO_CHANGES: StateDiff = {
   notes: NADA,
-  plans: NADA,
+  diagrams: NADA,
   contexts: NADA,
 }
 
@@ -76,7 +76,7 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
   if (prev === next) return NO_CHANGES
 
   const notes: EntityChanges<Note, NoteId> | null = diffRecord(prev.notes, next.notes)
-  const plans: EntityChanges<Plan, PlanId> | null = diffRecord(prev.plans, next.plans)
+  const diagrams: EntityChanges<Diagram, DiagramId> | null = diffRecord(prev.diagrams, next.diagrams)
   const contexts: EntityChanges<Context, ContextId> | null = diffRecord(
     prev.contexts,
     next.contexts,
@@ -85,11 +85,11 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
   /* Los tres a null significa que los mapas cambiaron de objeto pero no de
      contenido —posible si alguien copia sin cambiar nada— y sigue sin haber nada
      que escribir. */
-  if (notes === null && plans === null && contexts === null) return NO_CHANGES
+  if (notes === null && diagrams === null && contexts === null) return NO_CHANGES
 
   return {
     notes: notes ?? NADA,
-    plans: plans ?? NADA,
+    diagrams: diagrams ?? NADA,
     contexts: contexts ?? NADA,
   }
 }

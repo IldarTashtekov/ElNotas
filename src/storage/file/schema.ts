@@ -1,5 +1,5 @@
 /**
- * La forma que tiene que tener lo que se lee del disco: una nota, un plan o un
+ * La forma que tiene que tener lo que se lee del disco: una nota, un diagrama o un
  * contexto, campo a campo.
  *
  * Un fichero puede ser JSON válido y no ser una nota —lo ha tocado alguien, o lo
@@ -87,14 +87,14 @@ export const noteProblem = (o: Registro): Problem => {
 /* ──────────────────────────────── Contextos ────────────────────────────── */
 
 const referencia = (x: unknown): Problem =>
-  esRegistro(x) && (x["kind"] === "note" || x["kind"] === "plan") && esTexto(x["id"])
+  esRegistro(x) && (x["kind"] === "note" || x["kind"] === "diagram") && esTexto(x["id"])
     ? null
-    : "una referencia no es a una nota ni a un plan"
+    : "una referencia no es a una nota ni a un diagrama"
 
 const vistaPorDefecto = (x: unknown): Problem => {
   if (!esRegistro(x)) return "«defaultView» no es un objeto"
   if (x["type"] === "context") return null
-  if ((x["type"] === "note" || x["type"] === "plan") && esTexto(x["id"])) return null
+  if ((x["type"] === "note" || x["type"] === "diagram") && esTexto(x["id"])) return null
   return "«defaultView» no es una vista conocida"
 }
 
@@ -105,7 +105,7 @@ export const contextProblem = (o: Registro): Problem =>
     (): Problem => cadaUno(o, "items", referencia),
   )
 
-/* ───────────────────────────────── Planes ──────────────────────────────── */
+/* ────────────────────────────── Diagramas ──────────────────────────────── */
 
 const listaDeTextos = (o: Registro, campo: string): Problem =>
   cadaUno(o, campo, (x: unknown): Problem => (esTexto(x) ? null : `«${campo}» no es una lista de ids`))
@@ -125,7 +125,7 @@ const nodo = (x: unknown): Problem => {
   return "un nodo no es de un tipo conocido"
 }
 
-export const planProblem = (o: Registro): Problem =>
+export const diagramProblem = (o: Registro): Problem =>
   primero(
     (): Problem => versionada(o),
     (): Problem => cadaUno(o, "nodes", nodo),

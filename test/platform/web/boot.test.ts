@@ -72,7 +72,7 @@ test("un almacén vacío arranca con el estado vacío", async (): Promise<void> 
   const app: App = appDe(await arrancar(createFakeStorage()))
   const estado: AppState = app.store.getState()
 
-  assert.deepEqual(estado, { notes: {}, plans: {}, contexts: {} })
+  assert.deepEqual(estado, { notes: {}, diagrams: {}, contexts: {} })
 })
 
 test("un almacén vacío queda marcado con la versión actual del formato", async (): Promise<void> => {

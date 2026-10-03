@@ -61,7 +61,7 @@ const otraNota = (): Note => ({
 
 const estadoInicial = (): AppState => ({
   notes: { [ID_NOTA]: nota(), [ID_OTRA_NOTA]: otraNota() },
-  plans: {},
+  diagrams: {},
   contexts: {},
 })
 

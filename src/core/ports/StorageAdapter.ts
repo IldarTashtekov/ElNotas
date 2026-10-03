@@ -1,5 +1,5 @@
 /**
- * Un backend de almacenamiento entero: las notas, los planes, los contextos y la
+ * Un backend de almacenamiento entero: las notas, los diagramas, los contextos y la
  * versión del formato de lo guardado.
  *
  * Es lo que se le enchufa a la app al arrancar, y lo único que el resto del
@@ -12,16 +12,16 @@
  */
 
 import type { Context } from "../domain/Context.js"
-import type { ContextId, NoteId, PlanId } from "../domain/Ids.js"
+import type { Diagram } from "../domain/Diagram.js"
+import type { ContextId, DiagramId, NoteId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
-import type { Plan } from "../domain/Plan.js"
 import type { Result } from "../domain/Result.js"
 import type { StorageError } from "../domain/errors/StorageError.js"
 import type { Repository } from "./Repository.js"
 
 export interface StorageAdapter {
   readonly notes: Repository<Note, NoteId>
-  readonly plans: Repository<Plan, PlanId>
+  readonly diagrams: Repository<Diagram, DiagramId>
   readonly contexts: Repository<Context, ContextId>
 
   /**

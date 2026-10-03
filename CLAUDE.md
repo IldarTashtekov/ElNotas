@@ -32,7 +32,7 @@ verificación:** las dos listas manuales y las tres preguntas del editor quedan 
 Lo que hay en `src/`, de dentro afuera:
 
 - **`src/core/` — dominio puro, y la referencia de cómo se hacen las cosas aquí.** El modelo
-  (`Note`, `Plan`, `Context`, `Text` | `CheckBox`, IDs marcados, `ItemRef`, `AppState`
+  (`Note`, `Diagram`, `Context`, `Text` | `CheckBox`, IDs marcados, `ItemRef`, `AppState`
   normalizado), `Position` (tres casos), el helper de copia por camino en dos primitivas
   (`updateContent.ts` y `updateContainerOf.ts`, **maquinaria interna: no salen por
   `index.ts`**), **las ocho operaciones** en `operations.ts`, `Result<T, E>` y las dos
@@ -50,7 +50,7 @@ Lo que hay en `src/`, de dentro afuera:
   implementaciones de `Clock` e `IdGenerator`; `boot.ts`, que monta la pila entera;
   `LocalStorageWindows.ts`, la lista de ventanas; y `main.ts`, la entrada que carga
   `index.html`. Hoy se guarda en `LocalStorageBlobStore`.
-- **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 salvo la de plan, el editor con casillas
+- **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 salvo la de diagrama, el editor con casillas
   anidadas y los avisos de `onCorrupt` y `onError`. Cómo está construida, en §7.5.
 
 **Qué se prueba dónde:** *lo que exige la interfaz va en el contrato; lo que sólo tiene una
@@ -66,7 +66,7 @@ VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). �
 vuelve a pasar la lista**; la única excepción registrada —mismo código una vez quitados los
 comentarios— está en `TAREAS.md`.
 
-**Lo que NO existe todavía:** todo lo de Planes salvo sus tipos (Fase 5), la carpeta del usuario
+**Lo que NO existe todavía:** todo lo de Diagramas salvo sus tipos (Fase 5), la carpeta del usuario
 y OPFS como destino de la app y el botón de «reconectar carpeta».
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
@@ -242,7 +242,7 @@ index.html         # la página: carga dist/web/ con un importmap y los estilos,
   corrección —el compilador ya dice si un tipo está mal—, y los guardianes que existen tapan
   cosas que **funcionan mal en silencio**. El razonamiento, en `TAREAS.md`. **No lo vuelvas a
   proponer.**
-- **`Context.items` es `ItemRef[]`, nunca `(Note | Plan)[]`.** No negociable.
+- **`Context.items` es `ItemRef[]`, nunca `(Note | Diagram)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
   memoria, **nunca** en localStorage. En desktop, keychain del sistema.
 - **Los comentarios del código van en castellano**, igual que la documentación.
@@ -356,7 +356,10 @@ duda**; no la cambies por tu cuenta.
 - **El write-behind son DOS piezas, no una.** `setTimeout` **no compila dentro del core**
   (`TS2304`). *Qué está sucio* es puro y va en `core/app/`; *cuándo se escribe* va en
   `src/storage/`. **Nada de puerto `Scheduler`.** §6.4.
-- **Los Planes se persisten, pero no se operan** hasta la Fase 5. §9.7.
+- **Los Diagramas se persisten, pero no se operan** hasta la Fase 5. §9.7.
+- **La entidad se llama Diagrama (`Diagram` en el código), no Plan.** *Renombrada con el usuario
+  el 2026-10-03*: «plan» chocaba con el plan por fases y daba por hecho para qué sirve. Sin
+  migración: no había ninguno guardado. §5.
 - **Una acción, una operación.** Crear una nota en un contexto y «Mover a…» encadenan dos casos
   de uso desde la UI. La cascada de `setChecked` sigue sin construir, y si llega se pliega en
   **una sola** acción. §9.7.
@@ -421,7 +424,7 @@ duda**; no la cambies por tu cuenta.
 
 **De la navegación y el alcance de la Fase 4** (el porqué, en §7.4 salvo que se diga otra cosa):
 
-- **Cuatro vistas: ventanas (la principal y la única que enseña contextos), nota, plan y
+- **Cuatro vistas: ventanas (la principal y la única que enseña contextos), nota, diagrama y
   configuración.** De ventanas se entra a las demás **a un solo nivel**, y de una secundaria sólo
   se sale con **exit** (o el atrás del navegador, que es lo mismo), a **la misma ventana**. ◀ ▶
   no son circulares. En la vista nota no hay ◀ ▶ ni ⚙.
@@ -454,7 +457,7 @@ duda**; no la cambies por tu cuenta.
   mismo editor en dos marcos**, sin exit. `defaultView` queda sin uso, y no se toca.
 - **La Fase 4 es sólo web y se partió en Fase 4 · Contextos y Fase 4 · Notas**, sin tocar el
   core salvo la regla de `merge` y conservar las referencias a lo ilegible (2026-10-03,
-  arriba); **los Planes son la Fase 5**. §9.10.
+  arriba); **los Diagramas son la Fase 5**. §9.10.
 
 ## Fuera de alcance por ahora
 
@@ -469,7 +472,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - La carpeta del usuario y OPFS como destino de la app, con su botón de «reconectar carpeta»
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
-- El editor de grafos de los **Planes** — es la Fase 5
+- El editor de grafos de los **Diagramas** — es la Fase 5
 - Shells de desktop y móvil (Tauri / Capacitor)
 - Sync entre dispositivos, CRDTs, colaboración en tiempo real
 
@@ -488,7 +491,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   entiende solo), sin contestar. Siguen en `TAREAS.md` como pendientes, **no como hechas**. Lo
   que queda sin verificar de verdad es sobre todo **el móvil**: arrastrar las fichas con el dedo
   y el teclado de Android.
-- **Fase 5 — Planes.** El editor de grafos. **Lo siguiente: planificarla.**
+- **Fase 5 — Diagramas.** El editor de grafos. **Lo siguiente: planificarla.**
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que

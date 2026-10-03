@@ -184,7 +184,7 @@ export interface DeleteContext {
   readonly meta: ActionMeta
 }
 
-/** «Se metió una nota o un plan en este contexto». No-op si no existe. */
+/** «Se metió una nota o un diagrama en este contexto». No-op si no existe. */
 export interface AddItem {
   readonly type: "add-item"
   readonly contextId: ContextId
@@ -199,7 +199,7 @@ export interface RemoveItem {
   readonly meta: ActionMeta
 }
 
-/** Qué se ve al abrir el contexto: la lista, o directo a una nota o plan. */
+/** Qué se ve al abrir el contexto: la lista, o directo a una nota o diagrama. */
 export interface SetDefaultView {
   readonly type: "set-default-view"
   readonly contextId: ContextId

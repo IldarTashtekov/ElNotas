@@ -166,10 +166,10 @@ export const createWriteBehind = ({
           if (!r.ok) return r
           escrito = { ...escrito, notes: { ...escrito.notes, [n.id]: n } }
         }
-        for (const p of cambios.plans.upserted) {
-          const r: Result<void, StorageError> = await adapter.plans.put(p, escrito.plans[p.id]?.revision ?? null)
+        for (const p of cambios.diagrams.upserted) {
+          const r: Result<void, StorageError> = await adapter.diagrams.put(p, escrito.diagrams[p.id]?.revision ?? null)
           if (!r.ok) return r
-          escrito = { ...escrito, plans: { ...escrito.plans, [p.id]: p } }
+          escrito = { ...escrito, diagrams: { ...escrito.diagrams, [p.id]: p } }
         }
         for (const c of cambios.contexts.upserted) {
           const r: Result<void, StorageError> = await adapter.contexts.put(c, escrito.contexts[c.id]?.revision ?? null)
@@ -182,10 +182,10 @@ export const createWriteBehind = ({
           if (!r.ok) return r
           escrito = { ...escrito, notes: sin(escrito.notes, id) }
         }
-        for (const id of cambios.plans.deleted) {
-          const r: Result<void, StorageError> = await adapter.plans.delete(id, escrito.plans[id]?.revision ?? null)
+        for (const id of cambios.diagrams.deleted) {
+          const r: Result<void, StorageError> = await adapter.diagrams.delete(id, escrito.diagrams[id]?.revision ?? null)
           if (!r.ok) return r
-          escrito = { ...escrito, plans: sin(escrito.plans, id) }
+          escrito = { ...escrito, diagrams: sin(escrito.diagrams, id) }
         }
         for (const id of cambios.contexts.deleted) {
           const r: Result<void, StorageError> = await adapter.contexts.delete(id, escrito.contexts[id]?.revision ?? null)

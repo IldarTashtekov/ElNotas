@@ -1,18 +1,18 @@
 import type { Versioned } from "./Versioned.js"
-import type { ContextId, ItemRef, NoteId, PlanId } from "./Ids.js"
+import type { ContextId, DiagramId, ItemRef, NoteId } from "./Ids.js"
 
 /**
  * Qué se muestra al abrir un Contexto:
  * - "context": la lista de sus elementos
- * - "note" / "plan": entra directo a uno concreto
+ * - "note" / "diagram": entra directo a uno concreto
  */
 export type DefaultView =
   | { readonly type: "context" }
   | { readonly type: "note"; readonly id: NoteId }
-  | { readonly type: "plan"; readonly id: PlanId }
+  | { readonly type: "diagram"; readonly id: DiagramId }
 
 /**
- * Agrupa notas y planes.
+ * Agrupa notas y diagramas.
  *
  * `items` son REFERENCIAS, no las entidades. Es lo que permite que una nota esté
  * en varios contextos (base del ContextoCompuesto) y que guardar un contexto no

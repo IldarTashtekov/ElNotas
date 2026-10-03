@@ -18,8 +18,8 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context, Note, Plan, Result, StorageAdapter, StorageError } from "#core/index"
-import { contextId, err, noteId, noteRef, ok, planId, revision } from "#core/index"
+import type { Context, Diagram, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import { contextId, diagramId, err, noteId, noteRef, ok, revision } from "#core/index"
 
 /* ──────────────────── Abrir el sobre, fallando si no toca ─────────────────── */
 
@@ -52,8 +52,8 @@ const nota = (id: string, name: string): Note => ({
   revision: revision(`rev-${id}`),
 })
 
-const plan = (id: string, name: string): Plan => ({
-  id: planId(id),
+const diagrama = (id: string, name: string): Diagram => ({
+  id: diagramId(id),
   name,
   nodes: [],
   updatedAt: 0,
@@ -71,7 +71,7 @@ const contexto = (id: string, name: string): Context => ({
 
 const COMPRA = nota("compra", "Compra semanal")
 const DIARIO = nota("diario", "Diario")
-const MUDANZA = plan("mudanza", "Mudanza")
+const MUDANZA = diagrama("mudanza", "Mudanza")
 const CASA = contexto("casa", "Casa")
 /** Otra nota que, por lo que sea, llega con el id de Compra: un choque de ids. */
 const DIARIO_CON_ID_DE_COMPRA: Note = { ...DIARIO, id: COMPRA.id }
@@ -180,25 +180,25 @@ export const runStorageContract = (
 
   /* ── Repository: los tres están aislados ──
      Sin esto, un adaptador que guardara las tres clases en el mismo saco pasaría
-     todo lo de arriba. Y el fallo sería de los buenos: un Plan y una Nota con el
+     todo lo de arriba. Y el fallo sería de los buenos: un Diagrama y una Nota con el
      mismo id, y uno de los dos desaparece. */
 
   caso("los tres repositorios no se pisan entre sí", async (s) => {
     await s.notes.put(COMPRA, null)
-    await s.plans.put(MUDANZA, null)
+    await s.diagrams.put(MUDANZA, null)
     await s.contexts.put(CASA, null)
 
     assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
-    assert.deepEqual(valorDe(await s.plans.getAll()), [MUDANZA])
+    assert.deepEqual(valorDe(await s.diagrams.getAll()), [MUDANZA])
     assert.deepEqual(valorDe(await s.contexts.getAll()), [CASA])
   })
 
   caso("borrar en un repositorio no toca a los otros", async (s) => {
     await s.notes.put(COMPRA, null)
-    await s.plans.put(MUDANZA, null)
+    await s.diagrams.put(MUDANZA, null)
     await s.notes.delete(COMPRA.id, COMPRA.revision)
 
-    assert.deepEqual(valorDe(await s.plans.getAll()), [MUDANZA])
+    assert.deepEqual(valorDe(await s.diagrams.getAll()), [MUDANZA])
   })
 
   /* ── Las entidades se guardan enteras ──

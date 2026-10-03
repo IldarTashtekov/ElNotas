@@ -22,9 +22,9 @@ import assert from "node:assert/strict"
 
 import type { AppState } from "#core/domain/AppState"
 import type { Context } from "#core/domain/Context"
-import { contextId, noteId, noteRef, planId, planRef, revision } from "#core/domain/Ids"
+import { contextId, diagramId, diagramRef, noteId, noteRef, revision } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
-import type { Plan } from "#core/domain/Plan"
+import type { Diagram } from "#core/domain/Diagram"
 import type { ActionMeta } from "#core/app/Action"
 import { reduce } from "#core/app/reduce"
 
@@ -32,7 +32,7 @@ import { reduce } from "#core/app/reduce"
 
 const ID_COMPRA = noteId("compra")
 const ID_DIARIO = noteId("diario")
-const ID_MUDANZA = planId("mudanza")
+const ID_MUDANZA = diagramId("mudanza")
 const ID_CASA = contextId("casa")
 const ID_TRABAJO = contextId("trabajo")
 const ID_VACIO = contextId("vacio")
@@ -48,7 +48,7 @@ const nota = (id: typeof ID_COMPRA, name: string): Note => ({
   revision: revision(`rev-${id}`),
 })
 
-const MUDANZA: Plan = {
+const MUDANZA: Diagram = {
   id: ID_MUDANZA,
   name: "Mudanza",
   nodes: [],
@@ -70,14 +70,14 @@ const contexto = (
 })
 
 /**
- *   notas:     compra · diario          planes: mudanza
+ *   notas:     compra · diario          diagramas: mudanza
  *   contextos: casa    → [compra, diario]
  *              trabajo → [compra]
  *              vacio   → []
  */
 const estado = (): AppState => ({
   notes: { [ID_COMPRA]: nota(ID_COMPRA, "Compra"), [ID_DIARIO]: nota(ID_DIARIO, "Diario") },
-  plans: { [ID_MUDANZA]: MUDANZA },
+  diagrams: { [ID_MUDANZA]: MUDANZA },
   contexts: {
     [ID_CASA]: contexto(ID_CASA, "Casa", [noteRef(ID_COMPRA), noteRef(ID_DIARIO)]),
     [ID_TRABAJO]: contexto(ID_TRABAJO, "Trabajo", [noteRef(ID_COMPRA)]),
@@ -230,9 +230,9 @@ test("add-item mete la referencia", () => {
   assert.deepEqual(ctx(s, ID_VACIO).items, [noteRef(ID_COMPRA)])
 })
 
-test("add-item admite planes, no sólo notas", () => {
-  const s = reduce(estado(), { type: "add-item", contextId: ID_VACIO, item: planRef(ID_MUDANZA), meta: META })
-  assert.deepEqual(ctx(s, ID_VACIO).items, [planRef(ID_MUDANZA)])
+test("add-item admite diagramas, no sólo notas", () => {
+  const s = reduce(estado(), { type: "add-item", contextId: ID_VACIO, item: diagramRef(ID_MUDANZA), meta: META })
+  assert.deepEqual(ctx(s, ID_VACIO).items, [diagramRef(ID_MUDANZA)])
 })
 
 test("add-item de algo que NO EXISTE es no-op", () => {
@@ -256,22 +256,22 @@ test("add-item de algo que ya estaba es no-op", () => {
   )
 })
 
-test("add-item distingue una nota de un plan con el mismo id", () => {
-  // `kind` existe justamente para esto: Note y Plan no son discriminables entre
+test("add-item distingue una nota de un diagrama con el mismo id", () => {
+  // `kind` existe justamente para esto: Note y Diagram no son discriminables entre
   // sí en runtime —los dos son { id, name, … }— pero sus referencias sí.
-  const mismoTexto = planId("compra") // mismo string que ID_COMPRA, otra clase
-  const conPlan: AppState = {
+  const mismoTexto = diagramId("compra") // mismo string que ID_COMPRA, otra clase
+  const conDiagrama: AppState = {
     ...estado(),
-    plans: { [mismoTexto]: { ...MUDANZA, id: mismoTexto } },
+    diagrams: { [mismoTexto]: { ...MUDANZA, id: mismoTexto } },
   }
-  const s = reduce(conPlan, {
+  const s = reduce(conDiagrama, {
     type: "add-item",
     contextId: ID_TRABAJO,
-    item: planRef(mismoTexto),
+    item: diagramRef(mismoTexto),
     meta: META,
   })
 
-  assert.deepEqual(ctx(s, ID_TRABAJO).items, [noteRef(ID_COMPRA), planRef(mismoTexto)])
+  assert.deepEqual(ctx(s, ID_TRABAJO).items, [noteRef(ID_COMPRA), diagramRef(mismoTexto)])
 })
 
 /* ─────────────────────────────── remove-item ──────────────────────────────── */

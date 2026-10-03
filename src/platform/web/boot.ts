@@ -14,12 +14,12 @@ import type {
   BlobStore,
   Clock,
   Context,
+  Diagram,
   IdGenerator,
   ItemRef,
   MigrationError,
   MigrationResult,
   Note,
-  Plan,
   Result,
   StorageAdapter,
   StorageError,
@@ -92,15 +92,15 @@ export const boot = async ({
 
   const notes: Result<ReadonlyArray<Note>, StorageError> = await adapter.notes.getAll()
   if (!notes.ok) return notes
-  const plans: Result<ReadonlyArray<Plan>, StorageError> = await adapter.plans.getAll()
-  if (!plans.ok) return plans
+  const diagrams: Result<ReadonlyArray<Diagram>, StorageError> = await adapter.diagrams.getAll()
+  if (!diagrams.ok) return diagrams
   const contexts: Result<ReadonlyArray<Context>, StorageError> =
     await adapter.contexts.getAll()
   if (!contexts.ok) return contexts
 
   const guardado: StoredEntities = {
     notes: notes.value,
-    plans: plans.value,
+    diagrams: diagrams.value,
     contexts: contexts.value,
   }
   const migrado: Result<MigrationResult, MigrationError> = runMigrations(

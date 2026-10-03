@@ -16,9 +16,9 @@ import assert from "node:assert/strict"
 
 import type { AppState } from "#core/domain/AppState"
 import type { Context } from "#core/domain/Context"
-import { contextId, noteId, planId, revision } from "#core/domain/Ids"
+import { contextId, diagramId, noteId, revision } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
-import type { Plan } from "#core/domain/Plan"
+import type { Diagram } from "#core/domain/Diagram"
 import { NO_CHANGES, diffState } from "#core/app/diffState"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
@@ -26,7 +26,7 @@ import { NO_CHANGES, diffState } from "#core/app/diffState"
 const ID_COMPRA = noteId("compra")
 const ID_DIARIO = noteId("diario")
 const ID_CASA = contextId("casa")
-const ID_MUDANZA = planId("mudanza")
+const ID_MUDANZA = diagramId("mudanza")
 
 const nota = (id: typeof ID_COMPRA, name: string): Note => ({
   id,
@@ -48,7 +48,7 @@ const CASA: Context = {
   revision: revision("rev-casa"),
 }
 
-const MUDANZA: Plan = {
+const MUDANZA: Diagram = {
   id: ID_MUDANZA,
   name: "Mudanza",
   nodes: [],
@@ -58,7 +58,7 @@ const MUDANZA: Plan = {
 
 const estado = (): AppState => ({
   notes: { [ID_COMPRA]: COMPRA, [ID_DIARIO]: DIARIO },
-  plans: { [ID_MUDANZA]: MUDANZA },
+  diagrams: { [ID_MUDANZA]: MUDANZA },
   contexts: { [ID_CASA]: CASA },
 })
 
@@ -86,8 +86,8 @@ test("cambiar una nota NO ensucia las otras entidades", () => {
 
   assert.deepEqual(d.notes.upserted, [renombrada])
   assert.deepEqual(d.notes.deleted, [])
-  // Y esto es el meollo: ni el plan ni el contexto se van a escribir.
-  assert.deepEqual(d.plans.upserted, [])
+  // Y esto es el meollo: ni el diagrama ni el contexto se van a escribir.
+  assert.deepEqual(d.diagrams.upserted, [])
   assert.deepEqual(d.contexts.upserted, [])
 })
 
@@ -159,13 +159,13 @@ test("las tres clases de entidad se diferencian a la vez", () => {
   const antes = estado()
   const despues: AppState = {
     notes: { [ID_DIARIO]: DIARIO },
-    plans: { [ID_MUDANZA]: { ...MUDANZA, name: "Mudanza 2" } },
+    diagrams: { [ID_MUDANZA]: { ...MUDANZA, name: "Mudanza 2" } },
     contexts: {},
   }
 
   const d = diffState(antes, despues)
   assert.deepEqual(d.notes.deleted, [ID_COMPRA])
-  assert.equal(d.plans.upserted.length, 1)
+  assert.equal(d.diagrams.upserted.length, 1)
   assert.deepEqual(d.contexts.deleted, [ID_CASA])
 })
 
@@ -190,12 +190,12 @@ test("crear y borrar entre dos escrituras se cancela: no hay nada que escribir",
 /* ─────────────────────────── Estados vacíos y bordes ──────────────────────── */
 
 test("de vacío a vacío no hay nada que escribir", () => {
-  const vacio = (): AppState => ({ notes: {}, plans: {}, contexts: {} })
+  const vacio = (): AppState => ({ notes: {}, diagrams: {}, contexts: {} })
   assert.strictEqual(diffState(vacio(), vacio()), NO_CHANGES)
 })
 
 test("la primera entidad de un almacén vacío sale como upserted", () => {
-  const vacio: AppState = { notes: {}, plans: {}, contexts: {} }
+  const vacio: AppState = { notes: {}, diagrams: {}, contexts: {} }
   const conUna: AppState = { ...vacio, notes: { [ID_COMPRA]: COMPRA } }
 
   assert.deepEqual(diffState(vacio, conUna).notes.upserted, [COMPRA])

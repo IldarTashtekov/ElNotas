@@ -112,7 +112,7 @@ const contando = (
         return base.transaction(fn)
       },
       notes: { ...base.notes, put: contar(base.notes.put), delete: contar(base.notes.delete) },
-      plans: { ...base.plans, put: contar(base.plans.put), delete: contar(base.plans.delete) },
+      diagrams: { ...base.diagrams, put: contar(base.diagrams.put), delete: contar(base.diagrams.delete) },
       contexts: {
         ...base.contexts,
         put: contar(base.contexts.put),
@@ -134,7 +134,7 @@ const nota = (name: string): Note => ({
   revision: revision(`rev-${name}`),
 })
 
-const VACIO: AppState = { notes: {}, plans: {}, contexts: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {} }
 
 const conNota = (n: Note): AppState => ({ ...VACIO, notes: { [n.id]: n } })
 

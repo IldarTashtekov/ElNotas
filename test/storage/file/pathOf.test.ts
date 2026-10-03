@@ -7,12 +7,12 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { noteId, noteRef, planId, planRef } from "#core/index"
+import { diagramId, diagramRef, noteId, noteRef } from "#core/index"
 import { pathOf } from "#storage/index"
 
-test("una nota va en notes/ y un plan en plans/", (): void => {
+test("una nota va en notes/ y un diagrama en diagrams/", (): void => {
   assert.equal(pathOf(noteRef(noteId("rota"))), "notes/rota.json")
-  assert.equal(pathOf(planRef(planId("viaje"))), "plans/viaje.json")
+  assert.equal(pathOf(diagramRef(diagramId("viaje"))), "diagrams/viaje.json")
 })
 
 test("un id con / no sale de su carpeta: se codifica como al guardar", (): void => {

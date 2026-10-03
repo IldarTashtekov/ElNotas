@@ -102,7 +102,7 @@ const mismoItem = (a: ItemRef, b: ItemRef): boolean =>
 const existeItem = (state: AppState, item: ItemRef): boolean =>
   item.kind === "note"
     ? state.notes[item.id] !== undefined
-    : state.plans[item.id] !== undefined
+    : state.diagrams[item.id] !== undefined
 
 const mismaVista = (a: DefaultView, b: DefaultView): boolean =>
   a.type === b.type && (a.type === "context" || b.type === "context" || a.id === b.id)

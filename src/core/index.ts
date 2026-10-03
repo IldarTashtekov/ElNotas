@@ -13,20 +13,20 @@
 export type {
   ContentId,
   ContextId,
+  DiagramId,
+  DiagramNodeId,
   ItemRef,
   NoteId,
-  PlanId,
-  PlanNodeId,
   Revision,
 } from "./domain/Ids.js"
 export {
   contentId,
   contextId,
+  diagramId,
+  diagramNodeId,
+  diagramRef,
   noteId,
   noteRef,
-  planId,
-  planNodeId,
-  planRef,
   revision,
 } from "./domain/Ids.js"
 
@@ -123,7 +123,7 @@ export {
 /* Entidades */
 export type { Versioned } from "./domain/Versioned.js"
 export type { Note } from "./domain/Note.js"
-export type { NoteNode, Plan, PlanNode, SimpleNode } from "./domain/Plan.js"
+export type { Diagram, DiagramNode, NoteNode, SimpleNode } from "./domain/Diagram.js"
 export type { Context, DefaultView } from "./domain/Context.js"
 export type { AppState } from "./domain/AppState.js"
 export { emptyAppState } from "./domain/AppState.js"
