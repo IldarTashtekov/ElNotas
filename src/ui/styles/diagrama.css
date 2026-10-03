@@ -80,10 +80,23 @@
     fill: var(--muted);
   }
 }
-.relacion .linea {
-  fill: none;
-  stroke: var(--muted);
-  stroke-width: 1.5;
+.relacion {
+  & .linea {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+  }
+  /* El trazo que recibe el dedo: invisible y grueso, y el único de la capa que escucha. */
+  & .toque {
+    cursor: pointer;
+    fill: none;
+    pointer-events: stroke;
+    stroke: transparent;
+    stroke-width: 16;
+  }
+  &:hover .linea {
+    stroke: var(--accent);
+  }
 }
 
 /* ── Los pósits: su posición es su centro ── */

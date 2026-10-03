@@ -7,7 +7,8 @@
  * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, o
  * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo:
  * conectar, editar, hecho, borrar. *Conectar* espera a que se toque el nodo de
- * destino, y el fondo lo cancela. Un toque en un nodo-nota entra en su nota, tras esperar un
+ * destino, y el fondo lo cancela. Doble toque —o clic derecho— en una línea abre
+ * el suyo: invertir, con o sin dirección, borrar. Un toque en un nodo-nota entra en su nota, tras esperar un
  * instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
  * ratón, o manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez,
  * al soltar.
@@ -23,13 +24,14 @@ import type {
   DiagramNode,
   DiagramNodeId,
   DiagramRelation,
+  DiagramRelationId,
   Note,
   NoteId,
   Store,
   Unsubscribe,
   UseCases,
 } from "#core/index"
-import { diagramNodeId } from "#core/index"
+import { diagramNodeId, diagramRelationId } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
@@ -87,8 +89,10 @@ interface Pellizco {
 interface Gesto {
   readonly puntero: number
   readonly tipo: string
-  /** El pósit sobre el que bajó, o `null` si fue en el fondo. */
+  /** El pósit sobre el que bajó, o `null` si fue en el fondo o en una línea. */
   readonly nodo: DiagramNodeId | null
+  /** La línea sobre la que bajó, o `null`. Arrastrarla arrastra el corcho. */
+  readonly relacion: DiagramRelationId | null
   readonly origen: Point
   /** Dónde estaba el pósit al empezar, en el corcho. */
   readonly inicioNodo: Point
@@ -294,16 +298,21 @@ export const createDiagramCanvas = ({
         grupo.setAttribute("data-id", r.id)
         const linea: SVGPathElement = svg("path")
         linea.classList.add("linea")
-        grupo.append(linea)
+        /* Debajo, el mismo trazo, invisible y grueso: es el que recibe el dedo. */
+        const toque: SVGPathElement = svg("path")
+        toque.classList.add("toque")
+        grupo.append(toque, linea)
         return grupo
       },
       update: (grupo: Element, r: DiagramRelation): void => {
         const linea: Element | null = grupo.querySelector(".linea")
+        const toque: Element | null = grupo.querySelector(".toque")
         const desde: Box | null = caja(r.from)
         const hasta: Box | null = caja(r.to)
-        if (linea === null || desde === null || hasta === null) return
+        if (linea === null || toque === null || desde === null || hasta === null) return
         const c: RelationCurve = relationCurve(desde, hasta, r.from, r.to, curvas.get(r.id) ?? 0)
         linea.setAttribute("d", curvePath(c))
+        toque.setAttribute("d", curvePath(c))
         if (r.directed) linea.setAttribute("marker-end", `url(#${idFlecha})`)
         else linea.removeAttribute("marker-end")
       },
@@ -486,6 +495,37 @@ export const createDiagramCanvas = ({
     if (hasta !== null && hasta !== desde) useCases.addRelation(diagramId, desde, hasta)
   }
 
+  /** El menú de una línea: lo que se puede cambiar de ella, según tenga o no flecha. */
+  const menuRelacion = (id: DiagramRelationId): void => {
+    const actual: Diagram | undefined = diagrama()
+    const r: DiagramRelation | undefined = actual?.relations[id]
+    if (actual === undefined || r === undefined) return
+    const nombre = (n: DiagramNodeId): string => {
+      const nodo: DiagramNode | undefined = actual.nodes[n]
+      return nodo === undefined ? "?" : textoDe(nodo, store.getState()) || "Sin texto"
+    }
+    menu.open(`${nombre(r.from)} ${r.directed ? "→" : "—"} ${nombre(r.to)}`, acciones(
+      /* Sin flecha no hay sentido que invertir: la opción ni sale. */
+      ...(r.directed
+        ? [
+            opcion("Invertir dirección", (): void => {
+              useCases.setRelationEnds(diagramId, id, r.to, r.from)
+            }),
+            opcion("Sin dirección", (): void => {
+              useCases.setRelationDirected(diagramId, id, false)
+            }),
+          ]
+        : [
+            opcion("Con dirección", (): void => {
+              useCases.setRelationDirected(diagramId, id, true)
+            }),
+          ]),
+      opcion("Borrar", (): void => {
+        useCases.removeRelation(diagramId, id)
+      }, "peligro"),
+    ))
+  }
+
   const menuNodo = (id: DiagramNodeId): void => {
     const nodo: DiagramNode | undefined = diagrama()?.nodes[id]
     if (nodo === undefined) return
@@ -545,6 +585,14 @@ export const createDiagramCanvas = ({
     return id === undefined ? null : diagramNodeId(id)
   }
 
+  /** La línea sobre la que cayó un evento, o `null`. */
+  const relacionDe = (objetivo: EventTarget | null): DiagramRelationId | null => {
+    const el: Element | null =
+      objetivo instanceof Element ? objetivo.closest(".relacion[data-id]") : null
+    const id: string | null = el?.getAttribute("data-id") ?? null
+    return id === null ? null : diagramRelationId(id)
+  }
+
   lienzo.addEventListener("pointerdown", (evento: PointerEvent): void => {
     if (evento.pointerType === "mouse" && evento.button !== 0) return
     /* Dentro del campo que se edita, el dedo es del campo. */
@@ -571,6 +619,7 @@ export const createDiagramCanvas = ({
       puntero: evento.pointerId,
       tipo: evento.pointerType,
       nodo,
+      relacion: nodo === null ? relacionDe(evento.target) : null,
       origen: donde,
       inicioNodo: { x: n?.positionX ?? 0, y: n?.positionY ?? 0 },
       movido: false,
@@ -642,12 +691,18 @@ export const createDiagramCanvas = ({
       terminarDeConectar(g.nodo)
       return
     }
-    const toque: Tap = { x: donde.x, y: donde.y, time: cuando, target: g.nodo ?? FONDO }
+    const toque: Tap = {
+      x: donde.x,
+      y: donde.y,
+      time: cuando,
+      target: g.nodo ?? (g.relacion === null ? FONDO : `relacion:${g.relacion}`),
+    }
     if (isDoubleTap(toqueAnterior, toque)) {
       toqueAnterior = null
       cancelarApertura()
-      if (g.nodo === null) menuFondo(donde)
-      else menuNodo(g.nodo)
+      if (g.nodo !== null) menuNodo(g.nodo)
+      else if (g.relacion !== null) menuRelacion(g.relacion)
+      else menuFondo(donde)
       return
     }
     toqueAnterior = toque
@@ -707,8 +762,10 @@ export const createDiagramCanvas = ({
       terminarDeConectar(null)
       return
     }
-    if (nodo === null) menuFondo(enLienzo(evento))
-    else menuNodo(nodo)
+    const relacion: DiagramRelationId | null = nodo === null ? relacionDe(evento.target) : null
+    if (nodo !== null) menuNodo(nodo)
+    else if (relacion !== null) menuRelacion(relacion)
+    else menuFondo(enLienzo(evento))
   })
 
   /* No pasivo: uno pasivo no puede impedir que la rueda desplace la página. El
