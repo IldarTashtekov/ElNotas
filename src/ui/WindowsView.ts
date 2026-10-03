@@ -172,7 +172,13 @@ export const mountWindowsView = (
   const montarLienzo = (id: DiagramId): void => {
     if (lienzo !== null && lienzo.diagrama === id) return
     soltarLienzo()
-    const instancia: DiagramCanvas = createDiagramCanvas({ store, useCases, back, diagramId: id })
+    const instancia: DiagramCanvas = createDiagramCanvas({
+      store,
+      useCases,
+      back,
+      diagramId: id,
+      onOpenNote,
+    })
     zonaLienzo.append(instancia.element)
     lienzo = { diagrama: id, instancia }
   }

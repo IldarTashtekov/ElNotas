@@ -1,6 +1,7 @@
 /**
  * La app entera: la vista ventanas siempre montada y, encima, la configuración,
- * una nota o un diagrama cuando se abren. De lo de encima no se abre otra cosa.
+ * una nota o un diagrama cuando se abren. Lo de encima se apila: de un diagrama
+ * se entra a una nota, y al salir de ella se vuelve al diagrama.
  *
  * Lo de encima y el modo selección se cierran también con el atrás del
  * navegador —el del móvil incluido—, y comparten para eso un mismo historial.
@@ -46,22 +47,25 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   aviso.setAttribute("role", "alert")
   aviso.hidden = true
   const principal: HTMLElement = elemento("div")
-  const encima: HTMLElement = elemento("div")
-  encima.hidden = true
+  /** Lo abierto encima de la ventana, de abajo arriba. Sólo se ve el último. */
+  let capas: ReadonlyArray<HTMLElement> = []
 
-  /** Monta algo encima de la ventana. `montar` devuelve cómo se desmonta. */
+  /** Monta algo encima de lo que se ve. `montar` devuelve cómo se desmonta. */
   const abrirEncima = (montar: (raiz: HTMLElement) => () => void): void => {
-    if (back.isOpen()) return
-    /* Se enseña ANTES de montar: lo que se monte puede querer el foco, y un
-       elemento oculto no lo coge. */
-    principal.hidden = true
-    encima.hidden = false
-    const desmontar: () => void = montar(encima)
+    const debajo: HTMLElement = capas[capas.length - 1] ?? principal
+    const capa: HTMLElement = elemento("div")
+    raiz.insertBefore(capa, pregunta.element)
+    capas = [...capas, capa]
+    /* Lo de debajo se esconde ANTES de montar: lo que se monte puede querer el
+       foco, y en algo que va a esconderse no se quedaría. */
+    debajo.hidden = true
+    const desmontar: () => void = montar(capa)
     window.scrollTo(0, 0)
     back.open((): void => {
       desmontar()
-      encima.hidden = true
-      principal.hidden = false
+      capa.remove()
+      capas = capas.filter((c: HTMLElement): boolean => c !== capa)
+      debajo.hidden = false
     })
   }
 
@@ -77,10 +81,17 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
 
   const abrirDiagrama = (diagramId: DiagramId, editName: boolean): void =>
     abrirEncima((raiz: HTMLElement): (() => void) =>
-      mountDiagramView(raiz, { ...deps, back, diagramId, editName, onExit: back.close }),
+      mountDiagramView(raiz, {
+        ...deps,
+        back,
+        diagramId,
+        editName,
+        onExit: back.close,
+        onOpenNote: abrirNota,
+      }),
     )
 
-  raiz.replaceChildren(aviso, principal, encima, pregunta.element)
+  raiz.replaceChildren(aviso, principal, pregunta.element)
   mountWindowsView(principal, {
     ...deps,
     back,

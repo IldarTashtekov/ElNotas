@@ -2,11 +2,12 @@
  * La vista diagrama: la cabecera con el nombre —que se renombra tocándolo—, el
  * lienzo, y abajo la barra con el exit.
  *
- * Se sale con el exit o con el atrás. Un diagrama que es ventana enseña el mismo
+ * Se sale con el exit o con el atrás. Un nodo-nota abre su nota encima, y al
+ * salir de ella se vuelve aquí. Un diagrama que es ventana enseña el mismo
  * lienzo en la vista ventanas, sin exit.
  */
 
-import type { Diagram, DiagramId, Store, Unsubscribe, UseCases } from "#core/index"
+import type { Diagram, DiagramId, NoteId, Store, Unsubscribe, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import { createDiagramCanvas } from "./DiagramCanvas.js"
@@ -22,12 +23,14 @@ export interface DiagramViewDeps {
   /** Recién creado: llega con el nombre a punto de escribirse. */
   readonly editName: boolean
   readonly onExit: () => void
+  /** Entrar en la nota de un nodo-nota: se abre encima, y al salir se vuelve aquí. */
+  readonly onOpenNote: (id: NoteId) => void
 }
 
 /** Devuelve la función que la desmonta. */
 export const mountDiagramView = (
   raiz: HTMLElement,
-  { store, useCases, back, diagramId, editName, onExit }: DiagramViewDeps,
+  { store, useCases, back, diagramId, editName, onExit, onOpenNote }: DiagramViewDeps,
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -41,7 +44,13 @@ export const mountDiagramView = (
   cabecera.className = "cabecera"
   cabecera.append(titulo.element)
 
-  const lienzo: DiagramCanvas = createDiagramCanvas({ store, useCases, back, diagramId })
+  const lienzo: DiagramCanvas = createDiagramCanvas({
+    store,
+    useCases,
+    back,
+    diagramId,
+    onOpenNote,
+  })
 
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")
   salir.type = "button"

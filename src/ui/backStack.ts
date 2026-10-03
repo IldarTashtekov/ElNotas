@@ -25,6 +25,15 @@ export const createBackStack = (): BackStack => {
      y su `popstate` pasa un rato, y un `back()` de más ahí se saldría de la
      página: se van pidiendo de una en una. */
   let porCerrar: number = 0
+  /* Las que se abren mientras quedan cierres por llegar esperan a que lleguen: si
+     se apuntaran ya, el `popstate` pendiente cerraría la nueva y no la vieja. Pasa
+     al elegir en una hoja algo que abre otra capa. */
+  let pendientes: ReadonlyArray<() => void> = []
+
+  const apuntar = (cerrar: () => void): void => {
+    capas = [...capas, cerrar]
+    window.history.pushState({ capa: capas.length }, "")
+  }
 
   /* Al recargar, lo que hubiera abierto no se recuerda. */
   window.history.replaceState(null, "")
@@ -32,18 +41,24 @@ export const createBackStack = (): BackStack => {
     const cerrar: (() => void) | undefined = capas[capas.length - 1]
     if (cerrar === undefined) {
       porCerrar = 0
+    } else {
+      capas = capas.slice(0, -1)
+      porCerrar = Math.max(0, porCerrar - 1)
+      cerrar()
+    }
+    if (porCerrar > 0) {
+      window.history.back()
       return
     }
-    capas = capas.slice(0, -1)
-    porCerrar = Math.max(0, porCerrar - 1)
-    cerrar()
-    if (porCerrar > 0) window.history.back()
+    const esperan: ReadonlyArray<() => void> = pendientes
+    pendientes = []
+    for (const abrir of esperan) abrir()
   })
 
   return {
     open: (cerrar: () => void): void => {
-      capas = [...capas, cerrar]
-      window.history.pushState({ capa: capas.length }, "")
+      if (porCerrar > 0) pendientes = [...pendientes, (): void => apuntar(cerrar)]
+      else apuntar(cerrar)
     },
     close: (): void => {
       if (porCerrar >= capas.length) return

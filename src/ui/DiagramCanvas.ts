@@ -3,9 +3,12 @@
  * arrastra con un dedo o con el ratón y se acerca con dos dedos o con la rueda;
  * al montarse enseña su origen en el centro, y dónde se miraba no se recuerda.
  *
- * Doble toque —o clic derecho— en el fondo abre el menú para crear; en un pósit,
- * el suyo: editar, hecho, borrar. Un pósit se mueve arrastrándolo con el ratón, o
- * manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez, al soltar.
+ * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, o
+ * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo: editar,
+ * hecho, borrar. Un toque en un nodo-nota entra en su nota, tras esperar un
+ * instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
+ * ratón, o manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez,
+ * al soltar.
  *
  * Es el mismo en la vista diagrama y en una ventana de diagrama: cada una le pone
  * su marco alrededor.
@@ -17,6 +20,8 @@ import type {
   DiagramId,
   DiagramNode,
   DiagramNodeId,
+  Note,
+  NoteId,
   Store,
   Unsubscribe,
   UseCases,
@@ -25,7 +30,8 @@ import { diagramNodeId } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
-import { LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from "./gestures.js"
+import { DOUBLE_TAP_MS, LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from "./gestures.js"
+import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
 import type { Sheet } from "./sheet.js"
@@ -38,6 +44,8 @@ export interface DiagramCanvasDeps {
   readonly useCases: UseCases
   readonly back: BackStack
   readonly diagramId: DiagramId
+  /** Entrar en la nota de un nodo-nota. */
+  readonly onOpenNote: (id: NoteId) => void
 }
 
 export interface DiagramCanvas {
@@ -87,6 +95,7 @@ export const createDiagramCanvas = ({
   useCases,
   back,
   diagramId,
+  onOpenNote,
 }: DiagramCanvasDeps): DiagramCanvas => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -271,22 +280,64 @@ export const createDiagramCanvas = ({
     return b
   }
 
+  /**
+   * Pone un nodo y devuelve su id: el que no estaba antes. `poner` es el caso de
+   * uso que lo añade; el nuevo queda encima de los demás.
+   */
+  const ponerNodo = (poner: () => Diagram | null): DiagramNodeId | null => {
+    const antes: ReadonlySet<string> = new Set<string>(Object.keys(diagrama()?.nodes ?? {}))
+    const despues: Diagram | null = poner()
+    const nuevo: string | undefined = Object.keys(despues?.nodes ?? {}).find(
+      (id: string): boolean => !antes.has(id),
+    )
+    if (nuevo === undefined) return null
+    levantados = raise(levantados, nuevo)
+    pintar()
+    return diagramNodeId(nuevo)
+  }
+
+  /** Las notas que se pueden poner, por nombre, para elegir una en la misma hoja. */
+  const elegirNota = (caja: HTMLElement, p: Point): void => {
+    const notas: ReadonlyArray<Note> = [...Object.values<Note>(store.getState().notes)].sort(
+      (a: Note, b: Note): number => a.name.localeCompare(b.name),
+    )
+    const lista: HTMLElement = elemento("div")
+    lista.className = "selector"
+    lista.append(
+      ...notas.map((nota: Note): HTMLButtonElement =>
+        opcion(nota.name, (): void => {
+          ponerNodo((): Diagram | null => useCases.addNoteNode(diagramId, nota.id, p.x, p.y))
+        }),
+      ),
+    )
+    caja.replaceChildren(lista)
+  }
+
   /** Crear en el sitio donde se pidió. */
   const menuFondo = (donde: Point): void => {
     const p: Point = toCanvas(vista, donde)
-    menu.open("Añadir al diagrama", acciones(
+    const caja: HTMLElement = elemento("div")
+    caja.className = "hoja-acciones"
+    /* Ésta no cierra la hoja: la lista de notas sustituye a las opciones, en la misma. */
+    const existente: HTMLButtonElement = elemento("button", "Nota existente")
+    existente.type = "button"
+    existente.addEventListener("click", (): void => elegirNota(caja, p))
+    caja.append(
       opcion("Texto", (): void => {
-        const antes: ReadonlySet<string> = new Set<string>(Object.keys(diagrama()?.nodes ?? {}))
-        const despues: Diagram | null = useCases.addTextNode(diagramId, "", p.x, p.y)
-        const nuevo: string | undefined = Object.keys(despues?.nodes ?? {}).find(
-          (id: string): boolean => !antes.has(id),
+        const nuevo: DiagramNodeId | null = ponerNodo((): Diagram | null =>
+          useCases.addTextNode(diagramId, "", p.x, p.y),
         )
-        if (nuevo === undefined) return
-        levantados = raise(levantados, nuevo)
-        pintar()
-        editar(diagramNodeId(nuevo))
+        if (nuevo !== null) editar(nuevo)
       }),
-    ))
+      ...(Object.keys(store.getState().notes).length > 0 ? [existente] : []),
+      opcion("Nota nueva", (): void => {
+        const nota: Note | null = createNoteForDiagram(useCases, store.getState(), diagramId)
+        if (nota === null) return
+        ponerNodo((): Diagram | null => useCases.addNoteNode(diagramId, nota.id, p.x, p.y))
+        onOpenNote(nota.id)
+      }),
+    )
+    menu.open("Añadir al diagrama", [caja])
   }
 
   const menuNodo = (id: DiagramNodeId): void => {
@@ -312,6 +363,13 @@ export const createDiagramCanvas = ({
   let espera: ReturnType<typeof setTimeout> | null = null
   /** El último toque suelto, para reconocer el segundo de un doble toque. */
   let toqueAnterior: Tap | null = null
+  /** La nota que se abrirá si no llega el segundo toque. */
+  let abrirLuego: ReturnType<typeof setTimeout> | null = null
+
+  const cancelarApertura = (): void => {
+    if (abrirLuego !== null) clearTimeout(abrirLuego)
+    abrirLuego = null
+  }
 
   const cancelarEspera = (): void => {
     if (espera !== null) clearTimeout(espera)
@@ -432,11 +490,22 @@ export const createDiagramCanvas = ({
     const toque: Tap = { x: donde.x, y: donde.y, time: cuando, target: g.nodo ?? FONDO }
     if (isDoubleTap(toqueAnterior, toque)) {
       toqueAnterior = null
+      cancelarApertura()
       if (g.nodo === null) menuFondo(donde)
       else menuNodo(g.nodo)
       return
     }
     toqueAnterior = toque
+    /* Un toque en un nodo-nota entra en la nota, pero espera lo que tarda el
+       segundo toque de un doble: si llega, era el menú. Una nota ilegible no se abre. */
+    cancelarApertura()
+    const nodo: DiagramNode | undefined = g.nodo === null ? undefined : diagrama()?.nodes[g.nodo]
+    if (nodo?.type !== "note-node" || store.getState().notes[nodo.noteId] === undefined) return
+    const nota: NoteId = nodo.noteId
+    abrirLuego = setTimeout((): void => {
+      abrirLuego = null
+      onOpenNote(nota)
+    }, DOUBLE_TAP_MS)
   }
 
   const soltar = (evento: PointerEvent): void => {
@@ -477,6 +546,7 @@ export const createDiagramCanvas = ({
     if (evento instanceof PointerEvent && evento.pointerType !== "mouse") return
     if (gesto?.levantado === true) return
     const nodo: DiagramNodeId | null = nodoDe(evento.target)
+    cancelarApertura()
     if (nodo === null) menuFondo(enLienzo(evento))
     else menuNodo(nodo)
   })
@@ -502,6 +572,7 @@ export const createDiagramCanvas = ({
     destroy: (): void => {
       baja()
       cancelarEspera()
+      cancelarApertura()
       medida.disconnect()
       window.visualViewport?.removeEventListener("resize", asomar)
       window.removeEventListener("pointermove", mover)

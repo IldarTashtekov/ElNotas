@@ -1,6 +1,6 @@
 /**
  * Lo que se hace sobre lo que lista una ventana: crear una nota o un diagrama, la
- * papelera y «Mover a…».
+ * papelera y «Mover a…»; y crear una nota desde un diagrama.
  *
  * Cada una compone casos de uso que ya existen —crear y añadir, quitar y
  * añadir—, así que el core no se toca y cada acción sigue siendo una operación.
@@ -8,7 +8,16 @@
  * General, que no tiene de dónde quitar, BORRA de verdad.
  */
 
-import type { AppState, Context, ContextId, Diagram, ItemRef, Note, UseCases } from "#core/index"
+import type {
+  AppState,
+  Context,
+  ContextId,
+  Diagram,
+  DiagramId,
+  ItemRef,
+  Note,
+  UseCases,
+} from "#core/index"
 import { diagramRef, noteRef } from "#core/index"
 import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
@@ -87,4 +96,29 @@ export const deleteQuestion = (items: ReadonlyArray<ListItem>): string => {
   return items.length === 1 && uno !== undefined
     ? `¿Borrar «${uno.name}»? No se puede deshacer.`
     : `¿Borrar ${cuantos(items)}? No se puede deshacer.`
+}
+
+/** Los contextos que listan esto, por nombre. */
+export const contextsWith = (state: AppState, ref: ItemRef): ReadonlyArray<Context> =>
+  [...Object.values<Context>(state.contexts)]
+    .filter((ctx: Context): boolean =>
+      ctx.items.some((i: ItemRef): boolean => i.kind === ref.kind && i.id === ref.id),
+    )
+    .sort((a: Context, b: Context): number => a.name.localeCompare(b.name))
+
+/**
+ * Una «Nueva Nota» creada desde un diagrama: va a TODOS los contextos donde está
+ * el diagrama; si no está en ninguno, a ninguno, y se ve en el General.
+ */
+export const createNoteForDiagram = (
+  useCases: UseCases,
+  state: AppState,
+  diagramId: DiagramId,
+): Note | null => {
+  const nota: Note | null = useCases.createNote(NEW_NOTE_NAME)
+  if (nota === null) return null
+  for (const ctx of contextsWith(state, diagramRef(diagramId))) {
+    useCases.addItem(ctx.id, noteRef(nota.id))
+  }
+  return nota
 }

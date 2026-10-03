@@ -43,7 +43,9 @@ export { createNoteList } from "./NoteList.js"
 export {
   NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
+  contextsWith,
   createDiagramIn,
+  createNoteForDiagram,
   createNoteIn,
   deleteQuestion,
   moveItems,
