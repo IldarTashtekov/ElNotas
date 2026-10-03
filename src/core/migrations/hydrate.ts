@@ -12,12 +12,17 @@
  *
  * Lo que existe pero no se pudo leer es otra cosa: su referencia se conserva,
  * para que arreglar el fichero lo devuelva a su contexto.
+ *
+ * En los diagramas, igual: una relación con un extremo que no está se tira, y un
+ * nodo cuya nota ya no existe pasa a «Nota perdida».
  */
 
 import type { AppState } from "../domain/AppState.js"
 import type { Context } from "../domain/Context.js"
-import type { Diagram } from "../domain/Diagram.js"
-import type { ItemRef } from "../domain/Ids.js"
+import type { Diagram, DiagramNode, DiagramRelation } from "../domain/Diagram.js"
+import { loseNote } from "../domain/diagramOperations.js"
+import type { DiagramRelationId, ItemRef, NoteId } from "../domain/Ids.js"
+import { noteRef } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 
 /** Lo que devuelve el almacén: tres listas. */
@@ -37,9 +42,49 @@ export type Unreadable = (item: ItemRef) => boolean
 
 const nadaIlegible: Unreadable = (): boolean => false
 
+/**
+ * Un diagrama sin relaciones rotas —con un extremo que no está, o de un nodo a sí
+ * mismo— y con los nodos de notas que ya no existen como «Nota perdida». Si no
+ * sobraba nada, el diagrama TAL CUAL, como los contextos de abajo.
+ */
+const diagramaLimpio = (d: Diagram, notaPerdida: (id: NoteId) => boolean): Diagram => {
+  const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(d.relations)
+  const sanas: ReadonlyArray<DiagramRelation> = relaciones.filter(
+    (r: DiagramRelation): boolean =>
+      r.from !== r.to && d.nodes[r.from] !== undefined && d.nodes[r.to] !== undefined,
+  )
+  const conRelaciones: Diagram =
+    sanas.length === relaciones.length
+      ? d
+      : {
+          ...d,
+          relations: Object.fromEntries(
+            sanas.map((r: DiagramRelation): readonly [DiagramRelationId, DiagramRelation] => [
+              r.id,
+              r,
+            ]),
+          ),
+        }
+
+  const perdidas: ReadonlyArray<NoteId> = Object.values<DiagramNode>(d.nodes).flatMap(
+    (n: DiagramNode): ReadonlyArray<NoteId> =>
+      n.type === "note-node" && notaPerdida(n.noteId) ? [n.noteId] : [],
+  )
+  return perdidas.reduce(
+    (acc: Diagram, id: NoteId): Diagram => loseNote(acc, id),
+    conRelaciones,
+  )
+}
+
 export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegible): AppState => {
   const notes: AppState["notes"] = porId(stored.notes)
-  const diagrams: AppState["diagrams"] = porId(stored.diagrams)
+
+  /* Perdida es la que no está y tampoco está ilegible: ésa vuelve si se arregla. */
+  const notaPerdida = (id: NoteId): boolean =>
+    notes[id] === undefined && !ilegible(noteRef(id))
+  const diagrams: AppState["diagrams"] = porId(
+    stored.diagrams.map((d: Diagram): Diagram => diagramaLimpio(d, notaPerdida)),
+  )
 
   /* Se queda lo que está, y lo que está pero no se pudo leer. */
   const existe = (item: ItemRef): boolean =>

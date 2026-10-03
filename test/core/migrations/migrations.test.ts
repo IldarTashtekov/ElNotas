@@ -11,9 +11,19 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Context } from "#core/domain/Context"
+import type { Diagram, DiagramNode, DiagramRelation, NoteNode, SimpleNode } from "#core/domain/Diagram"
 import type { MigrationError } from "#core/domain/errors/MigrationError"
-import type { ItemRef } from "#core/domain/Ids"
-import { contextId, diagramId, diagramRef, noteId, noteRef, revision } from "#core/domain/Ids"
+import type { DiagramNodeId, DiagramRelationId, ItemRef, NoteId } from "#core/domain/Ids"
+import {
+  contextId,
+  diagramId,
+  diagramNodeId,
+  diagramRef,
+  diagramRelationId,
+  noteId,
+  noteRef,
+  revision,
+} from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import type { Result } from "#core/domain/Result"
 import type { StoredEntities } from "#core/migrations/hydrate"
@@ -154,6 +164,120 @@ test("la nota ilegible NO entra en el estado: sólo se conserva su referencia", 
     esRota,
   )
   assert.equal(state.notes[ID_ROTA], undefined)
+})
+
+/* ─────────────────────────── hydrate y los diagramas ───────────────────────────
+    Dos limpiezas: la relación con un extremo que no está (o de un nodo a sí
+    mismo) se tira, y el nodo de una nota que ya no existe —y no está ilegible—
+    pasa a «Nota perdida». */
+
+const ID_A: DiagramNodeId = diagramNodeId("a")
+const ID_B: DiagramNodeId = diagramNodeId("b")
+const ID_NODO_NOTA: DiagramNodeId = diagramNodeId("nodo-nota")
+
+const nodoTexto = (id: DiagramNodeId): SimpleNode => ({
+  type: "simple-node",
+  id,
+  text: id,
+  positionX: 0,
+  positionY: 0,
+  done: false,
+})
+
+const nodoDeNota = (nota: NoteId): NoteNode => ({
+  type: "note-node",
+  id: ID_NODO_NOTA,
+  noteId: nota,
+  positionX: 7,
+  positionY: 8,
+  done: true,
+})
+
+const relacion = (id: string, from: DiagramNodeId, to: DiagramNodeId): DiagramRelation => ({
+  id: diagramRelationId(id),
+  from,
+  to,
+  directed: true,
+  label: "",
+})
+
+const diagramaCon = (
+  nodos: ReadonlyArray<DiagramNode>,
+  relaciones: ReadonlyArray<DiagramRelation>,
+): Diagram => ({
+  id: diagramId("mudanza"),
+  name: "Mudanza",
+  nodes: Object.fromEntries(nodos.map((n: DiagramNode): readonly [DiagramNodeId, DiagramNode] => [n.id, n])),
+  relations: Object.fromEntries(
+    relaciones.map((r: DiagramRelation): readonly [DiagramRelationId, DiagramRelation] => [r.id, r]),
+  ),
+  updatedAt: 0,
+  revision: revision("rev-mudanza"),
+})
+
+const hidratado = (d: Diagram, notas: ReadonlyArray<Note>, ilegible?: (item: ItemRef) => boolean): Diagram => {
+  const r: Diagram | undefined = hydrate({ notes: notas, diagrams: [d], contexts: [] }, ilegible).diagrams[d.id]
+  if (r === undefined) assert.fail("el diagrama no ha llegado al estado")
+  return r
+}
+
+test("hydrate tira la relación con un extremo que no está, y conserva la sana", (): void => {
+  const sana: DiagramRelation = relacion("sana", ID_A, ID_B)
+  const d: Diagram = diagramaCon(
+    [nodoTexto(ID_A), nodoTexto(ID_B)],
+    [sana, relacion("rota-from", diagramNodeId("x"), ID_B), relacion("rota-to", ID_A, diagramNodeId("x"))],
+  )
+  const r: Diagram = hidratado(d, [])
+  assert.deepEqual(Object.keys(r.relations), ["sana"])
+  assert.strictEqual(r.relations[sana.id], sana)
+  assert.strictEqual(r.nodes, d.nodes)
+})
+
+test("hydrate tira la relación de un nodo a sí mismo", (): void => {
+  const d: Diagram = diagramaCon([nodoTexto(ID_A)], [relacion("bucle", ID_A, ID_A)])
+  assert.deepEqual(hidratado(d, []).relations, {})
+})
+
+test("hydrate pasa a «Nota perdida» el nodo de una nota que no existe", (): void => {
+  const d: Diagram = diagramaCon([nodoDeNota(ID_FANTASMA)], [])
+  assert.deepEqual(hidratado(d, []).nodes[ID_NODO_NOTA], {
+    type: "simple-node",
+    id: ID_NODO_NOTA,
+    positionX: 7,
+    positionY: 8,
+    done: true,
+    text: "Nota perdida",
+  })
+})
+
+test("hydrate CONSERVA el nodo de una nota ilegible: no está perdida", (): void => {
+  const d: Diagram = diagramaCon([nodoDeNota(ID_ROTA)], [])
+  assert.strictEqual(hidratado(d, [], esRota), d)
+})
+
+test("hydrate conserva el nodo de una nota que existe", (): void => {
+  const d: Diagram = diagramaCon([nodoDeNota(ID_COMPRA)], [])
+  assert.strictEqual(hidratado(d, [COMPRA]), d)
+})
+
+test("hydrate hace las dos limpiezas en el mismo diagrama, y conserva las relaciones del nodo perdido", (): void => {
+  const d: Diagram = diagramaCon(
+    [nodoTexto(ID_A), nodoDeNota(ID_FANTASMA)],
+    [relacion("al-perdido", ID_A, ID_NODO_NOTA), relacion("rota", ID_A, diagramNodeId("x"))],
+  )
+  const r: Diagram = hidratado(d, [])
+  assert.deepEqual(Object.keys(r.relations), ["al-perdido"])
+  assert.equal(r.nodes[ID_NODO_NOTA]?.type, "simple-node")
+})
+
+test("un arranque NORMAL devuelve los diagramas INTACTOS, por referencia", (): void => {
+  /* La misma razón que con los contextos: un diagrama copiado sin necesidad
+     saldría sucio en el primer diff y se reescribiría en disco. */
+  const d: Diagram = diagramaCon(
+    [nodoTexto(ID_A), nodoTexto(ID_B), nodoDeNota(ID_COMPRA)],
+    [relacion("r", ID_A, ID_B)],
+  )
+  assert.strictEqual(hidratado(d, [COMPRA]), d)
 })
 
 /* ───────────────────────────── runMigrations ──────────────────────────────── */
