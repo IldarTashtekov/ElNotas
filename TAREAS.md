@@ -1038,9 +1038,10 @@ documentación del 2026-09-29.
   encima del fichero roto desde cualquier sitio—; **D**, no guardar el contexto en esa sesión
   —descartada: cambios que no se guardan—. La A arregla la causa (confundir «ilegible» con «no
   existe») y no la consecuencia. → `ARCHITECTURE.md` §6.5
-- **Cuatro reglas `deny` de `.claude/settings.json` protegen carpetas que ya no existen**
-  —`Edit`/`Write` sobre `./src/scripts/**` y sobre `./public/js/**`—. **Abierta por decisión del
-  usuario.** `.claude/` es suyo: aquí sólo se anota.
+- ~~**Cuatro reglas `deny` de `.claude/settings.json` protegen carpetas que ya no existen**~~ —
+  ✅ **quitadas el 2026-10-03**, a petición del usuario: eran `Edit`/`Write` sobre
+  `./src/scripts/**` y `./public/js/**`. El mismo día se quitó el worktree viejo
+  `.claude/worktrees/reverent-elbakyan-7edec1` y su rama, ya integrada en `rediseno-arquitectura`.
 - **Las fichas de agentes están desfasadas**, y también son del usuario. `frontend-agent.md` sigue
   siendo el stub que dice «si te han invocado, para» y que `src/ui/` y `src/platform/` no
   existen; se redactó una ficha nueva que no se aplicó, porque **el usuario dijo que no hacía
