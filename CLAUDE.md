@@ -25,8 +25,9 @@ pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442; `test/` 7195. *(Las
 cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
-**Fases 1, 2 y 3 terminadas. La 4, con el código hecho y SIN CERRAR:** faltan las dos listas de
-verificación manual y las tres preguntas del editor (ver *Plan por fases*).
+**Fases 1 a 4 cerradas. La 4, por decisión del usuario el 2026-10-03, con deuda de
+verificación:** las dos listas manuales y las tres preguntas del editor quedan pendientes en
+`TAREAS.md` (ver *Plan por fases*). **Lo siguiente es planificar la Fase 5.**
 
 Lo que hay en `src/`, de dentro afuera:
 
@@ -479,17 +480,15 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 2 — Acciones, persistencia y memory. ✅ HECHA**, con **216** (§9.8).
 - **Fase 3 — Fichero local. ✅ HECHA**, con **314**, y la lista manual pasada el 2026-09-13
   (§9.9).
-- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 532 pruebas. Partida en dos (§9.10):
-  - **Fase 4 · Contextos** — puntos 1–7 y 9 hechos. **El 8, la lista manual
-    (`test/ui/VERIFICACION-MANUAL.md`), escrita y SIN PASAR entera**: hubo una revisión parcial
-    que el usuario no confirma. No cerrada.
-  - **Fase 4 · Notas** — puntos 1–9 y 11 hechos. **El 10, la lista del editor
-    (`test/ui/VERIFICACION-MANUAL-EDITOR.md`), escrita y SIN PASAR.** Y **las tres preguntas**
-    —si se aguanta no tener `move`, no tener `indent`/`outdent`, y si el disparador de anidar se
-    entiende solo— **sin contestar**: piden usar la app varios días. No cerrada.
-  - **Para cerrar la Fase 4 falta:** pasar las dos listas en escritorio y en móvil, anotar el
-    resultado, y contestar por escrito las tres preguntas en `TAREAS.md`.
-- **Fase 5 — Planes.** El editor de grafos. Se planifica cuando cierre la 4.
+- **Fase 4 — UI, sólo web. ✅ CERRADA el 2026-10-03, por decisión del usuario y CON DEUDA**, con
+  **532 pruebas**. Partida en dos (§9.10): todo el código de Contextos y de Notas, hecho. ⚠️ **No
+  cumple su propio criterio:** el usuario la cerró sabiendo que faltan **las dos listas manuales**
+  (`test/ui/VERIFICACION-MANUAL.md` y `VERIFICACION-MANUAL-EDITOR.md`, sin pasar en escritorio
+  ni en móvil) y **las tres preguntas** del editor (`move`, `indent`/`outdent`, si anidar se
+  entiende solo), sin contestar. Siguen en `TAREAS.md` como pendientes, **no como hechas**. Lo
+  que queda sin verificar de verdad es sobre todo **el móvil**: arrastrar las fichas con el dedo
+  y el teclado de Android.
+- **Fase 5 — Planes.** El editor de grafos. **Lo siguiente: planificarla.**
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que

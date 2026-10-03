@@ -9,8 +9,8 @@ arquitectura de front. Si algún término del resto del documento suena a jerga 
 puerto, copia por camino—, está explicado ahí con ejemplos de notas y casillas.
 
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy
-> lo están las **fases 1, 2 y 3 enteras** (§5.1) y **el código de la Fase 4**, la UI web (§7),
-> que sigue **sin cerrar**: faltan sus dos listas manuales y las tres preguntas del editor
+> lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
+> usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
 > (§9.10). Siguen siendo sólo diseño los Planes (Fase 5), la carpeta del usuario como destino y
 > la semántica multi-backend. Cada sección dice si lo que describe existe o está planificado.
 > Antes de dar algo por hecho, compruébalo contra el repo.
@@ -1852,8 +1852,8 @@ la sincronización entre dispositivos.
 
 ## 7. La UI
 
-**Construido en la Fase 4, en `src/ui/`, y sin cerrar** (§9.10): falta pasar sus dos listas
-manuales y contestar las tres preguntas del editor. El diseño de la navegación y las pantallas
+**Construido en la Fase 4, en `src/ui/`, cerrada el 2026-10-03 con deuda** (§9.10): siguen
+pendientes sus dos listas manuales y las tres preguntas del editor. El diseño de la navegación y las pantallas
 (§7.4) se cerró el **2026-09-27** a partir de un boceto en PDF del usuario; el del editor (§7.2 y
 §7.3), el 2026-09-20, y **se reabrió y precisó al construirlo, el 2026-09-29**. Cómo está hecho
 por dentro, en §7.5.
@@ -2836,7 +2836,8 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   carpeta"). Y ojo a la consecuencia, que ahora tiene nombre: mientras ese botón no exista, un
   `permission-denied` **detiene el write-behind sin vuelta atrás** hasta recargar.
 
-- **Fase 4 — UI. ⏳ CÓDIGO HECHO, SIN CERRAR.** Sólo web, incluido el navegador del móvil. Nacen
+- **Fase 4 — UI. ✅ CERRADA el 2026-10-03, con deuda** —las dos listas manuales y las tres
+  preguntas, pendientes (§9.10)—. Sólo web, incluido el navegador del móvil. Nacen
   `src/platform/web/` —con las primeras implementaciones reales de `Clock` e `IdGenerator` y el
   arranque de verdad— y `src/ui/`: la navegación por ventanas (§7.4), el editor con casillas
   anidadas (§7.2 y §7.3), `onCorrupt`, `onError` y la validación de esquema (§6.2, §6.5). Sale el
@@ -3583,6 +3584,21 @@ falso:** decía que el `importmap` estaba «ya probado en el repo», en el andam
 con `--noResolve`. El `importmap` solo no basta para el core entero; hizo falta además el `.js`
 en los imports relativos, decidido con el usuario el 2026-09-29. La decisión no cambia; el cómo,
 en §8.6.
+
+#### ✅ Cerrada el 2026-10-03, por decisión del usuario y con deuda
+
+**El usuario dio la Fase 4 por cerrada sin cumplir dos puntos de este criterio**, y queda escrito
+así, como excepción y no como cumplimiento: **el 8 y el 10** —las dos listas de verificación
+manual, escritas y al día pero **sin pasar** en escritorio ni en móvil— y **las tres preguntas**
+—`move`, `indent`/`outdent` y si el disparador de anidar se entiende solo—, **sin contestar**.
+Todo lo demás está hecho, con **532 pruebas** en verde (329 al empezar la fase).
+
+Lo que eso deja **sin verificar de verdad** es sobre todo el **móvil**: arrastrar las fichas de
+⚙ con el dedo sin que la fila se deslice, el teclado de Android en el editor, el atrás del
+sistema. El escritorio sí se ha usado a diario durante la fase, aunque la lista no se haya pasado
+entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si al pasarlas
+sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
+decisión aunque la fase esté cerrada.
 
 ---
 

@@ -523,7 +523,11 @@ validación de esquema, y la escritura condicional.
       —que es donde mira quien se plantee declarar otro— diciendo que el que hay ya es un caso
       de eso y está aquí anotado.
 
-### Fase 4 — UI ⏳ CÓDIGO HECHO, SIN CERRAR
+### Fase 4 — UI ✅ CERRADA el 2026-10-03, por decisión del usuario y CON DEUDA
+
+**Cerrada sin cumplir su criterio entero** (`ARCHITECTURE.md` §9.10): quedan **las dos listas
+manuales sin pasar** y **las tres preguntas sin contestar**, abajo, como pendientes. No se
+marcan como hechas. **532 pruebas** al cerrarla. Lo siguiente es planificar la Fase 5.
 
 **Estado el 2026-09-29:** todo el código de las dos partes está hecho y commiteado en la rama
 `rediseno-arquitectura`, con `npm run check` en verde y **489 pruebas** (la fase empezó con
