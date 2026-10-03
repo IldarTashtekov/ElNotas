@@ -13,6 +13,7 @@ import {
   guardWindows,
   insertWindowAfter,
   parseWindowsLayout,
+  moveWindow,
   removeWindowAt,
   replaceWindowAt,
   sameWindow,
@@ -36,6 +37,8 @@ export interface WindowsModel {
   readonly replaceAt: (i: number, ref: WindowRef) => void
   readonly insertAfter: (i: number, ref: WindowRef) => void
   readonly removeAt: (i: number) => void
+  /** Lleva la ventana `de` al puesto `a`: es lo que hace arrastrar en la configuración. */
+  readonly move: (de: number, a: number) => void
   readonly subscribe: (listener: WindowsListener) => Unsubscribe
 }
 
@@ -94,6 +97,7 @@ export const createWindowsModel = ({ store, persistence }: WindowsModelDeps): Wi
       if (windowExists(ref, store.getState())) editar(insertWindowAfter(layout, i, ref))
     },
     removeAt: (i: number): void => editar(removeWindowAt(layout, i)),
+    move: (de: number, a: number): void => editar(moveWindow(layout, de, a)),
 
     subscribe: (listener: WindowsListener): Unsubscribe => {
       listeners = [...listeners, listener]

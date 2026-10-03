@@ -17,6 +17,7 @@ import {
   GENERAL,
   guardWindows,
   insertWindowAfter,
+  moveWindow,
   parseWindowsLayout,
   removeWindowAt,
   replaceWindowAt,
@@ -180,6 +181,26 @@ test("removeWindowAt quita sólo esa", (): void => {
 test("removeWindowAt fuera de rango devuelve el MISMO objeto", (): void => {
   assert.strictEqual(removeWindowAt(TRES, 3), TRES)
   assert.strictEqual(removeWindowAt(TRES, -1), TRES)
+})
+
+test("moveWindow hacia delante y hacia atrás corre las de en medio", (): void => {
+  const [a, b, c]: ReadonlyArray<WindowRef> = TRES.windows
+  if (a === undefined || b === undefined || c === undefined) assert.fail("TRES tiene tres")
+  assert.deepEqual(moveWindow(TRES, 0, 2).windows, [b, c, a])
+  assert.deepEqual(moveWindow(TRES, 2, 0).windows, [c, a, b])
+  assert.deepEqual(moveWindow(TRES, 1, 2).windows, [a, c, b])
+})
+
+test("moveWindow no toca la activa: la sigue por referencia", (): void => {
+  assert.strictEqual(moveWindow(TRES, 0, 2).active, TRES.active)
+})
+
+test("moveWindow al mismo sitio, o fuera de rango, devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(moveWindow(TRES, 1, 1), TRES)
+  assert.strictEqual(moveWindow(TRES, 3, 0), TRES)
+  assert.strictEqual(moveWindow(TRES, 0, 3), TRES)
+  assert.strictEqual(moveWindow(TRES, 0, -1), TRES)
+  assert.strictEqual(moveWindow(TRES, -1, 0), TRES)
 })
 
 /* ────────────────────────── Las ventanas de tipo nota ──────────────────────── */

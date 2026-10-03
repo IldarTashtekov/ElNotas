@@ -10,6 +10,7 @@
 import type { AppState, Context, Note, NoteId, Store, UseCases } from "#core/index"
 import { noteId } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { Confirm } from "./sheet.js"
 import { elemento } from "./dom.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import {
@@ -29,7 +30,7 @@ export interface NoteListDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly back: BackStack
-  readonly confirm: (pregunta: string) => boolean
+  readonly confirm: Confirm
   /** Para que la cabecera apague ◀ ▶ y ⚙ mientras se selecciona. */
   readonly onSelectingChange: (seleccionando: boolean) => void
   readonly onOpenNote: (id: NoteId) => void
@@ -74,10 +75,12 @@ export const createNoteList = ({
   const sinNotas: HTMLParagraphElement = elemento("p", "Esta ventana no tiene notas.")
   sinNotas.className = "vacia"
   /* «+ Nota» crea y entra: la nota nueva se abre para escribir en ella. */
-  const mas: HTMLButtonElement = boton("+ Nota", (): void => {
+  const mas: HTMLButtonElement = boton("+", (): void => {
     const nueva: Note | null = ventana === null ? null : createNoteIn(useCases, ventana)
     if (nueva !== null) onOpenNote(nueva.id)
   }, "mas")
+  mas.setAttribute("aria-label", "Nueva nota")
+  mas.title = "Nueva nota"
 
   const cuenta: HTMLSpanElement = elemento("span")
   const papelera: HTMLButtonElement = boton("", (): void => tirar())
@@ -126,11 +129,15 @@ export const createNoteList = ({
 
   const tirar = (): void => {
     if (ventana === null) return
+    const donde: WindowRef = ventana
     const ids: ReadonlyArray<NoteId> = seleccionadas().map((n: Note): NoteId => n.id)
+    const hacer = (): void => {
+      trashNotes(useCases, donde, ids)
+      salir()
+    }
     /* Sólo confirma la papelera del General: es la única que borra de verdad. */
-    if (trashDeletes(ventana) && !confirm(deleteQuestion(seleccionadas()))) return
-    trashNotes(useCases, ventana, ids)
-    salir()
+    if (trashDeletes(donde)) confirm(deleteQuestion(seleccionadas()), "🗑 Borrar", hacer)
+    else hacer()
   }
 
   const moverA = (destino: Context): void => {
@@ -241,6 +248,7 @@ export const createNoteList = ({
         }
       },
     })
+    lista.classList.toggle("seleccionando", seleccionando)
     sinNotas.hidden = notas.length > 0 || ventana === null
     mas.hidden = seleccionando || ventana === null
 

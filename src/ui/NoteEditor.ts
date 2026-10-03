@@ -183,7 +183,8 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
         if (!isCheckBox(l)) return
         const marca: Element | null = fila.querySelector(":scope > .marca")
         if (marca !== null) {
-          setTextIfChanged(marca, l.checked ? "☑" : "☐")
+          /* La caja la dibuja el CSS: aquí sólo va el ✓ de dentro. */
+          setTextIfChanged(marca, l.checked ? "✓" : "")
           setAttrIfChanged(marca, "aria-pressed", l.checked ? "true" : "false")
           setAttrIfChanged(marca, "aria-label", l.checked ? "Desmarcar" : "Marcar")
         }
@@ -364,6 +365,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const campo: HTMLElement | null = caret === null ? null : campoDe(caret.line)
     if (caret !== null && campo !== null) ponerCursorEn(campo, caret.offset)
   })
+  anidar.classList.add("anidar")
 
   const pintarBarra = (): void => {
     casilla.setAttribute("aria-pressed", modo.checkbox ? "true" : "false")
@@ -373,7 +375,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     anidar.setAttribute("aria-pressed", modo.nestArmed ? "true" : "false")
     /* ⚠️ El armado tiene que verse: actúa sobre una línea que todavía no existe. */
     anidar.classList.toggle("activo", modo.nestArmed)
-    anidar.textContent = modo.nestArmed ? "↳ Anidar: la próxima, dentro" : "↳ Anidar"
+    anidar.textContent = modo.nestArmed ? "↳ Anidar armado" : "↳ Anidar"
   }
   pintarBarra()
 

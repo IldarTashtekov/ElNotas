@@ -12,6 +12,8 @@ export interface EditableTitle {
   readonly element: HTMLElement
   /** El título que se enseña, y si se puede renombrar. Se ignora mientras se edita. */
   readonly show: (titulo: string, renombrable: boolean) => void
+  /** Lo pone a editar sin tocarlo, como si se hubiera tocado. Nada si no se puede renombrar. */
+  readonly edit: () => void
 }
 
 export const createEditableTitle = (
@@ -72,5 +74,6 @@ export const createEditableTitle = (
       if (puede) titulo.setAttribute("role", "button")
       else titulo.removeAttribute("role")
     },
+    edit: empezar,
   }
 }

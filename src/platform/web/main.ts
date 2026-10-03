@@ -79,7 +79,6 @@ const iniciar = async (): Promise<void> => {
     useCases: app.useCases,
     windows,
     corrupt: ilegibles,
-    confirm: (pregunta: string): boolean => window.confirm(pregunta),
   })
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)

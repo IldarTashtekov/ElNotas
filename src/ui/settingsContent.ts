@@ -8,7 +8,7 @@
 
 import type { AppState, Context, Note } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
-import { GENERAL } from "./windows.js"
+import { GENERAL, sameWindow } from "./windows.js"
 import { windowTitle } from "./windowView.js"
 
 export interface WindowRow {
@@ -47,3 +47,13 @@ export const settingsContent = (layout: WindowsLayout, state: AppState): Setting
     choices: choices.map(fila(state)),
   }
 }
+
+/**
+ * Lo que ofrece el «+» de la última ventana: lo mismo que el selector de la
+ * configuración, menos lo que ya está en alguna ventana.
+ */
+export const addWindowChoices = (layout: WindowsLayout, state: AppState): ReadonlyArray<WindowRow> =>
+  settingsContent(layout, state).choices.filter(
+    (opcion: WindowRow): boolean =>
+      !layout.windows.some((w: WindowRef): boolean => sameWindow(w, opcion.ref)),
+  )

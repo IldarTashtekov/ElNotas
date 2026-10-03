@@ -120,6 +120,17 @@ export const removeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout 
   return { windows, active: layout.active }
 }
 
+/** Lleva la ventana `de` al puesto `a`, corriendo las de en medio. La activa no cambia. */
+export const moveWindow = (layout: WindowsLayout, de: number, a: number): WindowsLayout => {
+  const movida: WindowRef | undefined = layout.windows[de]
+  if (movida === undefined || de === a || a < 0 || a >= layout.windows.length) return layout
+  const sin: ReadonlyArray<WindowRef> = layout.windows.filter(
+    (_: WindowRef, j: number): boolean => j !== de,
+  )
+  const windows: ReadonlyArray<WindowRef> = [...sin.slice(0, a), movida, ...sin.slice(a)]
+  return { windows, active: layout.active }
+}
+
 /* ───────────────────── De lo guardado a una lista válida ─────────────────── */
 
 const esObjeto = (x: unknown): x is Record<string, unknown> =>

@@ -1,14 +1,15 @@
 /**
  * La vista ventanas, la principal: una ventana cada vez, con ◀ ▶ para pasar a la
- * de al lado, el título —que se renombra tocándolo, salvo en el General—, sus
- * notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
+ * de al lado —y en la última, un «+» para añadir otra detrás—, el título —que se
+ * renombra tocándolo, salvo en el General—, sus notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
  * que la vista nota, con su barra y sin exit. Sin ventanas, una pantalla vacía.
  *
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
 
-import type { AppState, Note, NoteId, StorageError, Store, UseCases } from "#core/index"
+import type { AppState, Context, Note, NoteId, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { Confirm, Sheet } from "./sheet.js"
 import { corruptNotice, elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
@@ -16,9 +17,13 @@ import type { NoteEditor } from "./NoteEditor.js"
 import { createNoteEditor } from "./NoteEditor.js"
 import type { NoteList } from "./NoteList.js"
 import { createNoteList } from "./NoteList.js"
+import type { WindowRow } from "./settingsContent.js"
+import { addWindowChoices } from "./settingsContent.js"
+import { NEW_CONTEXT_NAME } from "./SettingsView.js"
+import { createSheet } from "./sheet.js"
 import type { WindowView } from "./windowView.js"
 import { windowView } from "./windowView.js"
-import type { WindowsLayout } from "./windows.js"
+import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
 
 export interface WindowsViewDeps {
@@ -29,7 +34,7 @@ export interface WindowsViewDeps {
   readonly corrupt: ReadonlyArray<StorageError>
   readonly onOpenSettings: () => void
   readonly back: BackStack
-  readonly confirm: (pregunta: string) => boolean
+  readonly confirm: Confirm
   readonly onOpenNote: (id: NoteId) => void
 }
 
@@ -53,6 +58,9 @@ export const mountWindowsView = (
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
   const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
+  /* En la última ventana, en el sitio de ▶. */
+  const agregar: HTMLButtonElement = flecha("+", "Añadir ventana")
+  agregar.classList.add("agregar")
   const titulo: EditableTitle = createEditableTitle("Nombre", (nombre: string): void => {
     /* Se lee al guardar: es la ventana en la que se empezó a escribir. */
     if (vista.kind !== "window") return
@@ -67,11 +75,11 @@ export const mountWindowsView = (
     return boton
   }
   const ajustes: HTMLButtonElement = engranaje()
-  cabecera.append(anterior, titulo.element, siguiente, ajustes)
+  cabecera.append(anterior, titulo.element, siguiente, agregar, ajustes)
 
-  /* Mientras se selecciona se apagan ◀ ▶ y ⚙: no se sale de la lista a medias. */
+  /* Mientras se selecciona se apagan ◀ ▶ + y ⚙: no se sale de la lista a medias. */
   const apagar = (seleccionando: boolean): void => {
-    for (const b of [anterior, siguiente, ajustes]) {
+    for (const b of [anterior, siguiente, agregar, ajustes]) {
       b.disabled = seleccionando
       b.classList.toggle("apagado", seleccionando)
     }
@@ -130,6 +138,48 @@ export const mountWindowsView = (
     if (vista.kind === "window" && vista.next !== null) windows.setActive(vista.next)
   })
 
+  /* ── El «+»: añadir una ventana detrás de la última, e ir a ella ── */
+
+  const hoja: Sheet = createSheet(back)
+
+  const anadir = (ref: WindowRef): void => {
+    hoja.close()
+    windows.insertAfter(windows.getLayout().windows.length - 1, ref)
+    windows.setActive(ref)
+  }
+
+  const opcion = (texto: string, alPulsar: () => void): HTMLButtonElement => {
+    const b: HTMLButtonElement = elemento("button", texto)
+    b.type = "button"
+    b.addEventListener("click", alPulsar)
+    return b
+  }
+
+  agregar.addEventListener("click", (): void => {
+    const opciones: ReadonlyArray<WindowRow> = addWindowChoices(windows.getLayout(), store.getState())
+    const lista: HTMLElement = elemento("div")
+    lista.className = "selector"
+    /* Las notas, detrás de un rótulo, como en la configuración. */
+    const primeraNota: number = opciones.findIndex((o: WindowRow): boolean => o.ref.kind === "note")
+    const grupo: HTMLElement = elemento("span", "Notas:")
+    grupo.className = "grupo"
+    lista.append(
+      ...opciones.flatMap((o: WindowRow, i: number): ReadonlyArray<HTMLElement> => [
+        ...(i === primeraNota ? [grupo] : []),
+        opcion(o.title, (): void => anadir(o.ref)),
+      ]),
+    )
+    const nuevo: HTMLButtonElement = opcion("+ Contexto nuevo", (): void => {
+      const creado: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
+      if (creado === null) return
+      anadir({ kind: "context", id: creado.id })
+      /* Nace con el título a punto de escribir su nombre. */
+      titulo.edit()
+    })
+    nuevo.className = "hoja-nuevo"
+    hoja.open("Añadir ventana", opciones.length > 0 ? [nuevo, lista] : [nuevo])
+  })
+
   /* ── Pintar ── */
 
   let pintadoEstado: AppState | null = null
@@ -156,7 +206,9 @@ export const mountWindowsView = (
     cabecera.hidden = false
     sinVentanas.hidden = true
     mostrar(anterior, vista.prev !== null)
-    mostrar(siguiente, vista.next !== null)
+    /* ▶ y + comparten el sitio: en la última ventana está el +. */
+    siguiente.hidden = vista.next === null
+    agregar.hidden = vista.next !== null
 
     titulo.show(vista.title, vista.renames !== null || vista.editsNote !== null)
 
@@ -179,6 +231,7 @@ export const mountWindowsView = (
     notas.element,
     zonaEditor,
     sinVentanas,
+    hoja.element,
   )
   pintar()
   store.subscribe((): void => pintar())

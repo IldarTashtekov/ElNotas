@@ -8,7 +8,7 @@ import assert from "node:assert/strict"
 import type { AppState, Context, Note } from "#core/index"
 import { contextId, emptyAppState, noteId, revision } from "#core/index"
 import type { SettingsContent, WindowRef, WindowRow } from "#ui/index"
-import { GENERAL, GENERAL_TITLE, settingsContent } from "#ui/index"
+import { GENERAL, GENERAL_TITLE, addWindowChoices, settingsContent } from "#ui/index"
 
 const contexto = (id: string, name: string): Context => ({
   id: contextId(id),
@@ -73,4 +73,25 @@ test("una ventana de nota sale en la lista con el nombre de la nota", (): void =
   const deNota: WindowRef = { kind: "note", id: noteId("n1") }
   const contenido: SettingsContent = settingsContent({ windows: [deNota], active: deNota }, ESTADO)
   assert.deepEqual(titulos(contenido.windows), ["Diario"])
+})
+
+/* ── El «+» de la última ventana ── */
+
+test("el «+» ofrece lo que NO tiene ventana: sin el General ni Trabajo, que ya la tienen", (): void => {
+  const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [TRABAJO, GENERAL], active: GENERAL }, ESTADO)
+  assert.deepEqual(titulos(filas), ["Compra", "Sin ventana", "Diario", "Recetas"])
+})
+
+test("el «+» esconde también una nota que ya es ventana, y ofrece el General si no lo es", (): void => {
+  const deNota: WindowRef = { kind: "note", id: noteId("n1") }
+  const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [deNota], active: deNota }, ESTADO)
+  assert.deepEqual(titulos(filas), [GENERAL_TITLE, "Compra", "Sin ventana", "Trabajo", "Recetas"])
+})
+
+test("con todo en ventanas, el «+» no ofrece nada", (): void => {
+  const todas: ReadonlyArray<WindowRef> = settingsContent({ windows: [], active: null }, ESTADO).choices.map(
+    (f: WindowRow): WindowRef => f.ref,
+  )
+  const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: todas, active: GENERAL }, ESTADO)
+  assert.deepEqual(titulos(filas), [])
 })

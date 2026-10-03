@@ -224,3 +224,21 @@ test("borrar desde el General una nota que es ventana la quita EN LA MISMA SESIÃ
 
   assert.deepEqual(model.getLayout(), { windows: [GENERAL], active: GENERAL })
 })
+
+test("move reordena y lo guarda; al mismo sitio, ni avisa ni escribe", (): void => {
+  const { store, creado } = escenario()
+  const casa: ContextId = creado("Casa")
+  const obra: ContextId = creado("Obra")
+  const persistence: AlmacenFalso = almacen(ok({ windows: [GENERAL, ventana(casa), ventana(obra)], active: GENERAL }))
+  const model: WindowsModel = createWindowsModel({ store, persistence })
+  const antes: WindowsLayout = model.getLayout()
+
+  model.move(1, 1)
+  assert.strictEqual(model.getLayout(), antes)
+  assert.equal(persistence.guardados().length, 0)
+
+  model.move(2, 0)
+  assert.deepEqual(model.getLayout().windows, [ventana(obra), GENERAL, ventana(casa)])
+  assert.deepEqual(model.getLayout().active, GENERAL)
+  assert.equal(persistence.guardados().length, 1)
+})

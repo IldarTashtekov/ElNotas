@@ -34,6 +34,8 @@ export type { KeyedContainer, ReconcileSteps } from "./reconcile.js"
 export { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 export type { BackStack } from "./backStack.js"
 export { createBackStack } from "./backStack.js"
+export type { Confirm, Sheet } from "./sheet.js"
+export { createConfirm, createSheet } from "./sheet.js"
 export type { NoteList, NoteListDeps } from "./NoteList.js"
 export { createNoteList } from "./NoteList.js"
 export {
@@ -52,7 +54,8 @@ export { mountApp } from "./App.js"
 export type { SettingsViewDeps } from "./SettingsView.js"
 export { NEW_CONTEXT_NAME, mountSettingsView } from "./SettingsView.js"
 export type { SettingsContent, WindowRow } from "./settingsContent.js"
-export { settingsContent } from "./settingsContent.js"
+export { addWindowChoices, settingsContent } from "./settingsContent.js"
+export { dropIndex } from "./dropIndex.js"
 export type { WindowsViewDeps } from "./WindowsView.js"
 export { mountWindowsView } from "./WindowsView.js"
 export type { WindowView } from "./windowView.js"
@@ -64,6 +67,7 @@ export {
   GENERAL,
   guardWindows,
   insertWindowAfter,
+  moveWindow,
   parseWindowsLayout,
   removeWindowAt,
   replaceWindowAt,

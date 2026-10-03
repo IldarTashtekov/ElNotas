@@ -6,7 +6,8 @@
  * navegador —el del móvil incluido—, y comparten para eso un mismo historial.
  * Pasar de ventana no se apunta: el atrás no recorre ventanas.
  *
- * Arriba de todo, en cualquier vista, el aviso de que no se está guardando.
+ * Arriba de todo, en cualquier vista, el aviso de que no se está guardando; y
+ * encima de todo, la hoja que pregunta antes de borrar.
  */
 
 import type { NoteId, StorageError, Store, UseCases } from "#core/index"
@@ -16,6 +17,8 @@ import { elemento } from "./dom.js"
 import { describeStorageError } from "./messages.js"
 import { mountNoteView } from "./NoteView.js"
 import { mountSettingsView } from "./SettingsView.js"
+import type { Confirm, Sheet } from "./sheet.js"
+import { createConfirm, createSheet } from "./sheet.js"
 import { mountWindowsView } from "./WindowsView.js"
 import type { WindowsModel } from "./windowsModel.js"
 
@@ -24,7 +27,6 @@ export interface AppDeps {
   readonly useCases: UseCases
   readonly windows: WindowsModel
   readonly corrupt: ReadonlyArray<StorageError>
-  readonly confirm: (pregunta: string) => boolean
 }
 
 /** Lo que la app ofrece a quien la monta. */
@@ -35,6 +37,9 @@ export interface MountedApp {
 
 export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   const back: BackStack = createBackStack()
+  /* Propia y no `window.confirm`: hay navegadores que la contestan «no» sin enseñarla. */
+  const pregunta: Sheet = createSheet(back)
+  const confirm: Confirm = createConfirm(pregunta)
   const aviso: HTMLElement = elemento("div")
   aviso.className = "aviso aviso-guardado"
   aviso.setAttribute("role", "alert")
@@ -60,17 +65,18 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   /* Salir ES ir atrás: así el exit y el atrás del navegador no pueden divergir. */
   const abrirConfiguracion = (): void =>
     abrirEncima((raiz: HTMLElement): (() => void) =>
-      mountSettingsView(raiz, { ...deps, onExit: back.close }),
+      mountSettingsView(raiz, { ...deps, confirm, back, onExit: back.close }),
     )
   const abrirNota = (noteId: NoteId): void =>
     abrirEncima((raiz: HTMLElement): (() => void) =>
       mountNoteView(raiz, { ...deps, noteId, onExit: back.close }),
     )
 
-  raiz.replaceChildren(aviso, principal, encima)
+  raiz.replaceChildren(aviso, principal, encima, pregunta.element)
   mountWindowsView(principal, {
     ...deps,
     back,
+    confirm,
     onOpenSettings: abrirConfiguracion,
     onOpenNote: abrirNota,
   })
