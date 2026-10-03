@@ -1,0 +1,90 @@
+/*
+ * Lo que va pegado abajo: el «+» flotante de nota nueva, la barra de la
+ * selección y la del modo de escritura de la nota.
+ */
+
+/* ── «+»: el botón flotante de nota nueva ── */
+.mas {
+  background: var(--green);
+  border: none;
+  border-radius: 50%;
+  bottom: 1.25rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.6rem;
+  height: 3.25rem;
+  line-height: 1;
+  position: fixed;
+  right: max(1.25rem, calc((100vw - 40rem) / 2 + 1.25rem));
+  width: 3.25rem;
+  z-index: 1;
+}
+
+/* ── Las barras: selección y modo de escritura ── */
+.barra {
+  align-items: center;
+  background: var(--accent);
+  bottom: 0;
+  color: var(--accent-ink);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.75rem -1rem 0;
+  padding: 0.55rem 0.75rem;
+  position: sticky;
+}
+/* La de selección va fija al pie de la pantalla, como la del modo en la nota. */
+.notas ~ .barra {
+  bottom: 0;
+  left: 50%;
+  margin: 0;
+  max-width: 40rem;
+  position: fixed;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 2;
+}
+.barra {
+  & > span {
+    flex: 1;
+    font-weight: 600;
+  }
+  & button {
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--accent-ink);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.45rem 0.7rem;
+
+    &:disabled {
+      opacity: 0.45;
+    }
+    &.activo {
+      background: var(--accent-ink);
+      color: var(--accent);
+    }
+    /* Anidar armado: tiene que verse, porque actúa sobre la línea que aún no existe. */
+    &.anidar.activo {
+      background: none;
+      color: var(--accent-ink);
+      outline: 1.5px dashed var(--accent-ink);
+      outline-offset: -2px;
+    }
+  }
+  & .selector {
+    flex-basis: 100%;
+
+    & button {
+      background: var(--accent-ink);
+      border-color: transparent;
+      color: var(--accent);
+    }
+  }
+}
+.barra-modo .salir {
+  margin-left: auto;
+}

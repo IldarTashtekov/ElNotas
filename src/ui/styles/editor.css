@@ -1,0 +1,79 @@
+/*
+ * La nota: una línea por renglón, la casilla que se rellena con el ✓, las
+ * marcadas tachadas y las hijas sangradas.
+ */
+
+.vista-nota {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+
+  /* En una ventana, bajo la cabecera de la vista ventanas: se descuenta su alto. */
+  &.en-ventana {
+    min-height: calc(100dvh - 4rem);
+
+    &:empty {
+      display: none;
+    }
+  }
+}
+.contenido {
+  flex: 1;
+  padding: 0.25rem 0 1rem;
+}
+.linea {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  line-height: 1.45;
+  padding: 0.12rem 0;
+
+  & > .texto {
+    caret-color: var(--accent);
+    flex: 1;
+    min-height: 1.45em;
+    min-width: 2rem;
+    outline: none;
+    padding: 0.12rem 0;
+    tab-size: 4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+/* La casilla: una caja que se rellena con el ✓. */
+.marca {
+  align-self: center;
+  background: none;
+  border: 1.5px solid var(--muted);
+  border-radius: 4px;
+  color: var(--accent-ink);
+  cursor: pointer;
+  display: grid;
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  height: 1.05rem;
+  line-height: 1;
+  margin-right: 0.55rem;
+  padding: 0;
+  place-items: center;
+  width: 1.05rem;
+}
+.linea.marcada {
+  & > .marca {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  & > .texto {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+}
+.hijas {
+  flex-basis: 100%;
+  padding-left: 1.6rem;
+}
+.empezar {
+  cursor: text;
+  font-style: italic;
+}

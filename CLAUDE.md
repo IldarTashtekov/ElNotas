@@ -95,6 +95,7 @@ src/
 │   ├── blobs/     # ← las dos de BlobStore, que es OTRO puerto (§6.1)
 │   └── index.ts
 ├── ui/            # ← vanilla. Conoce sólo al core: no sabe dónde se guarda nada
+│   ├── styles/    # ← el CSS, un fichero por vista, que index.html enlaza EN ORDEN
 │   └── index.ts
 └── platform/      # ← composición: el ÚNICO sitio que inyecta adaptadores. Nadie la importa
     ├── web/       # ← SystemClock, CryptoIdGenerator, boot, LocalStorageWindows, main
@@ -106,7 +107,7 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 ├── platform/web/
 └── ui/            # ← incluye las dos listas de verificación manual de la Fase 4
 
-index.html         # la página: carga dist/web/ con un importmap, sin bundler (§8.6)
+index.html         # la página: carga dist/web/ con un importmap y los estilos, sin bundler (§8.6)
 ```
 
 - **Las pruebas van en `test/`, no al lado del código.** La carpeta es un **espejo** de `src/`:
@@ -283,6 +284,14 @@ duda**; no la cambies por tu cuenta.
   da), y el DOM virtual es débil justo donde esta app es difícil —`contenteditable`—. Las dos
   alternativas que sobrevivieron están aparcadas con su disparador en `TAREAS.md`: **Snabbdom**
   y un **motor de edición** (ProseMirror/Lexical). Si vuelve a surgir, se lee esa tabla.
+  **El disparador de Snabbdom son los fallos de sincronizar el DOM, no el tamaño** (2026-10-03).
+- **CSS nativo, sin Tailwind ni preprocesador**: un fichero por vista en `src/ui/styles/`,
+  enlazados desde `index.html` **en el orden de la cascada** —con la misma especificidad gana el
+  de después, así que reordenarlos puede cambiar la pantalla—, con **anidamiento nativo** y la
+  capa **`@layer base`** sólo para variables y estilos de elemento. Los colores son variables
+  CSS en `base.css` y en ningún otro sitio. *Decidido con el usuario el 2026-10-03*: Tailwind pide
+  compilación y una dependencia, duplica las variables y mete el estilo en el TypeScript. Al
+  tocar el CSS, **se compara el estilo calculado antes y después** (§7).
 - **Estado normalizado con `ItemRef`**, no entidades anidadas.
 - **`Versioned` con `revision` como token opaco**, no `version: number` ni "gana el último".
 - **Marcar una casilla NO arrastra a sus hijas.** La cascada se compone en la UI.

@@ -1,0 +1,191 @@
+/*
+ * La vista ventanas: la cabecera con ◀ título ▶ ⚙, las notas como tarjetas, el
+ * modo selección, y los vacíos y los avisos de arriba.
+ */
+
+/* ── La cabecera: ◀ título ▶ ⚙ ── */
+.cabecera {
+  align-items: center;
+  border-bottom: 1px solid var(--rowline);
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 -1rem 0.75rem;
+  min-height: 3.25rem;
+  padding: 0 0.5rem;
+}
+.flecha {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0.55rem 0.65rem;
+
+  &[aria-label="Configuración"] {
+    color: var(--green);
+  }
+  &:hover:not(:disabled) {
+    background: var(--row);
+  }
+}
+.apagado,
+.flecha:disabled {
+  color: var(--dim) !important;
+}
+.titulo {
+  flex: 1;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+input.titulo {
+  background: var(--accent-soft);
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  outline: none;
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+}
+.titulo.renombrable {
+  cursor: text;
+}
+
+/* ── Las listas como tarjetas: las notas aquí, los contextos en ⚙ ── */
+.notas,
+.ajustes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.notas li,
+.ajustes > li {
+  background: var(--row);
+  border: 1px solid var(--rowline);
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+}
+.notas li {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-weight: 500;
+  gap: 0.6rem;
+  /* La pulsación larga es de la app: ni selección de texto ni el menú de iOS. */
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  user-select: none;
+
+  &:hover {
+    border-color: var(--line);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+/* En selección: un círculo en cada fila, y el tick en las elegidas. */
+.notas.seleccionando li::before {
+  border: 1.5px solid var(--dim);
+  border-radius: 50%;
+  content: "";
+  flex: none;
+  height: 1.05rem;
+  width: 1.05rem;
+}
+.notas li.seleccionada {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.notas.seleccionando li.seleccionada::before {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  content: "✓";
+  display: grid;
+  font-size: 0.7rem;
+  place-items: center;
+}
+ul.ajustes > li {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.45rem 0.6rem 0.45rem 0.8rem;
+}
+
+/* ── Vacíos y avisos ── */
+.vacia {
+  color: var(--muted);
+  padding: 2rem 1rem;
+  text-align: center;
+
+  & button {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    color: var(--green);
+    cursor: pointer;
+    padding: 0.4rem 1rem;
+  }
+}
+.aviso {
+  background: var(--row);
+  border: 1px solid var(--line);
+  border-left: 4px solid #d08a00;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 1rem;
+}
+.aviso-guardado {
+  border-left-color: var(--danger);
+  position: sticky;
+  top: 0.5rem;
+  z-index: 2;
+}
+.aviso .recargar {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: var(--accent-ink);
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+  padding: 0.45rem 0.9rem;
+}
+/* El de ficheros ilegibles flota arriba y se difumina solo. */
+.aviso-temporal {
+  animation: bajar 0.25s ease-out;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
+  cursor: pointer;
+  left: 50%;
+  max-width: calc(min(40rem, 100vw) - 2rem);
+  position: fixed;
+  top: 0.75rem;
+  transform: translateX(-50%);
+  transition: opacity 0.6s ease;
+  width: 100%;
+  z-index: 20;
+
+  &.fuera {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+@keyframes bajar {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -1rem);
+  }
+}

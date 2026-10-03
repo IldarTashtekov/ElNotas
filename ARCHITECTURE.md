@@ -1874,8 +1874,25 @@ La persistencia se engancha como **suscriptor con write-behind y debounce**, esc
 las entidades marcadas como sucias. **La UI sí despacha en cada tecla** (`setText`): quien
 agrupa es el write-behind, no el editor, así que el disco no se entera de cada tecla.
 
-El CSS del prototipo **no** se aprovechó: la hoja de estilos vive en `index.html`, escrita de
-nuevo.
+El CSS del prototipo **no** se aprovechó: se escribió de nuevo, primero en un `<style>` de
+`index.html` y, desde el 2026-10-03, en **`src/ui/styles/`**, un fichero por vista —`base`,
+`ventanas`, `ajustes`, `hojas`, `barras` y `editor`— que `index.html` enlaza **en el orden del
+`<style>` original**. Ese orden es parte del diseño: con la misma especificidad gana la regla de
+después, y hay choques reales —un botón de «Mover a…» casa con `.barra button` y con
+`.selector button`—, así que agrupar las reglas por tema en vez de por tramo habría cambiado la
+pantalla. Sin dependencias: **anidamiento nativo** donde no altera la especificidad —nunca bajo
+una lista de selectores, que la subiría a la del más específico— y **`@layer base`** sólo para
+las variables y los estilos de elemento. `button:disabled` se queda fuera de la capa a
+propósito: dentro, perdería contra `.flecha` y los botones apagados enseñarían la mano.
+
+**Cómo se verificó que no cambió nada:** una foto del estilo calculado de cada elemento —y de
+sus `::before`/`::after`— en seis pantallas, antes y después, comparadas propiedad a propiedad:
+idénticas. Y la comparación se probó rompiendo a propósito —`button:disabled` dentro de la
+capa—: cazó los tres botones apagados. Al partir se quitaron reglas muertas de la configuración
+vieja (`.fila`, `.acciones`, `section > div > button`) y tres `[hidden]` que repetían el global.
+**Descartados:** Tailwind y similares (UnoCSS) —compilación, una dependencia, las variables
+duplicadas y el estilo dentro del TypeScript—, Sass y CSS Modules —compilación, y el
+anidamiento ya es nativo—, y los frameworks sin clases como Pico, que pelearían contra el diseño.
 
 ### 7.1 Tres clases de estado, no dos
 

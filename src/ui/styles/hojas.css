@@ -1,0 +1,114 @@
+/*
+ * Las hojas que suben desde abajo —añadir una ventana, las acciones de ⋮, la
+ * pregunta antes de borrar— y el «+» verde de la última ventana, que abre una.
+ */
+
+/* ── El «+» de la última ventana, en el sitio de ▶ ── */
+.flecha.agregar {
+  align-items: center;
+  background: var(--green);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  font-size: 1.3rem;
+  height: 2rem;
+  justify-content: center;
+  margin: 0 0.15rem;
+  padding: 0;
+  width: 2rem;
+
+  &:hover:not(:disabled) {
+    background: var(--green);
+    filter: brightness(1.1);
+  }
+  &:disabled {
+    background: var(--dim);
+    color: var(--screen) !important;
+  }
+}
+
+/* ── La hoja ── */
+.hoja-fondo {
+  align-items: flex-end;
+  background: rgb(0 0 0 / 0.45);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 10;
+}
+.hoja {
+  animation: subir 0.18s ease-out;
+  background: var(--screen);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 0.25);
+  display: flex;
+  flex-direction: column;
+  max-height: 80dvh;
+  max-width: 40rem;
+  padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  width: 100%;
+
+  /* El asa de arriba. */
+  &::before {
+    align-self: center;
+    background: var(--line);
+    border-radius: 2px;
+    content: "";
+    height: 4px;
+    margin-bottom: 0.6rem;
+    width: 2.5rem;
+  }
+  & h2 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+  }
+}
+.hoja-cuerpo {
+  overflow-y: auto;
+}
+.hoja-nuevo {
+  background: var(--green);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+  width: 100%;
+}
+/* La pregunta antes de borrar, con su botón rojo. */
+.hoja-pregunta {
+  font-size: 1rem;
+  margin: 0.25rem 0 1rem;
+  text-align: center;
+}
+.hoja-peligro {
+  background: var(--danger);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.6rem 0.9rem;
+  width: 100%;
+}
+.hoja .selector button {
+  background: var(--row);
+}
+.hoja-cancelar {
+  align-self: center;
+  border: none;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hoja {
+    animation: none;
+  }
+}

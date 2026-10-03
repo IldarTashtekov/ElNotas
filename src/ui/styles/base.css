@@ -1,0 +1,91 @@
+/*
+ * Lo de debajo de todo: los colores del boceto de vistas, en claro y en oscuro,
+ * las fuentes del sistema y el aspecto por defecto de los elementos.
+ *
+ * Va en la capa `base`, que pierde siempre contra cualquier regla con clase de
+ * los otros ficheros. Los colores son variables: se cambian aquí y en ningún
+ * otro sitio.
+ */
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --ground: #e9edf2;
+    --ink: #18202c;
+    --muted: #667085;
+    --line: #cdd4de;
+    --screen: #ffffff;
+    --row: #eef1f6;
+    --rowline: #dce2ea;
+    --accent: #3552d6;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3e8fb;
+    --green: #23915f;
+    --danger: #cf3f37;
+    --dim: #b7bfcc;
+    --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #11151c;
+      --ink: #e4e8ef;
+      --muted: #98a2b3;
+      --line: #2b3340;
+      --screen: #1a2029;
+      --row: #242b36;
+      --rowline: #313a47;
+      --accent: #6f88f5;
+      --accent-ink: #0d1220;
+      --accent-soft: #26304d;
+      --green: #3dbb82;
+      --danger: #f06a61;
+      --dim: #4a5364;
+    }
+  }
+  * {
+    box-sizing: border-box;
+  }
+  /* «hidden» manda siempre: dentro de una capa, un !important gana también a
+     las reglas de fuera de ella. */
+  [hidden] {
+    display: none !important;
+  }
+  html {
+    background: var(--ground);
+  }
+  body {
+    background: var(--screen);
+    color: var(--ink);
+    font: 15px/1.5 var(--ui);
+    margin: 0 auto;
+    max-width: 40rem;
+    min-height: 100dvh;
+    padding: 0 1rem 1rem;
+  }
+  button {
+    color: inherit;
+    font: inherit;
+    white-space: nowrap;
+  }
+  input {
+    background: var(--screen);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font: inherit;
+    padding: 0.5rem 0.65rem;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: 2px solid var(--accent-soft);
+    }
+  }
+}
+
+/* Fuera de la capa a propósito: tiene que ganar a `.flecha`, que pone el puntero
+   de mano, y dentro de la capa perdería contra ella. */
+button:disabled {
+  cursor: default;
+}
