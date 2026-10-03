@@ -727,6 +727,11 @@ descubre con el lienzo encima; a cambio, se verifican juntas en el mismo teléfo
 
 #### De la fase, sin parte asignada
 
+- [ ] **Renombrar `NoteList` (`src/ui/NoteList.ts`, `createNoteList`, `NoteListDeps`)**: desde
+      `c8a37db` lista notas **y diagramas**, así que el nombre ya no dice lo que es. Se dejó así
+      para no mezclar el cambio de nombre con el de la tarea. *Pedido por el usuario el
+      2026-10-04.* El nombre nuevo, por decidir con él.
+
 - [ ] **Manejar el lienzo con teclado.** Pendiente, como reordenar las fichas de ⚙ con teclado:
       el usuario lo dejó para más adelante. No bloquea el cierre de ninguna de las tres partes.
 

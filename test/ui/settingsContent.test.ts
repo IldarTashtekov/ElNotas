@@ -5,10 +5,10 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, Context, Note } from "#core/index"
-import { contextId, emptyAppState, noteId, revision } from "#core/index"
+import type { AppState, Context, Diagram, Note } from "#core/index"
+import { contextId, diagramId, emptyAppState, noteId, revision } from "#core/index"
 import type { SettingsContent, WindowRef, WindowRow } from "#ui/index"
-import { GENERAL, GENERAL_TITLE, addWindowChoices, settingsContent } from "#ui/index"
+import { GENERAL, GENERAL_TITLE, addWindowChoices, choiceGroupLabel, settingsContent } from "#ui/index"
 
 const contexto = (id: string, name: string): Context => ({
   id: contextId(id),
@@ -94,4 +94,54 @@ test("con todo en ventanas, el «+» no ofrece nada", (): void => {
   )
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: todas, active: GENERAL }, ESTADO)
   assert.deepEqual(titulos(filas), [])
+})
+
+/* ──────────────────────────────── Diagramas ──────────────────────────────── */
+
+const diagrama = (id: string, name: string): Diagram => ({
+  id: diagramId(id),
+  name,
+  nodes: {},
+  relations: {},
+  updatedAt: 0,
+  revision: revision(`rev-${id}`),
+})
+
+const CON_DIAGRAMAS: AppState = {
+  ...ESTADO,
+  diagrams: {
+    [diagramId("d2")]: diagrama("d2", "Mudanza"),
+    [diagramId("d1")]: diagrama("d1", "Boda"),
+  },
+}
+
+test("los diagramas se pueden elegir como ventana: detrás de las notas, por nombre", (): void => {
+  const opciones: ReadonlyArray<WindowRow> = settingsContent({ windows: [], active: null }, CON_DIAGRAMAS).choices
+  assert.deepEqual(titulos(opciones).slice(-4), ["Diario", "Recetas", "Boda", "Mudanza"])
+  assert.equal(opciones[opciones.length - 1]?.ref.kind, "diagram")
+})
+
+test("el «+» no ofrece un diagrama que ya está en una ventana", (): void => {
+  const enVentana: WindowRef = { kind: "diagram", id: diagramId("d1") }
+  const opciones: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [enVentana], active: enVentana }, CON_DIAGRAMAS)
+  assert.ok(!titulos(opciones).includes("Boda"))
+  assert.ok(titulos(opciones).includes("Mudanza"))
+})
+
+test("los rótulos: «Notas:» ante la primera nota y «Diagramas:» ante el primer diagrama, y en nada más", (): void => {
+  const opciones: ReadonlyArray<WindowRow> = settingsContent({ windows: [], active: null }, CON_DIAGRAMAS).choices
+  const rotulos: ReadonlyArray<string> = opciones.flatMap((o: WindowRow, i: number): ReadonlyArray<string> => {
+    const r: string | null = choiceGroupLabel(opciones, i)
+    return r === null ? [] : [`${r} ${o.title}`]
+  })
+  assert.deepEqual(rotulos, ["Notas: Diario", "Diagramas: Boda"])
+})
+
+test("sin notas, el rótulo de diagramas va igual ante el primero; fuera de la lista, ninguno", (): void => {
+  const sinNotas: AppState = { ...CON_DIAGRAMAS, notes: {} }
+  const opciones: ReadonlyArray<WindowRow> = settingsContent({ windows: [], active: null }, sinNotas).choices
+  const primero: number = opciones.findIndex((o: WindowRow): boolean => o.ref.kind === "diagram")
+  assert.equal(choiceGroupLabel(opciones, primero), "Diagramas:")
+  assert.equal(choiceGroupLabel(opciones, 0), null)
+  assert.equal(choiceGroupLabel(opciones, opciones.length), null)
 })

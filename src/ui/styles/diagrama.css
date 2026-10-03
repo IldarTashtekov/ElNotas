@@ -13,6 +13,15 @@
   & .cabecera {
     margin-bottom: 0;
   }
+
+  /* En una ventana, bajo la cabecera de la vista ventanas: se descuenta su alto. */
+  &.en-ventana {
+    height: calc(100dvh - 4rem);
+
+    &:empty {
+      display: none;
+    }
+  }
 }
 .lienzo {
   background-image: radial-gradient(circle, var(--dim) 1.25px, transparent 1.75px);

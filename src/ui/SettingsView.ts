@@ -15,7 +15,7 @@ import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent, WindowRow } from "./settingsContent.js"
-import { settingsContent } from "./settingsContent.js"
+import { choiceGroupLabel, settingsContent } from "./settingsContent.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
 
@@ -108,16 +108,18 @@ export const mountSettingsView = (
     }, "hoja-nuevo")
     const caja: HTMLElement = elemento("div")
     caja.className = "selector"
-    /* Las notas, detrás de un rótulo: sin él, una nota y un contexto con el
-       mismo nombre no se distinguirían. */
-    const primeraNota: number = vista.choices.findIndex((o: WindowRow): boolean => o.ref.kind === "note")
-    const grupo: HTMLElement = elemento("span", "Notas:")
-    grupo.className = "grupo"
+    /* Las notas y los diagramas, detrás de su rótulo: sin él, una nota y un
+       contexto con el mismo nombre no se distinguirían. */
     caja.append(
-      ...vista.choices.flatMap((opcion: WindowRow, i: number): ReadonlyArray<HTMLElement> => [
-        ...(i === primeraNota ? [grupo] : []),
-        boton(opcion.title, (): void => elegido(opcion.ref)),
-      ]),
+      ...vista.choices.flatMap((opcion: WindowRow, i: number): ReadonlyArray<HTMLElement> => {
+        const texto: string | null = choiceGroupLabel(vista.choices, i)
+        const grupo: HTMLElement = elemento("span", texto ?? "")
+        grupo.className = "grupo"
+        return [
+          ...(texto === null ? [] : [grupo]),
+          boton(opcion.title, (): void => elegido(opcion.ref)),
+        ]
+      }),
     )
     return [nuevo, caja]
   }

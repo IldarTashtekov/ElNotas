@@ -1,13 +1,22 @@
 /**
  * Qué enseña la vista ventanas ahora mismo: la ventana activa, su título, si se
- * puede renombrar, sus notas y diagramas —o la nota que se edita, si es una
- * ventana de nota— y si hay ventana antes y después.
+ * puede renombrar, sus notas y diagramas —o la nota o el diagrama que enseña, si
+ * es una ventana de nota o de diagrama— y si hay ventana antes y después.
  *
  * Es un cálculo puro sobre el estado y la lista de ventanas, así que todo lo que
  * decide la pantalla se prueba en Node; al DOM sólo le queda pintarlo.
  */
 
-import type { AppState, Context, ContextId, Diagram, ItemRef, Note, NoteId } from "#core/index"
+import type {
+  AppState,
+  Context,
+  ContextId,
+  Diagram,
+  DiagramId,
+  ItemRef,
+  Note,
+  NoteId,
+} from "#core/index"
 import { diagramRef, noteRef } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { sameWindow } from "./windows.js"
@@ -26,11 +35,13 @@ export type WindowView =
       readonly kind: "window"
       readonly ref: WindowRef
       readonly title: string
-      /** El contexto que se renombra al tocar el título; `null` en el General y en una nota. */
+      /** El contexto que se renombra al tocar el título; `null` si la ventana no es de contexto. */
       readonly renames: ContextId | null
       /** La nota que se edita en la ventana, si es de tipo nota. Su título la renombra. */
       readonly editsNote: NoteId | null
-      /** La lista de la ventana. Vacía en una ventana de nota: ahí va el editor. */
+      /** El diagrama que enseña la ventana, si es de tipo diagrama. Su título lo renombra. */
+      readonly editsDiagram: DiagramId | null
+      /** La lista de la ventana. Vacía en una de nota o de diagrama: ahí va lo suyo. */
       readonly items: ReadonlyArray<ListItem>
       /** Sin anterior en la primera ni siguiente en la última: no es circular. */
       readonly prev: WindowRef | null
@@ -48,6 +59,8 @@ export const windowTitle = (ref: WindowRef, state: AppState): string => {
       return state.contexts[ref.id]?.name ?? ""
     case "note":
       return state.notes[ref.id]?.name ?? ""
+    case "diagram":
+      return state.diagrams[ref.id]?.name ?? ""
   }
 }
 
@@ -93,6 +106,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       title: GENERAL_TITLE,
       renames: null,
       editsNote: null,
+      editsDiagram: null,
       items: todo(state),
       ...vecinas,
     }
@@ -107,6 +121,22 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       title: nota.name,
       renames: null,
       editsNote: nota.id,
+      editsDiagram: null,
+      items: [],
+      ...vecinas,
+    }
+  }
+
+  if (activa.kind === "diagram") {
+    const diagrama: Diagram | undefined = state.diagrams[activa.id]
+    if (diagrama === undefined) return VACIA
+    return {
+      kind: "window",
+      ref: activa,
+      title: diagrama.name,
+      renames: null,
+      editsNote: null,
+      editsDiagram: diagrama.id,
       items: [],
       ...vecinas,
     }
@@ -122,6 +152,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     title: ctx.name,
     renames: ctx.id,
     editsNote: null,
+    editsDiagram: null,
     items: deContexto(ctx, state),
     ...vecinas,
   }

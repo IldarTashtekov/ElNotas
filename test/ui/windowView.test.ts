@@ -183,3 +183,24 @@ test("una referencia a un diagrama que no está en el estado no se enseña", ():
   }
   assert.deepEqual(ventanaCon(estado, COMPRA).items, [])
 })
+
+test("una ventana de diagrama: se titula con el diagrama, lo renombra, y no lleva lista", (): void => {
+  const deDiagrama: WindowRef = { kind: "diagram", id: MUDANZA.id }
+  const vista: WindowView = windowView({ windows: [GENERAL, deDiagrama], active: deDiagrama }, CON_DIAGRAMAS)
+  if (vista.kind !== "window") assert.fail("tenía que enseñar una ventana")
+  assert.equal(vista.title, "Mudanza")
+  assert.equal(vista.editsDiagram, MUDANZA.id)
+  assert.equal(vista.editsNote, null)
+  assert.equal(vista.renames, null)
+  assert.deepEqual(vista.items, [])
+})
+
+test("en una ventana que no es de diagrama no se enseña ninguno", (): void => {
+  assert.equal(ventanaCon(CON_DIAGRAMAS, COMPRA).editsDiagram, null)
+  assert.equal(ventanaCon(CON_DIAGRAMAS, GENERAL).editsDiagram, null)
+})
+
+test("una ventana de diagrama que ya no existe enseña la pantalla vacía", (): void => {
+  const fantasma: WindowRef = { kind: "diagram", id: diagramId("fantasma") }
+  assert.deepEqual(windowView({ windows: [fantasma], active: fantasma }, CON_DIAGRAMAS), { kind: "empty" })
+})

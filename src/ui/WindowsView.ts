@@ -2,7 +2,8 @@
  * La vista ventanas, la principal: una ventana cada vez, con ◀ ▶ para pasar a la
  * de al lado —y en la última, un «+» para añadir otra detrás—, el título —que se
  * renombra tocándolo, salvo en el General—, sus notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
- * que la vista nota, con su barra y sin exit. Sin ventanas, una pantalla vacía.
+ * que la vista nota, con su barra y sin exit; una de diagrama, el mismo lienzo
+ * que la vista diagrama, también sin exit. Sin ventanas, una pantalla vacía.
  *
  * Lo que se enseña lo decide `windowView`; aquí sólo se pinta y se escucha.
  */
@@ -18,6 +19,8 @@ import type {
   UseCases,
 } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { DiagramCanvas } from "./DiagramCanvas.js"
+import { createDiagramCanvas } from "./DiagramCanvas.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { corruptNotice, elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
@@ -27,7 +30,7 @@ import { createNoteEditor } from "./NoteEditor.js"
 import type { NoteList } from "./NoteList.js"
 import { createNoteList } from "./NoteList.js"
 import type { WindowRow } from "./settingsContent.js"
-import { addWindowChoices } from "./settingsContent.js"
+import { addWindowChoices, choiceGroupLabel } from "./settingsContent.js"
 import { NEW_CONTEXT_NAME } from "./SettingsView.js"
 import { createSheet } from "./sheet.js"
 import type { WindowView } from "./windowView.js"
@@ -85,6 +88,7 @@ export const mountWindowsView = (
     /* Se lee al guardar: es la ventana en la que se empezó a escribir. */
     if (vista.kind !== "window") return
     if (vista.editsNote !== null) useCases.renameNote(vista.editsNote, nombre)
+    else if (vista.editsDiagram !== null) useCases.renameDiagram(vista.editsDiagram, nombre)
     else if (vista.renames !== null) useCases.renameContext(vista.renames, nombre)
   })
   const cabecera: HTMLElement = elemento("header")
@@ -152,6 +156,27 @@ export const mountWindowsView = (
     editor.instancia.refresh(nota)
   }
 
+  /* ── La ventana de diagrama: el mismo lienzo que la vista diagrama, en otro marco ── */
+
+  const zonaLienzo: HTMLElement = elemento("div")
+  zonaLienzo.className = "vista-diagrama en-ventana"
+  /** El lienzo montado, y de qué diagrama. Uno a la vez: cambiar de ventana lo rehace. */
+  let lienzo: { readonly diagrama: DiagramId; readonly instancia: DiagramCanvas } | null = null
+
+  const soltarLienzo = (): void => {
+    lienzo?.instancia.destroy()
+    lienzo = null
+    zonaLienzo.replaceChildren()
+  }
+
+  const montarLienzo = (id: DiagramId): void => {
+    if (lienzo !== null && lienzo.diagrama === id) return
+    soltarLienzo()
+    const instancia: DiagramCanvas = createDiagramCanvas({ store, diagramId: id })
+    zonaLienzo.append(instancia.element)
+    lienzo = { diagrama: id, instancia }
+  }
+
   anterior.addEventListener("click", (): void => {
     if (vista.kind === "window" && vista.prev !== null) windows.setActive(vista.prev)
   })
@@ -169,6 +194,14 @@ export const mountWindowsView = (
     windows.setActive(ref)
   }
 
+  /** El rótulo de un grupo del selector, si a esa opción le toca uno. */
+  const rotulo = (texto: string | null): ReadonlyArray<HTMLElement> => {
+    if (texto === null) return []
+    const grupo: HTMLElement = elemento("span", texto)
+    grupo.className = "grupo"
+    return [grupo]
+  }
+
   const opcion = (texto: string, alPulsar: () => void): HTMLButtonElement => {
     const b: HTMLButtonElement = elemento("button", texto)
     b.type = "button"
@@ -180,13 +213,10 @@ export const mountWindowsView = (
     const opciones: ReadonlyArray<WindowRow> = addWindowChoices(windows.getLayout(), store.getState())
     const lista: HTMLElement = elemento("div")
     lista.className = "selector"
-    /* Las notas, detrás de un rótulo, como en la configuración. */
-    const primeraNota: number = opciones.findIndex((o: WindowRow): boolean => o.ref.kind === "note")
-    const grupo: HTMLElement = elemento("span", "Notas:")
-    grupo.className = "grupo"
+    /* Las notas y los diagramas, detrás de su rótulo, como en la configuración. */
     lista.append(
       ...opciones.flatMap((o: WindowRow, i: number): ReadonlyArray<HTMLElement> => [
-        ...(i === primeraNota ? [grupo] : []),
+        ...rotulo(choiceGroupLabel(opciones, i)),
         opcion(o.title, (): void => anadir(o.ref)),
       ]),
     )
@@ -220,6 +250,7 @@ export const mountWindowsView = (
       cabecera.hidden = true
       notas.update(null, [])
       soltarEditor()
+      soltarLienzo()
       sinVentanas.hidden = false
       return
     }
@@ -231,16 +262,26 @@ export const mountWindowsView = (
     siguiente.hidden = vista.next === null
     agregar.hidden = vista.next !== null
 
-    titulo.show(vista.title, vista.renames !== null || vista.editsNote !== null)
+    titulo.show(
+      vista.title,
+      vista.renames !== null || vista.editsNote !== null || vista.editsDiagram !== null,
+    )
 
     const nota: Note | undefined =
       vista.editsNote === null ? undefined : estado.notes[vista.editsNote]
     if (vista.editsNote !== null && nota !== undefined) {
       notas.element.hidden = true
       notas.update(null, [])
+      soltarLienzo()
       montarEditor(vista.editsNote, nota)
+    } else if (vista.editsDiagram !== null) {
+      notas.element.hidden = true
+      notas.update(null, [])
+      soltarEditor()
+      montarLienzo(vista.editsDiagram)
     } else {
       soltarEditor()
+      soltarLienzo()
       notas.element.hidden = false
       notas.update(vista.ref, vista.items)
     }
@@ -251,6 +292,7 @@ export const mountWindowsView = (
     cabecera,
     notas.element,
     zonaEditor,
+    zonaLienzo,
     sinVentanas,
     hoja.element,
   )

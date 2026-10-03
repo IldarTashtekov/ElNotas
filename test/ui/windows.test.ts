@@ -10,7 +10,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Context } from "#core/index"
-import { contextId, emptyAppState, noteId, revision } from "#core/index"
+import { contextId, diagramId, emptyAppState, noteId, revision } from "#core/index"
 import type { WindowRef, WindowsLayout } from "#ui/index"
 import {
   DEFAULT_LAYOUT,
@@ -242,4 +242,68 @@ test("sameWindow no confunde clases: ni nota con contexto, en ningún sentido", 
   assert.equal(sameWindow(ventana("x"), ventanaNota("x")), false)
   assert.equal(sameWindow(ventanaNota("x"), ventanaNota("x")), true)
   assert.equal(sameWindow(ventanaNota("x"), GENERAL), false)
+})
+
+/* ──────────────────────── Las ventanas de tipo diagrama ────────────────────── */
+
+const ventanaDiagrama = (id: string): WindowRef => ({ kind: "diagram", id: diagramId(id) })
+
+const conDiagrama = (estado: AppState, id: string): AppState => ({
+  ...estado,
+  diagrams: {
+    ...estado.diagrams,
+    [diagramId(id)]: {
+      id: diagramId(id),
+      name: id,
+      nodes: {},
+      relations: {},
+      updatedAt: 0,
+      revision: revision(`rev-${id}`),
+    },
+  },
+})
+
+test("la guarda sabe de diagramas: la de uno que existe se queda, y es la MISMA lista", (): void => {
+  const layout: WindowsLayout = {
+    windows: [ventanaDiagrama("mudanza"), GENERAL],
+    active: ventanaDiagrama("mudanza"),
+  }
+  assert.strictEqual(guardWindows(layout, conDiagrama(emptyAppState(), "mudanza")), layout)
+})
+
+test("la guarda sabe de diagramas: la de uno borrado desaparece", (): void => {
+  const layout: WindowsLayout = {
+    windows: [ventanaDiagrama("borrado"), GENERAL],
+    active: ventanaDiagrama("borrado"),
+  }
+  assert.deepEqual(guardWindows(layout, emptyAppState()), { windows: [GENERAL], active: GENERAL })
+})
+
+test("un diagrama y una nota con el mismo id no son la misma ventana", (): void => {
+  const layout: WindowsLayout = { windows: [ventanaNota("x"), ventanaDiagrama("x")], active: ventanaDiagrama("x") }
+  /* Existe la nota «x» pero no el diagrama «x»: sólo se cae la de diagrama. */
+  assert.deepEqual(guardWindows(layout, conNota(emptyAppState(), "x")), {
+    windows: [ventanaNota("x")],
+    active: ventanaNota("x"),
+  })
+})
+
+test("una ventana de diagrama se lee de lo guardado, también como la activa", (): void => {
+  const leido: WindowsLayout = parseWindowsLayout({
+    windows: [{ kind: "diagram", id: "mudanza" }],
+    active: { kind: "diagram", id: "mudanza" },
+  })
+  assert.deepEqual(leido, { windows: [ventanaDiagrama("mudanza")], active: ventanaDiagrama("mudanza") })
+})
+
+test("una ventana de diagrama sin id se descarta al leer", (): void => {
+  assert.deepEqual(parseWindowsLayout({ windows: [{ kind: "diagram" }, GENERAL], active: null }).windows, [GENERAL])
+})
+
+test("sameWindow no confunde un diagrama con ninguna otra clase", (): void => {
+  assert.equal(sameWindow(ventanaDiagrama("x"), ventanaNota("x")), false)
+  assert.equal(sameWindow(ventanaNota("x"), ventanaDiagrama("x")), false)
+  assert.equal(sameWindow(ventanaDiagrama("x"), ventana("x")), false)
+  assert.equal(sameWindow(ventanaDiagrama("x"), ventanaDiagrama("x")), true)
+  assert.equal(sameWindow(ventanaDiagrama("x"), ventanaDiagrama("y")), false)
 })

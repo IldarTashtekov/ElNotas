@@ -8,14 +8,15 @@
  * Todo es puro: se prueba en Node sin navegador.
  */
 
-import type { AppState, ContextId, NoteId } from "#core/index"
-import { contextId, noteId } from "#core/index"
+import type { AppState, ContextId, DiagramId, NoteId } from "#core/index"
+import { contextId, diagramId, noteId } from "#core/index"
 
-/** Lo que enseña una ventana: el General, un contexto o una nota. */
+/** Lo que enseña una ventana: el General, un contexto, una nota o un diagrama. */
 export type WindowRef =
   | { readonly kind: "general" }
   | { readonly kind: "context"; readonly id: ContextId }
   | { readonly kind: "note"; readonly id: NoteId }
+  | { readonly kind: "diagram"; readonly id: DiagramId }
 
 export interface WindowsLayout {
   readonly windows: ReadonlyArray<WindowRef>
@@ -36,6 +37,8 @@ export const sameWindow = (a: WindowRef, b: WindowRef): boolean => {
       return b.kind === "context" && a.id === b.id
     case "note":
       return b.kind === "note" && a.id === b.id
+    case "diagram":
+      return b.kind === "diagram" && a.id === b.id
   }
 }
 
@@ -48,6 +51,8 @@ export const windowExists = (ref: WindowRef, state: AppState): boolean => {
       return state.contexts[ref.id] !== undefined
     case "note":
       return state.notes[ref.id] !== undefined
+    case "diagram":
+      return state.diagrams[ref.id] !== undefined
   }
 }
 
@@ -145,6 +150,9 @@ const refDe = (x: unknown): WindowRef | null => {
   }
   if (x["kind"] === "note" && typeof x["id"] === "string") {
     return { kind: "note", id: noteId(x["id"]) }
+  }
+  if (x["kind"] === "diagram" && typeof x["id"] === "string") {
+    return { kind: "diagram", id: diagramId(x["id"]) }
   }
   return null
 }
