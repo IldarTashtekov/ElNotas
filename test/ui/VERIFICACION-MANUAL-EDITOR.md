@@ -37,7 +37,7 @@ La misma que `VERIFICACION-MANUAL.md` (compilar con `npm run build:web`, servir,
 `localhost` o, en el móvil, por la IP). Las secciones J–L usan la consola y sólo se pasan en
 escritorio; J necesita abrir la app con **`?depurar`** al final de la dirección.
 
-Para cada sección, una nota nueva con **+ Nota** vale: nace vacía y se entra en ella.
+Para cada sección, una nota nueva con el botón redondo **+** vale: nace vacía y se entra en ella.
 
 ---
 
@@ -70,6 +70,7 @@ Para cada sección, una nota nueva con **+ Nota** vale: nace vacía y se entra e
 | **C5** | encendida + anidar | al final de una casilla | casilla **hija**, y anidar **se apaga solo** |
 | **C6** | encendida + anidar | al final de un texto | casilla hermana, y anidar **sigue armado** |
 | **C7** | cualquiera | en medio de una línea | la parte; la mitad de abajo nace de la clase del interruptor |
+| **C7b** | casilla apagada | en medio de una casilla **anidada** | la parte; la mitad de abajo sale como **texto** a la raíz, debajo de su casilla de la raíz |
 | **C8** | encendida + anidar | en medio de una línea | la parte **sin anidar**, y anidar sigue armado |
 
 ## D. Retroceso al principio de una línea
@@ -79,6 +80,8 @@ Para cada sección, una nota nueva con **+ Nota** vale: nace vacía y se entra e
 - **D2.** En una **casilla anidada**: une directamente, con una sola pulsación.
 - **D3.** En la **primera hija**: une con su madre.
 - **D4.** Entre **dos textos normales**: une.
+- **D4b.** Un texto justo debajo de una casilla **con hijas**: une con **la última hija**, la línea
+  que se ve encima, no con la casilla.
 - **D5.** En la **primera línea** de la nota, y en una **casilla con hijas**: no hace nada.
 - **D6.** En cualquier otro sitio de la línea, borra la letra anterior como siempre.
 
@@ -90,7 +93,7 @@ Para cada sección, una nota nueva con **+ Nota** vale: nace vacía y se entra e
 - **E2.** Apagarlo en una casilla de la raíz: vuelve a texto. En una casilla anidada: sigue siendo
   casilla (un texto no cabe ahí), pero el interruptor se apaga.
 - **E3.** Con la casilla apagada, **↳ Anidar** está desactivado.
-- **E4.** Armado, el botón **se ve distinto** y dice «la próxima, dentro». ¿Se entiende sin que
+- **E4.** Armado, el botón **se ve distinto** (borde discontinuo) y dice «↳ Anidar armado». ¿Se entiende sin que
   nadie lo explique? *(Anotar la impresión: es una de las tres preguntas de §9.10.)*
 - **E5.** Pulsar los botones de la barra **no cambia de línea** el cursor, y en el móvil **no cierra
   el teclado**.
@@ -119,7 +122,7 @@ Para cada sección, una nota nueva con **+ Nota** vale: nace vacía y se entra e
 
 ## I. Ventanas de tipo nota
 
-- **I1.** ⚙ → *Añadir detrás* → en el selector, bajo «Notas:», elegir una nota. Aparece como
+- **I1.** ⚙ → ⋮ de una ventana → *Añadir detrás* (o la ficha **+**) → en la lista, bajo «Notas:», elegir una nota. Aparece como
   ventana.
 - **I2.** En esa ventana: cabecera con **◀ ▶ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
   Todo lo de B–G funciona igual.
@@ -174,9 +177,6 @@ setTimeout(() => console.log("cambios en pantalla:", cambios), 700)
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:
 
-- **Retroceso bajo una casilla con hijas.** Al principio de un texto que va justo debajo de una
-  casilla **con hijas**, Retroceso une el texto a **esa casilla**, no a su última hija —aunque la
-  línea que se ve encima sea la hija—. Es la regla de `merge`.
 - **Varias «Nueva Nota» iguales** en el selector de ventanas: toda nota nace con ese nombre. Es
   decisión (2026-09-29): pueden existir notas con el mismo nombre; lo que las distingue es su id.
 - **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y

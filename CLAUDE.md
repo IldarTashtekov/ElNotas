@@ -20,7 +20,7 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-09-29:** `npm run check` en verde —sus seis pasos— con **489 pruebas** (la Fase
+**Medido el 2026-10-03:** `npm run check` en verde —sus seis pasos— con **505 pruebas** (la Fase
 4 empezó con 329; al terminar el código de Fase 4 · Contextos eran 423). Líneas de `.ts`:
 `src/core` 2320, `src/storage` 1577, `src/platform` 321, `src/ui` 2442; `test/` 7195. *(Las
 cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
@@ -312,6 +312,11 @@ duda**; no la cambies por tu cuenta.
   sobre la línea siguiente, no sobre la actual. §9.3 y §7.2.
 - **Retroceso al principio de una casilla hace DOS cosas, en dos pulsaciones:** la primera
   quita la casilla (`convertToText`), la segunda une con la línea de arriba (`merge`). §7.3.
+- **`merge` une con la línea que se ve encima**: la anterior **en orden de lectura** —la última
+  de la hermana de arriba, por honda que esté—, o la madre si es la primera hija. *Cambiado con
+  el usuario el 2026-10-03*: antes subía a la hermana anterior, y un texto bajo una casilla con
+  hijas se unía a la casilla y no a la hija que se ve encima. Es la única vez que la Fase 4 tocó
+  el core. §9.3 y §7.3.
 - **`WritingMode` es un interruptor «☐ Casilla» más un disparador de anidar**
   (`{ checkbox: boolean, nestArmed: boolean }`), con el texto como lo normal. *Decidido con el
   usuario el 2026-09-29*, y **sustituye a los dos modos con nombre (*Texto* ⇄ *Casilla*)** del
@@ -325,9 +330,12 @@ duda**; no la cambies por tu cuenta.
   casilla de la raíz** (un texto sólo cabe en la raíz). `root-end` queda para la primera línea
   de una nota vacía. *Decidido con el usuario el 2026-09-29.* El core no se tocó. §7.3.
 - **Los cuatro huecos de §7.3, cerrados con el usuario el 2026-09-29:** anidar armado en un
-  **texto** crea una casilla hermana y **sigue armado**; partir una casilla **anidada** con el
-  interruptor apagado deja la mitad nueva **como casilla**; **`split` no anida** y anidar sigue
+  **texto** crea una casilla hermana y **sigue armado**; **`split` no anida** y anidar sigue
   armado; **marcar con el teclado es Ctrl/Cmd+Intro** (y Tab + Espacio sobre el ☐).
+- **Partir una casilla anidada con el interruptor apagado saca la mitad nueva como TEXTO a la
+  raíz, debajo de su casilla de la raíz** —como Intro al final—, aunque haya hermanas detrás.
+  *Cambiado con el usuario el 2026-10-03*: antes seguía siendo casilla. El core no se tocó: es
+  `setText` + `insertText`. §7.3.
 - **Los adaptadores de navegador se verifican A MANO, no con Playwright**, y la UI también.
   Un doble prueba lo que **tú crees** que hace la API, no lo que hace. **No propongas instalar
   un runner de navegador**; qué lo reabriría está en `TAREAS.md`. Las listas viven en
@@ -392,6 +400,14 @@ duda**; no la cambies por tu cuenta.
   configuración.** De ventanas se entra a las demás **a un solo nivel**, y de una secundaria sólo
   se sale con **exit** (o el atrás del navegador, que es lo mismo), a **la misma ventana**. ◀ ▶
   no son circulares. En la vista nota no hay ◀ ▶ ni ⚙.
+- **Las ventanas en ⚙ son una fila de fichas que se desliza**: mantener pulsada una la levanta
+  para **arrastrarla y reordenar** (`moveWindow`), **⋮ abre la hoja** con *Cambiar contenido*,
+  *Añadir detrás* y *Quitar*, un toque corto no hace nada, y una ficha «+» añade al final.
+  Reordenar con teclado, pendiente. *Decidido con el usuario el 2026-10-03.*
+- **En la última ventana, un «+» verde en el sitio de ▶** abre una hoja desde abajo para añadir
+  otra detrás: «+ Contexto nuevo» y sólo lo que **aún no tiene ventana**. Al elegir **se va a
+  ella**, y un contexto nuevo llega con el título en edición. *Decidido con el usuario el
+  2026-10-03.*
 - **Una ventana es una referencia** (`WindowRef`: General, contexto o nota) y **la lista se
   guarda FUERA del core, en `localStorage`** (`elnotas:windows`), con la activa **como
   referencia y no como índice**. Riesgo aceptado: no viaja con las notas.
@@ -402,7 +418,8 @@ duda**; no la cambies por tu cuenta.
   sólo se pierde el orden. *Decidido con el usuario el 2026-09-29.*
 - **El General** enseña todas las notas, no se renombra, y su papelera **borra de verdad**; en un
   contexto la papelera **sólo quita de ese contexto**. Confirman sólo borrar un contexto y la
-  papelera del General.
+  papelera del General, **con una hoja propia y no con `window.confirm`**, que hay navegadores
+  que contestan «no» sin enseñarla (2026-10-03). El `backStack` es una pila: la hoja va encima.
 - **Selección por pulsación larga** (más clic derecho, Ctrl/Cmd+clic y teclado). «Mover a…»
   **mueve** (`remove-item` + `add-item`; desde el General sólo `add-item`) y no confirma.
 - **Una nota nace en el contexto donde se crea**, como «Nueva Nota», y **una nota vacía se
@@ -411,7 +428,7 @@ duda**; no la cambies por tu cuenta.
 - **El título, sólo en la cabecera, y se renombra tocándolo.** Una nota que es ventana usa **el
   mismo editor en dos marcos**, sin exit. `defaultView` queda sin uso, y no se toca.
 - **La Fase 4 es sólo web y se partió en Fase 4 · Contextos y Fase 4 · Notas**, sin tocar el
-  core; **los Planes son la Fase 5**. §9.10.
+  core salvo la regla de `merge` (2026-10-03, arriba); **los Planes son la Fase 5**. §9.10.
 
 ## Fuera de alcance por ahora
 
@@ -437,7 +454,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 2 — Acciones, persistencia y memory. ✅ HECHA**, con **216** (§9.8).
 - **Fase 3 — Fichero local. ✅ HECHA**, con **314**, y la lista manual pasada el 2026-09-13
   (§9.9).
-- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 489 pruebas. Partida en dos (§9.10):
+- **Fase 4 — UI, sólo web. ⏳ CÓDIGO HECHO, SIN CERRAR.** 505 pruebas. Partida en dos (§9.10):
   - **Fase 4 · Contextos** — puntos 1–7 y 9 hechos. **El 8, la lista manual
     (`test/ui/VERIFICACION-MANUAL.md`), escrita y SIN PASAR entera**: hubo una revisión parcial
     que el usuario no confirma. No cerrada.

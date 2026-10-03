@@ -593,9 +593,9 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
 - [x] **Los bordes del teclado: `split`, `merge` y las cuatro esquinas de §7.3**, con el
       Retroceso al principio en sus dos pulsaciones. ✅ `c95664d` + `9fab349`. Punto 3. Y los
       cuatro huecos que salieron al construirlo, cerrados con el usuario el 2026-09-29 (en *Sin
-      decidir*). **Comportamiento conocido, no un fallo:** Retroceso al principio de un texto que
-      va justo debajo de una casilla **con hijas** lo une a esa casilla, no a su última hija —la
-      regla de `merge`—. Si no se aguanta, se suma a las tres preguntas.
+      decidir*). Y un cambio pedido al usarlo, el 2026-10-03: **Retroceso une con la línea que
+      se ve encima** —la última hija de la casilla de arriba, por honda que esté—, no con la
+      casilla. Cambia la regla de `merge` en el core (§9.3), la única vez que la Fase 4 lo toca.
 - [x] **Un `set-checked` redundante no redibuja.** ✅ `56d838c`. Punto 4, y el tercer eslabón de
       la cadena de §9.5 y §9.8 queda **demostrado**: medido en el navegador con `?depurar`, un
       `set-checked` redundante da **0 avisos, 0 escrituras y 0 cambios en el DOM**, frente a
@@ -982,7 +982,8 @@ usuario una a una**; el diseño y su porqué, en `ARCHITECTURE.md` §7.2–§7.4
   registrado como decidido.)* → §7.3, §9.4
 - **Los cuatro huecos de §7.3** — ✅ **(a)** con anidar armado en un **texto**, Intro crea una
   casilla hermana y anidar **sigue armado**; **(b)** partir una casilla **anidada** con el
-  interruptor apagado deja la mitad nueva **como casilla**; **(c)** `split` **no anida**, y anidar
+  interruptor apagado deja la mitad nueva **como casilla** — *cambiado el 2026-10-03: ahora sale
+  como texto a la raíz, debajo de su casilla de la raíz*; **(c)** `split` **no anida**, y anidar
   sigue armado; **(d)** marcar con el teclado es **Ctrl/Cmd+Intro** (y el ☐ es un botón: Espacio
   con el foco encima). → §7.3
 - **Ventanas** — ✅ **sin nada guardado se ve una ventana, el General**; **se permite el mismo
@@ -998,8 +999,10 @@ el usuario en bloque**, no cerradas una a una. Están descritas en `ARCHITECTURE
 aquí, sólo la lista para que nadie las tome por accidentes:
 
 - el General ordena sus notas **por nombre**; un contexto, en el orden de sus `items`;
-- en la configuración: **«+ Ventana»** con la lista vacía, **«+ Contexto nuevo»** crea «Nuevo
-  contexto», la confirmación es `window.confirm` **inyectada**, y lo que se deja a medias **no se
+- en la configuración: **«+ Ventana»** con la lista vacía —*sustituido el 2026-10-03 por la fila
+  de fichas con ⋮, arrastrar y una ficha «+»*—, **«+ Contexto nuevo»** crea «Nuevo
+  contexto», la confirmación es `window.confirm` **inyectada** —*cambiada el 2026-10-03 por una hoja propia:
+  en el panel de Claude `window.confirm` contestaba «no» sin enseñarse*—, y lo que se deja a medias **no se
   recuerda** al salir;
 - **`backStack`**: configuración, vista nota y modo selección comparten el historial del
   navegador, así que el atrás cierra los tres y el exit **es** ir atrás; `close()` es idempotente

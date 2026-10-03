@@ -733,7 +733,7 @@ está en §6.3, y ese fichero no ha cambiado desde que se midió.
 | **`core/migrations/`** | `hydrate.ts` (de listas a mapas, limpiando `ItemRef` rotas) · `runMigrations.ts` (**puro y total**; `MIGRATIONS` **vacía a propósito**) |
 | **`storage/`** | `memory/MemoryStorageAdapter.ts` · `file/FileStorageAdapter.ts` (§6.2, con `onCorrupt`) · `file/schema.ts` (la validación al leer) · `blobs/LocalStorageBlobStore.ts` · `blobs/DirectoryHandleBlobStore.ts` (**sin pruebas a propósito**, §6.3) · `writeBehind.ts` (la mitad impura, con el estado *detenido* y `onError`) |
 | **`platform/web/`** | `SystemClock.ts` · `CryptoIdGenerator.ts` · `boot.ts` (la composición) · `LocalStorageWindows.ts` (la lista de ventanas) · `main.ts` (la entrada del navegador). Detalle en §7.5 |
-| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `backStack.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` |
+| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` |
 | **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` · `NoteView.ts` · `NoteEditor.ts` · `editableTitle.ts` · `dom.ts` |
 | **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 17 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
 | **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · `test/ui/VERIFICACION-MANUAL.md` y `test/ui/VERIFICACION-MANUAL-EDITOR.md`, **escritas y sin pasar**. No son TypeScript y no entran en `npm run check` |
@@ -2012,8 +2012,12 @@ la segunda se va a la línea nueva, que nace de la clase que diga el interruptor
 > - **Anidar armado sobre un texto** → Intro crea una casilla **hermana**, y anidar **sigue
 >   armado** para la próxima: un texto no tiene dónde meter una hija, y desarmarlo sin haber
 >   anidado sería gastar lo que el usuario pidió. Es la última fila de la tabla.
-> - **Partir una casilla anidada con el interruptor apagado** → la mitad nueva **sigue siendo
->   casilla**: convertirla a texto no cabe, porque un texto anidado no existe.
+> - **Partir una casilla anidada con el interruptor apagado** → la mitad nueva sale como **texto a
+>   la raíz, debajo de su casilla de la raíz** (y de todas sus hijas), igual que Intro al final de
+>   una anidada. *Cambiado con el usuario el 2026-10-03:* antes seguía siendo casilla, porque un
+>   texto anidado no existe, y eso contradecía el interruptor apagado. No es un `split`: el editor
+>   recorta la línea con `setText` y crea el texto con `insertText` y `after`. Precio: si la
+>   anidada tiene hermanas detrás, el texto aparece debajo de ellas.
 > - **`split` no anida**: la mitad nueva nace al lado, nunca dentro, y **anidar sigue armado** para
 >   la próxima línea que nazca con Intro al final.
 
@@ -2028,8 +2032,8 @@ la casilla, y unir con la línea de arriba. **Se resuelve en secuencia**, no eli
 | Cursor | La línea es… | Retroceso hace… | Operación |
 |---|---|---|---|
 | al principio del todo | una **casilla de la raíz** | se va la casilla, la línea queda como texto | `convertToText` |
-| al principio del todo | una **casilla anidada** | se une directamente: el texto sube a la hermana anterior, o a la madre si es la primera hija | `merge` |
-| al principio del todo | un **texto** | se une con la de arriba | `merge` |
+| al principio del todo | una **casilla anidada** | se une directamente: el texto sube a **la línea que se ve encima** —la última de la hermana de arriba, por honda que esté—, o a la madre si es la primera hija | `merge` |
+| al principio del todo | un **texto** | se une con la línea que se ve encima | `merge` |
 | en cualquier otro sitio | cualquiera | borra el carácter anterior | (ni toca el modelo) |
 
 O sea: sobre una casilla **de la raíz** hacen falta **dos** pulsaciones para unirla con la de
@@ -2050,10 +2054,11 @@ no-op— pasa a unir. La invariante de identidad (§3) le sirve aquí de condici
 Es como se comporta Notion, y es coherente con el resto: **cada pulsación hace una sola cosa**,
 y ninguna se lleva por delante algo que el usuario no esté mirando.
 
-**Comportamiento conocido, no un fallo:** al principio de un texto que va justo debajo de una
-casilla **con hijas**, Retroceso une el texto **a esa casilla**, no a su última hija, aunque la
-línea que se ve encima sea la hija. Es la regla de `merge` de §9.3 —sube a la hermana anterior—.
-Si usando el editor no se aguanta, entra en las preguntas de §9.10.
+**Se une con lo que se ve encima, no con la hermana anterior.** *Cambiado con el usuario el
+2026-10-03*, al usar el editor: un texto debajo de una casilla **con hijas** se unía a **esa
+casilla** —la regla de `merge` de entonces, «sube a la hermana anterior»—, y no a su última hija,
+que es la línea que se ve justo encima. Se sentía raro. Ahora `merge` sube a la línea anterior **en
+orden de lectura** (§9.3), y el cursor la sigue.
 
 #### El interruptor no solo elige: también actúa sobre la línea actual
 
@@ -2145,6 +2150,14 @@ Las reglas, que son pocas y se sostienen entre sí:
   entra a otra. No hay pila ni historial entre vistas secundarias.
 - **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
   ▶.
+- **En la última, en el sitio de ▶, un «+» verde añade una ventana detrás** *(decidido con el
+  usuario el 2026-10-03)*. Abre una **hoja desde abajo** con «+ Contexto nuevo» y la lista de lo
+  que **todavía no tiene ventana** —el General si no está, los contextos y, tras «Notas:», las
+  notas—; lo repetido se sigue pudiendo hacer desde ⚙. Al elegir, **se va a la ventana nueva**, y
+  un contexto nuevo llega con el **título ya en edición** para escribir su nombre. La hoja es una
+  capa del `backStack`: el atrás, Escape, tocar fuera o «Cancelar» la cierran, y no se apunta en
+  el historial al cerrarse por elegir. Lo que ofrece lo decide `addWindowChoices`, pura y con
+  pruebas. Durante el modo selección el «+» se apaga, como ◀ ▶ y ⚙.
 - **De una secundaria sólo se sale con exit**, y se vuelve **siempre a la ventana desde la que se
   entró**: de una nota, a la del contexto de origen; de configuración, a la ventana —de contexto
   o de nota— desde la que se pulsó ⚙.
@@ -2288,9 +2301,22 @@ Lo que no es la guarda, sino gestión de la lista:
 
 **Dos secciones:**
 
-- **Ventanas** — el orden. Al tocar una, tres acciones: **cambiar su contenido**, **añadir una
-  ventana nueva detrás** y **quitarla**. No hay «reordenar» como tal —coherente con que no exista
-  `move` (§9.3)—; «cambiar contenido» cubre lo mismo.
+- **Ventanas** — **una fila de fichas que se desliza** `[General ⋮] [Compra ⋮] … (+)`
+  *(rediseñada con el usuario el 2026-10-03; antes, una lista vertical que se desplegaba al
+  tocar una fila)*:
+  - **mantener pulsada una ficha medio segundo la levanta y se arrastra para reordenar**, con
+    dedo y con ratón. Antes de levantarse, mover el dedo desliza la fila. Al soltar se llama a
+    `moveWindow` —pura, en `windows.ts`— por `WindowsModel.move`; dónde cae lo decide
+    `dropIndex`, también pura. Es reordenar **ventanas**, que viven fuera del core: no
+    contradice que no exista `move` para las líneas de una nota (§9.3);
+  - **⋮ abre una hoja desde abajo** con las tres acciones: **cambiar su contenido**, **añadir
+    una ventana nueva detrás** y **quitarla**. Las dos primeras enseñan el selector dentro de la
+    misma hoja;
+  - **un toque corto en la ficha no hace nada**: la pulsación larga es sólo para arrastrar y el
+    menú está en ⋮, para que los dos gestos no compitan en el móvil;
+  - la **ficha «+» verde** del final añade una detrás de la última —también con la lista vacía,
+    así que ya no hace falta el «+ Ventana»—;
+  - **reordenar con teclado, pendiente**: el usuario lo dejó para más adelante.
 - **Contextos** — todos los que existen, estén o no en alguna ventana, con **crear** y **borrar**.
   Crear un contexto aquí **no le añade ventana**.
 
@@ -2300,11 +2326,14 @@ nuevo»**.
 
 *Decisiones de implementación, tomadas al construirla y aceptadas por el usuario:*
 
-- **con la lista de ventanas vacía hay un botón «+ Ventana»**, porque sin filas no hay ninguna
-  que tocar para «añadir detrás»;
+- ~~con la lista de ventanas vacía hay un botón «+ Ventana»~~ — sustituido el 2026-10-03 por la
+  ficha «+», que está siempre;
 - **«+ Contexto nuevo» crea uno llamado «Nuevo contexto»**, que se renombra en su ventana;
-- **la confirmación de borrar es `window.confirm`, inyectada** (`confirm` en las dependencias de
-  `mountApp`, que se la pasa `main.ts`);
+- **la confirmación de borrar es una hoja propia** que sube desde abajo, con la pregunta, un
+  botón rojo «🗑 Borrar» y «Cancelar» (`createConfirm`, en `sheet.ts`; la crea `mountApp` y la
+  reparte). *Cambiado con el usuario el 2026-10-03:* antes era `window.confirm`, y en el
+  navegador del panel de Claude —y en los que bloquean diálogos— contestaba «no» al instante sin
+  enseñarse, así que **la papelera del General no borraba**;
 - **lo que se deja a medias en la configuración no se recuerda al salir.**
 
 **Borrar un contexto es `delete-context`, y no borra sus notas:** las que sólo estaban en él quedan
@@ -2414,10 +2443,15 @@ las filas de detrás se recrean; por eso en cada paso **se lleva el foco a su si
 
 #### El atrás: `backStack`
 
-La configuración, la vista nota **y el modo selección** comparten el historial del navegador: al
-abrirlos se apunta una entrada, así que **el atrás —también el de Android— cierra los tres, y el
-exit ES ir atrás**. `close()` es **idempotente**: un segundo `back()` antes de que llegara el
-`popstate` sacaba de la página (fallo cazado probando).
+La configuración, la vista nota, el modo selección **y las hojas** comparten el historial del
+navegador: al abrirlos se apunta una entrada, así que **el atrás —también el de Android— los
+cierra, y el exit ES ir atrás**. **Es una pila** *(desde el 2026-10-03; antes, una capa como
+mucho)*: la pregunta de borrar se abre encima del modo selección o de la configuración, y el atrás
+cierra primero la de arriba. `close()` pide cerrar la de arriba; llamarlo otra vez antes del
+`popstate` pide también la de debajo —es lo que pasa al borrar desde la selección: se cierran la
+pregunta y la selección—, pero **nunca más capas de las que hay**, y los `back()` salen de uno en
+uno: dos seguidos antes del `popstate` sacaban de la página (fallo cazado probando). Escape en
+una hoja no llega al Escape del modo selección.
 
 #### La selección
 
@@ -2861,13 +2895,20 @@ testean:
 
   | La línea que se absorbe… | El texto sube a… |
   |---|---|
-  | tiene una hermana encima | esa **hermana anterior** |
+  | tiene una hermana encima | **la última línea de esa hermana**, por honda que esté —ella misma si no tiene hijas— |
   | es la **primera hija** de una casilla | su **madre**, y las demás hijas se quedan donde estaban |
   | es la primera línea de la nota | nadie: **no hace nada** |
 
-  El segundo caso es el que no se ve venir, y es el que hace que `merge` no sea sólo "combinar
-  dos elementos de una lista": ahí la madre cambia de texto **y** pierde una hija, las dos
-  cosas a la vez.
+  Dicho de una vez: **sube a la línea anterior en orden de lectura**, la que se ve encima.
+  *Cambiado con el usuario el 2026-10-03*: antes la primera fila decía «esa **hermana
+  anterior**», y un texto bajo una casilla con hijas se unía a la casilla y no a la hija que se
+  ve encima. **Es la única vez que la Fase 4 tocó el core**, y por petición expresa. Se
+  implementa como `remove` de la línea más `setText` de la receptora, dos operaciones que ya
+  conservan la identidad; las demás reglas (no-op si es la primera, si tiene hijas, si no
+  existe) no cambian.
+
+  El caso de la primera hija hace que `merge` no sea sólo "combinar dos elementos de una
+  lista": ahí la madre cambia de texto **y** pierde una hija, las dos cosas a la vez.
 
 - **En la raíz, la línea de abajo siempre es un `Text` cuando llega la unión**, porque la
   primera pulsación de Retroceso ya le ha quitado el cuadradito (§7.3). **En profundidad no**:
@@ -3343,7 +3384,7 @@ propuesta del usuario, por tres motivos:
 **Coste admitido:** lo difícil —el editor— llega segundo, y con él las tres preguntas empiezan a
 contestarse más tarde. Se mitiga haciendo Contextos **delgada**.
 
-**Ninguna de las dos toca el core.** Todas las acciones que hacen falta existen desde la Fase 2
+**Ninguna de las dos toca el core** —con una excepción posterior, pedida por el usuario el 2026-10-03: la regla de `merge` (§9.3)—. Todas las acciones que hacen falta existen desde la Fase 2
 —`create-note`, `rename-note`, `delete-note`, `create-context`, `rename-context`,
 `delete-context`, `add-item`, `remove-item`— y el General es cálculo de presentación. *(Cumplido:
 lo único que cambió en `src/core/` fueron los `.js` de los imports relativos, §8.6.)*
@@ -3451,8 +3492,8 @@ y las tres candidatas extra de la barra (§7.2).
 No bloquean el cierre por sí solas: **lo que bloquea es no haberlas contestado por escrito.** La
 respuesta va a `TAREAS.md`, con fecha, después de usar la app de verdad —listas reales, varios
 días—, no después de una demo de cinco minutos. **El 2026-09-29, las tres siguen sin contestar.**
-Y hay un comportamiento conocido que puede acabar sumándose a ellas si no se aguanta: el
-Retroceso bajo una casilla con hijas (§7.3).
+*(El Retroceso bajo una casilla con hijas, que estaba anotado aquí como posible cuarta pregunta,
+se cambió el 2026-10-03: ahora une con la línea que se ve encima, §7.3 y §9.3.)*
 
 - **¿Se aguanta no tener `move`?** Hoy una lista se queda en el orden en que se escribió, y
   reordenar es borrar y reescribir (§9.3).
