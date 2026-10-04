@@ -69,7 +69,17 @@ ul.ajustes .secundario {
   color: var(--danger) !important;
 }
 
-/* ── Datos: «Borrar todo», en rojo, al final ── */
+/* ── Datos: «Borrar todo», en rojo, abajo del todo de la pantalla ── */
+.vista-ajustes {
+  display: flex;
+  flex-direction: column;
+  /* Lo que deja el relleno de abajo del body: así no se desplaza la página sin motivo. */
+  min-height: calc(100dvh - 1rem);
+}
+.datos {
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
 .explicacion {
   color: var(--muted);
   font-size: 0.9rem;

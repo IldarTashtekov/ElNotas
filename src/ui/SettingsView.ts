@@ -262,13 +262,19 @@ export const mountSettingsView = (
   )
   explicacion.className = "explicacion"
 
-  raiz.replaceChildren(
+  /* «Datos» va abajo del todo de la pantalla, lejos de lo que se toca a diario. */
+  const datos: HTMLElement = seccion("Datos", explicacion, borrarTodo, sinBorrar)
+  datos.className = "datos"
+  const vista: HTMLElement = elemento("div")
+  vista.className = "vista-ajustes"
+  vista.append(
     cabecera,
     seccion("Ventanas", listaVentanas),
     seccion("Contextos", formulario, listaContextos),
-    seccion("Datos", explicacion, borrarTodo, sinBorrar),
+    datos,
     hoja.element,
   )
+  raiz.replaceChildren(vista)
   pintar()
   const bajas: ReadonlyArray<Unsubscribe> = [
     store.subscribe((): void => pintar()),
