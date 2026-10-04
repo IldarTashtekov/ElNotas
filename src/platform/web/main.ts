@@ -14,6 +14,7 @@ import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
+import { resetIfRequested } from "./resetStorage.js"
 import { systemClock } from "./SystemClock.js"
 
 /** `window.localStorage` LANZA si el navegador tiene bloqueados los datos del sitio. */
@@ -42,6 +43,10 @@ const iniciar = async (): Promise<void> => {
     mostrarFallo(raiz, describeBootError({ kind: "permission-denied" }))
     return
   }
+
+  /* Si se pidió «Borrar todo», es aquí, antes de leer nada: así también se va lo
+     que el guardado escribió al salir de la página. */
+  resetIfRequested(almacen)
 
   /* El guardado puede detenerse antes de que haya UI a la que avisar: se guarda
      el fallo y se enseña al montarla. */
