@@ -358,8 +358,9 @@ validación de esquema, y la escritura condicional.
         señala **esos dos y ninguno más, en su línea exacta**; y caza una regresión nueva (un
         `JSON.parse` suelto en un método público). Recorre el AST, así que **no necesita** el
         escáner que borra comentarios y cadenas que sí necesitó `check-core-purity.mjs`.
-        Entonces eran **ocho `try` y cero `throw`**; el 2026-09-29, con la Fase 4, son **trece**
-        y siguen cero `throw` (`ARCHITECTURE.md` §6).
+        Entonces eran **ocho `try` y cero `throw`**; el 2026-09-29, con la Fase 4, eran **trece**,
+        y desde el 2026-10-04, con «Borrar todo», son **quince**; siguen cero `throw`
+        (`ARCHITECTURE.md` §6).
 
       **Lo que NO se tocó, y así sigue:** que `get` de algo que no está guardado devuelva
       `ok(null)`, y que borrar lo que no existe no sea un error. **Ausencia no es fallo**, y
@@ -647,7 +648,10 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       conocido mientras tanto: ~5 MB por origen, que el base64 del blob infla alrededor de un
       tercio. **Y desde el 2026-09-27, un tercer cabo:** la lista de ventanas vive en su propia
       clave de `localStorage`, fuera del almacén, así que **no viaja con las notas** — un cambio
-      de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado).
+      de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado). **Y desde
+      el 2026-10-04, un cuarto:** «Borrar todo» vacía las claves `elnotas:` del `localStorage` de
+      ese navegador; con otro destino —carpeta, OPFS— **hay que revisar qué borra** y si sigue
+      teniendo sentido en dos tiempos (`ARCHITECTURE.md` §7.4).
 
 ### Fase 5 — Diagramas: TODO el código hecho; Lienzo y Relaciones, sin cerrar; lo siguiente, la sentada de las cuatro listas
 
@@ -773,6 +777,23 @@ Cómo quedó, el fallo que salió al probarlo y las decisiones tomadas al constr
 
 - [ ] **Manejar el lienzo con teclado.** Pendiente, como reordenar las fichas de ⚙ con teclado:
       el usuario lo dejó para más adelante. No bloquea el cierre de ninguna de las tres partes.
+
+#### Pedido por el usuario el 2026-10-04, fuera de las tres partes
+
+- [x] **«Borrar todo» en la configuración**: sección «Datos» al final, botón rojo, pregunta con la
+      hoja propia que **cuenta lo que se pierde** (`resetQuestion`), y borrado **en dos tiempos**
+      —marca y recarga; se borra al arrancar, antes de leer nada, sólo las claves `elnotas:` y la
+      marca la última—. Dos fronteras nuevas: **quince** en total. ✅ `0e1b168` (`resetStorage.ts`,
+      8 pruebas), `395d0e3` (`resetQuestion`, 3 pruebas), `c1e86c9` (el botón). **723 pruebas.**
+      Al romper a propósito salió un hueco —quitar la marca la primera no se notaba— y se añadió
+      una prueba que falla en un borrado de en medio. Verificado a mano en el navegador del panel,
+      en `127.0.0.1`, sin tocar los datos de `localhost`. El porqué, en `ARCHITECTURE.md` §7.4.
+      En las listas: paso **C7** de `test/ui/VERIFICACION-MANUAL.md`, la de la configuración.
+- [x] **El «+» azul, debajo y a la izquierda del verde y por encima de su esquina**, como en el
+      boceto del usuario. ✅ `88677af`; el paso A1 de
+      `test/ui/VERIFICACION-MANUAL-LIENZO.md` ya lo describe así.
+- [ ] **¿Etiquetas de texto junto a los «+»?** Su boceto las lleva. **Pregunta abierta al usuario,
+      sin contestar**; hasta que conteste, los botones siguen sin texto.
 
 ### Infraestructura (`infra-agent`)
 
@@ -1201,7 +1222,8 @@ documentación del 2026-09-29.
 
 **Y las que ya estaban abiertas siguen igual:** la **escritura condicional** (abajo), **si OPFS
 entra en juego** (abajo, *Tres huecos…*) y **qué pasa con lo guardado en `localStorage` al cambiar
-de destino**, que desde el 2026-09-27 incluye la lista de ventanas (arriba, en *Pendiente*).
+de destino**, que desde el 2026-09-27 incluye la lista de ventanas y desde el 2026-10-04 qué borra
+«Borrar todo» (arriba, en *Pendiente*).
 
 ### De los Diagramas (Fase 5) — ✅ **cerradas el 2026-10-03; construidos Modelo y el código de Lienzo y Relaciones**
 

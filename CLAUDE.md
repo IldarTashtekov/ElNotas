@@ -20,9 +20,10 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-04, tras `74c356e`:** `npm run check` en verde —sus seis pasos— con **712
-pruebas** (693 al acabar el código de Lienzo). Líneas de `.ts` (`find <dir> -name '*.ts' | xargs cat |
-wc -l`): `src/core` 3148, `src/storage` 1687, `src/platform` 339, `src/ui` 4372; `test/` 9435.
+**Medido el 2026-10-04, tras `c1e86c9`:** `npm run check` en verde —sus seis pasos— con **723
+pruebas** (712 al acabar el código de Relaciones; las otras once, de «Borrar todo»). Líneas de
+`.ts` (`find <dir> -name '*.ts' | xargs cat | wc -l`): `src/core` 3148, `src/storage` 1687,
+`src/platform` 397, `src/ui` 4426; `test/` 9566.
 *(Las cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
 **Fases 1 a 4 cerradas. La 4, por decisión del usuario el 2026-10-03, con deuda de
@@ -53,8 +54,8 @@ Lo que hay en `src/`, de dentro afuera:
   veces: memoria · fichero + `BlobStore` falso · fichero + `LocalStorageBlobStore` real.
 - **`src/platform/web/` — la composición.** `SystemClock` y `CryptoIdGenerator`, las únicas
   implementaciones de `Clock` e `IdGenerator`; `boot.ts`, que monta la pila entera;
-  `LocalStorageWindows.ts`, la lista de ventanas; y `main.ts`, la entrada que carga
-  `index.html`. Hoy se guarda en `LocalStorageBlobStore`.
+  `LocalStorageWindows.ts`, la lista de ventanas; `resetStorage.ts`, el «Borrar todo»; y
+  `main.ts`, la entrada que carga `index.html`. Hoy se guarda en `LocalStorageBlobStore`.
 - **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 —la de diagrama, con su lienzo de pósits,
   nodos-nota y las relaciones entre ellos—, el editor con casillas anidadas y los avisos de
   `onCorrupt` y `onError`. Cómo está construida, en §7.5.
@@ -106,7 +107,7 @@ src/
 │   ├── styles/    # ← el CSS, un fichero por vista, que index.html enlaza EN ORDEN
 │   └── index.ts
 └── platform/      # ← composición: el ÚNICO sitio que inyecta adaptadores. Nadie la importa
-    ├── web/       # ← SystemClock, CryptoIdGenerator, boot, LocalStorageWindows, main
+    ├── web/       # ← SystemClock, CryptoIdGenerator, boot, LocalStorageWindows, resetStorage, main
     └── index.ts
 
 test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de src/)
@@ -188,12 +189,13 @@ index.html         # la página: carga dist/web/ con un importmap y los estilos,
 - **Los errores no se propagan: se devuelven.** Lo que pueda fallar devuelve
   `Result<T, StorageError>`, no lanza. Un `throw` no sale en ninguna firma, así que quien llama
   no se entera. **El `try/catch` no desaparece, se confina:** vive sólo en las funciones frontera
-  que hablan con lo que lanza —**trece en todo el código de producción**: **cinco** en
+  que hablan con lo que lanza —**quince en todo el código de producción**: **cinco** en
   `FileStorageAdapter` (`caminoDe`, `aBytes`, `parsear`, `transaction` y el aviso `onCorrupt`),
   una en `writeBehind` (el aviso `onError`), una en `MemoryStorageAdapter`, una en cada
   `BlobStore`, una en `runMigrations` (la migración ajena), **dos** en `LocalStorageWindows`
-  (leer y escribir) y una en `main.ts` (`window.localStorage` lanza si el navegador bloquea los
-  datos del sitio)— y las traduce. Por encima de esa línea nada lanza, **y eso incluye el código
+  (leer y escribir), **dos** en `resetStorage` (`requestReset` y `resetIfRequested`) y una en
+  `main.ts` (`window.localStorage` lanza si el navegador bloquea los datos del sitio)— y las
+  traduce. Por encima de esa línea nada lanza, **y eso incluye el código
   ajeno**: una excepción dentro de `transaction`, de una migración o de un aviso **no escapa**.
   Ojo: **ausencia no es fallo** — `get` de algo que no está es `ok(null)`. El porqué, en §6.5.
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** No hay ni un `throw` en el
@@ -429,6 +431,12 @@ duda**; no la cambies por tu cuenta.
 - **Sin bundler: `index.html` con un `importmap` para los alias, y `.js` en todos los imports
   relativos de `src/`.** *Decidido con el usuario el 2026-09-29 (opción A)*: el `importmap`
   solo no bastaba. Descartados reescribir el JS emitido y un servidor que añada `.js`. §8.6.
+- **«Borrar todo» va en dos tiempos**: el botón de ⚙ sólo **apunta una marca**
+  (`elnotas:borrar-todo`) y recarga; el borrado lo hace `main.ts` **al arrancar, antes de leer
+  nada**, y quita la marca la última. **Sólo toca las claves `elnotas:`**. Borrar y recargar sin
+  más dejaría que el guardado de `pagehide` reescribiera parte de lo borrado. Borra el
+  `localStorage` de ese navegador: **se revisa cuando cambie el destino**. *Decidido con el
+  usuario el 2026-10-04.* §7.4.
 
 **De la navegación y el alcance de la Fase 4** (el porqué, en §7.4 salvo que se diga otra cosa):
 
@@ -456,8 +464,8 @@ duda**; no la cambies por tu cuenta.
   ventanas** (la activa es la primera que coincide); **y un fallo al guardar la lista no avisa**:
   sólo se pierde el orden. *Decidido con el usuario el 2026-09-29.*
 - **El General** enseña todas las notas (y los diagramas), no se renombra, y su papelera **borra de verdad**; en un
-  contexto la papelera **sólo quita de ese contexto**. Confirman sólo borrar un contexto y la
-  papelera del General, **con una hoja propia y no con `window.confirm`**, que hay navegadores
+  contexto la papelera **sólo quita de ese contexto**. Confirman sólo borrar un contexto, la
+  papelera del General y «Borrar todo» (2026-10-04), **con una hoja propia y no con `window.confirm`**, que hay navegadores
   que contestan «no» sin enseñarla (2026-10-03). El `backStack` es una pila: la hoja va encima.
 - **Selección por pulsación larga** (más clic derecho, Ctrl/Cmd+clic y teclado). «Mover a…»
   **mueve** (`remove-item` + `add-item`; desde el General sólo `add-item`) y no confirma.
@@ -499,7 +507,8 @@ implementación del lienzo y de las relaciones, en §9.11:
 - **Una nota nueva creada desde el lienzo va a TODOS los contextos del diagrama** (si no está en
   ninguno, sólo al General), encadenando casos de uso desde la UI, sin acción nueva.
 - **«+ Diagrama» nace en el contexto donde se crea; un diagrama puede ser ventana; borrarlo sigue
-  las reglas de una nota** y no borra sus notas.
+  las reglas de una nota** y no borra sus notas. Su botón, azul y más pequeño, va **debajo y a la
+  izquierda del «+» verde, por encima de su esquina** (boceto del usuario, 2026-10-04).
 - **Partida en tres: Fase 5 · Modelo → Lienzo → Relaciones**, y **la deuda móvil de la Fase 4 va
   DESPUÉS** de las tres.
 - **Las listas manuales pendientes se pasan TODAS JUNTAS, al final, en una sentada**: la del
@@ -550,7 +559,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
-cambie el destino.
+cambie el destino, y con él qué borra «Borrar todo».
 
 ## Comandos
 

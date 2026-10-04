@@ -45,9 +45,10 @@ directamente.
 
 ## A. Crear, listar y tirar un diagrama
 
-- **A1.** En la ventana de un contexto, abajo a la derecha, junto al **+** verde, hay un **+ azul
-  más pequeño** montado un poco sobre él. Tocarlo crea «Nuevo diagrama» y **entra** en él con el
-  **nombre seleccionado**, listo para escribir encima. Escribir un nombre e Intro lo guarda.
+- **A1.** En la ventana de un contexto, abajo a la derecha, **debajo y a la izquierda** del **+**
+  verde, hay un **+ azul más pequeño**, por encima de la esquina del verde. Tocarlo crea «Nuevo
+  diagrama» y **entra** en él con el **nombre seleccionado**, listo para escribir encima. Escribir
+  un nombre e Intro lo guarda.
 - **A2.** **✕ Salir** y el **atrás** vuelven a la ventana. El diagrama sale en la lista del
   contexto, **detrás** de las notas, con una **raya azul a la izquierda**. Tocarlo lo abre, ya
   sin el nombre en edición.
@@ -81,10 +82,11 @@ directamente.
 - **C3.** Escribir; **Intro guarda**. **Mayúsculas+Intro** hace otra línea. **Escape** descarta
   lo escrito. Tocar fuera también guarda.
 - **C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en gris.
-- **C5.** **Doble toque en un pósit** abre su menú, con su texto de título: *Editar · Marcar
-  hecho · Borrar*. *(Escritorio: también con clic derecho.)*
+- **C5.** **Doble toque en un pósit** abre su menú, con su texto de título: *Conectar · Editar ·
+  Marcar hecho · Borrar*. *(Escritorio: también con clic derecho.)* *Conectar* se prueba en
+  `VERIFICACION-MANUAL-RELACIONES.md`.
 - **C6.** **Marcar hecho** lo atenúa y lo tacha; el menú dice entonces **Desmarcar hecho**.
-- **C7.** **Borrar** lo quita **sin preguntar**.
+- **C7.** **Borrar** lo quita **sin preguntar**, y con él sus líneas.
 - **C8.** Un texto largo se parte en líneas y **el pósit crece hacia abajo**; el ancho no cambia.
 
 ## D. Mover un pósit
@@ -142,7 +144,7 @@ directamente.
 
 ## Conocidos
 
-- **No hay líneas entre nodos**: son Fase 5 · Relaciones.
+- **Las líneas entre nodos** tienen su propia lista: `VERIFICACION-MANUAL-RELACIONES.md`.
 - **El lienzo no se maneja con teclado** (moverse entre pósits, abrir menús): pendiente en
   `TAREAS.md`.
 - **Dónde se miraba no se recuerda**: al abrir, siempre el origen. Es decisión (§9.11).

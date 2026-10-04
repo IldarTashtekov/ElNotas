@@ -1070,11 +1070,13 @@ error— porque es donde más se lee mal el reparto de §6.1:
 ```
 
 **Las fronteras del dibujo son todas las de la persistencia**, y con la de `runMigrations`
-suman diez. Con las tres de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
-lista de ventanas) y una en `main.ts` (`window.localStorage` **lanza** si el navegador tiene
-bloqueados los datos del sitio)— son **trece `try` en todo el código de producción, y cero
-`throw`**, medido el 2026-09-29. Eran seis al cerrar la Fase 3, ocho tras tapar dos fugas (más
-abajo), y la Fase 4 trajo las otras cinco. `ui/` no tiene ninguno. Qué significa cada `kind` y por qué son esos
+suman diez. Con las cinco de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
+lista de ventanas), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
+`resetIfRequested` borra al arrancar, §7.4) y una en `main.ts` (`window.localStorage` **lanza**
+si el navegador tiene bloqueados los datos del sitio)— son **quince `try` en todo el código de
+producción, y cero `throw`**, medido el 2026-10-04. Eran seis al cerrar la Fase 3, ocho tras
+tapar dos fugas (más abajo), la Fase 4 trajo cinco y «Borrar todo» las dos últimas. `ui/` no
+tiene ninguno. Qué significa cada `kind` y por qué son esos
 cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
 del primer dibujo, porque es lo único que el escritor mira para decidir si insiste o se para.
 
@@ -2382,7 +2384,7 @@ Lo que no es la guarda, sino gestión de la lista:
 
 #### La vista configuración
 
-**Dos secciones:**
+**Tres secciones:**
 
 - **Ventanas** — **una fila de fichas que se desliza** `[General ⋮] [Compra ⋮] … (+)`
   *(rediseñada con el usuario el 2026-10-03; antes, una lista vertical que se desplegaba al
@@ -2402,6 +2404,9 @@ Lo que no es la guarda, sino gestión de la lista:
   - **reordenar con teclado, pendiente**: el usuario lo dejó para más adelante.
 - **Contextos** — todos los que existen, estén o no en alguna ventana, con **crear** y **borrar**.
   Crear un contexto aquí **no le añade ventana**.
+- **Datos** *(pedida por el usuario el 2026-10-04)* — al final, una frase que dice lo que hace y
+  el botón rojo **«🗑 Borrar todo»**, que deja la app como recién instalada. Abajo, *«Borrar
+  todo»*.
 
 **El selector de contenido** (al añadir detrás o al cambiar contenido) ofrece el General, los
 contextos existentes, las notas existentes —tras un rótulo «Notas:»—, desde la Fase 5 los
@@ -2424,11 +2429,44 @@ lógica estaba duplicada en las dos vistas).
 **Borrar un contexto es `delete-context`, y no borra sus notas:** las que sólo estaban en él quedan
 huérfanas y siguen en el General. Las ventanas que apuntaban a él desaparecen por la guarda.
 
-**Confirmación sólo donde se borra sin vuelta atrás**, que son dos: borrar un contexto («¿Borrar
-X? Sus notas seguirán en General») y la papelera del General. Quitar una ventana, quitar una nota
-de un contexto y «Mover a…» **no confirman**: no destruyen nada. Una ventana quitada se vuelve a
-añadir desde configuración; una nota quitada sigue en el General, y desde ahí se recoloca con
-«Mover a…».
+**Confirmación sólo donde se borra sin vuelta atrás**, que son tres: borrar un contexto («¿Borrar
+X? Sus notas seguirán en General»), la papelera del General y, desde el 2026-10-04, «Borrar
+todo». Quitar una ventana, quitar una nota de un contexto y «Mover a…» **no confirman**: no
+destruyen nada. Una ventana quitada se vuelve a añadir desde configuración; una nota quitada
+sigue en el General, y desde ahí se recoloca con «Mover a…».
+
+#### «Borrar todo» *(construido el 2026-10-04: `0e1b168`, `395d0e3`, `c1e86c9`)*
+
+**Pregunta con la misma hoja propia**, con el foco en «Cancelar», y **la pregunta cuenta lo que se
+pierde**: «¿Borrar 2 notas, 1 diagrama y 1 contexto, y las ventanas? No se puede deshacer.»; sin
+nada guardado, «¿Dejar la app en blanco? No hay nada guardado.». La cuenta la hace
+`resetQuestion`, pura, en `settingsContent.ts`, y se calcula al pulsar: dice lo que hay ahora.
+
+**Se borra en dos tiempos, y ése es el diseño.** El botón **no borra**: apunta una marca
+(`elnotas:borrar-todo`, con `requestReset`) y recarga. Es al arrancar, en `main.ts` **antes de
+leer nada**, cuando `resetIfRequested` quita todas las claves que empiezan por `elnotas:` —notas,
+diagramas, contextos, manifiesto y ventanas— y **la marca, la última**: si algo falla a medias, la
+marca sigue y el siguiente arranque lo reintenta. Un fallo ahí no tumba el arranque.
+
+*Por qué no borrar y recargar sin más:* el guardado en diferido escribe lo pendiente en `pagehide`
+y al pasar a segundo plano (§7.5), y eso ocurre **después** de pulsar, mientras la página se va.
+Ese último guardado reescribiría parte de lo recién borrado. Borrando al arrancar, lo que se
+escriba entre pedirlo y volver a abrir **también se va** —hay una prueba de eso—.
+
+- **Sólo las claves `elnotas:`**: lo que otra cosa guarde en el mismo origen no se toca.
+- **Tras borrar queda el manifiesto**: el arranque lo escribe en un almacén vacío (§7.5), así que
+  «en blanco» es eso, no un `localStorage` sin ninguna clave.
+- **Capas:** la UI no sabe dónde se guarda. `SettingsViewDeps` y `AppDeps` reciben `onResetAll:
+  () => boolean`, que pone `main.ts` (apuntar y recargar). Si no se puede apuntar la marca,
+  devuelve `false` y la configuración **enseña un aviso** en vez de recargar.
+- **Es local**: borra el `localStorage` de **ese navegador**, que es el destino de hoy. Cuando
+  cambie el destino —la carpeta, OPFS— hay que revisarlo (`TAREAS.md`).
+
+*Cómo se probó:* ocho pruebas en `test/platform/web/resetStorage.test.ts` y tres de
+`resetQuestion`. **Al romper a propósito salió un hueco:** quitar la marca la primera no hacía caer
+ninguna prueba, porque la que simulaba un fallo fallaba en el **primer** borrado, antes de llegar a
+la marca; ahora hay una que falla en uno **de en medio**. Verificado además a mano en el navegador
+del panel, en otro origen (`127.0.0.1`), para no tocar los datos del usuario en `localhost`.
 
 #### Las notas
 
@@ -2497,8 +2535,9 @@ pero **sin verificar a mano**: la lista del lienzo está sin pasar.
   era una pila, pero hubo que arreglarle una carrera. Lo que sostenía «un solo nivel» —que desde
   una nota no se llega a configuración— **sigue en pie**: ni la vista diagrama ni la nota
   abierta desde él llevan ⚙.
-- **«+ Diagrama»**, un botón azul algo más pequeño a la izquierda del «+» verde, montado un poco
-  sobre él, en cada contexto. El diagrama **nace en ese contexto** —como una nota:
+- **«+ Diagrama»**, un botón azul algo más pequeño **debajo y a la izquierda del «+» verde, por
+  encima de su esquina**, en cada contexto *(recolocado el 2026-10-04 con un boceto del usuario,
+  `88677af`; antes iba a la izquierda, solapado con el verde y por debajo de él)*. El diagrama **nace en ese contexto** —como una nota:
   `create-diagram` + `add-item`, en `createDiagramIn`— y llega con el nombre, «Nuevo diagrama»,
   **ya en edición**.
 - **Un diagrama puede ser ventana**: `WindowRef` gana el caso `diagram`, el selector lo ofrece
@@ -2548,8 +2587,9 @@ hace el navegador—, y el tacto de un teclado de móvil no lo prueba `node --te
   lo migrado antes de subir la versión**. Hoy `MIGRATIONS` está vacía y no se llega.
 - **`main.ts` decide las piezas de la web**: `systemClock`, `createCryptoIdGenerator(window.crypto)`,
   `LocalStorageBlobStore` y `LocalStorageWindows` sobre `window.localStorage` —que **lanza** si el
-  navegador bloquea los datos del sitio, y por eso va en su `try`—. Hace `flush` en `pagehide` y
-  al pasar a oculta (§2.2). Con **`?depurar`** en la dirección deja `window.elnotas = { store,
+  navegador bloquea los datos del sitio, y por eso va en su `try`—. **Antes de `boot`** llama a
+  `resetIfRequested` (`resetStorage.ts`), y pone el `onResetAll` de la UI: el «Borrar todo» en
+  dos tiempos de §7.4. Hace `flush` en `pagehide` y al pasar a oculta (§2.2). Con **`?depurar`** en la dirección deja `window.elnotas = { store,
   useCases }` para la consola; sin él, no existe.
 - **`CryptoIdGenerator` usa `getRandomValues`, no `randomUUID`**: éste sólo existe en **contexto
   seguro**, y el móvil abriendo la app por la IP de la red local (`http://192.168…`) no lo es.
@@ -3431,8 +3471,8 @@ abierto:
    envolver**, que resultó ser el agujero de verdad. Había dos, los dos medidos con una sonda:
    `encodeURIComponent` dentro de `caminoDe` —`URIError` con un surrogate suelto, y `get`, `put`
    y `delete` lo llamaban fuera de toda frontera— y `paso.migrate()` en `runMigrations`, que es
-   código ajeno. Con ellas fueron **ocho `try`** y el punto se sostiene de verdad (hoy son trece
-   con los de la Fase 4, §6). **Esto no reabre la
+   código ajeno. Con ellas fueron **ocho `try`** y el punto se sostiene de verdad (hoy son quince
+   con los de la Fase 4 y los de «Borrar todo», §6). **Esto no reabre la
    fase** —el criterio se cumplía con lo que se sabía medir entonces— pero sí corrige el método:
    la pregunta buena no es «¿cuántos `throw` hay?» sino «¿alguna llamada que lanza puede llegar
    a una firma pública?».
@@ -3667,7 +3707,8 @@ Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas
 - **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con
   `LocalStorageBlobStore` para salir del paso. Es barato de revertir —`BlobStore` es un puerto,
   y el destino se inyecta en un solo sitio de `platform/`—, pero deja **tres cabos con nombre**:
-  qué pasa con las notas ya escritas en `localStorage` el día que se cambie de destino, el techo
+  qué pasa con las notas ya escritas en `localStorage` el día que se cambie de destino —y con
+  ellas qué borra «Borrar todo», que hoy sólo vacía ese `localStorage` (§7.4)—, el techo
   de ~5 MB por origen, que el base64 del blob infla alrededor de un tercio, y —desde el
   2026-09-27— que **la lista de ventanas no viaja** con las notas (§7.4).
 - **El botón «reintentar» del aviso de `onError`.** Aparcado para cuando el destino sea la carpeta

@@ -115,6 +115,11 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
   Con «🗑 Borrar», se va el contexto **y su ventana**, y sus notas
   siguen en el General.
 - **C6.** **Recargar con la configuración abierta** deja en la ventana, no en la configuración.
+- **C7.** ⚠️ **Hazlo con datos que puedas perder.** Al final, en «Datos», **🗑 Borrar todo**
+  pregunta con la hoja **contando lo que se pierde** («¿Borrar 2 notas, 1 diagrama y 1
+  contexto, y las ventanas? …»), con el foco en *Cancelar*. *Cancelar* no borra nada. Con
+  «🗑 Borrar todo», la página **se recarga en blanco**: sin notas, sin diagramas, sin contextos y
+  con el General como única ventana. **Recargar otra vez**: sigue en blanco.
 
 ## D. Reordenar las ventanas arrastrando
 
@@ -226,7 +231,7 @@ qué.
 |---|---|
 | A1–A4 | |
 | B1–B5 | |
-| C1–C6 | |
+| C1–C7 | |
 | D1–D6 | |
 | E1–E11 | |
 | F1–F2 | |
@@ -248,7 +253,7 @@ qué.
 |---|---|
 | A1–A4 | |
 | B1–B5 | |
-| C1–C6 (C2 con el atrás del sistema) | |
+| C1–C7 (C2 con el atrás del sistema) | |
 | D1–D6 (D4 y D5 son los que importan aquí) | |
 | E1–E11 (E3 y E6 son los que importan aquí) | |
 | H2 | |
