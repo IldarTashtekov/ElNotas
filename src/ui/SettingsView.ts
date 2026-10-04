@@ -1,7 +1,8 @@
 /**
  * La vista configuración: las ventanas, como una fila de fichas que se desliza
  * —arrastrar una para reordenar, ⋮ para cambiar lo que enseña, añadir otra detrás
- * o quitarla—, y los contextos, con crear y borrar.
+ * o quitarla—, los contextos, con crear y borrar, y abajo «Borrar todo», que deja
+ * la app en blanco tras preguntar.
  *
  * Se monta al abrirla y se desmonta al salir, así que lo que hubiera a medias
  * no sobrevive a salir y volver.
@@ -15,7 +16,7 @@ import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent, WindowRow } from "./settingsContent.js"
-import { choiceGroupLabel, settingsContent } from "./settingsContent.js"
+import { choiceGroupLabel, resetQuestion, settingsContent } from "./settingsContent.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
 
@@ -28,6 +29,11 @@ export interface SettingsViewDeps {
   /** Para la hoja de ⋮, que se cierra con el atrás. */
   readonly back: BackStack
   readonly onExit: () => void
+  /**
+   * Deja la app en blanco: lo hace quien sabe dónde se guarda, porque la UI no
+   * lo sabe. `false` si no se pudo.
+   */
+  readonly onResetAll: () => boolean
 }
 
 export const NEW_CONTEXT_NAME: string = "Nuevo contexto"
@@ -43,7 +49,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
 /** Devuelve la función que la desmonta. */
 export const mountSettingsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, confirm, back, onExit }: SettingsViewDeps,
+  { store, useCases, windows, confirm, back, onExit, onResetAll }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
   titulo.className = "titulo"
@@ -235,10 +241,32 @@ export const mountSettingsView = (
     return s
   }
 
+  /* ── Borrar todo ── */
+
+  const sinBorrar: HTMLParagraphElement = elemento(
+    "p",
+    "No se ha podido borrar: el navegador no deja escribir en los datos del sitio.",
+  )
+  sinBorrar.className = "aviso"
+  sinBorrar.setAttribute("role", "alert")
+  sinBorrar.hidden = true
+  const borrarTodo: HTMLButtonElement = boton("🗑 Borrar todo", (): void => {
+    /* La pregunta se cuenta al pulsar: dice lo que hay ahora. */
+    confirm(resetQuestion(store.getState()), "🗑 Borrar todo", (): void => {
+      sinBorrar.hidden = onResetAll()
+    })
+  }, "borrar-todo")
+  const explicacion: HTMLParagraphElement = elemento(
+    "p",
+    "Borra todas las notas, diagramas, contextos y ventanas de este navegador, y deja la app como recién instalada.",
+  )
+  explicacion.className = "explicacion"
+
   raiz.replaceChildren(
     cabecera,
     seccion("Ventanas", listaVentanas),
     seccion("Contextos", formulario, listaContextos),
+    seccion("Datos", explicacion, borrarTodo, sinBorrar),
     hoja.element,
   )
   pintar()

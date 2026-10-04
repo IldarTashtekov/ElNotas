@@ -69,6 +69,22 @@ ul.ajustes .secundario {
   color: var(--danger) !important;
 }
 
+/* ── Datos: «Borrar todo», en rojo, al final ── */
+.explicacion {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 0.6rem;
+}
+.borrar-todo {
+  background: none;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  color: var(--danger);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+}
+
 /* ── Las ventanas en ⚙: una fila de fichas que se desliza ── */
 .fichas {
   align-items: center;

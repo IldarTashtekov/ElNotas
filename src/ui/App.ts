@@ -29,6 +29,8 @@ export interface AppDeps {
   readonly useCases: UseCases
   readonly windows: WindowsModel
   readonly corrupt: ReadonlyArray<StorageError>
+  /** «Borrar todo» de la configuración: lo hace quien sabe dónde se guarda. */
+  readonly onResetAll: () => boolean
 }
 
 /** Lo que la app ofrece a quien la monta. */

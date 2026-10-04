@@ -14,7 +14,7 @@ import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
-import { resetIfRequested } from "./resetStorage.js"
+import { requestReset, resetIfRequested } from "./resetStorage.js"
 import { systemClock } from "./SystemClock.js"
 
 /** `window.localStorage` LANZA si el navegador tiene bloqueados los datos del sitio. */
@@ -81,6 +81,12 @@ const iniciar = async (): Promise<void> => {
     useCases: app.useCases,
     windows,
     corrupt: app.corrupt,
+    /* Sólo apunta el borrado y recarga: se hace al arrancar, antes de leer nada. */
+    onResetAll: (): boolean => {
+      if (!requestReset(almacen)) return false
+      window.location.reload()
+      return true
+    },
   })
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)
