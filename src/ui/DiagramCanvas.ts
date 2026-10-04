@@ -653,7 +653,24 @@ export const createDiagramCanvas = ({
     return id === null ? null : diagramRelationId(id)
   }
 
+  /** El toque que acaba de abrir un menú: su `click` fantasma no tiene que llegar. */
+  let tragarClick: boolean = false
+
+  /* El `touchend` llega después del `pointerup` que abrió el menú, y cancelarlo es
+     lo único que impide el `click` que el navegador manda detrás. No pasivo: uno
+     pasivo no puede cancelarlo. */
+  lienzo.addEventListener(
+    "touchend",
+    (evento: TouchEvent): void => {
+      if (!tragarClick) return
+      tragarClick = false
+      evento.preventDefault()
+    },
+    { passive: false },
+  )
+
   lienzo.addEventListener("pointerdown", (evento: PointerEvent): void => {
+    tragarClick = false
     if (evento.pointerType === "mouse" && evento.button !== 0) return
     /* Dentro del campo que se edita, el dedo es del campo. */
     if (
@@ -765,6 +782,9 @@ export const createDiagramCanvas = ({
     if (isDoubleTap(toqueAnterior, toque)) {
       toqueAnterior = null
       cancelarApertura()
+      /* Con el dedo, el navegador manda después un `click` al punto donde estaba, y
+         ahí ya está la hoja: la cerraría, o elegiría lo que hubiera debajo. */
+      tragarClick = g.tipo !== "mouse"
       if (g.nodo !== null) menuNodo(g.nodo)
       else if (g.relacion !== null) menuRelacion(g.relacion)
       else menuFondo(donde)
