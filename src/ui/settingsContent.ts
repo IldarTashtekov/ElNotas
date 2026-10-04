@@ -79,3 +79,27 @@ export const choiceGroupLabel = (
   if (clase === "diagram") return "Diagramas:"
   return null
 }
+
+/** «1 nota», «3 notas»: cuántas de algo, en singular o en plural. */
+const cuantas = (n: number, singular: string, plural: string): string =>
+  `${n} ${n === 1 ? singular : plural}`
+
+/**
+ * La pregunta de «Borrar todo»: cuenta lo que se pierde, para que no se confirme
+ * a ciegas. Lo que no hay no se nombra; sin nada, se dice.
+ */
+export const resetQuestion = (state: AppState): string => {
+  const partes: ReadonlyArray<string> = [
+    [Object.keys(state.notes).length, "nota", "notas"] as const,
+    [Object.keys(state.diagrams).length, "diagrama", "diagramas"] as const,
+    [Object.keys(state.contexts).length, "contexto", "contextos"] as const,
+  ]
+    .filter(([n]): boolean => n > 0)
+    .map(([n, singular, plural]): string => cuantas(n, singular, plural))
+  if (partes.length === 0) return "¿Dejar la app en blanco? No hay nada guardado."
+  const lista: string =
+    partes.length === 1
+      ? (partes[0] ?? "")
+      : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1] ?? ""}`
+  return `¿Borrar ${lista}, y las ventanas? No se puede deshacer.`
+}

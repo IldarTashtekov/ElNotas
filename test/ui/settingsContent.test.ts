@@ -8,7 +8,14 @@ import assert from "node:assert/strict"
 import type { AppState, Context, Diagram, Note } from "#core/index"
 import { contextId, diagramId, emptyAppState, noteId, revision } from "#core/index"
 import type { SettingsContent, WindowRef, WindowRow } from "#ui/index"
-import { GENERAL, GENERAL_TITLE, addWindowChoices, choiceGroupLabel, settingsContent } from "#ui/index"
+import {
+  GENERAL,
+  GENERAL_TITLE,
+  addWindowChoices,
+  choiceGroupLabel,
+  resetQuestion,
+  settingsContent,
+} from "#ui/index"
 
 const contexto = (id: string, name: string): Context => ({
   id: contextId(id),
@@ -144,4 +151,25 @@ test("sin notas, el rótulo de diagramas va igual ante el primero; fuera de la l
   assert.equal(choiceGroupLabel(opciones, primero), "Diagramas:")
   assert.equal(choiceGroupLabel(opciones, 0), null)
   assert.equal(choiceGroupLabel(opciones, opciones.length), null)
+})
+
+/* ─────────────────────────── La pregunta de «Borrar todo» ─────────────────── */
+
+test("la pregunta de borrar todo cuenta notas, diagramas y contextos", (): void => {
+  /* CON_DIAGRAMAS: 2 notas, 2 diagramas y 3 contextos. */
+  assert.equal(
+    resetQuestion(CON_DIAGRAMAS),
+    "¿Borrar 2 notas, 2 diagramas y 3 contextos, y las ventanas? No se puede deshacer.",
+  )
+})
+
+test("lo que no hay no se nombra, y uno va en singular", (): void => {
+  const una: AppState = { ...emptyAppState(), notes: { [noteId("n1")]: nota("n1", "Diario") } }
+  assert.equal(resetQuestion(una), "¿Borrar 1 nota, y las ventanas? No se puede deshacer.")
+  const dos: AppState = { ...una, contexts: { [contextId("c")]: contexto("c", "Compra") } }
+  assert.equal(resetQuestion(dos), "¿Borrar 1 nota y 1 contexto, y las ventanas? No se puede deshacer.")
+})
+
+test("sin nada guardado, lo dice", (): void => {
+  assert.equal(resetQuestion(emptyAppState()), "¿Dejar la app en blanco? No hay nada guardado.")
 })
