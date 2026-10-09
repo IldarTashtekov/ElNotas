@@ -103,3 +103,10 @@ export const resetQuestion = (state: AppState): string => {
       : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1] ?? ""}`
   return `¿Borrar ${lista}, y las ventanas? No se puede deshacer.`
 }
+
+/**
+ * La línea de la versión, al pie de la configuración. `null` es que no se está en
+ * la versión publicada: la pone el script que la arma, y en desarrollo no existe.
+ */
+export const versionLine = (version: string | null): string =>
+  version === null ? "Versión de desarrollo" : `Versión ${version}`

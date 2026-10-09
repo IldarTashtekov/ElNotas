@@ -60,7 +60,13 @@ export { mountApp } from "./App.js"
 export type { SettingsViewDeps } from "./SettingsView.js"
 export { NEW_CONTEXT_NAME, mountSettingsView } from "./SettingsView.js"
 export type { SettingsContent, WindowRow } from "./settingsContent.js"
-export { addWindowChoices, choiceGroupLabel, resetQuestion, settingsContent } from "./settingsContent.js"
+export {
+  addWindowChoices,
+  choiceGroupLabel,
+  resetQuestion,
+  settingsContent,
+  versionLine,
+} from "./settingsContent.js"
 export { dropIndex } from "./dropIndex.js"
 export type { Point, Viewport } from "./viewport.js"
 export {

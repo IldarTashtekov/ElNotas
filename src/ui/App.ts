@@ -31,6 +31,8 @@ export interface AppDeps {
   readonly corrupt: ReadonlyArray<StorageError>
   /** «Borrar todo» de la configuración: lo hace quien sabe dónde se guarda. */
   readonly onResetAll: () => boolean
+  /** La versión publicada, para el pie de la configuración; `null` en desarrollo. */
+  readonly version: string | null
 }
 
 /** Lo que la app ofrece a quien la monta. */

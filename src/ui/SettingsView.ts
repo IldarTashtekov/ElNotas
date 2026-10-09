@@ -16,7 +16,7 @@ import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent, WindowRow } from "./settingsContent.js"
-import { choiceGroupLabel, resetQuestion, settingsContent } from "./settingsContent.js"
+import { choiceGroupLabel, resetQuestion, settingsContent, versionLine } from "./settingsContent.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
 
@@ -34,6 +34,8 @@ export interface SettingsViewDeps {
    * lo sabe. `false` si no se pudo.
    */
   readonly onResetAll: () => boolean
+  /** La versión publicada; `null` en desarrollo. */
+  readonly version: string | null
 }
 
 export const NEW_CONTEXT_NAME: string = "Nuevo contexto"
@@ -49,7 +51,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
 /** Devuelve la función que la desmonta. */
 export const mountSettingsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, confirm, back, onExit, onResetAll }: SettingsViewDeps,
+  { store, useCases, windows, confirm, back, onExit, onResetAll, version }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
   titulo.className = "titulo"
@@ -265,6 +267,9 @@ export const mountSettingsView = (
   /* «Datos» va abajo del todo de la pantalla, lejos de lo que se toca a diario. */
   const datos: HTMLElement = seccion("Datos", explicacion, borrarTodo, sinBorrar)
   datos.className = "datos"
+  /* Con la actualización en silencio, la única forma de saber qué versión corre. */
+  const pie: HTMLParagraphElement = elemento("p", versionLine(version))
+  pie.className = "version"
   const vista: HTMLElement = elemento("div")
   vista.className = "vista-ajustes"
   vista.append(
@@ -272,6 +277,7 @@ export const mountSettingsView = (
     seccion("Ventanas", listaVentanas),
     seccion("Contextos", formulario, listaContextos),
     datos,
+    pie,
     hoja.element,
   )
   raiz.replaceChildren(vista)

@@ -26,7 +26,20 @@ const localStorageDisponible = (): Storage | null => {
   }
 }
 
-const mostrarFallo = (raiz: HTMLElement, mensaje: string): void => {
+/** La versión que escribe el script que arma la carpeta publicada; en desarrollo no hay. */
+const versionPublicada = (): string | null =>
+  document.querySelector('meta[name="elnotas-version"]')?.getAttribute("content") ?? null
+
+/**
+ * Pide que el navegador no borre los datos por su cuenta cuando falte espacio. La
+ * respuesta no cambia nada. Sin HTTPS (la red de casa) `navigator.storage` no
+ * existe, y entonces no se pide.
+ */
+const pedirPersistencia = (): void => {
+  void navigator.storage?.persist().catch((): boolean => false)
+}
+
+const mostrarFallo =(raiz: HTMLElement, mensaje: string): void => {
   const aviso: HTMLParagraphElement = document.createElement("p")
   aviso.className = "aviso"
   aviso.setAttribute("role", "alert")
@@ -47,6 +60,7 @@ const iniciar = async (): Promise<void> => {
   /* Si se pidió «Borrar todo», es aquí, antes de leer nada: así también se va lo
      que el guardado escribió al salir de la página. */
   resetIfRequested(almacen)
+  pedirPersistencia()
 
   /* El guardado puede detenerse antes de que haya UI a la que avisar: se guarda
      el fallo y se enseña al montarla. */
@@ -87,6 +101,7 @@ const iniciar = async (): Promise<void> => {
       window.location.reload()
       return true
     },
+    version: versionPublicada(),
   })
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)

@@ -15,6 +15,7 @@ import {
   choiceGroupLabel,
   resetQuestion,
   settingsContent,
+  versionLine,
 } from "#ui/index"
 
 const contexto = (id: string, name: string): Context => ({
@@ -172,4 +173,12 @@ test("lo que no hay no se nombra, y uno va en singular", (): void => {
 
 test("sin nada guardado, lo dice", (): void => {
   assert.equal(resetQuestion(emptyAppState()), "¿Dejar la app en blanco? No hay nada guardado.")
+})
+
+test("la versión publicada se enseña tal cual la escribe el script", (): void => {
+  assert.equal(versionLine("2026-10-09 · 2896c632"), "Versión 2026-10-09 · 2896c632")
+})
+
+test("sin versión es que se está en desarrollo, y lo dice", (): void => {
+  assert.equal(versionLine(null), "Versión de desarrollo")
 })
