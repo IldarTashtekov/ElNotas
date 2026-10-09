@@ -3,7 +3,9 @@
  * navegador carga, con las mismas rutas que en el repo. Va después de
  * `npm run build:web`, con `npm run build:pages`.
  *
- * Calcula la huella del contenido y escribe la versión en el index.html copiado.
+ * Calcula la huella del contenido, escribe sw.js a partir de pwa/sw.js y añade al
+ * index.html copiado la versión y el registro del service worker: en desarrollo
+ * no hay service worker, porque el index.html del repo no lo registra.
  * Se niega a terminar si index.html o el manifiesto piden algo con ruta absoluta
  * o algo que no se publica: es el fallo que sólo se notaría en el móvil.
  */
@@ -21,6 +23,9 @@ const FICHEROS = [
   "assets/icono/icono-512.png",
 ]
 const CARPETAS = ["dist/web", "src/ui/styles"]
+
+/** El service worker, que no se copia tal cual: se le pone delante la huella y la lista. */
+const SERVICE_WORKER = "pwa/sw.js"
 
 /** Una ruta que no es relativa: empieza por «/» o lleva esquema («https:», «data:»…). */
 const ABSOLUTA = /^(?:\/|[a-z][a-z0-9+.-]*:)/i
@@ -76,7 +81,7 @@ if (ausentes.length > 0) {
 
 // La huella: cambia un byte de cualquier fichero, o cambia uno de nombre, y cambia.
 const hash = createHash("sha256")
-for (const ruta of publicados) {
+for (const ruta of [...publicados, SERVICE_WORKER]) {
   hash.update(ruta)
   hash.update("\0")
   hash.update(readFileSync(ruta))
@@ -90,14 +95,27 @@ for (const ruta of publicados) {
   copyFileSync(ruta, join(DESTINO, ruta))
 }
 
-// La versión, sólo en la copia: el index.html del repo no la lleva.
+const cabecera = [
+  `const HUELLA = ${JSON.stringify(huella)}`,
+  `const FICHEROS = ${JSON.stringify(publicados, null, 2)}`,
+].join("\n")
+writeFileSync(join(DESTINO, "sw.js"), `${cabecera}\n\n${readFileSync(SERVICE_WORKER, "utf8")}`)
+
+// La versión y el registro, sólo en la copia: el index.html del repo no los lleva.
 if (indexHtml.split("</head>").length !== 2) {
   fallar(["index.html tiene que tener exactamente un </head>, para escribir la versión."])
 }
-const conVersion = indexHtml.replace(
-  "</head>",
-  `  <meta name="elnotas-version" content="${version}" />\n  </head>`,
-)
-writeFileSync(join(DESTINO, "index.html"), conVersion)
+const añadido = [
+  `  <meta name="elnotas-version" content="${version}" />`,
+  `    <script>`,
+  `      if ("serviceWorker" in navigator) {`,
+  `        navigator.serviceWorker.register("./sw.js").catch((error) => {`,
+  `          console.error("No se pudo registrar el service worker:", error)`,
+  `        })`,
+  `      }`,
+  `    </script>`,
+  `  </head>`,
+].join("\n")
+writeFileSync(join(DESTINO, "index.html"), indexHtml.replace("</head>", añadido))
 
 console.log(`✓ ${DESTINO}/: ${publicados.length} ficheros, versión ${version}`)
