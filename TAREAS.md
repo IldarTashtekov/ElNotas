@@ -651,9 +651,19 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado). **Y desde
       el 2026-10-04, un cuarto:** «Borrar todo» vacía las claves `elnotas:` del `localStorage` de
       ese navegador; con otro destino —carpeta, OPFS— **hay que revisar qué borra** y si sigue
-      teniendo sentido en dos tiempos (`ARCHITECTURE.md` §7.4).
+      teniendo sentido en dos tiempos (`ARCHITECTURE.md` §7.4). **Y desde el 2026-10-08, un
+      quinto:** la app publicada de la Fase 6 es **otro origen** y empieza vacía; no ve lo escrito
+      en la red de casa. **El usuario acepta perderlo** (`ARCHITECTURE.md` §9.12).
 
-### Fase 5 — Diagramas: TODO el código hecho; Lienzo y Relaciones, sin cerrar; lo siguiente, la sentada de las cuatro listas
+### Fase 5 — Diagramas ✅ CERRADA el 2026-10-08, por decisión del usuario y CON DEUDA
+
+**Cerrada el 2026-10-08 sin pasar las listas de Lienzo y Relaciones**, que siguen abajo como
+pendientes, **no como hechas**, junto a las dos de la Fase 4. El usuario la cerró para empezar la
+Fase 6 sabiendo que el móvil —donde más puede fallar— sigue sin verificar. Después del código de
+Relaciones entraron dos arreglos sueltos, sin lista propia: **el doble toque con el dedo ya no
+cierra el menú que acaba de abrir** (`355be4a`, `DiagramCanvas.ts`) y **«Datos» va abajo del todo
+de la configuración** (`e8017bd`). **723 pruebas** al cerrarla. El cierre, en `ARCHITECTURE.md`
+§9.11.
 
 **Planificada con el usuario el 2026-10-03.** El diseño entero, sus porqués y los criterios de
 cierre de cada parte, en `ARCHITECTURE.md` §9.11; lo que cambia en la navegación, en §7.4.
@@ -662,16 +672,18 @@ cierre de cada parte, en `ARCHITECTURE.md` §9.11; lo que cambia en la navegaci�
 con **693**, y **Fase 5 · Relaciones, código hecho el mismo día** con **712**; **las dos sin
 cerrar**, con su lista manual escrita y sin pasar.
 
-**Lo siguiente es UNA tarea: la sentada de las cuatro listas.** Qué cierra cada una:
+**Lo que queda pendiente: las cuatro listas**, que ya no cierran ninguna fase. Qué verifica cada
+una:
 
-| Lista | Dónde | Al pasarla se cierra |
+| Lista | Dónde | Al pasarla queda verificado |
 |---|---|---|
 | `test/ui/VERIFICACION-MANUAL.md` | sobre todo en el móvil; la hoja de escritorio también está vacía | la lista de Fase 4 · Contextos |
 | `test/ui/VERIFICACION-MANUAL-EDITOR.md` | ídem | la lista de Fase 4 · Notas; las tres preguntas siguen aparte |
 | `test/ui/VERIFICACION-MANUAL-LIENZO.md` | en escritorio y en el móvil | Fase 5 · Lienzo |
 | `test/ui/VERIFICACION-MANUAL-RELACIONES.md` | en escritorio y en el móvil | Fase 5 · Relaciones |
 
-**Pasadas la del lienzo y la de las relaciones, se cierra la Fase 5 entera.**
+*(Hasta el 2026-10-08: pasadas la del lienzo y la de las relaciones, se cerraba la Fase 5 entera.
+Se cerró sin ellas.)*
 
 Las tres preguntas del editor (*Fase 4 · Notas*, arriba) **no se contestan en la sentada**: piden
 usar la app varios días.
@@ -681,7 +693,8 @@ el usuario el 2026-10-04*—: la del lienzo, la de las relaciones y la deuda mó
 dos listas, arriba). Ya el 2026-10-03 se había decidido que la deuda móvil iba después de las tres
 partes. **Riesgo asumido, explicado y elegido frente a pasar la del lienzo ya:** si los gestos
 fallan en su móvil se descubre con las relaciones construidas encima, y **las relaciones usan los
-mismos gestos**. A cambio, todo se verifica en el mismo teléfono y de una vez.
+mismos gestos**. A cambio, todo se verifica en el mismo teléfono y de una vez. **El 2026-10-08 la
+fase se cerró con ellas pendientes**, sin la sentada.
 
 #### Fase 5 · Modelo — el core y `storage/`, sin pantalla ✅ HECHA el 2026-10-03
 
@@ -794,6 +807,69 @@ Cómo quedó, el fallo que salió al probarlo y las decisiones tomadas al constr
       `test/ui/VERIFICACION-MANUAL-LIENZO.md` ya lo describe así.
 - [ ] **¿Etiquetas de texto junto a los «+»?** Su boceto las lleva. **Pregunta abierta al usuario,
       sin contestar**; hasta que conteste, los botones siguen sin texto.
+
+### Fase 6 — PWA: instalar la app en el móvil. Planificada el 2026-10-08, sin empezar
+
+**Qué es:** que ElNotas se instale en el móvil como una app —icono, pantalla completa, sin
+conexión, actualizándose sola— sin depender del ordenador de casa. Sin dependencias nuevas y sin
+tocar el core. Piezas: manifiesto, iconos, *service worker* y publicarla con HTTPS. El diseño, el
+porqué de cada decisión y el criterio de cierre, en `ARCHITECTURE.md` §9.12.
+
+**Antes de empezarla, decidido con el usuario el 2026-10-08:** las listas manuales de la Fase 5
+**se quedan como pendientes**, como las de la Fase 4, y la Fase 5 se cierra **con deuda** (arriba).
+
+**Las decisiones, cerradas con el usuario el 2026-10-08:**
+
+| # | Tema | Decisión |
+|---|---|---|
+| 1 | Alojamiento | GitHub Pages: el repo es público |
+| 2 | Publicación | GitHub Actions al subir a `main`, más botón manual; si `check` falla, no publica |
+| 3 | Actualización | En silencio (`skipWaiting`): la nueva se ve en la siguiente apertura |
+| 4 | Exportar/importar | Fuera de la fase, pendiente (abajo, *Sin fase asignada*) |
+| 5 | Almacenamiento persistente | Sí, `persist()` en `src/platform/web/main.ts` |
+| 6 | Icono | Tal cual, `purpose: "any"`, sin *maskable* |
+| 7 | *Service worker* | JavaScript plano en `pwa/sw.js`; el script le pone lista y huella |
+| 8 | Merge a `main` | Justo antes de publicar (fast-forward, `main` está en `a20dc75`), con la deuda de las Fases 4 y 5 |
+| 9 | Notas del móvil actual | Se pierden: la publicada empieza vacía y al usuario le da igual |
+| 10 | Versión a la vista | Sí, una línea al final de la configuración |
+| 11 | Orientación | Libre, sin código |
+| 12 | Pantalla de carga | Nombre «ElNotas», fondo azul `#3552d6` (hay modo oscuro: el blanco daría fogonazo) |
+
+- [x] **El icono**: el busto del «nerd» con sus libros sobre el azul de la app (variante B,
+      elegida por el usuario el 2026-10-08), recortado de una captura que trajo él. En
+      `assets/icono/`: `nerd-recortado.png` (la fuente, fondo transparente, para rehacer
+      cualquier tamaño), `icono-512.png` e `icono-192.png`. ⚠️ El original es pequeño (324 × 594),
+      así que a 512 se ve algo blando de cerca; y **parece una ilustración de otra persona**: si
+      la app se comparte, conviene un dibujo con permiso o propio.
+
+**Las tareas, en orden:**
+
+- [ ] **1. Rutas relativas en `index.html`**: el `importmap`, el `<script>` de entrada y los
+      estilos. La app sigue funcionando igual con `python3 -m http.server`.
+- [ ] **2. `manifest.webmanifest`** en la raíz, con los dos iconos, enlazado desde `index.html`
+      con `theme-color`.
+- [ ] **3. `tools/build-pages.mjs` y `npm run build:pages`**: arma `dist/pages/`, calcula la
+      huella, escribe `sw.js` e inyecta el registro y la meta de la versión. **Se niega** con una
+      ruta absoluta o un fichero que falte; las dos negativas, **rotas a propósito**.
+- [ ] **4. `pwa/sw.js`**: precarga con `cache: "reload"`, sirve sin conexión, `skipWaiting` y
+      borra las cachés viejas.
+- [ ] **5. `persist()` en `main.ts`**, dentro de su frontera (y en `check:fronteras` si hace
+      falta), y **la versión en la configuración**.
+- [ ] **6. Probar `dist/pages/` en `localhost`**: se instala, funciona sin conexión y se
+      actualiza.
+- [ ] **7. `.github/workflows/publicar.yml`**: Node 20, `npm ci`, `check`, `build:web`,
+      `build:pages`, `upload-pages-artifact` y `deploy-pages`; con `workflow_dispatch` y
+      `concurrency`.
+- [ ] **8. El usuario:** merge a `main`, `git push` y *Settings → Pages → Source: GitHub Actions*.
+- [ ] **9. `test/ui/VERIFICACION-MANUAL-PWA.md`**, escrita y pasada en el móvil.
+
+### Sin fase asignada
+
+- [ ] **Exportar e importar las notas (JSON).** Fuera de la Fase 6 por decisión del usuario el
+      2026-10-08. Hace falta porque las notas viven sólo en el `localStorage` de **un origen**:
+      la app publicada es otro origen y empieza vacía, y si se borran los datos de la app a mano
+      —o con el «limpiar» de MIUI— se pierde todo. **`persist()` no protege de eso**: sólo impide
+      que el navegador borre por su cuenta. Una copia fuera del navegador es lo único que lo cubre.
 
 ### Infraestructura (`infra-agent`)
 

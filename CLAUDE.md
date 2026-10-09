@@ -20,19 +20,17 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-04, tras `c1e86c9`:** `npm run check` en verde —sus seis pasos— con **723
+**Medido el 2026-10-08, tras `355be4a`:** `npm run check` en verde —sus seis pasos— con **723
 pruebas** (712 al acabar el código de Relaciones; las otras once, de «Borrar todo»). Líneas de
 `.ts` (`find <dir> -name '*.ts' | xargs cat | wc -l`): `src/core` 3148, `src/storage` 1687,
-`src/platform` 397, `src/ui` 4426; `test/` 9566.
+`src/platform` 397, `src/ui` 4452; `test/` 9566.
 *(Las cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
-**Fases 1 a 4 cerradas. La 4, por decisión del usuario el 2026-10-03, con deuda de
-verificación:** las dos listas manuales y las tres preguntas del editor quedan pendientes en
-`TAREAS.md` (ver *Plan por fases*). **De la Fase 5, TODO el código está hecho**: Modelo, cerrada el
-2026-10-03; **Lienzo y Relaciones, código hecho el 2026-10-04 y SIN CERRAR**, con sus listas
-escritas y sin pasar. **Lo siguiente: la sentada de las cuatro listas** —las dos de la Fase 4 en
-el móvil, y la del lienzo y la de las relaciones en escritorio y en móvil—, que cierra la deuda de
-la Fase 4, Lienzo, Relaciones y la Fase 5 entera.
+**Fases 1 a 5 cerradas. La 4 y la 5, por decisión del usuario y CON DEUDA de verificación**
+(el 2026-10-03 y el 2026-10-08): **las cuatro listas manuales siguen sin pasar** —las dos de la
+Fase 4, la del lienzo y la de las relaciones— y las tres preguntas del editor, sin contestar;
+todo pendiente en `TAREAS.md` (ver *Plan por fases*). **Lo siguiente: la Fase 6, la PWA,
+planificada y sin empezar** (§9.12).
 
 Lo que hay en `src/`, de dentro afuera:
 
@@ -75,7 +73,8 @@ vuelve a pasar la lista**; la única excepción registrada —mismo código una 
 comentarios— está en `TAREAS.md`.
 
 **Lo que NO existe todavía:** la carpeta del usuario y OPFS como destino de la app y el botón de
-«reconectar carpeta».
+«reconectar carpeta»; y la PWA de la Fase 6: el manifiesto, el *service worker* (`pwa/sw.js`),
+`npm run build:pages` y la receta de GitHub Actions.
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
 encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
@@ -514,7 +513,34 @@ implementación del lienzo y de las relaciones, en §9.11:
 - **Las listas manuales pendientes se pasan TODAS JUNTAS, al final, en una sentada**: la del
   lienzo, la de las relaciones y la deuda móvil de la Fase 4 (sus dos listas). *Decidido por el usuario el
   2026-10-04*, sabiendo el riesgo: si los gestos fallan en su móvil se descubre con las
-  relaciones construidas encima, que usan los mismos gestos. §9.11.
+  relaciones construidas encima, que usan los mismos gestos. **El 2026-10-08 el usuario cerró la
+  fase con ellas pendientes**, para empezar la Fase 6. §9.11.
+
+**De la PWA, la Fase 6** — *decididas con el usuario el 2026-10-08*. Planificada y sin empezar;
+el porqué y lo descartado, en §9.12:
+
+- **GitHub Pages**, porque el repo es público: `https://ildartashtekov.github.io/ElNotas/`. Las
+  rutas de `index.html` pasan a **relativas**, porque Pages sirve en una subcarpeta.
+- **Se publica con GitHub Actions al subir a `main`**, y también a mano (`workflow_dispatch`).
+  **Si `npm run check` falla, no se publica.** El `git push` y activar Pages los hace el usuario.
+- **La actualización es en silencio** (`skipWaiting`): la versión nueva se ve en la siguiente
+  apertura. Seguro porque la app carga todos sus módulos al arrancar; **un `import()` dinámico
+  la reabre**.
+- **Exportar e importar las notas queda fuera de la fase**, pendiente en `TAREAS.md`.
+- **Se pide almacenamiento persistente**, `navigator.storage.persist()`, en
+  `src/platform/web/main.ts`. No protege de que se borren los datos a mano.
+- **El icono, tal cual** (`purpose: "any"`), sin versión *maskable*.
+- **El *service worker*, en JavaScript plano en `pwa/sw.js`**, fuera de `src/`: un sexto tsconfig
+  con `WebWorker` sólo para él no compensa. La lista de ficheros y la huella las pone
+  `tools/build-pages.mjs`. **Sin *service worker* en desarrollo**: el registro sólo lo lleva la
+  copia publicada.
+- **El merge a `main`, justo antes de publicar**: es un *fast-forward* desde `a20dc75`, y se
+  publica con la deuda de las Fases 4 y 5.
+- **Las notas del móvil actual se pierden**: la app publicada es otro origen y empieza vacía.
+- **La versión, a la vista** en una línea al final de la configuración.
+- **La orientación, libre**: sin `orientation` en el manifiesto.
+- **La pantalla de carga**: nombre «ElNotas» y fondo **`#3552d6`**, el azul de la app; el
+  blanco daría un fogonazo en modo oscuro.
 
 ## Fuera de alcance por ahora
 
@@ -530,6 +556,7 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - Adaptador de MongoDB · adaptador de Google Drive
 - `CompositeStorage` y outbox · `storageTarget` por contexto
 - Una librería para mover y acercar el lienzo de los Diagramas (el lienzo se hace desde cero)
+- Exportar e importar las notas (JSON) — pendiente en `TAREAS.md`, sin fase
 - Shells de desktop y móvil (Tauri / Capacitor)
 - Sync entre dispositivos, CRDTs, colaboración en tiempo real
 
@@ -548,14 +575,14 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
   entiende solo), sin contestar. Siguen en `TAREAS.md` como pendientes, **no como hechas**. Lo
   que queda sin verificar de verdad es sobre todo **el móvil**: arrastrar las fichas con el dedo
   y el teclado de Android.
-- **Fase 5 — Diagramas** (§9.11). Partida en tres, en este orden: **Fase 5 · Modelo** (core y
-  `storage/`, sin pantalla) **✅ HECHA el 2026-10-03, con 643 pruebas**; **Fase 5 · Lienzo**
-  (todo menos las líneas) **con el código hecho el 2026-10-04 y 693 pruebas, SIN CERRAR**; y
-  **Fase 5 · Relaciones**, **con el código hecho el 2026-10-04 y 712 pruebas, SIN CERRAR**. Las
-  dos tienen su lista escrita y sin pasar (`test/ui/VERIFICACION-MANUAL-LIENZO.md` y
-  `-RELACIONES.md`), y cada una cierra con la suya pasada **en escritorio y en el móvil**.
-  **Lo siguiente: la sentada de las cuatro listas** (lienzo, relaciones y las dos de la Fase 4 en
-  el móvil). Pasadas, se cierran la deuda móvil de la Fase 4, Lienzo, Relaciones y la Fase 5.
+- **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08, por decisión del usuario y CON DEUDA**, con
+  **723 pruebas** (§9.11). Partida en tres: **Fase 5 · Modelo** (core y `storage/`, sin pantalla),
+  **✅ HECHA el 2026-10-03, con 643 pruebas**; **Fase 5 · Lienzo** (todo menos las líneas), con el
+  código hecho el 2026-10-04 y 693; y **Fase 5 · Relaciones**, con el código hecho el 2026-10-04 y
+  712. ⚠️ **Sus dos listas siguen sin pasar** (`test/ui/VERIFICACION-MANUAL-LIENZO.md` y
+  `-RELACIONES.md`), pendientes en `TAREAS.md` junto a las dos de la Fase 4, **no como hechas**.
+- **Fase 6 — PWA. Planificada el 2026-10-08, sin empezar** (§9.12): instalar la app en el móvil,
+  publicada en GitHub Pages. Nueve tareas, en `TAREAS.md`.
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que

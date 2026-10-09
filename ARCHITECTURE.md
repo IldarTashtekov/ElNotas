@@ -2894,6 +2894,9 @@ entra, porque no lo carga ningún navegador (§8.3).
 **Coste admitido:** los alias se declaran **dos veces**, en `package.json` y en el `importmap`. Un
 alias nuevo que se olvide en `index.html` no lo caza nada automático; se nota al abrir la app.
 
+**Las rutas de `index.html` pasan a relativas en la Fase 6** (`./dist/web/…`), porque GitHub
+Pages sirve la app en una subcarpeta (§9.12).
+
 ---
 
 ## 9. El plan por fases, razonado
@@ -2977,15 +2980,24 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   ilegible (§6.5). **Queda como deuda**, no como hecho: pasar las dos listas manuales y contestar
   las tres preguntas del editor (§9.10).
 
-- **Fase 5 — Diagramas. Planificada el 2026-10-03 con el usuario.** Un lienzo libre con nodos y
+- **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08, con deuda** —las listas de Lienzo y Relaciones,
+  sin pasar, pendientes en `TAREAS.md` junto a las dos de la Fase 4—. Planificada el 2026-10-03 con
+  el usuario. Un lienzo libre con nodos y
   relaciones, y la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo, Fase 5 ·
   Lienzo y Fase 5 · Relaciones** (§9.11). **Fase 5 · Modelo, ✅ HECHA el 2026-10-03**, con **643
   pruebas** (532 al empezar): los Diagramas ya se operan en el core. **Fase 5 · Lienzo, código
   hecho el 2026-10-04 y sin cerrar**, con **693**: la vista, el corcho, los pósits y los
   nodos-nota. **Fase 5 · Relaciones, código hecho el 2026-10-04 y sin cerrar**, con **712**: las
   líneas, *Conectar*, su menú y su texto. Las dos tienen su lista manual escrita y sin pasar.
-  **Lo siguiente: todas las listas manuales pendientes en una sentada** —lienzo, relaciones y la
-  deuda móvil de la Fase 4—, que cierra las tres cosas y la fase (§9.11).
+  Iba a cerrarse con todas las listas manuales pendientes pasadas en una sentada; **el usuario la
+  cerró el 2026-10-08 sin pasarlas**, para empezar la Fase 6, con **723 pruebas** (§9.11).
+
+- **Fase 6 — PWA. Planificada el 2026-10-08, sin empezar.** Que ElNotas se instale en el móvil
+  como una app —icono, pantalla completa, sin conexión, actualizándose sola— sin depender del
+  ordenador de casa: manifiesto, iconos, un *service worker* en `pwa/sw.js`, un script que arma la
+  carpeta publicada y GitHub Pages, publicada por GitHub Actions al subir a `main`. **Sin
+  dependencias nuevas y sin tocar el core.** Las doce decisiones, el porqué y el criterio de cierre,
+  en §9.12.
 
 ### 9.3 Las operaciones de contenido
 
@@ -3740,7 +3752,7 @@ entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si
 sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
 decisión aunque la fase esté cerrada.
 
-### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo y Relaciones, código hecho y sin cerrar)*
+### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo y Relaciones, código hecho y sin cerrar; cerrada el 2026-10-08 con deuda)*
 
 Al estilo de §9.10, y **escrito antes de que existiera una línea de código de diagramas**. ⚠️ **Hoy
 está construido Fase 5 · Modelo** —el modelo, sus operaciones, acciones y casos de uso,
@@ -4273,6 +4285,232 @@ línea en el móvil**, con su teclado.
 - **Una librería de mover y acercar**, salvo que salte su disparador (`TAREAS.md`).
 - **Todo lo que ya estaba fuera de la Fase 4** y sigue fuera: `move`/`indent`/`outdent`, la
   carpeta del usuario y OPFS, los shells y el sync.
+
+#### ✅ Cerrada el 2026-10-08, por decisión del usuario y con deuda
+
+Como la Fase 4: **todo el código está hecho y las listas de Lienzo y Relaciones quedan sin
+pasar**, pendientes en `TAREAS.md` junto a las dos de la Fase 4. El usuario la cerró para empezar
+la Fase 6, sabiendo que el móvil —donde más puede fallar— sigue sin verificar. Después de
+`74c356e` entraron dos arreglos sueltos, sin lista propia: el doble toque con el dedo ya no
+cierra el menú que acaba de abrir (`355be4a`, `DiagramCanvas.ts`) y «Datos» va abajo del todo de
+la configuración (`e8017bd`). **723 pruebas** al cerrarla.
+
+### 9.12 La Fase 6: la PWA *(planificada el 2026-10-08; sin empezar)*
+
+**Qué es:** que ElNotas se **instale en el móvil como una app** —icono, pantalla completa, sin
+conexión, actualizándose sola— **sin depender del ordenador de casa**. Hasta ahora se sirve con
+`python3 -m http.server` en la red local (§8.6): sólo funciona en casa, con el ordenador
+encendido, y por `http://`, que para el navegador no es un sitio seguro. **Sin dependencias
+nuevas y sin tocar el core.**
+
+| Pieza | Qué hace | Dónde |
+|---|---|---|
+| Rutas relativas | que la app funcione dentro de una subcarpeta | `index.html` |
+| Manifiesto | nombre, icono, pantalla completa, color de arranque | `manifest.webmanifest` |
+| Iconos | el busto del «nerd» sobre azul, 192 y 512 | `assets/icono/` |
+| Script de compilación | arma la carpeta que se publica y le pone la huella | `tools/build-pages.mjs` |
+| *Service worker* | guarda la app en el móvil y la sirve sin conexión | `pwa/sw.js` |
+| `persist()` | pide que el navegador no borre los datos por su cuenta | `src/platform/web/main.ts` |
+| La versión | una línea en la configuración que dice qué versión corre | `SettingsView.ts` |
+| La receta de publicación | compila, comprueba y publica al subir a `main` | `.github/workflows/publicar.yml` |
+
+#### Qué es una PWA, y por qué hace falta publicarla
+
+Una *Progressive Web App* es una web que el navegador deja **instalar**: sale un icono en el
+escritorio del móvil, se abre a pantalla completa sin la barra del navegador y funciona sin
+conexión. No es una app nativa: por dentro sigue siendo la misma página, en el mismo navegador.
+
+Para ofrecer la instalación, el navegador pide tres cosas: un **manifiesto** (nombre, iconos,
+cómo se abre), un ***service worker*** y que la página venga de un **sitio seguro**, con
+`https://` (o `localhost`, la excepción para desarrollar). La red de casa no cumple lo tercero, y
+por eso hace falta **publicarla en internet**.
+
+**Internet hace falta para instalarla y para actualizarla; para usarla, no.** El *service
+worker* guarda todos los ficheros de la app en el móvil al instalarla, y a partir de ahí la abre
+desde lo guardado. **Las notas nunca salen del móvil**: el sitio publicado aloja el programa, no
+los datos. Si el sitio desapareciera, la app instalada seguiría funcionando con la última versión
+que bajó.
+
+#### El *service worker*, desde cero
+
+Es un **programa pequeño que el navegador guarda junto a la app** y que se pone entre ella y la
+red: cada fichero que la página pide pasa por él, y él decide si lo sirve de lo guardado o lo va
+a buscar. Vive aparte de la página —no ve el DOM— y sigue registrado aunque se cierre.
+
+Su ciclo de vida explica casi todas las decisiones de abajo:
+
+1. **Se instala**: la primera vez, descarga la lista de ficheros de la app y los guarda en una
+   caché con nombre propio.
+2. **Se activa**: toma el mando y borra las cachés de versiones anteriores.
+3. **Sirve**: desde ahí, cada petición sale de su caché.
+4. **Al abrir la app con conexión**, el navegador baja el `sw.js` publicado y lo compara con el
+   que tiene. Si ha cambiado aunque sea un byte, **instala el nuevo por detrás**, que espera su
+   turno mientras el viejo sigue sirviendo.
+
+#### Las decisiones, cerradas con el usuario el 2026-10-08
+
+**1. GitHub Pages, porque el repo es público.** Gratis, con HTTPS y siempre encendido, en
+`https://ildartashtekov.github.io/ElNotas/`. Con un repo privado habría hecho falta otro sitio
+(Netlify o Cloudflare Pages), porque Pages en privado es de pago.
+
+**2. Se publica con GitHub Actions al subir a `main`.** GitHub Actions es un **robot que ejecuta
+una receta en los ordenadores de GitHub** cada vez que pasa algo en el repo. La receta:
+`npm ci` —instala **exactamente** lo de `package-lock.json`, nada nuevo—, `npm run check`,
+`npm run build:web`, `npm run build:pages` y publicar la carpeta. **Si `check` falla, no se
+publica nada** y en el móvil sigue la versión anterior. Se lanza también a mano con un botón
+(`workflow_dispatch`), dos publicaciones seguidas no se pisan (`concurrency`) y sólo usa piezas
+oficiales de GitHub (`actions/…`), ninguna de terceros. El `git push` y activar Pages
+(*Settings → Pages → Source: GitHub Actions*) los hace el usuario: en esta máquina `git push` está
+denegado en `.claude/settings.json`, a propósito.
+
+*Descartado:* compilar en el ordenador y subir la carpeta a mano a una rama `gh-pages`. Funciona,
+pero son varios pasos por actualización, nada impide publicar algo que no pasa `check` y el
+historial se llena de ficheros generados. El robot no añade nada al proyecto más que un fichero de
+receta, y **no es una dependencia de npm**.
+
+**3. La actualización es en silencio.** El *service worker* nuevo llama a `self.skipWaiting()` al
+instalarse y entra en cuanto termina de descargar: **la versión nueva se ve en la siguiente
+apertura**. Sin `skipWaiting`, el nuevo espera a que la app se cierre **del todo** —quitarla
+también de las recientes—, y en Android eso pueden ser días.
+
+*Descartado:* un aviso «Hay una versión nueva — tocar para actualizar». Más código y otra cosa en
+pantalla para una app de un solo usuario que sabe cuándo ha publicado.
+
+*Lo que hace seguro `skipWaiting`:* la página vieja sigue abierta mientras el nuevo borra la caché
+vieja, así que si pidiera un fichero **después de arrancar** recibiría el de la versión nueva,
+mezclando versiones. **No pasa porque la app carga todos sus módulos al arrancar**: comprobado el
+2026-10-08, en `src/` no hay ni un `import()` dinámico. Si algún día lo hay, esta decisión se
+revisa.
+
+**4. Exportar e importar las notas queda fuera de la fase**, pendiente en `TAREAS.md`. Importa
+porque la app publicada es **otro sitio** para el navegador —los datos se guardan por origen— y
+**empieza vacía**: no ve lo escrito en `http://192.168.…:8000`. **El usuario acepta perderlo**
+(2026-10-08).
+
+**5. Se pide almacenamiento persistente**, con `navigator.storage.persist()` al arrancar, en
+`src/platform/web/main.ts` —la composición, no el core—. Sin él, cuando el móvil anda corto de
+espacio el navegador **puede borrar por su cuenta** los datos de un sitio; con él, se compromete a
+no hacerlo. A una app instalada Chrome suele concederlo sin preguntar. La respuesta no cambia nada
+en pantalla. ⚠️ **No protege de que el usuario —o el «limpiar» de MIUI— borre los datos de la app a
+mano**: contra eso sólo sirve la exportación del punto 4.
+
+**6. El icono, tal como está**, con las esquinas redondeadas y transparentes, `purpose: "any"`.
+Android recorta los iconos a su forma y podría dejar un borde; *descartado* hacer además una
+versión *maskable* (que rellena el cuadrado entero para que el recorte no se note).
+
+**7. El *service worker*, en JavaScript plano.** TypeScript necesita saber qué existe donde corre
+el código, y eso lo dice la `lib` del tsconfig: la app usa `DOM`, y un *service worker* usa
+`WebWorker`, que **no conviven en el mismo tsconfig** —declaran las mismas cosas de dos formas—.
+Haría falta un sexto tsconfig sólo para él. Son unas cincuenta líneas, y lo que cambia en cada
+versión —la lista de ficheros y la huella— lo escribe el script de compilación; lo que se pierde
+sin el compilador lo cubre la prueba en el móvil. Vive **fuera de `src/`** (en `pwa/`) porque
+`src/` es TypeScript y sus guardianes lo dan por hecho.
+
+**8. El merge a `main`, justo antes de publicar.** `main` se quedó en el prototipo (`a20dc75`) y
+**no tiene nada que no tenga `rediseno-arquitectura`**, que le lleva 104 commits: el merge sólo
+avanza la rama (*fast-forward*), sin conflictos posibles. Va después de probar la carpeta montada
+en `localhost`, para que lo primero que llegue a `main` —y lo primero que se publique— esté
+probado. **Antes del merge no se puede instalar en el móvil:** Pages publica desde `main`, y la red
+de casa no es un sitio seguro. **Se publica con la deuda** de las listas de las Fases 4 y 5, sin
+pasar: la app la usa sólo el usuario, y usarla en el móvil de verdad sirve también para pasarlas.
+
+**Y tres detalles más:**
+
+- **La versión, a la vista en la configuración**, en una línea discreta al final («Versión
+  2026-10-08 · a1b2c3»): la fecha de compilación y el principio de la huella. Con la actualización
+  en silencio no se nota qué versión corre, y la caché **ya dio guerra en el móvil** al actualizar.
+  El script la escribe en el `index.html` publicado (`<meta name="elnotas-version">`), `main.ts` la
+  lee y se la pasa a la vista; en desarrollo no hay meta y la línea dice «desarrollo».
+- **La pantalla puede girar** (sin `orientation` en el manifiesto). No cuesta código: toda la app
+  es una columna centrada de ancho máximo (`max-width: 40rem`, `min-height: 100dvh`, en
+  `base.css`), y en horizontal queda la columna en el centro, igual que hoy al girar el móvil en el
+  navegador. La vista diagrama es la que más puede notarlo, y la lista del móvil la mira.
+- **La pantalla de carga la monta Android sola**, con tres cosas del manifiesto: el icono en el
+  centro, el nombre debajo («ElNotas») y `background_color` detrás. **El azul de la app,
+  `#3552d6`** (`--accent` en `base.css`), porque el manifiesto admite **un solo color** y la app
+  tiene modo claro y oscuro: con el blanco, en modo oscuro habría un fogonazo blanco en cada
+  apertura; el azul se ve igual en los dos.
+
+#### Las rutas: relativas, porque Pages sirve en una subcarpeta
+
+`index.html` pide hoy `/dist/web/…` y `/src/ui/styles/…`: **rutas absolutas**, desde la raíz del
+dominio. Con `python3 -m http.server` la raíz es el repo y funciona; en Pages la app vive en
+`/ElNotas/`, así que `/dist/web/…` apuntaría a `ildartashtekov.github.io/dist/web/…`, que no
+existe. **Pasan a relativas** (`./dist/web/…`), en el `importmap`, en el `<script>` de entrada y
+en los estilos: se resuelven contra la dirección de la página y funcionan en los dos sitios. El
+manifiesto, igual: `start_url` y `scope` son `"./"`. Comprobado el 2026-10-08: en `src/ui` y `src/platform` no hay
+otras rutas absolutas.
+
+#### La carpeta publicada: un trozo del repo con su misma forma
+
+No se publica el repo entero —`node_modules/`, `test/`, el TypeScript—, sino lo que el navegador
+carga: `index.html`, `manifest.webmanifest`, `assets/icono/`, `dist/web/`, `src/ui/styles/` y
+`sw.js`. **Con las mismas rutas que en el repo**, así que lo que funciona en desarrollo funciona
+publicado sin reescribir nada, salvo dos añadidos al `index.html` copiado.
+
+La arma **`tools/build-pages.mjs`** (`npm run build:pages`, después de `build:web`), sólo con
+`node:fs`, `node:path` y `node:crypto`, en `dist/pages/` —ya en `.gitignore`—:
+
+1. Copia los ficheros de arriba.
+2. **Calcula la huella**: un SHA-256 del contenido de todos ellos, del que se usan los primeros
+   caracteres. Cambia un byte de cualquier fichero y cambia la huella.
+3. **Escribe `sw.js`** a partir de `pwa/sw.js`, con la lista de ficheros y la huella dentro. Así
+   cada versión tiene **su caché con su nombre** (`elnotas-<huella>`), y como el `sw.js` cambia, el
+   navegador se entera de que hay versión nueva.
+4. **Añade al `index.html` copiado** el registro del *service worker* y la meta de la versión.
+5. **Se niega a terminar** si el `index.html` tiene alguna ruta absoluta, o si falta un fichero de
+   los que la página enlaza: es el error que **sólo se notaría en el móvil**.
+
+#### Sin *service worker* en desarrollo
+
+**El registro sólo existe en la copia publicada**, porque lo añade el script; el `index.html` del
+repo no lo lleva. En `localhost` el navegador sí permite *service workers*, y uno registrado
+**serviría desde su caché lo que se está cambiando**: se edita un fichero, se recarga y sigue
+saliendo el viejo. Así no hace falta preguntar en qué máquina se está, y `src/` no se entera de que
+existe.
+
+#### La caché del navegador, que ya dio problemas
+
+Hay **dos cachés** y conviene no confundirlas: la del *service worker*, que controlamos, y la
+**HTTP** del navegador, que Pages rellena con una validez de unos diez minutos. Si el *service
+worker* nuevo descarga sus ficheros a través de la caché HTTP, puede **guardar en la caché nueva
+ficheros viejos**, con el nombre de la versión nueva: justo el problema que se vio en el móvil.
+Por eso **al instalarse descarga con `cache: "reload"`**, que salta la caché HTTP. El propio
+`sw.js` no tiene ese problema: el navegador lo comprueba siempre contra la red.
+
+#### Lo que se prueba en Node y lo que se verifica a mano
+
+**No hay pruebas nuevas en Node, y es lo esperado:** casi nada de la fase es lógica. El script se
+verifica ejecutándolo y **rompiendo a propósito** sus dos negativas (una ruta absoluta, un fichero
+que falta). El *service worker* y el manifiesto sólo se pueden probar en un navegador: primero en
+el ordenador, sirviendo `dist/pages/` en `localhost`, y después en el móvil, con una lista nueva,
+`test/ui/VERIFICACION-MANUAL-PWA.md`. **`persist()` es una llamada a una API que puede no existir o
+rechazar**: va dentro de su frontera y en la lista de `check:fronteras` si hace falta.
+
+#### Fase 6 terminada
+
+1. **`npm run check` en verde**, sin dependencias nuevas y **sin tocar el core**.
+2. **Rutas relativas** en `index.html`, y la app funcionando igual con `python3 -m http.server`.
+3. **El manifiesto y los iconos** enlazados desde `index.html`.
+4. **`npm run build:pages`** arma `dist/pages/` con la huella, y sus dos negativas rotas a propósito.
+5. **El *service worker***: lo guarda todo con `cache: "reload"`, sirve sin conexión, entra con
+   `skipWaiting` y borra las cachés viejas. **En desarrollo no se registra.**
+6. **`persist()`** al arrancar, y **la versión** en la configuración.
+7. **Probado en el ordenador**, sirviendo `dist/pages/` en `localhost`: se instala, funciona sin
+   conexión y se actualiza.
+8. **La receta de GitHub Actions**, y el usuario hace el merge, el push y activa Pages.
+9. **La lista del móvil, escrita y pasada**: se instala con su icono y su nombre, abre a pantalla
+   completa con la pantalla de carga azul, funciona en modo avión, se actualiza sola tras un push
+   (en la segunda apertura, con la versión nueva en la configuración), gira en cada vista y las
+   notas sobreviven a cerrarla y volver a abrirla.
+
+#### Lo que NO entra en la Fase 6
+
+- **Exportar e importar las notas** — pendiente en `TAREAS.md`, sin fase asignada.
+- **Un aviso de versión nueva**, el icono *maskable* y bloquear la orientación (descartados arriba).
+- **Un dominio propio**: la dirección es la de Pages.
+- **Cambiar dónde se guardan las notas**: siguen en `localStorage`, ahora el del sitio publicado.
+- **Todo lo que ya estaba fuera**: la carpeta del usuario y OPFS, los shells y el sync.
 
 ---
 
