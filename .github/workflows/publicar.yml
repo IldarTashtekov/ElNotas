@@ -1,0 +1,49 @@
+# Publica la app en GitHub Pages cada vez que se sube a main: la comprueba, la
+# compila, arma la carpeta publicada y la sube. Si `npm run check` falla, no se
+# publica nada y en el móvil sigue la versión anterior. También se lanza a mano,
+# con «Run workflow» en la pestaña Actions del repo.
+name: Publicar
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Leer el repo y publicar en Pages; nada más.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Dos publicaciones seguidas no se pisan: la segunda espera a que acabe la primera.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # La misma versión de Node que en el ordenador de casa.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      # Exactamente lo de package-lock.json: no instala nada nuevo.
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build:web
+      - run: npm run build:pages
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/pages
+
+      - id: despliegue
+        uses: actions/deploy-pages@v5
