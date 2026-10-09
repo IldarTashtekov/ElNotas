@@ -6,6 +6,14 @@
     <title>ElNotas</title>
 
     <!--
+      Lo que hace falta para instalarla en el móvil: el manifiesto y el icono. La
+      barra de estado del móvil, siempre azul: es el --accent claro de base.css.
+    -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icono/icono-192.png" />
+    <meta name="theme-color" content="#3552d6" />
+
+    <!--
       La app se carga sin bundler: el JavaScript que emite `npm run build:web` en
       dist/web/, tal cual. Este mapa resuelve los alias entre módulos y tiene que
       calcar el campo "imports" de package.json.
