@@ -112,6 +112,11 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 
 ## Hoja de resultados
 
+**2026-10-10: el usuario dio esta lista por pasada**, tras instalar la app publicada en su móvil y
+probarla, **sin anotar paso a paso**: por eso las tablas de abajo siguen vacías. Se había juntado
+con las demás pendientes en `VERIFICACION-SENTADA.md`. La próxima pasada se anota aquí, como
+siempre.
+
 ### Pasada 1 — escritorio
 
 | | |

@@ -2862,9 +2862,10 @@ demás de esta sección.
 tsconfig.web.json`) compila `src/` a `dist/web/` en **ESM**, sin empaquetar nada. `index.html`, en
 la raíz del repo, declara un `<script type="importmap">` que **calca el campo `imports`** de
 `package.json` —`#core/index`, `#storage/index`, `#platform/index` y `#ui/index`, cada uno a su
-`/dist/web/…/index.js`— y carga `dist/web/platform/web/main.js` como módulo. Se sirve con
+`./dist/web/…/index.js`— y carga `./dist/web/platform/web/main.js` como módulo. Se sirve con
 cualquier servidor estático desde la raíz: `python3 -m http.server 8000` (y, para abrirla desde
-el móvil, `--bind 0.0.0.0` y la IP del ordenador). `dist/` está en `.gitignore`.
+el móvil, `--bind 0.0.0.0` y la IP del ordenador). `dist/` está en `.gitignore`. Publicada, la
+sirve GitHub Pages desde la carpeta que arma `npm run build:pages` (§9.12).
 
 **El `importmap` solo NO bastaba, y eso contradijo lo que decía este documento.** §9.10 cerró el
 bundler el 2026-09-27 con el argumento de que el `importmap` estaba «ya probado en el repo», en el
@@ -2894,8 +2895,9 @@ entra, porque no lo carga ningún navegador (§8.3).
 **Coste admitido:** los alias se declaran **dos veces**, en `package.json` y en el `importmap`. Un
 alias nuevo que se olvide en `index.html` no lo caza nada automático; se nota al abrir la app.
 
-**Las rutas de `index.html` pasan a relativas en la Fase 6** (`./dist/web/…`), porque GitHub
-Pages sirve la app en una subcarpeta (§9.12).
+**Las rutas de `index.html` son relativas desde la Fase 6** (`./dist/web/…`, `8f44d2d`), porque
+GitHub Pages sirve la app en una subcarpeta, `/ElNotas/` (§9.12). Una ruta absoluta funcionaría en
+casa y fallaría publicada; `npm run build:pages` se niega a armar la carpeta si encuentra una.
 
 ---
 
@@ -2981,9 +2983,9 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   las tres preguntas del editor (§9.10).
 
 - **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08, con deuda** —las listas de Lienzo y Relaciones,
-  sin pasar, pendientes en `TAREAS.md` junto a las dos de la Fase 4—. Planificada el 2026-10-03 con
-  el usuario. Un lienzo libre con nodos y
-  relaciones, y la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo, Fase 5 ·
+  sin pasar—, **saldada el 2026-10-10**, cuando el usuario las dio por pasadas tras probar la app
+  instalada. Planificada el 2026-10-03 con el usuario. Un lienzo libre con nodos y relaciones, y
+  la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo, Fase 5 ·
   Lienzo y Fase 5 · Relaciones** (§9.11). **Fase 5 · Modelo, ✅ HECHA el 2026-10-03**, con **643
   pruebas** (532 al empezar): los Diagramas ya se operan en el core. **Fase 5 · Lienzo, código
   hecho el 2026-10-04 y sin cerrar**, con **693**: la vista, el corcho, los pósits y los
@@ -2992,12 +2994,15 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   Iba a cerrarse con todas las listas manuales pendientes pasadas en una sentada; **el usuario la
   cerró el 2026-10-08 sin pasarlas**, para empezar la Fase 6, con **723 pruebas** (§9.11).
 
-- **Fase 6 — PWA. Planificada el 2026-10-08, sin empezar.** Que ElNotas se instale en el móvil
+- **Fase 6 — PWA. ✅ CERRADA el 2026-10-10.** Planificada el 2026-10-08, construida el 2026-10-09
+  y publicada el 2026-10-10 en `https://ildartashtekov.github.io/ElNotas/`, con **725 pruebas**.
+  Que ElNotas se instale en el móvil
   como una app —icono, pantalla completa, sin conexión, actualizándose sola— sin depender del
   ordenador de casa: manifiesto, iconos, un *service worker* en `pwa/sw.js`, un script que arma la
   carpeta publicada y GitHub Pages, publicada por GitHub Actions al subir a `main`. **Sin
-  dependencias nuevas y sin tocar el core.** Las doce decisiones, el porqué y el criterio de cierre,
-  en §9.12.
+  dependencias nuevas y sin tocar el core.** Las doce decisiones, el porqué, el criterio de cierre
+  y cómo quedó, en §9.12. **Con ella, el usuario dio por pasadas las cuatro listas pendientes de las
+  Fases 4 y 5**; de la deuda de la Fase 4 quedan sólo las tres preguntas del editor.
 
 ### 9.3 Las operaciones de contenido
 
@@ -3752,6 +3757,10 @@ entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si
 sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
 decisión aunque la fase esté cerrada.
 
+**El 2026-10-10 el usuario dio las dos listas por pasadas**, tras instalar la app de la Fase 6 en
+su móvil y probarla, **sin anotar paso a paso** (§9.12). De la deuda de la Fase 4 quedan **las tres
+preguntas**, que piden usar la app varios días.
+
 ### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo y Relaciones, código hecho y sin cerrar; cerrada el 2026-10-08 con deuda)*
 
 Al estilo de §9.10, y **escrito antes de que existiera una línea de código de diagramas**. ⚠️ **Hoy
@@ -4295,7 +4304,11 @@ la Fase 6, sabiendo que el móvil —donde más puede fallar— sigue sin verifi
 cierra el menú que acaba de abrir (`355be4a`, `DiagramCanvas.ts`) y «Datos» va abajo del todo de
 la configuración (`e8017bd`). **723 pruebas** al cerrarla.
 
-### 9.12 La Fase 6: la PWA *(planificada el 2026-10-08; sin empezar)*
+**La deuda se saldó el 2026-10-10:** el usuario dio por pasadas las listas de Lienzo y Relaciones
+tras probar la app instalada (§9.12), sin anotar paso a paso. El móvil, que era lo que quedaba sin
+ver, es justo donde la probó.
+
+### 9.12 La Fase 6: la PWA *(planificada el 2026-10-08; construida el 2026-10-09; cerrada el 2026-10-10)*
 
 **Qué es:** que ElNotas se **instale en el móvil como una app** —icono, pantalla completa, sin
 conexión, actualizándose sola— **sin depender del ordenador de casa**. Hasta ahora se sirve con
@@ -4438,8 +4451,8 @@ dominio. Con `python3 -m http.server` la raíz es el repo y funciona; en Pages l
 `/ElNotas/`, así que `/dist/web/…` apuntaría a `ildartashtekov.github.io/dist/web/…`, que no
 existe. **Pasan a relativas** (`./dist/web/…`), en el `importmap`, en el `<script>` de entrada y
 en los estilos: se resuelven contra la dirección de la página y funcionan en los dos sitios. El
-manifiesto, igual: `start_url` y `scope` son `"./"`. Comprobado el 2026-10-08: en `src/ui` y `src/platform` no hay
-otras rutas absolutas.
+manifiesto, igual: `start_url` y `scope` son `"./"`. Comprobado el 2026-10-08: en `src/ui` y
+`src/platform` no hay otras rutas absolutas.
 
 #### La carpeta publicada: un trozo del repo con su misma forma
 
@@ -4503,6 +4516,57 @@ rechazar**: va dentro de su frontera y en la lista de `check:fronteras` si hace 
    completa con la pantalla de carga azul, funciona en modo avión, se actualiza sola tras un push
    (en la segunda apertura, con la versión nueva en la configuración), gira en cada vista y las
    notas sobreviven a cerrarla y volver a abrirla.
+
+#### Construida y cerrada *(2026-10-09 y 2026-10-10)*
+
+En `8f44d2d`, `d007a3d`, `ccd94c6`, `45b6242`, `7791e24`, `926b8fd` y `af6dcf4`, uno por tarea,
+con **725 pruebas** (723 al empezar: las dos nuevas son de `versionLine`), **ninguna dependencia
+nueva** y **el core sin tocar**. Publicada el 2026-10-10 en
+`https://ildartashtekov.github.io/ElNotas/`, con la huella `c139fb76`: **la misma que sale en
+casa**, así que lo publicado es exactamente lo probado. El usuario la instaló en su móvil, la probó
+y **la dio por cerrada el 2026-10-10**, satisfecho, **sin anotar paso a paso** la lista del móvil
+(punto 9). Con ella dio por pasadas también las cuatro listas pendientes de las Fases 4 y 5, que
+antes se habían juntado en un solo recorrido, `test/ui/VERIFICACION-SENTADA.md`, con los 187 pasos
+de las cinco listas, cada uno con su código de origen. **No consta que se viera el bloque F**, la
+actualización en el móvil: necesita publicar un cambio. En el ordenador sí se vio (abajo).
+
+**Cómo se verificó el *service worker*.** El navegador del panel de Claude **no deja registrar
+*service workers***: la petición del script ni llega al servidor, en `127.0.0.1` y en `localhost`.
+Se verificó en **el Brave del usuario**, sirviendo la carpeta publicada en `localhost:8733/ElNotas/`
+y mirando el registro del servidor: al instalarse pide los 83 ficheros; después, la app no pide
+nada; con otra huella publicada, el `sw.js` nuevo **vuelve a bajar los 83 del servidor, con 200 y
+ni un 304** —`cache: "reload"` salta la caché HTTP, que era el problema del móvil—, y en *Cache
+storage* queda sólo la caché nueva. También se instaló como app desde Brave.
+
+**Lo que se apartó del plan, y por qué:**
+
+- **La barra de estado es azul siempre** (`<meta name="theme-color" content="#3552d6">`), y no del
+  color del fondo de cada modo, que fue lo propuesto. *Decidido por el usuario el 2026-10-09.* El
+  `theme_color` del manifiesto también es azul, así que la barra no cambia entre la pantalla de
+  carga y la app.
+- **El azul está repetido fuera de `base.css`**: en el manifiesto y en `index.html`, porque ninguno
+  de los dos lee variables de CSS. Rompe la regla de que los colores viven sólo en `base.css`;
+  pendiente en `TAREAS.md`.
+- **`build:pages` se hizo en dos commits**: el primero arma la carpeta, la huella y la versión; el
+  del *service worker* le añade escribir `sw.js` y su registro, porque ahí es donde existe. La
+  huella cuenta también `pwa/sw.js`, que no se publica tal cual.
+- **El registro del *service worker* es un `<script>` en línea** que el script añade al
+  `index.html` copiado; si falla, lo dice en la consola.
+- **`persist()` no va en un `try` ni en `check:fronteras`**: se llama con `navigator.storage?.persist()`
+  y su rechazo lo recoge un `.catch`. Sin HTTPS `navigator.storage` no existe y no se llama; con él,
+  la llamada no lanza. No puede escaparse nada, así que **las fronteras siguen siendo quince**. El
+  plan decía «si hace falta»: no hizo falta.
+- **La prueba en el ordenador (punto 7) se hizo dentro del punto 5**, y no como tarea aparte.
+- **Las versiones de las piezas de GitHub se comprobaron el día de escribir la receta**:
+  `checkout@v7`, `setup-node@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`. De memoria habrían
+  salido unas de dos años antes. Y la receta se **simuló** en una copia limpia del repo: `npm ci`,
+  las 725 pruebas, `build:web` y `build:pages`.
+- **La primera publicación falló en el último paso**, porque el push llegó antes de activar Pages;
+  relanzada a mano con *Run workflow*, publicó. Es lo que pasa si se hace en ese orden.
+- **Node 20 en la receta**, por ser el de casa, aunque dejó de tener soporte en abril de 2026.
+  Pendiente en `TAREAS.md`.
+- **El merge a `main` fue un *fast-forward*** desde `a20dc75`, y **la rama `rediseno-arquitectura`
+  se borró**: desde la Fase 6 se trabaja en `main`.
 
 #### Lo que NO entra en la Fase 6
 

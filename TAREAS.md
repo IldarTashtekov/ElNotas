@@ -530,7 +530,9 @@ validación de esquema, y la escritura condicional.
 manuales sin pasar** y **las tres preguntas sin contestar**, abajo, como pendientes. No se
 marcan como hechas. **532 pruebas** al cerrarla. **La parte móvil de esa deuda se pasa DESPUÉS de
 la Fase 5**, por decisión del usuario el 2026-10-03, y desde el 2026-10-04 **en la misma sentada
-que las listas del lienzo y de las relaciones** (ver *Fase 5*, abajo).
+que las listas del lienzo y de las relaciones** (ver *Fase 5*, abajo). **El 2026-10-10 el usuario
+dio las dos listas por pasadas** tras probar la app instalada (*Fase 6*); **de la deuda queda sólo
+contestar las tres preguntas.**
 
 **Estado el 2026-09-29:** todo el código de las dos partes está hecho y commiteado en la rama
 `rediseno-arquitectura`, con `npm run check` en verde y **489 pruebas** (la fase empezó con
@@ -550,7 +552,7 @@ una con su criterio de cierre en `ARCHITECTURE.md` §9.10 y la navegación que l
 en §7.4. Dentro de cada parte el orden fue **de abajo arriba y en rebanada vertical**, como en las
 fases 1 y 2. **Ninguna de las dos tocó el core.**
 
-#### Fase 4 · Contextos — código hecho, lista manual sin pasar
+#### Fase 4 · Contextos ✅ CERRADA el 2026-10-10: el usuario dio la lista por pasada
 
 - [x] **`src/platform/` nace: `Clock` e `IdGenerator` reales, y la composición.** ✅ `473f566`.
       `SystemClock`, `CryptoIdGenerator` (con `getRandomValues`, **no `randomUUID`**, que sólo
@@ -578,7 +580,10 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
 - [x] **Reconciliación de listas por clave**, comprobada. ✅ `296dd1b`. Punto 7. Contra una
       interfaz mínima de contenedor, probada en Node. La lista de ventanas de la configuración va
       por **posición + contenido** porque se permiten duplicados. → `ARCHITECTURE.md` §7.5
-- [ ] **La lista de verificación manual, escrita y pasada** en escritorio y en móvil. Punto 8.
+- [x] **La lista de verificación manual, escrita y pasada** en escritorio y en móvil. Punto 8.
+      ✅ **Dada por pasada por el usuario el 2026-10-10**, tras probar la app instalada en su
+      móvil, **sin anotar paso a paso**; junta con las demás en `test/ui/VERIFICACION-SENTADA.md`.
+      Lo de abajo es cómo estaba hasta entonces.
       **Escrita** (`test/ui/VERIFICACION-MANUAL.md`, `70aeeb6`). **Sin pasar entera**: el usuario
       hizo una revisión parcial y no la confirma, y la hoja de resultados está vacía. **Esto es
       lo que tiene abierta Fase 4 · Contextos.** *Puesta al día el 2026-10-03* con lo construido
@@ -588,7 +593,7 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
 - [x] **`npm run check` en verde y el recuento anotado.** Punto 9: **423** al terminar el código de
       esta parte.
 
-#### Fase 4 · Notas — código hecho, lista manual y preguntas pendientes
+#### Fase 4 · Notas — lista dada por pasada el 2026-10-10; quedan las tres preguntas
 
 - [x] **La vista nota**: se abre tocando una nota o con «+ Nota», que ya crea y entra; exit y
       atrás vuelven a la misma ventana. ✅ `6fd2667`. Punto 1. El atrás lo comparten la vista
@@ -620,8 +625,9 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       ve se perderá al cerrar, y **sólo informa**. `main.ts` lo guarda si llega antes de montar
       la UI.
 - [x] **Validar el esquema de lo que se lee del disco**, también al final. ✅ `8e2dba3`. Punto 8.
-- [ ] **La lista de verificación manual del editor, escrita y pasada** en escritorio y en móvil.
-      Punto 10. **Escrita** (`test/ui/VERIFICACION-MANUAL-EDITOR.md`, `9eec14d`). **Sin pasar**,
+- [x] **La lista de verificación manual del editor, escrita y pasada** en escritorio y en móvil.
+      ✅ **Dada por pasada por el usuario el 2026-10-10**, como la de Contextos, sin anotar paso a
+      paso. Punto 10. **Escrita** (`test/ui/VERIFICACION-MANUAL-EDITOR.md`, `9eec14d`). **Sin pasar**,
       con la hoja de resultados vacía. *Puesta al día el 2026-10-03* (C7b, D4b). **Sigue
       pendiente, por decisión del usuario el 2026-10-03.**
 - [ ] **Contestar por escrito las tres preguntas de §9.10** —`move`, `indent`/`outdent`, y si el
@@ -655,7 +661,7 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       quinto:** la app publicada de la Fase 6 es **otro origen** y empieza vacía; no ve lo escrito
       en la red de casa. **El usuario acepta perderlo** (`ARCHITECTURE.md` §9.12).
 
-### Fase 5 — Diagramas ✅ CERRADA el 2026-10-08, por decisión del usuario y CON DEUDA
+### Fase 5 — Diagramas ✅ CERRADA el 2026-10-08, con deuda; la deuda, saldada el 2026-10-10
 
 **Cerrada el 2026-10-08 sin pasar las listas de Lienzo y Relaciones**, que siguen abajo como
 pendientes, **no como hechas**, junto a las dos de la Fase 4. El usuario la cerró para empezar la
@@ -672,7 +678,13 @@ cierre de cada parte, en `ARCHITECTURE.md` §9.11; lo que cambia en la navegaci�
 con **693**, y **Fase 5 · Relaciones, código hecho el mismo día** con **712**; **las dos sin
 cerrar**, con su lista manual escrita y sin pasar.
 
-**Lo que queda pendiente: las cuatro listas**, que ya no cierran ninguna fase. Qué verifica cada
+✅ **El 2026-10-10 el usuario dio las cuatro listas por pasadas**, tras instalar y probar la app
+en su móvil (*Fase 6*, abajo), **sin anotar paso a paso**. Antes se habían juntado las cinco
+listas pendientes —éstas cuatro y la de la PWA— en un solo recorrido,
+`test/ui/VERIFICACION-SENTADA.md`, que queda para la próxima vez. Lo de abajo es cómo estaba hasta
+entonces.
+
+**Lo que quedaba pendiente: las cuatro listas**, que ya no cerraban ninguna fase. Qué verifica cada
 una:
 
 | Lista | Dónde | Al pasarla queda verificado |
@@ -723,7 +735,7 @@ fase se cerró con ellas pendientes**, sin la sentada.
       **643**. Una no se puede romper —`setNodeText` sobre un nodo-nota: quitarla no compila—, y
       una prueba se corrigió al romperla (`nodes: []`). `ARCHITECTURE.md` §9.11.
 
-#### Fase 5 · Lienzo — todo menos las líneas: código hecho, lista manual sin pasar
+#### Fase 5 · Lienzo — todo menos las líneas ✅ CERRADA el 2026-10-10: el usuario dio la lista por pasada
 
 Cómo quedó, y las decisiones tomadas al construirlo, en `ARCHITECTURE.md` §9.11 → *Fase 5 ·
 Lienzo: código hecho, sin cerrar*. **Cambio de plan aceptado por el usuario:** los menús de nodo y
@@ -751,13 +763,14 @@ tarea propia**.
       en todos los contextos del diagrama, y entrando en ella—; título en directo; «Nota perdida»;
       y el nivel extra de navegación ventana → diagrama → nota, con lo de encima apilado y el
       arreglo de la carrera del `backStack`. ✅ `1997ace`.
-- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil del
-      usuario.** **Escrita** (`test/ui/VERIFICACION-MANUAL-LIENZO.md`, `12be692`). **Sin pasar**:
+- [x] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil del
+      usuario.** ✅ **Dada por pasada por el usuario el 2026-10-10**, tras probar la app instalada,
+      sin anotar paso a paso. **Escrita** (`test/ui/VERIFICACION-MANUAL-LIENZO.md`, `12be692`). **Sin pasar**:
       se pasa al final de la Fase 5 junto a las demás, por decisión del usuario el 2026-10-04
       (arriba). **Esto es lo que tiene abierta Fase 5 · Lienzo.**
 - [x] **`npm run check` en verde y el recuento anotado**: **693** (643 al empezar).
 
-#### Fase 5 · Relaciones — las líneas: código hecho, lista manual sin pasar
+#### Fase 5 · Relaciones — las líneas ✅ CERRADA el 2026-10-10: el usuario dio la lista por pasada
 
 Cómo quedó, el fallo que salió al probarlo y las decisiones tomadas al construirlo, en
 `ARCHITECTURE.md` §9.11 → *Fase 5 · Relaciones: código hecho, sin cerrar*. Sin tocar el core ni
@@ -776,7 +789,8 @@ Cómo quedó, el fallo que salió al probarlo y las decisiones tomadas al constr
       borrar; y el trazo invisible grueso para el dedo. ✅ `e362682`.
 - [x] **El texto a lo largo de la línea** (`<textPath>`), sin salir boca abajo y editado con un
       campo encima. El último paso. ✅ `4ad85ba`.
-- [ ] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil.**
+- [x] **Su lista de verificación manual, escrita y pasada en escritorio Y en el móvil.**
+      ✅ **Dada por pasada por el usuario el 2026-10-10**, sin anotar paso a paso.
       **Escrita** (`test/ui/VERIFICACION-MANUAL-RELACIONES.md`, `74c356e`). **Sin pasar**: va en la
       sentada de las cuatro listas (arriba). **Esto es lo que tiene abierta Fase 5 · Relaciones.**
 - [x] **`npm run check` en verde y el recuento anotado**: **712** (693 al empezar).
@@ -808,12 +822,20 @@ Cómo quedó, el fallo que salió al probarlo y las decisiones tomadas al constr
 - [ ] **¿Etiquetas de texto junto a los «+»?** Su boceto las lleva. **Pregunta abierta al usuario,
       sin contestar**; hasta que conteste, los botones siguen sin texto.
 
-### Fase 6 — PWA: instalar la app en el móvil. Planificada el 2026-10-08, sin empezar
+### Fase 6 — PWA: instalar la app en el móvil ✅ CERRADA el 2026-10-10
 
 **Qué es:** que ElNotas se instale en el móvil como una app —icono, pantalla completa, sin
 conexión, actualizándose sola— sin depender del ordenador de casa. Sin dependencias nuevas y sin
 tocar el core. Piezas: manifiesto, iconos, *service worker* y publicarla con HTTPS. El diseño, el
 porqué de cada decisión y el criterio de cierre, en `ARCHITECTURE.md` §9.12.
+
+**Construida el 2026-10-09 y publicada el 2026-10-10** en
+**https://ildartashtekov.github.io/ElNotas/**, en siete commits (`8f44d2d`..`af6dcf4`), con
+**725 pruebas**, **ninguna dependencia nueva** y **el core sin tocar**. El usuario la instaló en
+su móvil, la probó y **la dio por cerrada el 2026-10-10**, satisfecho con el funcionamiento, sin
+anotar paso a paso la lista del móvil (ver la tarea 9). Cómo quedó y lo que se apartó del plan, en
+`ARCHITECTURE.md` §9.12 → *Construida*. Desde el merge, **el trabajo va en `main`**: la rama
+`rediseno-arquitectura` llegó a `main` sin conflictos (*fast-forward*) y se borró.
 
 **Antes de empezarla, decidido con el usuario el 2026-10-08:** las listas manuales de la Fase 5
 **se quedan como pendientes**, como las de la Fase 4, y la Fase 5 se cierra **con deuda** (arriba).
@@ -844,24 +866,42 @@ porqué de cada decisión y el criterio de cierre, en `ARCHITECTURE.md` §9.12.
 
 **Las tareas, en orden:**
 
-- [ ] **1. Rutas relativas en `index.html`**: el `importmap`, el `<script>` de entrada y los
-      estilos. La app sigue funcionando igual con `python3 -m http.server`.
-- [ ] **2. `manifest.webmanifest`** en la raíz, con los dos iconos, enlazado desde `index.html`
-      con `theme-color`.
-- [ ] **3. `tools/build-pages.mjs` y `npm run build:pages`**: arma `dist/pages/`, calcula la
-      huella, escribe `sw.js` e inyecta el registro y la meta de la versión. **Se niega** con una
-      ruta absoluta o un fichero que falte; las dos negativas, **rotas a propósito**.
-- [ ] **4. `pwa/sw.js`**: precarga con `cache: "reload"`, sirve sin conexión, `skipWaiting` y
-      borra las cachés viejas.
-- [ ] **5. `persist()` en `main.ts`**, dentro de su frontera (y en `check:fronteras` si hace
-      falta), y **la versión en la configuración**.
-- [ ] **6. Probar `dist/pages/` en `localhost`**: se instala, funciona sin conexión y se
-      actualiza.
-- [ ] **7. `.github/workflows/publicar.yml`**: Node 20, `npm ci`, `check`, `build:web`,
+- [x] **1. Rutas relativas en `index.html`**: el `importmap`, el `<script>` de entrada y los
+      estilos. ✅ `8f44d2d`. Probada servida desde la raíz y desde una subcarpeta `/ElNotas/`;
+      con la ruta vieja, la subcarpeta da 404. En `src/` no había otras rutas absolutas.
+- [x] **2. `manifest.webmanifest`** en la raíz, con los dos iconos, enlazado desde `index.html`
+      con `theme-color`. ✅ `d007a3d`. ⚠️ **La barra de estado, azul siempre**, y no del color de
+      cada modo como se propuso: *decidido por el usuario el 2026-10-09*.
+- [x] **3. `tools/build-pages.mjs` y `npm run build:pages`**: arma `dist/pages/` (83 ficheros),
+      calcula la huella y escribe la versión. ✅ `ccd94c6`. **Se niega** con una ruta absoluta, un
+      fichero que falte o sin `dist/web/`; las negativas, **rotas a propósito**. La misma entrada
+      da la misma huella, en cualquier máquina. Escribir `sw.js` y su registro pasó a la tarea 4,
+      que es donde existe el *service worker*.
+- [x] **4. `pwa/sw.js`**: precarga con `cache: "reload"`, sirve sin conexión, `skipWaiting` y
+      borra las cachés viejas; `build:pages` lo escribe y registra sólo en la copia publicada.
+      ✅ `45b6242`. **Verificado en Brave del usuario** en `localhost`: se registra, guarda los 83
+      ficheros, funciona sin conexión, se instala, y al publicar otra huella entra la versión
+      nueva y desaparece la caché vieja, con los 83 ficheros bajados del servidor y ni un 304. El
+      navegador del panel de Claude **no deja registrar *service workers***: no sirve para esto.
+- [x] **5. `persist()` en `main.ts` y la versión en la configuración.** ✅ `7791e24`. `versionLine`,
+      pura, con 2 pruebas rotas a propósito: **725**. ⚠️ `persist()` **no** va en un `try` ni en
+      `check:fronteras`: si no existe no se llama y su rechazo lo recoge un `.catch`, así que no
+      puede escaparse nada. **Las fronteras siguen siendo quince.**
+- [x] **6. Probar la carpeta montada en `localhost`.** Cubierta con la verificación de la tarea 4
+      y la versión de la 5, vista en desarrollo y en la carpeta publicada.
+- [x] **7. `.github/workflows/publicar.yml`**: Node 20, `npm ci`, `check`, `build:web`,
       `build:pages`, `upload-pages-artifact` y `deploy-pages`; con `workflow_dispatch` y
-      `concurrency`.
-- [ ] **8. El usuario:** merge a `main`, `git push` y *Settings → Pages → Source: GitHub Actions*.
-- [ ] **9. `test/ui/VERIFICACION-MANUAL-PWA.md`**, escrita y pasada en el móvil.
+      `concurrency`. ✅ `926b8fd`. Versiones comprobadas en GitHub el 2026-10-09 —`checkout@v7`,
+      `setup-node@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`—, y la receta simulada en una
+      copia limpia del repo.
+- [x] **8. El usuario:** merge a `main`, `git push` y *Settings → Pages → Source: GitHub Actions*.
+      ✅ 2026-10-10. La primera publicación falló en el último paso porque el push llegó antes
+      de activar Pages; relanzada a mano, publicó. Lo publicado lleva la huella `c139fb76`, la
+      misma que sale en casa.
+- [x] **9. `test/ui/VERIFICACION-MANUAL-PWA.md`**, escrita (`af6dcf4`) y **dada por pasada por el
+      usuario el 2026-10-10**, tras instalar y probar la app en su móvil, **sin anotar paso a
+      paso**. Su bloque F —que se actualice sola en el móvil— necesita publicar un cambio, y no
+      consta que se viera.
 
 ### Sin fase asignada
 
@@ -870,6 +910,15 @@ porqué de cada decisión y el criterio de cierre, en `ARCHITECTURE.md` §9.12.
       la app publicada es otro origen y empieza vacía, y si se borran los datos de la app a mano
       —o con el «limpiar» de MIUI— se pierde todo. **`persist()` no protege de eso**: sólo impide
       que el navegador borre por su cuenta. Una copia fuera del navegador es lo único que lo cubre.
+- [ ] **Pasar de Node 20 a uno con soporte**, en casa y en la receta de publicación
+      (`.github/workflows/publicar.yml`) a la vez. Node 20 dejó de tener soporte en abril de 2026;
+      la Fase 6 lo dejó en 20 porque es el de casa y con el que pasan las pruebas. Se cierra
+      cuando las dos digan lo mismo y `npm run check` siga en verde.
+- [ ] **Los colores de la app, repetidos fuera de `base.css`**: el azul `#3552d6` (`--accent`) está
+      también en `manifest.webmanifest` y en la `theme-color` de `index.html`, porque ni el
+      manifiesto ni esa etiqueta leen variables de CSS. Si cambia `--accent`, hay que cambiarlos a
+      mano. Se cierra con una comprobación en `build:pages` que falle si no coinciden, o
+      decidiendo con el usuario que se aguanta.
 
 ### Infraestructura (`infra-agent`)
 

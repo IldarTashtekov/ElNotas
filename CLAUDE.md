@@ -20,17 +20,22 @@ tienen ya un motivo escrito y alternativas descartadas.
 pasa, compruébalo antes: `find src test -name '*.ts' | sort`, `npm run check`,
 `git log --oneline`.
 
-**Medido el 2026-10-08, tras `355be4a`:** `npm run check` en verde —sus seis pasos— con **723
-pruebas** (712 al acabar el código de Relaciones; las otras once, de «Borrar todo»). Líneas de
-`.ts` (`find <dir> -name '*.ts' | xargs cat | wc -l`): `src/core` 3148, `src/storage` 1687,
-`src/platform` 397, `src/ui` 4452; `test/` 9566.
+**Medido el 2026-10-10, tras `af6dcf4`:** `npm run check` en verde —sus seis pasos— con **725
+pruebas** (723 al empezar la Fase 6; las dos nuevas, de `versionLine`). Líneas de `.ts`
+(`find <dir> -name '*.ts' | xargs cat | wc -l`): `src/core` 3148, `src/storage` 1687,
+`src/platform` 412, `src/ui` 4473; `test/` 9575.
 *(Las cifras envejecen solas: si no cuadran, manda `npm test`, no este párrafo.)*
 
-**Fases 1 a 5 cerradas. La 4 y la 5, por decisión del usuario y CON DEUDA de verificación**
-(el 2026-10-03 y el 2026-10-08): **las cuatro listas manuales siguen sin pasar** —las dos de la
-Fase 4, la del lienzo y la de las relaciones— y las tres preguntas del editor, sin contestar;
-todo pendiente en `TAREAS.md` (ver *Plan por fases*). **Lo siguiente: la Fase 6, la PWA,
-planificada y sin empezar** (§9.12).
+**Fases 1 a 6 cerradas.** La 6, la PWA, el 2026-10-10: **la app está publicada en
+`https://ildartashtekov.github.io/ElNotas/`** y el usuario la usa instalada en su móvil (§9.12).
+**La deuda de verificación de las Fases 4 y 5 está saldada**: el 2026-10-10 el usuario dio por
+pasadas sus cuatro listas manuales tras probar la app instalada, **sin anotar paso a paso**. De
+esa deuda quedan **sólo las tres preguntas del editor**, sin contestar. **No hay fase siguiente
+planificada**: lo abierto está en `TAREAS.md` (ver *Plan por fases*).
+
+**Se trabaja en `main`**, que es también lo que se publica: **cada `push` a `main` publica la
+app** si `npm run check` pasa (`.github/workflows/publicar.yml`). La rama `rediseno-arquitectura`
+llegó a `main` el 2026-10-10 sin conflictos y se borró.
 
 Lo que hay en `src/`, de dentro afuera:
 
@@ -53,18 +58,27 @@ Lo que hay en `src/`, de dentro afuera:
 - **`src/platform/web/` — la composición.** `SystemClock` y `CryptoIdGenerator`, las únicas
   implementaciones de `Clock` e `IdGenerator`; `boot.ts`, que monta la pila entera;
   `LocalStorageWindows.ts`, la lista de ventanas; `resetStorage.ts`, el «Borrar todo»; y
-  `main.ts`, la entrada que carga `index.html`. Hoy se guarda en `LocalStorageBlobStore`.
+  `main.ts`, la entrada que carga `index.html`, que además pide el almacenamiento persistente y
+  lee la versión publicada. Hoy se guarda en `LocalStorageBlobStore`.
 - **`src/ui/` — vanilla.** Las cuatro vistas de §7.4 —la de diagrama, con su lienzo de pósits,
   nodos-nota y las relaciones entre ellos—, el editor con casillas anidadas y los avisos de
   `onCorrupt` y `onError`. Cómo está construida, en §7.5.
+
+**Fuera de `src/`, la PWA de la Fase 6** (§9.12): `manifest.webmanifest` y los iconos de
+`assets/icono/`; `pwa/sw.js`, el *service worker*, **en JavaScript plano y fuera de `src/` a
+propósito**; `tools/build-pages.mjs`, que arma `dist/pages/` —lo que se publica—, le pone la huella
+y escribe `sw.js` y su registro **sólo en la copia publicada**: en desarrollo no hay *service
+worker*; y `.github/workflows/publicar.yml`, la receta que publica.
 
 **Qué se prueba dónde:** *lo que exige la interfaz va en el contrato; lo que sólo tiene una
 implementación, en un fichero aparte*. Por eso el adaptador de memoria no tiene ni una prueba
 propia y el de fichero sí (§6.3). Si una prueba pudiera escribirse contra la interfaz, su sitio
 es el contrato. **En la UI, lo que decide la pantalla es una función pura con pruebas en Node;
-el DOM de encima es delgado y se verifica a mano** con las cuatro listas de `test/ui/`
-(`VERIFICACION-MANUAL.md`, `-EDITOR.md`, `-LIENZO.md` y `-RELACIONES.md`). No hay pruebas
-automáticas del DOM, a propósito.
+el DOM de encima es delgado y se verifica a mano** con las cinco listas de `test/ui/`
+(`VERIFICACION-MANUAL.md`, `-EDITOR.md`, `-LIENZO.md`, `-RELACIONES.md` y `-PWA.md`), que
+`VERIFICACION-SENTADA.md` junta en un solo recorrido. No hay pruebas automáticas del DOM, a
+propósito. **El navegador del panel de Claude no registra *service workers***: la PWA se prueba
+en un navegador de verdad (§9.12).
 
 **`DirectoryHandleBlobStore` se verificó a mano el 2026-09-13** (`test/storage/blobs/
 VERIFICACION-MANUAL.md`: Brave pasa las cinco secciones; Firefox, sólo OPFS). ⚠️ Se pasó sobre
@@ -73,8 +87,7 @@ vuelve a pasar la lista**; la única excepción registrada —mismo código una 
 comentarios— está en `TAREAS.md`.
 
 **Lo que NO existe todavía:** la carpeta del usuario y OPFS como destino de la app y el botón de
-«reconectar carpeta»; y la PWA de la Fase 6: el manifiesto, el *service worker* (`pwa/sw.js`),
-`npm run build:pages` y la receta de GitHub Actions.
+«reconectar carpeta»; y exportar e importar las notas.
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` sale con código 1 si no
 encuentra ningún `*.test.js` en `tmp-test/test/`, porque `node --test` sin ficheros imprime
@@ -113,9 +126,13 @@ test/              # LAS PRUEBAS, fuera de src/ y partidas por capa (espejo de s
 ├── core/          # ← domain/ (+ errors/) · app/ · migrations/
 ├── storage/       # ← contract-tests/ · memory/ · file/ · blobs/
 ├── platform/web/
-└── ui/            # ← incluye las cuatro listas de verificación manual: dos de la Fase 4 y dos de la 5
+└── ui/            # ← incluye las listas de verificación manual (Fases 4, 5 y 6) y la sentada que las junta
 
 index.html         # la página: carga dist/web/ con un importmap y los estilos, sin bundler (§8.6)
+manifest.webmanifest # lo que hace instalable la app (§9.12)
+assets/icono/      # el icono, 192 y 512, y su fuente
+pwa/sw.js          # el service worker, en JS plano; build:pages le pone delante la huella y la lista
+.github/workflows/ # publicar.yml: cada push a main publica en GitHub Pages
 ```
 
 - **Las pruebas van en `test/`, no al lado del código.** La carpeta es un **espejo** de `src/`:
@@ -514,10 +531,11 @@ implementación del lienzo y de las relaciones, en §9.11:
   lienzo, la de las relaciones y la deuda móvil de la Fase 4 (sus dos listas). *Decidido por el usuario el
   2026-10-04*, sabiendo el riesgo: si los gestos fallan en su móvil se descubre con las
   relaciones construidas encima, que usan los mismos gestos. **El 2026-10-08 el usuario cerró la
-  fase con ellas pendientes**, para empezar la Fase 6. §9.11.
+  fase con ellas pendientes**, para empezar la Fase 6, y **el 2026-10-10 las dio por pasadas** tras
+  probar la app instalada. §9.11.
 
-**De la PWA, la Fase 6** — *decididas con el usuario el 2026-10-08*. Planificada y sin empezar;
-el porqué y lo descartado, en §9.12:
+**De la PWA, la Fase 6** — *decididas con el usuario el 2026-10-08*, **todo construido**; el
+porqué, lo descartado y lo que se apartó del plan, en §9.12:
 
 - **GitHub Pages**, porque el repo es público: `https://ildartashtekov.github.io/ElNotas/`. Las
   rutas de `index.html` pasan a **relativas**, porque Pages sirve en una subcarpeta.
@@ -528,7 +546,8 @@ el porqué y lo descartado, en §9.12:
   la reabre**.
 - **Exportar e importar las notas queda fuera de la fase**, pendiente en `TAREAS.md`.
 - **Se pide almacenamiento persistente**, `navigator.storage.persist()`, en
-  `src/platform/web/main.ts`. No protege de que se borren los datos a mano.
+  `src/platform/web/main.ts`. No protege de que se borren los datos a mano. **No va en un `try`
+  ni en `check:fronteras`**: si no existe no se llama, y su rechazo lo recoge un `.catch`.
 - **El icono, tal cual** (`purpose: "any"`), sin versión *maskable*.
 - **El *service worker*, en JavaScript plano en `pwa/sw.js`**, fuera de `src/`: un sexto tsconfig
   con `WebWorker` sólo para él no compensa. La lista de ficheros y la huella las pone
@@ -541,6 +560,10 @@ el porqué y lo descartado, en §9.12:
 - **La orientación, libre**: sin `orientation` en el manifiesto.
 - **La pantalla de carga**: nombre «ElNotas» y fondo **`#3552d6`**, el azul de la app; el
   blanco daría un fogonazo en modo oscuro.
+- **La barra de estado del móvil, azul siempre** (`theme-color` `#3552d6`), también en modo oscuro.
+  *Decidido por el usuario el 2026-10-09*, frente a la propuesta de seguir el color de cada modo.
+  ⚠️ **El azul está repetido** en `manifest.webmanifest` y `index.html`, que no leen variables de
+  CSS: si cambia `--accent`, hay que cambiarlo a mano (pendiente en `TAREAS.md`).
 
 ## Fuera de alcance por ahora
 
@@ -568,25 +591,29 @@ desbloquearía están en `TAREAS.md` → *Ideas aparcadas*.
 - **Fase 3 — Fichero local. ✅ HECHA**, con **314**, y la lista manual pasada el 2026-09-13
   (§9.9).
 - **Fase 4 — UI, sólo web. ✅ CERRADA el 2026-10-03, por decisión del usuario y CON DEUDA**, con
-  **532 pruebas**. Partida en dos (§9.10): todo el código de Contextos y de Notas, hecho. ⚠️ **No
-  cumple su propio criterio:** el usuario la cerró sabiendo que faltan **las dos listas manuales**
-  (`test/ui/VERIFICACION-MANUAL.md` y `VERIFICACION-MANUAL-EDITOR.md`, sin pasar en escritorio
-  ni en móvil) y **las tres preguntas** del editor (`move`, `indent`/`outdent`, si anidar se
-  entiende solo), sin contestar. Siguen en `TAREAS.md` como pendientes, **no como hechas**. Lo
-  que queda sin verificar de verdad es sobre todo **el móvil**: arrastrar las fichas con el dedo
-  y el teclado de Android.
-- **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08, por decisión del usuario y CON DEUDA**, con
-  **723 pruebas** (§9.11). Partida en tres: **Fase 5 · Modelo** (core y `storage/`, sin pantalla),
+  **532 pruebas**. Partida en dos (§9.10): todo el código de Contextos y de Notas, hecho. Se cerró
+  sin **las dos listas manuales** (`test/ui/VERIFICACION-MANUAL.md` y
+  `VERIFICACION-MANUAL-EDITOR.md`), que **el usuario dio por pasadas el 2026-10-10** tras probar la
+  app instalada, sin anotar paso a paso. ⚠️ **Siguen sin contestar las tres preguntas** del editor
+  (`move`, `indent`/`outdent`, si anidar se entiende solo): pendientes en `TAREAS.md`, **no como
+  hechas**.
+- **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08, con deuda; saldada el 2026-10-10**, con **723
+  pruebas** (§9.11). Partida en tres: **Fase 5 · Modelo** (core y `storage/`, sin pantalla),
   **✅ HECHA el 2026-10-03, con 643 pruebas**; **Fase 5 · Lienzo** (todo menos las líneas), con el
   código hecho el 2026-10-04 y 693; y **Fase 5 · Relaciones**, con el código hecho el 2026-10-04 y
-  712. ⚠️ **Sus dos listas siguen sin pasar** (`test/ui/VERIFICACION-MANUAL-LIENZO.md` y
-  `-RELACIONES.md`), pendientes en `TAREAS.md` junto a las dos de la Fase 4, **no como hechas**.
-- **Fase 6 — PWA. Planificada el 2026-10-08, sin empezar** (§9.12): instalar la app en el móvil,
-  publicada en GitHub Pages. Nueve tareas, en `TAREAS.md`.
+  712. Sus dos listas (`test/ui/VERIFICACION-MANUAL-LIENZO.md` y `-RELACIONES.md`), **dadas por
+  pasadas por el usuario el 2026-10-10**, sin anotar paso a paso.
+- **Fase 6 — PWA. ✅ CERRADA el 2026-10-10**, con **725 pruebas** (§9.12): la app, instalable en el
+  móvil y publicada en GitHub Pages en cada `push` a `main`. Sin dependencias nuevas y sin tocar
+  el core. El *service worker* se verificó en el Brave del usuario; la lista del móvil
+  (`test/ui/VERIFICACION-MANUAL-PWA.md`), dada por pasada por el usuario, sin anotar paso a paso
+  —sin constancia de su bloque F, la actualización en el móvil—.
 
 **Lo que queda abierto**, con su registro en `TAREAS.md` → *Sin decidir*: **si OPFS entra en
 juego** y **qué pasa con lo guardado en `localStorage`** —notas y lista de ventanas— el día que
-cambie el destino, y con él qué borra «Borrar todo».
+cambie el destino, y con él qué borra «Borrar todo». Y, sin fase: **exportar e importar las
+notas**, **pasar de Node 20** —sin soporte desde abril de 2026— en casa y en la receta a la vez, y
+**los colores repetidos** fuera de `base.css`.
 
 ## Comandos
 
@@ -604,7 +631,16 @@ npm test                   # limpia tmp-test/, compila src/ y test/, EXIGE que h
 npm run build:web          # compila src/ a dist/web/ en ESM, para el navegador
 python3 -m http.server 8000                # y se abre http://localhost:8000
 python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000
+
+npm run build:pages        # tras build:web: arma dist/pages/, lo que se publica, con huella,
+                           # versión, sw.js y su registro. Se niega ante una ruta absoluta
 ```
+
+**Publicar es hacer `push` a `main`**: la receta de GitHub Actions comprueba, compila, arma
+`dist/pages/` y lo publica en `https://ildartashtekov.github.io/ElNotas/`. El `git push` lo hace el
+usuario: aquí está denegado en `.claude/settings.json`, a propósito. Para probar la carpeta
+publicada en casa, servir `dist/pages/` dentro de una subcarpeta en `localhost`, en un navegador
+de verdad.
 
 `?depurar` en la dirección deja `window.elnotas = { store, useCases }` en la consola; sin él no
 existe. `npm audit` da 0 vulnerabilidades.
