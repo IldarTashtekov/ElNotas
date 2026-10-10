@@ -871,7 +871,9 @@ anotar paso a paso la lista del móvil (ver la tarea 9). Cómo quedó y lo que s
       con la ruta vieja, la subcarpeta da 404. En `src/` no había otras rutas absolutas.
 - [x] **2. `manifest.webmanifest`** en la raíz, con los dos iconos, enlazado desde `index.html`
       con `theme-color`. ✅ `d007a3d`. ⚠️ **La barra de estado, azul siempre**, y no del color de
-      cada modo como se propuso: *decidido por el usuario el 2026-10-09*.
+      cada modo como se propuso: *decidido por el usuario el 2026-10-09*. **Revisado el
+      2026-10-11**: azul, en horizontal, hacía una L con la barra de navegación; ahora las barras
+      llevan el color del sistema (Fase 7).
 - [x] **3. `tools/build-pages.mjs` y `npm run build:pages`**: arma `dist/pages/` (83 ficheros),
       calcula la huella y escribe la versión. ✅ `ccd94c6`. **Se niega** con una ruta absoluta, un
       fichero que falte o sin `dist/web/`; las negativas, **rotas a propósito**. La misma entrada
@@ -903,6 +905,52 @@ anotar paso a paso la lista del móvil (ver la tarea 9). Cómo quedó y lo que s
       paso**. Su bloque F —que se actualice sola en el móvil— necesita publicar un cambio, y no
       consta que se viera.
 
+### Fase 7 — Refactor: ajustes de diseño y medir antes de tocar. Planificada el 2026-10-11, sin empezar
+
+**Qué es:** dos cosas. Arreglar lo que molesta al usar la app en el móvil, y revisar lo que se
+construyó por adelantado o puede no aguantar el volumen, **con números y no a ojo**. Si al medir
+algo resulta que no duele, el punto se cierra sin tocar código. **Negrita, cursiva, tachado y
+subrayado NO entran**, por decisión del usuario: están en *Sin fase asignada*. Falta reflejar
+la fase en el plan de `CLAUDE.md` y `ARCHITECTURE.md`, en el pase de documentación.
+
+#### Ajustes de diseño (pedidos por el usuario el 2026-10-11, con capturas del móvil)
+
+- [ ] **La barra de la nota, encima del teclado.** El teclado de Android la tapaba porque Chrome
+      no encoge la página al abrirlo. Hecho en el código: `interactive-widget=resizes-content` en
+      el `viewport` de `index.html`. **Falta verlo en el móvil**; si no basta, `visualViewport`.
+      La última línea de una nota larga no puede quedar bajo la barra: va con `position: sticky`
+      y ocupa su propio sitio, no con `fixed`.
+- [ ] **Quitar la L azul en horizontal.** Las barras del móvil, del color del sistema y no uno
+      propio: *decidido por el usuario el 2026-10-11*, y revisa el «azul siempre» del 2026-10-09
+      (Fase 6, tarea 2). Hecho en el código: fuera la `theme-color` de `index.html` y el
+      `theme_color` del manifiesto; el `background_color`, el de la pantalla de carga, sigue azul.
+      **Falta verlo en el móvil**: publicar, desinstalar y reinstalar, porque la app instalada saca
+      la barra del manifiesto. Es lo único que molesta en horizontal: las franjas a los lados se
+      quedan.
+- [ ] **Los puntos del lienzo, a la mitad de intensidad**, sin quitarlos: una variable nueva en
+      `base.css` (`--dim` al 50 %) que el lienzo usa en vez de `--dim`.
+- [ ] **Los nodos, menos alargados**, no cuadrados: el ancho de `.posit` en `diagrama.css` pasa de
+      `10rem` a `7rem`. El otro `10rem` de ese fichero es el campo del texto de una relación, y no
+      se toca.
+- [ ] **Texto más grande, opcional**: un ajuste en ⚙ que cambie el tamaño de letra de toda la app.
+
+#### Medir antes de tocar
+
+- [ ] **El arranque con muchas notas.** `boot` lo lee todo con `getAll` y guarda el estado entero
+      en memoria. Cronometrar con 1.000, 5.000 y 20.000 notas.
+- [ ] **El lienzo con muchos nodos y relaciones.** Medir con 50, 200 y 500 nodos. Si va lento, lo
+      primero es redibujar por partes; Snabbdom sigue con su propio disparador.
+
+#### Documentación
+
+- [ ] **Recortar `CLAUDE.md` a las reglas vigentes**, de 583 líneas a unas 150-200. La historia y
+      los porqués van a `ARCHITECTURE.md`, sin perder nada.
+- [ ] **Adelgazar `ARCHITECTURE.md` y `TAREAS.md`**: quitar duplicados y comprimir las fases
+      cerradas.
+
+**Fuera de esta fase, con disparador propio:** revisar los puertos cuando llegue su segundo uso
+real (carpeta, OPFS o Drive). Se hace al construir ese adaptador.
+
 ### Sin fase asignada
 
 - [ ] **Exportar e importar las notas (JSON).** Fuera de la Fase 6 por decisión del usuario el
@@ -915,10 +963,17 @@ anotar paso a paso la lista del móvil (ver la tarea 9). Cómo quedó y lo que s
       la Fase 6 lo dejó en 20 porque es el de casa y con el que pasan las pruebas. Se cierra
       cuando las dos digan lo mismo y `npm run check` siga en verde.
 - [ ] **Los colores de la app, repetidos fuera de `base.css`**: el azul `#3552d6` (`--accent`) está
-      también en `manifest.webmanifest` y en la `theme-color` de `index.html`, porque ni el
-      manifiesto ni esa etiqueta leen variables de CSS. Si cambia `--accent`, hay que cambiarlos a
-      mano. Se cierra con una comprobación en `build:pages` que falle si no coinciden, o
-      decidiendo con el usuario que se aguanta.
+      también en el `background_color` de `manifest.webmanifest` (la pantalla de carga), porque el
+      manifiesto no lee variables de CSS. Si cambia `--accent`, hay que cambiarlo a mano. Desde
+      el 2026-10-11 es el único sitio: la `theme-color` de `index.html` y el `theme_color` se
+      quitaron (Fase 7). Se cierra con una comprobación en `build:pages` que falle si no
+      coinciden, o decidiendo con el usuario que se aguanta.
+- [ ] **Negrita, cursiva, tachado y subrayado en el editor.** *Pedido por el usuario el
+      2026-10-11*, tras usar la app en el móvil. **Fuera de la fase de refactor, por decisión
+      suya**: va aparte. Hoy el texto de una línea es una cadena plana en el
+      modelo, así que dar formato a un trozo toca el core, el formato en disco con su migración
+      y el editor. Queda por decidir con el usuario cómo se guarda el formato y cómo se aplica
+      desde la barra (botones, o seleccionar texto antes).
 
 ### Infraestructura (`infra-agent`)
 
