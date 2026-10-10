@@ -910,7 +910,8 @@ anotar paso a paso la lista del móvil (ver la tarea 9). Cómo quedó y lo que s
 **Qué es:** dos cosas. Arreglar lo que molesta al usar la app en el móvil, y revisar lo que se
 construyó por adelantado o puede no aguantar el volumen, **con números y no a ojo**. Si al medir
 algo resulta que no duele, el punto se cierra sin tocar código. **Negrita, cursiva, tachado y
-subrayado NO entran**, por decisión del usuario: están en *Sin fase asignada*. Falta reflejar
+subrayado NO entran, ni el texto más grande**, por decisión del usuario: están juntos en *Sin
+fase asignada*. Falta reflejar
 la fase en el plan de `CLAUDE.md` y `ARCHITECTURE.md`, en el pase de documentación.
 
 #### Ajustes de diseño (pedidos por el usuario el 2026-10-11, con capturas del móvil)
@@ -937,7 +938,6 @@ la fase en el plan de `CLAUDE.md` y `ARCHITECTURE.md`, en el pase de documentaci
       Medido antes y después: uno corto pasa de 160 × 39 a 128 × 39 px, y uno de cuatro renglones
       de 160 × 100 a 128 × 121, porque el texto que no cabe a lo ancho crece hacia abajo. Se
       probó `7rem` (112 × 141 el largo) y el usuario prefirió `8rem` por eso.
-- [ ] **Texto más grande, opcional**: un ajuste en ⚙ que cambie el tamaño de letra de toda la app.
 
 #### Medir antes de tocar
 
@@ -979,6 +979,11 @@ real (carpeta, OPFS o Drive). Se hace al construir ese adaptador.
       modelo, así que dar formato a un trozo toca el core, el formato en disco con su migración
       y el editor. Queda por decidir con el usuario cómo se guarda el formato y cómo se aplica
       desde la barra (botones, o seleccionar texto antes).
+      **Va junto con el texto más grande** (opcional), *decidido por el usuario el 2026-10-11*:
+      salió de la Fase 7. Dos caminos, sin elegir: probar antes el escalado de texto de Chrome en
+      Android (Accesibilidad), sin código; o un ajuste en ⚙ con tres pasos (100, 115 y 130 %) que
+      cambie el tamaño base de la página —crece todo junto, como un zoom—, guardado por
+      dispositivo en `localStorage` con su clave `elnotas:`, y con dos fronteras nuevas.
 
 ### Infraestructura (`infra-agent`)
 
