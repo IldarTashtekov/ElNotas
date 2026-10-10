@@ -24,7 +24,7 @@
   }
 }
 .lienzo {
-  background-image: radial-gradient(circle, var(--dim) 1.25px, transparent 1.75px);
+  background-image: radial-gradient(circle, var(--rejilla) 1.25px, transparent 1.75px);
   cursor: grab;
   flex: 1;
   margin: 0 -1rem;
@@ -136,7 +136,7 @@
   position: absolute;
   transform: translate(-50%, -50%);
   white-space: pre-wrap;
-  width: 10rem;
+  width: 8rem;
 
   /* Un nodo-nota, con la misma raya azul que un diagrama en la lista. */
   &.nota {

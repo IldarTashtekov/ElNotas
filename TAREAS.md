@@ -927,11 +927,16 @@ la fase en el plan de `CLAUDE.md` y `ARCHITECTURE.md`, en el pase de documentaci
       **Falta verlo en el móvil**: publicar, desinstalar y reinstalar, porque la app instalada saca
       la barra del manifiesto. Es lo único que molesta en horizontal: las franjas a los lados se
       quedan.
-- [ ] **Los puntos del lienzo, a la mitad de intensidad**, sin quitarlos: una variable nueva en
-      `base.css` (`--dim` al 50 %) que el lienzo usa en vez de `--dim`.
-- [ ] **Los nodos, menos alargados**, no cuadrados: el ancho de `.posit` en `diagrama.css` pasa de
-      `10rem` a `7rem`. El otro `10rem` de ese fichero es el campo del texto de una relación, y no
-      se toca.
+- [x] **Los puntos del lienzo, a la mitad de intensidad**, sin quitarlos: `--rejilla` en
+      `base.css`, `--dim` mezclado al 50 % con transparente, que el lienzo usa en vez de `--dim`.
+      Estilo calculado antes y después, en claro y en oscuro: el mismo color con opacidad 0,5, y
+      `--dim` sin cambiar en el resto de la app.
+- [x] **Los nodos, menos alargados**, no cuadrados: el ancho de `.posit` en `diagrama.css` pasa de
+      `10rem` a `8rem`. El otro `10rem` de ese fichero es el campo del texto de una relación, y no
+      se toca. Las líneas no dependen del número: miden cada nodo en pantalla (`offsetWidth`).
+      Medido antes y después: uno corto pasa de 160 × 39 a 128 × 39 px, y uno de cuatro renglones
+      de 160 × 100 a 128 × 121, porque el texto que no cabe a lo ancho crece hacia abajo. Se
+      probó `7rem` (112 × 141 el largo) y el usuario prefirió `8rem` por eso.
 - [ ] **Texto más grande, opcional**: un ajuste en ⚙ que cambie el tamaño de letra de toda la app.
 
 #### Medir antes de tocar
