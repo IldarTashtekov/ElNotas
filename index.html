@@ -2,16 +2,20 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- resizes-content: al abrir el teclado del móvil la página encoge, y la barra
+         de la nota sube con ella en vez de quedarse debajo del teclado. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
     <title>ElNotas</title>
 
     <!--
-      Lo que hace falta para instalarla en el móvil: el manifiesto y el icono. La
-      barra de estado del móvil, siempre azul: es el --accent claro de base.css.
+      Lo que hace falta para instalarla en el móvil: el manifiesto y el icono. Sin
+      theme-color a propósito: las barras del móvil llevan el color del sistema.
     -->
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icono/icono-192.png" />
-    <meta name="theme-color" content="#3552d6" />
 
     <!--
       La app se carga sin bundler: el JavaScript que emite `npm run build:web` en
