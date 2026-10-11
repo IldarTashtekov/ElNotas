@@ -8,15 +8,11 @@ Incluye una **sección de conceptos desde cero** (§2) para quien sepa TypeScrip
 arquitectura de front. Si algún término del resto del documento suena a jerga —reducer,
 puerto, copia por camino—, está explicado ahí con ejemplos de notas y casillas.
 
-> **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy
-> lo están las **fases 1 a 4** (§5.1), la 4 —la UI web (§7)— **cerrada por decisión del
-> usuario con deuda**: sus dos listas manuales y las tres preguntas del editor siguen pendientes
-> (§9.10). De la Fase 5, los Diagramas (§9.11), está construida **Fase 5 · Modelo** —el core y
-> `storage/`, el 2026-10-03— y tiene **todo el código de la pantalla**: **Fase 5 · Lienzo** —la
-> vista y los pósits— y **Fase 5 · Relaciones** —las líneas—, las dos del 2026-10-04 y **sin
-> cerrar**: sus listas manuales están sin pasar. Siguen siendo sólo diseño la carpeta del usuario
-> como destino y la semántica multi-backend. Cada sección dice si lo que describe existe o está
-> planificado.
+> **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy lo
+> están las **fases 1 a 6** —el dominio, la persistencia, la UI web, los Diagramas y la PWA—, y la
+> 7, un refactor, está en curso (§9.2). De la Fase 4 quedan sin contestar las tres preguntas del
+> editor (§9.10). Siguen siendo sólo diseño la carpeta del usuario como destino y la semántica
+> multi-backend (§6). Donde algo está planificado y no construido, la sección lo dice.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
 **Índice**
@@ -582,6 +578,26 @@ Con eso, tras `if (isCheckBox(c))` el compilador trata `c` como `CheckBox` y per
 tiene hijas**. Sin el guard no hay forma de recorrer el árbol: hay que preguntar "¿esto tiene
 hijos por los que bajar?" en cada nodo, y `isCheckBox` es esa pregunta.
 
+#### Tipo explícito en todo, aunque se infiera
+
+La regla de `CLAUDE.md` pide anotar las declaraciones de valor, los parámetros y el retorno de
+toda función, callbacks de una línea incluidos. **El porqué es uno:** cuando un tipo cambia,
+**se ve en el diff** en vez de que la inferencia lo absorba en silencio. Las cuatro excepciones,
+con su motivo:
+
+1. **`for (const x of …)`** — `error TS2483`: lo prohíbe el lenguaje, no el criterio. Es la
+   única que no es una elección;
+2. **la constante que ES una función** — ese trabajo lo hace su tipo de retorno; sus parámetros
+   y su retorno sí van anotados;
+3. **`as const`** — la anotación ensancharía justo lo que `as const` estrecha;
+4. **destructuring** — no hay dónde ponerla sin repetir la forma del objeto entero.
+
+**`src/` la cumple entera**, comprobado el 2026-09-29 con una sonda sobre el AST. Las pruebas
+viejas de `test/core/` y `test/storage/` no, a sabiendas: es deuda medida en `TAREAS.md`, no un
+precedente. **No tiene comprobación automática, y es deliberado:** es legibilidad, no
+corrección —el compilador ya dice si un tipo está mal—, y los guardianes de este repo tapan cosas
+que **funcionan mal en silencio**. El razonamiento completo, en `TAREAS.md`.
+
 ---
 
 ## 3. La cadena de la identidad
@@ -698,9 +714,8 @@ Tres entidades, más nociones de agrupación:
   tocarlo entras en una Nota, y enseña su título **en directo**, sin guardar copia. Una relación
   (`DiagramRelation`) une dos nodos, con o sin flecha y con un texto opcional, y entre dos nodos
   puede haber **cualquier número** (multigrafo). En el código, `Diagram` (público, en inglés).
-  **El modelo y sus operaciones están construidos** (Fase 5 · Modelo, 2026-10-03), y **la
-  pantalla entera, relaciones incluidas, tiene código sin verificar a mano** (Fase 5 · Lienzo y
-  Fase 5 · Relaciones, 2026-10-04; §9.11).
+  **Construido entero**: el modelo y sus operaciones en el core, y la pantalla, relaciones
+  incluidas (§9.11).
 
   **Se llamó *Plan* hasta el 2026-10-03**, y se renombró con el usuario antes de planificar la
   Fase 5, por dos motivos: «plan» chocaba con *el plan por fases* y con *planificar*, y daba por
@@ -708,13 +723,12 @@ Tres entidades, más nociones de agrupación:
   gratis: no había manera de crear uno, así que no había nada guardado con el nombre viejo ni
   hizo falta migración.
 - **Context** — agrupa notas y diagramas, y decide su `defaultView` (la lista, o entrar directo
-  a una nota o diagrama concreto). ⚠️ **`defaultView` se queda sin uso en la Fase 4**: «abrir
+  a una nota o diagrama concreto). ⚠️ **`defaultView` se queda sin uso**: «abrir
   directamente una nota» lo hace ahora una ventana de tipo nota (§7.4). Sigue en el modelo, con
   su acción `set-default-view`, porque el dominio está cerrado; se revisa con las entidades
   «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
-- **ContextoGeneral** — **vista derivada** de todas las notas (y, desde Fase 5 · Lienzo, de los
-  diagramas, mezclados con ellas por nombre, §7.4).
-  No es una entidad y no se persiste: guardarlo sería duplicar datos que se pueden calcular. Ahí
+- **ContextoGeneral** — **vista derivada** de todas las notas y los diagramas, mezclados por
+  nombre (§7.4). No es una entidad y no se persiste: guardarlo sería duplicar datos que se pueden calcular. Ahí
   aparecen las notas **huérfanas**, las que no están en ningún contexto. Como no es un contexto,
   se comporta distinto en tres cosas (§7.4): su título **no se renombra**, su papelera **borra
   la nota de verdad** (`delete-note`, con confirmación), y una nota creada desde él **nace sin
@@ -726,39 +740,15 @@ Tres entidades, más nociones de agrupación:
   abrir un menú marcara notas como sucias. **Sí se guarda** —qué ventanas hay y en qué orden—,
   pero **fuera del core y fuera de `AppState`**: en `localStorage`, con una clave propia que
   gestiona la presentación. Decidido el 2026-09-27; las cuatro opciones evaluadas y su riesgo,
-  en §7.4. *(Construido en la Fase 4: `src/ui/windows.ts` y `src/platform/web/LocalStorageWindows.ts`.)*
+  en §7.4.
 
 ### 5.1 Lo que existe hoy en el repo
 
-**Las fases 1 a 4, Fase 5 · Modelo y el código de Fase 5 · Lienzo y Fase 5 · Relaciones.** Medido
-el **2026-10-04**, tras `74c356e`, en líneas de `.ts`: `src/core` 3148, `src/storage` 1687,
-`src/platform` 339, `src/ui` 4372, y `test/` 9435. `npm run check` en verde con **712 pruebas**
-(532 al cerrar la Fase 4, 643 al cerrar Fase 5 · Modelo, 693 al acabar el código de Lienzo). Las cifras se quedan viejas solas: antes de afirmar nada,
-`find src test -name '*.ts' | sort` y `npm run check`.
-
-La tabla ya no lleva líneas por fichero, a propósito: la columna que tenía estaba sin re-medir
-desde que se adelgazaron las cabeceras y no decidía nada. La única cifra por fichero que sí
-decide algo —cuánto queda sin probar en `DirectoryHandleBlobStore`, **156 líneas de código**—
-está en §6.3, y ese fichero no ha cambiado desde que se midió.
-
-| Dónde | Qué hay |
-|---|---|
-| **`core/domain/` — el modelo** | `Ids.ts` (IDs marcados, `Revision`, `ItemRef`) · `Content.ts` (`Text` \| `CheckBox`) · `Versioned.ts` · `Note.ts` · `Diagram.ts` · `Context.ts` · `AppState.ts` · `Position.ts` (tres casos) · `Result.ts` (el sobre, **fuera de `errors/`**) · `errors/` con `StorageError` y `MigrationError` (**sin `index.ts`**) |
-| **`core/domain/` — la maquinaria** | `updateContent.ts` (primitiva **A**) y `updateContainerOf.ts` (**B**), que **no salen por `index.ts`**; `operations.ts`, **las ocho operaciones**, todas exportadas; `diagramOperations.ts`, **las diez de diagrama más `loseNote`** (§9.11), que **no salen por `index.ts`** |
-| **`core/ports/`** | cinco interfaces: `Clock`, `IdGenerator`, `Repository`, `StorageAdapter`, `BlobStore`. Los tres de persistencia devuelven `Result` en todos sus métodos |
-| **`core/app/`** | `Action.ts` (**treinta**: 8 de contenido, 3 de Nota, 6 de Contexto, 13 de Diagrama) · `reduce.ts` (**no sale por `index.ts`**) · `Store.ts` (una **función**) · `useCases.ts` (**treinta y dos**) · `diffState.ts` (la mitad pura del write-behind) |
-| **`core/migrations/`** | `hydrate.ts` (de listas a mapas, limpiando `ItemRef` rotas y los diagramas) · `runMigrations.ts` (**puro y total**; `MIGRATIONS` **vacía a propósito**) |
-| **`storage/`** | `memory/MemoryStorageAdapter.ts` · `file/FileStorageAdapter.ts` (§6.2, con `onCorrupt`) · `file/schema.ts` (la validación al leer) · `blobs/LocalStorageBlobStore.ts` · `blobs/DirectoryHandleBlobStore.ts` (**sin pruebas a propósito**, §6.3) · `writeBehind.ts` (la mitad impura, con el estado *detenido* y `onError`) |
-| **`platform/web/`** | `SystemClock.ts` · `CryptoIdGenerator.ts` · `boot.ts` (la composición) · `LocalStorageWindows.ts` (la lista de ventanas) · `main.ts` (la entrada del navegador). Detalle en §7.5 |
-| **`ui/` — la lógica pura, probada en Node** | `windows.ts` + `windowsModel.ts` (la lista de ventanas y su guarda) · `windowView.ts` · `settingsContent.ts` · `noteActions.ts` · `selection.ts` · `reconcile.ts` · `dropIndex.ts` · `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor sin DOM) · `messages.ts` · `viewport.ts` + `gestures.ts` + `paintOrder.ts` (las cuentas del lienzo) · `relationGeometry.ts` (las de las líneas) |
-| **`ui/` — el DOM, verificado a mano** | `App.ts` · `WindowsView.ts` · `SettingsView.ts` · `NoteList.ts` (lista notas **y diagramas**; el nombre está pendiente de cambiar) · `NoteView.ts` · `NoteEditor.ts` · `DiagramView.ts` · `DiagramCanvas.ts` · `editableTitle.ts` · `sheet.ts` · `dragReorder.ts` · `backStack.ts` · `dom.ts` |
-| **`ui/styles/`** | un CSS por vista, enlazados desde `index.html` en este orden: `base` · `ventanas` · `ajustes` · `hojas` · `barras` · `editor` · `diagrama` |
-| **`test/storage/` — lo que no son pruebas** | `contract-tests/storageContract.ts` (**la suite que todo adaptador debe pasar**, 22 casos, sin `.test` porque es una fábrica) · `file/FakeBlobStore.ts` y `blobs/FakeStorage.ts` (los dobles **con inyección de fallos**) |
-| **Las listas manuales** | `test/storage/blobs/VERIFICACION-MANUAL.md` (+ su andamio `.html`), pasada el 2026-09-13 · las cuatro de `test/ui/`, **escritas y sin pasar**: `VERIFICACION-MANUAL.md` y `VERIFICACION-MANUAL-EDITOR.md` (Fase 4), `VERIFICACION-MANUAL-LIENZO.md` y `VERIFICACION-MANUAL-RELACIONES.md` (Fase 5). No son TypeScript y no entran en `npm run check` |
-
-Las pruebas son más líneas que el código que vigilan, y eso es lo esperado en un repo donde
-cada invariante se verifica rompiéndola a propósito. Desde que viven en `test/` (§8.5) la cuenta
-es además directa: `src/` es código y `test/` son pruebas.
+Para saber qué hay, se mira el repo —`find src test -name '*.ts' | sort` y `npm run check`—, no
+este documento: la lista que había aquí se quedaba vieja sola. Las capas y su porqué, en §4–§7. Lo
+único que no se deduce de los nombres: **por `src/core/index.ts` no salen, a propósito**, las dos
+primitivas del helper (`updateContent.ts` y `updateContainerOf.ts`), `reduce` —se llega a él por
+el `Store`— y `diagramOperations.ts`, que hoy sólo usa el core (§9.11).
 
 ### 5.2 Estado normalizado, con referencias por ID
 
@@ -845,8 +835,8 @@ y el otro *el formato de todos*.
 Los dos campos van desde el principio aunque hoy no haya sincronización. El argumento que se
 venía dando —"añadirlos cuando ya haya notas guardadas sería una migración de datos"— **no es
 del todo válido todavía**, porque no hay persistencia y por tanto no hay datos que migrar; y
-si valiera, valdría igual para `schemaVersion`, que sí se aplaza a la Fase 2. Está anotado en
-`TAREAS.md` para reescribir la justificación real.
+si valiera, valdría igual para `schemaVersion`, que sí se aplaza a la Fase 2. La justificación
+real de `schemaVersion` —que *es* el mecanismo de migración y vive en `StorageAdapter`—, en §9.7.
 
 ### 5.4 El helper de copia por camino: son dos primitivas, no una
 
@@ -956,7 +946,7 @@ paga en cada operación que lo toque.
 
 #### Los tres tests que lo cierran
 
-Los dos del criterio de §9.5, con `assert.strictEqual`:
+Los dos del criterio de cierre de la Fase 1, con `assert.strictEqual`:
 
 1. `updateContent(c, idQueNoExiste, …)` **`=== c`** — el array de entrada, no una copia.
 2. `updateContent(c, idQueSíExiste, { onCheckBox: x => x, … })` **`=== c`** — el que se olvida.
@@ -970,11 +960,9 @@ uno más.
 
 ## 6. Persistencia
 
-**Construido: los puertos, el adaptador de memoria, el write-behind, el `Result` (§6.5),
-`FileStorageAdapter` con el formato en disco de §6.2 y las dos implementaciones de `BlobStore`
-(§6.1)** —en la Fase 3, con su pasada manual del 2026-09-13—, **y en la Fase 4 lo que quedaba
-aplazado:** el `onCorrupt` de `getAll`, la validación de esquema al leer y el `onError` del
-write-behind (§6.2, §6.5). Sigue siendo sólo diseño la semántica multi-backend —espejo, outbox,
+**Construido**: los puertos, el adaptador de memoria, el write-behind, el `Result` (§6.5),
+`FileStorageAdapter` con el formato en disco y su validación (§6.2), y las dos implementaciones de
+`BlobStore` (§6.1). **Sigue siendo sólo diseño** la semántica multi-backend —espejo, outbox,
 réplicas— y la carpeta del usuario como destino de la app.
 
 #### El recorrido de un cambio, de un vistazo
@@ -1294,7 +1282,7 @@ Los detalles que no se deducen de esas cuatro líneas, y por qué:
 - **Las tres clases no comparten carpeta**, que es lo que hace que un `getAll` de notas no
   tenga que mirar dentro de los diagramas para descartarlos.
 
-#### Lo que se lee se valida campo a campo *(Fase 4, construido)*
+#### Lo que se lee se valida campo a campo
 
 Hasta la Fase 4 era **un agujero conocido**: al leer sólo se comprobaba que lo parseado fuera un
 objeto con un `id` de texto, y un `notes/x.json` con un `content` inventado entraba en `AppState`
@@ -1388,6 +1376,13 @@ memoria, **nunca** en localStorage. En escritorio, keychain del sistema.
 
 #### Las dos decisiones propias de `LocalStorageBlobStore`
 
+**Es el destino de la app hoy, y es provisional**: el 2026-09-20 se decidió arrancar con él para
+salir del paso, en vez de con la carpeta del usuario u OPFS. Es barato de revertir —`BlobStore` es
+un puerto y el destino se inyecta en un solo sitio de `platform/`—, pero deja tres cabos con
+nombre: qué pasa con lo ya escrito en `localStorage` el día que cambie el destino —y con ello qué
+borra «Borrar todo» (§7.4)—; el techo de unos 5 MB por origen, que el base64 de abajo infla en un
+tercio; y que la lista de ventanas no viaja con las notas (§7.4).
+
 `localStorage` no es un sistema de ficheros, es **un mapa de texto a texto**, y de ahí salen las
 dos únicas decisiones que ese adaptador toma por su cuenta. Las dos se confirmaron al
 escribirlo.
@@ -1422,8 +1417,8 @@ cada implementación. Un adaptador está terminado **cuando pasa el contrato**, 
 única definición de "modular" que no se degrada con el tiempo: si un backend nuevo se
 comporta distinto, el contrato lo cantea.
 
-**Hoy corre TRES veces en cada `npm test`**, no dos, que es lo que anticipaba el punto 7 de
-§9.9. Son **22 casos** —17 hasta la escritura condicional del 2026-10-03—, así que 66 de las pruebas salen de aquí:
+**Corre TRES veces en cada `npm test`**, no las dos que se previeron, una por adaptador. Son **22
+casos** —17 hasta la escritura condicional del 2026-10-03—, así que 66 de las pruebas salen de aquí:
 
 | Pasada | Qué monta | Qué añade sobre la anterior |
 |---|---|---|
@@ -1485,7 +1480,16 @@ previsto**: `FileStorageAdapter` —que es donde está toda la lógica— pasa e
 con un `BlobStore` falso, y `LocalStorageBlobStore` la pasa además con la pila entera montada.
 Lo único que queda sin automatizar es `DirectoryHandleBlobStore`.
 
-**Corrección de una cifra que se repetía aquí y en §9.9: son 156 líneas de código, no ~50.**
+**Su lista se pasó el 2026-09-13** (`test/storage/blobs/VERIFICACION-MANUAL.md`): en Brave pasan
+las cinco secciones —arrancado con `--enable-features=FileSystemAccessAPI`, porque no trae la API
+de fábrica—, y en Firefox sólo OPFS, porque no tiene `showDirectoryPicker()`: «este navegador no
+puede» es un resultado, no un hueco. Cazó lo que ninguna prueba podía ver —un fichero de 45 bytes
+y no de 0, que es el `close()` de abajo, y que un `write` con el permiso revocado de verdad no
+escribía: el `mtime` no se movió— y un falso verde del método: el paso B sin recargar reutiliza el
+handle en memoria y no prueba nada. ⚠️ Se pasó sobre `dec4306` **con el árbol sucio**, y por eso
+**si se toca ese fichero, se vuelve a pasar la lista**.
+
+**Son 156 líneas de código, no las ~50 que se estimaron al decidirlo.**
 La decisión no cambia, y conviene decir por qué aguanta, porque el número era el argumento. Lo
 que creció son tres cosas concretas, y ninguna es lógica interesante:
 
@@ -1548,8 +1552,9 @@ puerto, es un argumento.
 
 ### 6.5 Los errores no se propagan: `Result<T, E>`
 
-**Decisión cerrada, y CONSTRUIDA** — es el paso 0 de la Fase 3, terminado. Se aplicó **antes**
-del adaptador de fichero (el porqué del momento, al final de la sección).
+**Construido**, como paso 0 de la Fase 3 y **antes** del adaptador de fichero, por coste: ése es el
+primero que falla de verdad —el de memoria no tiene permisos que revocar ni disco que llenar—, y
+escribirlo contra las firmas viejas para convertirlo después habría sido escribirlo dos veces.
 
 > **Toda operación que pueda fallar queda encapsulada y devuelve un resultado explícito en
 > lugar de lanzar una excepción.**
@@ -1592,49 +1597,31 @@ es `src/core/index.ts` y no hay una segunda frontera dentro. Y **`Result.ts` se 
 `domain/`, fuera de `errors/`**, porque no es un error: es el sobre. Un `Result<Note, never>`
 no lleva ninguno dentro.
 
-#### El punto de partida era bueno, y eso hizo el cambio barato
+#### Contar `throw` era la medida equivocada: el peligro es la llamada sin envolver
 
-Medido sobre el repo, no supuesto. **Había tres `throw` en todo el código de producción**, y
-ninguno en `src/core/domain/`. **Hoy no queda ninguno vivo:**
+En el código de producción no queda ni un `throw` —había tres: dos en `runMigrations`, que hoy son
+`err(…)`, y un relanzar en `writeBehind`, que hoy devuelve intacto el `Result` del adaptador—, y
+aun así se escapaban dos excepciones: `encodeURIComponent` dentro de `caminoDe` y `paso.migrate()`
+en el runner. Contar `throw` mide lo que lanzamos nosotros; **la pregunta buena es si alguna
+llamada que lanza puede llegar a una firma pública**. Las dos están tapadas y las vigila
+`npm run check:fronteras`, con dos límites que conviene tener presentes: **su lista de llamadas
+peligrosas se mantiene a mano** —no hay forma de saber desde el código qué API lanza, así que quien
+llame a una nueva que lance la añade ahí—; y entiende la **cobertura transitiva** —un ayudante al
+que sólo se llama desde dentro de una frontera está a salvo; sin esa regla marcaría media docena de
+ayudantes locales—, pero **esa cobertura es frágil**: basta una llamada nueva desde fuera para que
+el ayudante deje de estar cubierto. Aplicado al código de antes de los arreglos, el guardián
+señalaba exactamente las dos fugas y ninguna más.
 
-| Dónde estaba | Qué era | En qué quedó |
-|---|---|---|
-| `core/migrations/runMigrations.ts` | lo guardado es de un esquema **más nuevo** que el que este código entiende | `err({ kind: "schema-from-future", … })` |
-| `core/migrations/runMigrations.ts` | falta un paso de migración en la cadena | `err({ kind: "missing-migration", … })` |
-| `storage/writeBehind.ts` | **no creaba un error: lo relanzaba.** Restauraba `pendiente` y propagaba | el `Result` del adaptador, devuelto **intacto** por `flush()` |
+**Que hubiera tan poco que convertir no fue suerte: el dominio no puede fallar por diseño.** La
+regla «una operación que no aplica NO HACE NADA» (§9.3) eliminó el caso de error en vez de tiparlo,
+y el reducer es **total** por contrato. Y tipar el `catch` no habría arreglado nada: con `strict`
+va activo `useUnknownInCatchVariables`, así que `catch (fallo)` ya recibe `unknown`; al error no le
+falta el tipo en la firma, es que **no existe en ninguna parte**. Hay que mover el fallo al valor de
+retorno.
 
-⚠️ **Y contar `throw` era la medida equivocada, cosa que se descubrió más tarde.** Cuenta lo que
-lanzamos nosotros; no cuenta **lo que llamamos sin envolver**, que es por donde se escapaban de
-verdad dos excepciones con cero `throw` en el repo: `encodeURIComponent` dentro de `caminoDe` y
-`paso.migrate()` en el runner. Las dos están tapadas y las vigila `npm run check:fronteras`.
-
-Los `try/catch` que quedan en el código de producción están todos donde manda el principio 2 de
-más abajo: **la frontera del adaptador**. En `MemoryStorageAdapter` es una sola —la de
-`transaction`, que es lo único de ese fichero que ejecuta código ajeno—; en
-`FileStorageAdapter` son cuatro, y las cuatro se justifican solas: `transaction` por lo mismo,
-`caminoDe` porque `encodeURIComponent` lanza, y las
-dos de la serialización, porque `JSON.parse` lanza y un `TextDecoder` con `fatal: true` también.
-
-Y **cero aserciones no-nulas** (`algo!.campo`) en el código, así que tampoco había excepciones
-implícitas esperando su turno.
-
-Que hubiera tan poco no es suerte: **el dominio no puede fallar por diseño.** La regla «una
-operación que no aplica NO HACE NADA» (§9.3) eliminó el caso de error en vez de tiparlo, y el
-reducer es **total** por contrato. Por eso el único sitio del core que lanzaba era
-`runMigrations` — ahí dentro no había nada más que convertir.
-
-También conviene deshacer un malentendido sobre el `catch`. Con `strict` va activo
-`useUnknownInCatchVariables`, así que hoy `catch (fallo)` ya recibe **`unknown`**: no es que al
-error le falte el tipo en la firma, es que **no existe en ninguna parte**. Tipar el `catch` no
-arreglaría nada; hay que mover el fallo al valor de retorno.
-
-#### El argumento que decidió: se reintentaba a ciegas
-
-`writeBehind` no distinguía por qué había fallado una escritura, así que **reintentaba
-siempre**. Si el usuario revocaba el permiso de la carpeta, la app se pasaba la sesión entera
-reintentando en silencio, sin conseguirlo jamás y sin poder avisar de nada. No era un fallo de
-implementación: con `Promise<void>` **no hay dónde poner esa información**, porque el valor de
-retorno no tiene sitio para ella. Qué hace ahora, en «El estado *detenido*», más abajo.
+**El argumento que decidió:** con `Promise<void>` no había dónde decir por qué falló una escritura,
+así que el write-behind reintentaba a ciegas —un permiso revocado, toda la sesión, en silencio—.
+Qué hace ahora, en «El estado *detenido*», más abajo.
 
 #### La taxonomía: el criterio es «¿reintentar sirve de algo?»
 
@@ -1656,6 +1643,7 @@ export type StorageError =
   | { readonly kind: "not-found";  readonly path: string }
   | { readonly kind: "quota-exceeded" }
   | { readonly kind: "corrupt";    readonly path: string; readonly cause: unknown }
+  | { readonly kind: "stale";      readonly id: string }
   | { readonly kind: "io";         readonly cause: unknown }
 
 export type MigrationError =
@@ -1664,14 +1652,11 @@ export type MigrationError =
   | { readonly kind: "migration-failed";   readonly from: number; readonly cause: unknown }
 ```
 
-**El tercero de `MigrationError` llegó después, y por un agujero medido.** Los dos primeros
-describen cosas que el runner comprueba **antes** de tocar nada; `migration-failed` describe lo
-único que no controla: **`migrate` es código ajeno**, lo escribe quien migra y trabaja sobre
-datos con forma vieja. Hasta que se envolvió, una migración que lanzara **se escapaba de
-`runMigrations` como excepción** —comprobado con una sonda—, justo desde la función que esta
-sección llama *pura y total*. No era alcanzable en producción sólo porque `MIGRATIONS` está
-vacía; la primera migración de verdad es exactamente este caso, y corre **al arrancar la app
-sobre las notas del usuario**.
+**El tercero de `MigrationError` existe porque `migrate` es código ajeno.** Los dos primeros
+describen cosas que el runner comprueba **antes** de tocar nada; `migration-failed`, lo único que no
+controla: lo escribe quien migra y trabaja sobre datos con forma vieja. Sin él, una migración que
+lanzara se escapaba de `runMigrations` —la función *pura y total*— **al arrancar la app sobre las
+notas del usuario**.
 
 **`corrupt` no va dentro de `io`, y es deliberado.** Si un solo fichero de nota está corrupto,
 lo correcto es apartar esa nota y abrir todas las demás. Por el camino genérico la app
@@ -1720,21 +1705,19 @@ disco, nadie borra, y el primer `write` sí dice `not-found`. Distinguirlo exigi
 en cada lectura, en el fichero que no tiene pruebas, para un caso que habrá que tratar igualmente
 con el botón de reconectar la carpeta, el día que la carpeta sea el destino.
 
-#### `getAll` y un fichero ilegible: `onCorrupt` *(Fase 4, construido)*
+#### `getAll` y un fichero ilegible: `onCorrupt`
 
 La tabla de arriba dice que ante un `corrupt` la app **aísla esa entidad y sigue con el resto,
-diciendo cuál**. Eso es lo que justifica que `corrupt` no viva dentro de `io`. **Hasta la Fase 4
-el código no lo hacía**: `getAll` cortaba al primer fichero ilegible, así que **una sola nota
-corrupta impedía abrir la app**. Se aceptó a conciencia y se aplazó, porque la firma del puerto es
-`Result<ReadonlyArray<T>, StorageError>` —**todo o nada**— y las dos salidas obvias eran peores:
+diciendo cuál**. Sin más, `getAll` cortaría al primer fichero ilegible —**una sola nota corrupta
+impediría abrir la app**—, porque la firma del puerto es `Result<ReadonlyArray<T>, StorageError>`,
+**todo o nada**. Las dos salidas obvias son peores:
 
 - **saltarse la entidad corrupta en silencio** devolvería nueve notas como si fueran todas, y el
   write-behind vería la décima como **borrada** y acabaría limpiándola de los contextos,
   **convirtiendo un fichero recuperable en una pérdida de verdad**;
-- **cambiar la firma de `getAll`** era deshacer lo que el paso 0 acababa de estabilizar.
+- **cambiar la firma de `getAll`** sería deshacer lo que el paso 0 estabilizó.
 
-**El arreglo, construido en la primera rebanada de la Fase 4: una opción `onCorrupt` de
-`FileStorageAdapter`**, que no toca el puerto. Con ella:
+**El arreglo: una opción `onCorrupt` de `FileStorageAdapter`**, que no toca el puerto. Con ella:
 
 - `getAll` **se salta sólo los `corrupt`** —JSON ilegible o forma que no valida (§6.2)— y llama a
   `onCorrupt` con el error, que lleva el `path` del fichero. **Cualquier otro fallo sigue
@@ -1783,7 +1766,7 @@ memoria y `escrito` no se actualiza, así que el día que se reanudara se escrib
 
 **No hay forma de reanudar un escritor detenido, y es deliberado.** Reanudar significa «vuelve
 a pedir la carpeta», y pedir una carpeta es plataforma, que llega con la carpeta del usuario como
-destino —fuera de la Fase 4—. Consecuencia asumida y visible: un `permission-denied` deja el
+destino —hoy fuera de alcance—. Consecuencia asumida y visible: un `permission-denied` deja el
 write-behind muerto para el resto de la sesión. Se prefiere a la alternativa —reintentar en
 bucle— porque así el error se ve en vez de desaparecer.
 
@@ -1792,7 +1775,7 @@ fallo es ahora un **valor**, así que ya no puede envenenar las escrituras futur
 promesa que las encadena. Si algo llegara a rechazar ahí sería un adaptador incumpliendo su
 puerto, y eso tiene que hacer ruido en vez de quedar perdonado.
 
-**El aviso: `onError` *(Fase 4, construido)*.** El agujero era que cuando falla un flush
+**El aviso: `onError`.** El agujero era que cuando falla un flush
 **automático** —el del temporizador— nadie mira su resultado, así que no se enteraba nadie. Hoy
 `onError` es una opción de `WriteBehindDeps` y se llama **una sola vez**, cuando un fallo no
 reintentable detiene al escritor; **un `io` se sigue reintentando sin avisar**: es justo el caso
@@ -1829,18 +1812,7 @@ exista la UI, `main.ts` guarda el fallo y lo enseña al montarla.
    deliberado: si el permiso está revocado, las otras cinco tandas fallarían igual, y lo que
    interesa devolver es el **primer** error, que es el que explica lo que pasó.
 
-#### Por qué antes y no después del adaptador de fichero
-
-Dos razones, las dos de coste, y las dos se confirmaron al hacerlo:
-
-- **El adaptador de fichero es lo primero que falla de verdad.** El de memoria no tiene permisos
-  que revocar ni disco que llenar; el de fichero tiene las dos cosas. Escribirlo contra las
-  firmas viejas y convertirlo después habría sido escribirlo dos veces.
-- **La suite de contratos cambia con los puertos, y había UN adaptador.** Después de la Fase 3
-  habría dos, y el contrato es precisamente lo que ambos comparten. A partir de aquí
-  `FileStorageAdapter` la reusa **sin tocarla**.
-
-#### La escritura condicional: dos pestañas no se pisan *(construida el 2026-10-03)*
+#### La escritura condicional: dos pestañas no se pisan
 
 **El problema:** cada pestaña lee las notas al abrirse y trabaja con su copia. Si A guarda y luego
 B guarda la misma nota, B pisaba lo de A sin que nadie se enterara. `revision` existía justo para
@@ -1876,16 +1848,23 @@ la sincronización entre dispositivos.
 
 ## 7. La UI
 
-**Construido en la Fase 4, en `src/ui/`, cerrada el 2026-10-03 con deuda** (§9.10): siguen
-pendientes sus dos listas manuales y las tres preguntas del editor. **La vista diagrama, con su
-lienzo, se añadió en Fase 5 · Lienzo, y sus líneas en Fase 5 · Relaciones** (código hecho el
-2026-10-04, las dos sin cerrar; §9.11). El diseño de la navegación y las pantallas
-(§7.4) se cerró el **2026-09-27** a partir de un boceto en PDF del usuario; el del editor (§7.2 y
-§7.3), el 2026-09-20, y **se reabrió y precisó al construirlo, el 2026-09-29**. Cómo está hecho
-por dentro, en §7.5.
+**Construido en `src/ui/`**: la UI web de la Fase 4 y la vista diagrama de la Fase 5, con su
+lienzo y sus líneas (§9.11). Sus listas manuales, en `test/ui/`, las dio por pasadas el usuario el
+2026-10-10; de la Fase 4 siguen sin contestar las tres preguntas del editor (§9.10). El diseño
+de la navegación y las pantallas (§7.4) se cerró el **2026-09-27** a partir de un boceto en PDF del
+usuario; el del editor (§7.2 y §7.3), el 2026-09-20, y **se reabrió y precisó al construirlo, el
+2026-09-29**. Cómo está hecho por dentro, en §7.5.
 
 Sin framework, vanilla. El core expone reducers puros y un `Store`; la UI se suscribe y
 despacha. La inmutabilidad da la detección de cambios gratis por referencia (§3).
+
+**Reconfirmada el 2026-09-20, frente a React, Svelte, Solid, Angular, Redux y htmx:** `Store.ts`
+**ya es Redux** —`getState`/`dispatch`/`subscribe` sobre un reducer puro, más la invariante de
+identidad que Redux no da—, y un DOM virtual es débil justo donde esta app es difícil,
+`contenteditable`. Las dos alternativas que sobrevivieron, **Snabbdom** y un **motor de edición**
+(ProseMirror/Lexical), están aparcadas con su disparador en `TAREAS.md` → *Ideas aparcadas*. **El
+de Snabbdom son los fallos de sincronizar el DOM, no el tamaño** (cambiado con el usuario el
+2026-10-03).
 
 Dos reglas que evitan el dolor conocido de este enfoque:
 
@@ -1900,25 +1879,24 @@ La persistencia se engancha como **suscriptor con write-behind y debounce**, esc
 las entidades marcadas como sucias. **La UI sí despacha en cada tecla** (`setText`): quien
 agrupa es el write-behind, no el editor, así que el disco no se entera de cada tecla.
 
-El CSS del prototipo **no** se aprovechó: se escribió de nuevo, primero en un `<style>` de
-`index.html` y, desde el 2026-10-03, en **`src/ui/styles/`**, un fichero por vista —`base`,
-`ventanas`, `ajustes`, `hojas`, `barras` y `editor`— que `index.html` enlaza **en el orden del
-`<style>` original**; la Fase 5 añadió `diagrama`, enlazado el último. Ese orden es parte del diseño: con la misma especificidad gana la regla de
-después, y hay choques reales —un botón de «Mover a…» casa con `.barra button` y con
-`.selector button`—, así que agrupar las reglas por tema en vez de por tramo habría cambiado la
-pantalla. Sin dependencias: **anidamiento nativo** donde no altera la especificidad —nunca bajo
+El CSS vive en **`src/ui/styles/`**, un fichero por vista —`base`, `ventanas`, `ajustes`,
+`hojas`, `barras`, `editor` y `diagrama`— que `index.html` enlaza **en el orden del `<style>` del
+que salieron** (el último, el de la Fase 5). Ese orden es parte del diseño: con la misma
+especificidad gana la regla de después, y hay choques reales —un botón de «Mover a…» casa con
+`.barra button` y con `.selector button`—, así que agrupar las reglas por tema en vez de por tramo
+habría cambiado la pantalla. Sin dependencias: **anidamiento nativo** donde no altera la especificidad —nunca bajo
 una lista de selectores, que la subiría a la del más específico— y **`@layer base`** sólo para
 las variables y los estilos de elemento. `button:disabled` se queda fuera de la capa a
 propósito: dentro, perdería contra `.flecha` y los botones apagados enseñarían la mano.
 
-**Cómo se verificó que no cambió nada:** una foto del estilo calculado de cada elemento —y de
-sus `::before`/`::after`— en seis pantallas, antes y después, comparadas propiedad a propiedad:
-idénticas. Y la comparación se probó rompiendo a propósito —`button:disabled` dentro de la
-capa—: cazó los tres botones apagados. Al partir se quitaron reglas muertas de la configuración
-vieja (`.fila`, `.acciones`, `section > div > button`) y tres `[hidden]` que repetían el global.
+**Al tocar el CSS se compara el estilo calculado antes y después**: una foto del de cada
+elemento —y de sus `::before`/`::after`— en varias pantallas, comparadas propiedad a propiedad. Así
+se verificó la partición en ficheros (idénticas), y la comparación se probó rompiendo a propósito
+—`button:disabled` dentro de la capa—: cazó los tres botones apagados.
+
 **Descartados:** Tailwind y similares (UnoCSS) —compilación, una dependencia, las variables
-duplicadas y el estilo dentro del TypeScript—, Sass y CSS Modules —compilación, y el
-anidamiento ya es nativo—, y los frameworks sin clases como Pico, que pelearían contra el diseño.
+duplicadas y el estilo dentro del TypeScript—, Sass y CSS Modules —compilación, y el anidamiento
+ya es nativo—, y los frameworks sin clases como Pico, que pelearían contra el diseño.
 
 ### 7.1 Tres clases de estado, no dos
 
@@ -2030,17 +2008,11 @@ usarlo.
    de conflictos; una variable desechable no necesita nada de eso, y metiéndola ahí cambiar de
    modo marcaría notas como sucias y las reescribiría en disco (§3).
 
-> **Nombre: cerrado el 2026-09-20.** El tipo se llama **`WritingMode`**, en inglés y en
-> singular —singular porque el editor guarda **un** modo activo, no el conjunto—.
-> `ModosEscritura` era el nombre provisional del diseño y **se retira**: un concepto, un nombre.
->
-> La premisa con la que se planteó esta duda era falsa, y conviene dejarla corregida porque
-> volvería a usarse para decidir el siguiente nombre. Decía «todo lo demás está en inglés», y el
-> código **está mezclado**, con un patrón que nadie había escrito: **lo público en inglés**
-> (`Note`, `CheckBox`, `AppState`, `createFileStorageAdapter`, `guardWindows`) y **la maquinaria
-> interna en castellano** (`cambio`, `caminoDe`, `clasificar`, `codificador`, `esReintentable`,
-> `frontera`, `dePlataforma`). `WritingMode` sale por el `index.ts` de `ui/`, o sea es público, y
-> va en inglés **por eso** — no porque el repo entero lo esté.
+> **Nombre: `WritingMode`** (2026-09-20), en singular porque el editor guarda **un** modo activo.
+> Va en inglés porque es público —sale por el `index.ts` de `ui/`—, no porque el repo entero lo
+> esté: el patrón es **lo público en inglés** (`Note`, `AppState`, `guardWindows`) y **la
+> maquinaria interna en castellano** (`cambio`, `caminoDe`, `frontera`). Sirve para decidir el
+> siguiente nombre.
 
 **Qué más cabe en esa barra, y qué no.** La regla: cabe si cambia el comportamiento mientras
 escribes o mientras miras, **y la salida de la vista nota** (el botón exit). No cabe lo que es
@@ -2053,7 +2025,7 @@ contenido (el nombre de la nota) ni lo que es ajuste de la aplicación.
 
 Las otras tres candidatas que ya se veían —**"al marcar una casilla, marcar también sus hijas"**
 (y aquí es exactamente donde se compone esa cascada que el dominio se niega a hacer, §9.3),
-**"esconder las marcadas"**, **"mandar las marcadas al final"**— **quedan fuera de la Fase 4**,
+**"esconder las marcadas"**, **"mandar las marcadas al final"**— **quedan fuera**,
 aparcadas en `TAREAS.md` con el mismo disparador que las tres preguntas de §9.10: si usando el
 editor se echan en falta, se reabren.
 
@@ -2169,8 +2141,8 @@ Y no necesita ninguna operación nueva: es **`split` y luego `convertToCheckBox`
 llamadas que compone el editor. El motor sigue sin saber que los modos existen.
 
 > **Confirmadas las cuatro el 2026-09-20.** Cuatro esquinas que el diseño de arriba dejaba sin
-> cubrir. Dejan de ser propuestas: son comportamiento exigible, y entran en el criterio de
-> cierre de la fase (§9.10). *(Escritas cuando la barra tenía dos modos con nombre; con el
+> cubrir. Dejan de ser propuestas: son comportamiento exigible, y entraron en el criterio de
+> cierre de la Fase 4. *(Escritas cuando la barra tenía dos modos con nombre; con el
 > interruptor del 2026-09-29 dicen lo mismo.)*
 > - **Cursor al final de la línea** al encender la casilla → la línea se parte igual, y
 >   nace debajo una casilla vacía. Es lo útil cuando acabas un párrafo y empiezas una lista.
@@ -2199,20 +2171,19 @@ se elige **al nacer**: con el interruptor, y con el disparador de anidar si est�
 
 ### 7.4 La navegación: cuatro vistas y una lista de ventanas
 
-**Construido en la Fase 4**, salvo la vista diagrama, que llegó con **Fase 5 · Lienzo** (código
-hecho el 2026-10-04, sin cerrar): lo que cambió aquí con ella, en el último apartado de esta
-sección. Cerrado con el usuario el
-**2026-09-27** a partir de su boceto en PDF, y precisado al construirlo el **2026-09-29**. Todo lo
-de aquí es **web**, incluido el navegador del móvil —por eso importan la pulsación
+Cerrado con el usuario el **2026-09-27** a partir de su boceto en PDF, precisado al construirlo el
+**2026-09-29** y ampliado con la vista diagrama en la Fase 5 (decidido el 2026-10-03). Todo lo de
+aquí es **web**, incluido el navegador del móvil —por eso importan la pulsación
 larga y el atrás de Android—. Los shells nativos, cuando lleguen, envuelven esta misma UI: lo que
 cambia entonces es plataforma (el atrás nativo, el destino de los datos, el keychain), no la UI.
 
 #### Cuatro vistas, con la de ventanas en el centro
 
 - **Vista ventanas** — la principal. Es **la única forma de ver contextos**, y una ventana
-  también puede mostrar una nota o, desde la Fase 5, un diagrama.
-- **Vista nota**, **vista diagrama** (desde Fase 5 · Lienzo) y **vista configuración** — las
-  secundarias.
+  también puede mostrar una nota o un diagrama.
+- **Vista nota**, **vista diagrama** y **vista configuración** — las secundarias. A la vista
+  diagrama se entra tocando un diagrama en la lista de un contexto o del General, y su cabecera es
+  como la de la nota: exit y el nombre, que se renombra tocándolo.
 
 ```
             ◀   ventana 1 · ventana 2 · … · ventana n   ▶          ← vista ventanas
@@ -2226,10 +2197,12 @@ cambia entonces es plataforma (el atrás nativo, el destino de los datos, el key
 
 Las reglas, que son pocas y se sostienen entre sí:
 
-- **Un solo nivel.** De la vista ventanas se entra a una secundaria, y de una secundaria no se
-  entra a otra. ⚠️ **Cambiado con la Fase 5** *(decidido con el usuario el 2026-10-03,
-  construido el 2026-10-04 en `1997ace`)*: de un diagrama se entra a una nota, así que hay **un
-  nivel más** —ventana → diagrama → nota— y lo de encima **se apila**. Ver el último apartado.
+- **Lo de encima se apila, y exit vuelve paso a paso.** De la vista ventanas se entra a una
+  secundaria, y de una secundaria sólo a una más: de un diagrama, a una nota —tocando un nodo-nota
+  o creando una nota desde el lienzo—. Ventana → diagrama → nota, y exit sale de la nota al
+  diagrama y del diagrama a la ventana. **Si el diagrama es ventana**, diagrama → nota es un solo
+  nivel, como ventana → nota. Era «un solo nivel» hasta la Fase 5 *(cambiado con el usuario el
+  2026-10-03)*.
 - **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
   ▶.
 - **En la última, en el sitio de ▶, un «+» verde añade una ventana detrás** *(decidido con el
@@ -2246,11 +2219,11 @@ Las reglas, que son pocas y se sostienen entre sí:
 - **En la vista nota no hay ◀ ▶ ni ⚙.** El engranaje sólo existe en la vista ventanas, también
   cuando la ventana muestra una nota.
 
-**Todo el estado de navegación son dos datos: qué ventana está activa y qué vista hay encima, si
-hay alguna** —desde la Fase 5, qué vistas, apiladas—. El efecto buscado, y es el motivo de que no haya más niveles: **desde una nota no se
-llega a configuración**, así que no se puede borrar el contexto de debajo mientras estás dentro de
-una nota suya. El caso raro no se trata: no se puede producir. *(Desde la Fase 5 «lo de encima»
-es una pila —un diagrama con una nota sobre él—; el efecto se conserva, ver el último apartado.)*
+**Todo el estado de navegación son dos datos: qué ventana está activa y qué vistas hay apiladas
+encima.** El efecto buscado, y el motivo de que no haya más caminos: **desde una nota no se llega a
+configuración** —ni la vista diagrama ni una nota abierta desde él llevan ⚙—, así que no se puede
+borrar el contexto de debajo mientras estás dentro de una nota suya. El caso raro no se trata: no
+se puede producir.
 
 **Al recargar, vuelves a la ventana en la que estabas; lo que hubiera encima, no.** *(Decidido el
 2026-09-27.)* La ventana activa se guarda junto a la lista de ventanas, en `localStorage` y fuera
@@ -2282,7 +2255,7 @@ type WindowRef =
   | { readonly kind: "general" }
   | { readonly kind: "context"; readonly id: ContextId }
   | { readonly kind: "note"; readonly id: NoteId }
-  | { readonly kind: "diagram"; readonly id: DiagramId }  // desde Fase 5 · Lienzo
+  | { readonly kind: "diagram"; readonly id: DiagramId }
 
 interface WindowsLayout {
   readonly windows: ReadonlyArray<WindowRef>
@@ -2293,7 +2266,9 @@ interface WindowsLayout {
 Se guarda como JSON en la clave **`elnotas:windows`** de `localStorage`
 (`src/platform/web/LocalStorageWindows.ts`). Lo que se lee pasa por `parseWindowsLayout`: lo que
 no tenga forma de ventana se descarta de una en una, y si el conjunto no tiene forma de lista se
-empieza como la primera vez.
+empieza como la primera vez. **Un diagrama también puede ser ventana**: el selector lo ofrece tras
+las notas, la ventana monta el mismo lienzo que la vista, y la guarda y `parseWindowsLayout` lo
+conocen —sin ese caso, una ventana de diagrama se descartaba en silencio al recargar—.
 
 **Dónde se guarda esa lista fue la decisión con más enjundia.** Se evaluaron cuatro opciones:
 
@@ -2316,13 +2291,13 @@ vive en el storage»**. No añaden datos; son una forma de mirarlos.
 
 #### La guarda de integridad: las ventanas visibles se calculan
 
-Una lista guardada fuera del core puede apuntar a un contexto o una nota que ya no existen, y el
+Una lista guardada fuera del core puede apuntar a algo que ya no existe, y el
 reducer no se va a enterar. La guarda —una «guarda tontorrona», a propósito— es: **las ventanas
 visibles son siempre la lista guardada menos las referencias que ya no existen**, y la lista
 guardada se limpia de paso.
 
-- **Siempre, no sólo al arrancar.** Si se borra un contexto o una nota que era ventana, la ventana
-  desaparece **en la misma sesión**.
+- **Siempre, no sólo al arrancar.** Si se borra un contexto, una nota o un diagrama que era
+  ventana, la ventana desaparece **en la misma sesión**.
 - **También resuelve la ventana activa:** si la guardada ya no es visible, la primera visible, o
   ninguna (pantalla vacía).
 - **Es una función pura, con pruebas**, y se verifica **rompiéndola a propósito**, como todo lo que
@@ -2348,15 +2323,22 @@ Lo que no es la guarda, sino gestión de la lista:
 
 #### La lista de un contexto: selección, papelera y «Mover a…»
 
+- **Las listas enseñan elementos, no notas**: notas y diagramas, como `ListItem { ref, name }`
+  —una `ItemRef` y su nombre—. **El General los mezcla y ordena por nombre**, porque no tiene
+  `items` propios; **un contexto, en el orden de sus `items`** *(decisión de implementación,
+  aceptada por el usuario)*. Una referencia a lo que no está no se pinta. La selección va por una
+  clave con el tipo (`itemKey`: `note:x`, `diagram:x`), porque una nota y un diagrama podrían
+  compartir id, y **una fila de diagrama lleva una raya azul a la izquierda**.
 - **La papelera en un contexto quita la nota DE ESE contexto** (`remove-item`), no la borra de
   todas partes: la nota sigue existiendo y se ve en el General. **En el General**, que no tiene de
-  dónde quitarla, **borra de verdad** (`delete-note`), con confirmación.
+  dónde quitarla, **borra de verdad** (`delete-note`), con confirmación. **Un diagrama sigue las
+  mismas reglas** (`delete-diagram` en el General), y borrarlo no borra las notas a las que apuntan
+  sus nodos. La pregunta de borrar cuenta «notas», «diagramas» o «elementos» si van mezclados.
 - **«Mover a…»**, la otra acción de la barra de selección *(decidida el 2026-09-27)*. Semántica:
   **mover**, no copiar.
   - **Desde un contexto:** quita las notas seleccionadas de éste (`remove-item`) y las añade al
-    elegido (`add-item`). Son dos acciones que encadena la UI (`moveItems` —`moveNotes` hasta
-    la Fase 5, que lo extendió a diagramas—, en `src/ui/noteActions.ts`: primero añade y luego
-    quita), así que *una acción, una operación* se
+    elegido (`add-item`). Son dos acciones que encadena la UI (`moveItems`, en
+    `src/ui/noteActions.ts`: primero añade y luego quita), así que *una acción, una operación* se
     respeta. Si una nota ya estaba en el destino, `add-item` es no-op y sólo cuenta el
     `remove-item`.
   - **Desde el General**, que no es un contexto: sólo añade al elegido (`add-item`), sin tocar los
@@ -2377,10 +2359,12 @@ Lo que no es la guarda, sino gestión de la lista:
   desaparecen los botones «+», y ◀ ▶ y ⚙ se apagan (color más apagado).
 - **Descartada la casilla de selección manual** que el boceto ponía a la derecha de cada fila:
   allí era simbólica, y la pulsación larga ocupa su lugar.
-- **«+ Diagrama» no aparecía en la Fase 4.** Llegó con Fase 5 · Lienzo (último apartado).
-- **El orden de la lista** *(decisión de implementación, aceptada por el usuario)*: **el General
-  ordena sus notas por nombre** —no tiene `items` propios—; **un contexto, en el orden de sus
-  `items`**. Las cifras de la pulsación larga, en §7.5.
+- **«+ Diagrama»**, un botón azul algo más pequeño **debajo y a la izquierda del «+» verde, por
+  encima de su esquina** (boceto del usuario, 2026-10-04). El diagrama **nace en ese contexto**,
+  como una nota —`create-diagram` + `add-item`, en `createDiagramIn`—, y llega con el nombre,
+  «Nuevo diagrama», **ya en edición**.
+
+Las cifras de la pulsación larga, en §7.5.
 
 #### La vista configuración
 
@@ -2435,7 +2419,7 @@ todo». Quitar una ventana, quitar una nota de un contexto y «Mover a…» **no
 destruyen nada. Una ventana quitada se vuelve a añadir desde configuración; una nota quitada
 sigue en el General, y desde ahí se recoloca con «Mover a…».
 
-#### «Borrar todo» *(construido el 2026-10-04: `0e1b168`, `395d0e3`, `c1e86c9`)*
+#### «Borrar todo»
 
 **Pregunta con la misma hoja propia**, con el foco en «Cancelar», y **la pregunta cuenta lo que se
 pierde**: «¿Borrar 2 notas, 1 diagrama y 1 contexto, y las ventanas? No se puede deshacer.»; sin
@@ -2462,11 +2446,9 @@ escriba entre pedirlo y volver a abrir **también se va** —hay una prueba de e
 - **Es local**: borra el `localStorage` de **ese navegador**, que es el destino de hoy. Cuando
   cambie el destino —la carpeta, OPFS— hay que revisarlo (`TAREAS.md`).
 
-*Cómo se probó:* ocho pruebas en `test/platform/web/resetStorage.test.ts` y tres de
-`resetQuestion`. **Al romper a propósito salió un hueco:** quitar la marca la primera no hacía caer
-ninguna prueba, porque la que simulaba un fallo fallaba en el **primer** borrado, antes de llegar a
-la marca; ahora hay una que falla en uno **de en medio**. Verificado además a mano en el navegador
-del panel, en otro origen (`127.0.0.1`), para no tocar los datos del usuario en `localhost`.
+*Cómo se prueba:* en `test/platform/web/resetStorage.test.ts`, con una prueba que falla en un
+borrado **de en medio** —si falla en el primero, quitar la marca antes de tiempo no hace caer
+nada—. A mano, en otro origen (`127.0.0.1`), para no tocar los datos del usuario en `localhost`.
 
 #### Las notas
 
@@ -2484,11 +2466,9 @@ del panel, en otro origen (`127.0.0.1`), para no tocar los datos del usuario en 
   La excepción es el General, que no se renombra.
 - **Una nota vacía se mantiene.**
 
-> **Rectificado el 2026-09-27, en la misma sesión.** Primero se decidió que *una nota abandonada
-> vacía se descarta* (vacía = sin texto en el contenido), y se cambió por **se mantiene** porque
-> simplifica la gestión: «+ Nota» crea en el momento y exit sólo vuelve, sin tener que decidir
-> nada al salir. Salió además un motivo que la regla de descarte no veía: **vaciar una nota
-> existente que es ventana la borraría de verdad al salir.** Precio aceptado: un «+» sin querer
+> **Por qué se mantiene** (2026-09-27, rectificando un «se descarta» de la misma sesión): «+ Nota»
+> crea en el momento y exit sólo vuelve, sin decidir nada al salir; y descartarla **borraría de
+> verdad una nota existente que es ventana con sólo vaciarla**. Precio aceptado: un «+» sin querer
 > deja una «Nueva Nota» vacía, que se quita con selección y papelera.
 
 **Una nota que es ventana se edita ahí mismo: es el MISMO editor en dos marcos.**
@@ -2506,50 +2486,12 @@ desde el General una nota que es ventana la quita en la misma sesión—.
 #### Lo que se queda sin uso: `Context.defaultView`
 
 Existía para que un contexto «abriera directamente» una nota o un diagrama. Eso lo hace ahora una
-**ventana de tipo nota**, así que en la Fase 4 **ni `defaultView` ni `set-default-view` tienen
-consumidor**. No se eliminan —el dominio está cerrado, y quitarlos tocaría modelo, reducer,
+**ventana de tipo nota o de tipo diagrama**, así que **ni `defaultView` ni `set-default-view`
+tienen consumidor**. No se eliminan —el dominio está cerrado, y quitarlos tocaría modelo, reducer,
 pruebas y formato en disco por algo que no molesta—; se anotan como candidatos a revisar cuando
-lleguen las entidades «meta» de UX (`TAREAS.md` → *Ideas aparcadas*). La Fase 5 tampoco les da
-uso: abrir directamente un diagrama lo hace una ventana de tipo diagrama.
+lleguen las entidades «meta» de UX (`TAREAS.md` → *Ideas aparcadas*).
 
-#### Lo que cambia con la Fase 5 *(planificado el 2026-10-03; construido en Fase 5 · Lienzo, sin cerrar)*
-
-Decidido con el usuario al planificar los Diagramas; el resto del diseño de la fase, en §9.11.
-**Todo lo de este apartado tiene código desde el 2026-10-04** (`c8a37db`, `ede620f`, `1997ace`),
-pero **sin verificar a mano**: la lista del lienzo está sin pasar.
-
-- **La vista diagrama es la cuarta.** Se entra tocando un diagrama en la lista de un contexto o
-  del General —donde salen **mezclados con las notas**—, y su cabecera es como la de la nota:
-  exit y el nombre, que se renombra tocándolo.
-- **Las listas enseñan elementos, no notas.** Una ventana de contexto o del General enseña
-  `ListItem { ref, name }` —una `ItemRef` y su nombre—: el General, todo mezclado y por nombre;
-  un contexto, en el orden de sus `items`; una referencia a lo que no está no se pinta. La
-  selección va por una clave con el tipo (`itemKey`: `note:x`, `diagram:x`), porque una nota y
-  un diagrama podrían compartir id. La papelera y «Mover a…» son `trashItems` y `moveItems`, y la
-  pregunta de borrar cuenta «notas», «diagramas» o «elementos» si van mezclados. **Una fila de
-  diagrama lleva una raya azul a la izquierda** *(decisión de implementación)*.
-- **Un nivel más de navegación: ventana → diagrama → nota.** Tocar un nodo-nota, o crear una
-  nota desde el lienzo, entra en la nota; **exit vuelve paso a paso**: de la nota al diagrama, y
-  del diagrama a la ventana. **Si el diagrama es ventana**, diagrama → nota es un solo nivel,
-  como ventana → nota. **Construido apilando lo de encima** en `App.ts` (§7.5); el `backStack` ya
-  era una pila, pero hubo que arreglarle una carrera. Lo que sostenía «un solo nivel» —que desde
-  una nota no se llega a configuración— **sigue en pie**: ni la vista diagrama ni la nota
-  abierta desde él llevan ⚙.
-- **«+ Diagrama»**, un botón azul algo más pequeño **debajo y a la izquierda del «+» verde, por
-  encima de su esquina**, en cada contexto *(recolocado el 2026-10-04 con un boceto del usuario,
-  `88677af`; antes iba a la izquierda, solapado con el verde y por debajo de él)*. El diagrama **nace en ese contexto** —como una nota:
-  `create-diagram` + `add-item`, en `createDiagramIn`— y llega con el nombre, «Nuevo diagrama»,
-  **ya en edición**.
-- **Un diagrama puede ser ventana**: `WindowRef` gana el caso `diagram`, el selector lo ofrece
-  —tras las notas—, y **la guarda lo sabe**: un diagrama borrado se quita de las ventanas en la
-  misma sesión. También lo sabe `parseWindowsLayout`: sin ese caso, una ventana de diagrama se
-  descartaba en silencio al recargar. La ventana monta **el mismo lienzo** que la vista.
-- **Borrar un diagrama sigue las reglas de una nota**: en el General la papelera **borra de
-  verdad** (`delete-diagram`) y confirma con la hoja propia; en un contexto **sólo lo quita de
-  ese contexto** (`remove-item`), sin confirmar. **Borrar un diagrama no borra las notas** a las
-  que apuntan sus nodos.
-
-### 7.5 Cómo está construida *(Fase 4, y la vista diagrama de Fase 5 · Lienzo y Relaciones)*
+### 7.5 Cómo está construida
 
 Lo de arriba es el diseño; esto es cómo quedó el código y lo que se decidió al escribirlo. Casi
 todo son **decisiones de implementación, aceptadas por el usuario** en bloque, no cerradas una a
@@ -2558,7 +2500,7 @@ una como las de §7.2–§7.4.
 #### El patrón: lo que decide es puro; el DOM, delgado
 
 **Lo que decide qué se ve y qué pasa es una función pura, con pruebas en Node; el DOM de encima
-es delgado y se verifica en el navegador**, con las cuatro listas manuales de `test/ui/`. Por eso
+es delgado y se verifica en el navegador**, con las listas manuales de `test/ui/`. Por eso
 cada pantalla va en dos ficheros: `windowView.ts` decide qué enseña una ventana y `WindowsView.ts`
 lo pinta; `settingsContent.ts` y `SettingsView.ts`; `noteActions.ts` + `selection.ts` y
 `NoteList.ts`; `writingMode.ts` + `noteTree.ts` + `editor.ts` (el editor entero, sin DOM, probado
@@ -2622,12 +2564,12 @@ pregunta y la selección—, pero **nunca más capas de las que hay**, y los `ba
 uno: dos seguidos antes del `popstate` sacaban de la página (fallo cazado probando). Escape en
 una hoja no llega al Escape del modo selección.
 
-**Una carrera, arreglada en Fase 5 · Lienzo** (`1997ace`): al elegir en una hoja algo que abre
+**Una carrera, arreglada al apilar vistas:** al elegir en una hoja algo que abre
 otra capa —«Nota nueva» en el menú del lienzo—, el `popstate` pendiente del cierre de la hoja
 llegaba después de apuntar la capa nueva, y la cerraba a ella. **Ahora una capa que se abre con
 cierres pendientes espera a que lleguen** antes de su `pushState`.
 
-**Lo de encima se apila** (`App.ts`, desde el mismo commit). Antes había una sola capa encima de
+**Lo de encima se apila** (`App.ts`). Antes había una sola capa encima de
 la ventana, y una guarda —`if (back.isOpen()) return`— que existía justamente para impedir el
 segundo nivel; se quitó, y ahora cada vista abierta encima es una capa más y sólo se ve la de
 arriba. `abrirEncima` esconde lo de debajo **antes** de montar lo nuevo, porque lo nuevo puede
@@ -2652,11 +2594,13 @@ empieza limpia**: el primer toque tras una pulsación larga se perdía (cazado p
 
 #### El tercer eslabón, demostrado
 
-§3 promete que un cambio que no cambia nada **no toca el DOM**, y era el punto 4 de Fase 4 ·
-Notas: el único de los tres eslabones que el usuario nota. **Medido en el navegador con
-`?depurar`:** un `set-checked` redundante da **0 avisos del `Store`, 0 escrituras y 0 cambios en el
-DOM**, frente a **1, 1 y 7** de un cambio de verdad. Con esto la cadena de §9.5 (no notifica) y
-§9.8 (no escribe) queda cerrada de punta a punta.
+§3 promete que un cambio que no cambia nada no llega a ningún sitio, y se demostró eslabón a
+eslabón, cada uno en el criterio de cierre de su fase: en la 1, que un `set-checked` redundante
+**no notifica** al suscriptor ni toca `updatedAt`; en la 2, que **no escribe**, con un
+`StorageAdapter` que cuenta escrituras; y en la 4, que **no toca el DOM**, el único de los tres que
+el usuario nota —un re-render con el cursor dentro le borra lo que está escribiendo—. **Medido en
+el navegador con `?depurar`:** un `set-checked` redundante da **0 avisos del `Store`, 0 escrituras
+y 0 cambios en el DOM**, frente a **1, 1 y 7** de un cambio de verdad.
 
 ---
 
@@ -2671,6 +2615,10 @@ La razón de fondo cabe en una frase: **`lib` y `types` se aplican por invocaci�
 por fichero.** En el momento en que se decidió que el core no viera el DOM pero la UI sí,
 quedaron garantizadas al menos dos configuraciones. Las otras son economía, los tests y el
 navegador.
+
+Los límites entre módulos son **carpetas con su `tsconfig`, no un monorepo con workspaces de
+npm**. Es decisión cerrada, pero su motivo original no quedó escrito; lo único registrado es
+cuándo se reconsideraría: con los shells de escritorio y móvil (`TAREAS.md` → *Ideas aparcadas*).
 
 | Fichero | Para qué |
 |---|---|
@@ -2769,6 +2717,11 @@ problema: sin el guardián, un import sin `.js` en `src/` pasa todas las pruebas
 Es más lento que un runner dedicado y no tiene watch mode; es el precio elegido a cambio de
 cero dependencias. Se evaluó vitest y se descartó: ~64M en disco para algo que Node ya trae.
 
+**Por qué existe `tools/require-tests.mjs`:** `node --test` sin ningún fichero imprime `1..0` y
+sale con código 0, así que `npm test` pasaría en verde **sin ejecutar nada**. El guardián sale
+con código 1 si no encuentra ningún `*.test.js` en `tmp-test/test/`. No se quita para «arreglar»
+un fallo: el fallo es lo que avisa.
+
 ### 8.4 Dependencias: solo lo de la fase actual
 
 No se instala una dependencia hasta la fase en que se usa de verdad, y se desinstala si deja
@@ -2816,7 +2769,7 @@ test/
 │   ├── file/
 │   └── blobs/       # incluye VERIFICACION-MANUAL.md
 ├── platform/web/    # desde la Fase 4
-└── ui/              # desde la Fase 4, con sus tres VERIFICACION-MANUAL*.md (la del lienzo, de la 5)
+└── ui/              # desde la Fase 4, con sus listas VERIFICACION-*.md
 ```
 
 **Lo que se gana no es estética, aunque la razón de partida fuera esa.** Es que la separación
@@ -2856,7 +2809,7 @@ y no `tmp-test/` a secas, así que caza un fallo más de los que cazaba — que 
 compilen a un sitio distinto de donde las busca el runner. Verificado rompiéndolo, como todo lo
 demás de esta sección.
 
-### 8.6 El navegador sin bundler: `importmap` y `.js` *(Fase 4)*
+### 8.6 El navegador sin bundler: `importmap` y `.js`
 
 **Cómo se carga la app:** `npm run build:web` (`tools/clean-dist.mjs` y luego `tsc -p
 tsconfig.web.json`) compila `src/` a `dist/web/` en **ESM**, sin empaquetar nada. `index.html`, en
@@ -2899,34 +2852,32 @@ alias nuevo que se olvide en `index.html` no lo caza nada automático; se nota a
 GitHub Pages sirve la app en una subcarpeta, `/ElNotas/` (§9.12). Una ruta absoluta funcionaría en
 casa y fallaría publicada; `npm run build:pages` se niega a armar la carpeta si encuentra una.
 
+#### Los comentarios del código: cabeceras cortas y sin `§`
+
+No es infraestructura, pero es una regla sobre los ficheros y no tiene otro sitio mejor. **La
+cabecera de un fichero responde a «¿para qué sirve esto?» y para ahí**, de tres a ocho líneas
+que entienda quien no programa. **El porqué no va en el código** porque una cabecera que
+argumenta una decisión es una sección de este documento copiada, y las copias se separan del
+original sin que nadie lo note. **Nada de `§` en el código**: apunta a un número que se renumera
+solo y nada comprueba esos punteros; si hay que señalar un documento, se nombra el fichero. **Los
+comentarios de dentro se quedan**, cortos y pegados a la línea, porque dicen lo que el código no
+dice; al quitar una cabecera, lo que explicara y no esté aquí se trae aquí, no se borra.
+
 ---
 
 ## 9. El plan por fases, razonado
 
 ### 9.1 La frontera entre la Fase 1 y la Fase 2 es `Versioned`
 
-Antes el reparto era una lista de tareas sin criterio, y se contradecía a sí mismo: la tabla
-de carpetas ponía los reducers en la Fase 2 y el plan por fases los ponía en la Fase 1. La
-regla que lo resuelve:
+> **Fase 1 = todo lo que opera por debajo de `Versioned`**: funciones cuya entrada y salida son
+> *contenido* (`Text | CheckBox`), nunca una entidad.
 
-> **Fase 1 = todo lo que opera por debajo de `Versioned`.** Funciones cuya entrada y salida
-> son *contenido* (`Text | CheckBox`), nunca una entidad.
-
-El razonamiento: producir una entidad nueva obliga a estampar `updatedAt` y `revision`, y eso
-obliga a tener los puertos y a alguien que los inyecte. Una operación de contenido no toca
-`Versioned`, así que no depende de nada: se escribe y se testea sola, array de entrada, array
-de salida.
-
-**Un matiz que es fácil documentar mal.** El motivo por el que el reducer *completo* no cabe
-en la Fase 1 **no es que falten los puertos**: los puertos son cuatro líneas de interfaz y se
-adelantan sin coste. El motivo real es la **superficie**. La superficie de un reducer es *el
-comportamiento entero de la aplicación*: escribirlo completo exige haber decidido antes cada
-acción que existe (crear nota, borrar, renombrar, meter en un contexto, cambiar
-`defaultView`…), y eso es un catálogo de producto, no un problema de árboles. La superficie
-de una operación de contenido es un array.
-
-De ahí el reparto: la Fase 1 se lleva un reducer de **un solo caso**, como prueba de que la
-cadena funciona de punta a punta; el catálogo entero es Fase 2.
+Producir una entidad obliga a estampar `updatedAt` y `revision`, y eso pide puertos y alguien que
+los inyecte; una operación de contenido no depende de nada: array de entrada, array de salida. Y
+el reducer *completo* no cabía en la Fase 1, no por los puertos —son cuatro líneas de interfaz—
+sino por su **superficie**: escribirlo exige haber decidido cada acción que existe, y eso es un
+catálogo de producto, no un problema de árboles. Por eso la Fase 1 se llevó un reducer de un solo
+caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (§9.7).
 
 ### 9.2 Las fases
 
@@ -2934,75 +2885,61 @@ cadena funciona de punta a punta; el catálogo entero es Fase 2.
   `node:test`, y limpieza de los restos del prototipo.
 
 - **Fase 1 — Dominio puro. ✅ HECHA.** El helper con sus dos primitivas, `Position`, las ocho
-  operaciones (§9.3), los puertos `Clock` e `IdGenerator` y la rebanada vertical. Los seis
-  puntos del criterio de cierre (§9.5), cumplidos, con 99 pruebas. La rebanada fue lo que
-  verificó la cadena de identidad de punta a punta **antes** de escribir las otras siete
-  operaciones: la alternativa —escribirlas todas y enchufarlas al final— habría descubierto un
-  fallo de identidad cuando ya hubiera ocho sitios donde pudiera estar.
+  operaciones (§9.3), los puertos `Clock` e `IdGenerator` y la rebanada vertical, que verificó la
+  cadena de identidad de punta a punta **antes** de escribir las otras siete operaciones: la
+  alternativa —escribirlas todas y enchufarlas al final— habría descubierto un fallo de identidad
+  cuando ya hubiera ocho sitios donde pudiera estar.
 
-- **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los seis puntos del criterio de
-  cierre (§9.8), cumplidos, con 216 pruebas al cerrarla: los tres puertos (§6.1),
+- **Fase 2 — Acciones, persistencia y memory. ✅ HECHA.** Los tres puertos (§6.1),
   `MemoryStorageAdapter` y su suite de contratos (§6.3), el write-behind en sus **dos** piezas
-  (§6.4), **las diecisiete acciones** (§9.7) y la mitad pura del arranque.
+  (§6.4), **las diecisiete acciones** (§9.7) y la mitad pura del arranque. **Se atacó de abajo
+  arriba:** primero la persistencia entera con la única acción que ya existía, y sólo después las
+  demás. El write-behind era la única pieza con riesgo real, y se quería descubrir que escribe de
+  más **con un solo candidato**, no con diecisiete. Valió la pena: la rotura que comprobaba ese
+  corte no tumbaba ninguna prueba hasta que se añadió un contador de transacciones.
 
-  **Se atacó de abajo arriba, no de arriba abajo:** primero la persistencia entera verificada
-  con la única acción que ya existía, y sólo después las quince que faltaban. Mismo
-  razonamiento que la rebanada vertical de la Fase 1 — el write-behind era la única pieza con
-  riesgo real de la fase, y se quería descubrir que escribe de más **con un solo candidato**,
-  no con diecisiete. Valió la pena: la rotura que comprobaba ese corte no tumbaba **ninguna**
-  prueba hasta que se añadió un contador de transacciones, y eso se vio con una acción en el
-  catálogo en vez de con diecisiete.
+- **Fase 3 — Fichero local. ✅ HECHA.** Primero el **paso 0** —`Result<T, E>` y las taxonomías de
+  error (§6.5)—; luego `FileStorageAdapter` con el formato de §6.2, que pasa la suite de contratos
+  **sin tocarla**; y las dos implementaciones de `BlobStore` (§6.1), con la lista manual de la de
+  carpeta pasada el 2026-09-13 (§6.3). Deja un detalle de UX con nombre: al recargar **no se puede
+  recuperar el permiso de la carpeta en silencio** —el handle se guarda en IndexedDB, pero volver a
+  pedir permiso exige un gesto del usuario, el botón de «reconectar carpeta»—, y mientras ese botón
+  no exista un `permission-denied` **detiene el write-behind sin vuelta atrás** hasta recargar.
 
-- **Fase 3 — Fichero local. ✅ HECHA.** Los siete puntos de §9.9, cumplidos, con **314 pruebas**.
-  Hechos el **paso 0** —`Result<T, E>`, las dos taxonomías en `domain/errors/`, los once métodos
-  de puerto, `runMigrations` ya total, `MemoryStorageAdapter`, el write-behind con su estado
-  *detenido* y la suite de contratos (§6.5), con **232 pruebas** en ese punto—,
-  **`FileStorageAdapter`** con el formato en disco de §6.2 —pasa la suite **sin tocarla** y lleva
-  su propio fichero para lo que el contrato no puede ver (§6.3), **274 pruebas**— y **las dos
-  implementaciones de `BlobStore`**, en `src/storage/blobs/`: **314 pruebas**, y el contrato
-  corriendo **tres** veces. **Y el punto 5, que era lo único que no es código: la lista de
-  verificación manual, ejecutada el 2026-09-13** en Brave —las cinco secciones pasan— y en
-  Firefox, que anota que sin `showDirectoryPicker()` cuatro de ellas no se pueden probar ahí.
-  **Cuándo se da por terminada: §9.9**, escrito antes de que el adaptador exista. Ojo al detalle
-  de UX: al recargar
-  **no se puede recuperar el permiso de la carpeta en silencio** — el handle se guarda en
-  IndexedDB, pero volver a pedir permiso exige un gesto del usuario (botón de "reconectar
-  carpeta"). Y ojo a la consecuencia, que ahora tiene nombre: mientras ese botón no exista, un
-  `permission-denied` **detiene el write-behind sin vuelta atrás** hasta recargar.
+- **Fase 4 — UI. ✅ CERRADA el 2026-10-03, por decisión del usuario y con deuda.** Sólo web,
+  incluido el navegador del móvil, y partida en dos (§9.10). Nacen `src/platform/web/` —con las
+  primeras implementaciones reales de `Clock` e `IdGenerator` y el arranque de verdad— y `src/ui/`:
+  la navegación por ventanas (§7.4), el editor con casillas anidadas (§7.2 y §7.3), `onCorrupt`,
+  `onError` y la validación de esquema (§6.2, §6.5). Sale el prototipo viejo. Ninguna dependencia
+  nueva. Sus dos listas manuales se dieron por pasadas el 2026-10-10; **siguen sin contestar las
+  tres preguntas del editor** (§9.10).
 
-- **Fase 4 — UI. ✅ CERRADA el 2026-10-03, con deuda** —las dos listas manuales y las tres
-  preguntas, pendientes (§9.10)—. Sólo web, incluido el navegador del móvil. Nacen
-  `src/platform/web/` —con las primeras implementaciones reales de `Clock` e `IdGenerator` y el
-  arranque de verdad— y `src/ui/`: la navegación por ventanas (§7.4), el editor con casillas
-  anidadas (§7.2 y §7.3), `onCorrupt`, `onError` y la validación de esquema (§6.2, §6.5). Sale el
-  prototipo viejo. **Partida en dos desde el 2026-09-27**: **Fase 4 · Contextos** y **Fase 4 ·
-  Notas**. **532 pruebas** al cerrarla (329 al empezar, 423 al terminar el código de Contextos,
-  489 al terminar el de Notas), **ninguna dependencia nueva**, y el core sólo se tocó por los
-  `.js` de sus imports (§8.6), la regla de `merge` (§9.3) y conservar las referencias a lo
-  ilegible (§6.5). **Queda como deuda**, no como hecho: pasar las dos listas manuales y contestar
-  las tres preguntas del editor (§9.10).
+- **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08**, y su deuda —las listas de Lienzo y
+  Relaciones— saldada el 2026-10-10, cuando el usuario las dio por pasadas tras probar la app
+  instalada. Un lienzo libre con nodos y relaciones, y la vista diagrama, en tres partes: Modelo,
+  Lienzo y Relaciones (§9.11).
 
-- **Fase 5 — Diagramas. ✅ CERRADA el 2026-10-08, con deuda** —las listas de Lienzo y Relaciones,
-  sin pasar—, **saldada el 2026-10-10**, cuando el usuario las dio por pasadas tras probar la app
-  instalada. Planificada el 2026-10-03 con el usuario. Un lienzo libre con nodos y relaciones, y
-  la vista diagrama. **Partida en tres, en este orden: Fase 5 · Modelo, Fase 5 ·
-  Lienzo y Fase 5 · Relaciones** (§9.11). **Fase 5 · Modelo, ✅ HECHA el 2026-10-03**, con **643
-  pruebas** (532 al empezar): los Diagramas ya se operan en el core. **Fase 5 · Lienzo, código
-  hecho el 2026-10-04 y sin cerrar**, con **693**: la vista, el corcho, los pósits y los
-  nodos-nota. **Fase 5 · Relaciones, código hecho el 2026-10-04 y sin cerrar**, con **712**: las
-  líneas, *Conectar*, su menú y su texto. Las dos tienen su lista manual escrita y sin pasar.
-  Iba a cerrarse con todas las listas manuales pendientes pasadas en una sentada; **el usuario la
-  cerró el 2026-10-08 sin pasarlas**, para empezar la Fase 6, con **723 pruebas** (§9.11).
+- **Fase 6 — PWA. ✅ CERRADA el 2026-10-10**, publicada en
+  `https://ildartashtekov.github.io/ElNotas/`. Que ElNotas se instale en el móvil como una app
+  —icono, pantalla completa, sin conexión, actualizándose sola— sin depender del ordenador de casa:
+  manifiesto, iconos, un *service worker* en `pwa/sw.js`, un script que arma la carpeta publicada y
+  GitHub Pages, publicada por GitHub Actions al subir a `main`. **Sin dependencias nuevas y sin
+  tocar el core** (§9.12). Con ella el usuario dio por pasadas las listas pendientes de las Fases 4
+  y 5.
 
-- **Fase 6 — PWA. ✅ CERRADA el 2026-10-10.** Planificada el 2026-10-08, construida el 2026-10-09
-  y publicada el 2026-10-10 en `https://ildartashtekov.github.io/ElNotas/`, con **725 pruebas**.
-  Que ElNotas se instale en el móvil
-  como una app —icono, pantalla completa, sin conexión, actualizándose sola— sin depender del
-  ordenador de casa: manifiesto, iconos, un *service worker* en `pwa/sw.js`, un script que arma la
-  carpeta publicada y GitHub Pages, publicada por GitHub Actions al subir a `main`. **Sin
-  dependencias nuevas y sin tocar el core.** Las doce decisiones, el porqué, el criterio de cierre
-  y cómo quedó, en §9.12. **Con ella, el usuario dio por pasadas las cuatro listas pendientes de las
-  Fases 4 y 5**; de la deuda de la Fase 4 quedan sólo las tres preguntas del editor.
+- **Fase 7 — Refactor. EN CURSO**, planificada el 2026-10-11, en la rama `fase-7-refactor`. Dos
+  cosas: arreglar lo que molesta al usar la app en el móvil, y revisar lo que se construyó por
+  adelantado o puede no aguantar el volumen **con números y no a ojo** —si al medir algo no duele,
+  se cierra sin tocar código—. Hecho en el código: la barra de la nota sube con el teclado
+  (`interactive-widget=resizes-content` en el `viewport`, porque Chrome en Android no encogía la
+  página; la barra va con `sticky` y ocupa su sitio, para no tapar la última línea), las barras del
+  móvil con el color del sistema (§9.12), los puntos del lienzo a media intensidad (`--rejilla`) y
+  los pósits de `10rem` a `8rem` (`7rem` los alargaba demasiado hacia abajo). Medido: **el
+  arranque no duele** —el techo de `localStorage`, unas 4.000 notas, llega antes—, y **arrastrar un
+  nodo sí dolía**: se redibujaban todas las líneas, alternando medir y escribir; ahora sólo las del
+  nodo (`relationsOf`), midiendo todo antes de escribir. Las tablas, en `TAREAS.md`. Falta verlo en
+  el móvil y la documentación. **Negrita, cursiva, tachado, subrayado y el texto más grande NO
+  entran**, por decisión del usuario: van juntos, sin fase.
 
 ### 9.3 Las operaciones de contenido
 
@@ -3266,48 +3203,24 @@ usen nunca.
 
 ### 9.5 Definición de "Fase 1 terminada"
 
-No la tenía. Las fases 2 y 3 sí, aunque implícita: *terminan cuando el adaptador pasa el
-contrato*. Sin criterio, "terminada" acaba queriendo decir "me he cansado". Son seis:
-
-1. El helper devuelve el array de entrada **intacto** en sus dos casos: id ausente, y
-   transformación que no cambia nada.
-2. **Las ocho operaciones existen** (§9.3): `setText`, `setChecked`, `insert`, `remove`,
-   `split`, `merge`, `convertToCheckBox` y `convertToText`.
-3. Cada una tiene tests de **valor** y de **identidad** (`assert.strictEqual`, nunca
-   `deepEqual`).
-4. Cada caso no-op de la tabla está testeado explícitamente.
-5. La rebanada vertical demuestra que un `set-checked` redundante **no notifica al suscriptor
-   y no toca `updatedAt`**.
-6. `npm run check` en verde, y `npm test` ya **incapaz de pasar en falso**.
-
-### 9.6 `src/platform/` no nace en la Fase 1
-
-Podría parecer que declarar los puertos obliga a implementarlos ya. No: **las
-implementaciones no hacen falta hasta la Fase 4.** Un test se fabrica las suyas en una línea
-—`const clock: Clock = { now: () => 1000 }`— y los tests están excluidos de la verja de
-pureza, así que ni siquiera necesitan permiso para tocar plataforma.
-
-Hasta que haya código de producción que arranque la app de verdad, una implementación real
-**no tiene consumidor**. Así que no se crea `src/platform/` y no se declara el alias
-`#platform/*`: un alias se declara cuando el módulo existe. *(Y así fue: `src/platform/` y su
-alias nacieron en la primera rebanada de la Fase 4, `473f566`, con `boot.ts` como consumidor.)*
+Era el criterio de cierre de la Fase 1, ya cumplido. Su crónica, en `TAREAS.md` y `git log`; la
+cadena de identidad que demostraba, en §3 y §7.5.
 
 ### 9.7 El catálogo de acciones de la Fase 2
 
-Hoy `Action` tiene **un solo miembro**, así que ni siquiera es una unión. El catálogo no se ha
-inventado: cada acción sale de un campo del modelo que alguien tiene que poder cambiar, o de
-una operación de la Fase 1 que ya existe y no tiene quien la despache. **Son diecisiete.**
+El catálogo no se inventó: cada acción sale de un campo del modelo que alguien tiene que poder
+cambiar, o de una operación de la Fase 1 que no tenía quien la despachara. **En la Fase 2 fueron
+diecisiete**; la Fase 5 añadió las trece de Diagrama (§9.11), treinta en total.
 
 | Grupo | Acciones | De dónde salen |
 |---|---|---|
-| **Contenido** | `set-text` · `insert` · `remove` · `split` · `merge` · `convert-to-checkbox` · `convert-to-text` | las siete operaciones de §9.3 que aún no tienen acción. La octava, `set-checked`, ya está |
+| **Contenido** | `set-checked` · `set-text` · `insert` · `remove` · `split` · `merge` · `convert-to-checkbox` · `convert-to-text` | las ocho operaciones de §9.3. `set-checked` existía desde la rebanada de la Fase 1 |
 | **Notas** | `create-note` · `rename-note` · `delete-note` | `Note` tiene `name` y `content`; el contenido ya está cubierto arriba |
-| **Contextos** | `create-context` · `rename-context` · `delete-context` · `add-item` · `remove-item` · `set-default-view` | los cuatro campos de `Context`: `name`, `defaultView` e `items` |
+| **Contextos** | `create-context` · `rename-context` · `delete-context` · `add-item` · `remove-item` · `set-default-view` | los campos de `Context`: `name`, `defaultView` e `items` |
 
-**Las siete de contenido son mecánicas.** Su caso de reducer es calcado al de `set-checked`:
-buscar la nota, llamar a la operación, comparar con `===`, y si el contenido no cambió devolver
-el estado tal cual. Copiar catorce líneas siete veces. Lo único que hay que vigilar es que
-**nadie se salte la comparación** en ninguna de las siete.
+**Las de contenido son mecánicas.** Su caso de reducer es calcado al de `set-checked`: buscar la
+nota, llamar a la operación, comparar con `===`, y si el contenido no cambió devolver el estado tal
+cual. Lo único que hay que vigilar es que **nadie se salte la comparación**.
 
 #### Ninguna acción pliega varias operaciones
 
@@ -3321,22 +3234,14 @@ aparcada con las candidatas de la barra (§7.2) y el borrar rama, en §9.3—. L
 son **dos casos de uso desde la UI** en dos gestos que tocan entidades y no contenido: crear una
 nota en un contexto (`create-note` + `add-item`) y «Mover a…» (`add-item` + `remove-item`), §7.4.
 
-#### Los Diagramas se persisten, pero no se operan
+#### Qué devuelve un caso de uso: la entidad protagonista, o `null`
 
-> ⚠️ **Ya no es así: desde Fase 5 · Modelo (2026-10-03) los Diagramas se operan**, con trece
-> acciones de Diagrama (17 → 30) y catorce casos de uso (§9.11), aún sin pantalla. Lo de abajo
-> se queda como el porqué de la Fase 2.
-
-`AppState.diagrams` existe y `StorageAdapter` lleva su `Repository<Diagram>`, así que un Diagrama se
-guarda y se lee como cualquier otra entidad. Pero **no hay ni una acción de Diagrama** en el
-catálogo, ni siquiera `create-diagram`.
-
-Es la misma regla que quitó `move` (§9.3): no se construye lo que no tiene consumidor. El
-editor de grafos es la Fase 5, así que en la Fase 2 una acción de Diagrama no tendría quien la
-despachara ni forma de comprobarse contra un uso real. **La consecuencia asumida y visible:**
-`add-item` acepta un `ItemRef` de tipo `diagram` —el tipo lo permite y sería raro mutilarlo— pero
-en la Fase 2 no hay manera de crear un Diagrama que referenciar, así que ese camino queda muerto
-hasta que alguien lo despierte. Añadirlas luego es puramente aditivo.
+*Construido el 2026-09-19; hoy son treinta y dos, todos con esta forma.* Cada caso de uso devuelve
+la entidad que ha tocado, o `null` si no aplicó, que sale de la invariante de identidad (`cambio`,
+en `useCases.ts`). **No un `Result`**: un no-op **no es un fallo**, y sin esto «hecho» y «no
+aplicaba» eran indistinguibles desde la llamada. ⚠️ Es **la protagonista, no todo lo que cambió**
+—`deleteNote` devuelve la nota, no las `ItemRef` que limpió—, así que **no sirve de undo**: el undo
+será una pila con su propio diseño. El registro entero, en `TAREAS.md` → *Sin decidir*.
 
 #### Lo que de verdad tiene enjundia: la integridad referencial
 
@@ -3356,18 +3261,12 @@ Tres cosas que hay que hacer bien y que no se parecen a nada de la Fase 1:
 - **`add-item` es no-op si la entidad referenciada no existe.** Es el otro lado de la misma
   regla, y no hay dónde comprobarlo salvo aquí.
 
-#### La hidratación entra; el arranque de verdad, no
+#### El arranque, partido en dos
 
-Se parte por la misma costura que el write-behind (§6.4), y por el mismo motivo:
-
-- **puro y en la Fase 2** — `hydrate(entidades) → AppState`, y el runner de migraciones que la
-  precede. Son funciones de datos a datos, se prueban sin navegador y sin temporizadores.
-- **impuro y en la Fase 4** — quién abre el storage, en qué orden, y qué se le enseña al
-  usuario si no hay nada guardado. **Construido**: `boot.ts` en `platform/web/` (§7.5), y sin
-  nada guardado se ve la ventana del General (§7.4).
-
-Esto cierra la entrada de `TAREAS.md` que decía que el arranque no tenía dueño de fase. Tenía
-dos, y por eso no encajaba en ninguna.
+Por la misma costura que el write-behind (§6.4): **la mitad pura** —`hydrate(entidades) →
+AppState` y el runner de migraciones que la precede— es del core y se prueba sin navegador ni
+temporizadores; **la impura** —quién abre el almacén, en qué orden, y qué se ve si no hay nada
+guardado— es `boot.ts`, en `platform/web/` (§7.5).
 
 #### `schemaVersion` no va en `AppState`
 
@@ -3376,332 +3275,62 @@ añade a `AppState`**. Es una
 propiedad de **lo guardado**, no del estado en memoria: en `AppState` no significaría nada, no
 la leería nadie, y cada acción tendría que arrastrarla intacta de un estado al siguiente.
 
-Y de paso se corrige la justificación, que `TAREAS.md` marcaba como no-real. El argumento
-escrito era que «añadirlo cuando ya haya notas guardadas sería una migración de datos», y **no
-aplica**: no hay nada guardado todavía, así que ese argumento valdría igual para `Versioned`,
-que sí se adelantó. La razón verdadera es otra: **`schemaVersion` *es* el mecanismo de
-migración**, y un número de versión que nadie lee no protege nada. Por eso llega con el runner
-que lo consume, en esta fase, y ni un día antes.
+La razón no es que añadirlo luego fuera una migración de datos —ese argumento valdría igual para
+`Versioned`, que sí se adelantó—: es que **`schemaVersion` *es* el mecanismo de migración**, y un
+número de versión que nadie lee no protege nada. Por eso llegó con el runner que lo consume. Y **en
+un almacén vacío `boot` apunta ya la versión actual**: si no, uno con notas seguiría diciendo «0»
+y la primera migración se lo saltaría (§7.5).
 
 ### 9.8 Definición de "Fase 2 terminada"
 
-Al estilo de §9.5, porque sin criterio «terminada» acaba queriendo decir «me he cansado». Son
-seis:
-
-1. Los tres puertos de persistencia existen como **interfaces** (§6.1), todos `async`.
-2. **`MemoryStorageAdapter` pasa la suite de contratos entera**, y la suite está escrita contra
-   la interfaz, no contra él. Esa es la única definición de terminado que no se degrada.
-3. **Un `set-checked` redundante no llega a disco.** Es el punto 5 de §9.5 llevado un eslabón
-   más abajo: la Fase 1 demostró que no notifica al suscriptor; la Fase 2 tiene que demostrar
-   que **tampoco escribe**. Con un `StorageAdapter` que cuente escrituras.
-4. **Las diecisiete acciones existen**, cada una con su caso de reducer, y el `switch` vuelve a
-   ser exhaustivo por el compilador.
-5. **`delete-note` deja los contextos consistentes** —ninguna `ItemRef` colgando— **y devuelve
-   intactos los que no la listaban**, comprobado con `strictEqual`.
-6. `npm run check` en verde, con la verja y el guardián de pureza incluidos.
+Era el criterio de cierre de la Fase 2, ya cumplido. Su crónica, en `TAREAS.md` y `git log`.
 
 ### 9.9 Definición de "Fase 3 terminada"
 
-Al estilo de §9.5 y §9.8, y **escrito antes de que el adaptador esté hecho**, que es el único
-momento en que sirve: un criterio decidido con el trabajo delante se decide siempre a favor de
-lo que se hizo.
+Era el criterio de cierre de la Fase 3, ya cumplido. Su crónica, en `TAREAS.md` y `git log`; lo que
+dejó de diseño está en §6: el recuento de fronteras y su guardián en §6.5, y la lista manual de
+`DirectoryHandleBlobStore` y lo que cazó en §6.3.
 
-Esta fase lo necesita más que las dos anteriores por un motivo propio: **es la primera cuya
-última pieza no la comprueba ninguna prueba** (§6.3). Está decidido que `DirectoryHandleBlobStore`
-se verifica a mano, y «a mano» sin una lista escrita y ejecutada significa en la práctica «no se
-verifica». El criterio es lo que impide que esa decisión se convierta en un agujero.
+### 9.10 La Fase 4: la UI web
 
-**Son siete, y los siete están cumplidos: la Fase 3 está TERMINADA.** El 5 —la lista manual— fue
-el último en caer, el **2026-09-13**, y era el único que separaba «el código está entero» de «la
-fase está terminada», que es exactamente el agujero que este criterio existe para no dejar
-abierto:
-
-1. **✅ El paso 0, hecho** (§6.5) — el único punto ya cerrado al escribir esto: los once métodos de
-   puerto devuelven `Result`, `runMigrations` es pura **y total**, y la suite de contratos se
-   convirtió con las firmas, antes de que hubiera dos adaptadores que convertir.
-2. **✅ `FileStorageAdapter` pasa la suite de contratos entera, en Node y con un `BlobStore`
-   falso** — y es comprobable en el diff: **de la suite de contratos no se toca nada**
-   después del paso 0. El fichero que lo engancha es tan corto como el de memoria; si hace falta
-   alargarlo, es que se está probando un detalle que los otros backends no cumplen.
-3. **✅ Lo que sólo tiene él va probado aparte: la traducción de errores.** El contrato está escrito
-   contra la interfaz, así que no puede cubrir esto —el adaptador de memoria no tiene nada que
-   serializar—, y son justamente los caminos que fallan en silencio:
-   - un JSON ilegible que devuelve el `BlobStore` sale como **`corrupt`**, no como `io`, que es
-     lo suyo porque es quien parsea (§6.1);
-   - un `err` que sube del `BlobStore` llega arriba **sin reclasificar**: un `permission-denied`
-     no se convierte en `io`. Reclasificar ahí convierte un «no insistas» en un «insiste» y, por
-     el camino, resucita un write-behind que tenía que haberse detenido (§6.5).
-
-   Y verificado **rompiéndolo**, como todo aquí. Van **en un fichero aparte**, no alargando el
-   que engancha el contrato, que se queda en dos `import` y una llamada, como el de memoria. Por
-   qué esto no contradice a `MemoryStorageAdapter` —que no tiene ni una prueba propia, a
-   propósito— está en §6.3: aquél no tiene lógica propia y éste sí.
-4. **✅ Existen las dos implementaciones de `BlobStore`**, no sólo la de desarrollo:
-   `LocalStorageBlobStore`, probada en Node con un `Storage` falso **que sabe lanzar
-   excepciones** —sin eso la cuota no se puede provocar—, y `DirectoryHandleBlobStore`. Viven en
-   `src/storage/blobs/` y el porqué de la carpeta está en §6.1. La fase se llama *fichero local*;
-   cerrarla sin el de la carpeta real sería cerrarla sin lo que le da nombre.
-5. **✅ La lista de pasos manual está escrita en el repo Y ejecutada, con su resultado anotado** —
-   fecha, navegador y versión, y qué pasó. El «una vez» ya venía en la decisión (§6.3); esto sólo
-   lo hace comprobable. **Escrita**, en `test/storage/blobs/VERIFICACION-MANUAL.md`, junto a las
-   demás pruebas de ese rincón (dónde vivía era un hueco de *Sin decidir* y está cerrado; se mudó
-   ahí con el resto, §8.5). **Y ejecutada el 2026-09-13, con DOS pasadas anotadas:**
-   - **Brave 1.95.101** (Chromium 153.0.8010.37, Ubuntu 22.04) — pasan **las cinco** secciones,
-     incluida la E de OPFS que este criterio no exige. ⚠️ Brave **no trae la API de fábrica**: se
-     arrancó con `--enable-features=FileSystemAccessAPI`, y eso queda anotado porque es parte de
-     poder repetir la pasada;
-   - **Firefox 153.0.4** — A, B, C y D **«no se ha podido probar»**, porque no tiene
-     `showDirectoryPicker()`. Eso **también cierra el punto**: la regla de oro de la lista es que
-     se cierra con el resultado que haya y no con el bueno, y «este navegador no puede» es
-     información, no un hueco. Sólo pasa OPFS.
-
-   **Lo que la pasada cazó, y que ninguna prueba automática podía ver:** el fichero apareció con
-   **45 bytes y no 0** —ése es el `close()` que §6.3 usa como ejemplo de lo que un doble deja
-   pasar en verde—, y el `permission-denied` del paso C resultó **no ser cosmético**: el `mtime`
-   del fichero no se movió tras el `write` denegado. También se corrigió un falso verde del
-   método: el paso B hecho sin recargar reutiliza el handle en memoria y **no prueba nada** —«B
-   sin F5 no es B»—.
-
-   ⚠️ **El asterisco, que se conserva en vez de taparlo:** las dos pasadas se hicieron sobre el
-   commit `dec4306` **con el árbol sucio**, o sea que lo verificado no es literalmente lo que hay
-   en ese commit. Es la debilidad conocida de este punto, y lo que la compensa es la regla de
-   `CLAUDE.md`: **si se toca `DirectoryHandleBlobStore.ts`, se repasa la lista.**
-   Lo mínimo que cubre es lo que un doble no puede ver:
-   - que los bytes **llegan de verdad al disco** — el `close()` olvidado de §6.3 pasa en verde
-     contra un `Map`, y contra una carpeta real no;
-   - que lo escrito **se relee en una sesión nueva**, tras recargar y volver a conceder permiso;
-   - que revocar el permiso sale por `Result` como `permission-denied` y **no como excepción**.
-     Si el navegador no deja provocarlo a mano, se anota eso mismo: el punto se cierra con el
-     resultado, sea cual sea, no con el resultado bueno.
-6. **✅ Nada lanza por encima de la frontera de cada adaptador** (§6.5, principio 2): en cada pieza
-   nueva —el adaptador y los dos `BlobStore`— el `try/catch` está **confinado a las funciones que
-   hablan con lo que lanza**, y por encima ni un `throw`. No es «una y sólo una»: en
-   `FileStorageAdapter` son tres, y las tres se justifican solas —`transaction`, que ejecuta
-   código ajeno, y las dos de la serialización, porque `JSON.parse` lanza y un `TextDecoder` con
-   `fatal: true` también—; en cada `BlobStore` es **una**, y en el de la carpeta esa única
-   frontera lleva el `await` dentro a propósito: sin él una promesa rechazada se escaparía del
-   `try`. **Medido al cerrar la fase: seis `try` en todo el código de producción de `core/` y
-   `storage/`, y cero `throw`.** La fase no podía ser la que estrenara uno.
-
-   ⚠️ **Y ese recuento se quedó corto, cosa que se descubrió DESPUÉS de cerrar la fase.**
-   Contar `try` y `throw` mide lo que nosotros lanzamos; no mide **lo que llamamos sin
-   envolver**, que resultó ser el agujero de verdad. Había dos, los dos medidos con una sonda:
-   `encodeURIComponent` dentro de `caminoDe` —`URIError` con un surrogate suelto, y `get`, `put`
-   y `delete` lo llamaban fuera de toda frontera— y `paso.migrate()` en `runMigrations`, que es
-   código ajeno. Con ellas fueron **ocho `try`** y el punto se sostiene de verdad (hoy son quince
-   con los de la Fase 4 y los de «Borrar todo», §6). **Esto no reabre la
-   fase** —el criterio se cumplía con lo que se sabía medir entonces— pero sí corrige el método:
-   la pregunta buena no es «¿cuántos `throw` hay?» sino «¿alguna llamada que lanza puede llegar
-   a una firma pública?».
-
-   **Y el guardián ya existe: `npm run check:fronteras`.** No entraba en el criterio —`TAREAS.md`
-   lo marcaba opcional y una fase no se bloquea por una casilla opcional—, y se escribió al
-   encontrar las dos fugas. Entiende la cobertura **transitiva**, que es lo que lo hace
-   utilizable: seis ayudantes locales están a salvo sólo porque se les llama desde dentro de una
-   frontera, y sin esa regla el guardián los marcaría a los seis. Aplicado al código de antes de
-   los arreglos, señala exactamente las dos fugas y ninguna más. Cae por tanto el precio que
-   este punto daba por asumido: esa regla ya no la sostiene la revisión sino la comprobación,
-   como todo lo demás aquí.
-7. **✅ `npm run check` en verde**, con la verja y el guardián de pureza, y **el recuento de
-   pruebas anotado al cerrarla**, como en §9.5 y §9.8. **La cifra de cierre son 314 pruebas**
-   —99 al cerrar la Fase 1, 216 al cerrar la 2—. Y una previsión que salió mal y
-   conviene dejar corregida: esto decía que la suite de contratos pasaría a correr **dos** veces,
-   una por adaptador, y corre **tres** — la tercera monta el adaptador de fichero sobre un
-   `BlobStore` de producción, y el porqué está en §6.3.
-
-#### Lo que NO entra en la Fase 3
-
-Dicho explícitamente para que nadie lo dé por hecho, igual que en §9.7:
-
-- **La UI.** Fase 4.
-- **El arranque real de la app** —quién abre el storage, en qué orden, y qué se ve cuando no hay
-  nada guardado—. Ya estaba partido (§9.7): la mitad pura se hizo en la Fase 2 y la impura vive
-  en `platform/web/`, que no nació hasta la Fase 4. Consecuencia en su momento: **en esta fase el
-  `FileStorageAdapter` no tenía quien lo montara en la app real**; sus únicos consumidores eran
-  las pruebas y la lista manual.
-- **El `onError` del write-behind, el `onCorrupt` de `getAll` y el botón de «reconectar
-  carpeta».** Iban los tres a la Fase 4 (§6.5), por el mismo motivo: entonces no había a quién
-  avisar. *(Los dos primeros se hicieron en la Fase 4; el botón sigue fuera, con la carpeta del
-  usuario como destino.)*
-- **Validar el esquema de lo que se lee del disco** (§6.2). Entonces era una comprobación de
-  forma mínima; el validador se hizo al final de Fase 4 · Notas.
-- **La escritura condicional.** Sigue abierta (§6.5) y sería lo primero que se añadiría a
-  `StorageError`; no bloquea esta fase, porque sin un segundo escritor real nadie puede
-  dispararla.
-- **El modo `integration` de la suite de contratos** (§6.3): planificado y no construido, sin
-  backend real que probar.
-- **Un runner de navegador.** Cerrado que no (§6.3), y qué lo reabriría está en `TAREAS.md`.
-
-Y **queda una** cosa que no se cierra arriba a propósito, porque no está decidida y no se decide
-escribiendo un criterio: **si la fase exige además una pasada manual sobre OPFS**. Está en la
-lista como sección opcional, y ningún punto de arriba la pide. Con su porqué, en `TAREAS.md` →
-*Sin decidir*. **Eran tres, y las otras dos ya están cerradas:** qué lleva dentro el
-`manifest.json` —sólo `schemaVersion`, sin índice de ids— se cerró al escribir el adaptador
-(§6.2), y **dónde vive la lista manual** se cerró al escribirla: junto a las pruebas del mismo
-rincón del código —hoy `test/storage/blobs/`, tras la mudanza de §8.5—, que es lo que evita
-convertirla en un cuarto documento.
-
-### 9.10 Definición de "Fase 4 terminada"
-
-Al estilo de §9.5, §9.8 y §9.9, y **escrito antes de que exista una línea de `ui/`**, por el
-mismo motivo de siempre: un criterio decidido con el trabajo delante se decide a favor de lo que
-se hizo.
-
-Esta fase lo necesita más que ninguna, y por una razón que las otras tres no tenían: **una UI no
-termina sola.** Las fases 1 a 3 acababan cuando una pieza cumplía un contrato; aquí siempre se
-puede pulir un píxel más, así que sin criterio escrito «terminada» quiere decir exactamente «me
-he cansado».
-
-**Y trae una dificultad propia, que conviene admitir en vez de disimular:** es la primera fase
-en la que **algunas decisiones no se pueden cerrar sobre el papel**. «¿Se aguanta no poder
-reordenar una lista?» no tiene respuesta hasta que alguien hace la compra con la app. El método
-de las fases anteriores —cerrarlo todo antes— aquí no aplica entero, y forzarlo sería teatro. La
-salida no es saltarse el criterio: es **escribir en él cuáles son esas preguntas y qué cuenta
-como haberlas contestado**. Van abajo, y son parte del cierre de Fase 4 · Notas.
-
-> **Estado el 2026-09-29: el código está entero y la fase NO está cerrada.** Cada criterio de abajo
-> lleva su marca.
-> - **Fase 4 · Contextos:** puntos 1–7 y 9 ✅. **El 8 ⏳**: la lista está escrita
->   (`test/ui/VERIFICACION-MANUAL.md`) y **sin pasar entera** —hubo una revisión parcial que el
->   usuario no confirma, y su hoja de resultados está vacía—. **No cerrada.**
-> - **Fase 4 · Notas:** puntos 1–9 y 11 ✅. **El 10 ⏳**: la lista del editor está escrita
->   (`test/ui/VERIFICACION-MANUAL-EDITOR.md`) y **sin pasar**. **Las tres preguntas, sin
->   contestar**: piden usar la app varios días. **No cerrada.**
-> - **Para cerrar la Fase 4 entera falta:** pasar las dos listas en escritorio **y** en móvil,
->   anotar el resultado en sus hojas, y contestar las tres preguntas por escrito en `TAREAS.md`.
->
-> **Cifras de cierre del código:** 423 pruebas al terminar el de Contextos (desde 329), **489** al
-> terminar el de Notas. Ningún paquete nuevo en toda la fase.
+Una UI no termina sola —siempre se puede pulir un píxel más—, y ésta fue la primera fase en la que
+**algunas decisiones no se pueden cerrar sobre el papel**: «¿se aguanta no poder reordenar una
+lista?» no tiene respuesta hasta que alguien hace la compra con la app. La salida no fue saltarse el
+criterio de cierre, sino **escribir en él cuáles son esas preguntas y qué cuenta como haberlas
+contestado** (abajo). El resumen de la fase y sus commits, en `TAREAS.md`; el detalle, en
+`git log`.
 
 #### Partida en dos: primero Contextos, luego Notas
 
-**Decidido el 2026-09-27**, al planificar la navegación (§7.4). La lista única de nueve criterios
-que había aquí se sustituye por dos, una por parte. **Se nombran por contenido y no por número**
-—ni «4a», ni «criterio N», que chocaría con los criterios numerados de abajo—: **Fase 4 ·
-Contextos** y **Fase 4 · Notas**, en ese orden. De lo global a lo específico, que fue la
-propuesta del usuario, por tres motivos:
+**Decidido el 2026-09-27**, al planificar la navegación (§7.4): **Fase 4 · Contextos** y **Fase 4 ·
+Notas**, nombradas por contenido y no por número, en ese orden. De lo global a lo específico, que
+fue la propuesta del usuario, por tres motivos:
 
-- **No hay andamio que tirar.** Cada parte se construye sobre la anterior: el editor de Notas se
-  abre desde las listas que construye Contextos.
+- **No hay andamio que tirar**: el editor de Notas se abre desde las listas que construye
+  Contextos.
 - **Sigue el camino por el que se llega a las cosas**: primero se ve una ventana, luego se entra a
   una nota.
 - **La rebanada vertical cae sobre la pieza más sencilla.** Si la pila entera —`platform/`,
   `LocalStorageBlobStore`, `hydrate`, el write-behind— no encaja, se descubre con contextos, que
   son un nombre y una lista, y no con el editor.
 
-**Coste admitido:** lo difícil —el editor— llega segundo, y con él las tres preguntas empiezan a
-contestarse más tarde. Se mitiga haciendo Contextos **delgada**.
+**Coste admitido:** lo difícil —el editor— llegó segundo, y con él las tres preguntas empezaron a
+contestarse más tarde. **Ninguna de las dos partes necesitaba tocar el core**: todas las acciones
+existían desde la Fase 2, y el General es cálculo de presentación. Lo tocaron sólo los `.js` de los
+imports (§8.6) y, a petición del usuario el 2026-10-03, la regla de `merge` (§9.3) y conservar las
+referencias a lo ilegible (§6.5).
 
-**Ninguna de las dos toca el core** —con una excepción posterior, pedida por el usuario el 2026-10-03: la regla de `merge` (§9.3)—. Todas las acciones que hacen falta existen desde la Fase 2
-—`create-note`, `rename-note`, `delete-note`, `create-context`, `rename-context`,
-`delete-context`, `add-item`, `remove-item`— y el General es cálculo de presentación. *(Cumplido:
-lo único que cambió en `src/core/` fueron los `.js` de los imports relativos, §8.6.)*
-
-**Y la fase es sólo web**, incluido el navegador del móvil. Los shells nativos siguen fuera (§7.4).
-
-#### Fase 4 · Contextos: los criterios
-
-1. ✅ **La rebanada vertical enciende: un contexto creado sobrevive al recargar.** Nace
-   `src/platform/` con las primeras implementaciones reales de `Clock` e `IdGenerator` —hasta
-   entonces no existía **ninguna**—, monta `LocalStorageBlobStore` y arranca con `hydrate` y
-   `runMigrations`. Es el **primer arranque real de la app**: hasta aquí el núcleo entero sólo
-   había corrido dentro de pruebas. Este punto no juzga el aspecto, sólo que la pila encaja.
-   *(`473f566`.)*
-2. ✅ **`onCorrupt`: una nota ilegible ya no impide abrir la app.** Es lo único de la deuda de la
-   Fase 3 que entra **con la primera rebanada** y no después, porque no es deuda interna: un solo
-   fichero roto tumbaba el `getAll` entero y con él la app (§6.5). *(`473f566`; el riesgo
-   residual que quedó abierto se cerró el 2026-10-03, en §6.5.)*
-3. ✅ **La vista ventanas se comporta como está diseñada** (§7.4): ◀ ▶ sin anterior en la primera ni
-   siguiente en la última; renombrar tocando el título, salvo el General; el General enseña todas
-   las notas; pantalla vacía sin ventanas. En esta parte, **sólo ventanas de contexto y del
-   General**. *(`c17f5c1`.)*
-4. ✅ **La lista de ventanas vive en `localStorage`, fuera del core, y su guarda de integridad es una
-   función pura con pruebas.** Las ventanas visibles se calculan siempre, y la de un contexto
-   borrado desaparece **en la misma sesión**. **Al recargar se vuelve a la ventana activa**,
-   guardada como referencia y no como índice; si ya no es visible, la primera, o la pantalla
-   vacía. Lo que hubiera encima no se recuerda. Todo ello verificado rompiéndolo a propósito.
-   *(`8b96c70`.)*
-5. ✅ **La vista configuración, entera:** sus dos secciones; el selector con el General, los
-   contextos existentes y «+ Contexto nuevo»; borrar un contexto con confirmación; y exit y el
-   atrás del navegador —también en el móvil— devuelven a la misma ventana. *(`ba27135`.)*
-6. ✅ **La lista de un contexto, con todo lo que se hace sobre ella.** «+ Nota» crea una «Nueva Nota»
-   —en el contexto, o sin contexto desde el General— y **en esta parte todavía no se abre**;
-   selección por pulsación larga y toques, clic derecho, Ctrl/Cmd+clic y teclado; durante la
-   selección se ocultan los «+» y se apagan flechas y engranaje; la papelera es `remove-item` en un
-   contexto y `delete-note` con confirmación en el General; y **«Mover a…»** mueve entre
-   contextos (`remove-item` + `add-item`) o, desde el General, sólo añade (`add-item`), con un
-   selector sin el General ni el contexto actual y sin confirmación. *(`11c3291`.)*
-7. ✅ **Las listas se reconcilian por `data-id`.** Seleccionar una fila o renombrar un contexto **no
-   recrea las filas que no cambiaron**. Es la regla de §7 probada donde es sencillo, antes de
-   llegar al editor, donde no lo es. *(`296dd1b`. La lista de ventanas de la configuración no
-   tiene id estable y va por posición + contenido, §7.5.)*
-8. ⏳ **Una lista de verificación manual, ejecutada y anotada** —pulsación larga, atrás, recargar—,
-   en un navegador de escritorio **y en uno de móvil**, al estilo de
-   `test/storage/blobs/VERIFICACION-MANUAL.md`. Sigue cerrado que no hay runner de navegador
-   (§6.3). *(**Escrita** en `test/ui/VERIFICACION-MANUAL.md`, `70aeeb6`; **sin pasar entera**.)*
-9. ✅ **`npm run check` en verde y el recuento de pruebas anotado**, como en las fases anteriores.
-   La cifra de partida eran **329** —99 al cerrar la Fase 1, 216 la 2, 314 la 3—, y al terminar el
-   código de esta parte, **423**.
-
-**Lo que NO entra en Fase 4 · Contextos:** abrir y editar notas, las ventanas de tipo nota y
-borrar `src/scripts/` (las tres, a Fase 4 · Notas); los Diagramas (Fase 5); la carpeta del usuario y
-OPFS como destino, la escritura condicional, los shells, y `move`/`indent`/`outdent`.
-
-#### Fase 4 · Notas: los criterios
-
-1. ✅ **La vista nota, con su navegación** (§7.4). Se abre tocando una nota o con «+ Nota», que desde
-   esta parte **crea y entra**; exit y el atrás del navegador vuelven a la misma ventana; la
-   cabecera lleva sólo el título, renombrable, sin flechas ni engranaje; una nota vacía se queda.
-   *(`6fd2667`.)*
-2. ✅ **Las ocho operaciones de contenido llegan desde el teclado.** Intro construye según el estado
-   de la barra (§7.3), Retroceso al principio hace sus dos cosas en dos pulsaciones, y el botón de
-   anidar arma la línea siguiente sin tocar la actual (§7.2). *(`c95664d` la lógica, `9fab349` la
-   pantalla.)*
-3. ✅ **Las cuatro esquinas de §7.3 se comportan como dice su tabla.** Confirmadas el 2026-09-20.
-   Sin ellas el editor «funciona» y se siente roto justo en los bordes, que es donde se nota. *(Y
-   los cuatro huecos que salieron al construirlo, cerrados el 2026-09-29, §7.3.)*
-4. ✅ **Un `set-checked` redundante no redibuja.** Tercer eslabón de la misma cadena: la Fase 1
-   demostró que no notifica (§9.5, punto 5), la Fase 2 que no escribe (§9.8, punto 3), y la 4
-   tiene que demostrar que **no toca el DOM**. ⚠️ Es el único de los tres que el usuario nota: un
-   re-render con el cursor dentro le borra lo que está escribiendo. *(`56d838c`: 0 avisos, 0
-   escrituras y 0 cambios en el DOM, medido en el navegador, §7.5.)*
-5. ✅ **Escribir deprisa no pierde el cursor.** La regla de §7: mientras un nodo tiene el foco, el
-   DOM es la fuente de verdad y no se re-renderiza. Se comprueba escribiendo una frase larga
-   seguida en una casilla anidada, con el write-behind trabajando por debajo. *(En el código; su
-   paso de la lista manual, B2, está sin pasar.)*
-6. ✅ **La barra de modo** (§7.2): el interruptor «☐ Casilla» —hasta el 2026-09-29, *Texto* ⇄
-   *Casilla*—, más el disparador de anidar, visible cuando está armado; `WritingMode` nace al
-   abrir la nota y muere al salir; el exit, sólo en la vista nota.
-7. ✅ **Las ventanas de tipo nota.** El selector ofrece las notas existentes; es el mismo editor en
-   la ventana —cabecera con ◀ ▶, título y ⚙; barra sin exit—; y **la guarda sabe de notas**:
-   borrar desde el General una nota que es ventana la quita en la misma sesión. Con pruebas, y
-   verificada rompiéndola. *(`a0ed6ea`.)*
-8. ✅ **Los fallos que antes no veía nadie, ya se ven.** El `onError` del write-behind —si se
-   detiene, el usuario lo sabe; el aviso **sólo informa**, «No se están guardando los cambios»,
-   porque un escritor detenido no se reanuda (§6.5)— y la validación de esquema al leer: un
-   fichero que parsea pero no tiene forma de nota va por el mismo camino que `onCorrupt`.
-   *(`f406d96` y `8e2dba3`.)*
-9. ✅ **`src/scripts/` ha desaparecido del repo**, con `webpack.config.js` y `public/` entero. El
-   prototipo viejo se **sustituyó**, no se jubiló, y su CSS no se aprovechó. *(`cdfb816`.)*
-10. ⏳ **Una lista de verificación manual del editor, ejecutada y anotada**, en escritorio y en
-    móvil. El tacto del teclado no lo prueba `node --test`, y sin lista escrita y pasada «se probó
-    a mano» significa en la práctica «no se probó». *(**Escrita** en
-    `test/ui/VERIFICACION-MANUAL-EDITOR.md`, `9eec14d`; **sin pasar**.)*
-11. ✅ **`npm run check` en verde y el recuento de pruebas anotado**: **489**.
-
-**Y las tres preguntas de abajo son de esta parte**: es la que pone el editor delante.
-
-**Lo que NO entra en Fase 4 · Notas:** los Diagramas (Fase 5); la escritura condicional; la carpeta
-del usuario y OPFS; los shells; `move`, `indent` y `outdent` salvo que las preguntas los reabran;
-y las tres candidatas extra de la barra (§7.2).
+**El bundler, cerrado el 2026-09-27: de entrada no se instala**, y la fase entera se hizo sin él;
+entra sólo cuando algo concreto lo exija. El argumento con que se cerró era a medias falso; cómo se
+resolvió, en §8.6.
 
 #### Las tres preguntas que se contestan con el editor delante
 
-No bloquean el cierre por sí solas: **lo que bloquea es no haberlas contestado por escrito.** La
+**Siguen sin contestar**, y son la deuda con la que el usuario cerró la Fase 4 el 2026-10-03. La
 respuesta va a `TAREAS.md`, con fecha, después de usar la app de verdad —listas reales, varios
-días—, no después de una demo de cinco minutos. **El 2026-09-29, las tres siguen sin contestar.**
-*(El Retroceso bajo una casilla con hijas, que estaba anotado aquí como posible cuarta pregunta,
-se cambió el 2026-10-03: ahora une con la línea que se ve encima, §7.3 y §9.3.)*
+días—, no después de una demo de cinco minutos. *(El Retroceso bajo una casilla con hijas, que se
+anotó como posible cuarta pregunta, se cambió el 2026-10-03: ahora une con la línea que se ve
+encima, §7.3 y §9.3.)*
 
 - **¿Se aguanta no tener `move`?** Hoy una lista se queda en el orden en que se escribió, y
   reordenar es borrar y reescribir (§9.3).
@@ -3711,66 +3340,15 @@ se cambió el 2026-10-03: ahora une con la línea que se ve encima, §7.3 y §9.
   la única que actúa sobre una línea que todavía no existe.
 
 ⚠️ **«No se aguanta» es un resultado válido**, y reabre la decisión correspondiente con datos en
-vez de con intuiciones. Escribir estas tres preguntas ahora es justamente lo que compra el
-derecho a cambiar de opinión después sin que parezca una rendición.
+vez de con intuiciones, aunque la fase esté cerrada. Haber escrito estas tres preguntas antes es
+justamente lo que compra el derecho a cambiar de opinión después sin que parezca una rendición.
 
-#### Lo que NO entra en la Fase 4, en ninguna de sus dos partes
+### 9.11 La Fase 5: los Diagramas
 
-Dicho explícitamente, como en §9.7 y §9.9, y con el porqué que en las listas de arriba no cabe:
-
-- **Los Diagramas y su editor de grafos: son la Fase 5.** Se persistían desde la Fase 2 sin
-  operarse; desde Fase 5 · Modelo se operan en el core (§9.11).
-- **`move`, `indent` y `outdent`**, salvo que las preguntas de arriba los reabran.
-- **La carpeta del usuario y OPFS como destino real.** Decidido el 2026-09-20 arrancar con
-  `LocalStorageBlobStore` para salir del paso. Es barato de revertir —`BlobStore` es un puerto,
-  y el destino se inyecta en un solo sitio de `platform/`—, pero deja **tres cabos con nombre**:
-  qué pasa con las notas ya escritas en `localStorage` el día que se cambie de destino —y con
-  ellas qué borra «Borrar todo», que hoy sólo vacía ese `localStorage` (§7.4)—, el techo
-  de ~5 MB por origen, que el base64 del blob infla alrededor de un tercio, y —desde el
-  2026-09-27— que **la lista de ventanas no viaja** con las notas (§7.4).
-- **El botón «reintentar» del aviso de `onError`.** Aparcado para cuando el destino sea la carpeta
-  del usuario: ahí reanudar tiene sentido, porque es volver a pedir la carpeta.
-- ~~**La escritura condicional**~~ — construida el 2026-10-03 (§6.5).
-- **Los shells de desktop y móvil, y el sync entre dispositivos.**
-
-**El bundler, cerrado el 2026-09-27: de entrada no se instala**, y la fase entera se hizo sin él.
-Se arrancó con un `<script type="importmap">`, con cero dependencias, y el bundler entra sólo
-cuando algo concreto lo exija, no por costumbre. ⚠️ **El argumento con que se cerró era a medias
-falso:** decía que el `importmap` estaba «ya probado en el repo», en el andamio de
-`test/storage/blobs/verificacion-manual.html`, y ese andamio sólo cargaba dos ficheros compilados
-con `--noResolve`. El `importmap` solo no basta para el core entero; hizo falta además el `.js`
-en los imports relativos, decidido con el usuario el 2026-09-29. La decisión no cambia; el cómo,
-en §8.6.
-
-#### ✅ Cerrada el 2026-10-03, por decisión del usuario y con deuda
-
-**El usuario dio la Fase 4 por cerrada sin cumplir dos puntos de este criterio**, y queda escrito
-así, como excepción y no como cumplimiento: **el 8 y el 10** —las dos listas de verificación
-manual, escritas y al día pero **sin pasar** en escritorio ni en móvil— y **las tres preguntas**
-—`move`, `indent`/`outdent` y si el disparador de anidar se entiende solo—, **sin contestar**.
-Todo lo demás está hecho, con **532 pruebas** en verde (329 al empezar la fase).
-
-Lo que eso deja **sin verificar de verdad** es sobre todo el **móvil**: arrastrar las fichas de
-⚙ con el dedo sin que la fila se deslice, el teclado de Android en el editor, el atrás del
-sistema. El escritorio sí se ha usado a diario durante la fase, aunque la lista no se haya pasado
-entera. Las listas y las preguntas siguen en `TAREAS.md` como **pendientes**: si al pasarlas
-sale un fallo, se arregla como cualquier otro, y si una pregunta sale «no se aguanta», reabre su
-decisión aunque la fase esté cerrada.
-
-**El 2026-10-10 el usuario dio las dos listas por pasadas**, tras instalar la app de la Fase 6 en
-su móvil y probarla, **sin anotar paso a paso** (§9.12). De la deuda de la Fase 4 quedan **las tres
-preguntas**, que piden usar la app varios días.
-
-### 9.11 La Fase 5: los Diagramas *(planificada el 2026-10-03; Modelo, construida; Lienzo y Relaciones, código hecho y sin cerrar; cerrada el 2026-10-08 con deuda)*
-
-Al estilo de §9.10, y **escrito antes de que existiera una línea de código de diagramas**. ⚠️ **Hoy
-está construido Fase 5 · Modelo** —el modelo, sus operaciones, acciones y casos de uso,
-`delete-note`, `hydrate` y `schema.ts`— **y el código de Fase 5 · Lienzo** —la vista, el corcho,
-los pósits, los nodos-nota y sus gestos— **y de Fase 5 · Relaciones** —las líneas, *Conectar*, su
-menú y su texto—, éstos dos **sin verificar a mano**; los tres, al final, en sus apartados
-*construida* y *código hecho*. Todas las decisiones de aquí se tomaron **con el usuario el
-2026-10-03**; lo que no lleve otra fecha, lleva ésa. Donde el código se apartó de lo de aquí, lo
-dicen los apartados *código hecho*.
+**Escrito antes de que existiera una línea de código de diagramas**, y hoy construido entero. Todas
+las decisiones de aquí se tomaron **con el usuario el 2026-10-03**; lo que no lleve otra fecha,
+lleva ésa. Las que salieron al construirlo sin decidirse con él —el usuario las ha visto y no las
+ha rechazado— van marcadas como *decisiones de implementación*.
 
 #### Qué es un diagrama: un lienzo libre
 
@@ -3805,7 +3383,7 @@ grafos, y **«connection»**, que suena a red o a servidor.
   significa nada—. **Invertir cuando ya hay otra igual** en el otro sentido no hace nada especial:
   **conviven**, como cualquier repetida.
 - **Texto opcional a lo largo de la línea** (`<textPath>` de SVG), **girado para no salir boca
-  abajo**, y editado con un campo que aparece encima. **Entra en la Fase 5**, como último paso.
+  abajo**, y editado con un campo que aparece encima.
 
 #### Los nodos: pósits iguales, de dos clases
 
@@ -3858,7 +3436,7 @@ interface Diagram extends Versioned {
 }
 ```
 
-Así está hoy en `Diagram.ts`, con `DiagramRelationId` y su constructor `diagramRelationId`
+Así está en `Diagram.ts`, con `DiagramRelationId` y su constructor `diagramRelationId`
 exportados por `index.ts`. Lo que cambió respecto al modelo viejo, y por qué:
 
 - **Las aristas salen de los nodos.** Iban en `parents` + `children` de cada nodo: **dos
@@ -3910,6 +3488,16 @@ Tres que piden explicación:
   referencial.
 - **Nodos y relaciones llegan construidos, con su id**: el reducer no genera ids (`CLAUDE.md`).
 
+**Cómo quedó en el código:** las diez operaciones de `diagramOperations.ts` comparan con dos
+ayudantes (`enNodo` y `enRelacion`) y **no salen por `index.ts`**: hoy sólo las usa el core, y se
+abren el día que la UI las necesite. `onDiagram` envuelve las once acciones que actúan sobre un
+diagrama existente; lógica propia sólo en
+`create-diagram`, `delete-diagram` —que lo quita de los contextos y **no borra sus notas**— y
+`add-node` de un nodo-nota, que mira que la nota exista. Un nodo nace con `done: false`; una
+relación, con `directed: true` y `label: ""`. **Una guarda la vigila el compilador y no una
+prueba:** quitar el no-op de `setNodeText` sobre un nodo-nota no compila, porque un `NoteNode` no
+tiene `text`.
+
 #### Lo que toca del core fuera de los diagramas
 
 ⚠️ **La Fase 5 toca dos piezas del core que ya existen y no son de diagramas**, y conviene
@@ -3924,6 +3512,10 @@ decirlo antes de que nadie lo descubra en un diff:
   diagrama, o de un nodo a sí mismo, **se tiran**; y un nodo-nota cuya nota no existe —y no es
   ilegible— **pasa a «Nota perdida»**. Las dos **devuelven por referencia lo que no cambie**,
   como hoy con los contextos.
+
+**La regla de «Nota perdida» está escrita una sola vez**, en `loseNote` (con la constante
+`LOST_NOTE_TEXT`), y la usan los dos caminos: `delete-note` por `sinNotaEnDiagramas`, gemelo de
+`sinReferenciasA`, y `hydrate` por `diagramaLimpio`, que, como con los contextos, **no estampa**.
 
 Lo que **no** cambia: `add-item` ya acepta diagramas y `diffState` ya los cubre.
 
@@ -3955,6 +3547,41 @@ no en su centro.
 **Plan B, aparcado en `TAREAS.md`:** una librería pequeña y sin dependencias **sólo para mover y
 acercar**, si el pellizco o el arrastre no se dejan domar en el móvil real. Mismo trato que
 Snabbdom y los motores de edición: con su disparador escrito.
+
+**Cómo quedó** —en `DiagramCanvas.ts`, que montan la vista y la ventana (§7.5)—:
+
+- **Los pósits miden `8rem` de ancho** —eran `10rem`, y `7rem` los alargaba demasiado hacia abajo;
+  Fase 7— y van en su propio contenedor, para que su `reconcile` no mueva la capa SVG. La rejilla
+  de puntos usa `--rejilla`, que es `--dim` al 50 % (Fase 7).
+- **La posición de un nodo es su centro, y al abrir el origen se pone en el centro del lienzo**:
+  «se abre en el origen» podía ser también la esquina, y el centro deja sitio alrededor
+  (*decisiones de implementación*). Se centra la primera vez que el lienzo tiene tamaño, con un
+  `ResizeObserver`: al montarse todavía no se ve y mide cero.
+- **`viewport.ts`, puro: el encuadre.** Un punto del corcho se ve en `corcho × scale + offset`, con
+  la escala entre 0,25 y 4. **El pellizco se calcula siempre desde el encuadre que había al poner el
+  segundo dedo**, no paso a paso: así no acumula error de redondeo.
+- **Una sola punta de flecha por lienzo, con un id distinto en cada uno**, porque puede haber dos
+  montados: la ventana y el diagrama abierto encima.
+- **Cada pósit se mide una vez por repintado** (`offsetWidth`/`offsetHeight`, que no cuentan la
+  escala: ya son unidades del corcho), y **un `ResizeObserver` por pósit** repinta las líneas cuando
+  aparece o crece, también mientras se escribe en él. Sin él las líneas se pintaban antes de que
+  los pósits tuvieran tamaño, y una caja de tamaño cero hace salir la línea del centro, con la punta
+  tapada (cazado probando).
+- **Arrastrando un pósit, sólo se redibujan sus líneas** (`relationsOf`, en `relationGeometry.ts`),
+  siguiendo al dedo, y **se mide todo antes de escribir nada**: alternar medir y escribir obliga al
+  navegador a recalcular la página antes de cada medida. Al soltar se guarda la posición, y el
+  repintado normal las redibuja todas. Antes se redibujaban todas en cada movimiento, alternando, y
+  con muchas líneas dolía (medido en la Fase 7; las tablas, en `TAREAS.md`).
+- **La geometría, pura, en `relationGeometry.ts`.** `borderPoint` da dónde corta el borde la recta
+  que sale del centro. `fanOffsets` agrupa por **par sin sentido** —A→B y B→A son del mismo par—,
+  ordena por id y reparte las curvaturas alrededor de cero; una sola, recta. En la cuadrática, el
+  lado de la curva se mide **del nodo de id menor al mayor**, así que A→B y B→A con curvaturas
+  opuestas no se pisan; el control se separa **el doble** de la curvatura, porque el vértice de una
+  cuadrática queda a mitad de camino del control; y **cada extremo sale hacia el control**, no hacia
+  el otro centro, para que la línea nazca por el borde por donde de verdad sale. `labelPath` da el
+  trazado **al revés si la línea va hacia la izquierda**, para que el texto no salga boca abajo.
+- **El texto de una línea** lleva un halo del color del fondo (`paint-order: stroke`) para leerse si
+  cruza otra; si es más largo que la línea, se corta.
 
 #### Los gestos: «doble = menú o crear»
 
@@ -3993,6 +3620,32 @@ Las reglas que salen de la tabla:
   el de creación.
 - **Pendiente: manejar el lienzo con teclado**, como reordenar las fichas con teclado (§7.4).
 
+**Cómo quedó:**
+
+- **Las cifras de `gestures.ts`:** `LONG_PRESS_MS` 500 y `MOVE_TOLERANCE_PX` 10, **las mismas que
+  el arrastre de fichas** (§7.4), para que los dos gestos se sientan igual; `DOUBLE_TAP_MS` 250, que
+  es también lo que espera un nodo-nota antes de abrirse; y `DOUBLE_TAP_DISTANCE_PX` 25, porque un
+  dedo no repite el sitio exacto. Un doble toque exige además **el mismo objetivo**.
+- **Con el ratón, un pósit se arrastra directamente; con el dedo, tras 500 ms.** Mover el corcho
+  con el dedo no espera, también empezando sobre un pósit o una línea.
+- **El menú del fondo, «Añadir al diagrama»:** *Texto · Nota existente · Nota nueva*. *Nota
+  existente* sólo sale si hay notas, y su lista sustituye a las opciones en la misma hoja. **Los
+  menús son la hoja de abajo** —la de ⋮ en la configuración—, no un menú flotante (*decisión de
+  implementación*).
+- **Un nodo-nota cuya nota no se pudo leer** dice «Nota ilegible» y **no se abre**.
+- **Conectar es una capa del `backStack`**, como una hoja: lo cancelan el atrás, el fondo, el propio
+  origen —una relación a sí mismo no existe—, el clic derecho y una línea, y también que el origen
+  se borre mientras tanto. Consecuencia: **con el modo activo, «✕ Salir» primero cancela el modo**
+  y hay que pulsarlo otra vez.
+- **El texto de un pósit: Intro guarda, Mayúsculas+Intro hace otra línea**; salir del campo guarda,
+  y Escape descarta. **Precio:** en el móvil, sin Mayúsculas a mano, un pósit no puede tener varias
+  líneas. El texto de una línea se edita en un campo sobre su punto medio: Intro o tocar fuera
+  guardan, Escape descarta, y vacío lo quita.
+- *Decisiones de implementación*, también: **borrar un pósit o una línea no pide confirmación**;
+  **un pósit vacío se queda**, y enseña «Sin texto»; **una raya azul a la izquierda** distingue los
+  nodos-nota y las filas de diagrama en las listas; **una línea se pone azul al pasar el ratón**; y
+  su trazo invisible para el dedo mide 16 de grueso.
+
 #### Crear nodos-nota
 
 - **De una nota existente**, con el selector —el mismo de «Mover a…»—.
@@ -4007,312 +3660,26 @@ Las reglas que salen de la tabla:
 El patrón de §7.5, sin cambios: **las cuentas van en funciones puras con pruebas en Node** —pasar
 de pantalla a corcho y de vuelta, acercar alrededor del punto del pellizco, distinguir clic,
 doble clic y pulsación larga, el punto donde la línea corta el borde del pósit, el abanico, la
-orientación del texto— y **el DOM se verifica a mano**, con listas nuevas en `test/ui/`.
+orientación del texto— y **el DOM se verifica a mano**, con `test/ui/VERIFICACION-MANUAL-LIENZO.md`
+y `-RELACIONES.md`.
 
 #### Partida en tres, en este orden
 
 **Fase 5 · Modelo → Fase 5 · Lienzo → Fase 5 · Relaciones**, nombradas por contenido como las de
-la Fase 4.
+la Fase 4: el core y `storage/` sin pantalla; todo menos las líneas; y las líneas. **Por qué ese
+orden:** las relaciones son la parte con más geometría, y separarlas dejaba probar el lienzo en el
+móvil antes, cuando todavía podía entrar el plan B de la librería de mover y acercar.
 
-- **Modelo** — el core y `storage/`, **sin pantalla**: los tipos, las trece acciones con sus
-  operaciones, los casos de uso, `delete-note`, `hydrate` y `schema.ts`. **✅ Construida el
-  2026-10-03.**
-- **Lienzo** — todo **menos las líneas**: «+ Diagrama», el diagrama como ventana, la vista con el
-  corcho, los pósits y todo lo que se les hace, los nodos-nota con su nivel de navegación, los
-  menús y el clic que espera. **Código hecho el 2026-10-04; sin cerrar**, porque su lista manual
-  está sin pasar.
-- **Relaciones** — conectar, la flecha al borde, el abanico, sin dirección, invertir, el menú de
-  la línea y, al final, el texto a lo largo. **Código hecho el 2026-10-04; sin cerrar**, por lo
-  mismo.
+**El usuario decidió el 2026-10-04 pasar las listas manuales pendientes todas juntas, al final, en
+una sentada** —la del lienzo, la de las relaciones y la deuda móvil de la Fase 4—, sabiendo el
+riesgo: si los gestos fallaban en su móvil, se descubriría con las relaciones, que usan los mismos
+gestos, construidas encima. Separar las partes siguió sirviendo para construir por piezas.
 
-**Por qué ese orden:** las relaciones son la parte con más geometría. Separarlas deja **probar el
-lienzo en el móvil antes**, y si los gestos se atascan se ve pronto —que es cuando entra el plan
-B de la librería de mover y acercar—, no con todo encima.
-
-**Después de las tres va la deuda móvil de la Fase 4** —sus dos listas manuales en el móvil—, por
-decisión del usuario. **Riesgo asumido:** si la base móvil falla, se descubre con el lienzo
-encima. **A cambio**, se verifican juntas en el mismo teléfono.
-
-⚠️ **Precisado el 2026-10-04, y esto deja sin efecto la mitad de «por qué ese orden»:** el usuario
-decidió **no pasar todavía la lista del lienzo** y pasar **todas las pendientes juntas, al final,
-en una sentada** —la del lienzo, la de las relaciones y la deuda móvil de la Fase 4—. Se le
-explicó el riesgo y lo eligió frente a pasarla ya: **si los gestos fallan en su móvil, se descubre
-con las relaciones construidas encima, y las relaciones usan los mismos gestos**. Separar Lienzo
-de Relaciones sigue sirviendo para construir por partes; lo que ya no da es probar el lienzo en el
-móvil antes de las relaciones.
-
-#### Fase 5 · Modelo: los criterios
-
-1. **El modelo nuevo**: sin `parents` ni `children`, `nodes` y `relations` como `Record`, `done`
-   en todo nodo. `schema.ts` valida la forma nueva y que cada clave coincida con su id.
-2. **Las trece acciones existen**, con su caso de reducer por `onDiagram`, y el `switch` sigue
-   siendo exhaustivo por el compilador.
-3. **Cada no-op de la tabla tiene su prueba con `strictEqual`.**
-4. **`delete-note` deja los diagramas consistentes**: sus nodos-nota pasan a «Nota perdida» con
-   el mismo `meta`, y **los diagramas que no la usaban salen intactos**, comprobado con
-   `strictEqual`.
-5. **`hydrate` hace sus dos limpiezas**, conserva como nodo-nota el de una nota ilegible y
-   devuelve por referencia lo que no cambia.
-6. **Los trece casos de uso** devuelven el diagrama o `null`. *(Salieron catorce: arriba, en
-   *Las acciones*.)*
-7. **Cada guarda, rota a propósito**, y las pruebas caen.
-8. **`npm run check` en verde y el recuento anotado.**
-
-#### Fase 5 · Modelo: construida *(2026-10-03)*
-
-Los ocho puntos, cumplidos, en `b14df06`, `1a13700`, `bb05a0b`, `b38b4f8`, `adc6b1a` y
-`a87e012`, con **643 pruebas** en verde (532 al empezar) y **sin tocar `ui/` ni `platform/`**.
-Cómo quedó lo que el plan no fijaba:
-
-- **`diagramOperations.ts`**: las diez operaciones de la tabla —`addNode`, `setNodeText`,
-  `setNodePosition`, `setNodeDone`, `removeNode`, `addRelation`, `setRelationEnds`,
-  `setRelationDirected`, `setRelationLabel`, `removeRelation`— y **`loseNote`**, con la constante
-  **`LOST_NOTE_TEXT`** («Nota perdida»). La comparación de identidad está escrita una vez en dos
-  ayudantes, `enNodo` y `enRelacion`. **No salen por `index.ts`**: hoy sólo las usa el core, y se
-  abren el día que la UI las necesite.
-- **`loseNote` es la regla de «Nota perdida» escrita una sola vez**, y la usan los dos caminos:
-  `delete-note`, por **`sinNotaEnDiagramas`** en `reduce.ts` —gemelo de `sinReferenciasA`: mismo
-  `meta` para todos los diagramas tocados, los demás por referencia, y si no tocó ninguno, el
-  mismo objeto `diagrams`—; y `hydrate`, por **`diagramaLimpio`**, que además tira las relaciones
-  con un extremo ausente o de un nodo a sí mismo, devuelve el diagrama por referencia si no había
-  nada que limpiar y, como con los contextos, **no estampa**.
-- **El reducer**: `onDiagram` envuelve las once que actúan sobre un diagrama existente. Lógica
-  propia sólo en tres: `create-diagram` (id repetido, no-op), `delete-diagram` (lo quita de los
-  contextos con `sinReferenciasA` y **no borra sus notas**) y `add-node` de un nodo-nota, que
-  mira que la nota exista.
-- **Los casos de uso**: `trasDiagrama`, gemelo de `trasNota` y `trasContexto`. Un nodo nace con
-  `done: false`; una relación, con `directed: true` y `label: ""`. Crean tres: `createNote`,
-  `createContext` y `createDiagram`.
-
-**Una guarda no se puede romper:** `setNodeText` sobre un nodo-nota es no-op, y quitar esa
-comprobación **no compila** —un `NoteNode` no tiene `text`—, así que la vigila el compilador. Y
-**una prueba se corrigió al romper lo que vigilaba**: la de «`nodes` como lista» usaba una lista
-llena, que caía por la comprobación de clave y no por la de «es un mapa»; ahora usa `nodes: []`.
-
-#### Fase 5 · Lienzo: los criterios
-
-1. **«+ Diagrama»** crea en el contexto, con el nombre en edición; en el General los diagramas
-   salen mezclados con las notas; la papelera sigue las reglas de una nota.
-2. **El diagrama como ventana**, con la guarda sabiéndolo: con pruebas y rota a propósito.
-3. **El corcho**: mover y acercar con ratón, trackpad y dedos; al abrir, el origen.
-4. **Los pósits**: crear, editar, marcar hecho, borrar y mover —guardando una vez al soltar—, con
-   los solapes como se describen y el teclado virtual sin tapar el que se edita.
-5. **Los nodos-nota**: título en directo, «Nota perdida», el nivel extra de navegación, y la nota
-   nueva creada desde el lienzo en todos los contextos del diagrama.
-6. **«Doble = menú o crear»** y el clic que espera en el nodo-nota.
-7. **Las cuentas, en funciones puras con pruebas en Node.**
-8. **Su lista de verificación manual, nueva en `test/ui/`, pasada en escritorio Y en el móvil del
-   usuario**, con el resultado anotado.
-9. **`npm run check` en verde y el recuento anotado.**
-
-#### Fase 5 · Lienzo: código hecho, sin cerrar *(2026-10-04)*
-
-En `446b26b`, `57663f2`, `c8a37db`, `ede620f`, `0f33c6a`, `1997ace` y `12be692`, con **693
-pruebas** en verde (643 al empezar), **sin tocar el core ni `storage/`** y sin instalar nada. Los
-puntos 1 a 7 y el 9 tienen código; **el 8 no se cumple**: la lista
-(`test/ui/VERIFICACION-MANUAL-LIENZO.md`) está escrita y **sin pasar**, y se pasa al final de la
-fase con las demás (arriba, *Partida en tres*). Hasta entonces, lo de este apartado **existe pero
-no está verificado en un navegador de verdad**, y menos en el móvil.
-
-**Las piezas:**
-
-- **`viewport.ts`, puro: el encuadre.** `Viewport { offsetX, offsetY, scale }`: un punto del
-  corcho se ve en `corcho × scale + offset`. `toCanvas`/`toScreen`; `panBy` (sin desplazamiento,
-  el mismo objeto); `zoomAround`, que deja quieto el punto, con topes `MIN_SCALE` 0,25 y
-  `MAX_SCALE` 4 —en el tope, el mismo objeto—; `wheelFactor` para la rueda; `centeredViewport`
-  para abrir. **`pinch` se calcula siempre desde el encuadre que había al poner el segundo
-  dedo**, no paso a paso: así no acumula error de redondeo durante el pellizco.
-- **`gestures.ts`, puro: qué ha hecho el dedo.** `LONG_PRESS_MS` 500 y `MOVE_TOLERANCE_PX` 10,
-  **los mismos que el arrastre de fichas** (§7.4), para que los dos gestos se sientan igual;
-  `DOUBLE_TAP_MS` 250, que es también lo que espera un nodo-nota antes de abrirse;
-  `DOUBLE_TAP_DISTANCE_PX` 25, porque un dedo no repite el sitio exacto. `isDoubleTap` exige
-  **mismo objetivo**, a tiempo y cerca.
-- **`paintOrder.ts`, puro: los solapes.** `raise` sube el último pósit movido o creado y
-  `paintOrder` da el orden de pintado; **no se guarda**, como estaba decidido.
-- **`DiagramCanvas.ts`: el lienzo**, separado de la vista igual que `NoteEditor` de `NoteView`,
-  para montarse en la vista y en la ventana (§7.5). Pósits en HTML dentro de una capa con
-  transformación CSS, sobre una rejilla de puntos (`--dim`). Gestos con Pointer Events, sin
-  librería. Los menús son la hoja de `sheet.ts`. **Centra el encuadre la primera vez que tiene
-  tamaño**, con un `ResizeObserver`: al montarse todavía no se ve y mide cero.
-- **`DiagramView.ts`**: cabecera con el nombre renombrable (`createEditableTitle`; `editName`
-  para el recién creado), el lienzo y una barra con ✕ Salir. **`diagrama.css`**, enlazado el
-  último en `index.html`.
-- **Las listas, las ventanas y la navegación**: `ListItem`, `itemKey`, `trashItems`/`moveItems`,
-  `WindowRef` con `diagram` en `sameWindow`, `windowExists` y `parseWindowsLayout`,
-  `choiceGroupLabel`, y lo de encima apilado, con el arreglo de la carrera del `backStack`. Todo
-  eso, en §7.4 y §7.5.
-
-**Los gestos y los menús, como quedaron:**
-
-| | Ratón | Dedo |
-|---|---|---|
-| Mover el corcho | arrastrar el fondo | arrastrar **sin esperar**, también empezando sobre un pósit |
-| Mover un pósit | arrastrarlo, directamente | **mantener 500 ms** y arrastrar |
-| Acercar | rueda | pellizco |
-| Menú del fondo | doble clic o clic derecho | doble toque |
-| Menú de un pósit | doble clic o clic derecho | doble toque |
-| Entrar en un nodo-nota | clic, que espera 250 ms | toque, igual |
-
-- **El menú del fondo, «Añadir al diagrama»**: *Texto · Nota existente · Nota nueva*. *Nota
-  existente* sólo sale si hay notas, y **su lista sustituye a las opciones en la misma hoja**.
-  *Texto* nace vacío y en edición. *Nota nueva* usa **`createNoteForDiagram`** —la nota en todos
-  los contextos del diagrama, apoyado en `contextsWith`— y entra en ella.
-- **El menú de un pósit**: *Editar · Marcar hecho* (o *Desmarcar*) *· Borrar*; el nodo-nota, sin
-  *Editar*. *Conectar*, que llegó con Relaciones, los encabeza (abajo).
-- **Un nodo-nota enseña el título en directo**; si la nota no está cargada, «Nota ilegible», y
-  **una ilegible no se abre**. Si llega el segundo toque antes de los 250 ms, menú en vez de
-  entrar.
-- **Mover guarda con `setNodePosition` una vez, al soltar.**
-
-**Decisiones de implementación** —mías, al construirlo; el usuario las ha visto y no las ha
-rechazado, pero **no se decidieron con él**:
-
-- **La posición de un nodo es su centro.**
-- **El origen, en el centro del lienzo al abrir.** «Se abre en el origen» podía ser también la
-  esquina; el centro deja sitio alrededor.
-- **Borrar un pósit no pide confirmación.**
-- **Editar: Intro guarda, Mayúsculas+Intro hace otra línea**; salir del campo también guarda, y
-  Escape descarta. **Precio:** en el móvil, sin Mayúsculas a mano, un pósit no puede tener varias
-  líneas.
-- **Un pósit vacío se queda**, y enseña «Sin texto».
-- **Los menús son la hoja de abajo**, la misma de ⋮ en la configuración, **no un menú flotante**.
-- **Una raya azul a la izquierda** distingue una fila de diagrama en las listas, y la llevan
-  también los nodos-nota.
-
-**Cambio de plan, aceptado por el usuario:** los menús de nodo y de fondo entraron en la tarea de
-los pósits —sin ellos no se crea, edita ni borra nada— y el clic que espera, en la de los
-nodos-nota; la tarea «Los menús y el clic que espera» desapareció como tarea propia.
-
-**Lo que queda sin verificar de verdad**, y es lo que la lista tiene que mirar: **el pellizco**,
-**la pulsación larga para levantar un pósit** frente a arrastrar el corcho, **el teclado del
-móvil** —que no tape el pósit que se edita: hay código que sube el corcho con `visualViewport`,
-sin probar—, y **si la espera de 250 ms se nota** al abrir un nodo-nota.
-
-#### Fase 5 · Relaciones: los criterios
-
-1. **Conectar**: *Conectar*, el aviso, clic en el destino —también un nodo-nota—, y el fondo
-   cancela.
-2. **La flecha acaba en el borde medido del pósit.**
-3. **El abanico**: una relación, recta; varias entre el mismo par, curvas que no se tapan.
-4. **El menú de la línea**: invertir, sin dirección y con dirección de vuelta, borrar; invertir con
-   otra igual existente, conviven; y el trazo invisible para el dedo.
-5. **El texto a lo largo de la línea**, que no sale boca abajo y se edita con un campo encima. El
-   último paso.
-6. **Las cuentas, en funciones puras con pruebas en Node**: corte con el borde, abanico,
-   orientación.
-7. **Su lista manual, pasada en escritorio Y en el móvil**, con el resultado anotado.
-8. **`npm run check` en verde y el recuento anotado.**
-
-#### Fase 5 · Relaciones: código hecho, sin cerrar *(2026-10-04)*
-
-En `c45f122`, `7e2ebca`, `54dc2c6`, `e362682`, `4ad85ba` y `74c356e`, con **712 pruebas** en verde
-(693 al empezar), **sin tocar el core ni `storage/`** —las relaciones ya se operaban desde Fase 5 ·
-Modelo— y sin instalar nada. Los puntos 1 a 6 y el 8 tienen código; **el 7 no se cumple**: la
-lista (`test/ui/VERIFICACION-MANUAL-RELACIONES.md`) está escrita y **sin pasar**, y va en la misma
-sentada que la del lienzo y la deuda móvil de la Fase 4 (arriba, *Partida en tres*). Con esto
-**todo el código de la Fase 5 está hecho**; lo de este apartado **existe pero no está verificado en
-un navegador de verdad**.
-
-**Las piezas:**
-
-- **`relationGeometry.ts`, puro: dónde va cada línea.** Lo primero que se hizo, con 19 pruebas.
-  `Box` es un pósit en unidades del corcho, por su centro y sus medidas. `borderPoint` da dónde
-  corta el borde la recta que sale del centro; hacia su propio centro, el centro, sin dividir
-  entre cero. `fanOffsets` agrupa por **par de nodos sin sentido** —A→B y B→A son del mismo par—,
-  ordena por id y reparte las curvaturas alrededor de cero, separadas `FAN_SPACING` (28); una
-  sola, cero: recta. `relationCurve` es una **cuadrática**: el lado hacia el que se curva se mide
-  siempre **del nodo de id menor al mayor**, así que A→B y B→A con curvaturas opuestas no se
-  pisan; el control se separa **el doble** de la curvatura, porque el vértice de una cuadrática
-  queda a mitad de camino del control; y **cada extremo sale hacia el control, no hacia el otro
-  centro**, para que la línea nazca en el borde por donde de verdad sale. Con los dos centros en
-  el mismo sitio no hay lado y no divide entre cero. `curvePath` da el trazado; `labelPath`, el
-  mismo **al revés si la línea va hacia la izquierda**, para que el texto no salga boca abajo; y
-  `curveMidpoint`, el punto de la curva a mitad de camino.
-- **El dibujo, en `DiagramCanvas.ts`.** Una capa SVG **debajo** de los pósits, dentro de la capa
-  que se mueve: **los pósits pasaron a su propio contenedor** para que su `reconcile` no mueva la
-  capa SVG. **Una sola punta de flecha definida por lienzo**, con un id distinto en cada uno,
-  porque puede haber dos montados —la ventana y el diagrama abierto encima—. Cada pósit se mide
-  **una vez por repintado** (`offsetWidth`/`offsetHeight`, que no cuentan la escala: ya son
-  unidades del corcho). Mientras se arrastra un pósit cuenta la posición del dedo, así que **sus
-  líneas lo siguen**, no sólo al soltar.
-- **`diagrama.css`** gana las líneas (`--muted`, azul al pasar el ratón), el trazo invisible, el
-  texto con su halo, el aviso de conectar y la marca del origen.
-
-**El fallo que salió al probarlo, y se arregló:** las líneas salían del **centro** de los pósits y
-las puntas quedaban tapadas por ellos. Se pintaban antes de que los pósits tuvieran tamaño —al
-montarse miden cero, como el lienzo (*Fase 5 · Lienzo: código hecho*)—, y `borderPoint` con una
-caja de tamaño cero da el centro. Ahora **un `ResizeObserver` por pósit** repinta las líneas
-cuando aparece o crece, también mientras se escribe en él.
-
-**Cómo quedó:**
-
-| | Ratón | Dedo |
-|---|---|---|
-| Conectar | *Conectar* en el menú del pósit, y clic en el de destino | igual, con toques |
-| Menú de una línea | doble clic o clic derecho sobre ella | doble toque |
-| Mover el corcho | arrastrar empezando en una línea, como en el fondo | igual |
-
-- **Conectar** encabeza el menú del pósit, también del nodo-nota. Sale el aviso «Toca el nodo de
-  destino» y el origen se marca; tocar otro pósit crea la relación, con flecha (`addRelation`).
-  **Cancelan** el fondo, el propio origen, el clic derecho, una línea y **el atrás**: el modo es
-  **una capa del `backStack`**, como una hoja, y funciona al elegir *Conectar* desde la hoja
-  gracias al arreglo de las capas pendientes de Fase 5 · Lienzo. Si el origen se borra mientras se
-  conecta, se cancela. Conectando, un toque en un nodo-nota **no abre la nota**: lo une.
-- **El menú de la línea**, titulado «A → B» o «A — B». Con flecha: *Invertir dirección · Sin
-  dirección · Texto · Borrar*; sin flecha: *Con dirección · Texto · Borrar*. *Invertir* es
-  `setRelationEnds` con los extremos cambiados, decidido en la UI; *Con dirección* devuelve el
-  sentido que tenía, porque `from`/`to` no se tocaron. **Un trazo invisible de 16 de grosor**
-  debajo de cada línea (`pointer-events: stroke`) es el que recibe el dedo.
-- **El texto** va por `<textPath>` sobre un trazado guía (`labelPath`), centrado y por encima de
-  la línea, con **un halo del color del fondo** (`paint-order: stroke`) para leerse si cruza otra.
-  *Texto* pone un campo en `curveMidpoint`: Intro o tocar fuera guardan, Escape descarta, y vacío
-  quita el texto. Un texto más largo que la línea **se corta**.
-
-**Decisiones de implementación** —mías, al construirlo; el usuario las ha visto y no las ha
-rechazado, pero **no se decidieron con él**:
-
-- **Borrar una línea no pide confirmación**, como borrar un pósit.
-- **Con el modo de conectar activo, «✕ Salir» primero cancela el modo** y hay que pulsarlo otra
-  vez. Es la consecuencia de que el modo sea una capa del atrás; el usuario lo ha visto y no lo ha
-  cambiado. La lista lo anota como conocido.
-- **Tocar el propio origen cancela**, en vez de no hacer nada: una relación de un nodo a sí mismo
-  no existe (arriba).
-- **Una línea se pone azul al pasar el ratón**, para saber que se puede tocar.
-
-**Una guarda rota a propósito destapó un hueco:** que el control se separe el doble de la
-curvatura sólo estaba probado con los pósits en horizontal; se añadió la prueba en vertical.
-
-**Lo que queda sin verificar de verdad**, y es lo que la lista tiene que mirar: **acertar una
-línea con el dedo** —el trazo invisible está, sin probar en un móvil—, **el atrás del sistema en el
-modo de conectar** —que cancele el modo y no cierre el diagrama—, y **escribir el texto de una
-línea en el móvil**, con su teclado.
-
-#### Lo que NO entra en la Fase 5
-
-- **Manejar el lienzo con teclado** — pendiente en `TAREAS.md`.
-- **Recordar el encuadre**, el orden de los solapes, o **seleccionar** varios nodos.
-- **Una librería de mover y acercar**, salvo que salte su disparador (`TAREAS.md`).
-- **Todo lo que ya estaba fuera de la Fase 4** y sigue fuera: `move`/`indent`/`outdent`, la
-  carpeta del usuario y OPFS, los shells y el sync.
-
-#### ✅ Cerrada el 2026-10-08, por decisión del usuario y con deuda
-
-Como la Fase 4: **todo el código está hecho y las listas de Lienzo y Relaciones quedan sin
-pasar**, pendientes en `TAREAS.md` junto a las dos de la Fase 4. El usuario la cerró para empezar
-la Fase 6, sabiendo que el móvil —donde más puede fallar— sigue sin verificar. Después de
-`74c356e` entraron dos arreglos sueltos, sin lista propia: el doble toque con el dedo ya no
-cierra el menú que acaba de abrir (`355be4a`, `DiagramCanvas.ts`) y «Datos» va abajo del todo de
-la configuración (`e8017bd`). **723 pruebas** al cerrarla.
-
-**La deuda se saldó el 2026-10-10:** el usuario dio por pasadas las listas de Lienzo y Relaciones
-tras probar la app instalada (§9.12), sin anotar paso a paso. El móvil, que era lo que quedaba sin
-ver, es justo donde la probó.
-
-### 9.12 La Fase 6: la PWA *(planificada el 2026-10-08; construida el 2026-10-09; cerrada el 2026-10-10)*
+### 9.12 La Fase 6: la PWA
 
 **Qué es:** que ElNotas se **instale en el móvil como una app** —icono, pantalla completa, sin
-conexión, actualizándose sola— **sin depender del ordenador de casa**. Hasta ahora se sirve con
-`python3 -m http.server` en la red local (§8.6): sólo funciona en casa, con el ordenador
+conexión, actualizándose sola— **sin depender del ordenador de casa**. Antes se servía sólo con
+`python3 -m http.server` en la red local (§8.6), que sólo funciona en casa, con el ordenador
 encendido, y por `http://`, que para el navegador no es un sitio seguro. **Sin dependencias
 nuevas y sin tocar el core.**
 
@@ -4374,7 +3741,8 @@ publica nada** y en el móvil sigue la versión anterior. Se lanza también a ma
 (`workflow_dispatch`), dos publicaciones seguidas no se pisan (`concurrency`) y sólo usa piezas
 oficiales de GitHub (`actions/…`), ninguna de terceros. El `git push` y activar Pages
 (*Settings → Pages → Source: GitHub Actions*) los hace el usuario: en esta máquina `git push` está
-denegado en `.claude/settings.json`, a propósito.
+denegado en `.claude/settings.json`, a propósito. Las versiones de las piezas de GitHub se
+comprueban el día de escribir la receta: de memoria salen unas de años antes.
 
 *Descartado:* compilar en el ordenador y subir la carpeta a mano a una rama `gh-pages`. Funciona,
 pero son varios pasos por actualización, nada impide publicar algo que no pasa `check` y el
@@ -4405,7 +3773,9 @@ porque la app publicada es **otro sitio** para el navegador —los datos se guar
 espacio el navegador **puede borrar por su cuenta** los datos de un sitio; con él, se compromete a
 no hacerlo. A una app instalada Chrome suele concederlo sin preguntar. La respuesta no cambia nada
 en pantalla. ⚠️ **No protege de que el usuario —o el «limpiar» de MIUI— borre los datos de la app a
-mano**: contra eso sólo sirve la exportación del punto 4.
+mano**: contra eso sólo sirve la exportación del punto 4. **No va en un `try` ni en
+`check:fronteras`**: se llama con `navigator.storage?.persist()` y su rechazo lo recoge un
+`.catch`; sin HTTPS `navigator.storage` no existe y no se llama, y con él la llamada no lanza.
 
 **6. El icono, tal como está**, con las esquinas redondeadas y transparentes, `purpose: "any"`.
 Android recorta los iconos a su forma y podría dejar un borde; *descartado* hacer además una
@@ -4419,13 +3789,10 @@ versión —la lista de ficheros y la huella— lo escribe el script de compilac
 sin el compilador lo cubre la prueba en el móvil. Vive **fuera de `src/`** (en `pwa/`) porque
 `src/` es TypeScript y sus guardianes lo dan por hecho.
 
-**8. El merge a `main`, justo antes de publicar.** `main` se quedó en el prototipo (`a20dc75`) y
-**no tiene nada que no tenga `rediseno-arquitectura`**, que le lleva 104 commits: el merge sólo
-avanza la rama (*fast-forward*), sin conflictos posibles. Va después de probar la carpeta montada
-en `localhost`, para que lo primero que llegue a `main` —y lo primero que se publique— esté
-probado. **Antes del merge no se puede instalar en el móvil:** Pages publica desde `main`, y la red
-de casa no es un sitio seguro. **Se publica con la deuda** de las listas de las Fases 4 y 5, sin
-pasar: la app la usa sólo el usuario, y usarla en el móvil de verdad sirve también para pasarlas.
+**8. El merge a `main`, justo antes de publicar**, después de probar la carpeta montada en
+`localhost`, para que lo primero que llegara a `main` —y lo primero que se publicara— estuviera
+probado. Fue un *fast-forward*: `main` seguía en el prototipo. Desde entonces se trabaja en `main`,
+y la Fase 7 en su propia rama, `fase-7-refactor`.
 
 **Y tres detalles más:**
 
@@ -4443,13 +3810,20 @@ pasar: la app la usa sólo el usuario, y usarla en el móvil de verdad sirve tam
   `#3552d6`** (`--accent` en `base.css`), porque el manifiesto admite **un solo color** y la app
   tiene modo claro y oscuro: con el blanco, en modo oscuro habría un fogonazo blanco en cada
   apertura; el azul se ve igual en los dos.
+- **Las barras del sistema llevan su color, no el azul.** *El usuario decidió el 2026-10-09* que
+  fueran azules siempre (`theme-color` en `index.html` y `theme_color` en el manifiesto), en vez del
+  color del fondo de cada modo; **revisado en la Fase 7, el 2026-10-11, por decisión del usuario**:
+  en horizontal la barra azul hacía una L con la de navegación, así que se quitaron las dos. **El
+  azul queda repetido fuera de `base.css` en un solo sitio**, el `background_color` del manifiesto,
+  que no lee variables de CSS: rompe la regla de que los colores viven sólo en `base.css`, y está
+  pendiente en `TAREAS.md`.
 
 #### Las rutas: relativas, porque Pages sirve en una subcarpeta
 
-`index.html` pide hoy `/dist/web/…` y `/src/ui/styles/…`: **rutas absolutas**, desde la raíz del
+`index.html` pedía `/dist/web/…` y `/src/ui/styles/…`: **rutas absolutas**, desde la raíz del
 dominio. Con `python3 -m http.server` la raíz es el repo y funciona; en Pages la app vive en
 `/ElNotas/`, así que `/dist/web/…` apuntaría a `ildartashtekov.github.io/dist/web/…`, que no
-existe. **Pasan a relativas** (`./dist/web/…`), en el `importmap`, en el `<script>` de entrada y
+existe. **Pasaron a relativas** (`./dist/web/…`), en el `importmap`, en el `<script>` de entrada y
 en los estilos: se resuelven contra la dirección de la página y funcionan en los dos sitios. El
 manifiesto, igual: `start_url` y `scope` son `"./"`. Comprobado el 2026-10-08: en `src/ui` y
 `src/platform` no hay otras rutas absolutas.
@@ -4466,11 +3840,13 @@ La arma **`tools/build-pages.mjs`** (`npm run build:pages`, después de `build:w
 
 1. Copia los ficheros de arriba.
 2. **Calcula la huella**: un SHA-256 del contenido de todos ellos, del que se usan los primeros
-   caracteres. Cambia un byte de cualquier fichero y cambia la huella.
+   caracteres. Cambia un byte de cualquier fichero y cambia la huella. Cuenta también
+   `pwa/sw.js`, que no se publica tal cual.
 3. **Escribe `sw.js`** a partir de `pwa/sw.js`, con la lista de ficheros y la huella dentro. Así
    cada versión tiene **su caché con su nombre** (`elnotas-<huella>`), y como el `sw.js` cambia, el
    navegador se entera de que hay versión nueva.
-4. **Añade al `index.html` copiado** el registro del *service worker* y la meta de la versión.
+4. **Añade al `index.html` copiado** el registro del *service worker* —un `<script>` en línea,
+   que si falla lo dice en la consola— y la meta de la versión.
 5. **Se niega a terminar** si el `index.html` tiene alguna ruta absoluta, o si falta un fichero de
    los que la página enlaza: es el error que **sólo se notaría en el móvil**.
 
@@ -4493,88 +3869,18 @@ Por eso **al instalarse descarga con `cache: "reload"`**, que salta la caché HT
 
 #### Lo que se prueba en Node y lo que se verifica a mano
 
-**No hay pruebas nuevas en Node, y es lo esperado:** casi nada de la fase es lógica. El script se
-verifica ejecutándolo y **rompiendo a propósito** sus dos negativas (una ruta absoluta, un fichero
-que falta). El *service worker* y el manifiesto sólo se pueden probar en un navegador: primero en
-el ordenador, sirviendo `dist/pages/` en `localhost`, y después en el móvil, con una lista nueva,
-`test/ui/VERIFICACION-MANUAL-PWA.md`. **`persist()` es una llamada a una API que puede no existir o
-rechazar**: va dentro de su frontera y en la lista de `check:fronteras` si hace falta.
+**Casi nada de la fase es lógica**, así que casi no hay pruebas nuevas en Node: sólo `versionLine`,
+la línea de la versión. El script se verifica ejecutándolo y **rompiendo a propósito** sus dos
+negativas (una ruta absoluta, un fichero que falta). El *service worker* y el manifiesto sólo se
+pueden probar en un navegador: primero en el ordenador, sirviendo `dist/pages/` en `localhost`, y
+después en el móvil, con `test/ui/VERIFICACION-MANUAL-PWA.md`.
 
-#### Fase 6 terminada
-
-1. **`npm run check` en verde**, sin dependencias nuevas y **sin tocar el core**.
-2. **Rutas relativas** en `index.html`, y la app funcionando igual con `python3 -m http.server`.
-3. **El manifiesto y los iconos** enlazados desde `index.html`.
-4. **`npm run build:pages`** arma `dist/pages/` con la huella, y sus dos negativas rotas a propósito.
-5. **El *service worker***: lo guarda todo con `cache: "reload"`, sirve sin conexión, entra con
-   `skipWaiting` y borra las cachés viejas. **En desarrollo no se registra.**
-6. **`persist()`** al arrancar, y **la versión** en la configuración.
-7. **Probado en el ordenador**, sirviendo `dist/pages/` en `localhost`: se instala, funciona sin
-   conexión y se actualiza.
-8. **La receta de GitHub Actions**, y el usuario hace el merge, el push y activa Pages.
-9. **La lista del móvil, escrita y pasada**: se instala con su icono y su nombre, abre a pantalla
-   completa con la pantalla de carga azul, funciona en modo avión, se actualiza sola tras un push
-   (en la segunda apertura, con la versión nueva en la configuración), gira en cada vista y las
-   notas sobreviven a cerrarla y volver a abrirla.
-
-#### Construida y cerrada *(2026-10-09 y 2026-10-10)*
-
-En `8f44d2d`, `d007a3d`, `ccd94c6`, `45b6242`, `7791e24`, `926b8fd` y `af6dcf4`, uno por tarea,
-con **725 pruebas** (723 al empezar: las dos nuevas son de `versionLine`), **ninguna dependencia
-nueva** y **el core sin tocar**. Publicada el 2026-10-10 en
-`https://ildartashtekov.github.io/ElNotas/`, con la huella `c139fb76`: **la misma que sale en
-casa**, así que lo publicado es exactamente lo probado. El usuario la instaló en su móvil, la probó
-y **la dio por cerrada el 2026-10-10**, satisfecho, **sin anotar paso a paso** la lista del móvil
-(punto 9). Con ella dio por pasadas también las cuatro listas pendientes de las Fases 4 y 5, que
-antes se habían juntado en un solo recorrido, `test/ui/VERIFICACION-SENTADA.md`, con los 187 pasos
-de las cinco listas, cada uno con su código de origen. **No consta que se viera el bloque F**, la
-actualización en el móvil: necesita publicar un cambio. En el ordenador sí se vio (abajo).
-
-**Cómo se verificó el *service worker*.** El navegador del panel de Claude **no deja registrar
-*service workers***: la petición del script ni llega al servidor, en `127.0.0.1` y en `localhost`.
-Se verificó en **el Brave del usuario**, sirviendo la carpeta publicada en `localhost:8733/ElNotas/`
-y mirando el registro del servidor: al instalarse pide los 83 ficheros; después, la app no pide
-nada; con otra huella publicada, el `sw.js` nuevo **vuelve a bajar los 83 del servidor, con 200 y
-ni un 304** —`cache: "reload"` salta la caché HTTP, que era el problema del móvil—, y en *Cache
-storage* queda sólo la caché nueva. También se instaló como app desde Brave.
-
-**Lo que se apartó del plan, y por qué:**
-
-- **La barra de estado es azul siempre** (`<meta name="theme-color" content="#3552d6">`), y no del
-  color del fondo de cada modo, que fue lo propuesto. *Decidido por el usuario el 2026-10-09.* El
-  `theme_color` del manifiesto también es azul, así que la barra no cambia entre la pantalla de
-  carga y la app.
-- **El azul está repetido fuera de `base.css`**: en el manifiesto y en `index.html`, porque ninguno
-  de los dos lee variables de CSS. Rompe la regla de que los colores viven sólo en `base.css`;
-  pendiente en `TAREAS.md`.
-- **`build:pages` se hizo en dos commits**: el primero arma la carpeta, la huella y la versión; el
-  del *service worker* le añade escribir `sw.js` y su registro, porque ahí es donde existe. La
-  huella cuenta también `pwa/sw.js`, que no se publica tal cual.
-- **El registro del *service worker* es un `<script>` en línea** que el script añade al
-  `index.html` copiado; si falla, lo dice en la consola.
-- **`persist()` no va en un `try` ni en `check:fronteras`**: se llama con `navigator.storage?.persist()`
-  y su rechazo lo recoge un `.catch`. Sin HTTPS `navigator.storage` no existe y no se llama; con él,
-  la llamada no lanza. No puede escaparse nada, así que **las fronteras siguen siendo quince**. El
-  plan decía «si hace falta»: no hizo falta.
-- **La prueba en el ordenador (punto 7) se hizo dentro del punto 5**, y no como tarea aparte.
-- **Las versiones de las piezas de GitHub se comprobaron el día de escribir la receta**:
-  `checkout@v7`, `setup-node@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`. De memoria habrían
-  salido unas de dos años antes. Y la receta se **simuló** en una copia limpia del repo: `npm ci`,
-  las 725 pruebas, `build:web` y `build:pages`.
-- **La primera publicación falló en el último paso**, porque el push llegó antes de activar Pages;
-  relanzada a mano con *Run workflow*, publicó. Es lo que pasa si se hace en ese orden.
-- **Node 20 en la receta**, por ser el de casa, aunque dejó de tener soporte en abril de 2026.
-  Pendiente en `TAREAS.md`.
-- **El merge a `main` fue un *fast-forward*** desde `a20dc75`, y **la rama `rediseno-arquitectura`
-  se borró**: desde la Fase 6 se trabaja en `main`.
-
-#### Lo que NO entra en la Fase 6
-
-- **Exportar e importar las notas** — pendiente en `TAREAS.md`, sin fase asignada.
-- **Un aviso de versión nueva**, el icono *maskable* y bloquear la orientación (descartados arriba).
-- **Un dominio propio**: la dirección es la de Pages.
-- **Cambiar dónde se guardan las notas**: siguen en `localStorage`, ahora el del sitio publicado.
-- **Todo lo que ya estaba fuera**: la carpeta del usuario y OPFS, los shells y el sync.
+**El navegador del panel de Claude no deja registrar *service workers***, ni en `127.0.0.1` ni en
+`localhost`: la petición del script ni llega al servidor. Se verificó en el Brave del usuario,
+mirando el registro del servidor: al instalarse pide todos los ficheros; después, la app no pide
+nada; y con otra huella publicada los vuelve a bajar **con 200 y ni un 304**, que es
+`cache: "reload"` saltándose la caché HTTP. **La actualización en el móvil no consta que se viera**:
+necesita publicar un cambio.
 
 ---
 
