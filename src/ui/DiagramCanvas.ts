@@ -47,6 +47,7 @@ import {
   fanOffsets,
   labelPath,
   relationCurve,
+  relationsOf,
 } from "./relationGeometry.js"
 import type { Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
@@ -272,9 +273,7 @@ export const createDiagramCanvas = ({
    * que mide. Las medidas de `offset*` no cuentan la escala del corcho: son ya
    * unidades del corcho. `null` si todavía no está pintado.
    */
-  const cajaDe = (nodo: DiagramNode): Box | null => {
-    const el: HTMLElement | null = positDe(nodo.id)
-    if (el === null) return null
+  const cajaDe = (nodo: DiagramNode, el: HTMLElement): Box => {
     const arrastrado: Point | null =
       gesto !== null && gesto.nodo === nodo.id && gesto.levantado ? gesto.destino : null
     return {
@@ -285,23 +284,78 @@ export const createDiagramCanvas = ({
     }
   }
 
-  const pintarRelaciones = (): void => {
+  /** Lo ya pintado en `contenedor`, por su `data-id`: una pasada, no una búsqueda por cada uno. */
+  const porId = (contenedor: Element): Map<string, Element> => {
+    const mapa: Map<string, Element> = new Map<string, Element>()
+    for (const el of Array.from(contenedor.children)) {
+      const id: string | null = el.getAttribute("data-id")
+      if (id !== null) mapa.set(id, el)
+    }
+    return mapa
+  }
+
+  /** Escribe en el DOM la línea de una relación, ya calculada. */
+  const trazar = (grupo: Element, r: DiagramRelation, c: RelationCurve): void => {
+    const linea: Element | null = grupo.querySelector(".linea")
+    const toque: Element | null = grupo.querySelector(".toque")
+    if (linea === null || toque === null) return
+    trazadas.set(r.id, c)
+    linea.setAttribute("d", curvePath(c))
+    toque.setAttribute("d", curvePath(c))
+    grupo.querySelector(".guia")?.setAttribute("d", labelPath(c))
+    const recorrido: Element | null = grupo.querySelector("textPath")
+    if (recorrido !== null && recorrido.textContent !== r.label) recorrido.textContent = r.label
+    if (r.directed) linea.setAttribute("marker-end", `url(#${idFlecha})`)
+    else linea.removeAttribute("marker-end")
+  }
+
+  /**
+   * Redibuja las líneas; con `soloDe`, sólo las de ese nodo, que es lo único que
+   * se mueve mientras se arrastra. Primero se mide todo y después se escribe:
+   * alternar haría que el navegador recalculase la página antes de cada medida.
+   */
+  const pintarRelaciones = (soloDe: DiagramNodeId | null = null): void => {
     const actual: Diagram | undefined = diagrama()
     if (actual === undefined) return
     const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(
       actual.relations,
     )
+    /* El abanico se reparte con todas, aunque sólo se redibujen unas. */
     const curvas: ReadonlyMap<string, number> = fanOffsets(relaciones)
-    trazadas = new Map<string, RelationCurve>()
-    /* Una caja por nodo y no por relación: un nodo con muchas se mide una vez. */
+    const afectadas: ReadonlyArray<DiagramRelation> =
+      soloDe === null ? relaciones : relationsOf(relaciones, soloDe)
+
+    /* Medir. Una caja por nodo y no por relación: un nodo con muchas se mide una vez. */
+    const posits: Map<string, Element> = porId(nodosCapa)
     const cajas: Map<string, Box | null> = new Map<string, Box | null>()
     const caja = (id: DiagramNodeId): Box | null => {
       if (!cajas.has(id)) {
         const nodo: DiagramNode | undefined = actual.nodes[id]
-        cajas.set(id, nodo === undefined ? null : cajaDe(nodo))
+        const el: Element | undefined = posits.get(id)
+        cajas.set(id, nodo === undefined || !(el instanceof HTMLElement) ? null : cajaDe(nodo, el))
       }
       return cajas.get(id) ?? null
     }
+    const nuevas: Map<string, RelationCurve> = new Map<string, RelationCurve>()
+    for (const r of afectadas) {
+      const desde: Box | null = caja(r.from)
+      const hasta: Box | null = caja(r.to)
+      if (desde !== null && hasta !== null) {
+        nuevas.set(r.id, relationCurve(desde, hasta, r.from, r.to, curvas.get(r.id) ?? 0))
+      }
+    }
+
+    /* Escribir. Arrastrando no nace ni muere ninguna línea: basta con moverlas. */
+    if (soloDe !== null) {
+      const grupos: Map<string, Element> = porId(lineas)
+      for (const r of afectadas) {
+        const grupo: Element | undefined = grupos.get(r.id)
+        const c: RelationCurve | undefined = nuevas.get(r.id)
+        if (grupo !== undefined && c !== undefined) trazar(grupo, r, c)
+      }
+      return
+    }
+    trazadas = new Map<string, RelationCurve>()
     reconcile<DiagramRelation, Element>(lineas, relaciones, {
       key: (r: DiagramRelation): string => r.id,
       keyOf: (el: Element): string | null => el.getAttribute("data-id"),
@@ -329,20 +383,8 @@ export const createDiagramCanvas = ({
         return grupo
       },
       update: (grupo: Element, r: DiagramRelation): void => {
-        const linea: Element | null = grupo.querySelector(".linea")
-        const toque: Element | null = grupo.querySelector(".toque")
-        const desde: Box | null = caja(r.from)
-        const hasta: Box | null = caja(r.to)
-        if (linea === null || toque === null || desde === null || hasta === null) return
-        const c: RelationCurve = relationCurve(desde, hasta, r.from, r.to, curvas.get(r.id) ?? 0)
-        trazadas.set(r.id, c)
-        linea.setAttribute("d", curvePath(c))
-        toque.setAttribute("d", curvePath(c))
-        grupo.querySelector(".guia")?.setAttribute("d", labelPath(c))
-        const recorrido: Element | null = grupo.querySelector("textPath")
-        if (recorrido !== null && recorrido.textContent !== r.label) recorrido.textContent = r.label
-        if (r.directed) linea.setAttribute("marker-end", `url(#${idFlecha})`)
-        else linea.removeAttribute("marker-end")
+        const c: RelationCurve | undefined = nuevas.get(r.id)
+        if (c !== undefined) trazar(grupo, r, c)
       },
     })
     /* `reconcile` deja las definiciones donde estaban, al final: se vuelven arriba. */
@@ -757,7 +799,7 @@ export const createDiagramCanvas = ({
       }
       const el: HTMLElement | null = positDe(g.nodo)
       if (el !== null) colocar(el, g.destino)
-      pintarRelaciones()
+      pintarRelaciones(g.nodo)
     } else if (g.arrastraFondo) {
       vista = panBy(vista, ahora.x - antes.x, ahora.y - antes.y)
       aplicar()

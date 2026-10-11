@@ -67,6 +67,15 @@ export const fanOffsets = (relaciones: ReadonlyArray<FanItem>): ReadonlyMap<stri
   return curvas
 }
 
+/**
+ * Las relaciones que salen o llegan a `nodo`: las únicas que se mueven mientras
+ * se arrastra. Las demás no cambian, y no hace falta redibujarlas.
+ */
+export const relationsOf = <R extends FanItem>(
+  relaciones: ReadonlyArray<R>,
+  nodo: string,
+): ReadonlyArray<R> => relaciones.filter((r: R): boolean => r.from === nodo || r.to === nodo)
+
 /** Cómo se dibuja una relación: los dos extremos, ya en el borde, y el punto de control. */
 export interface RelationCurve {
   readonly start: Point

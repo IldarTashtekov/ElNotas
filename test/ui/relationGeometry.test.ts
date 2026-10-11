@@ -15,6 +15,7 @@ import {
   fanOffsets,
   labelPath,
   relationCurve,
+  relationsOf,
 } from "#ui/index"
 
 /** Un pósit de 100 × 40 centrado en el origen, y otro igual 300 a su derecha. */
@@ -68,6 +69,22 @@ test("las de otro par no cuentan para el abanico", (): void => {
   const c: ReadonlyMap<string, number> = fanOffsets([rel("r1", "a", "b"), rel("r2", "a", "c")])
   assert.equal(c.get("r1"), 0)
   assert.equal(c.get("r2"), 0)
+})
+
+/* ────────────────────────────── relationsOf ────────────────────────────── */
+
+test("las de un nodo son las que salen de él y las que llegan, en su orden", (): void => {
+  const sale: FanItem = rel("r1", "a", "b")
+  const otra: FanItem = rel("r2", "b", "c")
+  const llega: FanItem = rel("r3", "c", "a")
+  const delA: ReadonlyArray<FanItem> = relationsOf([sale, otra, llega], "a")
+  assert.equal(delA.length, 2)
+  assert.strictEqual(delA[0], sale)
+  assert.strictEqual(delA[1], llega)
+})
+
+test("un nodo sin relaciones no tiene ninguna, aunque el diagrama tenga otras", (): void => {
+  assert.equal(relationsOf([rel("r1", "a", "b")], "c").length, 0)
 })
 
 /* ────────────────────────────── relationCurve ──────────────────────────── */

@@ -90,6 +90,7 @@ export {
   fanOffsets,
   labelPath,
   relationCurve,
+  relationsOf,
 } from "./relationGeometry.js"
 export type { Tap } from "./gestures.js"
 export {
