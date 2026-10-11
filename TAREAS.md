@@ -652,7 +652,8 @@ fases 1 y 2. **Ninguna de las dos tocó el core.**
       el destino se inyecta en un solo sitio. Lo que **no** es gratis son las notas ya escritas:
       o se migran o se pierden. Conviene decidirlo antes de usar la app en serio. Techo
       conocido mientras tanto: ~5 MB por origen, que el base64 del blob infla alrededor de un
-      tercio. **Y desde el 2026-09-27, un tercer cabo:** la lista de ventanas vive en su propia
+      tercio. **En notas, unas 4.000** de un título y seis líneas (~1.300 caracteres cada una),
+      estimado el 2026-10-11 en la Fase 7: el techo llega antes que la lentitud. **Y desde el 2026-09-27, un tercer cabo:** la lista de ventanas vive en su propia
       clave de `localStorage`, fuera del almacén, así que **no viaja con las notas** — un cambio
       de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado). **Y desde
       el 2026-10-04, un cuarto:** «Borrar todo» vacía las claves `elnotas:` del `localStorage` de
@@ -941,10 +942,44 @@ la fase en el plan de `CLAUDE.md` y `ARCHITECTURE.md`, en el pase de documentaci
 
 #### Medir antes de tocar
 
-- [ ] **El arranque con muchas notas.** `boot` lo lee todo con `getAll` y guarda el estado entero
-      en memoria. Cronometrar con 1.000, 5.000 y 20.000 notas.
-- [ ] **El lienzo con muchos nodos y relaciones.** Medir con 50, 200 y 500 nodos. Si va lento, lo
-      primero es redibujar por partes; Snabbdom sigue con su propio disparador.
+- [x] **El arranque con muchas notas.** `boot` lo lee todo con `getAll` y guarda el estado entero
+      en memoria. ✅ **Medido el 2026-10-11 y cerrado sin tocar código: no duele.** En el
+      navegador del panel, en `127.0.0.1` (otro origen, sin tocar los datos de `localhost`), con
+      notas sembradas por el adaptador real (título y seis líneas), arrancar y montar el General
+      como `main.ts`, mediana de tres:
+
+      | Notas | Leer y montar el estado | Pintar el General |
+      |---|---|---|
+      | 1.000 | 43 ms | 73 ms |
+      | 5.000 | 306 ms | 601 ms |
+      | 10.000 | 370 ms | 1.755 ms |
+      | 20.000 | 878 ms | 6.387 ms |
+
+      En el móvil, varias veces más lento, sin medir. Dos avisos para el futuro: **pintar la
+      lista crece más deprisa que las notas** (el doble de notas, casi cuatro veces el tiempo),
+      algo de más en el General que no se buscó porque no duele; y **el techo de `localStorage`
+      llega antes**: unas 4.000 notas así (apuntado en la tarea de cambiar de destino, Fase 4).
+- [x] **El lienzo con muchos nodos y relaciones.** ✅ **Medido el 2026-10-11, dolía, y optimizado.**
+      Abrir un diagrama y mover el corcho iban bien con cualquier tamaño; **arrastrar un nodo
+      no**: en cada movimiento se redibujaban TODAS las líneas, y por cada una se alternaba medir
+      un pósit y escribir una línea, así que el navegador recalculaba la página una vez por
+      línea. Dos cambios en `DiagramCanvas.ts`: arrastrando, **sólo las líneas del nodo**
+      (`relationsOf`, pura, en `relationGeometry.ts`, con dos pruebas rotas a propósito); y
+      **medir todo primero y escribir después**, con los pósits buscados en una pasada y no uno a
+      uno. Al soltar se repinta todo, como antes. En el navegador del panel, `127.0.0.1`,
+      diagramas en rejilla con una vez y media tantas relaciones, ratón simulado, mediana:
+
+      | Nodos | Relaciones | Por movimiento, antes | Después |
+      |---|---|---|---|
+      | 20 | 27 | 8 ms | 1,3 ms |
+      | 50 | 70 | 26 ms | 1,3 ms |
+      | 200 | 292 | 239 ms | 4,4 ms |
+      | 500 | 738 | 1.326 ms | 9,8 ms |
+
+      Comprobado en los cuatro: las líneas que dibuja el arrastre son **idénticas** a las del
+      repintado completo al soltar, y sólo se mueven las del nodo. **Falta pasarlo a mano**:
+      arrastrar nodos con relaciones en el ordenador y en el móvil (pasos de arrastre de
+      `VERIFICACION-MANUAL-LIENZO.md` y `-RELACIONES.md`).
 
 #### Documentación
 
