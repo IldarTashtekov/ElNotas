@@ -1059,14 +1059,15 @@ error— porque es donde más se lee mal el reparto de §6.1:
 ```
 
 **Las fronteras del dibujo son todas las de la persistencia**, y con la de `runMigrations`
-suman diez. Con las siete de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
+suman diez. Con las diecinueve de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
 lista de ventanas), dos en `LocalStoragePhosphor` (leer y escribir el color de la pantalla, desde
 la Fase 8, §9.13), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
-`resetIfRequested` borra al arrancar, §7.4) y una en `main.ts` (`window.localStorage` **lanza**
-si el navegador tiene bloqueados los datos del sitio)— son **diecisiete `try` en todo el código
-de producción, y cero `throw`**, medido el 2026-10-12. Eran seis al cerrar la Fase 3, ocho tras
-tapar dos fugas (más abajo), la Fase 4 trajo cinco, «Borrar todo» dos y el fósforo las dos
-últimas. `ui/` no
+`resetIfRequested` borra al arrancar, §7.4) una en `main.ts` (`window.localStorage` **lanza**
+si el navegador tiene bloqueados los datos del sitio) y doce de la copia de seguridad (dos en
+`exportBackup`, tres en `saveFile`, cinco en `importStorage` y dos en `prepareImport`, §9.14)— son
+**veintinueve `try` en todo el código de producción, y cero `throw`**, medido el 2026-10-12. Eran
+seis al cerrar la Fase 3, ocho tras tapar dos fugas (más abajo), la Fase 4 trajo cinco, «Borrar
+todo» dos, el fósforo dos y la copia de seguridad las doce últimas. `ui/` no
 tiene ninguno. Qué significa cada `kind` y por qué son esos
 cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
 del primer dibujo, porque es lo único que el escritor mira para decidir si insiste o se para.
@@ -2408,8 +2409,8 @@ Las cifras de la pulsación larga, en §7.5.
   Crear un contexto aquí **no le añade ventana**.
 - **Datos** *(pedida por el usuario el 2026-10-04)* — al final, una frase que dice lo que hace y
   el botón rojo **«Borrar todo»**, que deja la app como recién instalada. Desde la Fase 8, encima,
-  **Pantalla**: el fósforo, ámbar o verde (§9.13). Abajo, *«Borrar
-  todo»*.
+  **Pantalla**: el fósforo, ámbar o verde (§9.13). Desde el 2026-10-12, en **Datos** y encima de
+  «Borrar todo», **Exportar copia** e **Importar copia** (§9.14).
 
 **El selector de contenido** (al añadir detrás o al cambiar contenido) ofrece el General, los
 contextos existentes, las notas existentes —tras un rótulo «Notas:»—, desde la Fase 5 los
@@ -2548,9 +2549,10 @@ hace el navegador—, y el tacto de un teclado de móvil no lo prueba `node --te
   lo migrado antes de subir la versión**. Hoy `MIGRATIONS` está vacía y no se llega.
 - **`main.ts` decide las piezas de la web**: `systemClock`, `createCryptoIdGenerator(window.crypto)`,
   `LocalStorageBlobStore` y `LocalStorageWindows` sobre `window.localStorage` —que **lanza** si el
-  navegador bloquea los datos del sitio, y por eso va en su `try`—. **Antes de `boot`** llama a
-  `resetIfRequested` (`resetStorage.ts`), y pone el `onResetAll` de la UI: el «Borrar todo» en
-  dos tiempos de §7.4. Hace `flush` en `pagehide` y al pasar a oculta (§2.2). Con **`?depurar`** en la dirección deja `window.elnotas = { store,
+  navegador bloquea los datos del sitio, y por eso va en su `try`—. **Antes de `boot`** termina una importación
+  pedida (`importIfRequested`, y si se queda a medias no arranca, §9.14) y llama a
+  `resetIfRequested` (`resetStorage.ts`); pone el `onResetAll` de la UI, el «Borrar todo» en dos
+  tiempos de §7.4, y las dos acciones de la copia de seguridad (§9.14). Hace `flush` en `pagehide` y al pasar a oculta (§2.2). Con **`?depurar`** en la dirección deja `window.elnotas = { store,
   useCases }` para la consola; sin él, no existe.
 - **`CryptoIdGenerator` usa `getRandomValues`, no `randomUUID`**: éste sólo existe en **contexto
   seguro**, y el móvil abriendo la app por la IP de la red local (`http://192.168…`) no lo es.
@@ -2967,6 +2969,10 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
   ámbar o verde sobre negro, letra monoespaciada, formas rectas y un efecto CRT suave. Casi todo
   CSS, más el fósforo a elegir en ⚙, el icono y la pantalla de carga (§9.13). **Sin dependencias
   nuevas y sin tocar el core.**
+
+- **La copia de seguridad, sin fase. ✅ 2026-10-12**, en la rama `feat/backup`: exportar a un
+  `.json` e importarlo sustituyendo todo, con las ventanas y el fósforo dentro (§9.14). **Sin
+  dependencias nuevas y sin tocar el core.**
 
 ### 9.3 Las operaciones de contenido
 
@@ -3790,8 +3796,8 @@ mezclando versiones. **No pasa porque la app carga todos sus módulos al arranca
 2026-10-08, en `src/` no hay ni un `import()` dinámico. Si algún día lo hay, esta decisión se
 revisa.
 
-**4. Exportar e importar las notas queda fuera de la fase**, pendiente en `TAREAS.md`. Importa
-porque la app publicada es **otro sitio** para el navegador —los datos se guardan por origen— y
+**4. Exportar e importar las notas queda fuera de la fase**; se construyó después, el 2026-10-12
+(§9.14). Importaba porque la app publicada es **otro sitio** para el navegador —los datos se guardan por origen— y
 **empieza vacía**: no ve lo escrito en `http://192.168.…:8000`. **El usuario acepta perderlo**
 (2026-10-08).
 
@@ -3800,7 +3806,7 @@ porque la app publicada es **otro sitio** para el navegador —los datos se guar
 espacio el navegador **puede borrar por su cuenta** los datos de un sitio; con él, se compromete a
 no hacerlo. A una app instalada Chrome suele concederlo sin preguntar. La respuesta no cambia nada
 en pantalla. ⚠️ **No protege de que el usuario —o el «limpiar» de MIUI— borre los datos de la app a
-mano**: contra eso sólo sirve la exportación del punto 4. **No va en un `try` ni en
+mano**: contra eso sólo sirve la copia de seguridad del punto 4 (§9.14). **No va en un `try` ni en
 `check:fronteras`**: se llama con `navigator.storage?.persist()` y su rechazo lo recoge un
 `.catch`; sin HTTPS `navigator.storage` no existe y no se llama, y con él la llamada no lanza.
 
@@ -3968,6 +3974,94 @@ necesita publicar un cambio.
 
 **La lista manual**, `test/ui/VERIFICACION-MANUAL-TERMINAL.md`: el aspecto, que los toques sigan
 llegando con la capa de barrido encima, el fósforo verde y la pantalla de carga.
+
+### 9.14 La copia de seguridad: exportar e importar
+
+*Decidida y construida con el usuario el 2026-10-12, sin fase. Probada por él ese día.*
+
+**Para qué.** Las notas viven sólo en el `localStorage` de **un origen**. Si se borran los datos
+de la app a mano —o con el «limpiar» de MIUI—, se pierde todo, y `persist()` no protege de eso
+(§9.12, punto 5). Además la app publicada es otro origen y empieza vacía. Una copia **fuera del
+navegador** cubre las dos cosas: es el salvavidas y es la forma de pasar las notas de
+`localhost` a la app instalada.
+
+**Qué se decidió, y por qué:**
+
+- **Importar sustituye todo; no mezcla.** Se estudió mezclar con la política de la nube —copia en
+  conflicto, *Pendiente → La nube* en `TAREAS.md`— y funcionaría, pero tiene dos pegas sin la
+  memoria de un sincronizador: **restaurar una copia vieja llena la app de «(conflicto)»**, porque
+  sin saber qué `revision` se vio la última vez, una versión antigua de la misma nota no se
+  distingue de una edición hecha en otro sitio; y **lo borrado reaparece**, porque no hay registro
+  de borrados. Sobre todo, **mezclar toca el core** (una acción «aplicar lo remoto» con su
+  política en el reducer) y **sustituir no**: el usuario eligió sustituir por eso. Mezclar quedó
+  aparcado (`TAREAS.md` → *Ideas aparcadas*). Como salvavidas da lo mismo: con la app vacía, no
+  hay nada con qué chocar.
+- **Entran las ventanas y el fósforo**, a petición del usuario, aunque sean de cada dispositivo y
+  no viajen con las notas (§7.4, §9.13). Restaurar en un móvil nuevo sin ellas obligaría a
+  montar las ventanas a mano.
+- **La copia lleva los ficheros guardados tal cual**, cada uno con su camino y como texto, no el
+  estado de la pantalla. Así van también **los ficheros ilegibles** —nunca se pierde nada—, y al
+  importar se aprovecha entero lo que ya existe: la validación de `schema.ts`, `runMigrations`,
+  `hydrate` y `onCorrupt`. Como texto y con los caminos del `BlobStore`, **no con el base64 de
+  `localStorage`**: la copia no depende de dónde se guarde, y servirá igual el día que el destino
+  sea OPFS o una carpeta.
+- **El formato, un `.json` legible:** `{ app: "elnotas", backupVersion: 1, exportedAt, files,
+  windows, phosphor }`. `app` distingue una copia de cualquier otro JSON; **`backupVersion` es la
+  versión del sobre, no la de las notas** —ésa va dentro, en `manifest.json`, y la comprueba el
+  arranque—. Una copia con `backupVersion` más nuevo que la app se rechaza diciendo que se
+  actualice.
+- **Exportar con el guardado detenido exporta igualmente** lo guardado, y lo dice: es justo cuando
+  más falta hace una copia.
+- **«Guardar como» si el navegador lo tiene; si no, Descargas.** Chrome y Edge de escritorio tienen
+  `showSaveFilePicker`; Android, Firefox y Safari no, y ahí el fichero va a Descargas. Cancelar el
+  diálogo no es un fallo y no se avisa; cualquier otro fallo del diálogo manda a Descargas, para no
+  quedarse sin copia. ⚠️ **No reabre «la carpeta del usuario»** (aparcada): aquello es guardar las
+  notas en una carpeta para siempre, con permiso recordado; esto es elegir dónde va un fichero una
+  vez, sin recordar nada.
+- **Se elige dónde antes de leer nada.** El navegador sólo deja abrir «Guardar como» justo después
+  de la pulsación; esperar antes al guardado podría hacérsela perder.
+- **Antes de borrar nada, un ensayo.** Se arranca la app de mentira sobre la copia, en memoria, con
+  **el mismo `boot`**. Si no arrancaría —un formato de notas más nuevo, una migración que falla—,
+  se sabe sin haber tocado nada. Si arranca, dice qué trae, y la pregunta lo cuenta: «La copia trae
+  2 notas, 1 diagrama y 1 contexto. ¿Sustituir por ella todo lo de este navegador? Lo de ahora se
+  pierde.» **Lo ilegible no impide importar:** se cuenta y se salta, como al arrancar; si lo
+  impidiera, una copia con un fichero roto —y exportar los lleva a propósito— no se podría
+  restaurar nunca.
+- **Se sustituye en dos tiempos, como «Borrar todo»** (§7.4), y por el mismo motivo: el guardado
+  de salida escribe después de pulsar. El botón apunta la copia en `elnotas:importar` y recarga; al
+  arrancar, **antes de leer nada y antes que «Borrar todo»**, se borra lo de `elnotas:` (menos la
+  marca), se escriben los ficheros, las ventanas y el fósforo, y **la marca se quita la última**.
+  Si la copia no cabe al apuntarla, lo dice y **no cambia nada**.
+- **Si falla a medias, la app no arranca.** Lo de antes ya está borrado y sólo ha entrado una
+  parte: si arrancara, lo que se editara se perdería en el siguiente intento, que vuelve a borrar.
+  Sale un aviso con **«Reintentar»** (recargar) y **«Abandonar la importación»** (quitar la marca y
+  arrancar con lo que haya entrado), para no quedarse atascado si nunca llega a caber. El precio
+  del doble guardado es el espacio: durante la recarga la copia está dos veces en `localStorage`.
+  Con notas de texto no se llega.
+
+**Cómo está hecho:**
+
+- **Todo en `src/platform/web/`, y el core sin tocar.** `backup.ts`: el formato, `readBackup` (mira
+  el sobre, no las notas) y el nombre del fichero. `exportBackup.ts`: elegir, guardar lo pendiente,
+  leer lo guardado y escribir. `saveFile.ts`: «Guardar como» o Descargas; `showSaveFilePicker` se
+  declara a mano, porque TypeScript no lo trae. `rehearseImport.ts`: el ensayo, con un `BlobStore`
+  sobre un `Map` que no se exporta —sólo lo usa él, y en `storage/` pediría su batería de
+  pruebas—. `prepareImport.ts`: del fichero elegido a «se puede» o a por qué no.
+  `importStorage.ts`: los dos tiempos.
+- **Capas:** la UI no sabe qué hay en una copia ni dónde acaba el fichero. `src/ui/backup.ts`
+  declara las dos acciones (`BackupActions`) y lo que responden, y la plataforma usa esos mismos
+  tipos; `main.ts` las pone, como pone `onResetAll`. Los textos son puros, en `settingsContent.ts`
+  —la pregunta comparte con la de «Borrar todo» la forma de contar— y `messages.ts`.
+- **Doce fronteras nuevas**, y en `check:fronteras` tres patrones más: `.showSaveFilePicker`,
+  `URL.createObjectURL` y `.text` (leer el fichero elegido).
+- **En ⚙ → Datos**, encima de «Borrar todo»: **Exportar copia** e **Importar copia**, sin color
+  —ni crean ni borran—, y un mensaje debajo. «Sustituir todo», en la hoja, va en rojo: borra.
+
+*Cómo se prueba:* en Node, con copias hechas de verdad —se arranca la app sobre un almacén de
+mentira, se crean cosas y se exporta— y el viaje entero: un dispositivo exporta, otro importa,
+arranca y sólo ve lo de la copia. A mano, `test/ui/VERIFICACION-MANUAL-COPIA.md`: el diálogo, la
+descarga, el selector de Android, pasar de `localhost` a la publicada, y la importación a medias,
+que en el navegador del panel no se puede provocar porque tiene mucho más espacio que uno normal.
 
 ---
 

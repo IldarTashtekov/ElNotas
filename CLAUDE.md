@@ -14,12 +14,12 @@ nativos, más adelante (shells sobre la misma UI web).
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Fases 0 a 8 cerradas**; la siguiente, sin decidir.
+**Fases 0 a 8 cerradas**, y la copia de seguridad (sin fase); la siguiente, sin decidir.
 Publicada en `https://ildartashtekov.github.io/ElNotas/`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
 - **`src/storage/`** — los adaptadores de memoria y fichero, las dos de `BlobStore` y el `writeBehind`.
-- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, «Borrar todo» y `main.ts`.
+- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, «Borrar todo», la copia de seguridad y `main.ts`.
 - **`src/ui/`** — vanilla: las cuatro vistas (§7.4), el editor y el lienzo de diagramas (§7.5).
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
@@ -81,9 +81,10 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
   ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§9.3).
-- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **diecisiete fronteras**:
-  cinco en `FileStorageAdapter`, una en `writeBehind`, `MemoryStorageAdapter`, cada `BlobStore`,
-  `runMigrations` y `main.ts`, y dos en `LocalStorageWindows`, `LocalStoragePhosphor` y `resetStorage`. Por encima nada
+- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **veintinueve fronteras**:
+  cinco en `FileStorageAdapter` y en `importStorage`; tres en `saveFile`; dos en `LocalStorageWindows`,
+  `LocalStoragePhosphor`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
+  `MemoryStorageAdapter`, cada `BlobStore`, `runMigrations` y `main.ts`. Por encima nada
   lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.5).
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Si algo de plataforma o un aviso
   ajeno puede lanzar, va dentro de una frontera. Lo vigila `check:fronteras`, pero **su lista de lo
@@ -191,6 +192,13 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Icono: el dibujo del «nerd» con lluvia de letras verdes sobre negro (Fase 8; era azul).
 - Barras del móvil con el color del sistema (Fase 7: fuera `theme-color` y `theme_color`).
 
+**Copia de seguridad** (§9.14)
+- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas y el fósforo.
+- Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
+- «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
+- Antes de borrar, un ensayo con el mismo `boot`, en memoria. Luego en dos tiempos, como «Borrar todo».
+- A medias, la app no arranca: «Reintentar» o «Abandonar la importación».
+
 El porqué de cada una está en `ARCHITECTURE.md`. Si crees que una está mal, **plantéalo como
 duda**; no la cambies por tu cuenta.
 
@@ -202,7 +210,7 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
 - La nube con Supabase (diseñada el 2026-10-12, sin fase: `TAREAS.md` → *La nube*) · `storageTarget`
-- Exportar e importar las notas · formato de texto y texto más grande (sin fase)
+- Exportar a Markdown · importar mezclando · formato de texto y texto más grande (sin fase)
 - Shells de desktop y móvil (Tauri / Capacitor) · sync entre pares · CRDTs, colaboración
 
 ## Plan por fases
@@ -218,9 +226,11 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - **Fase 8 — Aspecto de terminal.** ✅ Cerrada el 2026-10-12 con **742 pruebas**, sin deuda: el
   usuario la revisó y la dio por hecha (§9.13). Fósforo ámbar o verde, letra monoespaciada, formas
   rectas, CRT suave, icono nuevo y fuera el emoji de la papelera.
+- **Copia de seguridad** (sin fase). ✅ 2026-10-12 con **803 pruebas**, probada por el usuario:
+  exportar e importar en ⚙ → Datos (§9.14). Pendiente, pasar su lista manual.
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
-de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar/importar, pasar de
+de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar a Markdown, pasar de
 Node 20 y el negro repetido en el manifiesto.
 
 ## Comandos
