@@ -14,8 +14,8 @@ nativos, más adelante (shells sobre la misma UI web).
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Fases 0 a 8 cerradas**, y dos tandas sin fase (la copia de seguridad; ventanas, hueco y
-encuadre); la siguiente, sin decidir.
+**Versión 1 cerrada el 2026-10-13** (etiqueta `v1.0.0`): fases 0 a 8 y dos tandas sin fase (la
+copia de seguridad; ventanas, hueco y encuadre). La siguiente, sin decidir.
 Publicada en `https://ildartashtekov.github.io/ElNotas/`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
@@ -234,6 +234,8 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - **Ventanas, hueco y encuadre** (sin fase). ✅ 2026-10-13 con **828 pruebas**, validado por el
   usuario en el móvil: ⚙ crea lo mismo que el «+» (§7.4), tocar el hueco de la nota escribe al final
   (§7.5), el encuadre del diagrama se recuerda y va en la copia, y la mira (§9.11, §9.14).
+- **Versión 1.** ✅ Cerrada el 2026-10-13 por el usuario, con **828 pruebas**: etiqueta `v1.0.0`.
+  Pasan a la siguiente: **pasar la lista manual de la copia** y **las tres preguntas del editor**.
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar a Markdown, pasar de

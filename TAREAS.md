@@ -407,6 +407,19 @@ de documentación:
       paso a paso. Si algún día arrastrar pósits va a tirones en el móvil, el primer sospechoso es
       el brillo del lienzo (G3).
 
+### Versión 1 ✅ CERRADA el 2026-10-13, por decisión del usuario
+
+**Cerrada con 828 pruebas**, tras validar en el móvil la tanda de ventanas, hueco y encuadre. El
+commit lleva la etiqueta **`v1.0.0`**, para poder volver a esta versión exacta. Incluye las fases
+0 a 8 y las dos tandas sin fase (la copia de seguridad; ventanas, hueco y encuadre).
+**Pasa a la siguiente, como deuda conocida:**
+
+- **Pasar la lista manual de la copia** (abajo, en *Sin fase asignada*).
+- **Las tres preguntas del editor** de la Fase 4 (arriba), sin contestar.
+
+Lo demás pendiente (la nube, Markdown, Node 20, el negro repetido en el manifiesto, el formato de
+texto) sigue sin fase, como estaba.
+
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
 Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
