@@ -8,7 +8,7 @@ import assert from "node:assert/strict"
 
 import type { Content } from "#core/index"
 import { checkBox, contentId, text } from "#core/index"
-import { inReadingOrder, lineBeside, mergeTarget, rootAncestor } from "#ui/index"
+import { inReadingOrder, lastLine, lineBeside, mergeTarget, rootAncestor } from "#ui/index"
 
 /*
     T intro
@@ -45,6 +45,13 @@ test("la línea de al lado cruza niveles, hacia arriba y hacia abajo", (): void 
 test("en los bordes de la nota no hay línea de al lado", (): void => {
   assert.equal(lineBeside(NOTA, contentId("intro"), "prev"), null)
   assert.equal(lineBeside(NOTA, contentId("fin"), "next"), null)
+})
+
+test("la última línea que se ve, aunque sea una hija honda; ninguna si la nota está vacía", (): void => {
+  assert.equal(lastLine(NOTA)?.id, "fin")
+  /* Sin «Fin», la de más abajo es «Pan», la hija de «Compra», no «Compra». */
+  assert.equal(lastLine(NOTA.slice(0, 2))?.id, "pan")
+  assert.equal(lastLine([]), null)
 })
 
 test("la casilla de la raíz de una anidada, por hondo que esté", (): void => {

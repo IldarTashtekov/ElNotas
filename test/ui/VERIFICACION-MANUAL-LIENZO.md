@@ -61,8 +61,8 @@ directamente.
 
 ## B. El corcho
 
-- **B1.** Al abrir un diagrama, el origen está **en el centro**: un pósit creado en el centro de
-  la pantalla, al volver a abrir, sigue en el centro.
+- **B1.** Un diagrama **que nunca se ha movido** se abre con el origen **en el centro**: un pósit
+  creado en el centro de la pantalla, al volver a abrir sin tocar el corcho, sigue en el centro.
 - **B2.** Arrastrar el fondo **mueve el corcho**, con los puntos de la rejilla.
 - **B3.** *(Escritorio.)* La **rueda** acerca y aleja **alrededor del puntero**: lo que hay debajo
   no se mueve. El **pellizco del trackpad** hace lo mismo. **La página no se desplaza** ni se
@@ -72,6 +72,17 @@ directamente.
 - **B5.** *(Móvil.)* Pellizcando, **levantar un dedo y seguir con el otro** sigue arrastrando, sin
   saltos.
 - **B6.** No se acerca más de ×4 ni se aleja más de ×0,25.
+- **B7.** ⚠️ **Dónde se miraba se recuerda, en cada diagrama.** Mover el corcho y acercarlo; salir
+  —✕, el atrás o cambiar de ventana— y volver: se ve **igual**, mismo sitio y mismo zoom.
+  **Recargar**, y *(móvil)* **cerrar la app** del todo y abrirla: igual. Otro diagrama **no
+  hereda** ese encuadre. En la **ventana y en la vista propia** del mismo diagrama, lo mismo en el
+  centro y el mismo zoom. Tras «Borrar todo», todos vuelven al origen.
+- **B8.** La **mira** (un círculo con cuatro marcas): en la vista diagrama, **en la barra de
+  abajo, a la izquierda**, con «✕ Salir» a la derecha y sin otra encima del lienzo; en una
+  **ventana** de diagrama, que no tiene barra, **flotando abajo a la derecha** del lienzo, en el
+  color del fósforo. Con el corcho movido y acercado, tocarla lo devuelve **al origen en el centro
+  y a ×1**, como un diagrama nuevo, y así se recuerda (B7). La flotante **no arrastra** el corcho
+  ni abre menús, tampoco con doble toque o *(escritorio)* clic derecho.
 
 ## C. Los pósits y sus menús
 
@@ -147,7 +158,6 @@ directamente.
 - **Las líneas entre nodos** tienen su propia lista: `VERIFICACION-MANUAL-RELACIONES.md`.
 - **El lienzo no se maneja con teclado** (moverse entre pósits, abrir menús): pendiente en
   `TAREAS.md`.
-- **Dónde se miraba no se recuerda**: al abrir, siempre el origen. Es decisión (§9.11).
 
 ---
 
@@ -170,7 +180,7 @@ siempre.
 | Paso | Resultado |
 |---|---|
 | A1–A6 | |
-| B1–B3, B6 | |
+| B1–B3, B6–B8 | |
 | C1–C8 | |
 | D1, D4–D5 | |
 | F1–F6 | |
@@ -189,7 +199,7 @@ siempre.
 | Paso | Resultado |
 |---|---|
 | A1–A5 | |
-| B1–B2, B4–B5 (**B4**) | |
+| B1–B2, B4–B5, B7–B8 (**B4**, **B7**) | |
 | C1–C8 | |
 | D2–D5 (**D2**, **D3**) | |
 | E1 | |

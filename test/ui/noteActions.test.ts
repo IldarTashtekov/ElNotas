@@ -24,6 +24,7 @@ import { createStore, createUseCases, diagramRef, emptyAppState, noteId, noteRef
 import type { ListItem, WindowRef } from "#ui/index"
 import {
   GENERAL,
+  NEW_CONTEXT_NAME,
   NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
   contextsWith,
@@ -84,6 +85,16 @@ test("+ Nota desde el General la crea sin contexto", (): void => {
   assert.notEqual(suelta, null)
   assert.equal(itemsDe(store.getState(), compra).length, 2)
   assert.equal(itemsDe(store.getState(), casa).length, 0)
+})
+
+test("+ Contexto nuevo como ventana: un «Nuevo contexto» vacío, y su ventana", (): void => {
+  const { store, useCases, compra } = escenario()
+  const ref: WindowRef | null = createAsWindow(useCases, "context")
+  if (ref === null || ref.kind !== "context") return assert.fail("tenía que dar una ventana de contexto")
+
+  assert.equal(store.getState().contexts[ref.id]?.name, NEW_CONTEXT_NAME)
+  assert.equal(itemsDe(store.getState(), ref.id).length, 0)
+  assert.equal(itemsDe(store.getState(), compra).length, 2)
 })
 
 test("+ Nota nueva como ventana: una «Nueva Nota» sin contexto, y su ventana", (): void => {

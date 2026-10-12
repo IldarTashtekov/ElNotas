@@ -1,7 +1,7 @@
 /**
  * Lo que se hace sobre lo que lista una ventana: crear una nota o un diagrama, la
- * papelera y «Mover a…»; crear una nota desde un diagrama; y crear una nota o un
- * diagrama como ventana nueva.
+ * papelera y «Mover a…»; crear una nota desde un diagrama; y crear un contexto,
+ * una nota o un diagrama como ventana nueva.
  *
  * Cada una compone casos de uso que ya existen —crear y añadir, quitar y
  * añadir—, así que el core no se toca y cada acción sigue siendo una operación.
@@ -24,6 +24,7 @@ import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
 import { GENERAL } from "./windows.js"
 
+export const NEW_CONTEXT_NAME: string = "Nuevo contexto"
 export const NEW_NOTE_NAME: string = "Nueva Nota"
 export const NEW_DIAGRAM_NAME: string = "Nuevo diagrama"
 
@@ -44,11 +45,19 @@ export const createDiagramIn = (useCases: UseCases, ventana: WindowRef): Diagram
 }
 
 /**
- * Una nota o un diagrama nuevos para enseñarlos en una ventana nueva, desde el
- * «+» de la última. Nacen sin contexto, como desde el General. Devuelve la
- * ventana que los enseña, o `null` si no se pudo crear.
+ * Un contexto, una nota o un diagrama nuevos para enseñarlos en una ventana
+ * nueva, desde el «+» de la última o desde la configuración. La nota y el
+ * diagrama nacen sin contexto, como desde el General. Devuelve la ventana que
+ * los enseña, o `null` si no se pudo crear.
  */
-export const createAsWindow = (useCases: UseCases, kind: "note" | "diagram"): WindowRef | null => {
+export const createAsWindow = (
+  useCases: UseCases,
+  kind: "context" | "note" | "diagram",
+): WindowRef | null => {
+  if (kind === "context") {
+    const contexto: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
+    return contexto === null ? null : { kind: "context", id: contexto.id }
+  }
   if (kind === "note") {
     const nota: Note | null = createNoteIn(useCases, GENERAL)
     return nota === null ? null : { kind: "note", id: nota.id }

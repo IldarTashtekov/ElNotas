@@ -3,7 +3,8 @@
  * cómo se comprueba que lo que se importa es una.
  *
  * Lleva los ficheros guardados tal cual, cada uno con su camino y como texto,
- * más las ventanas y el fósforo de este dispositivo. Aquí sólo hay datos: leer y
+ * más las ventanas, el fósforo y los encuadres de los diagramas de este
+ * dispositivo. Aquí sólo hay datos: leer y
  * escribir el fichero, y el almacén, son de quien llama.
  */
 
@@ -27,6 +28,8 @@ export interface Backup {
   readonly windows: unknown
   /** El fósforo tal cual estaba guardado, o `null`. Lo valida quien lo carga. */
   readonly phosphor: string | null
+  /** Dónde se miraba cada diagrama, tal cual, o `null`. Lo valida quien lo carga. */
+  readonly framing: unknown
 }
 
 /** Por qué no se puede importar. */
@@ -41,15 +44,23 @@ export interface BackupParts {
   readonly files: Readonly<Record<string, string>>
   readonly windows: unknown
   readonly phosphor: string | null
+  readonly framing: unknown
 }
 
-export const makeBackup = ({ exportedAt, files, windows, phosphor }: BackupParts): Backup => ({
+export const makeBackup = ({
+  exportedAt,
+  files,
+  windows,
+  phosphor,
+  framing,
+}: BackupParts): Backup => ({
   app: MARCA,
   backupVersion: BACKUP_VERSION,
   exportedAt,
   files,
   windows,
   phosphor,
+  framing,
 })
 
 type Registro = Record<string, unknown>
@@ -67,7 +78,8 @@ const noEs = (detail: string): Result<never, BackupProblem> => {
  *
  * Mira la forma del sobre, no la de las notas: eso lo hacen después la
  * validación y las migraciones del arranque, igual que con lo guardado.
- * Las ventanas y el fósforo no hacen fallar nada: si faltan, `null`.
+ * Las ventanas, el fósforo y los encuadres no hacen fallar nada: si faltan,
+ * `null`. Una copia de antes de los encuadres no los trae, y vale igual.
  */
 export const readBackup = (datos: unknown): Result<Backup, BackupProblem> => {
   if (!esRegistro(datos) || datos["app"] !== MARCA) return noEs("no es una copia de ElNotas")
@@ -101,6 +113,7 @@ export const readBackup = (datos: unknown): Result<Backup, BackupProblem> => {
     files: files as Readonly<Record<string, string>>,
     windows: datos["windows"] ?? null,
     phosphor: typeof phosphor === "string" ? phosphor : null,
+    framing: datos["framing"] ?? null,
   }
   return ok(backup)
 }

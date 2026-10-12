@@ -1,6 +1,6 @@
 /**
  * La vista diagrama: la cabecera con el nombre —que se renombra tocándolo—, el
- * lienzo, y abajo la barra con el exit.
+ * lienzo, y abajo la barra con la mira, que lo devuelve al inicio, y el exit.
  *
  * Se sale con el exit o con el atrás. Un nodo-nota abre su nota encima, y al
  * salir de ella se vuelve aquí. Un diagrama que es ventana enseña el mismo
@@ -10,7 +10,8 @@
 import type { Diagram, DiagramId, NoteId, Store, Unsubscribe, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
-import { createDiagramCanvas } from "./DiagramCanvas.js"
+import type { DiagramFraming } from "./diagramFraming.js"
+import { createDiagramCanvas, crosshairButton } from "./DiagramCanvas.js"
 import { elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
@@ -20,6 +21,8 @@ export interface DiagramViewDeps {
   readonly useCases: UseCases
   readonly back: BackStack
   readonly diagramId: DiagramId
+  /** Dónde se miraba cada diagrama: el lienzo vuelve allí. */
+  readonly framing: DiagramFraming
   /** Recién creado: llega con el nombre a punto de escribirse. */
   readonly editName: boolean
   readonly onExit: () => void
@@ -30,7 +33,7 @@ export interface DiagramViewDeps {
 /** Devuelve la función que la desmonta. */
 export const mountDiagramView = (
   raiz: HTMLElement,
-  { store, useCases, back, diagramId, editName, onExit, onOpenNote }: DiagramViewDeps,
+  { store, useCases, back, diagramId, framing, editName, onExit, onOpenNote }: DiagramViewDeps,
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -49,6 +52,9 @@ export const mountDiagramView = (
     useCases,
     back,
     diagramId,
+    framing,
+    /* La mira va en la barra, con el exit. */
+    floatingCrosshair: false,
     onOpenNote,
   })
 
@@ -58,7 +64,7 @@ export const mountDiagramView = (
   salir.addEventListener("click", onExit)
   const barra: HTMLElement = elemento("div")
   barra.className = "barra barra-diagrama"
-  barra.append(salir)
+  barra.append(crosshairButton(lienzo.recenter), salir)
 
   const pintar = (): void => {
     const actual: Diagram | undefined = diagrama()

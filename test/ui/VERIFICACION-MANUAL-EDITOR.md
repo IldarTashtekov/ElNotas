@@ -51,13 +51,17 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 
 ## B. Escribir sin perder nada
 
-- **B1.** En una nota vacía, «Toca aquí para escribir» crea la primera línea y deja el cursor en
-  ella.
+- **B1.** En una nota vacía, tocar **en cualquier sitio de la nota** —en «Toca para escribir» o en
+  el hueco de debajo, hasta la barra— crea la primera línea y deja el cursor en ella. Igual en una
+  ventana de tipo nota.
 - **B2.** ⚠️ **La importante: escribir deprisa.** En una casilla **anidada**, escribir dos o tres
   frases largas seguidas, sin parar. El cursor **no salta**, no se pierde ninguna letra y no se
   duplica ninguna. (El guardado va por debajo mientras tanto.)
 - **B3.** Recargar: lo escrito está.
 - **B4.** **Tab** mete un hueco de tabulación dentro de la línea; no anida nada.
+- **B5.** En una nota con líneas, tocar **el hueco de debajo de la última** deja el cursor **al
+  final de la última que se ve**, aunque sea una hija anidada; 📱 se abre el teclado. Tocar una
+  línea sigue dejando el cursor donde se toca.
 
 ## C. Intro
 
@@ -203,7 +207,7 @@ siempre.
 | Paso | Resultado |
 |---|---|
 | A1–A5 | |
-| B1–B4 (**B2**) | |
+| B1–B5 (**B2**) | |
 | C1–C8 | |
 | D1–D6 | |
 | E1–E5 | |

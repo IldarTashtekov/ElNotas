@@ -15,6 +15,7 @@ import type { DiagramId, NoteId, StorageError, Store, UseCases } from "#core/ind
 import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
+import type { DiagramFraming } from "./diagramFraming.js"
 import { mountDiagramView } from "./DiagramView.js"
 import { elemento } from "./dom.js"
 import { describeStorageError } from "./messages.js"
@@ -30,6 +31,8 @@ export interface AppDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly windows: WindowsModel
+  /** Dónde se miraba cada diagrama, compartido por su vista y su ventana. */
+  readonly framing: DiagramFraming
   /** El color de la pantalla, que se elige en la configuración. */
   readonly phosphor: PhosphorSetting
   readonly corrupt: ReadonlyArray<StorageError>

@@ -1,6 +1,6 @@
 /**
  * El encuadre del lienzo de un diagrama: dónde está el corcho en la pantalla y a
- * qué escala. Puro, sin DOM.
+ * qué escala, y lo que de él se recuerda al salir. Puro, sin DOM.
  *
  * Un punto del corcho se ve en `corcho × scale + offset`. Moverlo es cambiar el
  * `offset`; acercarlo, la `scale`, sin que se mueva lo que hay bajo el dedo.
@@ -22,7 +22,18 @@ export interface Viewport {
 export const MIN_SCALE: number = 0.25
 export const MAX_SCALE: number = 4
 
-const acotar = (scale: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale))
+export const clampScale = (scale: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale))
+
+/**
+ * Lo que se recuerda de un encuadre: el punto del corcho que queda en el centro
+ * del lienzo, y la escala. Sin píxeles de pantalla, para que valga en un lienzo
+ * de otro tamaño.
+ */
+export interface Framing {
+  readonly x: number
+  readonly y: number
+  readonly scale: number
+}
 
 /** Al abrir: el origen del corcho en el centro de la pantalla, a tamaño real. */
 export const centeredViewport = (width: number, height: number): Viewport => ({
@@ -54,12 +65,22 @@ const conPuntoEn = (c: Point, p: Point, scale: number): Viewport => ({
   scale,
 })
 
+/** Lo que se recuerda del encuadre `v` en un lienzo de `width` × `height`. */
+export const framingOf = (v: Viewport, width: number, height: number): Framing => {
+  const centro: Point = toCanvas(v, { x: width / 2, y: height / 2 })
+  return { x: centro.x, y: centro.y, scale: v.scale }
+}
+
+/** El encuadre que deja lo recordado en el centro de un lienzo de `width` × `height`. */
+export const viewportFor = (f: Framing, width: number, height: number): Viewport =>
+  conPuntoEn({ x: f.x, y: f.y }, { x: width / 2, y: height / 2 }, clampScale(f.scale))
+
 /**
  * Acerca (`factor` > 1) o aleja alrededor de `p`, que se queda quieto. Si la
  * escala ya está en su tope, el mismo encuadre.
  */
 export const zoomAround = (v: Viewport, p: Point, factor: number): Viewport => {
-  const scale: number = acotar(v.scale * factor)
+  const scale: number = clampScale(v.scale * factor)
   if (scale === v.scale) return v
   return conPuntoEn(toCanvas(v, p), p, scale)
 }
@@ -76,7 +97,7 @@ const puntoMedio = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y
 export const pinch = (inicio: Viewport, a0: Point, b0: Point, a1: Point, b1: Point): Viewport => {
   const antes: number = distancia(a0, b0)
   const scale: number =
-    antes === 0 ? inicio.scale : acotar((inicio.scale * distancia(a1, b1)) / antes)
+    antes === 0 ? inicio.scale : clampScale((inicio.scale * distancia(a1, b1)) / antes)
   return conPuntoEn(toCanvas(inicio, puntoMedio(a0, b0)), puntoMedio(a1, b1), scale)
 }
 

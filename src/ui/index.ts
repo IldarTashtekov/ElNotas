@@ -18,6 +18,7 @@ export {
 export type { Located } from "./noteTree.js"
 export {
   inReadingOrder,
+  lastLine,
   lineBeside,
   locate,
   mergeTarget,
@@ -41,6 +42,7 @@ export { createConfirm, createSheet } from "./sheet.js"
 export type { NoteList, NoteListDeps } from "./NoteList.js"
 export { createNoteList } from "./NoteList.js"
 export {
+  NEW_CONTEXT_NAME,
   NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
   contextsWith,
@@ -59,7 +61,7 @@ export { NO_SELECTION, itemKey, pruneSelected, toggleSelected } from "./selectio
 export type { AppDeps, MountedApp } from "./App.js"
 export { mountApp } from "./App.js"
 export type { SettingsViewDeps } from "./SettingsView.js"
-export { NEW_CONTEXT_NAME, mountSettingsView } from "./SettingsView.js"
+export { mountSettingsView } from "./SettingsView.js"
 export type { SettingsContent, WindowRow } from "./settingsContent.js"
 export {
   IMPORT_NOT_APPLIED,
@@ -73,18 +75,33 @@ export {
   versionLine,
 } from "./settingsContent.js"
 export { dropIndex } from "./dropIndex.js"
-export type { Point, Viewport } from "./viewport.js"
+export type { Framing, Point, Viewport } from "./viewport.js"
 export {
   MAX_SCALE,
   MIN_SCALE,
   centeredViewport,
+  clampScale,
+  framingOf,
   panBy,
   pinch,
   toCanvas,
   toScreen,
+  viewportFor,
   wheelFactor,
   zoomAround,
 } from "./viewport.js"
+export type {
+  DiagramFraming,
+  DiagramFramingDeps,
+  FramingPersistence,
+  Framings,
+} from "./diagramFraming.js"
+export {
+  NO_FRAMINGS,
+  createDiagramFraming,
+  guardFramings,
+  parseFramings,
+} from "./diagramFraming.js"
 export { paintOrder, raise } from "./paintOrder.js"
 export type { Box, FanItem, RelationCurve } from "./relationGeometry.js"
 export {

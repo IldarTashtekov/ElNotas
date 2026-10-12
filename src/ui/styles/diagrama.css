@@ -66,6 +66,43 @@
   z-index: 1;
 }
 
+/* La mira: volver al inicio. Su dibujo, en el color del texto del botón. */
+.mira {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+
+  & > svg {
+    fill: none;
+    height: 1.5rem;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    width: 1.5rem;
+  }
+  & .punto {
+    fill: currentColor;
+    stroke: none;
+  }
+}
+/* En una ventana, que no tiene barra: flotando abajo a la derecha del lienzo. */
+.lienzo > .mira {
+  background: var(--screen);
+  border: 1px solid var(--line);
+  bottom: 0.75rem;
+  color: var(--accent);
+  cursor: pointer;
+  height: 2.5rem;
+  padding: 0;
+  position: absolute;
+  right: 0.75rem;
+  width: 2.5rem;
+  z-index: 1;
+
+  &:hover {
+    background: var(--row);
+  }
+}
+
 /* ── Las líneas, debajo de los pósits: el SVG no mide nada y deja ver lo que se sale ── */
 .relaciones {
   height: 1px;
@@ -175,6 +212,11 @@
 }
 .barra-diagrama {
   margin-top: 0;
+
+  /* En la barra, a la izquierda y con su color, como los demás botones. */
+  & .mira {
+    padding: 0.3rem 0.5rem;
+  }
 
   & .salir {
     margin-left: auto;

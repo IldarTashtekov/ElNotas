@@ -3,16 +3,17 @@
  *
  * Se hace en dos tiempos, como «Borrar todo»: el botón apunta la copia y recarga,
  * y es al arrancar, antes de leer nada, cuando se borra lo que había y se
- * escriben los ficheros, las ventanas y el fósforo de la copia. La marca se
+ * escriben los ficheros, las ventanas, el fósforo y los encuadres de la copia. La marca se
  * quita la última: si algo falla a medias, el próximo arranque lo reintenta.
  */
 
 import type { BlobStore, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
-import { parsePhosphor, parseWindowsLayout } from "#ui/index"
+import { parseFramings, parsePhosphor, parseWindowsLayout } from "#ui/index"
 import type { Backup, BackupProblem } from "./backup.js"
 import { backupBytes, readBackup } from "./backup.js"
+import { createLocalStorageFraming } from "./LocalStorageFraming.js"
 import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
 
@@ -122,6 +123,13 @@ export const importIfRequested = async (almacen: Storage): Promise<ImportAtBoot>
       parsePhosphor(copia.phosphor),
     )
     if (!fosforo.ok) return { kind: "failed", error: fosforo.error }
+  }
+  /* Los de diagramas que no vengan en la copia los quita el arranque. */
+  if (copia.framing !== null) {
+    const encuadres: Result<void, StorageError> = createLocalStorageFraming(almacen).save(
+      parseFramings(copia.framing),
+    )
+    if (!encuadres.ok) return { kind: "failed", error: encuadres.error }
   }
 
   return cancelImport(almacen) ? { kind: "imported" } : fallo("no se pudo quitar la marca")

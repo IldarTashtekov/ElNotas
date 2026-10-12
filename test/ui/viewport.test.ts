@@ -1,20 +1,22 @@
 /**
  * El encuadre del lienzo, sin DOM: pasar de pantalla a corcho y vuelta, mover,
- * acercar alrededor de un punto y el pellizco.
+ * acercar alrededor de un punto, el pellizco y lo que se recuerda al salir.
  */
 
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Point, Viewport } from "#ui/index"
+import type { Framing, Point, Viewport } from "#ui/index"
 import {
   MAX_SCALE,
   MIN_SCALE,
   centeredViewport,
+  framingOf,
   panBy,
   pinch,
   toCanvas,
   toScreen,
+  viewportFor,
   wheelFactor,
   zoomAround,
 } from "#ui/index"
@@ -97,4 +99,29 @@ test("wheelFactor: la rueda hacia arriba acerca, hacia abajo aleja, y quieta no 
   assert.equal(wheelFactor(0), 1)
   // Subir y bajar lo mismo vuelve a la escala de partida.
   assert.ok(Math.abs(wheelFactor(-100) * wheelFactor(100) - 1) < 1e-12)
+})
+
+test("lo recordado es el punto del corcho en el centro y la escala; al volver, se ve igual", (): void => {
+  const f: Framing = framingOf(V, 800, 600)
+  /* El centro (400, 300) de la pantalla cae en el corcho en ((400-100)/2, (300-50)/2). */
+  assert.deepEqual(f, { x: 150, y: 125, scale: 2 })
+  const vuelta: Viewport = viewportFor(f, 800, 600)
+  cerca({ x: vuelta.offsetX, y: vuelta.offsetY }, { x: V.offsetX, y: V.offsetY })
+  assert.equal(vuelta.scale, V.scale)
+})
+
+test("en un lienzo de otro tamaño, lo que estaba en el centro sigue en el centro", (): void => {
+  const f: Framing = framingOf(V, 800, 600)
+  const pequeno: Viewport = viewportFor(f, 300, 500)
+  cerca(toScreen(pequeno, { x: f.x, y: f.y }), { x: 150, y: 250 })
+  assert.equal(pequeno.scale, V.scale)
+})
+
+test("sin moverlo, lo recordado es el origen a escala 1, como al abrir", (): void => {
+  assert.deepEqual(framingOf(centeredViewport(800, 600), 800, 600), { x: 0, y: 0, scale: 1 })
+})
+
+test("una escala recordada fuera de los topes se queda en el tope", (): void => {
+  assert.equal(viewportFor({ x: 0, y: 0, scale: 100 }, 800, 600).scale, MAX_SCALE)
+  assert.equal(viewportFor({ x: 0, y: 0, scale: 0.001 }, 800, 600).scale, MIN_SCALE)
 })

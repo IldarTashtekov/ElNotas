@@ -2,7 +2,8 @@
  * La entrada de la app en el navegador: la carga `index.html`.
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
- * navegador, las notas, las ventanas y el color de la pantalla en `localStorage`—,
+ * navegador, las notas, las ventanas, el color de la pantalla y dónde se miraba
+ * cada diagrama en `localStorage`—,
  * termina una importación pedida, arranca y monta la app, con la copia de
  * seguridad en la configuración. Si no arranca, lo dice en pantalla en vez de
  * quedarse en blanco.
@@ -12,6 +13,7 @@ import type { BlobStore, IdGenerator, Result, StorageError } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
+  DiagramFraming,
   ExportResult,
   ImportPreparation,
   MountedApp,
@@ -20,6 +22,7 @@ import type {
   WindowsModel,
 } from "#ui/index"
 import {
+  createDiagramFraming,
   createPhosphorSetting,
   createWindowsModel,
   describeBootError,
@@ -32,6 +35,7 @@ import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import { exportBackup } from "./exportBackup.js"
 import type { ImportAtBoot } from "./importStorage.js"
 import { cancelImport, importIfRequested } from "./importStorage.js"
+import { createLocalStorageFraming } from "./LocalStorageFraming.js"
 import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
 import { prepareImport } from "./prepareImport.js"
@@ -158,17 +162,25 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     persistence: createLocalStorageWindows(almacen),
   })
+  const framing: DiagramFraming = createDiagramFraming({
+    store: app.store,
+    persistence: createLocalStorageFraming(almacen),
+  })
   /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
   const backup: BackupActions = {
-    exportAll: (): Promise<ExportResult> =>
-      exportBackup({
+    exportAll: (): Promise<ExportResult> => {
+      /* Dónde se miraba el diagrama de debajo, que sigue abierto: antes de leer lo guardado. */
+      framing.save()
+      return exportBackup({
         flush: app.flush,
         blobs,
         windows: createLocalStorageWindows(almacen),
         phosphor: createLocalStoragePhosphor(almacen),
+        framing: createLocalStorageFraming(almacen),
         clock: systemClock,
         chooseDestination: chooseFileDestination,
-      }),
+      })
+    },
     prepareImport: (fichero: File): Promise<ImportPreparation> =>
       prepareImport(fichero, {
         almacen,
@@ -181,6 +193,7 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     useCases: app.useCases,
     windows,
+    framing,
     phosphor,
     corrupt: app.corrupt,
     /* Sólo apunta el borrado y recarga: se hace al arrancar, antes de leer nada. */
@@ -195,11 +208,17 @@ const iniciar = async (): Promise<void> => {
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)
 
-  /* Lo pendiente se escribe al salir. En el móvil `pagehide` no siempre llega,
-     y pasar a segundo plano es la última ocasión segura. */
-  window.addEventListener("pagehide", (): void => void app.flush())
+  /* Lo pendiente se escribe al salir, y dónde se miraba el diagrama abierto. En
+     el móvil `pagehide` no siempre llega, y pasar a segundo plano es la última
+     ocasión segura. */
+  window.addEventListener("pagehide", (): void => {
+    framing.save()
+    void app.flush()
+  })
   document.addEventListener("visibilitychange", (): void => {
-    if (document.visibilityState === "hidden") void app.flush()
+    if (document.visibilityState !== "hidden") return
+    framing.save()
+    void app.flush()
   })
 }
 

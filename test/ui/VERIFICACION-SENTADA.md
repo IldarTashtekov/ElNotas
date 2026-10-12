@@ -121,8 +121,10 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 - **CTX-C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** al
   final. ⋮ abre una hoja con *Cambiar contenido*, *Añadir detrás* y *Quitar*, que hacen lo que
   dicen; las dos primeras enseñan la lista **en la misma hoja**. La **+** añade al final. Un
-  **toque corto** en una ficha no hace nada. *+ Contexto nuevo* en el selector crea «Nuevo
-  contexto» y lo pone en esa ventana.
+  **toque corto** en una ficha no hace nada. Encima del selector, los **mismos tres botones** que
+  en el «+» de la última ventana (CTX-I2): *+ Contexto nuevo*, *+ Nota nueva* y *+ Diagrama
+  nuevo* crean «Nuevo contexto», «Nueva Nota» o «Nuevo diagrama» y lo ponen en esa ventana, **sin
+  salir de ⚙**; la nota y el diagrama, sin contexto.
 - **CTX-C5.** *Borrar* un contexto **pregunta** («¿Borrar «X»? Sus notas seguirán en General.») con
   una **hoja desde abajo** y un botón rojo «Borrar», no con un diálogo del navegador. Con
   *Cancelar*, Escape 💻 o el atrás, no pasa nada y **se sigue en la configuración**. Con «Borrar»
@@ -200,13 +202,17 @@ Para cada apartado, una nota nueva con el botón **+** grande vale: nace vacía 
 
 ### Escribir sin perder nada
 
-- **ED-B1.** En una nota vacía, «Toca aquí para escribir» crea la primera línea y deja el cursor en
-  ella.
+- **ED-B1.** En una nota vacía, tocar **en cualquier sitio de la nota** —en «Toca para escribir» o
+  en el hueco de debajo, hasta la barra— crea la primera línea y deja el cursor en ella. Igual en
+  una ventana de tipo nota.
 - **ED-B2.** ⚠️ **La importante: escribir deprisa.** En una casilla **anidada**, escribir dos o
   tres frases largas seguidas, sin parar. El cursor **no salta**, no se pierde ninguna letra y no
   se duplica ninguna.
 - **ED-B3.** Recargar: lo escrito está.
 - **ED-B4.** 💻 **Tab** mete un hueco de tabulación dentro de la línea; no anida nada.
+- **ED-B5.** En una nota con líneas, tocar **el hueco de debajo de la última** deja el cursor **al
+  final de la última que se ve**, aunque sea una hija anidada; 📱 se abre el teclado. Tocar una
+  línea sigue dejando el cursor donde se toca.
 
 ### Intro
 
@@ -307,8 +313,9 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ### El corcho
 
-- **LZ-B1.** Al abrir un diagrama, el origen está **en el centro**: un pósit creado en el centro de
-  la pantalla, al volver a abrir, sigue en el centro.
+- **LZ-B1.** Un diagrama **que nunca se ha movido** se abre con el origen **en el centro**: un
+  pósit creado en el centro de la pantalla, al volver a abrir sin tocar el corcho, sigue en el
+  centro.
 - **LZ-B2.** Arrastrar el fondo **mueve el corcho**, con los puntos de la rejilla.
 - **LZ-B3.** 💻 La **rueda** acerca y aleja **alrededor del puntero**: lo que hay debajo no se
   mueve. El **pellizco del trackpad** hace lo mismo. **La página no se desplaza** ni se acerca
@@ -318,6 +325,16 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 - **LZ-B5.** 📱 Pellizcando, **levantar un dedo y seguir con el otro** sigue arrastrando, sin
   saltos.
 - **LZ-B6.** No se acerca más de ×4 ni se aleja más de ×0,25.
+- **LZ-B7.** ⚠️ **Dónde se miraba se recuerda, en cada diagrama.** Mover el corcho y acercarlo;
+  salir —✕, el atrás o cambiar de ventana— y volver: se ve **igual**, mismo sitio y mismo zoom.
+  **Recargar**, y 📱 **cerrar la app** del todo (quitarla de recientes) y abrirla: igual. Otro
+  diagrama **no hereda** ese encuadre. Tras «Borrar todo», todos vuelven al origen.
+- **LZ-B8.** La **mira** (un círculo con cuatro marcas): en la vista diagrama, **en la barra de
+  abajo, a la izquierda**, con «✕ Salir» a la derecha y sin otra encima del lienzo; en una
+  **ventana** de diagrama, que no tiene barra, **flotando abajo a la derecha** del lienzo, en el
+  color del fósforo. Con el corcho movido y acercado, tocarla lo devuelve **al origen en el
+  centro y a ×1**, como un diagrama nuevo, y así se recuerda (LZ-B7). La flotante **no arrastra**
+  el corcho ni abre menús, tampoco con doble toque o clic derecho 💻.
 
 ### Los pósits y sus menús
 
@@ -376,6 +393,9 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 - **LZ-G5.** Un nodo-nota de una ventana de diagrama abre su nota **encima**; salir vuelve a la
   ventana.
 - **LZ-G6.** Borrar el diagrama desde el General: **su ventana desaparece**.
+- **LZ-G7.** El encuadre es **el mismo en la ventana y en la vista propia** del diagrama: moverlo
+  en su ventana y abrirlo desde la lista del General (o al revés) enseña **lo mismo en el centro**,
+  con el mismo zoom, aunque el lienzo tenga otro tamaño.
 
 ### El atrás y las hojas
 
@@ -595,7 +615,6 @@ No son fallos; se anotan para no marcarlos como tales, y para decidir si se agua
 **De la Fase 5:**
 
 - **El lienzo y las líneas no se manejan con teclado**: pendiente en `TAREAS.md`.
-- **Dónde se miraba no se recuerda**: al abrir un diagrama, siempre el origen (§9.11).
 - **Con el modo de conectar activo, «✕ Salir» primero lo cancela** y hay que pulsarlo otra vez: el
   modo es una capa del atrás, como una hoja.
 - **No se puede unir un pósit consigo mismo**: tocarlo como destino cancela (§9.11).
@@ -642,7 +661,7 @@ casilla con **—** es que ese paso no va en ese sitio.
 | | CTX-I1–I6 | | |
 | | CTX-E1–E11 (**E3**, **E6** en el móvil) | | |
 | 3. El editor | ED-A1–A5 | | |
-| | ED-B1–B4 (**B2**) | | |
+| | ED-B1–B5 (**B2**) | | |
 | | ED-C1–C8 | | |
 | | ED-D1–D6 | | |
 | | ED-E1–E5 (**E4**: ¿se entiende anidar?) | | |
@@ -651,12 +670,12 @@ casilla con **—** es que ese paso no va en ese sitio.
 | | ED-H1–H4 | | — |
 | | ED-I1–I4 | | |
 | 4. El lienzo | LZ-A1–A6 | | |
-| | LZ-B1–B6 (**B4** en el móvil) | | |
+| | LZ-B1–B8 (**B4** y **B7** en el móvil) | | |
 | | LZ-C1–C8 | | |
 | | LZ-D1–D5 (**D2**, **D3** en el móvil) | | |
 | | LZ-E1 | | — |
 | | LZ-F1–F6 (**F3**) | | |
-| | LZ-G1–G6 | | |
+| | LZ-G1–G7 | | |
 | | LZ-H1–H2 | | |
 | 5. Las relaciones | RL-A1–A5 | | |
 | | RL-B1–B7 | | |

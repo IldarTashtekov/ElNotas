@@ -10,7 +10,6 @@
 
 import type {
   AppState,
-  Context,
   DiagramId,
   Note,
   NoteId,
@@ -20,6 +19,7 @@ import type {
 } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
+import type { DiagramFraming } from "./diagramFraming.js"
 import { createDiagramCanvas } from "./DiagramCanvas.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { corruptNotice, elemento } from "./dom.js"
@@ -29,10 +29,9 @@ import type { NoteEditor } from "./NoteEditor.js"
 import { createNoteEditor } from "./NoteEditor.js"
 import type { NoteList } from "./NoteList.js"
 import { createNoteList } from "./NoteList.js"
-import { createAsWindow } from "./noteActions.js"
+import { newWindowButtons } from "./newWindowButtons.js"
 import type { WindowRow } from "./settingsContent.js"
 import { addWindowChoices, choiceGroupLabel } from "./settingsContent.js"
-import { NEW_CONTEXT_NAME } from "./SettingsView.js"
 import { createSheet } from "./sheet.js"
 import type { WindowView } from "./windowView.js"
 import { windowView } from "./windowView.js"
@@ -43,6 +42,8 @@ export interface WindowsViewDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly windows: WindowsModel
+  /** Dónde se miraba cada diagrama, para el lienzo de una ventana de diagrama. */
+  readonly framing: DiagramFraming
   /** Los ficheros que no se pudieron leer al arrancar. Vacío es lo normal. */
   readonly corrupt: ReadonlyArray<StorageError>
   readonly onOpenSettings: () => void
@@ -72,6 +73,7 @@ export const mountWindowsView = (
     store,
     useCases,
     windows,
+    framing,
     corrupt,
     onOpenSettings,
     back,
@@ -178,6 +180,9 @@ export const mountWindowsView = (
       useCases,
       back,
       diagramId: id,
+      framing,
+      /* Una ventana no tiene barra: la mira va sobre el lienzo. */
+      floatingCrosshair: true,
       onOpenNote,
     })
     zonaLienzo.append(instancia.element)
@@ -227,28 +232,11 @@ export const mountWindowsView = (
         opcion(o.title, (): void => anadir(o.ref)),
       ]),
     )
-    const nuevo: HTMLButtonElement = opcion("+ Contexto nuevo", (): void => {
-      const creado: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
-      if (creado === null) return
-      anadir({ kind: "context", id: creado.id })
+    const nuevos: HTMLElement = newWindowButtons(useCases, (ref: WindowRef): void => {
+      anadir(ref)
       /* Nace con el título a punto de escribir su nombre. */
       titulo.edit()
     })
-    /* La nota y el diagrama nuevos, sin contexto; también nacen con el título en edición. */
-    const nuevoComo = (texto: string, kind: "note" | "diagram"): HTMLButtonElement => {
-      const b: HTMLButtonElement = opcion(texto, (): void => {
-        const ref: WindowRef | null = createAsWindow(useCases, kind)
-        if (ref === null) return
-        anadir(ref)
-        titulo.edit()
-      })
-      b.className = "hoja-nuevo"
-      return b
-    }
-    nuevo.className = "hoja-nuevo"
-    const nuevos: HTMLElement = elemento("div")
-    nuevos.className = "hoja-nuevos"
-    nuevos.append(nuevo, nuevoComo("+ Nota nueva", "note"), nuevoComo("+ Diagrama nuevo", "diagram"))
     hoja.open("Añadir ventana", opciones.length > 0 ? [nuevos, lista] : [nuevos])
   })
 

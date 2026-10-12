@@ -38,7 +38,8 @@ La misma que `VERIFICACION-MANUAL.md`: `npm run build:web`, servir, y abrir por 
 en el móvil, por la IP del ordenador. Para I5 e I6, además, **la copia publicada instalada** en
 el móvil.
 
-Hace falta: **un contexto con dos notas, un diagrama, tres ventanas y el fósforo en verde.**
+Hace falta: **un contexto con dos notas, un diagrama movido y acercado, tres ventanas y el
+fósforo en verde.**
 
 > Por la IP de casa no hay HTTPS, y sin HTTPS el navegador no ofrece «Guardar como»: ahí la copia
 > va siempre a Descargas. Es lo esperado.
@@ -51,7 +52,8 @@ Hace falta: **un contexto con dos notas, un diagrama, tres ventanas y el fósfor
   sistema, con el nombre `elnotas-backup-AAAA-MM-DD.json` y la fecha de hoy. Se elige una
   carpeta y se guarda: abajo sale **«Copia guardada.»**
 - **E2.** Abrir ese fichero con un editor de texto: se lee, y lleva `"app": "elnotas"`, los
-  ficheros de las notas en `files`, las ventanas en `windows` y `"phosphor": "green"`.
+  ficheros de las notas en `files`, las ventanas en `windows`, `"phosphor": "green"` y en
+  `framing` el encuadre del diagrama.
 - **E3.** **Exportar copia** y **cerrar el diálogo sin guardar**: no sale ningún mensaje y no
   aparece ningún fichero.
 - **E4.** *(Firefox o Safari, que no tienen «Guardar como».)* **Exportar copia** la deja en
@@ -63,12 +65,13 @@ Hace falta: **un contexto con dos notas, un diagrama, tres ventanas y el fósfor
 
 ## I. Importar
 
-- **I1.** Crear una nota **«Sobra»** y poner el fósforo en **ámbar**. ⚙ → **Importar copia** abre
+- **I1.** Crear una nota **«Sobra»**, poner el fósforo en **ámbar** y mover el corcho del diagrama. ⚙ → **Importar copia** abre
   el **selector de ficheros** del sistema. Elegir la copia de E1: sube la hoja con **lo que trae**
   («La copia trae 2 notas, 1 diagrama y 1 contexto…») y el botón rojo **«Sustituir todo»**.
 - **I2.** **Cancelar**: la hoja se cierra y **no cambia nada**; «Sobra» sigue ahí.
 - **I3.** Repetir I1 y pulsar **«Sustituir todo»**: la app **recarga** y queda **como en la
-  copia**: sin «Sobra», con sus **tres ventanas** y el fósforo **verde**.
+  copia**: sin «Sobra», con sus **tres ventanas**, el fósforo **verde** y el diagrama **donde se
+  miraba al exportar**.
 - **I4.** Elegir **el mismo fichero dos veces seguidas** (cancelando la primera): la segunda vez
   **vuelve a preguntar**.
 - **I5.** Elegir un fichero que **no es una copia** (cualquier `.json`, o un `.txt` renombrado):

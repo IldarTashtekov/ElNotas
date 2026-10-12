@@ -12,7 +12,12 @@ import type { Cancel } from "#storage/index"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type { ImportPreparation } from "#ui/index"
 import type { App, BootError } from "#platform/index"
-import { boot, createLocalStoragePhosphor, createLocalStorageWindows } from "#platform/index"
+import {
+  boot,
+  createLocalStorageFraming,
+  createLocalStoragePhosphor,
+  createLocalStorageWindows,
+} from "#platform/index"
 import type { Backup } from "#platform/web/backup"
 import { BACKUP_VERSION, makeBackup } from "#platform/web/backup"
 import { collectBackup } from "#platform/web/exportBackup"
@@ -47,6 +52,7 @@ const copiaDeVerdad = async (): Promise<Backup> => {
     blobs: createLocalStorageBlobStore(origen),
     windows: createLocalStorageWindows(origen),
     phosphor: createLocalStoragePhosphor(origen),
+    framing: createLocalStorageFraming(origen),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que exportarse")

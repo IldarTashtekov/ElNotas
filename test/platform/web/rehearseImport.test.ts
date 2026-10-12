@@ -10,7 +10,7 @@ import assert from "node:assert/strict"
 import type { Clock, Context, IdGenerator, Note, Result, StorageError } from "#core/index"
 import { CURRENT_SCHEMA_VERSION, noteRef, ok } from "#core/index"
 import type { Cancel } from "#storage/index"
-import type { PhosphorPersistence, WindowsPersistence } from "#ui/index"
+import type { FramingPersistence, PhosphorPersistence, WindowsPersistence } from "#ui/index"
 import type { App, BootError } from "#platform/index"
 import { boot } from "#platform/index"
 import type { Backup } from "#platform/web/backup"
@@ -35,6 +35,11 @@ const sinVentanas: WindowsPersistence = {
 }
 
 const sinFosforo: PhosphorPersistence = {
+  load: (): Result<unknown, StorageError> => ok(null),
+  save: (): Result<void, StorageError> => ok(undefined),
+}
+
+const sinEncuadres: FramingPersistence = {
   load: (): Result<unknown, StorageError> => ok(null),
   save: (): Result<void, StorageError> => ok(undefined),
 }
@@ -64,6 +69,7 @@ const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blob
     blobs,
     windows: sinVentanas,
     phosphor: sinFosforo,
+    framing: sinEncuadres,
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que exportarse")

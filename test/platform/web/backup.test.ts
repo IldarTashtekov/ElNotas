@@ -19,6 +19,7 @@ const copia = (): Backup =>
     },
     windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
     phosphor: "green",
+    framing: { d1: { x: 10, y: -20, scale: 2 } },
   })
 
 const problemaDe = (r: Result<Backup, BackupProblem>): BackupProblem => {
@@ -32,6 +33,14 @@ const con = (campo: string, valor: unknown): unknown => ({ ...copia(), [campo]: 
 test("lo que se arma, pasado por JSON, se lee igual", (): void => {
   const leida: Result<Backup, BackupProblem> = readBackup(JSON.parse(JSON.stringify(copia())))
   assert.deepEqual(leida, { ok: true, value: copia() })
+})
+
+test("una copia de antes de los encuadres se lee igual, con los encuadres a null", (): void => {
+  const { framing: _, ...vieja }: Backup = copia()
+  const leida: Result<Backup, BackupProblem> = readBackup(JSON.parse(JSON.stringify(vieja)))
+  if (!leida.ok) assert.fail("tenía que leerse")
+  assert.equal(leida.value.framing, null)
+  assert.equal(leida.value.phosphor, "green")
 })
 
 test("lleva la marca de la app y la versión actual del formato", (): void => {

@@ -248,11 +248,4 @@ ul.ajustes .secundario {
       color: var(--danger);
     }
   }
-  & > .hoja-nuevo {
-    background: var(--accent);
-    border: none;
-    color: var(--sobre-color);
-    text-align: center;
-    text-shadow: none;
-  }
 }

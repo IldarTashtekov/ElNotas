@@ -13,6 +13,8 @@ import type { AppState, Context, Unsubscribe, Store, UseCases } from "#core/inde
 import type { BackStack } from "./backStack.js"
 import type { BackupActions, ExportResult, ImportPreparation } from "./backup.js"
 import { elemento } from "./dom.js"
+import { newWindowButtons } from "./newWindowButtons.js"
+import { NEW_CONTEXT_NAME } from "./noteActions.js"
 import { attachDragReorder } from "./dragReorder.js"
 import type { Phosphor, PhosphorChoice, PhosphorSetting } from "./phosphor.js"
 import { PHOSPHORS } from "./phosphor.js"
@@ -53,8 +55,6 @@ export interface SettingsViewDeps {
   /** La versión publicada; `null` en desarrollo. */
   readonly version: string | null
 }
-
-export const NEW_CONTEXT_NAME: string = "Nuevo contexto"
 
 const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonElement => {
   const b: HTMLButtonElement = elemento("button", texto)
@@ -137,10 +137,8 @@ export const mountSettingsView = (
       hoja.close()
       alElegir(ref)
     }
-    const nuevo: HTMLButtonElement = boton("+ Contexto nuevo", (): void => {
-      const creado: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
-      if (creado !== null) elegido({ kind: "context", id: creado.id })
-    }, "hoja-nuevo")
+    /* Lo mismo que el «+» de la última ventana: contexto, nota o diagrama nuevos. */
+    const nuevos: HTMLElement = newWindowButtons(useCases, elegido)
     const caja: HTMLElement = elemento("div")
     caja.className = "selector"
     /* Las notas y los diagramas, detrás de su rótulo: sin él, una nota y un
@@ -156,7 +154,7 @@ export const mountSettingsView = (
         ]
       }),
     )
-    return [nuevo, caja]
+    return [nuevos, caja]
   }
 
   const elegir = (titulo: string, alElegir: (ref: WindowRef) => void): void =>

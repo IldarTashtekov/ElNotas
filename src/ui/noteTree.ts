@@ -1,6 +1,6 @@
 /**
  * Cómo se recorre el contenido de una nota: buscar una línea, saber de quién
- * cuelga, cuál va antes y cuál después.
+ * cuelga, cuál va antes y cuál después, y cuál es la última.
  *
  * Es lo que el editor necesita para decidir adónde va el cursor. Puro: sólo lee.
  */
@@ -40,6 +40,15 @@ export const inReadingOrder = (content: ReadonlyArray<Content>): ReadonlyArray<C
   content.flatMap((line: Content): ReadonlyArray<Content> =>
     isCheckBox(line) ? [line, ...inReadingOrder(line.children)] : [line],
   )
+
+/**
+ * La última línea que se ve: la de más abajo, aunque sea la hija de una hija.
+ * Para tocar el hueco de debajo de la nota. `null` si la nota está vacía.
+ */
+export const lastLine = (content: ReadonlyArray<Content>): Content | null => {
+  const todas: ReadonlyArray<Content> = inReadingOrder(content)
+  return todas[todas.length - 1] ?? null
+}
 
 /** La línea de antes o de después, leyendo de arriba abajo. Para las flechas. */
 export const lineBeside = (

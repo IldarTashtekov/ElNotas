@@ -2,7 +2,9 @@
  * El lienzo de un diagrama: un corcho con los pósits encima, y por debajo las
  * líneas de sus relaciones, que los siguen cuando se mueven. El corcho se
  * arrastra con un dedo o con el ratón y se acerca con dos dedos o con la rueda;
- * al montarse enseña su origen en el centro, y dónde se miraba no se recuerda.
+ * al montarse vuelve a donde se miraba la última vez, o enseña su origen en el
+ * centro si nunca se movió. La mira lo devuelve al origen: abajo a la derecha del
+ * lienzo, o en la barra de quien lo monta.
  *
  * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, o
  * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo:
@@ -34,6 +36,7 @@ import type {
 } from "#core/index"
 import { diagramNodeId, diagramRelationId } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { DiagramFraming } from "./diagramFraming.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
 import { DOUBLE_TAP_MS, LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from "./gestures.js"
@@ -51,14 +54,27 @@ import {
 } from "./relationGeometry.js"
 import type { Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
-import type { Point, Viewport } from "./viewport.js"
-import { centeredViewport, panBy, pinch, toCanvas, wheelFactor, zoomAround } from "./viewport.js"
+import type { Framing, Point, Viewport } from "./viewport.js"
+import {
+  centeredViewport,
+  framingOf,
+  panBy,
+  pinch,
+  toCanvas,
+  viewportFor,
+  wheelFactor,
+  zoomAround,
+} from "./viewport.js"
 
 export interface DiagramCanvasDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly back: BackStack
   readonly diagramId: DiagramId
+  /** Dónde se miraba cada diagrama: se lee al montarlo y se guarda al soltarlo. */
+  readonly framing: DiagramFraming
+  /** Si pone su propia mira, flotando abajo a la derecha. Sin ella, quien lo monta usa `recenter`. */
+  readonly floatingCrosshair: boolean
   /** Entrar en la nota de un nodo-nota. */
   readonly onOpenNote: (id: NoteId) => void
 }
@@ -66,7 +82,9 @@ export interface DiagramCanvasDeps {
 export interface DiagramCanvas {
   /** El lienzo y su hoja de menús. Va dentro de una columna que le da el alto. */
   readonly element: HTMLElement
-  /** Suelta lo que escucha fuera del lienzo. */
+  /** Vuelve al origen en el centro y a ×1, como un diagrama nuevo. Lo hace la mira. */
+  readonly recenter: () => void
+  /** Suelta lo que escucha fuera del lienzo y guarda dónde se miraba. */
   readonly destroy: () => void
 }
 
@@ -80,6 +98,43 @@ const FONDO: string = "fondo"
 /** Un elemento SVG: `elemento` crea los de HTML, y éstos van en otro espacio de nombres. */
 const svg = <K extends keyof SVGElementTagNameMap>(etiqueta: K): SVGElementTagNameMap[K] =>
   document.createElementNS("http://www.w3.org/2000/svg", etiqueta)
+
+/** El dibujo de la mira: un círculo con cuatro marcas y un punto, en el color del texto. */
+const dibujoMira = (): SVGSVGElement => {
+  const dibujo: SVGSVGElement = svg("svg")
+  dibujo.setAttribute("viewBox", "0 0 24 24")
+  dibujo.setAttribute("aria-hidden", "true")
+  const circulo: SVGCircleElement = svg("circle")
+  circulo.setAttribute("cx", "12")
+  circulo.setAttribute("cy", "12")
+  circulo.setAttribute("r", "7")
+  const marcas: SVGPathElement = svg("path")
+  marcas.setAttribute("d", "M12 1v6M12 17v6M1 12h6M17 12h6")
+  const punto: SVGCircleElement = svg("circle")
+  punto.setAttribute("class", "punto")
+  punto.setAttribute("cx", "12")
+  punto.setAttribute("cy", "12")
+  punto.setAttribute("r", "1.5")
+  dibujo.append(circulo, marcas, punto)
+  return dibujo
+}
+
+/**
+ * El botón de la mira, para el lienzo o para una barra. No es del lienzo: tocarlo
+ * no arrastra el corcho ni abre ningún menú.
+ */
+export const crosshairButton = (alPulsar: () => void): HTMLButtonElement => {
+  const mira: HTMLButtonElement = elemento("button")
+  mira.type = "button"
+  mira.className = "mira"
+  mira.setAttribute("aria-label", "Volver al inicio")
+  mira.title = "Volver al inicio"
+  mira.append(dibujoMira())
+  mira.addEventListener("pointerdown", (evento: PointerEvent): void => evento.stopPropagation())
+  mira.addEventListener("contextmenu", (evento: MouseEvent): void => evento.stopPropagation())
+  mira.addEventListener("click", alPulsar)
+  return mira
+}
 
 /** Para que la punta de flecha de cada lienzo tenga su id: puede haber dos montados. */
 let lienzosCreados: number = 0
@@ -119,6 +174,8 @@ export const createDiagramCanvas = ({
   useCases,
   back,
   diagramId,
+  framing,
+  floatingCrosshair,
   onOpenNote,
 }: DiagramCanvasDeps): DiagramCanvas => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
@@ -170,7 +227,7 @@ export const createDiagramCanvas = ({
   /* ── El encuadre ── */
 
   let vista: Viewport = { offsetX: 0, offsetY: 0, scale: 1 }
-  /* Al montarlo todavía no se ve y no mide nada: se centra la primera vez que tiene tamaño. */
+  /* Al montarlo todavía no se ve y no mide nada: se encuadra la primera vez que tiene tamaño. */
   let centrado: boolean = false
 
   const aplicar = (): void => {
@@ -180,10 +237,27 @@ export const createDiagramCanvas = ({
     lienzo.style.backgroundPosition = `${vista.offsetX}px ${vista.offsetY}px`
   }
 
+  /** Aplica un encuadre nuevo, movido por quien usa el lienzo, y lo apunta. */
+  const encuadrar = (nueva: Viewport): void => {
+    if (nueva === vista) return
+    vista = nueva
+    aplicar()
+    const ancho: number = lienzo.clientWidth
+    if (centrado && ancho > 0) framing.remember(diagramId, framingOf(vista, ancho, lienzo.clientHeight))
+  }
+
+  const recenter = (): void => encuadrar(centeredViewport(lienzo.clientWidth, lienzo.clientHeight))
+  /* La flotante, sobre el lienzo y fuera de la capa, como el aviso. */
+  if (floatingCrosshair) lienzo.append(crosshairButton(recenter))
+
   const medida: ResizeObserver = new ResizeObserver((): void => {
     if (centrado || lienzo.clientWidth === 0) return
     centrado = true
-    vista = centeredViewport(lienzo.clientWidth, lienzo.clientHeight)
+    const recordado: Framing | null = framing.get(diagramId)
+    vista =
+      recordado === null
+        ? centeredViewport(lienzo.clientWidth, lienzo.clientHeight)
+        : viewportFor(recordado, lienzo.clientWidth, lienzo.clientHeight)
     aplicar()
   })
   medida.observe(lienzo)
@@ -773,8 +847,7 @@ export const createDiagramCanvas = ({
       const a1: Point | undefined = punteros.get(p.a)
       const b1: Point | undefined = punteros.get(p.b)
       if (a1 === undefined || b1 === undefined) return
-      vista = pinch(p.inicio, p.a0, p.b0, a1, b1)
-      aplicar()
+      encuadrar(pinch(p.inicio, p.a0, p.b0, a1, b1))
       return
     }
 
@@ -801,8 +874,7 @@ export const createDiagramCanvas = ({
       if (el !== null) colocar(el, g.destino)
       pintarRelaciones(g.nodo)
     } else if (g.arrastraFondo) {
-      vista = panBy(vista, ahora.x - antes.x, ahora.y - antes.y)
-      aplicar()
+      encuadrar(panBy(vista, ahora.x - antes.x, ahora.y - antes.y))
     }
   }
 
@@ -901,8 +973,7 @@ export const createDiagramCanvas = ({
     "wheel",
     (evento: WheelEvent): void => {
       evento.preventDefault()
-      vista = zoomAround(vista, enLienzo(evento), wheelFactor(evento.deltaY))
-      aplicar()
+      encuadrar(zoomAround(vista, enLienzo(evento), wheelFactor(evento.deltaY)))
     },
     { passive: false },
   )
@@ -913,7 +984,9 @@ export const createDiagramCanvas = ({
 
   return {
     element: marco,
+    recenter,
     destroy: (): void => {
+      framing.save()
       baja()
       cancelarEspera()
       cancelarApertura()

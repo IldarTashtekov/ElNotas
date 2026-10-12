@@ -8,7 +8,7 @@ import assert from "node:assert/strict"
 
 import type { Clock, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
-import type { PhosphorPersistence, WindowsPersistence } from "#ui/index"
+import type { FramingPersistence, PhosphorPersistence, WindowsPersistence } from "#ui/index"
 import type { Backup, BackupProblem } from "#platform/web/backup"
 import { readBackup } from "#platform/web/backup"
 import type { ExportResult } from "#ui/index"
@@ -29,6 +29,13 @@ const ventanas = (leido: Result<unknown, StorageError>): WindowsPersistence => (
 })
 
 const fosforo = (leido: Result<unknown, StorageError>): PhosphorPersistence => ({
+  load: (): Result<unknown, StorageError> => leido,
+  save: (): Result<void, StorageError> => ok(undefined),
+})
+
+const ENCUADRES: unknown = { d1: { x: 10, y: -20, scale: 2 } }
+
+const encuadres = (leido: Result<unknown, StorageError>): FramingPersistence => ({
   load: (): Result<unknown, StorageError> => leido,
   save: (): Result<void, StorageError> => ok(undefined),
 })
@@ -68,6 +75,7 @@ const escena = (cambios: Partial<ExportDeps> = {}, escribe: boolean = true): Esc
     blobs: conFicheros(),
     windows: ventanas(ok(VENTANAS)),
     phosphor: fosforo(ok("green")),
+    framing: encuadres(ok(ENCUADRES)),
     clock: reloj,
     chooseDestination: async (n: string): Promise<Destination | null> => {
       pasos = [...pasos, "elegir"]
@@ -102,12 +110,13 @@ test("la copia lleva todos los ficheros tal cual, los ilegibles incluidos", asyn
   })
 })
 
-test("lleva las ventanas, el fósforo y la hora del reloj", async (): Promise<void> => {
+test("lleva las ventanas, el fósforo, los encuadres y la hora del reloj", async (): Promise<void> => {
   const e: Escena = escena()
   await exportBackup(e.deps)
   const copia: Backup = copiaEscrita(e)
   assert.deepEqual(copia.windows, VENTANAS)
   assert.equal(copia.phosphor, "green")
+  assert.deepEqual(copia.framing, ENCUADRES)
   assert.equal(copia.exportedAt, AHORA)
 })
 
@@ -169,23 +178,26 @@ test("un fichero listado que ya no está no va, y no es un fallo", async (): Pro
     blobs,
     windows: ventanas(ok(null)),
     phosphor: fosforo(ok(null)),
+    framing: encuadres(ok(null)),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que salir")
   assert.equal("notes/borrada.json" in copia.value.files, false)
 })
 
-test("ventanas o fósforo que no se pueden leer van a null, sin fallar", async (): Promise<void> => {
+test("ventanas, fósforo o encuadres que no se pueden leer van a null, sin fallar", async (): Promise<void> => {
   const ilegible: StorageError = { kind: "io", cause: "bloqueado" }
   const copia: Result<Backup, StorageError> = await collectBackup({
     blobs: conFicheros(),
     windows: ventanas(err(ilegible)),
     phosphor: fosforo(err(ilegible)),
+    framing: encuadres(err(ilegible)),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que salir")
   assert.equal(copia.value.windows, null)
   assert.equal(copia.value.phosphor, null)
+  assert.equal(copia.value.framing, null)
 })
 
 test("un fósforo guardado que no es texto va a null", async (): Promise<void> => {
@@ -193,6 +205,7 @@ test("un fósforo guardado que no es texto va a null", async (): Promise<void> =
     blobs: conFicheros(),
     windows: ventanas(ok(null)),
     phosphor: fosforo(ok(42)),
+    framing: encuadres(ok(null)),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que salir")

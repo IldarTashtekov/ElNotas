@@ -1,6 +1,6 @@
 /**
- * Exportar: junta lo guardado —los ficheros, las ventanas y el fósforo— en una
- * copia y la escribe donde diga el usuario.
+ * Exportar: junta lo guardado —los ficheros, las ventanas, el fósforo y los
+ * encuadres de los diagramas— en una copia y la escribe donde diga el usuario.
  *
  * Primero se elige dónde, luego se guarda lo pendiente y se lee lo guardado. Si
  * el guardado está detenido, se exporta igualmente lo que hay y se dice. Dónde
@@ -9,7 +9,12 @@
 
 import type { BlobStore, Clock, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
-import type { ExportResult, PhosphorPersistence, WindowsPersistence } from "#ui/index"
+import type {
+  ExportResult,
+  FramingPersistence,
+  PhosphorPersistence,
+  WindowsPersistence,
+} from "#ui/index"
 import type { Backup } from "./backup.js"
 import { backupFileName, makeBackup } from "./backup.js"
 
@@ -26,6 +31,7 @@ export interface ExportDeps {
   readonly blobs: BlobStore
   readonly windows: WindowsPersistence
   readonly phosphor: PhosphorPersistence
+  readonly framing: FramingPersistence
   readonly clock: Clock
   readonly chooseDestination: ChooseDestination
 }
@@ -44,11 +50,17 @@ const aTexto = (bytes: Uint8Array): string | null => {
 
 /**
  * Lo guardado ahora mismo, como copia. Los ficheros salen tal cual, también los
- * ilegibles. Si las ventanas o el fósforo no se pueden leer, van a `null`: sólo
- * se pierde cómo estaba montada la pantalla.
+ * ilegibles. Si las ventanas, el fósforo o los encuadres no se pueden leer, van
+ * a `null`: sólo se pierde cómo estaba montada la pantalla.
  */
 export const collectBackup = async (
-  { blobs, windows, phosphor, clock }: Pick<ExportDeps, "blobs" | "windows" | "phosphor" | "clock">,
+  {
+    blobs,
+    windows,
+    phosphor,
+    framing,
+    clock,
+  }: Pick<ExportDeps, "blobs" | "windows" | "phosphor" | "framing" | "clock">,
 ): Promise<Result<Backup, StorageError>> => {
   const caminos: Result<ReadonlyArray<string>, StorageError> = await blobs.list("")
   if (!caminos.ok) return caminos
@@ -70,12 +82,14 @@ export const collectBackup = async (
 
   const ventanas: Result<unknown, StorageError> = windows.load()
   const fosforo: Result<unknown, StorageError> = phosphor.load()
+  const encuadres: Result<unknown, StorageError> = framing.load()
   return ok(
     makeBackup({
       exportedAt: clock.now(),
       files,
       windows: ventanas.ok ? ventanas.value : null,
       phosphor: fosforo.ok && typeof fosforo.value === "string" ? fosforo.value : null,
+      framing: encuadres.ok ? encuadres.value : null,
     }),
   )
 }

@@ -19,7 +19,7 @@ import {
   toggleCheckbox,
   toggleChecked,
 } from "./editor.js"
-import { lineBeside, locate } from "./noteTree.js"
+import { lastLine, lineBeside, locate } from "./noteTree.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { WritingMode } from "./writingMode.js"
 import { INITIAL_MODE, toggleNest } from "./writingMode.js"
@@ -120,7 +120,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
 
   const lineas: HTMLElement = elemento("div")
   lineas.className = "lineas"
-  const empezar: HTMLParagraphElement = elemento("p", "Esta nota está vacía. Toca aquí para escribir.")
+  const empezar: HTMLParagraphElement = elemento("p", "Esta nota está vacía. Toca para escribir.")
   empezar.className = "vacia empezar"
   empezar.tabIndex = 0
   empezar.setAttribute("role", "button")
@@ -336,6 +336,18 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
       evento.preventDefault()
       empezarAEscribir()
     }
+  })
+
+  /* Tocar el hueco que no es ninguna línea: en una nota vacía, empezar a
+     escribir; si tiene líneas, al final de la última que se ve. */
+  element.addEventListener("click", (evento: MouseEvent): void => {
+    if (evento.target !== element && evento.target !== lineas) return
+    const nota: Note | undefined = deps.note()
+    if (nota === undefined) return
+    const ultima: Content | null = lastLine(nota.content)
+    if (ultima === null) return empezarAEscribir()
+    const campo: HTMLElement | null = campoDe(ultima.id)
+    if (campo !== null) ponerCursorEn(campo, campo.textContent?.length ?? 0)
   })
 
   /* ── La barra: el interruptor de casilla y anidar ── */
