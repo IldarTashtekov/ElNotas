@@ -3,19 +3,40 @@
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
  * navegador, las notas, las ventanas y el color de la pantalla en `localStorage`—,
- * arranca y monta la app. Si no arranca, lo dice en pantalla en vez de quedarse en blanco.
+ * termina una importación pedida, arranca y monta la app, con la copia de
+ * seguridad en la configuración. Si no arranca, lo dice en pantalla en vez de
+ * quedarse en blanco.
  */
 
-import type { Result, StorageError } from "#core/index"
+import type { BlobStore, IdGenerator, Result, StorageError } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
-import type { MountedApp, Phosphor, PhosphorSetting, WindowsModel } from "#ui/index"
-import { createPhosphorSetting, createWindowsModel, describeBootError, mountApp } from "#ui/index"
+import type {
+  BackupActions,
+  ExportResult,
+  ImportPreparation,
+  MountedApp,
+  Phosphor,
+  PhosphorSetting,
+  WindowsModel,
+} from "#ui/index"
+import {
+  createPhosphorSetting,
+  createWindowsModel,
+  describeBootError,
+  describeImportFailure,
+  mountApp,
+} from "#ui/index"
 import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
+import { exportBackup } from "./exportBackup.js"
+import type { ImportAtBoot } from "./importStorage.js"
+import { cancelImport, importIfRequested } from "./importStorage.js"
 import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
+import { prepareImport } from "./prepareImport.js"
 import { requestReset, resetIfRequested } from "./resetStorage.js"
+import { chooseFileDestination } from "./saveFile.js"
 import { systemClock } from "./SystemClock.js"
 
 /** `window.localStorage` LANZA si el navegador tiene bloqueados los datos del sitio. */
@@ -48,6 +69,35 @@ const mostrarFallo =(raiz: HTMLElement, mensaje: string): void => {
   raiz.replaceChildren(aviso)
 }
 
+/**
+ * Una importación que se quedó a medias: lo de antes ya no está, así que la app no
+ * arranca, para que nada de lo que se edite se pierda en el siguiente intento.
+ * Recargar lo reintenta; abandonar arranca con lo que haya entrado.
+ */
+const mostrarImportacionSinTerminar = (raiz: HTMLElement, almacen: Storage, fallo: StorageError): void => {
+  const boton = (texto: string, clase: string, alPulsar: () => void): HTMLButtonElement => {
+    const b: HTMLButtonElement = document.createElement("button")
+    b.type = "button"
+    b.className = clase
+    b.textContent = texto
+    b.addEventListener("click", alPulsar)
+    return b
+  }
+  const texto: HTMLParagraphElement = document.createElement("p")
+  texto.textContent = describeImportFailure(fallo)
+  const aviso: HTMLElement = document.createElement("div")
+  aviso.className = "aviso importacion-sin-terminar"
+  aviso.setAttribute("role", "alert")
+  aviso.append(
+    texto,
+    boton("Reintentar", "recargar", (): void => window.location.reload()),
+    boton("Abandonar la importación", "abandonar", (): void => {
+      if (cancelImport(almacen)) window.location.reload()
+    }),
+  )
+  raiz.replaceChildren(aviso)
+}
+
 const iniciar = async (): Promise<void> => {
   const raiz: HTMLElement | null = document.getElementById("app")
   if (raiz === null) return
@@ -55,6 +105,13 @@ const iniciar = async (): Promise<void> => {
   const almacen: Storage | null = localStorageDisponible()
   if (almacen === null) {
     mostrarFallo(raiz, describeBootError({ kind: "permission-denied" }))
+    return
+  }
+
+  /* Si se pidió importar una copia, antes que nada: sustituye lo guardado por ella. */
+  const importada: ImportAtBoot = await importIfRequested(almacen)
+  if (importada.kind === "failed") {
+    mostrarImportacionSinTerminar(raiz, almacen, importada.error)
     return
   }
 
@@ -77,10 +134,12 @@ const iniciar = async (): Promise<void> => {
   let avisarDeGuardado: (fallo: StorageError) => void = (fallo: StorageError): void => {
     sinGuardar = fallo
   }
+  const blobs: BlobStore = createLocalStorageBlobStore(almacen)
+  const ids: IdGenerator = createCryptoIdGenerator(window.crypto)
   const arrancada: Result<App, BootError> = await boot({
-    blobs: createLocalStorageBlobStore(almacen),
+    blobs,
     clock: systemClock,
-    ids: createCryptoIdGenerator(window.crypto),
+    ids,
     skipCorrupt: true,
     onError: (fallo: StorageError): void => avisarDeGuardado(fallo),
   })
@@ -99,6 +158,25 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     persistence: createLocalStorageWindows(almacen),
   })
+  /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
+  const backup: BackupActions = {
+    exportAll: (): Promise<ExportResult> =>
+      exportBackup({
+        flush: app.flush,
+        blobs,
+        windows: createLocalStorageWindows(almacen),
+        phosphor: createLocalStoragePhosphor(almacen),
+        clock: systemClock,
+        chooseDestination: chooseFileDestination,
+      }),
+    prepareImport: (fichero: File): Promise<ImportPreparation> =>
+      prepareImport(fichero, {
+        almacen,
+        clock: systemClock,
+        ids,
+        reload: (): void => window.location.reload(),
+      }),
+  }
   const montada: MountedApp = mountApp(raiz, {
     store: app.store,
     useCases: app.useCases,
@@ -111,6 +189,7 @@ const iniciar = async (): Promise<void> => {
       window.location.reload()
       return true
     },
+    backup,
     version: versionPublicada(),
   })
   avisarDeGuardado = montada.showSaveError

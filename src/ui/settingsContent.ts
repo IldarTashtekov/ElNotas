@@ -1,12 +1,15 @@
 /**
  * Qué enseña la vista configuración: las ventanas en su orden, todos los
  * contextos, y lo que se puede elegir como contenido de una ventana: el General,
- * los contextos, las notas y los diagramas.
+ * los contextos, las notas y los diagramas. Y lo que dice al borrar, exportar e
+ * importar.
  *
  * Puro, como `windowView`: la pantalla sólo lo pinta.
  */
 
 import type { AppState, Context, Diagram, Note } from "#core/index"
+import type { ExportResult, ImportPreparation, ImportSummary } from "./backup.js"
+import { describeBootError, describeStorageError } from "./messages.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { GENERAL, sameWindow } from "./windows.js"
 import { windowTitle } from "./windowView.js"
@@ -85,23 +88,87 @@ const cuantas = (n: number, singular: string, plural: string): string =>
   `${n} ${n === 1 ? singular : plural}`
 
 /**
+ * «2 notas, 1 diagrama y 3 contextos». Lo que no hay no se nombra; `null` si no
+ * hay nada.
+ */
+const recuento = (notas: number, diagramas: number, contextos: number): string | null => {
+  const partes: ReadonlyArray<string> = [
+    [notas, "nota", "notas"] as const,
+    [diagramas, "diagrama", "diagramas"] as const,
+    [contextos, "contexto", "contextos"] as const,
+  ]
+    .filter(([n]): boolean => n > 0)
+    .map(([n, singular, plural]): string => cuantas(n, singular, plural))
+  if (partes.length === 0) return null
+  return partes.length === 1
+    ? (partes[0] ?? "")
+    : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1] ?? ""}`
+}
+
+/**
  * La pregunta de «Borrar todo»: cuenta lo que se pierde, para que no se confirme
  * a ciegas. Lo que no hay no se nombra; sin nada, se dice.
  */
 export const resetQuestion = (state: AppState): string => {
-  const partes: ReadonlyArray<string> = [
-    [Object.keys(state.notes).length, "nota", "notas"] as const,
-    [Object.keys(state.diagrams).length, "diagrama", "diagramas"] as const,
-    [Object.keys(state.contexts).length, "contexto", "contextos"] as const,
-  ]
-    .filter(([n]): boolean => n > 0)
-    .map(([n, singular, plural]): string => cuantas(n, singular, plural))
-  if (partes.length === 0) return "¿Dejar la app en blanco? No hay nada guardado."
-  const lista: string =
-    partes.length === 1
-      ? (partes[0] ?? "")
-      : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1] ?? ""}`
+  const lista: string | null = recuento(
+    Object.keys(state.notes).length,
+    Object.keys(state.diagrams).length,
+    Object.keys(state.contexts).length,
+  )
+  if (lista === null) return "¿Dejar la app en blanco? No hay nada guardado."
   return `¿Borrar ${lista}, y las ventanas? No se puede deshacer.`
+}
+
+/**
+ * La pregunta antes de importar: qué trae la copia y que lo de ahora se pierde.
+ * Los ficheros ilegibles se nombran: entran, pero no se verán.
+ */
+export const importQuestion = (resumen: ImportSummary): string => {
+  const lista: string | null = recuento(resumen.notes, resumen.diagrams, resumen.contexts)
+  const trae: string = lista === null ? "La copia está vacía." : `La copia trae ${lista}.`
+  const ilegibles: string =
+    resumen.unreadable === 0
+      ? ""
+      : resumen.unreadable === 1
+        ? " 1 fichero no se puede leer: entra igual, pero no se verá."
+        : ` ${resumen.unreadable} ficheros no se pueden leer: entran igual, pero no se verán.`
+  return `${trae}${ilegibles} ¿Sustituir por ella todo lo de este navegador? Lo de ahora se pierde.`
+}
+
+/** Por qué no se puede importar ese fichero. */
+export const importProblem = (
+  problema: Exclude<ImportPreparation, { readonly kind: "ready" }>,
+): string => {
+  switch (problema.kind) {
+    case "unreadable-file":
+      return "No se ha podido leer el fichero."
+    case "not-a-backup":
+      return "Ese fichero no es una copia de ElNotas."
+    case "newer-backup":
+      return "Esa copia es de una versión más nueva de ElNotas. Actualiza la app y vuelve a probar."
+    case "wont-boot":
+      return `Esa copia no se puede usar. ${describeBootError(problema.error)}`
+  }
+}
+
+/** Cuando se confirmó, pero la copia no cabe para apuntarla. */
+export const IMPORT_NOT_APPLIED: string =
+  "La copia no cabe en el navegador. No se ha cambiado nada."
+
+/** Cómo fue exportar. `null` si no hay nada que decir: se canceló. */
+export const exportMessage = (resultado: ExportResult): string | null => {
+  switch (resultado.kind) {
+    case "exported":
+      return resultado.partial
+        ? "Copia guardada, pero sin los últimos cambios: el guardado está detenido."
+        : "Copia guardada."
+    case "cancelled":
+      return null
+    case "failed":
+      return resultado.error === null
+        ? "No se ha podido escribir la copia."
+        : `No se ha podido hacer la copia. ${describeStorageError(resultado.error)}`
+  }
 }
 
 /**

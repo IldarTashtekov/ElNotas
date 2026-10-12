@@ -160,6 +160,14 @@ ul.ajustes > li {
   padding: 0.45rem 0.9rem;
   text-shadow: none;
 }
+/* La importación a medias: «Reintentar» en vídeo inverso y, al lado, abandonarla. */
+.aviso .abandonar {
+  background: none;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  margin: 0 0 0.6rem 0.4rem;
+  padding: 0.45rem 0.9rem;
+}
 /* El de ficheros ilegibles flota arriba y se difumina solo. */
 .aviso-temporal {
   animation: bajar 0.25s ease-out;

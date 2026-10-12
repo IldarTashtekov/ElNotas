@@ -13,6 +13,7 @@
 
 import type { DiagramId, NoteId, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
 import { mountDiagramView } from "./DiagramView.js"
 import { elemento } from "./dom.js"
@@ -34,6 +35,8 @@ export interface AppDeps {
   readonly corrupt: ReadonlyArray<StorageError>
   /** «Borrar todo» de la configuración: lo hace quien sabe dónde se guarda. */
   readonly onResetAll: () => boolean
+  /** Exportar e importar la copia, en la configuración: también lo hace quien sabe dónde se guarda. */
+  readonly backup: BackupActions
   /** La versión publicada, para el pie de la configuración; `null` en desarrollo. */
   readonly version: string | null
 }

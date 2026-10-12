@@ -2,7 +2,8 @@
  * La vista configuración: las ventanas, como una fila de fichas que se desliza
  * —arrastrar una para reordenar, ⋮ para cambiar lo que enseña, añadir otra detrás
  * o quitarla—, los contextos, con crear y borrar, el color de la pantalla, y abajo
- * «Borrar todo», que deja la app en blanco tras preguntar.
+ * los datos: exportar e importar una copia, y «Borrar todo», que deja la app en
+ * blanco tras preguntar.
  *
  * Se monta al abrirla y se desmonta al salir, así que lo que hubiera a medias
  * no sobrevive a salir y volver.
@@ -10,6 +11,7 @@
 
 import type { AppState, Context, Unsubscribe, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { BackupActions, ExportResult, ImportPreparation } from "./backup.js"
 import { elemento } from "./dom.js"
 import { attachDragReorder } from "./dragReorder.js"
 import type { Phosphor, PhosphorChoice, PhosphorSetting } from "./phosphor.js"
@@ -18,7 +20,16 @@ import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent, WindowRow } from "./settingsContent.js"
-import { choiceGroupLabel, resetQuestion, settingsContent, versionLine } from "./settingsContent.js"
+import {
+  IMPORT_NOT_APPLIED,
+  choiceGroupLabel,
+  exportMessage,
+  importProblem,
+  importQuestion,
+  resetQuestion,
+  settingsContent,
+  versionLine,
+} from "./settingsContent.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
 
@@ -37,6 +48,8 @@ export interface SettingsViewDeps {
    * lo sabe. `false` si no se pudo.
    */
   readonly onResetAll: () => boolean
+  /** Exportar e importar la copia: también lo hace quien sabe dónde se guarda. */
+  readonly backup: BackupActions
   /** La versión publicada; `null` en desarrollo. */
   readonly version: string | null
 }
@@ -54,7 +67,18 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
 /** Devuelve la función que la desmonta. */
 export const mountSettingsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, phosphor, confirm, back, onExit, onResetAll, version }: SettingsViewDeps,
+  {
+    store,
+    useCases,
+    windows,
+    phosphor,
+    confirm,
+    back,
+    onExit,
+    onResetAll,
+    backup,
+    version,
+  }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
   titulo.className = "titulo"
@@ -224,7 +248,7 @@ export const mountSettingsView = (
           boton("Borrar", (): void => {
             /* El nombre se lee al pulsar: la fila sobrevive a los renombrados. */
             const nombre: string = store.getState().contexts[ctx.id]?.name ?? ctx.name
-            /* Una de las dos únicas confirmaciones de la app: no tiene vuelta atrás. */
+            /* Una de las pocas confirmaciones de la app: no tiene vuelta atrás. */
             confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`, "Borrar", (): void => {
               useCases.deleteContext(ctx.id)
             })
@@ -291,8 +315,81 @@ export const mountSettingsView = (
   )
   explicacion.className = "explicacion"
 
+  /* ── La copia: exportar e importar ── */
+
+  const sobreLaCopia: HTMLParagraphElement = elemento(
+    "p",
+    "La copia guarda en un fichero las notas, diagramas, contextos, ventanas y el color. Importar una sustituye todo lo de este navegador.",
+  )
+  sobreLaCopia.className = "explicacion"
+  /* Lo que pasó con la última copia; vacío y escondido hasta entonces. */
+  const estadoCopia: HTMLParagraphElement = elemento("p")
+  estadoCopia.className = "estado-copia"
+  estadoCopia.setAttribute("role", "status")
+  estadoCopia.hidden = true
+  const decir = (texto: string | null): void => {
+    estadoCopia.textContent = texto ?? ""
+    estadoCopia.hidden = texto === null
+  }
+
+  const exportar: HTMLButtonElement = boton("Exportar copia", (): void => {
+    void (async (): Promise<void> => {
+      ocupar(true)
+      decir(null)
+      const resultado: ExportResult = await backup.exportAll()
+      ocupar(false)
+      decir(exportMessage(resultado))
+    })()
+  })
+
+  /* El selector de ficheros del sistema, escondido: lo abre el botón. */
+  const elegirFichero: HTMLInputElement = elemento("input")
+  elegirFichero.type = "file"
+  elegirFichero.accept = ".json,application/json"
+  elegirFichero.hidden = true
+  elegirFichero.addEventListener("change", (): void => {
+    const fichero: File | undefined = elegirFichero.files?.[0]
+    /* Vacío otra vez: así elegir el mismo fichero dos veces vuelve a avisar. */
+    elegirFichero.value = ""
+    if (fichero !== undefined) void importar(fichero)
+  })
+  const importarBoton: HTMLButtonElement = boton("Importar copia", (): void => elegirFichero.click())
+
+  const ocupar = (ocupado: boolean): void => {
+    exportar.disabled = ocupado
+    importarBoton.disabled = ocupado
+  }
+
+  const importar = async (fichero: File): Promise<void> => {
+    ocupar(true)
+    decir("Leyendo la copia…")
+    const preparada: ImportPreparation = await backup.prepareImport(fichero)
+    ocupar(false)
+    if (preparada.kind !== "ready") {
+      decir(importProblem(preparada))
+      return
+    }
+    decir(null)
+    /* Pregunta antes, como «Borrar todo»: lo de ahora no vuelve. */
+    confirm(importQuestion(preparada.summary), "Sustituir todo", (): void => {
+      if (!preparada.apply()) decir(IMPORT_NOT_APPLIED)
+    })
+  }
+
+  const botonesCopia: HTMLElement = elemento("div")
+  botonesCopia.className = "copia"
+  botonesCopia.append(exportar, importarBoton, elegirFichero)
+
   /* «Datos» va abajo del todo de la pantalla, lejos de lo que se toca a diario. */
-  const datos: HTMLElement = seccion("Datos", explicacion, borrarTodo, sinBorrar)
+  const datos: HTMLElement = seccion(
+    "Datos",
+    sobreLaCopia,
+    botonesCopia,
+    estadoCopia,
+    explicacion,
+    borrarTodo,
+    sinBorrar,
+  )
   datos.className = "datos"
   /* Con la actualización en silencio, la única forma de saber qué versión corre. */
   const pie: HTMLParagraphElement = elemento("p", versionLine(version))

@@ -34,6 +34,10 @@ export const describeMigrationError = (fallo: MigrationError): string => {
   }
 }
 
+/** La pantalla de cuando una importación se quedó a medias al arrancar. */
+export const describeImportFailure = (fallo: StorageError): string =>
+  `La copia no se ha terminado de importar. ${describeStorageError(fallo)} Se reintentará al recargar; si no llega a entrar, «Abandonar la importación» arranca con lo que ya haya entrado.`
+
 /** Para el arranque, que puede fallar por cualquiera de los dos lados. */
 export const describeBootError = (fallo: StorageError | MigrationError): string =>
   fallo.kind === "schema-from-future" ||

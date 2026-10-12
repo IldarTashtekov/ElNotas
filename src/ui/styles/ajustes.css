@@ -109,6 +109,23 @@ ul.ajustes .secundario {
   font-size: 0.9rem;
   margin: 0 0 0.6rem;
 }
+/* Exportar e importar: botones de siempre, sin color; lo que pasó, debajo. */
+.copia {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+
+  & button {
+    background: var(--screen);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    padding: 0.45rem 0.9rem;
+  }
+}
+.estado-copia {
+  font-size: 0.9rem;
+  margin: -0.6rem 0 1.2rem;
+}
 .borrar-todo {
   background: none;
   border: 1px solid var(--danger);

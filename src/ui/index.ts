@@ -62,8 +62,12 @@ export type { SettingsViewDeps } from "./SettingsView.js"
 export { NEW_CONTEXT_NAME, mountSettingsView } from "./SettingsView.js"
 export type { SettingsContent, WindowRow } from "./settingsContent.js"
 export {
+  IMPORT_NOT_APPLIED,
   addWindowChoices,
   choiceGroupLabel,
+  exportMessage,
+  importProblem,
+  importQuestion,
   resetQuestion,
   settingsContent,
   versionLine,
@@ -106,7 +110,18 @@ export type { WindowsViewDeps } from "./WindowsView.js"
 export { mountWindowsView } from "./WindowsView.js"
 export type { ListItem, WindowView } from "./windowView.js"
 export { GENERAL_TITLE, windowTitle, windowView } from "./windowView.js"
-export { describeBootError, describeMigrationError, describeStorageError } from "./messages.js"
+export {
+  describeBootError,
+  describeImportFailure,
+  describeMigrationError,
+  describeStorageError,
+} from "./messages.js"
+export type {
+  BackupActions,
+  ExportResult,
+  ImportPreparation,
+  ImportSummary,
+} from "./backup.js"
 export type { WindowRef, WindowsLayout } from "./windows.js"
 export {
   DEFAULT_LAYOUT,
