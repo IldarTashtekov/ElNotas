@@ -14,12 +14,12 @@ nativos, más adelante (shells sobre la misma UI web).
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Fases 0 a 7 cerradas**; la siguiente, sin decidir.
+**Fases 0 a 8 cerradas**; la siguiente, sin decidir.
 Publicada en `https://ildartashtekov.github.io/ElNotas/`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
 - **`src/storage/`** — los adaptadores de memoria y fichero, las dos de `BlobStore` y el `writeBehind`.
-- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, «Borrar todo» y `main.ts`.
+- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, «Borrar todo» y `main.ts`.
 - **`src/ui/`** — vanilla: las cuatro vistas (§7.4), el editor y el lienzo de diagramas (§7.5).
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
@@ -81,9 +81,9 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
   ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§9.3).
-- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **quince fronteras**:
+- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **diecisiete fronteras**:
   cinco en `FileStorageAdapter`, una en `writeBehind`, `MemoryStorageAdapter`, cada `BlobStore`,
-  `runMigrations` y `main.ts`, y dos en `LocalStorageWindows` y en `resetStorage`. Por encima nada
+  `runMigrations` y `main.ts`, y dos en `LocalStorageWindows`, `LocalStoragePhosphor` y `resetStorage`. Por encima nada
   lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.5).
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Si algo de plataforma o un aviso
   ajeno puede lanzar, va dentro de una frontera. Lo vigila `check:fronteras`, pero **su lista de lo
@@ -160,12 +160,19 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Cuatro vistas: ventanas, nota, diagrama, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
 - Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
-- Fichas en ⚙ que se arrastran; «+» verde en la última ventana para añadir otra. Ahí se crea
+- Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí se crea
   contexto, nota o diagrama; los dos últimos, sin contexto. En ⚙, sólo contexto.
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
 - Selección por pulsación larga. «Mover a…» mueve y no confirma.
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí.
 - Título sólo en la cabecera, renombrable. `defaultView`, sin uso.
+
+**Aspecto** (§9.13)
+- Terminal de fósforo: **ámbar o verde, a elegir en ⚙**, ámbar por defecto; **siempre en oscuro**.
+- El fósforo es de cada dispositivo: `localStorage` (`elnotas:phosphor`), fuera del core, no viaja.
+- Letra monoespaciada **del sistema**, sin fuente propia. Sin esquinas redondeadas ni sombras.
+- Crear o confirmar, en **vídeo inverso**; el rojo, sólo para borrar y los errores. Sin verde «de crear».
+- CRT suave y **fijo**: brillo leve y líneas de barrido con `pointer-events: none`. Nada se mueve.
 
 **Diagramas** (§9.11)
 - Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería. El encuadre no se recuerda.
@@ -180,7 +187,8 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Actualización en silencio (`skipWaiting`); un `import()` dinámico la reabriría.
 - `persist()` en `main.ts`, fuera de `try` y de `check:fronteras`.
 - *Service worker* en JS plano, `pwa/sw.js`, sólo en la copia publicada.
-- Icono `purpose: "any"`, orientación libre, versión a la vista en ⚙, pantalla de carga azul.
+- Icono `purpose: "any"`, orientación libre, versión a la vista en ⚙, pantalla de carga negra.
+- Icono: el dibujo del «nerd» con lluvia de letras verdes sobre negro (Fase 8; era azul).
 - Barras del móvil con el color del sistema (Fase 7: fuera `theme-color` y `theme_color`).
 
 El porqué de cada una está en `ARCHITECTURE.md`. Si crees que una está mal, **plantéalo como
@@ -207,10 +215,13 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
   barra de la nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media
   intensidad, pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado,
   documentación adelgazada y nota o diagrama nuevos desde el «+».
+- **Fase 8 — Aspecto de terminal.** ✅ Cerrada el 2026-10-12 por decisión del usuario, con **742
+  pruebas** y con deuda: **su lista manual, sin pasar en el móvil**, y el coste del brillo al
+  arrastrar, sin medir (§9.13). Fósforo ámbar o verde, icono nuevo y fuera el emoji de la papelera.
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar/importar, pasar de
-Node 20 y el azul repetido en el manifiesto.
+Node 20 y el negro repetido en el manifiesto.
 
 ## Comandos
 

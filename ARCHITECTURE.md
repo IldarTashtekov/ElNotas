@@ -9,8 +9,8 @@ arquitectura de front. Si algún término del resto del documento suena a jerga 
 puerto, copia por camino—, está explicado ahí con ejemplos de notas y casillas.
 
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy lo
-> están las **fases 1 a 7** —el dominio, la persistencia, la UI web, los Diagramas, la PWA y un
-> refactor— (§9.2). De la Fase 4 quedan sin contestar las tres preguntas del
+> están las **fases 1 a 8** —el dominio, la persistencia, la UI web, los Diagramas, la PWA, un
+> refactor y el aspecto de terminal— (§9.2). De la Fase 4 quedan sin contestar las tres preguntas del
 > editor (§9.10). Siguen siendo sólo diseño la carpeta del usuario como destino y la semántica
 > multi-backend (§6); la nube, diseñada el 2026-10-12, vive en `TAREAS.md` hasta que se construya.
 > Donde algo está planificado y no construido, la sección lo dice.
@@ -1059,12 +1059,14 @@ error— porque es donde más se lee mal el reparto de §6.1:
 ```
 
 **Las fronteras del dibujo son todas las de la persistencia**, y con la de `runMigrations`
-suman diez. Con las cinco de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
-lista de ventanas), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
+suman diez. Con las siete de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
+lista de ventanas), dos en `LocalStoragePhosphor` (leer y escribir el color de la pantalla, desde
+la Fase 8, §9.13), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
 `resetIfRequested` borra al arrancar, §7.4) y una en `main.ts` (`window.localStorage` **lanza**
-si el navegador tiene bloqueados los datos del sitio)— son **quince `try` en todo el código de
-producción, y cero `throw`**, medido el 2026-10-04. Eran seis al cerrar la Fase 3, ocho tras
-tapar dos fugas (más abajo), la Fase 4 trajo cinco y «Borrar todo» las dos últimas. `ui/` no
+si el navegador tiene bloqueados los datos del sitio)— son **diecisiete `try` en todo el código
+de producción, y cero `throw`**, medido el 2026-10-12. Eran seis al cerrar la Fase 3, ocho tras
+tapar dos fugas (más abajo), la Fase 4 trajo cinco, «Borrar todo» dos y el fósforo las dos
+últimas. `ui/` no
 tiene ninguno. Qué significa cada `kind` y por qué son esos
 cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
 del primer dibujo, porque es lo único que el escritor mira para decidir si insiste o se para.
@@ -2214,8 +2216,9 @@ Las reglas, que son pocas y se sostienen entre sí:
   2026-10-03)*.
 - **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
   ▶.
-- **En la última, en el sitio de ▶, un «+» verde añade una ventana detrás** *(decidido con el
-  usuario el 2026-10-03)*. Abre una **hoja desde abajo** con tres botones verdes, uno bajo otro
+- **En la última, en el sitio de ▶, un «+» añade una ventana detrás** *(decidido con el
+  usuario el 2026-10-03; verde hasta la Fase 8, hoy en vídeo inverso, §9.13)*. Abre una **hoja
+  desde abajo** con tres botones de crear, uno bajo otro
   —«+ Contexto nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y la lista de lo que **todavía no
   tiene ventana** —el General si no está, los contextos y, tras «Notas:», las notas—; lo repetido
   se sigue pudiendo hacer desde ⚙. Al elegir, **se va a la ventana nueva**, y lo recién creado
@@ -2342,7 +2345,7 @@ Lo que no es la guarda, sino gestión de la lista:
   `items` propios; **un contexto, en el orden de sus `items`** *(decisión de implementación,
   aceptada por el usuario)*. Una referencia a lo que no está no se pinta. La selección va por una
   clave con el tipo (`itemKey`: `note:x`, `diagram:x`), porque una nota y un diagrama podrían
-  compartir id, y **una fila de diagrama lleva una raya azul a la izquierda**.
+  compartir id, y **una fila de diagrama lleva una raya gruesa a la izquierda** (azul hasta la Fase 8).
 - **La papelera en un contexto quita la nota DE ESE contexto** (`remove-item`), no la borra de
   todas partes: la nota sigue existiendo y se ve en el General. **En el General**, que no tiene de
   dónde quitarla, **borra de verdad** (`delete-note`), con confirmación. **Un diagrama sigue las
@@ -2373,8 +2376,9 @@ Lo que no es la guarda, sino gestión de la lista:
   desaparecen los botones «+», y ◀ ▶ y ⚙ se apagan (color más apagado).
 - **Descartada la casilla de selección manual** que el boceto ponía a la derecha de cada fila:
   allí era simbólica, y la pulsación larga ocupa su lugar.
-- **«+ Diagrama»**, un botón azul algo más pequeño **debajo y a la izquierda del «+» verde, por
-  encima de su esquina** (boceto del usuario, 2026-10-04). El diagrama **nace en ese contexto**,
+- **«+ Diagrama»**, un botón algo más pequeño **debajo y a la izquierda del «+» de nota, por
+  encima de su esquina** (boceto del usuario, 2026-10-04). Era azul junto a uno verde; desde la
+  Fase 8, el de nota va en vídeo inverso y éste **en hueco**, para distinguirlos (§9.13). El diagrama **nace en ese contexto**,
   como una nota —`create-diagram` + `add-item`, en `createDiagramIn`—, y llega con el nombre,
   «Nuevo diagrama», **ya en edición**.
 
@@ -2397,19 +2401,20 @@ Las cifras de la pulsación larga, en §7.5.
     misma hoja;
   - **un toque corto en la ficha no hace nada**: la pulsación larga es sólo para arrastrar y el
     menú está en ⋮, para que los dos gestos no compitan en el móvil;
-  - la **ficha «+» verde** del final añade una detrás de la última —también con la lista vacía,
+  - la **ficha «+»** del final añade una detrás de la última —también con la lista vacía,
     así que ya no hace falta el «+ Ventana»—;
   - **reordenar con teclado, pendiente**: el usuario lo dejó para más adelante.
 - **Contextos** — todos los que existen, estén o no en alguna ventana, con **crear** y **borrar**.
   Crear un contexto aquí **no le añade ventana**.
 - **Datos** *(pedida por el usuario el 2026-10-04)* — al final, una frase que dice lo que hace y
-  el botón rojo **«🗑 Borrar todo»**, que deja la app como recién instalada. Abajo, *«Borrar
+  el botón rojo **«Borrar todo»**, que deja la app como recién instalada. Desde la Fase 8, encima,
+  **Pantalla**: el fósforo, ámbar o verde (§9.13). Abajo, *«Borrar
   todo»*.
 
 **El selector de contenido** (al añadir detrás o al cambiar contenido) ofrece el General, los
 contextos existentes, las notas existentes —tras un rótulo «Notas:»—, desde la Fase 5 los
 diagramas —tras «Diagramas:»— y el atajo **«+ Contexto nuevo»**. Qué rótulo va delante de cada
-opción lo decide `choiceGroupLabel`, pura y compartida con la hoja del «+» verde (antes, esa
+opción lo decide `choiceGroupLabel`, pura y compartida con la hoja del «+» de la última ventana (antes, esa
 lógica estaba duplicada en las dos vistas).
 
 *Decisiones de implementación, tomadas al construirla y aceptadas por el usuario:*
@@ -2956,6 +2961,13 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
   del usuario, una nota o un diagrama nuevos, sin contexto, desde el «+» de la última ventana.
   Con la barra bastó `interactive-widget`, sin `visualViewport`. **Negrita, cursiva, tachado, subrayado y el texto más grande NO
   entran**, por decisión del usuario: van juntos, sin fase.
+
+- **Fase 8 — Aspecto de terminal. ✅ CERRADA el 2026-10-12**, por decisión del usuario y con
+  deuda, en la rama `fase-8-terminal`. Que la app parezca una terminal de fósforo de los 80:
+  ámbar o verde sobre negro, letra monoespaciada, formas rectas y un efecto CRT suave. Casi todo
+  CSS, más el fósforo a elegir en ⚙, el icono y la pantalla de carga (§9.13). **Sin dependencias
+  nuevas y sin tocar el core.** La deuda: su lista manual, sin pasar en el móvil, y el coste del
+  brillo al arrastrar nodos, sin medir.
 
 ### 9.3 Las operaciones de contenido
 
@@ -3658,8 +3670,8 @@ Las reglas que salen de la tabla:
   líneas. El texto de una línea se edita en un campo sobre su punto medio: Intro o tocar fuera
   guardan, Escape descarta, y vacío lo quita.
 - *Decisiones de implementación*, también: **borrar un pósit o una línea no pide confirmación**;
-  **un pósit vacío se queda**, y enseña «Sin texto»; **una raya azul a la izquierda** distingue los
-  nodos-nota y las filas de diagrama en las listas; **una línea se pone azul al pasar el ratón**; y
+  **un pósit vacío se queda**, y enseña «Sin texto»; **una raya gruesa a la izquierda** distingue los
+  nodos-nota y las filas de diagrama en las listas; **una línea se ilumina al pasar el ratón**; y
   su trazo invisible para el dedo mide 16 de grueso.
 
 #### Crear nodos-nota
@@ -3703,7 +3715,7 @@ nuevas y sin tocar el core.**
 |---|---|---|
 | Rutas relativas | que la app funcione dentro de una subcarpeta | `index.html` |
 | Manifiesto | nombre, icono, pantalla completa, color de arranque | `manifest.webmanifest` |
-| Iconos | el busto del «nerd» sobre azul, 192 y 512 | `assets/icono/` |
+| Iconos | el busto del «nerd» sobre azul, 192 y 512; desde la Fase 8, sobre lluvia de letras verdes en negro | `assets/icono/` |
 | Script de compilación | arma la carpeta que se publica y le pone la huella | `tools/build-pages.mjs` |
 | *Service worker* | guarda la app en el móvil y la sirve sin conexión | `pwa/sw.js` |
 | `persist()` | pide que el navegador no borre los datos por su cuenta | `src/platform/web/main.ts` |
@@ -3822,15 +3834,17 @@ y la Fase 7 en su propia rama, `fase-7-refactor`.
   `base.css`), y en horizontal queda la columna en el centro, igual que hoy al girar el móvil en el
   navegador. La vista diagrama es la que más puede notarlo, y la lista del móvil la mira.
 - **La pantalla de carga la monta Android sola**, con tres cosas del manifiesto: el icono en el
-  centro, el nombre debajo («ElNotas») y `background_color` detrás. **El azul de la app,
-  `#3552d6`** (`--accent` en `base.css`), porque el manifiesto admite **un solo color** y la app
-  tiene modo claro y oscuro: con el blanco, en modo oscuro habría un fogonazo blanco en cada
-  apertura; el azul se ve igual en los dos.
+  centro, el nombre debajo («ElNotas») y `background_color` detrás. Fue **el azul de la app,
+  `#3552d6`**, porque el manifiesto admite **un solo color** y la app tenía modo claro y oscuro:
+  con el blanco, en modo oscuro habría un fogonazo blanco en cada apertura. **Desde la Fase 8 es
+  el negro de `--ground`, `#050301`**: la app es siempre oscura, y el negro vale para los dos
+  fósforos (§9.13).
 - **Las barras del sistema llevan su color, no el azul.** *El usuario decidió el 2026-10-09* que
   fueran azules siempre (`theme-color` en `index.html` y `theme_color` en el manifiesto), en vez del
   color del fondo de cada modo; **revisado en la Fase 7, el 2026-10-11, por decisión del usuario**:
-  en horizontal la barra azul hacía una L con la de navegación, así que se quitaron las dos. **El
-  azul queda repetido fuera de `base.css` en un solo sitio**, el `background_color` del manifiesto,
+  en horizontal la barra azul hacía una L con la de navegación, así que se quitaron las dos. Con la
+app siempre en oscuro (Fase 8), salen oscuras. **El color de arranque queda repetido fuera de
+`base.css` en un solo sitio**, el `background_color` del manifiesto,
   que no lee variables de CSS: rompe la regla de que los colores viven sólo en `base.css`, y está
   pendiente en `TAREAS.md`.
 
@@ -3897,6 +3911,63 @@ mirando el registro del servidor: al instalarse pide todos los ficheros; despué
 nada; y con otra huella publicada los vuelve a bajar **con 200 y ni un 304**, que es
 `cache: "reload"` saltándose la caché HTTP. **La actualización en el móvil no consta que se viera**:
 necesita publicar un cambio.
+
+### 9.13 La Fase 8: el aspecto de terminal
+
+*Pedida por el usuario el 2026-10-12, con capturas de Cool Retro Term y otras terminales viejas.*
+
+**Qué se decidió, y por qué:**
+
+- **Fósforo ámbar o verde, a elegir en ⚙, ámbar por defecto.** Primero se decidió sólo ámbar
+  —más cálido, cansa menos—; al verlo, el usuario pidió poder elegir también el verde, el día
+  mismo. Una sección **Pantalla** con dos botones; el elegido, en vídeo inverso.
+- **Siempre en oscuro.** Una terminal de fósforo no tiene versión clara, y una sola paleta es la
+  mitad de trabajo y de pruebas. Se fue el bloque `prefers-color-scheme`; `color-scheme: dark`,
+  fijo.
+- **La letra monoespaciada del sistema**, ninguna «píxel» (VT323 y parecidas): una fuente propia
+  pesa, hay que cachearla en el *service worker* y se lee peor en textos largos; cargarla de
+  Google Fonts rompería el uso sin conexión. Su coste: es más ancha, y las fichas de ⚙ tuvieron que
+  bajar su letra y su relleno para que cupiera «contexto».
+- **Formas rectas, sin sombras, y vídeo inverso para crear y confirmar.** En una pantalla de un
+  solo color, lo importante se distingue invirtiendo: letra negra sobre fondo de fósforo, como en
+  las terminales de entonces. **El rojo se queda sólo para borrar y para los errores**, lo único
+  que no debe pasar desapercibido; el verde «de crear» desapareció. El «+» de diagrama, que se
+  distinguía del de nota por ser azul, va **en hueco**.
+- **CRT suave y fijo:** un brillo leve en las letras (`text-shadow`, heredado del `body`) y líneas
+  de barrido en una capa `body::after` encima de todo. **Nada se mueve**: ni parpadeo ni esquinas
+  oscurecidas, que gastan batería y se leen peor. La capa lleva `pointer-events: none`, y es lo
+  que la hace inofensiva: sin eso se comería todos los toques y los gestos del lienzo. Lo que va
+  en vídeo inverso apaga el brillo, porque el halo de fósforo emborrona la letra negra.
+- **Fuera el emoji de la papelera**, a petición del usuario: «Borrar», «Quitar» y «Borrar todo»,
+  sólo texto. Los demás símbolos (◀ ▶ ⚙ ✕ ☐ ↳) se quedan.
+- **El icono:** el mismo dibujo, en sus colores, con el fondo azul cambiado por negro y una lluvia
+  de letras verdes detrás, al estilo Matrix, elegido por el usuario entre tres muestras (el dibujo
+  teñido de verde y un cursor `>_` propio). El dibujo sigue siendo de otra persona (§9.12).
+
+**Cómo está hecho:**
+
+- **Los colores, todos en `base.css`.** Antes de cambiar la paleta se pasaron a variables los que
+  estaban sueltos en otros ficheros (`--sobre-color`, `--aviso`, `--velo`), comprobando que el
+  estilo calculado de toda la página no cambiaba. El verde es `:root[data-phosphor="green"]`, que
+  **sólo cambia lo que brilla**: los negros y el rojo son los mismos, y `--brillo`, `--aviso` y
+  `--rejilla` se calculan desde la tinta, así que lo siguen solos.
+- **El fósforo es de cada dispositivo**, como la lista de ventanas: en `localStorage`, clave
+  `elnotas:phosphor`, fuera del core y sin viajar con las notas. Tener el móvil en verde y el
+  ordenador en ámbar es legítimo, y meterlo en el core pedía un modelo de preferencias que nada más
+  necesita. «Borrar todo» se lo lleva, porque empieza por `elnotas:`. La parte pura —leer lo
+  guardado, con cualquier valor raro como ámbar, y el ajuste vivo que aplica y guarda sólo si
+  cambia— está en `src/ui/phosphor.ts`; el adaptador, en `src/platform/web/LocalStoragePhosphor.ts`,
+  con sus dos fronteras. `main.ts` lo aplica **antes de arrancar**, poniendo `data-phosphor` en
+  `<html>`, así que no sale un instante en ámbar; y como los dos comparten los negros, lo poco que
+  se pinta antes de `main.ts` es igual en los dos.
+- **Medido:** el contraste pasa de 4,5 en todo el texto (la tinta, 10,9; el tenue, 6,6; el rojo,
+  6,3); sólo `--dim` se queda en 2,6, y pinta lo desactivado. Arrastrar un nodo con 200 nodos y
+  290 relaciones sigue en 4,2 ms de JavaScript por movimiento (4,4 en la Fase 7). **El pintado con
+  el brillo no se pudo medir**: con el panel del navegador oculto, los fotogramas se frenan. Si en
+  el móvil va a tirones, el brillo se quita del lienzo.
+
+**La lista manual**, `test/ui/VERIFICACION-MANUAL-TERMINAL.md`: el aspecto, que los toques sigan
+llegando con la capa de barrido encima, el fósforo verde y la pantalla de carga.
 
 ---
 

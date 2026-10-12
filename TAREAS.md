@@ -302,7 +302,12 @@ documentación.
 **Fuera de esta fase, con disparador propio:** revisar los puertos cuando llegue su segundo uso
 real (carpeta, OPFS o Supabase). Se hace al construir ese adaptador.
 
-### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro — EN CURSO desde el 2026-10-12, en la rama `fase-8-terminal`
+### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro ✅ CERRADA el 2026-10-12, con deuda
+
+Planificada, construida y **cerrada el 2026-10-12 por decisión del usuario, con 742 pruebas** y
+sin dependencias nuevas, en la rama `fase-8-terminal`. **La deuda:** la lista manual, sin pasar
+en el móvil (abajo, en *Pendiente de la Fase 8*). El diseño y sus porqués, en `ARCHITECTURE.md`
+§9.13. Commits clave: `d832ac1` (el ámbar), `d2214b2` (el verde a elegir), `1157c81` (el icono).
 
 **Qué es:** cambiar el aspecto de la app para que parezca una terminal de los 80, de las de
 fósforo, a partir de capturas que trajo el usuario (Cool Retro Term y otras parecidas). **Sólo
@@ -311,7 +316,9 @@ cambian, y no hay dependencias nuevas. Al cerrarla, `npm run check` tiene que da
 **729 pruebas**.
 
 **Decidido con el usuario el 2026-10-12:**
-- **Fósforo ámbar** sobre negro. Ni verde ni las dos a elegir: no hay preferencia en ⚙.
+- **Fósforo ámbar** sobre negro. ~~Ni verde ni las dos a elegir~~: **revisado por el usuario el
+  mismo día**, tras ver el ámbar: **ámbar o verde, a elegir en ⚙**, ámbar por defecto. El color es
+  de cada dispositivo: se guarda en `localStorage` y no viaja con las notas.
 - **Siempre en oscuro.** Fuera la paleta clara: una sola paleta y `color-scheme: dark` fijo.
 - **La letra monoespaciada del sistema** (la `--mono` que ya existe) en toda la app. Ninguna
   fuente «píxel» en el repo (VT323 y parecidas): pesa y se lee peor en textos largos.
@@ -364,17 +371,40 @@ de documentación:
 - [x] **Fuera el emoji de la papelera** *(pedido por el usuario el 2026-10-12)*: «Borrar»,
       «Quitar» y «Borrar todo», sólo con texto, en `NoteList.ts` y `SettingsView.ts`, y en las
       listas manuales que lo nombraban. No se cambió ningún otro símbolo (◀ ▶ ⚙ ✕ ☐ ↳).
-- [ ] **5. La PWA.** ✅ `background_color` del manifiesto, a `#050301`, el negro de `--ground`. El
+- [x] **El fósforo verde, a elegir en ⚙** *(pedido por el usuario el 2026-10-12)*. Una sección
+      «Pantalla» encima de «Datos», con **Ámbar** y **Verde**; el elegido, en vídeo inverso, y el
+      cambio se ve al instante. En `base.css`, `:root[data-phosphor="green"]` cambia sólo lo que
+      brilla: los negros y el rojo son los mismos, y `--brillo` y `--aviso` salen ya de la tinta.
+      `src/ui/phosphor.ts` (`parsePhosphor` y `createPhosphorSetting`, puros, con pruebas) y
+      `src/platform/web/LocalStoragePhosphor.ts`, en la clave `elnotas:phosphor`, que «Borrar
+      todo» ya se lleva. `main.ts` lo aplica **antes de arrancar**, para que no salga un instante
+      en ámbar. **Dos fronteras más** (el `load` y el `save`): diecisiete. **13 pruebas nuevas,
+      742 en total**, con cuatro roturas a propósito: la guarda de no-op, `parsePhosphor`, aplicar
+      al crearlo y el `try` del `load`, que además caza `check:fronteras`. Probado en el panel:
+      cambia, se guarda y la tinta y el brillo pasan a verde.
+- [x] **5. La PWA.** `background_color` del manifiesto, a `#050301`, el negro de `--ground`. El
       duplicado de *Sin fase asignada* («Los colores de la app, repetidos…») **no se resuelve**:
-      cambia el valor y sigue repetido. **Falta el icono**, que se revisa viéndolo todo junto.
-- [ ] **6. Verificar.** ✅ `npm run check`: 729 de 729, y `build:pages` arma la copia. ✅ La lista
+      cambia el valor y sigue repetido. **El icono** (`1157c81`): el mismo dibujo, en sus colores,
+      con el fondo azul cambiado por negro y lluvia de letras verdes detrás, estilo Matrix,
+      **elegido por el usuario** entre tres muestras (el dibujo teñido de verde y un cursor `>_`
+      propio). 512 y 192, en `assets/icono/`; la copia publicada los recoge.
+- [x] **6. Verificar.** `npm run check`: 742 de 742, y `build:pages` arma la copia. La lista
       manual, `test/ui/VERIFICACION-MANUAL-TERMINAL.md`: las cuatro vistas, las hojas, el lienzo y
-      los gestos. **Falta pasarla** en el ordenador y en el móvil, donde hay que **publicar,
-      desinstalar y reinstalar**, porque la pantalla de carga sale del manifiesto.
-- [ ] **7. Documentación**, en un solo pase al cerrar: las decisiones reabiertas en `CLAUDE.md`
+      los gestos. **Sin pasar**: la fase se cerró antes, por decisión del usuario (abajo).
+- [x] **7. Documentación**, en un solo pase al cerrar: hecho el 2026-10-12, con §9.13 nueva en
+      `ARCHITECTURE.md` y las listas manuales al día. Lo que pedía: las decisiones reabiertas en `CLAUDE.md`
       (*Decisiones cerradas* y *Plan por fases*) y en `ARCHITECTURE.md`. También **las listas
       manuales viejas**, que aún hablan del «+ verde», el «+ azul», la «raya azul» y la «sombra
-      más grande» (`VERIFICACION-MANUAL-LIENZO.md` A1, A2 y D3, y las que lo repitan).
+      más grande» (`VERIFICACION-MANUAL-LIENZO.md` A1, A2 y D3, y las que lo repitan). Y en
+      `CLAUDE.md`, las **diecisiete fronteras** (con las dos de `LocalStoragePhosphor`) y el
+      fósforo en `localStorage`, junto a las ventanas, entre lo que no viaja con las notas.
+
+#### Pendiente de la Fase 8 (la deuda)
+
+- [ ] **Pasar `test/ui/VERIFICACION-MANUAL-TERMINAL.md`** en el ordenador y en el móvil, con la PWA
+      **publicada, desinstalada y reinstalada**: la pantalla de carga negra y el icono nuevo salen
+      del manifiesto. Sobre todo **G1** (los toques con la capa de barrido encima) y **G3**: si
+      arrastrar pósits va a tirones en el móvil, quitar el brillo del lienzo.
 
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 

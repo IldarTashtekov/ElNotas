@@ -45,7 +45,7 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 ## A. Conectar
 
 - **A1.** El menú de un pósit empieza por **Conectar** (también en un nodo-nota). Al elegirlo,
-  arriba sale **«Toca el nodo de destino»** y el pósit de origen queda **marcado en azul**.
+  arriba sale **«Toca el nodo de destino»** y el pósit de origen queda **marcado con el borde iluminado**.
 - **A2.** Tocar otro pósit crea la línea **con flecha, del origen al destino**. El aviso y la
   marca se van.
 - **A3.** Conectando, tocar un **nodo-nota** como destino lo une y **no entra** en la nota.
@@ -66,7 +66,7 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 - **B5.** Escribir en un pósit hasta que crezca: sus líneas siguen saliendo **del borde nuevo**.
 - **B6.** Al abrir el diagrama, las líneas ya salen del borde: **ninguna** empieza en el centro
   de un pósit.
-- **B7.** Con el ratón encima, la línea se pone **azul**.
+- **B7.** Con el ratón encima, la línea se **ilumina**.
 
 ## C. El menú de la línea
 

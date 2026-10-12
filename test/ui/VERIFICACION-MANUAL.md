@@ -104,7 +104,7 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
 - **C2.** Lo mismo con el **atrás del navegador**, y en Android con el **gesto o botón atrás del
   sistema**. Tiene que salir de la configuración, **no de la app**.
 - **C3.** En la ventana principal (sin nada encima), el atrás no hace nada propio de la app.
-- **C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** verde al
+- **C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** al
   final. ⋮ abre una hoja con *Cambiar contenido*, *Añadir detrás* y *Quitar*, que hacen lo que
   dicen; las dos primeras enseñan la lista **en la misma hoja**. La **+** añade al final. Un
   **toque corto** en una ficha no hace nada.
@@ -125,7 +125,7 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
 
 Con tres o cuatro ventanas, en ⚙:
 
-- **D1.** **Mantener pulsada** una ficha medio segundo la **levanta** (se resalta y hace sombra).
+- **D1.** **Mantener pulsada** una ficha medio segundo la **levanta** (se resalta con el borde del fósforo).
   Con el ratón, igual: mantener el botón.
 - **D2.** Arrastrándola, las demás **se corren** para hacerle hueco; al soltar, **queda en ese
   puesto**, y al salir ◀ ▶ recorren las ventanas en el orden nuevo. Sobrevive a recargar.
@@ -138,9 +138,9 @@ Con tres o cuatro ventanas, en ⚙:
 
 ## E. La lista de un contexto
 
-Con dos o tres notas en Compra (el botón redondo **+**, varias veces):
+Con dos o tres notas en Compra (el botón **+** grande, varias veces):
 
-- **E1.** El botón redondo **+** crea una «Nueva Nota» **en ese contexto** y entra en ella (desde
+- **E1.** El botón **+** grande crea una «Nueva Nota» **en ese contexto** y entra en ella (desde
   Fase 4 · Notas). Desde el General la crea sin contexto: sale en el General y en ningún contexto.
 - **E2.** **Pulsación larga** (medio segundo) sobre una nota entra en modo selección y la marca.
   **Un toque corto no.** Si el dedo **se mueve** durante la pulsación, tampoco.
@@ -186,8 +186,8 @@ el navegador **resalta en color los nodos que cambian**.
 
 ## I. El «+» de la última ventana
 
-- **I1.** En la última ventana, en el sitio de ▶, hay un **+ verde**; en las demás, ▶ y no el +.
-- **I2.** Tocarlo sube una **hoja desde abajo** con tres botones verdes, uno bajo otro —«+ Contexto
+- **I1.** En la última ventana, en el sitio de ▶, hay un **+** en vídeo inverso; en las demás, ▶ y no el +.
+- **I2.** Tocarlo sube una **hoja desde abajo** con tres botones en vídeo inverso, uno bajo otro —«+ Contexto
   nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene ventana** (el
   General no sale si ya es ventana; las notas, tras «Notas:»).
 - **I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**; aparece ◀ a la

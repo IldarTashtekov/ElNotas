@@ -46,11 +46,11 @@ directamente.
 ## A. Crear, listar y tirar un diagrama
 
 - **A1.** En la ventana de un contexto, abajo a la derecha, **debajo y a la izquierda** del **+**
-  verde, hay un **+ azul más pequeño**, por encima de la esquina del verde. Tocarlo crea «Nuevo
+  grande, hay un **+ en hueco más pequeño**, por encima de la esquina del grande. Tocarlo crea «Nuevo
   diagrama» y **entra** en él con el **nombre seleccionado**, listo para escribir encima. Escribir
   un nombre e Intro lo guarda.
 - **A2.** **✕ Salir** y el **atrás** vuelven a la ventana. El diagrama sale en la lista del
-  contexto, **detrás** de las notas, con una **raya azul a la izquierda**. Tocarlo lo abre, ya
+  contexto, **detrás** de las notas, con una **raya gruesa a la izquierda**. Tocarlo lo abre, ya
   sin el nombre en edición.
 - **A3.** En el **General**, el diagrama sale **mezclado con las notas, por nombre**.
 - **A4.** Seleccionarlo (pulsación larga, o clic derecho) en un contexto: la papelera dice
@@ -81,7 +81,7 @@ directamente.
 - **C2.** **Texto** crea un pósit **donde se tocó**, vacío y con el cursor dentro.
 - **C3.** Escribir; **Intro guarda**. **Mayúsculas+Intro** hace otra línea. **Escape** descarta
   lo escrito. Tocar fuera también guarda.
-- **C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en gris.
+- **C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en tenue.
 - **C5.** **Doble toque en un pósit** abre su menú, con su texto de título: *Conectar · Editar ·
   Marcar hecho · Borrar*. *(Escritorio: también con clic derecho.)* *Conectar* se prueba en
   `VERIFICACION-MANUAL-RELACIONES.md`.
@@ -93,7 +93,7 @@ directamente.
 
 - **D1.** *(Escritorio.)* **Arrastrar un pósit lo mueve**; el corcho no se mueve.
 - **D2.** *(Móvil.)* ⚠️ **Arrastrar un pósit sin esperar mueve el corcho**, no el pósit.
-- **D3.** *(Móvil.)* ⚠️ **Mantenerlo pulsado medio segundo lo levanta** (sombra más grande) y
+- **D3.** *(Móvil.)* ⚠️ **Mantenerlo pulsado medio segundo lo levanta** (se le ilumina el borde) y
   entonces el dedo lo arrastra. **Ni la página ni el corcho se mueven.** No sale el menú del
   sistema (copiar, seleccionar).
 - **D4.** Al soltar se queda ahí; **recargar** y volver a abrir: sigue ahí.
@@ -107,7 +107,7 @@ directamente.
 
 ## F. Los nodos-nota
 
-- **F1.** **Nota nueva** crea «Nueva Nota», pone un nodo-nota (con la **raya azul**) donde se
+- **F1.** **Nota nueva** crea «Nueva Nota», pone un nodo-nota (con la **raya gruesa**) donde se
   tocó y **entra en la nota**. Renombrarla, **✕ Salir**: se vuelve **al diagrama**, y el nodo
   enseña **el nombre nuevo**.
 - **F2.** Con el diagrama en **dos contextos** (Mover a… desde el General lo añade al otro),
@@ -124,7 +124,7 @@ directamente.
 
 ## G. El diagrama como ventana
 
-- **G1.** En la última ventana, el **+** verde ofrece los diagramas bajo el rótulo
+- **G1.** En la última ventana, el **+** ofrece los diagramas bajo el rótulo
   **«Diagramas:»**, detrás de «Notas:». En ⚙, *Cambiar contenido* y *Añadir detrás* también.
 - **G2.** Una ventana de diagrama enseña el **lienzo** bajo la cabecera, **sin ✕ Salir** y sin los
   **+**; ◀ ▶ y ⚙ siguen. Tocar el título lo renombra.

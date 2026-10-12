@@ -47,16 +47,16 @@ la forma que tenga MIUI de cerrar y limpiar apps.
 - **A1.** Abrir la dirección en Chrome: la app carga y funciona como en casa.
 - **A2.** Menú **⋮ → «Instalar aplicación»** (o «Añadir a pantalla de inicio»): sale el diálogo
   con **el nerd** y el nombre **«ElNotas»**.
-- **A3.** Tras instalarla, en la pantalla de inicio hay un icono **con el nerd** y **«ElNotas»**
-  debajo.
+- **A3.** Tras instalarla, en la pantalla de inicio hay un icono **con el nerd y la lluvia de
+  letras verdes** y **«ElNotas»** debajo.
 
 ## B. Abrirla
 
-- **B1.** Al tocar el icono sale **la pantalla de carga**: fondo **azul**, el nerd en el centro y
+- **B1.** Al tocar el icono sale **la pantalla de carga**: fondo **negro**, el icono en el centro y
   «ElNotas» debajo.
 - **B2.** La app se abre **a pantalla completa**, sin la barra de direcciones de Chrome.
-- **B3.** La **barra de estado** —la de la hora y la batería— es **azul**, con el móvil en modo
-  claro **y** en modo oscuro.
+- **B3.** La **barra de estado** —la de la hora y la batería— es **oscura**, del color del
+  sistema (Fase 7), con el móvil en modo claro **y** en modo oscuro.
 - **B4.** En ⚙, al pie: **«Versión AAAA-MM-DD · xxxxxxxx»**, no «Versión de desarrollo».
 - **B5.** En la lista de apps recientes sale como **ElNotas**, con su icono, aparte de Chrome.
 
@@ -111,7 +111,7 @@ para el móvil, la misma versión.
 
 - **La primera apertura tras publicar enseña la versión anterior**; la nueva, en la siguiente.
   Es la actualización en silencio, por decisión (§9.12).
-- **La barra de estado es azul también en modo oscuro**: decisión del usuario del 2026-10-09.
+- ~~**La barra de estado es azul también en modo oscuro**~~: decisión del 2026-10-09, revisada en la Fase 7 (color del sistema).
 - **El icono puede salir con un borde o un fondo** en algunos lanzadores: no tiene versión
   *maskable*, por decisión (§9.12).
 - **En MIUI, «Instalar» puede no poner el icono** si Chrome no tiene permiso para crear accesos

@@ -81,12 +81,13 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 - **PWA-A1.** 📱 Abrir la dirección en Chrome: la app carga y funciona.
 - **PWA-A2.** 📱 Menú **⋮ → «Instalar aplicación»**: sale el diálogo con **el nerd** y **«ElNotas»**;
   hay que elegir **«Instalar»**, no «Crear acceso directo».
-- **PWA-A3.** 📱 En la pantalla de inicio hay un icono **con el nerd** y **«ElNotas»** debajo.
-- **PWA-B1.** 📱 Al tocar el icono sale **la pantalla de carga**: fondo **azul**, el nerd en el
+- **PWA-A3.** 📱 En la pantalla de inicio hay un icono **con el nerd y la lluvia de letras
+  verdes** y **«ElNotas»** debajo.
+- **PWA-B1.** 📱 Al tocar el icono sale **la pantalla de carga**: fondo **negro**, el icono en el
   centro y «ElNotas» debajo.
 - **PWA-B2.** 📱 La app se abre **a pantalla completa**, sin la barra de direcciones.
-- **PWA-B3.** 📱 La **barra de estado** —la de la hora y la batería— es **azul**, con el móvil en
-  modo claro **y** en modo oscuro.
+- **PWA-B3.** 📱 La **barra de estado** —la de la hora y la batería— es **oscura**, del
+  color del sistema (Fase 7), con el móvil en modo claro **y** en modo oscuro.
 - **PWA-B4.** 📱 En ⚙, al pie: **«Versión AAAA-MM-DD · xxxxxxxx»**, no «Versión de desarrollo».
 - **PWA-B5.** 📱 En recientes sale como **ElNotas**, con su icono, aparte de Chrome.
 
@@ -117,7 +118,7 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 - **CTX-C1.** ⚙ abre la configuración; **✕** vuelve a **la misma ventana** de la que se entró.
 - **CTX-C2.** Lo mismo con **el atrás**. Tiene que salir de la configuración, **no de la app**.
 - **CTX-C3.** En la ventana principal, sin nada encima, el atrás no hace nada propio de la app.
-- **CTX-C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** verde al
+- **CTX-C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** al
   final. ⋮ abre una hoja con *Cambiar contenido*, *Añadir detrás* y *Quitar*, que hacen lo que
   dicen; las dos primeras enseñan la lista **en la misma hoja**. La **+** añade al final. Un
   **toque corto** en una ficha no hace nada. *+ Contexto nuevo* en el selector crea «Nuevo
@@ -133,7 +134,7 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 
 Con tres o cuatro ventanas, en ⚙:
 
-- **CTX-D1.** **Mantener pulsada** una ficha medio segundo la **levanta**: se resalta y hace sombra.
+- **CTX-D1.** **Mantener pulsada** una ficha medio segundo la **levanta**: se resalta con el borde del fósforo.
 - **CTX-D2.** Arrastrándola, las demás **se corren** para hacerle hueco; al soltar **queda en ese
   puesto**, y al salir ◀ ▶ recorren las ventanas en el orden nuevo. Sobrevive a recargar.
 - **CTX-D3.** Soltarla en su sitio no cambia nada.
@@ -145,8 +146,8 @@ Con tres o cuatro ventanas, en ⚙:
 
 ### El «+» de la última ventana
 
-- **CTX-I1.** En la última ventana, en el sitio de ▶, hay un **+ verde**; en las demás, ▶ y no el +.
-- **CTX-I2.** Tocarlo sube una **hoja desde abajo** con tres botones verdes, uno bajo otro —«+
+- **CTX-I1.** En la última ventana, en el sitio de ▶, hay un **+** en vídeo inverso; en las demás, ▶ y no el +.
+- **CTX-I2.** Tocarlo sube una **hoja desde abajo** con tres botones en vídeo inverso, uno bajo otro —«+
   Contexto nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene
   ventana**: el General no sale si ya es ventana; las notas, tras «Notas:».
 - **CTX-I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**; aparece ◀ a la
@@ -162,9 +163,9 @@ Con tres o cuatro ventanas, en ⚙:
 
 ### La lista de un contexto
 
-Con dos o tres notas en Compra (el botón redondo **+**, varias veces):
+Con dos o tres notas en Compra (el botón **+** grande, varias veces):
 
-- **CTX-E1.** El botón redondo **+** crea una «Nueva Nota» **en ese contexto** y entra en ella.
+- **CTX-E1.** El botón **+** grande crea una «Nueva Nota» **en ese contexto** y entra en ella.
   Desde el General la crea sin contexto: sale en el General y en ningún contexto.
 - **CTX-E2.** **Pulsación larga** sobre una nota entra en modo selección y la marca. **Un toque
   corto no.** Si el dedo **se mueve** durante la pulsación, tampoco.
@@ -187,7 +188,7 @@ Con dos o tres notas en Compra (el botón redondo **+**, varias veces):
 
 ## 3. El editor
 
-Para cada apartado, una nota nueva con el botón redondo **+** vale: nace vacía y se entra en ella.
+Para cada apartado, una nota nueva con el botón **+** grande vale: nace vacía y se entra en ella.
 
 ### Abrir y salir
 
@@ -291,11 +292,11 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 ### Crear, listar y tirar un diagrama
 
 - **LZ-A1.** En la ventana de un contexto, abajo a la derecha, **debajo y a la izquierda** del **+**
-  verde, hay un **+ azul más pequeño**, por encima de la esquina del verde. Tocarlo crea «Nuevo
+  grande, hay un **+ en hueco más pequeño**, por encima de la esquina del grande. Tocarlo crea «Nuevo
   diagrama» y **entra** en él con el **nombre seleccionado**, listo para escribir encima. Escribir
   un nombre e Intro lo guarda.
 - **LZ-A2.** **✕ Salir** y **el atrás** vuelven a la ventana. El diagrama sale en la lista del
-  contexto, **detrás** de las notas, con una **raya azul a la izquierda**. Tocarlo lo abre, ya sin
+  contexto, **detrás** de las notas, con una **raya gruesa a la izquierda**. Tocarlo lo abre, ya sin
   el nombre en edición.
 - **LZ-A3.** En el **General**, el diagrama sale **mezclado con las notas, por nombre**.
 - **LZ-A4.** Seleccionarlo (pulsación larga) en un contexto: la papelera dice **«Quitar»** y lo
@@ -325,7 +326,7 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 - **LZ-C2.** **Texto** crea un pósit **donde se tocó**, vacío y con el cursor dentro.
 - **LZ-C3.** Escribir; **Intro guarda**. 💻 **Mayúsculas+Intro** hace otra línea. 💻 **Escape**
   descarta lo escrito. Tocar fuera también guarda.
-- **LZ-C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en gris.
+- **LZ-C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en tenue.
 - **LZ-C5.** **Doble toque en un pósit** abre su menú, con su texto de título: *Conectar · Editar ·
   Marcar hecho · Borrar*. *Conectar* se prueba en la parte 5.
 - **LZ-C6.** **Marcar hecho** lo atenúa y lo tacha; el menú dice entonces **Desmarcar hecho**.
@@ -336,7 +337,7 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 - **LZ-D1.** 💻 **Arrastrar un pósit lo mueve**; el corcho no se mueve.
 - **LZ-D2.** 📱 ⚠️ **Arrastrar un pósit sin esperar mueve el corcho**, no el pósit.
-- **LZ-D3.** 📱 ⚠️ **Mantenerlo pulsado medio segundo lo levanta** (sombra más grande) y entonces el
+- **LZ-D3.** 📱 ⚠️ **Mantenerlo pulsado medio segundo lo levanta** (se le ilumina el borde) y entonces el
   dedo lo arrastra. **Ni la página ni el corcho se mueven.** No sale el menú del sistema.
 - **LZ-D4.** Al soltar se queda ahí; **recargar** y volver a abrir: sigue ahí.
 - **LZ-D5.** Arrastrar uno encima de otro: **el que se movió queda encima**. Salir y volver: se
@@ -349,7 +350,7 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ### Los nodos-nota
 
-- **LZ-F1.** **Nota nueva** crea «Nueva Nota», pone un nodo-nota (con la **raya azul**) donde se
+- **LZ-F1.** **Nota nueva** crea «Nueva Nota», pone un nodo-nota (con la **raya gruesa**) donde se
   tocó y **entra en la nota**. Renombrarla, **✕ Salir**: se vuelve **al diagrama**, y el nodo
   enseña **el nombre nuevo**.
 - **LZ-F2.** Con el diagrama en **dos contextos** (*Mover a…* desde el General lo añade al otro),
@@ -366,7 +367,7 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ### El diagrama como ventana
 
-- **LZ-G1.** En la última ventana, el **+** verde ofrece los diagramas bajo **«Diagramas:»**, detrás
+- **LZ-G1.** En la última ventana, el **+** ofrece los diagramas bajo **«Diagramas:»**, detrás
   de «Notas:». En ⚙, *Cambiar contenido* y *Añadir detrás* también.
 - **LZ-G2.** Una ventana de diagrama enseña el **lienzo** bajo la cabecera, **sin ✕ Salir** y sin
   los **+**; ◀ ▶ y ⚙ siguen. Tocar el título lo renombra.
@@ -389,7 +390,7 @@ Hace falta **un diagrama con tres pósits** separados —A, B y C—, y uno de e
 ### Conectar
 
 - **RL-A1.** El menú de un pósit empieza por **Conectar**, también en un nodo-nota. Al elegirlo,
-  arriba sale **«Toca el nodo de destino»** y el pósit de origen queda **marcado en azul**.
+  arriba sale **«Toca el nodo de destino»** y el pósit de origen queda **marcado con el borde iluminado**.
 - **RL-A2.** Tocar otro pósit crea la línea **con flecha, del origen al destino**. El aviso y la
   marca se van.
 - **RL-A3.** Conectando, tocar un **nodo-nota** como destino lo une y **no entra** en la nota.
@@ -410,7 +411,7 @@ Hace falta **un diagrama con tres pósits** separados —A, B y C—, y uno de e
 - **RL-B5.** Escribir en un pósit hasta que crezca: sus líneas siguen saliendo **del borde nuevo**.
 - **RL-B6.** Al abrir el diagrama, las líneas ya salen del borde: **ninguna** empieza en el centro
   de un pósit.
-- **RL-B7.** 💻 Con el ratón encima, la línea se pone **azul**.
+- **RL-B7.** 💻 Con el ratón encima, la línea se **ilumina**.
 
 ### El menú de la línea
 
@@ -603,7 +604,7 @@ No son fallos; se anotan para no marcarlos como tales, y para decidir si se agua
 
 - **La primera apertura tras publicar enseña la versión anterior**; la nueva, en la siguiente. Es
   la actualización en silencio (§9.12).
-- **La barra de estado es azul también en modo oscuro**: decisión del usuario del 2026-10-09.
+- ~~**La barra de estado es azul también en modo oscuro**~~: decisión del 2026-10-09, revisada en la Fase 7 (color del sistema).
 - **El icono puede salir con un borde o un fondo** en algunos lanzadores: no tiene versión
   *maskable* (§9.12).
 - **En MIUI, «Instalar» puede no poner el icono** si Chrome no tiene permiso para crear accesos

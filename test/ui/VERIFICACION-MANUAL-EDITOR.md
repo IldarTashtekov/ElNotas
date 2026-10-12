@@ -37,7 +37,7 @@ La misma que `VERIFICACION-MANUAL.md` (compilar con `npm run build:web`, servir,
 `localhost` o, en el móvil, por la IP). Las secciones J–L usan la consola y sólo se pasan en
 escritorio; J necesita abrir la app con **`?depurar`** al final de la dirección.
 
-Para cada sección, una nota nueva con el botón redondo **+** vale: nace vacía y se entra en ella.
+Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía y se entra en ella.
 
 ---
 
