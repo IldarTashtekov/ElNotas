@@ -2,17 +2,18 @@
  * La entrada de la app en el navegador: la carga `index.html`.
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
- * navegador, las notas y las ventanas en `localStorage`—, arranca y monta la
- * app. Si no arranca, lo dice en pantalla en vez de quedarse en blanco.
+ * navegador, las notas, las ventanas y el color de la pantalla en `localStorage`—,
+ * arranca y monta la app. Si no arranca, lo dice en pantalla en vez de quedarse en blanco.
  */
 
 import type { Result, StorageError } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
-import type { MountedApp, WindowsModel } from "#ui/index"
-import { createWindowsModel, describeBootError, mountApp } from "#ui/index"
+import type { MountedApp, Phosphor, PhosphorSetting, WindowsModel } from "#ui/index"
+import { createPhosphorSetting, createWindowsModel, describeBootError, mountApp } from "#ui/index"
 import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
+import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
 import { requestReset, resetIfRequested } from "./resetStorage.js"
 import { systemClock } from "./SystemClock.js"
@@ -62,6 +63,14 @@ const iniciar = async (): Promise<void> => {
   resetIfRequested(almacen)
   pedirPersistencia()
 
+  /* El color, antes de arrancar: así lo que se pinte mientras tanto ya sale con él. */
+  const phosphor: PhosphorSetting = createPhosphorSetting({
+    persistence: createLocalStoragePhosphor(almacen),
+    apply: (elegido: Phosphor): void => {
+      document.documentElement.dataset["phosphor"] = elegido
+    },
+  })
+
   /* El guardado puede detenerse antes de que haya UI a la que avisar: se guarda
      el fallo y se enseña al montarla. */
   let sinGuardar: StorageError | null = null
@@ -94,6 +103,7 @@ const iniciar = async (): Promise<void> => {
     store: app.store,
     useCases: app.useCases,
     windows,
+    phosphor,
     corrupt: app.corrupt,
     /* Sólo apunta el borrado y recarga: se hace al arrancar, antes de leer nada. */
     onResetAll: (): boolean => {

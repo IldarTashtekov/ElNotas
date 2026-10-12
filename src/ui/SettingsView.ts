@@ -1,8 +1,8 @@
 /**
  * La vista configuración: las ventanas, como una fila de fichas que se desliza
  * —arrastrar una para reordenar, ⋮ para cambiar lo que enseña, añadir otra detrás
- * o quitarla—, los contextos, con crear y borrar, y abajo «Borrar todo», que deja
- * la app en blanco tras preguntar.
+ * o quitarla—, los contextos, con crear y borrar, el color de la pantalla, y abajo
+ * «Borrar todo», que deja la app en blanco tras preguntar.
  *
  * Se monta al abrirla y se desmonta al salir, así que lo que hubiera a medias
  * no sobrevive a salir y volver.
@@ -12,6 +12,8 @@ import type { AppState, Context, Unsubscribe, Store, UseCases } from "#core/inde
 import type { BackStack } from "./backStack.js"
 import { elemento } from "./dom.js"
 import { attachDragReorder } from "./dragReorder.js"
+import type { Phosphor, PhosphorChoice, PhosphorSetting } from "./phosphor.js"
+import { PHOSPHORS } from "./phosphor.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
@@ -24,6 +26,7 @@ export interface SettingsViewDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly windows: WindowsModel
+  readonly phosphor: PhosphorSetting
   /** Pregunta antes de borrar. Lo pone quien monta la vista. */
   readonly confirm: Confirm
   /** Para la hoja de ⋮, que se cierra con el atrás. */
@@ -51,7 +54,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
 /** Devuelve la función que la desmonta. */
 export const mountSettingsView = (
   raiz: HTMLElement,
-  { store, useCases, windows, confirm, back, onExit, onResetAll, version }: SettingsViewDeps,
+  { store, useCases, windows, phosphor, confirm, back, onExit, onResetAll, version }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
   titulo.className = "titulo"
@@ -243,6 +246,30 @@ export const mountSettingsView = (
     return s
   }
 
+  /* ── La pantalla: un botón por fósforo, el elegido en vídeo inverso ── */
+
+  const fosforos: HTMLElement = elemento("div")
+  fosforos.className = "fosforos"
+  fosforos.setAttribute("role", "group")
+  fosforos.setAttribute("aria-label", "Color de la pantalla")
+  const marcarElegido = (): void => {
+    const elegido: Phosphor = phosphor.get()
+    for (const b of fosforos.children) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-phosphor") === elegido))
+    }
+  }
+  fosforos.append(
+    ...PHOSPHORS.map((opcion: PhosphorChoice): HTMLButtonElement => {
+      const b: HTMLButtonElement = boton(opcion.label, (): void => {
+        phosphor.set(opcion.value)
+        marcarElegido()
+      })
+      b.dataset["phosphor"] = opcion.value
+      return b
+    }),
+  )
+  marcarElegido()
+
   /* ── Borrar todo ── */
 
   const sinBorrar: HTMLParagraphElement = elemento(
@@ -276,6 +303,7 @@ export const mountSettingsView = (
     cabecera,
     seccion("Ventanas", listaVentanas),
     seccion("Contextos", formulario, listaContextos),
+    seccion("Pantalla", fosforos),
     datos,
     pie,
     hoja.element,

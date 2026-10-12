@@ -1,7 +1,7 @@
 /*
- * Lo de debajo de todo: los colores de la terminal de fósforo ámbar, la letra
- * monoespaciada del sistema, las líneas de barrido y el aspecto por defecto de
- * los elementos.
+ * Lo de debajo de todo: los colores de la terminal de fósforo, ámbar o verde,
+ * la letra monoespaciada del sistema, las líneas de barrido y el aspecto por
+ * defecto de los elementos.
  *
  * Va en la capa `base`, que pierde siempre contra cualquier regla con clase de
  * los otros ficheros. Los colores son variables: se cambian aquí y en ningún
@@ -25,16 +25,28 @@
     --dim: #6b4d12;
     /* La letra sobre los botones de color: crear y borrar. */
     --sobre-color: #0c0802;
-    --aviso: #ffb000;
+    --aviso: var(--accent);
     /* Lo que oscurece el fondo bajo una hoja. */
     --velo: rgb(0 0 0 / 0.6);
     /* El efecto de pantalla vieja: el halo de las letras y las líneas de barrido. */
-    --brillo: 0 0 4px rgb(255 176 0 / 0.45);
+    --brillo: 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent);
     --barrido: rgb(0 0 0 / 0.22);
     /* Los puntos del lienzo: --dim a media intensidad. */
     --rejilla: color-mix(in srgb, var(--dim) 50%, transparent);
     --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
     --ui: var(--mono);
+  }
+  /* El fósforo verde, si se elige en la configuración: los negros y el rojo, los
+     mismos; cambia sólo lo que brilla. */
+  :root[data-phosphor="green"] {
+    --ink: #33ff66;
+    --muted: #2bbf55;
+    --line: #155c28;
+    --row: #04110a;
+    --rowline: #0d3318;
+    --accent: #33ff66;
+    --accent-soft: #0b3a18;
+    --dim: #1f6b35;
   }
   * {
     box-sizing: border-box;

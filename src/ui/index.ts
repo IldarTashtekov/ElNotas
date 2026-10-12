@@ -127,3 +127,11 @@ export type {
   WindowsPersistence,
 } from "./windowsModel.js"
 export { createWindowsModel } from "./windowsModel.js"
+export type {
+  Phosphor,
+  PhosphorChoice,
+  PhosphorPersistence,
+  PhosphorSetting,
+  PhosphorSettingDeps,
+} from "./phosphor.js"
+export { DEFAULT_PHOSPHOR, PHOSPHORS, createPhosphorSetting, parsePhosphor } from "./phosphor.js"

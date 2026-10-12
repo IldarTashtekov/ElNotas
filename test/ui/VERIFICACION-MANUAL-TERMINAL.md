@@ -51,6 +51,10 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
   sin partirlas.
 - **T6.** El **foco del teclado** (tabulador) es un recuadro ámbar recto, no el anillo blanco y
   redondo del navegador.
+- **T8.** En ⚙, la sección **Pantalla** tiene **Ámbar** y **Verde**, el elegido en vídeo inverso.
+  Pulsar **Verde** lo cambia **todo al instante**: la tinta, el brillo, las líneas, los pósits y
+  la rejilla. El rojo de borrar sigue rojo. **Recargar**: sigue en verde. Volver a **Ámbar**.
+- **T9.** Con el verde elegido, **«Borrar todo»**: tras recargar, vuelve el **ámbar**.
 
 ## G. Que los toques sigan llegando
 

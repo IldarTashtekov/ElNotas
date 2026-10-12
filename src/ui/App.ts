@@ -18,6 +18,7 @@ import { mountDiagramView } from "./DiagramView.js"
 import { elemento } from "./dom.js"
 import { describeStorageError } from "./messages.js"
 import { mountNoteView } from "./NoteView.js"
+import type { PhosphorSetting } from "./phosphor.js"
 import { mountSettingsView } from "./SettingsView.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createConfirm, createSheet } from "./sheet.js"
@@ -28,6 +29,8 @@ export interface AppDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly windows: WindowsModel
+  /** El color de la pantalla, que se elige en la configuración. */
+  readonly phosphor: PhosphorSetting
   readonly corrupt: ReadonlyArray<StorageError>
   /** «Borrar todo» de la configuración: lo hace quien sabe dónde se guarda. */
   readonly onResetAll: () => boolean

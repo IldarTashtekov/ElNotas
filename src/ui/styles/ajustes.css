@@ -58,6 +58,25 @@ h2 {
     text-transform: uppercase;
   }
 }
+/* El color de la pantalla: dos botones, el elegido en vídeo inverso. */
+.fosforos {
+  display: flex;
+  gap: 0.4rem;
+
+  & button {
+    background: var(--screen);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    padding: 0.4rem 0.9rem;
+
+    &[aria-pressed="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-ink);
+      text-shadow: none;
+    }
+  }
+}
 .secundario {
   background: none !important;
   border-color: transparent !important;
