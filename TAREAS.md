@@ -232,7 +232,8 @@ documentación.
 - [x] **Una nota o un diagrama nuevos como ventana siguiente** *(pedido por el usuario el
       2026-10-12)* (`1815a2b`). La hoja del «+» de la última ventana lleva, bajo «+ Contexto
       nuevo», «+ Nota nueva» y «+ Diagrama nuevo», apilados. Nacen **sin contexto** y llegan con
-      el título en edición; el selector de ⚙ no cambia (las dos cosas, decididas por el usuario).
+      el título en edición; el selector de ⚙ no cambia (las dos cosas, decididas por el usuario;
+      lo de ⚙, **cambiado el 2026-10-13**: ofrece lo mismo, ver *Sin fase asignada*).
       `createAsWindow`, con dos pruebas rotas a propósito; la hoja, pasada en el panel (I2–I5,
       I7). **Falta CTX-I7 en el móvil**, en la última casilla de la fase.
 
@@ -494,12 +495,31 @@ en el ordenador.
       viven sólo en el `localStorage` de **un origen** y `persist()` no protege de que se borren a
       mano. En ⚙ → Datos, **Exportar copia** (con «Guardar como» si el navegador lo tiene; si no, a
       Descargas) e **Importar copia**, que **sustituye todo** tras un ensayo y una pregunta. Lleva
-      los ficheros guardados tal cual, las ventanas y el fósforo. Sin dependencias y sin tocar el
-      core. Mezclar en vez de sustituir, aparcado (*Ideas aparcadas*). Diseño y porqués,
+      los ficheros guardados tal cual, las ventanas y el fósforo (y desde el 2026-10-13, los
+      encuadres de los diagramas). Sin dependencias y sin tocar el core. Mezclar en vez de sustituir, aparcado (*Ideas aparcadas*). Diseño y porqués,
       `ARCHITECTURE.md` §9.14.
   - [ ] **Pasar la lista manual**, `test/ui/VERIFICACION-MANUAL-COPIA.md`, y anotar la pasada:
         sobre todo **F**, la importación a medias, que en el navegador del panel no se puede
         provocar, e **I6–I7**, el selector de Android y pasar de `localhost` a la publicada.
+- [x] **Ventanas, hueco y encuadre** ✅ *(pedido por el usuario el 2026-10-13 y construido ese día
+      en la rama `feat/ventanas-hueco-encuadre`, con **828 pruebas** —eran 803—; validado por él en
+      el móvil)*. Sin dependencias y sin tocar el core. Cuatro cosas:
+  - **⚙ → Ventanas ofrece lo mismo que el «+» de la última ventana**: contexto, nota o diagrama
+    nuevos, con `newWindowButtons.ts` para los dos. Desde ⚙ se quedan con su nombre por defecto.
+    **Cambia la decisión «en ⚙, sólo contexto»**. §7.4.
+  - **Tocar el hueco de la nota**: vacía, empieza a escribir; con líneas, cursor al final de la
+    última que se ve (`lastLine`). §7.5.
+  - **El encuadre de cada diagrama se recuerda**, en el dispositivo (`elnotas:framing`), y **entra
+    en la copia** sin subir `backupVersion`. **Cambia la decisión «el encuadre no se recuerda»**;
+    el usuario eligió la opción B (en el dispositivo) frente a A (en memoria) y C (dentro del
+    diagrama). Dos fronteras nuevas: de 29 a 31. §9.11, §9.14.
+  - **La mira**, que vuelve al origen a ×1: en la barra de la vista diagrama, y flotando abajo a la
+    derecha en una ventana de diagrama. §9.11.
+
+  Cada guarda se verificó rompiéndola a propósito: `guardFramings`, el `sucio`, el centro en
+  `framingOf`, importar, leer y exportar sin encuadres, `lastLine` y el nombre del contexto en
+  `createAsWindow`. Listas manuales al día en `test/ui/`: `VERIFICACION-SENTADA.md` y las de
+  editor, lienzo y copia.
 - [ ] **Exportar a Markdown**, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
       modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
       Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
@@ -634,6 +654,11 @@ que se cita.
 - **De los Diagramas (Fase 5)** — ✅ el 2026-10-03: lienzo libre, `DiagramRelation` en un
   multigrafo, «Nota perdida», vista mixta desde cero, «doble = menú o crear», la nota nueva en todos
   los contextos del diagrama, un nivel más de navegación, y la fase partida en tres. §7.4, §9.11.
+- **Dos decisiones cerradas que el usuario cambió el 2026-10-13** — ✅ **⚙ crea lo mismo que el
+  «+»** (antes, sólo contexto), para que los dos sitios ofrezcan lo mismo; y **el encuadre del
+  diagrama se recuerda** (antes, no), en el dispositivo (opción B; descartadas A, en memoria, y C,
+  dentro del diagrama, que tocaba el core y el formato y no sirve entre pantallas distintas), y va
+  en la copia. §7.4, §9.11, §9.14.
 - **Escritura condicional y conflicto entre dos pestañas** — ✅ decidida y construida el
   2026-10-03: la opción c, escritura condicional con `revision`, porque es la que se reutilizará con
   la sincronización; ante `stale`, avisar y ofrecer Recargar. Descartadas **a** (una sola pestaña

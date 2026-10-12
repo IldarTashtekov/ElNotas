@@ -14,12 +14,13 @@ nativos, más adelante (shells sobre la misma UI web).
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Fases 0 a 8 cerradas**, y la copia de seguridad (sin fase); la siguiente, sin decidir.
+**Fases 0 a 8 cerradas**, y dos tandas sin fase (la copia de seguridad; ventanas, hueco y
+encuadre); la siguiente, sin decidir.
 Publicada en `https://ildartashtekov.github.io/ElNotas/`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
 - **`src/storage/`** — los adaptadores de memoria y fichero, las dos de `BlobStore` y el `writeBehind`.
-- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, «Borrar todo», la copia de seguridad y `main.ts`.
+- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, encuadres, «Borrar todo», la copia de seguridad y `main.ts`.
 - **`src/ui/`** — vanilla: las cuatro vistas (§7.4), el editor y el lienzo de diagramas (§7.5).
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
@@ -81,9 +82,9 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
   ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§9.3).
-- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **veintinueve fronteras**:
+- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **treinta y una fronteras**:
   cinco en `FileStorageAdapter` y en `importStorage`; tres en `saveFile`; dos en `LocalStorageWindows`,
-  `LocalStoragePhosphor`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
+  `LocalStoragePhosphor`, `LocalStorageFraming`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
   `MemoryStorageAdapter`, cada `BlobStore`, `runMigrations` y `main.ts`. Por encima nada
   lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.5).
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Si algo de plataforma o un aviso
@@ -161,8 +162,8 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Cuatro vistas: ventanas, nota, diagrama, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
 - Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
-- Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí se crea
-  contexto, nota o diagrama; los dos últimos, sin contexto. En ⚙, sólo contexto.
+- Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí y en
+  ⚙ se crea contexto, nota o diagrama; los dos últimos, sin contexto (⚙, desde el 2026-10-13).
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
 - Selección por pulsación larga. «Mover a…» mueve y no confirma.
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí.
@@ -176,7 +177,9 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - CRT suave y **fijo**: brillo leve y líneas de barrido con `pointer-events: none`. Nada se mueve.
 
 **Diagramas** (§9.11)
-- Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería. El encuadre no se recuerda.
+- Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería.
+- El encuadre (punto del centro y escala, no píxeles) se recuerda **por dispositivo** en `elnotas:framing`,
+  fuera del core; se escribe al soltar el lienzo, sin temporizador. La mira vuelve al origen a ×1.
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
 - Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`.
 - Nodo-nota con el título en directo; sin nota, «Nota perdida» (en `delete-note` y `hydrate`).
@@ -193,7 +196,7 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Barras del móvil con el color del sistema (Fase 7: fuera `theme-color` y `theme_color`).
 
 **Copia de seguridad** (§9.14)
-- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas y el fósforo.
+- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el fósforo y los encuadres.
 - Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
 - «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
 - Antes de borrar, un ensayo con el mismo `boot`, en memoria. Luego en dos tiempos, como «Borrar todo».
@@ -228,6 +231,9 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
   rectas, CRT suave, icono nuevo y fuera el emoji de la papelera.
 - **Copia de seguridad** (sin fase). ✅ 2026-10-12 con **803 pruebas**, probada por el usuario:
   exportar e importar en ⚙ → Datos (§9.14). Pendiente, pasar su lista manual.
+- **Ventanas, hueco y encuadre** (sin fase). ✅ 2026-10-13 con **828 pruebas**, validado por el
+  usuario en el móvil: ⚙ crea lo mismo que el «+» (§7.4), tocar el hueco de la nota escribe al final
+  (§7.5), el encuadre del diagrama se recuerda y va en la copia, y la mira (§9.11, §9.14).
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar a Markdown, pasar de

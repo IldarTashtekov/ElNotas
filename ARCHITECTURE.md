@@ -1059,15 +1059,18 @@ error— porque es donde más se lee mal el reparto de §6.1:
 ```
 
 **Las fronteras del dibujo son todas las de la persistencia**, y con la de `runMigrations`
-suman diez. Con las diecinueve de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
+suman diez. Con las veintiuna de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
 lista de ventanas), dos en `LocalStoragePhosphor` (leer y escribir el color de la pantalla, desde
-la Fase 8, §9.13), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
+la Fase 8, §9.13), dos en `LocalStorageFraming` (leer y escribir dónde se miraba cada diagrama,
+desde el 2026-10-13, §9.11), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
 `resetIfRequested` borra al arrancar, §7.4) una en `main.ts` (`window.localStorage` **lanza**
 si el navegador tiene bloqueados los datos del sitio) y doce de la copia de seguridad (dos en
 `exportBackup`, tres en `saveFile`, cinco en `importStorage` y dos en `prepareImport`, §9.14)— son
-**veintinueve `try` en todo el código de producción, y cero `throw`**, medido el 2026-10-12. Eran
+**treinta y un `try` en todo el código de producción, y cero `throw`**, medido el 2026-10-13. Eran
 seis al cerrar la Fase 3, ocho tras tapar dos fugas (más abajo), la Fase 4 trajo cinco, «Borrar
-todo» dos, el fósforo dos y la copia de seguridad las doce últimas. `ui/` no
+todo» dos, el fósforo dos, la copia de seguridad doce y los encuadres las dos últimas. Las dos de
+`LocalStorageFraming` no pidieron patrones nuevos en `check:fronteras`: ya vigilaba
+`almacen.getItem`/`setItem`. `ui/` no
 tiene ninguno. Qué significa cada `kind` y por qué son esos
 cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
 del primer dibujo, porque es lo único que el escritor mira para decidir si insiste o se para.
@@ -1926,7 +1929,8 @@ ventanas hay y en qué orden* (§7.4). No es contenido —no dice nada de ningun
 se enseñan— ni modo de escritura, y tampoco es un ajuste en el sentido de la tabla, aunque se
 edite en la vista configuración: es **organización de la vista**. Vive en `localStorage`, con
 clave propia, **fuera del core y de `AppState`**. Junto a ella se guarda **qué ventana está
-activa**, para volver a ella al recargar. Lo que es pura memoria es **qué vista hay encima**, más
+activa**, para volver a ella al recargar. **Dónde se miraba cada diagrama** es de la misma
+familia, y vive igual, en su propia clave (desde el 2026-10-13, §9.11). Lo que es pura memoria es **qué vista hay encima**, más
 el historial del navegador para que funcione el atrás: al recargar se ve la ventana, no la nota
 ni la configuración que hubiera abierta.
 
@@ -2226,8 +2230,8 @@ Las reglas, que son pocas y se sostienen entre sí:
   llega con el **título ya en edición** para escribir su nombre. **La nota y el diagrama nuevos
   nacen sin contexto**, como los creados desde el General, aunque se esté en la ventana de un
   contexto: no dependen de dónde se pulse *(decidido con el usuario el 2026-10-12)*. Los crea
-  `createAsWindow`, en `noteActions.ts`, pura y con pruebas. El selector de ⚙ sigue ofreciendo
-  sólo «+ Contexto nuevo», también por decisión suya. La hoja es una
+  `createAsWindow`, en `noteActions.ts`, pura y con pruebas. **Los mismos tres botones salen en
+  el selector de ⚙** desde el 2026-10-13 (abajo, *La vista configuración*). La hoja es una
   capa del `backStack`: el atrás, Escape, tocar fuera o «Cancelar» la cierran, y no se apunta en
   el historial al cerrarse por elegir. Lo que ofrece lo decide `addWindowChoices`, pura y con
   pruebas. Durante el modo selección el «+» se apaga, como ◀ ▶ y ⚙.
@@ -2414,9 +2418,22 @@ Las cifras de la pulsación larga, en §7.5.
 
 **El selector de contenido** (al añadir detrás o al cambiar contenido) ofrece el General, los
 contextos existentes, las notas existentes —tras un rótulo «Notas:»—, desde la Fase 5 los
-diagramas —tras «Diagramas:»— y el atajo **«+ Contexto nuevo»**. Qué rótulo va delante de cada
-opción lo decide `choiceGroupLabel`, pura y compartida con la hoja del «+» de la última ventana (antes, esa
-lógica estaba duplicada en las dos vistas).
+diagramas —tras «Diagramas:»— y, encima, los tres atajos de crear: **«+ Contexto nuevo», «+ Nota
+nueva» y «+ Diagrama nuevo»**. Qué rótulo va delante de cada opción lo decide `choiceGroupLabel`,
+pura y compartida con la hoja del «+» de la última ventana (antes, esa lógica estaba duplicada en
+las dos vistas).
+
+**Los tres atajos, igual que en el «+» de la última ventana** *(cambiado con el usuario el
+2026-10-13)*. Hasta entonces ⚙ ofrecía sólo «+ Contexto nuevo», por decisión suya del 2026-10-12
+al añadir nota y diagrama al «+». Al usarlo pidió que **las opciones fueran las mismas en los dos
+sitios**: dos menús que crean ventanas y ofrecen cosas distintas obligan a recordar cuál tiene
+qué. Ahora los pinta una sola pieza, `newWindowButtons.ts`, que usan `WindowsView` y
+`SettingsView`; lo que crea lo decide `createAsWindow`, que ganó el caso `"context"` (y con él
+`NEW_CONTEXT_NAME` pasó de `SettingsView.ts` a `noteActions.ts`). **Lo que cambia es qué se hace
+después**, y lo decide quien pone los botones: desde el «+» se va a la ventana nueva con el título
+en edición; **desde ⚙ no se salta a ninguna ventana**, así que lo creado se queda con su nombre
+por defecto («Nuevo contexto», «Nueva Nota», «Nuevo diagrama») y se renombra en su ventana. La
+nota y el diagrama nacen sin contexto, como desde el «+».
 
 *Decisiones de implementación, tomadas al construirla y aceptadas por el usuario:*
 
@@ -2449,7 +2466,8 @@ nada guardado, «¿Dejar la app en blanco? No hay nada guardado.». La cuenta la
 **Se borra en dos tiempos, y ése es el diseño.** El botón **no borra**: apunta una marca
 (`elnotas:borrar-todo`, con `requestReset`) y recarga. Es al arrancar, en `main.ts` **antes de
 leer nada**, cuando `resetIfRequested` quita todas las claves que empiezan por `elnotas:` —notas,
-diagramas, contextos, manifiesto y ventanas— y **la marca, la última**: si algo falla a medias, la
+diagramas, contextos, manifiesto y ventanas, y desde que existen el fósforo y los encuadres de los
+diagramas, sin tocar el código— y **la marca, la última**: si algo falla a medias, la
 marca sigue y el siguiente arranque lo reintenta. Un fallo ahí no tumba el arranque.
 
 *Por qué no borrar y recargar sin más:* el guardado en diferido escribe lo pendiente en `pagehide`
@@ -2552,7 +2570,8 @@ hace el navegador—, y el tacto de un teclado de móvil no lo prueba `node --te
   navegador bloquea los datos del sitio, y por eso va en su `try`—. **Antes de `boot`** termina una importación
   pedida (`importIfRequested`, y si se queda a medias no arranca, §9.14) y llama a
   `resetIfRequested` (`resetStorage.ts`); pone el `onResetAll` de la UI, el «Borrar todo» en dos
-  tiempos de §7.4, y las dos acciones de la copia de seguridad (§9.14). Hace `flush` en `pagehide` y al pasar a oculta (§2.2). Con **`?depurar`** en la dirección deja `window.elnotas = { store,
+  tiempos de §7.4, y las dos acciones de la copia de seguridad (§9.14). Hace `flush` en `pagehide` y al pasar a oculta (§2.2), y
+  en esos dos momentos guarda también los encuadres de los diagramas (§9.11). Con **`?depurar`** en la dirección deja `window.elnotas = { store,
   useCases }` para la consola; sin él, no existe.
 - **`CryptoIdGenerator` usa `getRandomValues`, no `randomUUID`**: éste sólo existe en **contexto
   seguro**, y el móvil abriendo la app por la IP de la red local (`http://192.168…`) no lo es.
@@ -2612,6 +2631,15 @@ empieza limpia**: el primer toque tras una pulsación larga se perdía (cazado p
   viejo (cazado probando).
 - **Intro y Retroceso por `keydown`, con `beforeinput` de respaldo**, porque los teclados de
   Android no siempre mandan `keydown` pero todos dicen en `beforeinput` qué van a hacer.
+- **Tocar el hueco de la nota escribe** *(pedido por el usuario el 2026-10-13)*. Tocar fuera de
+  cualquier línea —debajo de la última, o en una nota vacía— no hacía nada, salvo sobre la frase de la
+  nota vacía, y en el móvil el hueco es casi toda la pantalla. Ahora: **vacía, empieza a escribir**
+  (crea la primera línea, como hacía la frase, que pasó a «Esta nota está vacía. Toca para
+  escribir.»); **con líneas, deja el cursor al final de la última que se ve**, en orden de lectura,
+  aunque sea una hija anidada: es la que está justo encima del dedo. **No crea línea nueva**: eso
+  sigue siendo Intro, con sus reglas (§7.3). Tocar una línea sigue igual. Vale en la vista nota y en
+  una ventana de nota, porque es el mismo `NoteEditor`. La última línea la da `lastLine`, pura,
+  en `noteTree.ts`, sobre `inReadingOrder`.
 
 #### El tercer eslabón, demostrado
 
@@ -2973,6 +3001,13 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
 - **La copia de seguridad, sin fase. ✅ 2026-10-12**, en la rama `feat/backup`: exportar a un
   `.json` e importarlo sustituyendo todo, con las ventanas y el fósforo dentro (§9.14). **Sin
   dependencias nuevas y sin tocar el core.**
+
+- **Ventanas, hueco y encuadre, sin fase. ✅ 2026-10-13**, en la rama `feat/ventanas-hueco-encuadre`,
+  con **828 pruebas** y validada por el usuario en el móvil. Cuatro peticiones suyas tras usar la
+  app: ⚙ crea lo mismo que el «+» de la última ventana (§7.4); tocar el hueco de una nota escribe
+  (§7.5); el encuadre de cada diagrama se recuerda en el dispositivo y entra en la copia (§9.11,
+  §9.14); y una mira para volver al origen (§9.11). Dos decisiones cerradas cambian con ellas: «en
+  ⚙, sólo contexto» y «el encuadre no se recuerda». **Sin dependencias nuevas y sin tocar el core.**
 
 ### 9.3 Las operaciones de contenido
 
@@ -3394,8 +3429,10 @@ donde quiere, y los une con relaciones. Es como el usuario se lo imaginó desde 
   hizo—: quita justo lo que el usuario quería, decidir dónde va cada cosa;
 - **texto que se dibuja** (estilo Mermaid): el diagrama se escribe, no se toca.
 
-**Al abrir un diagrama siempre se ve el origen** (0, 0) de un mapa X/Y que el usuario no ve. **El
-encuadre no se recuerda.**
+**Un diagrama nuevo se abre en el origen** (0, 0) de un mapa X/Y que el usuario no ve. Hasta el
+2026-10-13 se abría siempre ahí, y el encuadre no se recordaba; **desde entonces se vuelve a donde
+se miraba**, en el dispositivo, y una mira lleva de vuelta al origen (abajo, *El encuadre se
+recuerda, y la mira*).
 
 #### Las relaciones: un multigrafo con flecha opcional
 
@@ -3586,10 +3623,10 @@ Snabbdom y los motores de edición: con su disparador escrito.
 - **Los pósits miden `8rem` de ancho** —eran `10rem`, y `7rem` los alargaba demasiado hacia abajo;
   Fase 7— y van en su propio contenedor, para que su `reconcile` no mueva la capa SVG. La rejilla
   de puntos usa `--rejilla`, que es `--dim` al 50 % (Fase 7).
-- **La posición de un nodo es su centro, y al abrir el origen se pone en el centro del lienzo**:
-  «se abre en el origen» podía ser también la esquina, y el centro deja sitio alrededor
-  (*decisiones de implementación*). Se centra la primera vez que el lienzo tiene tamaño, con un
-  `ResizeObserver`: al montarse todavía no se ve y mide cero.
+- **La posición de un nodo es su centro, y sin encuadre recordado el origen se pone en el centro
+  del lienzo**: «se abre en el origen» podía ser también la esquina, y el centro deja sitio
+  alrededor (*decisiones de implementación*). Se encuadra la primera vez que el lienzo tiene
+  tamaño, con un `ResizeObserver`: al montarse todavía no se ve y mide cero.
 - **`viewport.ts`, puro: el encuadre.** Un punto del corcho se ve en `corcho × scale + offset`, con
   la escala entre 0,25 y 4. **El pellizco se calcula siempre desde el encuadre que había al poner el
   segundo dedo**, no paso a paso: así no acumula error de redondeo.
@@ -3615,6 +3652,71 @@ Snabbdom y los motores de edición: con su disparador escrito.
   trazado **al revés si la línea va hacia la izquierda**, para que el texto no salga boca abajo.
 - **El texto de una línea** lleva un halo del color del fondo (`paint-order: stroke`) para leerse si
   cruza otra; si es más largo que la línea, se corta.
+
+#### El encuadre se recuerda, y la mira
+
+*Pedido por el usuario el 2026-10-13, con la app ya en uso; sustituye a «el encuadre no se
+recuerda» de la Fase 5.* Con diagramas de verdad, volver a uno y encontrarlo en el origen obligaba
+a buscar cada vez dónde se estaba trabajando.
+
+**Dónde se guarda: en el dispositivo.** Se le ofrecieron tres opciones y eligió la B:
+
+| | Opción | Veredicto |
+|---|---|---|
+| **A** | En memoria: se recuerda mientras la app sigue abierta | **Descartada.** Se pierde al cerrar la app, y en el móvil el sistema la cierra a menudo |
+| **B** | **En el dispositivo, en `localStorage`**, fuera del core, como las ventanas y el fósforo | **ELEGIDA** |
+| **C** | Dentro del diagrama, en su fichero: viaja con él | **Descartada.** Toca el core y el formato guardado —un campo nuevo en `Diagram`, `schema.ts`, quizá una migración— por un dato de vista; y **un encuadre del móvil no le sirve al ordenador**, con otra pantalla |
+
+**Qué se guarda: el punto del corcho que queda en el centro del lienzo, y la escala**
+(`Framing { x, y, scale }`), **no los píxeles de desplazamiento** del `Viewport`. Un mismo
+diagrama se ve en su ventana y en su vista propia, que no miden lo mismo —la vista tiene cabecera y
+barra; la ventana, las flechas—, y entre el móvil girado y sin girar tampoco. Con los píxeles, el
+mismo desplazamiento enseñaría otra cosa en cada marco; con el centro, **los dos enseñan lo mismo en
+medio**, que es lo que se recuerda de «dónde estaba mirando». Por eso **el encuadre es del
+diagrama, no del marco**: su ventana y su vista comparten uno. Sin nada guardado, como antes: el
+origen en el centro a ×1. Las cuentas son puras, en `viewport.ts`: `framingOf` (del encuadre en
+pantalla a lo que se recuerda) y `viewportFor` (al revés, para un lienzo de un tamaño dado).
+
+**Cuándo se escribe: al soltar el lienzo, sin temporizador.** Mientras se mueve o se pellizca sólo
+cambia en memoria (`remember`); se escribe (`save`) al **salir del diagrama o cambiar de ventana**
+—el `destroy` del lienzo—, al **pasar la app a segundo plano o en `pagehide`** (`main.ts`, junto al
+`flush` de las notas) y **justo antes de exportar la copia**, para que lleve el del diagrama que
+sigue abierto debajo. Sólo si hay algo nuevo desde la última vez (`sucio`). **Sin temporizador
+porque no hace falta**: el encuadre no es una nota, y lo que se pierde si la app muere de golpe es
+dónde se miraba, no un dato; los momentos de arriba son los mismos en que se guardan las notas, que
+sí importan, y un temporizador sería una pieza más —arrancarlo, cancelarlo al desmontar— sin
+ganar nada que se note.
+
+**Lo que no se apunta:** el desplazamiento automático que sube el corcho para que el teclado del
+móvil no tape el pósit que se edita. No lo hizo el usuario, y recordarlo dejaría el diagrama
+descolocado la próxima vez, sin teclado.
+
+**Lo que se protege, como con las ventanas (§7.4):**
+
+- **Se olvidan los encuadres de diagramas que ya no existen**, al arrancar y al guardar
+  (`guardFramings`, que devuelve **los mismos** encuadres si no sobra ninguno). Si no, la clave
+  crecería con cada diagrama borrado.
+- **Lo leído se valida** (`parseFramings`): sólo números finitos, y la escala acotada a sus topes
+  (0,25 y 4, `clampScale`); lo que no tenga forma se descarta, de uno en uno.
+- **Si no se puede leer, todos se abren centrados**; **un fallo al guardar no avisa**: sólo se
+  pierde dónde se miraba.
+- **«Borrar todo» lo limpia solo**, porque la clave empieza por `elnotas:`.
+
+**Las piezas:** lo puro en `src/ui/viewport.ts` y `src/ui/diagramFraming.ts` (`parseFramings`,
+`guardFramings` y `createDiagramFraming`, con `get`, `remember` y `save`); el adaptador,
+`src/platform/web/LocalStorageFraming.ts`, en la clave **`elnotas:framing`** —JSON `{ [id del
+diagrama]: { x, y, scale } }`—, con sus dos fronteras. `main.ts` lo crea y `App` lo reparte a
+`DiagramView` y `WindowsView`, que se lo pasan al lienzo.
+
+**La mira: volver al inicio.** Un botón que deja el lienzo en el origen, en el centro y a ×1, como
+un diagrama nuevo, **y así se recuerda**. Es una mira dibujada en SVG —un círculo, cuatro marcas y
+un punto, en `currentColor` para seguir al fósforo—, sin emoji ni glifo de fuente, que cada sistema
+pinta a su manera. **Dónde va, como lo pidió el usuario:** en la **vista diagrama**, en la barra de
+abajo, a la izquierda, con «✕ Salir» a la derecha; en una **ventana de diagrama**, que no tiene
+barra, **flotando abajo a la derecha** del lienzo. Una sola fábrica, `crosshairButton`, en
+`DiagramCanvas.ts`; el lienzo expone `recenter()` y recibe `floatingCrosshair` para saber si pone la
+suya. El botón corta `pointerdown` y `contextmenu`, que es lo que importa en la flotante, encima
+del lienzo: tocarla no arrastra el corcho ni abre el menú del fondo.
 
 #### Los gestos: «doble = menú o crear»
 
@@ -3693,7 +3795,7 @@ Las reglas que salen de la tabla:
 El patrón de §7.5, sin cambios: **las cuentas van en funciones puras con pruebas en Node** —pasar
 de pantalla a corcho y de vuelta, acercar alrededor del punto del pellizco, distinguir clic,
 doble clic y pulsación larga, el punto donde la línea corta el borde del pósit, el abanico, la
-orientación del texto— y **el DOM se verifica a mano**, con `test/ui/VERIFICACION-MANUAL-LIENZO.md`
+orientación del texto y, desde el 2026-10-13, el encuadre que se recuerda— y **el DOM se verifica a mano**, con `test/ui/VERIFICACION-MANUAL-LIENZO.md`
 y `-RELACIONES.md`.
 
 #### Partida en tres, en este orden
@@ -3977,7 +4079,8 @@ llegando con la capa de barrido encima, el fósforo verde y la pantalla de carga
 
 ### 9.14 La copia de seguridad: exportar e importar
 
-*Decidida y construida con el usuario el 2026-10-12, sin fase. Probada por él ese día.*
+*Decidida y construida con el usuario el 2026-10-12, sin fase. Probada por él ese día. Ampliada
+el 2026-10-13 con los encuadres de los diagramas.*
 
 **Para qué.** Las notas viven sólo en el `localStorage` de **un origen**. Si se borran los datos
 de la app a mano —o con el «limpiar» de MIUI—, se pierde todo, y `persist()` no protege de eso
@@ -3998,7 +4101,8 @@ navegador** cubre las dos cosas: es el salvavidas y es la forma de pasar las not
   hay nada con qué chocar.
 - **Entran las ventanas y el fósforo**, a petición del usuario, aunque sean de cada dispositivo y
   no viajen con las notas (§7.4, §9.13). Restaurar en un móvil nuevo sin ellas obligaría a
-  montar las ventanas a mano.
+  montar las ventanas a mano. **Y desde el 2026-10-13, los encuadres de los diagramas** (§9.11),
+  también a petición suya y por lo mismo.
 - **La copia lleva los ficheros guardados tal cual**, cada uno con su camino y como texto, no el
   estado de la pantalla. Así van también **los ficheros ilegibles** —nunca se pierde nada—, y al
   importar se aprovecha entero lo que ya existe: la validación de `schema.ts`, `runMigrations`,
@@ -4006,10 +4110,18 @@ navegador** cubre las dos cosas: es el salvavidas y es la forma de pasar las not
   `localStorage`**: la copia no depende de dónde se guarde, y servirá igual el día que el destino
   sea OPFS o una carpeta.
 - **El formato, un `.json` legible:** `{ app: "elnotas", backupVersion: 1, exportedAt, files,
-  windows, phosphor }`. `app` distingue una copia de cualquier otro JSON; **`backupVersion` es la
+  windows, phosphor, framing }`. `app` distingue una copia de cualquier otro JSON; **`backupVersion` es la
   versión del sobre, no la de las notas** —ésa va dentro, en `manifest.json`, y la comprueba el
   arranque—. Una copia con `backupVersion` más nuevo que la app se rechaza diciendo que se
   actualice.
+- **`framing` entró sin subir `backupVersion`**, a propósito. Subirla haría que una versión vieja
+  de la app **rechazara** las copias nuevas, y no hace falta: el campo es opcional en los dos
+  sentidos. **Una copia de antes, sin `framing`, se importa igual** —queda en `null` y los
+  diagramas se abren centrados—, y **una app de antes ignora el campo** y restaura lo demás. La
+  versión sube cuando una copia vieja ya no se pueda leer igual, no cuando se añade algo que se
+  puede no traer. Como las ventanas y el fósforo, va **tal cual estaba guardado**, y al importar
+  se valida con `parseFramings` antes de escribirlo; los encuadres de diagramas que la copia no
+  trae los olvida el arranque (`guardFramings`).
 - **Exportar con el guardado detenido exporta igualmente** lo guardado, y lo dice: es justo cuando
   más falta hace una copia.
 - **«Guardar como» si el navegador lo tiene; si no, Descargas.** Chrome y Edge de escritorio tienen
@@ -4030,7 +4142,8 @@ navegador** cubre las dos cosas: es el salvavidas y es la forma de pasar las not
 - **Se sustituye en dos tiempos, como «Borrar todo»** (§7.4), y por el mismo motivo: el guardado
   de salida escribe después de pulsar. El botón apunta la copia en `elnotas:importar` y recarga; al
   arrancar, **antes de leer nada y antes que «Borrar todo»**, se borra lo de `elnotas:` (menos la
-  marca), se escriben los ficheros, las ventanas y el fósforo, y **la marca se quita la última**.
+  marca), se escriben los ficheros, las ventanas, el fósforo y los encuadres, y **la marca se quita
+  la última**.
   Si la copia no cabe al apuntarla, lo dice y **no cambia nada**.
 - **Si falla a medias, la app no arranca.** Lo de antes ya está borrado y sólo ha entrado una
   parte: si arrancara, lo que se editara se perdería en el siguiente intento, que vuelve a borrar.
