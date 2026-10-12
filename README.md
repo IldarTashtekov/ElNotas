@@ -7,15 +7,11 @@ framework y sin dependencias de runtime. El código vive en `src/` —`core/` (e
 `storage/` (la persistencia), `platform/` (la composición) y `ui/`— y las pruebas aparte, en
 `test/`, en un árbol que calca el de `src/`.
 
-**Estado:** fases 1, 2 y 3 terminadas. **La Fase 4, la UI web, está cerrada con deuda**:
-ventanas, contextos, configuración y el editor con casillas anidadas funcionan, y quedan
-pendientes pasar a mano sus dos listas de verificación (`test/ui/VERIFICACION-MANUAL.md` y
-`test/ui/VERIFICACION-MANUAL-EDITOR.md`) y usarla unos días. Hoy guarda en el `localStorage` del
-navegador. **La Fase 5, los Diagramas** —un lienzo libre con notas y relaciones—, tiene todo el
-código hecho: el modelo, el lienzo con sus pósits y las líneas entre ellos. Falta verificar a
-mano el lienzo y las líneas, en escritorio y en el móvil, junto con la parte móvil de la Fase 4.
-
-La cuenta de arriba envejece sola: lo que manda es `npm run check` y `CLAUDE.md`.
+**Publicada** en <https://ildartashtekov.github.io/ElNotas/>, y se instala en el móvil como app
+(PWA). Hace notas con casillas anidadas, las agrupa en contextos y las enseña en ventanas que se
+pasan de lado; dibuja diagramas en un lienzo libre, con pósits y líneas entre ellos. Tiene aspecto
+de terminal de fósforo, ámbar o verde. Guarda en el `localStorage` del navegador, y en
+⚙ → Datos se **exporta una copia** a un fichero y se **importa** sustituyendo todo.
 
 ## Abrir la app
 
@@ -31,6 +27,10 @@ python3 -m http.server 8000 # y se abre http://localhost:8000
 Para abrirla desde el móvil, en la misma red: `python3 -m http.server 8000 --bind 0.0.0.0` y
 `http://<IP del ordenador>:8000`. Con `?depurar` en la dirección, la consola tiene
 `window.elnotas` con el estado y los casos de uso.
+
+**Publicar es subir a `main`**: GitHub Actions pasa `npm run check`, arma la carpeta publicada y la
+sube a GitHub Pages. Cada origen guarda sus notas aparte, así que lo escrito en `localhost` no
+aparece en la publicada: para pasarlo, se exporta una copia en una y se importa en la otra.
 
 ## Documentación
 
@@ -52,4 +52,5 @@ npm run check:extensiones # guardián: falla si un import relativo de src/ no ll
 npm test                  # compila src/ y test/ a tmp-test/ y lanza node --test
 
 npm run build:web         # compila la app para el navegador, a dist/web/
+npm run build:pages       # tras build:web: arma dist/pages/, lo que se publica
 ```
