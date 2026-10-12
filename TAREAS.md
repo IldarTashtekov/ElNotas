@@ -222,6 +222,13 @@ documentación.
       de 160 × 100 a 128 × 121, porque el texto que no cabe a lo ancho crece hacia abajo. Se
       probó `7rem` (112 × 141 el largo) y el usuario prefirió `8rem` por eso.
 
+- [x] **Una nota o un diagrama nuevos como ventana siguiente** *(pedido por el usuario el
+      2026-10-12)* (`1815a2b`). La hoja del «+» de la última ventana lleva, bajo «+ Contexto
+      nuevo», «+ Nota nueva» y «+ Diagrama nuevo», apilados. Nacen **sin contexto** y llegan con
+      el título en edición; el selector de ⚙ no cambia (las dos cosas, decididas por el usuario).
+      `createAsWindow`, con dos pruebas rotas a propósito; la hoja, pasada en el panel (I2–I5,
+      I7). **Falta CTX-I7 en el móvil**, en la última casilla de la fase.
+
 #### Medir antes de tocar
 
 - [x] **El arranque con muchas notas.** `boot` lo lee todo con `getAll` y guarda el estado entero
@@ -276,8 +283,9 @@ documentación.
 
 #### Para cerrarla
 
-- [ ] **Verlo en el móvil**: la barra con el teclado, la L (publicar y reinstalar) y arrastrar
-      nodos con relaciones; con eso se cierra la Fase 7. En detalle: que la barra de la nota quede
+- [ ] **Verlo en el móvil**: la barra con el teclado, la L (publicar y reinstalar), arrastrar
+      nodos con relaciones y crear nota o diagrama desde el «+» (CTX-I7 de
+      `VERIFICACION-SENTADA.md`); con eso se cierra la Fase 7. En detalle: que la barra de la nota quede
       encima del teclado de Android y la última línea no se esconda bajo ella (si no basta,
       `visualViewport`); **publicar, desinstalar y reinstalar**, porque la app instalada saca la
       barra del manifiesto, y comprobar que en horizontal ya no sale la L; y arrastrar nodos con

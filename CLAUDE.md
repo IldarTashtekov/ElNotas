@@ -156,7 +156,8 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Cuatro vistas: ventanas, nota, diagrama, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
 - Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
-- Fichas en ⚙ que se arrastran; «+» verde en la última ventana para añadir otra.
+- Fichas en ⚙ que se arrastran; «+» verde en la última ventana para añadir otra. Ahí se crea
+  contexto, nota o diagrama; los dos últimos, sin contexto. En ⚙, sólo contexto.
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
 - Selección por pulsación larga. «Mover a…» mueve y no confirma.
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí.
@@ -198,10 +199,11 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - **Fase 4 — UI, sólo web.** ✅ Con deuda: **las tres preguntas del editor, sin contestar** (§9.10).
 - **Fase 5 — Diagramas.** ✅ Modelo, Lienzo y Relaciones (§9.11).
 - **Fase 6 — PWA.** ✅ Publicada e instalada en el móvil del usuario (§9.12).
-- **Fase 7 — Refactor. EN CURSO**, rama `fase-7-refactor`, **727 pruebas**. Hecho: la barra de la
+- **Fase 7 — Refactor. EN CURSO**, rama `fase-7-refactor`, **729 pruebas**. Hecho: la barra de la
   nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media intensidad,
-  pósits a `8rem`, arranque medido (no duele) y arrastre de nodos optimizado. **Falta:** verlo en
-  el móvil (teclado, la L, arrastre) y la documentación.
+  pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado, documentación
+  adelgazada y nota o diagrama nuevos desde el «+». **Falta:** verlo en el móvil (teclado, la L,
+  arrastre y el «+»).
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: exportar/importar, pasar de Node 20 y el azul repetido en el manifiesto.

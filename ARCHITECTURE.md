@@ -2206,10 +2206,15 @@ Las reglas, que son pocas y se sostienen entre sí:
 - **◀ y ▶ recorren las ventanas, y no es circular:** en la primera no hay ◀, en la última no hay
   ▶.
 - **En la última, en el sitio de ▶, un «+» verde añade una ventana detrás** *(decidido con el
-  usuario el 2026-10-03)*. Abre una **hoja desde abajo** con «+ Contexto nuevo» y la lista de lo
-  que **todavía no tiene ventana** —el General si no está, los contextos y, tras «Notas:», las
-  notas—; lo repetido se sigue pudiendo hacer desde ⚙. Al elegir, **se va a la ventana nueva**, y
-  un contexto nuevo llega con el **título ya en edición** para escribir su nombre. La hoja es una
+  usuario el 2026-10-03)*. Abre una **hoja desde abajo** con tres botones verdes, uno bajo otro
+  —«+ Contexto nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y la lista de lo que **todavía no
+  tiene ventana** —el General si no está, los contextos y, tras «Notas:», las notas—; lo repetido
+  se sigue pudiendo hacer desde ⚙. Al elegir, **se va a la ventana nueva**, y lo recién creado
+  llega con el **título ya en edición** para escribir su nombre. **La nota y el diagrama nuevos
+  nacen sin contexto**, como los creados desde el General, aunque se esté en la ventana de un
+  contexto: no dependen de dónde se pulse *(decidido con el usuario el 2026-10-12)*. Los crea
+  `createAsWindow`, en `noteActions.ts`, pura y con pruebas. El selector de ⚙ sigue ofreciendo
+  sólo «+ Contexto nuevo», también por decisión suya. La hoja es una
   capa del `backStack`: el atrás, Escape, tocar fuera o «Cancelar» la cierran, y no se apunta en
   el historial al cerrarse por elegir. Lo que ofrece lo decide `addWindowChoices`, pura y con
   pruebas. Durante el modo selección el «+» se apaga, como ◀ ▶ y ⚙.
