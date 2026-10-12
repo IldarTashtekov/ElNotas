@@ -67,6 +67,12 @@
 .hoja-cuerpo {
   overflow-y: auto;
 }
+/* Crear algo nuevo y añadirlo como ventana: contexto, nota o diagrama, uno bajo otro. */
+.hoja-nuevos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
 .hoja-nuevo {
   background: var(--green);
   border: none;

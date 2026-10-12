@@ -44,6 +44,7 @@ export {
   NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
   contextsWith,
+  createAsWindow,
   createDiagramIn,
   createNoteForDiagram,
   createNoteIn,

@@ -29,6 +29,7 @@ import type { NoteEditor } from "./NoteEditor.js"
 import { createNoteEditor } from "./NoteEditor.js"
 import type { NoteList } from "./NoteList.js"
 import { createNoteList } from "./NoteList.js"
+import { createAsWindow } from "./noteActions.js"
 import type { WindowRow } from "./settingsContent.js"
 import { addWindowChoices, choiceGroupLabel } from "./settingsContent.js"
 import { NEW_CONTEXT_NAME } from "./SettingsView.js"
@@ -233,8 +234,22 @@ export const mountWindowsView = (
       /* Nace con el título a punto de escribir su nombre. */
       titulo.edit()
     })
+    /* La nota y el diagrama nuevos, sin contexto; también nacen con el título en edición. */
+    const nuevoComo = (texto: string, kind: "note" | "diagram"): HTMLButtonElement => {
+      const b: HTMLButtonElement = opcion(texto, (): void => {
+        const ref: WindowRef | null = createAsWindow(useCases, kind)
+        if (ref === null) return
+        anadir(ref)
+        titulo.edit()
+      })
+      b.className = "hoja-nuevo"
+      return b
+    }
     nuevo.className = "hoja-nuevo"
-    hoja.open("Añadir ventana", opciones.length > 0 ? [nuevo, lista] : [nuevo])
+    const nuevos: HTMLElement = elemento("div")
+    nuevos.className = "hoja-nuevos"
+    nuevos.append(nuevo, nuevoComo("+ Nota nueva", "note"), nuevoComo("+ Diagrama nuevo", "diagram"))
+    hoja.open("Añadir ventana", opciones.length > 0 ? [nuevos, lista] : [nuevos])
   })
 
   /* ── Pintar ── */

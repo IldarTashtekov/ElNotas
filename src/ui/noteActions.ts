@@ -1,6 +1,7 @@
 /**
  * Lo que se hace sobre lo que lista una ventana: crear una nota o un diagrama, la
- * papelera y «Mover a…»; y crear una nota desde un diagrama.
+ * papelera y «Mover a…»; crear una nota desde un diagrama; y crear una nota o un
+ * diagrama como ventana nueva.
  *
  * Cada una compone casos de uso que ya existen —crear y añadir, quitar y
  * añadir—, así que el core no se toca y cada acción sigue siendo una operación.
@@ -21,6 +22,7 @@ import type {
 import { diagramRef, noteRef } from "#core/index"
 import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
+import { GENERAL } from "./windows.js"
 
 export const NEW_NOTE_NAME: string = "Nueva Nota"
 export const NEW_DIAGRAM_NAME: string = "Nuevo diagrama"
@@ -39,6 +41,20 @@ export const createDiagramIn = (useCases: UseCases, ventana: WindowRef): Diagram
     useCases.addItem(ventana.id, diagramRef(diagrama.id))
   }
   return diagrama
+}
+
+/**
+ * Una nota o un diagrama nuevos para enseñarlos en una ventana nueva, desde el
+ * «+» de la última. Nacen sin contexto, como desde el General. Devuelve la
+ * ventana que los enseña, o `null` si no se pudo crear.
+ */
+export const createAsWindow = (useCases: UseCases, kind: "note" | "diagram"): WindowRef | null => {
+  if (kind === "note") {
+    const nota: Note | null = createNoteIn(useCases, GENERAL)
+    return nota === null ? null : { kind: "note", id: nota.id }
+  }
+  const diagrama: Diagram | null = createDiagramIn(useCases, GENERAL)
+  return diagrama === null ? null : { kind: "diagram", id: diagrama.id }
 }
 
 /** Si la papelera de esta ventana borra de verdad, que es cuando hay que confirmar. */

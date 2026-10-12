@@ -27,6 +27,7 @@ import {
   NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
   contextsWith,
+  createAsWindow,
   createDiagramIn,
   createNoteForDiagram,
   createNoteIn,
@@ -81,6 +82,26 @@ test("+ Nota desde el General la crea sin contexto", (): void => {
   const { store, useCases, compra, casa } = escenario()
   const suelta: Note | null = createNoteIn(useCases, GENERAL)
   assert.notEqual(suelta, null)
+  assert.equal(itemsDe(store.getState(), compra).length, 2)
+  assert.equal(itemsDe(store.getState(), casa).length, 0)
+})
+
+test("+ Nota nueva como ventana: una «Nueva Nota» sin contexto, y su ventana", (): void => {
+  const { store, useCases, compra, casa } = escenario()
+  const ref: WindowRef | null = createAsWindow(useCases, "note")
+  if (ref === null || ref.kind !== "note") return assert.fail("tenía que dar una ventana de nota")
+
+  assert.equal(store.getState().notes[ref.id]?.name, NEW_NOTE_NAME)
+  assert.equal(itemsDe(store.getState(), compra).length, 2)
+  assert.equal(itemsDe(store.getState(), casa).length, 0)
+})
+
+test("+ Diagrama nuevo como ventana: un «Nuevo diagrama» sin contexto, y su ventana", (): void => {
+  const { store, useCases, compra, casa } = escenario()
+  const ref: WindowRef | null = createAsWindow(useCases, "diagram")
+  if (ref === null || ref.kind !== "diagram") return assert.fail("tenía que dar una ventana de diagrama")
+
+  assert.equal(store.getState().diagrams[ref.id]?.name, NEW_DIAGRAM_NAME)
   assert.equal(itemsDe(store.getState(), compra).length, 2)
   assert.equal(itemsDe(store.getState(), casa).length, 0)
 })

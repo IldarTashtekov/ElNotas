@@ -187,8 +187,9 @@ el navegador **resalta en color los nodos que cambian**.
 ## I. El «+» de la última ventana
 
 - **I1.** En la última ventana, en el sitio de ▶, hay un **+ verde**; en las demás, ▶ y no el +.
-- **I2.** Tocarlo sube una **hoja desde abajo** con «+ Contexto nuevo» y, debajo, **sólo lo que no
-  tiene ventana** (el General no sale si ya es ventana; las notas, tras «Notas:»).
+- **I2.** Tocarlo sube una **hoja desde abajo** con tres botones verdes, uno bajo otro —«+ Contexto
+  nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene ventana** (el
+  General no sale si ya es ventana; las notas, tras «Notas:»).
 - **I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**; aparece ◀ a la
   ventana de antes y el + sigue en la nueva última.
 - **I4.** «+ Contexto nuevo» crea uno y llega a él **con el título ya en edición**: escribir y
@@ -196,6 +197,9 @@ el navegador **resalta en color los nodos que cambian**.
 - **I5.** La hoja se cierra **sin cambiar nada** con *Cancelar*, con **Escape**, **tocando fuera**
   y con el **atrás** (en Android, el del sistema), y en ningún caso se sale de la app.
 - **I6.** Durante el modo selección, el + se apaga como ◀ ▶ y ⚙.
+- **I7.** «+ Nota nueva» crea una «Nueva Nota» y llega a ella **con el título ya en edición**, como
+  I4; «+ Diagrama nuevo», lo mismo con «Nuevo diagrama» y su lienzo. Los dos nacen **sin
+  contexto**: salen en el General y en ningún contexto. Sobreviven a recargar, en su ventana.
 
 ## J. Dos pestañas no se pisan *(sólo escritorio)*
 
