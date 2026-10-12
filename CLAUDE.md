@@ -99,7 +99,9 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   pruebas viejas de `test/core/` y `test/storage/` no la cumplen (deuda); lo que toques, sí. **Sin
   comprobación automática, a propósito: no la propongas** (§2.4).
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Diagram)[]`.** No negociable.
-- **Nada de credenciales en el repo ni en el bundle.** Web: PKCE, token en memoria. Desktop: keychain.
+- **Nada de credenciales en el repo ni en el bundle.** Web: la sesión de un servicio externo se
+  guarda en el navegador, conectada y revocable desde ⚙ (hasta el 2026-10-12, «token en memoria»;
+  sin construir, en `TAREAS.md` → *La nube*). Desktop: keychain.
 - **Comentarios en castellano.** La **cabecera** responde a «¿para qué sirve esto?» en 3-8 líneas,
   sin porqués (van en `ARCHITECTURE.md`). **⚠️ NADA de `§` en el código**: si hay que señalar un
   documento, se nombra el fichero. **Los comentarios de dentro se quedan**; al quitar una cabecera,
@@ -139,8 +141,10 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Lo público, en inglés; la maquinaria interna, en castellano. Diagrama (`Diagram`), no Plan.
 
 **Persistencia y errores**
+- **Manda el modelo, no el fichero:** un fichero o una fila es la copia guardada de una entidad.
 - Espejo con local como primario. File System Access API, con OPFS de fallback.
-- Un fichero por entidad + `manifest.json` con SÓLO `{ schemaVersion }` (ausente = versión 0).
+- Un fichero por entidad (el grano: un documento por entidad) + `manifest.json` con SÓLO
+  `{ schemaVersion }` (ausente = versión 0).
 - `schemaVersion` vive en `StorageAdapter`; en un almacén vacío `boot` apunta la actual.
 - Write-behind en dos piezas: qué está sucio, en el core; cuándo, en `storage/`. Sin `Scheduler`.
 - `StorageError`, seis casos por «¿reintentar sirve?»; `corrupt` y `stale` no van dentro de `io`.
@@ -189,9 +193,9 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - Reordenar y re-anidar líneas (`move`, `indent`, `outdent`), hasta contestar las tres preguntas
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
-- Adaptadores de MongoDB y Google Drive · `CompositeStorage` y outbox · `storageTarget` por contexto
+- La nube con Supabase (diseñada el 2026-10-12, sin fase: `TAREAS.md` → *La nube*) · `storageTarget`
 - Exportar e importar las notas · formato de texto y texto más grande (sin fase)
-- Shells de desktop y móvil (Tauri / Capacitor) · sync, CRDTs, colaboración
+- Shells de desktop y móvil (Tauri / Capacitor) · sync entre pares · CRDTs, colaboración
 
 ## Plan por fases
 
@@ -205,7 +209,8 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
   documentación adelgazada y nota o diagrama nuevos desde el «+».
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
-de destino. Sin fase: exportar/importar, pasar de Node 20 y el azul repetido en el manifiesto.
+de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar/importar, pasar de
+Node 20 y el azul repetido en el manifiesto.
 
 ## Comandos
 

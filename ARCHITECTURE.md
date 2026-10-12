@@ -9,10 +9,11 @@ arquitectura de front. Si algún término del resto del documento suena a jerga 
 puerto, copia por camino—, está explicado ahí con ejemplos de notas y casillas.
 
 > **Ojo al leer:** este documento describe **el diseño**, y no todo él está construido. Hoy lo
-> están las **fases 1 a 6** —el dominio, la persistencia, la UI web, los Diagramas y la PWA—, y la
-> 7, un refactor, está en curso (§9.2). De la Fase 4 quedan sin contestar las tres preguntas del
+> están las **fases 1 a 7** —el dominio, la persistencia, la UI web, los Diagramas, la PWA y un
+> refactor— (§9.2). De la Fase 4 quedan sin contestar las tres preguntas del
 > editor (§9.10). Siguen siendo sólo diseño la carpeta del usuario como destino y la semántica
-> multi-backend (§6). Donde algo está planificado y no construido, la sección lo dice.
+> multi-backend (§6); la nube, diseñada el 2026-10-12, vive en `TAREAS.md` hasta que se construya.
+> Donde algo está planificado y no construido, la sección lo dice.
 > Antes de dar algo por hecho, compruébalo contra el repo.
 
 **Índice**
@@ -1163,14 +1164,15 @@ mismo que «no me han dado nada». Indexar un `Record` es lo segundo; preguntarl
 es lo primero.
 
 **El `BlobStore` existe porque un fichero local y uno remoto solo difieren en dónde van los
-bytes.** Un único `FileStorageAdapter` parametrizado por `BlobStore` da cuatro backends:
+bytes.** Un único `FileStorageAdapter` parametrizado por `BlobStore` da tres backends (eran cuatro
+hasta descartar Drive):
 
 | Objetivo | Implementación | Estado |
 |---|---|---|
 | Desarrollo / fallback | `LocalStorageBlobStore` | **construida**, 108 líneas de código, 22 pruebas |
 | Fichero local en disco | `DirectoryHandleBlobStore` con `showDirectoryPicker()` (Chromium) | **construida**, 156 líneas, sin pruebas a propósito (§6.3) |
 | Fallback otros navegadores | el **mismo** `DirectoryHandleBlobStore` con OPFS | el código está; sólo cambia quién le pasa el handle |
-| Drive (más adelante) | `DriveBlobStore` | fuera de alcance (`TAREAS.md`) |
+| ~~Drive~~ | ~~`DriveBlobStore`~~ | **descartado el 2026-10-12**: la nube será Supabase, que es una base de datos y no un `BlobStore` (`TAREAS.md` → *La nube*) |
 
 La File System Access API y OPFS exponen el mismo `FileSystemDirectoryHandle`: solo cambia
 **cómo obtienes el handle**, no la implementación.
@@ -1186,7 +1188,7 @@ esta sección: `memory/` y `file/` nombran **formas de guardar entidades**, o se
 implementaciones de `StorageAdapter`. `BlobStore` es **otro puerto**, y no está debajo de
 `Repository` sino que es **un parámetro** de `FileStorageAdapter`. Meterlas en `file/` diría que
 son parte del adaptador de ficheros; `blobs/` nombra el puerto que implementan, que es lo único
-que `localStorage`, la carpeta del usuario y el futuro Drive tienen en común.
+que `localStorage`, la carpeta del usuario y OPFS tienen en común.
 
 Nota conceptual sobre el reparto por fases: `Clock` e `IdGenerator` son puertos de **la
 semántica de escritura del dominio**; `Repository`, `StorageAdapter` y `BlobStore` son
@@ -1216,9 +1218,9 @@ StorageAdapter                               StorageAdapter
                                                                      ▼
     (ni rastro de BlobStore)                                    BlobStore
                                                                      │
-                                                  ┌──────────────────┼─────────────┐
-                                                  ▼                  ▼             ▼
-                                            localStorage     carpeta / OPFS      Drive
+                                                  ┌──────────────────┴─────────────┐
+                                                  ▼                                ▼
+                                            localStorage                    carpeta / OPFS
 ```
 
 **Cada capa habla un idioma distinto, y la traducción ocurre en un solo sitio:**
@@ -1231,7 +1233,7 @@ StorageAdapter                               StorageAdapter
 
 Que el esquema `notes/<id>.json` viva en **un único fichero** del proyecto es el beneficio
 entero del reparto: cambiarlo, o pasar de JSON a otro formato, toca ahí y en ningún otro lado,
-y los cuatro `BlobStore` ni se enteran.
+y los `BlobStore` ni se enteran.
 
 **Son dos ejes de variación independientes**, y por eso son dos puertos y no uno:
 
@@ -1256,7 +1258,8 @@ uno de los tres motivos de que no lo lleve es precisamente éste (§6.2). Hoy s�
 ### 6.2 Formato y semántica
 
 **Formato: un fichero por entidad** (`notes/<id>.json`) más un `manifest.json`. Da diffs
-pequeños y conflictos por nota en vez de globales. **Construido**, en
+pequeños y conflictos por nota en vez de globales. Lo que decide es el grano —**un documento por
+entidad**—, no que sea un fichero: una fila por entidad en una base de datos es la misma decisión. **Construido**, en
 `src/storage/file/FileStorageAdapter.ts`, que es el único fichero del proyecto donde aparece
 este esquema: cambiarlo —o dejar JSON por otro formato— se toca ahí y en ningún sitio más.
 
@@ -1363,16 +1366,22 @@ significa exactamente. **Garantiza:**
 
 #### Semántica multi-backend
 
-**Decidida, no construida:** espejo con **el fichero local siempre
-como primario y fuente de verdad**. Los backends remotos son réplicas alimentadas por un
-**outbox durable** con reintentos, para que la app nunca se bloquee porque la red o un token
-fallen. El estado de sincronización es **dato persistido**, no estado en memoria.
+**Decidida, no construida, y revisada el 2026-10-12:** la nube será **Supabase**, como copia de
+seguridad y para sincronizar dispositivos. El diseño entero —el sincronizador, el puerto nuevo, la
+copia en conflicto, la sesión en ⚙— está en `TAREAS.md` → *La nube*, y entra aquí cuando se
+construya. Lo que sigue en pie: **lo local, siempre primario y fuente de verdad** en cada
+dispositivo, y la nube alimentada por **una cola de pendientes** con reintentos, para que la app
+nunca se bloquee porque la red o la sesión fallen. El estado de sincronización es **dato
+persistido**, no estado en memoria. Lo que cambia: no hay réplicas recibiendo cada escritura por
+un `CompositeStorage`. El core habla sólo con lo local, y lo que baja de la nube entra por el core.
 
 **La config de storage no puede vivir en el storage que configura.** Necesita su propio sitio
 aparte (`settings.json` o localStorage), o tienes un huevo-y-gallina al arrancar.
 
-**Nada de credenciales en el repo ni en el bundle.** En web, OAuth con PKCE y token en
-memoria, **nunca** en localStorage. En escritorio, keychain del sistema.
+**Nada de credenciales en el repo ni en el bundle.** En web, la sesión de un servicio externo se
+guarda en el navegador, conectada y revocable desde ⚙. Hasta el 2026-10-12 decía «token en memoria,
+**nunca** en localStorage»; se cambió para que abrir la app no pida nunca iniciar sesión, y el
+riesgo aceptado está en `TAREAS.md` → *La nube*. En escritorio, keychain del sistema.
 
 #### Las dos decisiones propias de `LocalStorageBlobStore`
 

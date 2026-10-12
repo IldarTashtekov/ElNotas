@@ -300,7 +300,139 @@ documentación.
       `VERIFICACION-MANUAL-LIENZO.md` y `-RELACIONES.md`).
 
 **Fuera de esta fase, con disparador propio:** revisar los puertos cuando llegue su segundo uso
-real (carpeta, OPFS o Drive). Se hace al construir ese adaptador.
+real (carpeta, OPFS o Supabase). Se hace al construir ese adaptador.
+
+### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro — PLANIFICADA el 2026-10-12
+
+**Qué es:** cambiar el aspecto de la app para que parezca una terminal de los 80, de las de
+fósforo, a partir de capturas que trajo el usuario (Cool Retro Term y otras parecidas). **Sólo
+CSS**, más la pantalla de carga del manifiesto. Ni el DOM, ni el comportamiento, ni las pruebas
+cambian, y no hay dependencias nuevas. Al cerrarla, `npm run check` tiene que dar las mismas
+**729 pruebas**.
+
+**Decidido con el usuario el 2026-10-12:**
+- **Fósforo ámbar** sobre negro. Ni verde ni las dos a elegir: no hay preferencia en ⚙.
+- **Siempre en oscuro.** Fuera la paleta clara: una sola paleta y `color-scheme: dark` fijo.
+- **La letra monoespaciada del sistema** (la `--mono` que ya existe) en toda la app. Ninguna
+  fuente «píxel» en el repo (VT323 y parecidas): pesa y se lee peor en textos largos.
+- **Efecto CRT suave:** un brillo leve en las letras y líneas de barrido fijas. Nada se mueve: ni
+  parpadeo, ni esquinas oscurecidas, ni cursor de bloque.
+- **Ámbar y rojo:** todo en ámbar y lo importante (crear, confirmar) en **vídeo inverso**, es decir,
+  letra negra sobre fondo ámbar. El rojo se queda sólo para borrar y para los errores. El verde
+  desaparece.
+
+**Decisiones cerradas que reabre**, que se reescriben en `CLAUDE.md` y `ARCHITECTURE.md` en el pase
+de documentación:
+- **«"+" verde en la última ventana»** pasa a «+» en vídeo inverso.
+- **«Pantalla de carga azul»** (Fase 6) pasa a negra: el `background_color` del manifiesto.
+- **Claro y oscuro según el sistema** pasa a «sólo oscuro». «Barras del móvil con el color del
+  sistema» (Fase 7) sigue en pie: al ser `color-scheme: dark` siempre, saldrán oscuras.
+
+- [ ] **0. Los colores sueltos, a variables.** Hoy hay colores fuera de `base.css`, aunque la regla
+      lo prohíbe: seis `#fff` (`barras.css`, `hojas.css`, `ajustes.css`), el ámbar `#d08a00` del
+      borde de `.aviso` (`ventanas.css`) y cinco sombras con `rgb(0 0 0 / …)`. Pasan a variables
+      de `base.css` **sin cambio visible**, comprobado con el estilo calculado antes y después.
+- [ ] **1. Paleta y letra.** Una sola paleta en `base.css`: negro tostado de fondo, ámbar para la
+      tinta, ámbar tenue para `--muted`, `--line` y `--dim`, y rojo de fósforo para `--danger`.
+      Fuera el bloque `prefers-color-scheme` y el `:not([data-theme="light"])`, que nadie usa.
+      `--green` desaparece y sus usos pasan al vídeo inverso. `--ui` pasa a ser la `--mono`.
+      **Medir el contraste** del ámbar tenue sobre negro: que se lea.
+- [ ] **2. Formas.** `border-radius: 0` en los siete CSS y fuera las sombras. El borde de los avisos
+      ya no se distingue en ámbar: se resuelve aquí, con el vídeo inverso o con un borde más grueso.
+- [ ] **3. CRT suave.** Brillo con `text-shadow` y líneas de barrido en una capa encima de todo,
+      con `pointer-events: none`. **Riesgo:** sin eso, la capa se come los toques y los gestos
+      del lienzo.
+- [ ] **4. El lienzo.** Pósits en recuadro ámbar; líneas, flechas y puntos de la rejilla en ámbar
+      tenue. **Medir el arrastre de nodos** como en la Fase 7: el `text-shadow` en muchos pósits
+      puede notarse, y si se nota, el brillo se quita del lienzo.
+- [ ] **5. La PWA.** `background_color` del manifiesto, en el negro de `--ground`. El duplicado de
+      *Sin fase asignada* («Los colores de la app, repetidos…») **no se resuelve**: cambia el
+      valor y sigue repetido. El icono se revisa al final, viendo cómo queda todo.
+- [ ] **6. Verificar.** Una lista manual nueva en `test/ui/` con las cuatro vistas, las hojas, el
+      lienzo y los gestos. `npm run check` con las mismas 729 pruebas. Y en el móvil: **publicar,
+      desinstalar y reinstalar**, porque la pantalla de carga sale del manifiesto.
+- [ ] **7. Documentación**, en un solo pase al cerrar: las decisiones reabiertas en `CLAUDE.md`
+      (*Decisiones cerradas* y *Plan por fases*) y en `ARCHITECTURE.md`.
+
+### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
+
+Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
+código.** El diseño pasa a `ARCHITECTURE.md` (§6) cuando se construya; hasta entonces vive aquí.
+**Para qué, las dos cosas:** copia de seguridad, y las mismas notas en el móvil (Android, la PWA) y
+en el ordenador.
+
+**Decidido:**
+
+- **Manda el modelo, no el fichero.** Una nota es un dato estructurado —ids de línea, `revision`,
+  reglas de casillas—, y un fichero o una fila es su copia guardada. «Manda el fichero», al estilo
+  Obsidian, sería refundar el core. Consecuencia: **la nube es una base de datos**, no un sitio de
+  ficheros. Markdown, sólo para exportar (ver *Sin fase asignada*).
+- **Supabase** (Postgres gestionado). Es la única base de datos a la que el navegador llega **sin
+  servidor propio**: habla HTTPS y trae de serie el inicio de sesión y las reglas por usuario (*Row
+  Level Security*). El usuario no quiere mantener un servidor.
+- **Una fila por entidad, con su JSON dentro** (id, tipo, `revision`, contenido, hora de escritura,
+  marca de borrado). Es el mismo grano que los ficheros de hoy, y `schema.ts` sirve igual para
+  validar lo que baja.
+- **La forma:** el core habla sólo con lo local, como hoy, y **un sincronizador** se pone entre lo
+  local y la nube. El core no sabe que Supabase existe. **Todo lo que baja entra por el core**, con
+  una acción nueva («aplicar lo remoto»), y nunca se escribe directamente en `localStorage`: si no,
+  la pantalla no se entera y el `writeBehind` lo pisaría con lo que tiene en memoria. **Reparto:**
+  la acción y la política de conflictos, en `core/`; el adaptador y el sincronizador, en `storage/`;
+  cuándo sincronizar, la sesión y ⚙, en `platform/web/`. Sin `CompositeStorage`.
+- **Un puerto nuevo, sin nada de Supabase dentro**, en vez de ampliar `StorageAdapter`. Tres
+  operaciones: «dame lo que cambió desde este punto» (los cambios y un punto nuevo, opaco), «sube
+  esto si la revisión remota sigue siendo X» (ok, o `stale` con la versión remota) y «borra esto si
+  sigue siendo X». En Supabase **el punto es la hora del servidor**, no la del dispositivo, así que
+  los relojes desajustados no importan; y **los borrados son marcas**, no filas quitadas, para que el
+  otro dispositivo se entere. Sin Supabase dentro para que mañana lo cumpla otro transporte (el
+  peer-to-peer de *Ideas aparcadas*).
+- **El estado de sincronización, persistido en local** (que fuera dato ya estaba decidido): por
+  cada entidad, **la última revisión sincronizada**, y los ids borrados pendientes de subir. Una
+  entidad está pendiente si su revisión local es distinta de la sincronizada. Son unos bytes por
+  nota: **cabe en `localStorage`**.
+- **El eco**, resuelto con eso mismo: «aplicar lo remoto» **conserva la revisión que trae**; el
+  sincronizador la apunta como sincronizada y no la vuelve a subir. Sin marcas especiales.
+- **Conflictos: copia en conflicto.** Si al subir sale `stale`, la versión remota queda como la
+  oficial y la local se guarda como una entidad nueva, «‹nombre› (conflicto)», en los mismos
+  contextos; los nodos de diagrama siguen apuntando a la original. Así para notas y diagramas. **En
+  los contextos, se suman las referencias de los dos lados**: una quitada puede reaparecer, y eso
+  molesta pero no pierde nada. **Editar gana a borrar:** lo borrado en un lado y editado en el otro
+  sigue vivo. **Nunca se pierde nada, y no se guarda la versión base.** El usuario eligió primero la
+  fusión a tres bandas y la cambió por ésta: en una app personal el conflicto es raro —sin
+  conexión, la pausa de Supabase, un dispositivo que no se ha puesto al día—, y la fusión cuesta
+  mucho (guardar la base duplica lo local, y la función de fusión es la pieza más cara). Aparcada
+  abajo, con lo que se decidió de ella.
+- **Lo local sigue mandando en cada dispositivo**, y la app funciona sin red.
+- **ElNotas sigue sin cuentas: abrir la app no pide nada, nunca.** La conexión vive en ⚙, en una
+  sección «Nube» con la lista de servicios (hoy, Supabase). Cada servicio tiene conectar,
+  desconectar, estado y su adaptador. **Conectar se hace una vez:** la dirección y la clave pública
+  del proyecto (públicas por diseño; lo que protege las notas son las reglas de la base, y no van en
+  el repo), y **un código de 6 cifras por correo**. El código sirve en cualquier navegador; el enlace
+  por correo también valdría en Android, pero obliga a gestionar la vuelta a la app.
+- **La sesión (el token de renovación) se guarda en el navegador**, sin cifrar por ahora. **Cambia
+  la regla de `CLAUDE.md`**, que decía «token en memoria». Si caduca, la app sigue en local, la cola
+  espera y ⚙ ofrece «Reconectar», sin interrumpir.
+- **«Quitar»** desconecta, invalida la sesión en Supabase y la olvida. La copia remota se queda.
+- **El código, incluido pero dormido**: se activa en ⚙. Sin `import()` dinámico, que reabriría la
+  actualización en silencio de la PWA (§9.12).
+- **La pausa del plan gratuito** (una semana sin actividad): **una tarea programada en GitHub
+  Actions** que hace una consulta cada pocos días, con la dirección del proyecto en los *secrets*
+  del repo. El aviso «la nube no responde» en ⚙, igualmente, por si la tarea falla.
+- **Se sigue con la PWA.** Capacitor o Tauri, más adelante y como complemento, no como sustituto.
+
+**Propuesto, sin objeción del usuario, por confirmar al construir:**
+
+- [ ] **«Borrar todo» se lleva también la conexión**, porque borra las claves `elnotas:`.
+
+**Por comprobar antes de construir**, porque se dijo de memoria:
+
+- [ ] Qué cuenta como «actividad» para la pausa de Supabase, y si basta con la consulta de la tarea.
+- [ ] Que GitHub desactiva las tareas programadas de un repo público tras 60 días sin actividad, y
+      qué se hace entonces (reactivarla a mano, con el aviso por correo).
+- [ ] El inicio de sesión de Supabase con `fetch` y sin su librería: el código por correo, la
+      renovación del token y su rotación.
+- [ ] Que Supabase acepta peticiones desde `ildartashtekov.github.io` (CORS).
+- [ ] **Asignarle fase**, con el usuario.
 
 ### Sin fase asignada
 
@@ -309,6 +441,10 @@ real (carpeta, OPFS o Drive). Se hace al construir ese adaptador.
       la app publicada es otro origen y empieza vacía, y si se borran los datos de la app a mano
       —o con el «limpiar» de MIUI— se pierde todo. **`persist()` no protege de eso**: sólo impide
       que el navegador borre por su cuenta. Una copia fuera del navegador es lo único que lo cubre.
+      **Desde el 2026-10-12**, con «manda el modelo» (ver *La nube*), Markdown entra como formato
+      de exportación legible, **sólo hacia fuera**: así no hacen falta ni los ids de línea, ni
+      escapar lo que parece Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`,
+      si llega, crearía notas nuevas, sin ida y vuelta.
 - [ ] **Pasar de Node 20 a uno con soporte**, en casa y en la receta de publicación
       (`.github/workflows/publicar.yml`) a la vez. Node 20 dejó de tener soporte en abril de 2026;
       la Fase 6 lo dejó en 20 porque es el de casa y con el que pasan las pruebas. Se cierra
@@ -318,7 +454,8 @@ real (carpeta, OPFS o Drive). Se hace al construir ese adaptador.
       manifiesto no lee variables de CSS. Si cambia `--accent`, hay que cambiarlo a mano. Desde
       el 2026-10-11 es el único sitio: la `theme-color` de `index.html` y el `theme_color` se
       quitaron (Fase 7). Se cierra con una comprobación en `build:pages` que falle si no
-      coinciden, o decidiendo con el usuario que se aguanta.
+      coinciden, o decidiendo con el usuario que se aguanta. **La Fase 8 lo cambia de valor**:
+      pasa a ser el negro de `--ground`, sigue repetido.
 - [ ] **Negrita, cursiva, tachado y subrayado en el editor.** *Pedido por el usuario el
       2026-10-11*, tras usar la app en el móvil. **Fuera de la fase de refactor, por decisión
       suya**: va aparte. Hoy el texto de una línea es una cadena plana en el
@@ -370,6 +507,9 @@ documentación**.
     por «un montón de imports sin extensión que el navegador no sabe resolver», y desde
     `1037ea1` ya no los hay. ⚠️ **Tocar ese procedimiento no obliga a repasar la lista** —es el
     `.md`, no `DirectoryHandleBlobStore.ts`—, pero conviene no cambiar los pasos al corregirlo.
+  - **Desde el 2026-10-12, dos cabeceras nombran a Drive**, que ya está descartado (*Ideas
+    aparcadas*): `src/core/ports/BlobStore.ts` («o en Drive») y
+    `src/storage/file/FileStorageAdapter.ts` («OPFS, Drive»). Con quitar a Drive de las dos basta.
 - [ ] **Las pruebas viejas — 942 anotaciones** (423 variables, 412 retornos, 107 parámetros,
       medido el 2026-09-19), **deuda aceptada a sabiendas y no un olvido.** Es trabajo mecánico
       que no arregla ni caza ningún fallo, y el diff sería irrevisable. **Lo que se escriba o se
@@ -535,17 +675,21 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
 | **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
-| **Adaptador de MongoDB** | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
-| **Adaptador de Google Drive** | Escribir **siempre** exige OAuth (scope `drive.file`), aunque la carpeta sea pública. Eso arrastra registro de app, PKCE y gestión de tokens. | Querer de verdad sincronizar entre dispositivos, y aceptar el coste de OAuth. Antes tendría que estar cerrado el `BlobStore`. |
-| **`CompositeStorage` y outbox durable** | Sin consumidor mientras haya un solo backend. La semántica (local primario + réplicas con reintentos) ya está decidida. | Que exista un segundo backend real. Ni un día antes: es infraestructura para un problema que aún no se tiene. |
+| **Adaptador de MongoDB** (o cualquier base de datos con servidor propio) | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. **Reconsiderado el 2026-10-12** al elegir la nube, y lo mismo vale para SQL con servidor propio: el usuario no quiere mantener un servidor, así que se eligió Supabase (*Pendiente → La nube*). | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
+| ~~**Adaptador de Google Drive**~~ — ❌ **descartado el 2026-10-12** | Drive guarda **ficheros**, y la app es de «manda el modelo» (*Pendiente → La nube*): una base de datos da de serie la escritura condicional y el «qué cambió desde…», que sobre Drive habría que construir. Además, sin servidor la sesión dura una hora y no se renueva sola. **Una carpeta pública no lo arregla:** escribir **siempre** exige OAuth (scope `drive.file`), y lo público deja las notas a la vista de quien tenga el enlace. **Tampoco SQLite dentro de Drive:** se sube y se baja el fichero entero, y dos dispositivos se pisan la base completa. | Que se reabra «manda el fichero». Ese día un `DriveBlobStore` encaja tal cual bajo `FileStorageAdapter`. |
+| ~~**`CompositeStorage` y outbox durable**~~ — ✅ **ya no está aparcado: diseñado el 2026-10-12** | Estaba aquí por falta de un segundo backend. | **Desbloqueado por la nube** (*Pendiente → La nube*), pero con otra forma: no hay `CompositeStorage` repartiendo cada escritura entre réplicas. El core habla sólo con lo local, y un sincronizador sube lo pendiente (la cola) y baja lo nuevo, que entra por el core. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
-| **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. |
+| **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. **Reconsiderado el 2026-10-12** con «manda el modelo» y Postgres en la nube, y la conclusión no cambia: SQLite en el navegador es posible (wasm sobre OPFS, en un *Worker*), pero sin búsqueda ni volumen no tiene consumidor. Y «un fichero por entidad» se relee como **un documento por entidad**: lo que decide es el grano, no que sea un fichero. |
 | **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. ⚠️ **Desde la Fase 4 hay dos suscriptores** —la UI y el write-behind— y esto **no se ha reabierto**: la UI se escribió con el `Listener` tal cual. **No confundir con el caso que quedaba vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo veía nadie — no se arreglaba con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo fue el `onError`, **hecho en la Fase 4** (`f406d96`). |
 | ~~**El editor de grafos de los Diagramas**~~ — ✅ **ya no está aparcado: planificado el 2026-10-03** | Estaba aquí porque no tenía diseño: el boceto del usuario decía que aún no sabía cómo plantear la interfaz. | **Desbloqueada:** cerró la Fase 4 y se planificó la 5 —un lienzo libre, partido en Modelo, Lienzo y Relaciones— en `ARCHITECTURE.md` §9.11 y en *Pendiente*. Lo que estaba anotado aquí, que `Diagram.nodes` pasara de array a `Record`, entra en Fase 5 · Modelo. |
 | **Una librería pequeña sólo para mover y acercar el lienzo** (pan/zoom, sin dependencias propias) | Decidido el 2026-10-03 hacer el lienzo **desde cero**: las librerías de lienzo completas exigen React o guardan su propio estado (`ARCHITECTURE.md` §9.11), y mover y acercar son unas pocas cuentas puras que se prueban en Node. | **Que el pellizco o el arrastre no se dejen domar en el móvil real.** El lienzo se hizo sin ella, y **aún no se ha probado en el móvil**: se sabrá al pasar su lista, que desde el 2026-10-04 va al final de la Fase 5, con las relaciones ya encima. Ese día se evalúa una que haga **sólo** eso y no guarde estado; sería la primera dependencia de runtime, así que con el mismo cuidado que Snabbdom. |
-| **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web. Ese build existe desde la Fase 4 (`npm run build:web`, a `dist/web/`), y desde la Fase 6 se publica como PWA, que ya da la app instalada en el móvil. | Era «una Fase 4 terminada», y ya se cumple. **Qué lo reabre ahora, sin decidir con el usuario.** Y ese es el momento de reconsiderar los workspaces de npm, no antes. |
-| **Sync entre dispositivos, CRDTs, colaboración en tiempo real** | Salto enorme de complejidad. `revision` ya deja la puerta abierta a detectar conflictos, que es el 10% que sí hacía falta desde el principio. | Uso real en dos dispositivos y una política de conflictos elegida a conciencia. "Gana el último" ya está descartada. |
-| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, 156 líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** `BlobStore` sobre navegador con lógica de verdad —el de Drive, con su OAuth y sus reintentos— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
+| **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web. Ese build existe desde la Fase 4 (`npm run build:web`, a `dist/web/`), y desde la Fase 6 se publica como PWA, que ya da la app instalada en el móvil. | Era «una Fase 4 terminada», y ya se cumple. **Qué lo reabre ahora, sin decidir con el usuario.** Y ese es el momento de reconsiderar los workspaces de npm, no antes. **Desde el 2026-10-12, dos motivos con nombre:** el peer-to-peer automático (abajo) y guardar la sesión de la nube en el llavero del sistema. *Decidido ese día: se sigue con la PWA.* |
+| ~~**Sync entre dispositivos**~~ — ✅ **diseñado el 2026-10-12** · **CRDTs y colaboración en tiempo real**, siguen aparcados | El sync, con su política de conflictos (copia en conflicto), está en *Pendiente → La nube*. Los CRDTs son un salto enorme de complejidad para un problema que en una app personal es raro. | CRDTs: colaborar con otras personas en la misma nota. |
+| **Fusión a tres bandas en los conflictos** | Elegida primero por el usuario el 2026-10-12 y cambiada ese mismo día por la copia en conflicto: el conflicto es raro en una app personal, y la fusión exige **guardar la base** de cada entidad (lo local se duplica) y escribir la función de fusión, la pieza más cara del sync. Lo que se decidió de ella, por si vuelve: fusionar **por campos**; **editar gana a borrar** en todos los niveles; en un choque real (el mismo campo en los dos lados) **gana el más nuevo**, usando la `updatedAt` de la entidad y aceptando que se pierde la otra versión; las inserciones en el mismo sitio se quedan las dos, la más nueva primero; y en los diagramas, nodo a nodo y relación a relación. La facilitan los ids de línea, que no exista `move` y los `Record` del diagrama. ⚠️ «Gana el más nuevo» aquí **no** reabre el «gana el último» descartado: aquél era sobre la entidad entera; éste, sólo sobre el campo que chocó después de fusionar. | Que las copias en conflicto salgan **más de lo esperado** usando la app. Ese día se empieza a guardar la base; no hace falta migrar lo ya guardado. |
+| **Sincronizar sin nube, entre pares** (*peer-to-peer*) | Preguntado el 2026-10-12, y al usuario le atraía más que la base de datos. Tres variantes, cada una con su pega. **(1) Manual, en la PWA, con WebRTC:** los dos dispositivos se presentan con QR, pero son **dos escaneos** (oferta y respuesta) **cada vez**, o un servicio público sólo para el saludo; y las dos apps abiertas a la vez. **(2) Automático** («enciendo el ordenador y se sincroniza»): una PWA no puede escuchar conexiones ni correr en segundo plano, y una página HTTPS no puede llamar a `http://192.168.x.x`. Pide **app nativa en los dos lados**. **(3) PWA más un servicio Kotlin aparte en cada dispositivo**, hablando por `localhost`: es la versión frágil de la (2). Chrome está poniendo permiso a que las webs públicas lleguen a la red local, Android exige una notificación fija para el segundo plano, y son dos programas más por dispositivo. Lo limpio es **Capacitor con plugins en Kotlin**, que es la (2). Ninguna da copia fuera de casa. | **(1):** querer prescindir de la nube y aceptar que sincronizar sea un gesto. **(2):** la app nativa (fila de los shells). Las dos entrarían como **un servicio más** en la sección «Nube» de ⚙, con el puerto sin Supabase dentro y la misma política de conflictos. |
+| **Markdown como formato de guardado** | Preguntado el 2026-10-12. Una nota es un dato estructurado y un `.md` es texto libre: los ids de línea no tienen sitio, lo que el usuario escribe y parece Markdown hay que escaparlo, los diagramas y los contextos no caben, y si se edita fuera la app no lo entiende ni se entera (la `revision` no cambia). Con «manda el modelo», Markdown es **sólo para exportar** (*Sin fase asignada*). | Que se reabra «manda el fichero»: editar las notas en Obsidian o en cualquier editor. Es otro proyecto, no una ampliación del almacenamiento. |
+| **Cifrar la sesión guardada de la nube** (con una llave de WebCrypto que no se puede sacar) | El 2026-10-12 se decidió guardar la sesión en el navegador sin cifrar. Cifrarla impide que copiar el almacén baste para llevarse el token, pero no protege de un script malicioso dentro de la app, que podría usar la llave. Hoy no hay código de terceros ni dependencias. | Que la app cargue código ajeno, o que se comparta con más gente. |
+| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, 156 líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** adaptador sobre navegador con lógica de verdad —el de Supabase, con su sesión y sus reintentos; hasta el 2026-10-12 decía «el de Drive»— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | ⚠️ **Superada el 2026-09-27:** webpack ya **no** es el bundler previsto para la Fase 4 — la fase arranca con el `importmap`, sin bundler. La elección entre bundlers no afecta a la arquitectura, así que no urge. | Que algo concreto exija un bundler. Ese día se comparan los que haya, no sólo estos dos; y se reinstala **sólo** el elegido. |
 | **Las ventanas como entidad del core** (la opción B de `ARCHITECTURE.md` §7.4: algo como `Layout`, en su fichero junto a las notas) | Es la opción más limpia —una sola fuente, viaja con las notas, el reducer vigila la integridad—, pero reabre `StorageAdapter`, la suite de contratos, `FileStorageAdapter` y el catálogo de acciones, todo cerrado. Se eligió la C (`localStorage`) para salir del paso. | Que lleguen las **entidades «meta» de UX/UI** al core, que el usuario prevé; o que duela de verdad que las ventanas no viajen con las notas (un cambio de destino o de dispositivo). Ese día la guarda de la presentación se sustituye por la integridad del reducer. |
 | **Revisar `Context.defaultView`** (y su acción `set-default-view`) | Se queda sin consumidor en la Fase 4: «abrir directamente una nota» lo hace ahora una ventana de tipo nota. No se quita porque el dominio está cerrado y quitarlo toca modelo, reducer, pruebas y formato en disco por algo que no molesta. | Lo mismo que la fila anterior: cuando lleguen las entidades «meta» de UX. Ahí se decide si se elimina o si recupera un sentido. |
