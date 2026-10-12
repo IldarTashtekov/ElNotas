@@ -302,7 +302,7 @@ documentación.
 **Fuera de esta fase, con disparador propio:** revisar los puertos cuando llegue su segundo uso
 real (carpeta, OPFS o Supabase). Se hace al construir ese adaptador.
 
-### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro — PLANIFICADA el 2026-10-12
+### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro — EN CURSO desde el 2026-10-12, en la rama `fase-8-terminal`
 
 **Qué es:** cambiar el aspecto de la app para que parezca una terminal de los 80, de las de
 fósforo, a partir de capturas que trajo el usuario (Cool Retro Term y otras parecidas). **Sólo
@@ -328,31 +328,53 @@ de documentación:
 - **Claro y oscuro según el sistema** pasa a «sólo oscuro». «Barras del móvil con el color del
   sistema» (Fase 7) sigue en pie: al ser `color-scheme: dark` siempre, saldrán oscuras.
 
-- [ ] **0. Los colores sueltos, a variables.** Hoy hay colores fuera de `base.css`, aunque la regla
+- [x] **0. Los colores sueltos, a variables.** Había colores fuera de `base.css`, aunque la regla
       lo prohíbe: seis `#fff` (`barras.css`, `hojas.css`, `ajustes.css`), el ámbar `#d08a00` del
-      borde de `.aviso` (`ventanas.css`) y cinco sombras con `rgb(0 0 0 / …)`. Pasan a variables
-      de `base.css` **sin cambio visible**, comprobado con el estilo calculado antes y después.
-- [ ] **1. Paleta y letra.** Una sola paleta en `base.css`: negro tostado de fondo, ámbar para la
+      borde de `.aviso` (`ventanas.css`) y el velo de las hojas. Ahora son `--sobre-color`,
+      `--aviso` y `--velo`, **sin cambio visible**: el estilo calculado de toda la página, idéntico
+      antes y después. Las sombras no se pasaron: se van en la tarea 2.
+- [x] **1. Paleta y letra.** Una sola paleta en `base.css`: negro tostado de fondo, ámbar para la
       tinta, ámbar tenue para `--muted`, `--line` y `--dim`, y rojo de fósforo para `--danger`.
       Fuera el bloque `prefers-color-scheme` y el `:not([data-theme="light"])`, que nadie usa.
       `--green` desaparece y sus usos pasan al vídeo inverso. `--ui` pasa a ser la `--mono`.
-      **Medir el contraste** del ámbar tenue sobre negro: que se lea.
-- [ ] **2. Formas.** `border-radius: 0` en los siete CSS y fuera las sombras. El borde de los avisos
+      **Medir el contraste** del ámbar tenue sobre negro: que se lea. ✅ Medido: la tinta da 10,9;
+      `--muted`, 6,6 sobre la pantalla y 6,3 sobre una fila; el rojo, 6,3; el negro sobre ámbar,
+      10,9. Todo pasa de 4,5 menos `--dim` (2,6), que sólo pinta lo desactivado. Las fichas de ⚙
+      partían «contexto» (la monoespaciada es más ancha): su nombre baja a `0.68rem` y el relleno
+      lateral a `0.35rem`, y ya caben ocho letras.
+- [x] **2. Formas.** `border-radius: 0` en los siete CSS y fuera las sombras. El borde de los avisos
       ya no se distingue en ámbar: se resuelve aquí, con el vídeo inverso o con un borde más grueso.
-- [ ] **3. CRT suave.** Brillo con `text-shadow` y líneas de barrido en una capa encima de todo,
+      ✅ Se quedó en ámbar con su borde grueso, y en rojo el de guardado detenido. Lo que tenía
+      sombra para verse levantado (la ficha, el pósit) ya cambiaba de borde. La hoja gana un borde
+      arriba. El «+» de diagrama nuevo pasa a ir **en hueco** (borde ámbar, fondo negro) para no
+      confundirse con el de nota, que va en vídeo inverso. Y el foco del teclado, ámbar y recto
+      (`:focus-visible` en `base.css`), porque el del navegador salía blanco y redondo.
+- [x] **3. CRT suave.** Brillo con `text-shadow` y líneas de barrido en una capa encima de todo,
       con `pointer-events: none`. **Riesgo:** sin eso, la capa se come los toques y los gestos
-      del lienzo.
-- [ ] **4. El lienzo.** Pósits en recuadro ámbar; líneas, flechas y puntos de la rejilla en ámbar
+      del lienzo. ✅ `--brillo` en el `body`, que se hereda, y `body::after` con `--barrido`.
+      Comprobado: el punto de un pósit y el de ⚙ caen en ellos, no en la capa. Lo que va en vídeo
+      inverso lleva `text-shadow: none`, porque el halo ámbar emborrona la letra negra.
+- [x] **4. El lienzo.** Pósits en recuadro ámbar; líneas, flechas y puntos de la rejilla en ámbar
       tenue. **Medir el arrastre de nodos** como en la Fase 7: el `text-shadow` en muchos pósits
-      puede notarse, y si se nota, el brillo se quita del lienzo.
-- [ ] **5. La PWA.** `background_color` del manifiesto, en el negro de `--ground`. El duplicado de
-      *Sin fase asignada* («Los colores de la app, repetidos…») **no se resuelve**: cambia el
-      valor y sigue repetido. El icono se revisa al final, viendo cómo queda todo.
-- [ ] **6. Verificar.** Una lista manual nueva en `test/ui/` con las cuatro vistas, las hojas, el
-      lienzo y los gestos. `npm run check` con las mismas 729 pruebas. Y en el móvil: **publicar,
+      puede notarse, y si se nota, el brillo se quita del lienzo. ✅ Recuadro en `--muted`, que pasa
+      a `--accent` al levantarlo. **Medido a medias**: con 200 nodos y 290 relaciones, el
+      JavaScript de cada movimiento sigue en **4,2 ms** (4,4 en la Fase 7). Pero el brillo cuesta
+      al pintar, y eso no se pudo medir: con el panel oculto, el navegador frena los fotogramas
+      (alguno tardó un segundo entero). **Queda para el móvil** (G3 de la lista nueva).
+- [x] **Fuera el emoji de la papelera** *(pedido por el usuario el 2026-10-12)*: «Borrar»,
+      «Quitar» y «Borrar todo», sólo con texto, en `NoteList.ts` y `SettingsView.ts`, y en las
+      listas manuales que lo nombraban. No se cambió ningún otro símbolo (◀ ▶ ⚙ ✕ ☐ ↳).
+- [ ] **5. La PWA.** ✅ `background_color` del manifiesto, a `#050301`, el negro de `--ground`. El
+      duplicado de *Sin fase asignada* («Los colores de la app, repetidos…») **no se resuelve**:
+      cambia el valor y sigue repetido. **Falta el icono**, que se revisa viéndolo todo junto.
+- [ ] **6. Verificar.** ✅ `npm run check`: 729 de 729, y `build:pages` arma la copia. ✅ La lista
+      manual, `test/ui/VERIFICACION-MANUAL-TERMINAL.md`: las cuatro vistas, las hojas, el lienzo y
+      los gestos. **Falta pasarla** en el ordenador y en el móvil, donde hay que **publicar,
       desinstalar y reinstalar**, porque la pantalla de carga sale del manifiesto.
 - [ ] **7. Documentación**, en un solo pase al cerrar: las decisiones reabiertas en `CLAUDE.md`
-      (*Decisiones cerradas* y *Plan por fases*) y en `ARCHITECTURE.md`.
+      (*Decisiones cerradas* y *Plan por fases*) y en `ARCHITECTURE.md`. También **las listas
+      manuales viejas**, que aún hablan del «+ verde», el «+ azul», la «raya azul» y la «sombra
+      más grande» (`VERIFICACION-MANUAL-LIENZO.md` A1, A2 y D3, y las que lo repitan).
 
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
