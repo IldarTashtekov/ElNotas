@@ -188,7 +188,14 @@ Commits clave: `8f44d2d` (rutas relativas), `d007a3d` (manifiesto e icono), `ccd
 (`build:pages`), `45b6242` (el *service worker*), `7791e24` (`persist()` y la versión), `926b8fd`
 (la publicación), `af6dcf4` (la lista manual).
 
-### Fase 7 — Refactor: ajustes de diseño y medir antes de tocar. En curso, planificada el 2026-10-11
+### Fase 7 — Refactor: ajustes de diseño y medir antes de tocar ✅ CERRADA el 2026-10-12
+
+Planificada el 2026-10-11 y **cerrada el 2026-10-12 con 729 pruebas**, sin dependencias nuevas,
+sin tocar el core y sin deuda: el usuario la probó en el móvil y la dio por cerrada, **sin anotar
+paso a paso** (teclado, la L, arrastre de nodos y el «+»). Con la barra bastó
+`interactive-widget`: `visualViewport` no hizo falta.
+Commits clave: `710253a` (la barra y la L), `165eca9` (el arrastre de nodos), `cc0e311` (la
+documentación adelgazada), `1815a2b` (nota o diagrama desde el «+»).
 
 **Qué es:** dos cosas. Arreglar lo que molesta al usar la app en el móvil, y revisar lo que se
 construyó por adelantado o puede no aguantar el volumen, **con números y no a ojo**. Si al medir
@@ -283,7 +290,7 @@ documentación.
 
 #### Para cerrarla
 
-- [ ] **Verlo en el móvil**: la barra con el teclado, la L (publicar y reinstalar), arrastrar
+- [x] **Verlo en el móvil** ✅ *(dado por probado por el usuario el 2026-10-12)*: la barra con el teclado, la L (publicar y reinstalar), arrastrar
       nodos con relaciones y crear nota o diagrama desde el «+» (CTX-I7 de
       `VERIFICACION-SENTADA.md`); con eso se cierra la Fase 7. En detalle: que la barra de la nota quede
       encima del teclado de Android y la última línea no se esconda bajo ella (si no basta,

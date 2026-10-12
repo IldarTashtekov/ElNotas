@@ -2932,7 +2932,8 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
   tocar el core** (§9.12). Con ella el usuario dio por pasadas las listas pendientes de las Fases 4
   y 5.
 
-- **Fase 7 — Refactor. EN CURSO**, planificada el 2026-10-11, en la rama `fase-7-refactor`. Dos
+- **Fase 7 — Refactor. ✅ CERRADA el 2026-10-12**, planificada el 2026-10-11, en la rama
+  `fase-7-refactor`, y probada en el móvil por el usuario. Dos
   cosas: arreglar lo que molesta al usar la app en el móvil, y revisar lo que se construyó por
   adelantado o puede no aguantar el volumen **con números y no a ojo** —si al medir algo no duele,
   se cierra sin tocar código—. Hecho en el código: la barra de la nota sube con el teclado
@@ -2942,8 +2943,9 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
   los pósits de `10rem` a `8rem` (`7rem` los alargaba demasiado hacia abajo). Medido: **el
   arranque no duele** —el techo de `localStorage`, unas 4.000 notas, llega antes—, y **arrastrar un
   nodo sí dolía**: se redibujaban todas las líneas, alternando medir y escribir; ahora sólo las del
-  nodo (`relationsOf`), midiendo todo antes de escribir. Las tablas, en `TAREAS.md`. Falta verlo en
-  el móvil y la documentación. **Negrita, cursiva, tachado, subrayado y el texto más grande NO
+  nodo (`relationsOf`), midiendo todo antes de escribir. Las tablas, en `TAREAS.md`. Y a petición
+  del usuario, una nota o un diagrama nuevos, sin contexto, desde el «+» de la última ventana.
+  Con la barra bastó `interactive-widget`, sin `visualViewport`. **Negrita, cursiva, tachado, subrayado y el texto más grande NO
   entran**, por decisión del usuario: van juntos, sin fase.
 
 ### 9.3 Las operaciones de contenido

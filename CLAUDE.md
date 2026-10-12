@@ -14,7 +14,7 @@ nativos, más adelante (shells sobre la misma UI web).
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Fases 0 a 6 cerradas; en curso, la Fase 7 — Refactor**, en la rama `fase-7-refactor`.
+**Fases 0 a 7 cerradas**; la siguiente, sin decidir.
 Publicada en `https://ildartashtekov.github.io/ElNotas/`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
@@ -199,11 +199,10 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - **Fase 4 — UI, sólo web.** ✅ Con deuda: **las tres preguntas del editor, sin contestar** (§9.10).
 - **Fase 5 — Diagramas.** ✅ Modelo, Lienzo y Relaciones (§9.11).
 - **Fase 6 — PWA.** ✅ Publicada e instalada en el móvil del usuario (§9.12).
-- **Fase 7 — Refactor. EN CURSO**, rama `fase-7-refactor`, **729 pruebas**. Hecho: la barra de la
-  nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media intensidad,
-  pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado, documentación
-  adelgazada y nota o diagrama nuevos desde el «+». **Falta:** verlo en el móvil (teclado, la L,
-  arrastre y el «+»).
+- **Fase 7 — Refactor.** ✅ Cerrada el 2026-10-12 con **729 pruebas**, probada en el móvil: la
+  barra de la nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media
+  intensidad, pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado,
+  documentación adelgazada y nota o diagrama nuevos desde el «+».
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: exportar/importar, pasar de Node 20 y el azul repetido en el manifiesto.
