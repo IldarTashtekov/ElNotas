@@ -127,7 +127,7 @@ Para cada sección, una nota nueva con el botón redondo **+** vale: nace vacía
 - **I2.** En esa ventana: cabecera con **◀ ▶ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
   Todo lo de B–G funciona igual.
 - **I3.** Renombrarla por el título renombra la nota (se ve en el General).
-- **I4.** Borrar esa nota desde el General (selección → 🗑 Borrar): su ventana **desaparece en la
+- **I4.** Borrar esa nota desde el General (selección → Borrar): su ventana **desaparece en la
   misma sesión**.
 
 ## J. Un «marcar» que no cambia nada no toca la pantalla *(escritorio, con `?depurar`)*

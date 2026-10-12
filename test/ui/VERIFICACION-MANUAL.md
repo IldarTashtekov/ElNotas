@@ -110,15 +110,15 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
   **toque corto** en una ficha no hace nada.
   *+ Contexto nuevo* en el selector crea «Nuevo contexto» y lo pone en esa ventana.
 - **C5.** *Borrar* un contexto **pregunta** («¿Borrar «X»? Sus notas seguirán en General.»).
-  La pregunta es una **hoja desde abajo** con un botón rojo «🗑 Borrar», no un diálogo del
+  La pregunta es una **hoja desde abajo** con un botón rojo «Borrar», no un diálogo del
   navegador. Con *Cancelar*, Escape o el atrás, no pasa nada y **se sigue en la configuración**.
-  Con «🗑 Borrar», se va el contexto **y su ventana**, y sus notas
+  Con «Borrar», se va el contexto **y su ventana**, y sus notas
   siguen en el General.
 - **C6.** **Recargar con la configuración abierta** deja en la ventana, no en la configuración.
-- **C7.** ⚠️ **Hazlo con datos que puedas perder.** Al final, en «Datos», **🗑 Borrar todo**
+- **C7.** ⚠️ **Hazlo con datos que puedas perder.** Al final, en «Datos», **Borrar todo**
   pregunta con la hoja **contando lo que se pierde** («¿Borrar 2 notas, 1 diagrama y 1
   contexto, y las ventanas? …»), con el foco en *Cancelar*. *Cancelar* no borra nada. Con
-  «🗑 Borrar todo», la página **se recarga en blanco**: sin notas, sin diagramas, sin contextos y
+  «Borrar todo», la página **se recarga en blanco**: sin notas, sin diagramas, sin contextos y
   con el General como única ventana. **Recargar otra vez**: sigue en blanco.
 
 ## D. Reordenar las ventanas arrastrando
@@ -156,7 +156,7 @@ Con dos o tres notas en Compra (el botón redondo **+**, varias veces):
 - **E8.** En un contexto la papelera dice **«Quitar»**, **no pregunta**, y las notas **siguen en el
   General**.
 - **E9.** En el General dice **«Borrar»** y **pregunta** con la hoja de abajo. Con *Cancelar*,
-  Escape o el atrás, se cierra **sólo la pregunta** y la selección sigue; con «🗑 Borrar», se
+  Escape o el atrás, se cierra **sólo la pregunta** y la selección sigue; con «Borrar», se
   borran de todas partes.
 - **E10.** *Mover a…* desde un contexto: el selector **no ofrece ni el General ni el contexto
   actual**; al elegir, las notas **salen de aquí y aparecen allí**. No pregunta.

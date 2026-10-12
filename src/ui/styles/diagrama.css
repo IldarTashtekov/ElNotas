@@ -52,7 +52,6 @@
 /* El aviso de *Conectar*, arriba y en medio del lienzo. */
 .aviso-conectar {
   background: var(--accent);
-  border-radius: 99px;
   color: var(--accent-ink);
   font-size: 0.9rem;
   font-weight: 600;
@@ -61,6 +60,7 @@
   padding: 0.35rem 0.9rem;
   pointer-events: none;
   position: absolute;
+  text-shadow: none;
   top: 0.75rem;
   transform: translateX(-50%);
   z-index: 1;
@@ -125,9 +125,7 @@
 /* ── Los pósits: su posición es su centro ── */
 .posit {
   background: var(--screen);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+  border: 1px solid var(--muted);
   cursor: default;
   font-size: 0.95rem;
   line-height: 1.35;
@@ -138,7 +136,7 @@
   white-space: pre-wrap;
   width: 8rem;
 
-  /* Un nodo-nota, con la misma raya azul que un diagrama en la lista. */
+  /* Un nodo-nota, con la misma raya gruesa que un diagrama en la lista. */
   &.nota {
     border-left: 4px solid var(--accent);
   }
@@ -147,7 +145,7 @@
     text-decoration: line-through;
   }
   &.levantado {
-    box-shadow: 0 8px 20px rgb(0 0 0 / 0.25);
+    border-color: var(--accent);
     cursor: grabbing;
   }
   /* El nodo del que sale la relación que se está tirando. */

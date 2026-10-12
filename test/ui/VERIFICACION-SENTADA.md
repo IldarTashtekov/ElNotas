@@ -123,8 +123,8 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
   **toque corto** en una ficha no hace nada. *+ Contexto nuevo* en el selector crea «Nuevo
   contexto» y lo pone en esa ventana.
 - **CTX-C5.** *Borrar* un contexto **pregunta** («¿Borrar «X»? Sus notas seguirán en General.») con
-  una **hoja desde abajo** y un botón rojo «🗑 Borrar», no con un diálogo del navegador. Con
-  *Cancelar*, Escape 💻 o el atrás, no pasa nada y **se sigue en la configuración**. Con «🗑 Borrar»
+  una **hoja desde abajo** y un botón rojo «Borrar», no con un diálogo del navegador. Con
+  *Cancelar*, Escape 💻 o el atrás, no pasa nada y **se sigue en la configuración**. Con «Borrar»
   se va el contexto **y su ventana**, y sus notas siguen en el General.
 - **CTX-C6.** **Recargar con la configuración abierta** deja en la ventana, no en la configuración.
 - *(CTX-C7, «Borrar todo», va al final: parte 8.)*
@@ -179,7 +179,7 @@ Con dos o tres notas en Compra (el botón redondo **+**, varias veces):
 - **CTX-E8.** En un contexto la papelera dice **«Quitar»**, **no pregunta**, y las notas **siguen
   en el General**.
 - **CTX-E9.** En el General dice **«Borrar»** y **pregunta** con la hoja de abajo. Con *Cancelar*,
-  Escape 💻 o el atrás se cierra **sólo la pregunta** y la selección sigue; con «🗑 Borrar», se
+  Escape 💻 o el atrás se cierra **sólo la pregunta** y la selección sigue; con «Borrar», se
   borran de todas partes.
 - **CTX-E10.** *Mover a…* desde un contexto: el selector **no ofrece ni el General ni el contexto
   actual**; al elegir, las notas **salen de aquí y aparecen allí**. No pregunta.
@@ -281,7 +281,7 @@ En el móvil, con el **borrar del teclado** (es también ED-H2).
 - **ED-I2.** En esa ventana: cabecera con **◀ ▶ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
   Todo lo de ED-B a ED-G funciona igual.
 - **ED-I3.** Renombrarla por el título renombra la nota: se ve en el General.
-- **ED-I4.** Borrar esa nota desde el General (selección → 🗑 Borrar): su ventana **desaparece en la
+- **ED-I4.** Borrar esa nota desde el General (selección → Borrar): su ventana **desaparece en la
   misma sesión**.
 
 ## 4. El lienzo
@@ -559,9 +559,9 @@ Va casi al final porque deja la pestaña sin guardar hasta recargar.
 ⚠️ **Borra todas las notas de ese sitio.** Por eso va lo último, y en cada sitio por separado: en
 el móvil borra las de la app instalada; en el escritorio, las de `localhost:8000`.
 
-- **CTX-C7.** En ⚙, al final, en «Datos», **🗑 Borrar todo** pregunta con la hoja **contando lo que
+- **CTX-C7.** En ⚙, al final, en «Datos», **Borrar todo** pregunta con la hoja **contando lo que
   se pierde** («¿Borrar 2 notas, 1 diagrama y 1 contexto, y las ventanas? …»), con el foco en
-  *Cancelar*. *Cancelar* no borra nada. Con «🗑 Borrar todo», la app **se recarga en blanco**: sin
+  *Cancelar*. *Cancelar* no borra nada. Con «Borrar todo», la app **se recarga en blanco**: sin
   notas, sin diagramas, sin contextos y con el General como única ventana. **Recargar otra vez**:
   sigue en blanco.
 

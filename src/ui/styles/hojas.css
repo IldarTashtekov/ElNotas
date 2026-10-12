@@ -1,24 +1,24 @@
 /*
  * Las hojas que suben desde abajo —añadir una ventana, las acciones de ⋮, la
- * pregunta antes de borrar— y el «+» verde de la última ventana, que abre una.
+ * pregunta antes de borrar— y el «+» de la última ventana, que abre una.
  */
 
 /* ── El «+» de la última ventana, en el sitio de ▶ ── */
 .flecha.agregar {
   align-items: center;
-  background: var(--green);
-  border-radius: 50%;
-  color: #fff;
+  background: var(--accent);
+  color: var(--sobre-color);
   display: inline-flex;
   font-size: 1.3rem;
   height: 2rem;
   justify-content: center;
   margin: 0 0.15rem;
   padding: 0;
+  text-shadow: none;
   width: 2rem;
 
   &:hover:not(:disabled) {
-    background: var(--green);
+    background: var(--accent);
     filter: brightness(1.1);
   }
   &:disabled {
@@ -30,7 +30,7 @@
 /* ── La hoja ── */
 .hoja-fondo {
   align-items: flex-end;
-  background: rgb(0 0 0 / 0.45);
+  background: var(--velo);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -40,8 +40,7 @@
 .hoja {
   animation: subir 0.18s ease-out;
   background: var(--screen);
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -6px 24px rgb(0 0 0 / 0.25);
+  border-top: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   max-height: 80dvh;
@@ -53,7 +52,6 @@
   &::before {
     align-self: center;
     background: var(--line);
-    border-radius: 2px;
     content: "";
     height: 4px;
     margin-bottom: 0.6rem;
@@ -74,13 +72,13 @@
   gap: 0.4rem;
 }
 .hoja-nuevo {
-  background: var(--green);
+  background: var(--accent);
   border: none;
-  border-radius: 8px;
-  color: #fff;
+  color: var(--sobre-color);
   cursor: pointer;
   font-weight: 600;
   padding: 0.55rem 0.9rem;
+  text-shadow: none;
   width: 100%;
 }
 /* La pregunta antes de borrar, con su botón rojo. */
@@ -92,11 +90,11 @@
 .hoja-peligro {
   background: var(--danger);
   border: none;
-  border-radius: 8px;
-  color: #fff;
+  color: var(--sobre-color);
   cursor: pointer;
   font-weight: 600;
   padding: 0.6rem 0.9rem;
+  text-shadow: none;
   width: 100%;
 }
 .hoja .selector button {

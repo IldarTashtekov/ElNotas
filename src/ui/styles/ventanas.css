@@ -16,16 +16,12 @@
 .flecha {
   background: none;
   border: none;
-  border-radius: 8px;
   color: var(--accent);
   cursor: pointer;
   font-size: 1.15rem;
   line-height: 1;
   padding: 0.55rem 0.65rem;
 
-  &[aria-label="Configuración"] {
-    color: var(--green);
-  }
   &:hover:not(:disabled) {
     background: var(--row);
   }
@@ -49,7 +45,6 @@
 input.titulo {
   background: var(--accent-soft);
   border: 1.5px solid var(--accent);
-  border-radius: 8px;
   outline: none;
   padding: 0.3rem 0.6rem;
   text-align: left;
@@ -72,7 +67,6 @@ input.titulo {
 .ajustes > li {
   background: var(--row);
   border: 1px solid var(--rowline);
-  border-radius: 10px;
   padding: 0.65rem 0.8rem;
 }
 .notas li {
@@ -94,14 +88,13 @@ input.titulo {
     outline-offset: 1px;
   }
 }
-/* Un diagrama se distingue de una nota por la raya azul de la izquierda. */
+/* Un diagrama se distingue de una nota por la raya gruesa de la izquierda. */
 .notas li.diagrama {
   border-left: 4px solid var(--accent);
 }
 /* En selección: un círculo en cada fila, y el tick en las elegidas. */
 .notas.seleccionando li::before {
   border: 1.5px solid var(--dim);
-  border-radius: 50%;
   content: "";
   flex: none;
   height: 1.05rem;
@@ -119,6 +112,7 @@ input.titulo {
   display: grid;
   font-size: 0.7rem;
   place-items: center;
+  text-shadow: none;
 }
 ul.ajustes > li {
   align-items: center;
@@ -137,8 +131,7 @@ ul.ajustes > li {
   & button {
     background: none;
     border: 1px solid var(--line);
-    border-radius: 99px;
-    color: var(--green);
+    color: var(--accent);
     cursor: pointer;
     padding: 0.4rem 1rem;
   }
@@ -146,8 +139,7 @@ ul.ajustes > li {
 .aviso {
   background: var(--row);
   border: 1px solid var(--line);
-  border-left: 4px solid #d08a00;
-  border-radius: 10px;
+  border-left: 4px solid var(--aviso);
   font-size: 0.9rem;
   margin-bottom: 0.75rem;
   padding: 0.25rem 1rem;
@@ -161,17 +153,16 @@ ul.ajustes > li {
 .aviso .recargar {
   background: var(--accent);
   border: none;
-  border-radius: 8px;
   color: var(--accent-ink);
   cursor: pointer;
   font-weight: 600;
   margin: 0 0 0.6rem;
   padding: 0.45rem 0.9rem;
+  text-shadow: none;
 }
 /* El de ficheros ilegibles flota arriba y se difumina solo. */
 .aviso-temporal {
   animation: bajar 0.25s ease-out;
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
   cursor: pointer;
   left: 50%;
   max-width: calc(min(40rem, 100vw) - 2rem);

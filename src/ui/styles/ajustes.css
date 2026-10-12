@@ -40,7 +40,6 @@ h2 {
   & button {
     background: var(--screen);
     border: 1px solid var(--rowline);
-    border-radius: 8px;
     cursor: pointer;
     padding: 0.4rem 0.75rem;
 
@@ -94,7 +93,6 @@ ul.ajustes .secundario {
 .borrar-todo {
   background: none;
   border: 1px solid var(--danger);
-  border-radius: 8px;
   color: var(--danger);
   cursor: pointer;
   font-weight: 600;
@@ -122,14 +120,13 @@ ul.ajustes .secundario {
 .ficha {
   background: var(--row);
   border: 1.5px solid var(--rowline);
-  border-radius: 12px;
   cursor: grab;
   display: flex;
   flex: none;
   flex-direction: column;
   height: 7.5rem;
   overflow: hidden;
-  padding: 0.9rem 0.45rem 0.2rem;
+  padding: 0.9rem 0.35rem 0.2rem;
   position: relative;
   transition: transform 0.15s ease;
   width: 4.25rem;
@@ -140,7 +137,6 @@ ul.ajustes .secundario {
   /* El altavoz de arriba, para que se lea como pantalla. */
   &::before {
     background: var(--rowline);
-    border-radius: 2px;
     content: "";
     height: 3px;
     left: 50%;
@@ -151,7 +147,8 @@ ul.ajustes .secundario {
   }
   & .nombre {
     flex: 1;
-    font-size: 0.75rem;
+    /* La monoespaciada es ancha: así cabe una palabra de ocho letras. */
+    font-size: 0.68rem;
     font-weight: 600;
     line-height: 1.25;
     min-height: 0;
@@ -162,7 +159,6 @@ ul.ajustes .secundario {
     align-self: flex-end;
     background: none;
     border: none;
-    border-radius: 6px;
     color: var(--muted);
     cursor: pointer;
     flex: none;
@@ -178,7 +174,6 @@ ul.ajustes .secundario {
   &.levantada {
     background: var(--accent-soft);
     border-color: var(--accent);
-    box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
     cursor: grabbing;
     position: relative;
     transition: none;
@@ -189,15 +184,15 @@ ul.ajustes .secundario {
   cursor: grabbing;
 }
 .ficha-mas {
-  background: var(--green);
+  background: var(--accent);
   border: none;
-  border-radius: 50%;
-  color: #fff;
+  color: var(--sobre-color);
   cursor: pointer;
   flex: none;
   font-size: 1.3rem;
   height: 2.1rem;
   line-height: 1;
+  text-shadow: none;
   width: 2.1rem;
 }
 /* Las tres acciones de ⋮, dentro de su hoja. */
@@ -209,7 +204,6 @@ ul.ajustes .secundario {
   & > button {
     background: var(--row);
     border: 1px solid var(--rowline);
-    border-radius: 8px;
     cursor: pointer;
     padding: 0.6rem 0.9rem;
     text-align: left;
@@ -219,9 +213,10 @@ ul.ajustes .secundario {
     }
   }
   & > .hoja-nuevo {
-    background: var(--green);
+    background: var(--accent);
     border: none;
-    color: #fff;
+    color: var(--sobre-color);
     text-align: center;
+    text-shadow: none;
   }
 }

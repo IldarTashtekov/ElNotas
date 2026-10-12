@@ -161,7 +161,7 @@ export const createNoteList = ({
       salir()
     }
     /* Sólo confirma la papelera del General: es la única que borra de verdad. */
-    if (trashDeletes(donde)) confirm(deleteQuestion(seleccionadas()), "🗑 Borrar", hacer)
+    if (trashDeletes(donde)) confirm(deleteQuestion(seleccionadas()), "Borrar", hacer)
     else hacer()
   }
 
@@ -294,7 +294,7 @@ export const createNoteList = ({
     if (!seleccionando || ventana === null) return
     cuenta.textContent =
       seleccion.size === 1 ? "1 seleccionada" : `${seleccion.size} seleccionadas`
-    papelera.textContent = trashDeletes(ventana) ? "🗑 Borrar" : "🗑 Quitar"
+    papelera.textContent = trashDeletes(ventana) ? "Borrar" : "Quitar"
     const estado: AppState = store.getState()
     const posibles: ReadonlyArray<Context> = moveTargets(estado, ventana)
     mover.disabled = posibles.length === 0

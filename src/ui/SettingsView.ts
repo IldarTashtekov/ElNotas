@@ -222,7 +222,7 @@ export const mountSettingsView = (
             /* El nombre se lee al pulsar: la fila sobrevive a los renombrados. */
             const nombre: string = store.getState().contexts[ctx.id]?.name ?? ctx.name
             /* Una de las dos únicas confirmaciones de la app: no tiene vuelta atrás. */
-            confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`, "🗑 Borrar", (): void => {
+            confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`, "Borrar", (): void => {
               useCases.deleteContext(ctx.id)
             })
           }, "secundario"),
@@ -252,9 +252,9 @@ export const mountSettingsView = (
   sinBorrar.className = "aviso"
   sinBorrar.setAttribute("role", "alert")
   sinBorrar.hidden = true
-  const borrarTodo: HTMLButtonElement = boton("🗑 Borrar todo", (): void => {
+  const borrarTodo: HTMLButtonElement = boton("Borrar todo", (): void => {
     /* La pregunta se cuenta al pulsar: dice lo que hay ahora. */
-    confirm(resetQuestion(store.getState()), "🗑 Borrar todo", (): void => {
+    confirm(resetQuestion(store.getState()), "Borrar todo", (): void => {
       sinBorrar.hidden = onResetAll()
     })
   }, "borrar-todo")
