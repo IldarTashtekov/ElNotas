@@ -2962,12 +2962,11 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
   Con la barra bastó `interactive-widget`, sin `visualViewport`. **Negrita, cursiva, tachado, subrayado y el texto más grande NO
   entran**, por decisión del usuario: van juntos, sin fase.
 
-- **Fase 8 — Aspecto de terminal. ✅ CERRADA el 2026-10-12**, por decisión del usuario y con
-  deuda, en la rama `fase-8-terminal`. Que la app parezca una terminal de fósforo de los 80:
+- **Fase 8 — Aspecto de terminal. ✅ CERRADA el 2026-10-12**, en la rama `fase-8-terminal`, **sin
+  deuda**: el usuario la revisó y la dio por hecha. Que la app parezca una terminal de fósforo de los 80:
   ámbar o verde sobre negro, letra monoespaciada, formas rectas y un efecto CRT suave. Casi todo
   CSS, más el fósforo a elegir en ⚙, el icono y la pantalla de carga (§9.13). **Sin dependencias
-  nuevas y sin tocar el core.** La deuda: su lista manual, sin pasar en el móvil, y el coste del
-  brillo al arrastrar nodos, sin medir.
+  nuevas y sin tocar el core.**
 
 ### 9.3 Las operaciones de contenido
 
@@ -3963,7 +3962,8 @@ necesita publicar un cambio.
 - **Medido:** el contraste pasa de 4,5 en todo el texto (la tinta, 10,9; el tenue, 6,6; el rojo,
   6,3); sólo `--dim` se queda en 2,6, y pinta lo desactivado. Arrastrar un nodo con 200 nodos y
   290 relaciones sigue en 4,2 ms de JavaScript por movimiento (4,4 en la Fase 7). **El pintado con
-  el brillo no se pudo medir**: con el panel del navegador oculto, los fotogramas se frenan. Si en
+  el brillo no se midió**: con el panel del navegador oculto, los fotogramas se frenan, y el
+  usuario no notó nada al revisarla. Si en
   el móvil va a tirones, el brillo se quita del lienzo.
 
 **La lista manual**, `test/ui/VERIFICACION-MANUAL-TERMINAL.md`: el aspecto, que los toques sigan

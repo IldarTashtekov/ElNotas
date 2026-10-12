@@ -302,11 +302,11 @@ documentación.
 **Fuera de esta fase, con disparador propio:** revisar los puertos cuando llegue su segundo uso
 real (carpeta, OPFS o Supabase). Se hace al construir ese adaptador.
 
-### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro ✅ CERRADA el 2026-10-12, con deuda
+### Fase 8 — Aspecto de terminal: fósforo ámbar sobre negro ✅ CERRADA el 2026-10-12
 
-Planificada, construida y **cerrada el 2026-10-12 por decisión del usuario, con 742 pruebas** y
-sin dependencias nuevas, en la rama `fase-8-terminal`. **La deuda:** la lista manual, sin pasar
-en el móvil (abajo, en *Pendiente de la Fase 8*). El diseño y sus porqués, en `ARCHITECTURE.md`
+Planificada, construida y **cerrada el 2026-10-12 con 742 pruebas**, sin dependencias nuevas y
+**sin deuda**, en la rama `fase-8-terminal`: el usuario la revisó y la dio por hecha, **sin
+anotar paso a paso** la lista manual. El diseño y sus porqués, en `ARCHITECTURE.md`
 §9.13. Commits clave: `d832ac1` (el ámbar), `d2214b2` (el verde a elegir), `1157c81` (el icono).
 
 **Qué es:** cambiar el aspecto de la app para que parezca una terminal de los 80, de las de
@@ -399,12 +399,12 @@ de documentación:
       `CLAUDE.md`, las **diecisiete fronteras** (con las dos de `LocalStoragePhosphor`) y el
       fósforo en `localStorage`, junto a las ventanas, entre lo que no viaja con las notas.
 
-#### Pendiente de la Fase 8 (la deuda)
+#### Para cerrarla
 
-- [ ] **Pasar `test/ui/VERIFICACION-MANUAL-TERMINAL.md`** en el ordenador y en el móvil, con la PWA
-      **publicada, desinstalada y reinstalada**: la pantalla de carga negra y el icono nuevo salen
-      del manifiesto. Sobre todo **G1** (los toques con la capa de barrido encima) y **G3**: si
-      arrastrar pósits va a tirones en el móvil, quitar el brillo del lienzo.
+- [x] **Revisarla** ✅ *(dada por hecha por el usuario el 2026-10-12, tras revisarla: «todo
+      aparentemente va bien»)*. La lista `test/ui/VERIFICACION-MANUAL-TERMINAL.md` no se anotó
+      paso a paso. Si algún día arrastrar pósits va a tirones en el móvil, el primer sospechoso es
+      el brillo del lienzo (G3).
 
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 

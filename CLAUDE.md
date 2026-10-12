@@ -215,9 +215,9 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
   barra de la nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media
   intensidad, pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado,
   documentación adelgazada y nota o diagrama nuevos desde el «+».
-- **Fase 8 — Aspecto de terminal.** ✅ Cerrada el 2026-10-12 por decisión del usuario, con **742
-  pruebas** y con deuda: **su lista manual, sin pasar en el móvil**, y el coste del brillo al
-  arrastrar, sin medir (§9.13). Fósforo ámbar o verde, icono nuevo y fuera el emoji de la papelera.
+- **Fase 8 — Aspecto de terminal.** ✅ Cerrada el 2026-10-12 con **742 pruebas**, sin deuda: el
+  usuario la revisó y la dio por hecha (§9.13). Fósforo ámbar o verde, letra monoespaciada, formas
+  rectas, CRT suave, icono nuevo y fuera el emoji de la papelera.
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar/importar, pasar de
