@@ -5,7 +5,7 @@
  * Hasta que se confirma no cambia nada; lo que dice va a la configuración.
  */
 
-import type { Clock, IdGenerator, Result } from "#core/index"
+import type { Clock, IdGenerator, Logger, Result } from "#core/index"
 import type { ImportPreparation, ImportSummary } from "#ui/index"
 import type { Backup, BackupProblem } from "./backup.js"
 import { readBackup } from "./backup.js"
@@ -17,6 +17,7 @@ export interface PrepareImportDeps {
   readonly almacen: Storage
   readonly clock: Clock
   readonly ids: IdGenerator
+  readonly logger: Logger
   /** Recarga la página: es al arrancar cuando se sustituye. */
   readonly reload: () => void
 }
@@ -41,7 +42,7 @@ const comoJson = (texto: string): unknown => {
 
 export const prepareImport = async (
   fichero: Blob,
-  { almacen, clock, ids, reload }: PrepareImportDeps,
+  { almacen, clock, ids, logger, reload }: PrepareImportDeps,
 ): Promise<ImportPreparation> => {
   const texto: string | null = await leer(fichero)
   if (texto === null) return { kind: "unreadable-file" }
@@ -51,7 +52,7 @@ export const prepareImport = async (
     return copia.error.kind === "newer-backup" ? { kind: "newer-backup" } : { kind: "not-a-backup" }
   }
 
-  const ensayo: Result<ImportSummary, BootError> = await rehearseImport(copia.value, { clock, ids })
+  const ensayo: Result<ImportSummary, BootError> = await rehearseImport(copia.value, { clock, ids, logger })
   if (!ensayo.ok) return { kind: "wont-boot", error: ensayo.error }
 
   return {

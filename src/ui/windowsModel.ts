@@ -6,7 +6,7 @@
  * recargar se vuelve a la ventana en la que se estaba.
  */
 
-import type { AppState, Result, StorageError, Store, Unsubscribe } from "#core/index"
+import type { AppState, Logger, Result, StorageError, Store, Unsubscribe } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import {
   DEFAULT_LAYOUT,
@@ -45,9 +45,10 @@ export interface WindowsModel {
 export interface WindowsModelDeps {
   readonly store: Store
   readonly persistence: WindowsPersistence
+  readonly logger: Logger
 }
 
-export const createWindowsModel = ({ store, persistence }: WindowsModelDeps): WindowsModel => {
+export const createWindowsModel = ({ store, persistence, logger }: WindowsModelDeps): WindowsModel => {
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer se empieza como la primera vez: sin la lista se pierde
      el orden de las ventanas, no ninguna nota. */
@@ -57,9 +58,13 @@ export const createWindowsModel = ({ store, persistence }: WindowsModelDeps): Wi
   let layout: WindowsLayout = guardWindows(inicial, store.getState())
   let listeners: ReadonlyArray<WindowsListener> = []
 
-  /* Un fallo al guardar se descarta a sabiendas: lo único que se pierde es el
-     orden de las ventanas. Avisar de fallos de guardado llega con `onError`. */
-  const guardar = (): void => void persistence.save(layout)
+  /* Un fallo al guardar no se avisa: lo único que se pierde es el orden de las
+     ventanas. Avisar de fallos de guardado llega con `onError`. Queda en la
+     consola. */
+  const guardar = (): void => {
+    const guardado: Result<void, StorageError> = persistence.save(layout)
+    if (!guardado.ok) logger.failure("no se guardaron las ventanas", guardado.error)
+  }
 
   const cambiar = (siguiente: WindowsLayout): void => {
     if (siguiente === layout) return

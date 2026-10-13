@@ -21,6 +21,7 @@ import { rehearseImport } from "#platform/web/rehearseImport"
 
 import type { FakeBlobStore } from "../../storage/file/FakeBlobStore"
 import { createFakeBlobStore } from "../../storage/file/FakeBlobStore"
+import { silentLogger } from "../../core/ports/FakeLogger"
 
 const reloj: Clock = { now: (): number => 1000 }
 
@@ -48,6 +49,7 @@ const sinEncuadres: FramingPersistence = {
 const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blobs: FakeBlobStore }> => {
   const blobs: FakeBlobStore = createFakeBlobStore()
   const arrancada: Result<App, BootError> = await boot({
+    logger: silentLogger,
     blobs,
     clock: reloj,
     ids: ids(),
@@ -86,7 +88,7 @@ const conFicheros = (backup: Backup, files: Readonly<Record<string, string>>): B
 
 test("una copia hecha por la app pasa el ensayo y dice qué trae", async (): Promise<void> => {
   const { backup } = await copiaDeVerdad()
-  assert.deepEqual(resumenDe(await rehearseImport(backup, { clock: reloj, ids: ids() })), {
+  assert.deepEqual(resumenDe(await rehearseImport(backup, { logger: silentLogger, clock: reloj, ids: ids() })), {
     notes: 2,
     diagrams: 1,
     contexts: 1,
@@ -97,7 +99,7 @@ test("una copia hecha por la app pasa el ensayo y dice qué trae", async (): Pro
 test("la copia de una app vacía pasa, sin nada dentro", async (): Promise<void> => {
   const { backup } = await copiaDeVerdad()
   const vacia: Backup = conFicheros(backup, {})
-  assert.deepEqual(resumenDe(await rehearseImport(vacia, { clock: reloj, ids: ids() })), {
+  assert.deepEqual(resumenDe(await rehearseImport(vacia, { logger: silentLogger, clock: reloj, ids: ids() })), {
     notes: 0,
     diagrams: 0,
     contexts: 0,
@@ -112,6 +114,7 @@ test("un formato más nuevo que la app se rechaza, sin arrancar", async (): Prom
     "manifest.json": JSON.stringify({ schemaVersion: CURRENT_SCHEMA_VERSION + 1 }),
   })
   const ensayo: Result<ImportSummary, BootError> = await rehearseImport(futura, {
+    logger: silentLogger,
     clock: reloj,
     ids: ids(),
   })
@@ -122,7 +125,7 @@ test("un formato más nuevo que la app se rechaza, sin arrancar", async (): Prom
 test("un fichero ilegible no impide importar: se cuenta y se salta", async (): Promise<void> => {
   const { backup } = await copiaDeVerdad()
   const conRota: Backup = conFicheros(backup, { ...backup.files, "notes/rota.json": "no es json" })
-  const resumen: ImportSummary = resumenDe(await rehearseImport(conRota, { clock: reloj, ids: ids() }))
+  const resumen: ImportSummary = resumenDe(await rehearseImport(conRota, { logger: silentLogger, clock: reloj, ids: ids() }))
   assert.equal(resumen.notes, 2)
   assert.equal(resumen.unreadable, 1)
 })
@@ -130,6 +133,6 @@ test("un fichero ilegible no impide importar: se cuenta y se salta", async (): P
 test("el ensayo no toca el almacén del que salió la copia", async (): Promise<void> => {
   const { backup, blobs } = await copiaDeVerdad()
   const antes: ReadonlyArray<string> = blobs.caminos()
-  await rehearseImport(conFicheros(backup, {}), { clock: reloj, ids: ids() })
+  await rehearseImport(conFicheros(backup, {}), { logger: silentLogger, clock: reloj, ids: ids() })
   assert.deepEqual(blobs.caminos(), antes)
 })

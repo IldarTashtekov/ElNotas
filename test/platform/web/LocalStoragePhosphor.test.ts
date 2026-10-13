@@ -18,6 +18,7 @@ import {
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
+import { silentLogger } from "../../core/ports/FakeLogger"
 
 const errorDe = <T>(r: Result<T, StorageError>): StorageError => {
   if (r.ok) assert.fail("tenía que fallar")
@@ -50,6 +51,7 @@ test("un setItem que lanza sale por Result, sin lanzar", (): void => {
 
 const ajuste = (almacen: FakeStorage): PhosphorSetting =>
   createPhosphorSetting({
+    logger: silentLogger,
     persistence: createLocalStoragePhosphor(almacen),
     apply: (_: Phosphor): void => {},
   })

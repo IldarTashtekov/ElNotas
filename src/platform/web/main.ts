@@ -31,6 +31,7 @@ import {
 } from "#ui/index"
 import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
+import { consoleLogger } from "./ConsoleLogger.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import { exportBackup } from "./exportBackup.js"
 import type { ImportAtBoot } from "./importStorage.js"
@@ -63,7 +64,9 @@ const versionPublicada = (): string | null =>
  * existe, y entonces no se pide.
  */
 const pedirPersistencia = (): void => {
-  void navigator.storage?.persist().catch((): boolean => false)
+  navigator.storage
+    ?.persist()
+    .catch((fallo: unknown): void => consoleLogger.failure("no se pudo pedir que no se borren los datos", fallo))
 }
 
 const mostrarFallo =(raiz: HTMLElement, mensaje: string): void => {
@@ -128,6 +131,7 @@ const iniciar = async (): Promise<void> => {
   /* El color, antes de arrancar: así lo que se pinte mientras tanto ya sale con él. */
   const phosphor: PhosphorSetting = createPhosphorSetting({
     persistence: createLocalStoragePhosphor(almacen),
+    logger: consoleLogger,
     apply: (elegido: Phosphor): void => {
       document.documentElement.dataset["phosphor"] = elegido
     },
@@ -145,6 +149,7 @@ const iniciar = async (): Promise<void> => {
     blobs,
     clock: systemClock,
     ids,
+    logger: consoleLogger,
     skipCorrupt: true,
     onError: (fallo: StorageError): void => avisarDeGuardado(fallo),
   })
@@ -162,10 +167,12 @@ const iniciar = async (): Promise<void> => {
   const windows: WindowsModel = createWindowsModel({
     store: app.store,
     persistence: createLocalStorageWindows(almacen),
+    logger: consoleLogger,
   })
   const framing: DiagramFraming = createDiagramFraming({
     store: app.store,
     persistence: createLocalStorageFraming(almacen),
+    logger: consoleLogger,
   })
   /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
   const backup: BackupActions = {
@@ -187,6 +194,7 @@ const iniciar = async (): Promise<void> => {
         almacen,
         clock: systemClock,
         ids,
+        logger: consoleLogger,
         reload: (): void => window.location.reload(),
       }),
   }
@@ -206,6 +214,7 @@ const iniciar = async (): Promise<void> => {
     },
     backup,
     version: versionPublicada(),
+    logger: consoleLogger,
   })
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)
@@ -213,15 +222,22 @@ const iniciar = async (): Promise<void> => {
   /* Lo pendiente se escribe al salir, y dónde se miraba el diagrama abierto. En
      el móvil `pagehide` no siempre llega, y pasar a segundo plano es la última
      ocasión segura. */
-  window.addEventListener("pagehide", (): void => {
+  const guardarAlSalir = (): void => {
     framing.save()
-    void app.flush()
-  })
+    /* Un fallo que no se arregla reintentando ya lo ha avisado `onError`; aquí,
+       con la página yéndose, sólo queda dejarlo en la consola. */
+    app
+      .flush()
+      .then((guardado: Result<void, StorageError>): void => {
+        if (!guardado.ok) consoleLogger.failure("no se guardó lo pendiente al salir", guardado.error)
+      })
+      .catch((fallo: unknown): void => consoleLogger.failure("falló guardar lo pendiente al salir", fallo))
+  }
+  window.addEventListener("pagehide", guardarAlSalir)
   document.addEventListener("visibilitychange", (): void => {
     if (document.visibilityState !== "hidden") return
-    framing.save()
-    void app.flush()
+    guardarAlSalir()
   })
 }
 
-void iniciar()
+iniciar().catch((fallo: unknown): void => consoleLogger.failure("falló el arranque", fallo))

@@ -119,6 +119,7 @@ export {
 /* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
 export type { Clock } from "./ports/Clock.js"
 export type { IdGenerator } from "./ports/IdGenerator.js"
+export type { Logger } from "./ports/Logger.js"
 /* …y los de persistencia, que implementa `storage/`. Su taxonomía de fallos
    —`StorageError`— sale más arriba, con el resto de entidades del dominio. */
 export type { Repository } from "./ports/Repository.js"

@@ -13,7 +13,14 @@ import { readFileSync } from "node:fs"
 import { relative, resolve } from "node:path"
 
 const CARPETAS = ["src/", "test/", "tools/"]
-const RAPIDOS = ["typecheck", "typecheck:core", "check:purity", "check:fronteras", "check:extensiones"]
+const RAPIDOS = [
+  "typecheck",
+  "typecheck:core",
+  "check:purity",
+  "check:fronteras",
+  "check:extensiones",
+  "check:descartes",
+]
 const LINEAS = 60
 
 const raiz = process.cwd()

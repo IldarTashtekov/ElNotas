@@ -10,6 +10,8 @@ import type { Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 import type { Phosphor, PhosphorPersistence, PhosphorSetting } from "#ui/index"
 import { DEFAULT_PHOSPHOR, createPhosphorSetting, parsePhosphor } from "#ui/index"
+import type { RecordingLogger } from "../core/ports/FakeLogger"
+import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 
 test("parsePhosphor reconoce los dos fósforos", (): void => {
   assert.equal(parsePhosphor("amber"), "amber")
@@ -40,6 +42,7 @@ const escenario = (leido: Result<unknown, StorageError>): Escenario => {
     },
   }
   const setting: PhosphorSetting = createPhosphorSetting({
+    logger: silentLogger,
     persistence,
     apply: (phosphor: Phosphor): void => {
       aplicados = [...aplicados, phosphor]
@@ -87,6 +90,7 @@ test("un fallo al guardar no impide el cambio", (): void => {
   const fallo: StorageError = { kind: "io", cause: new Error("lleno") }
   let aplicado: Phosphor | null = null
   const setting: PhosphorSetting = createPhosphorSetting({
+    logger: silentLogger,
     persistence: {
       load: (): Result<unknown, StorageError> => ok(null),
       save: (): Result<void, StorageError> => err(fallo),
@@ -98,4 +102,21 @@ test("un fallo al guardar no impide el cambio", (): void => {
   setting.set("green")
   assert.equal(setting.get(), "green")
   assert.equal(aplicado, "green")
+})
+
+test("un fallo al guardar queda en el registro, y un guardado bueno no", (): void => {
+  const registro: RecordingLogger = createRecordingLogger()
+  let falla: boolean = true
+  const setting: PhosphorSetting = createPhosphorSetting({
+    logger: registro.logger,
+    persistence: {
+      load: (): Result<unknown, StorageError> => ok(null),
+      save: (): Result<void, StorageError> => (falla ? err({ kind: "io", cause: "lleno" }) : ok(undefined)),
+    },
+    apply: (): void => undefined,
+  })
+  setting.set("green")
+  falla = false
+  setting.set("amber")
+  assert.deepEqual(registro.logged(), ["no se guardó el fósforo"])
 })

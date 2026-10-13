@@ -32,6 +32,8 @@ import { err, noteId, revision } from "#core/index"
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import type { Schedule } from "#storage/writeBehind"
 import { createWriteBehind } from "#storage/writeBehind"
+import type { RecordingLogger } from "../core/ports/FakeLogger"
+import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 
 /* ──────────────────────────── Utillaje de prueba ──────────────────────────── */
 
@@ -142,6 +144,7 @@ const montar = (initial: AppState = VACIO) => {
   const reloj = relojDeMentira()
   const contador = contando(createMemoryStorageAdapter())
   const wb = createWriteBehind({
+    logger: silentLogger,
     adapter: contador.adapter,
     initial,
     schedule: reloj.schedule,
@@ -312,6 +315,7 @@ const montarConFallo = (fallo: () => StorageError | null) => {
   const reloj = relojDeMentira()
   const almacen = fallandoAlEscribir(fallo)
   const wb = createWriteBehind({
+    logger: silentLogger,
     adapter: almacen.adapter,
     initial: VACIO,
     schedule: reloj.schedule,
@@ -413,6 +417,7 @@ const montarConAviso = (fallo: () => StorageError | null): ConAviso => {
   const almacen: ReturnType<typeof fallandoAlEscribir> = fallandoAlEscribir(fallo)
   let avisos: ReadonlyArray<StorageError> = []
   const wb: ReturnType<typeof createWriteBehind> = createWriteBehind({
+    logger: silentLogger,
     adapter: almacen.adapter,
     initial: VACIO,
     schedule: reloj.schedule,
@@ -454,6 +459,33 @@ test("onError avisa UNA sola vez: detenido, los flush siguientes no repiten el a
   assert.equal(s.avisos().length, 1)
 })
 
+test("un guardado automático que falla queda en el registro; uno pedido con flush, no", async (): Promise<void> => {
+  const reloj: ReturnType<typeof relojDeMentira> = relojDeMentira()
+  const almacen: ReturnType<typeof fallandoAlEscribir> = fallandoAlEscribir(
+    (): StorageError => ({ kind: "io", cause: "x" }),
+  )
+  const registro: RecordingLogger = createRecordingLogger()
+  const wb: ReturnType<typeof createWriteBehind> = createWriteBehind({
+    logger: registro.logger,
+    adapter: almacen.adapter,
+    initial: VACIO,
+    schedule: reloj.schedule,
+  })
+
+  /* El de flush lo recibe quien lo espera: no se registra. */
+  wb.onState(conNota(nota("Compra")))
+  errorDe(await wb.flush())
+  assert.deepEqual(registro.logged(), [])
+
+  /* El programado no lo espera nadie: se registra. */
+  wb.onState(conNota(nota("Compra del mes")))
+  reloj.correr()
+  await new Promise<void>((listo: () => void): void => {
+    setImmediate(listo)
+  })
+  assert.deepEqual(registro.logged(), ["falló un guardado programado"])
+})
+
 test("un fallo de io NO avisa: se reintenta, no se ha detenido nada", async (): Promise<void> => {
   const s: ConAviso = montarConAviso((): StorageError => ({ kind: "io", cause: "x" }))
 
@@ -476,6 +508,7 @@ test("si todo va bien, onError no se llama nunca", async (): Promise<void> => {
 test("un onError que lanza no tumba al escritor: el fallo sigue saliendo por flush", async (): Promise<void> => {
   const sinPermiso: StorageError = { kind: "permission-denied" }
   const wb: ReturnType<typeof createWriteBehind> = createWriteBehind({
+    logger: silentLogger,
     adapter: fallandoAlEscribir((): StorageError => sinPermiso).adapter,
     initial: VACIO,
     schedule: relojDeMentira().schedule,
@@ -501,6 +534,7 @@ const dosPestanas = (): {
     almacen,
     crear: (onError?: (fallo: StorageError) => void): ReturnType<typeof createWriteBehind> =>
       createWriteBehind({
+        logger: silentLogger,
         adapter: almacen,
         initial: conNota(nota("Compra")),
         schedule: (): (() => void) => (): void => undefined,
@@ -551,6 +585,7 @@ test("una tanda cortada por io a mitad: al reintentar, lo ya escrito NO da un st
     },
   }
   const wb = createWriteBehind({
+    logger: silentLogger,
     adapter,
     initial: VACIO,
     schedule: (): (() => void) => (): void => undefined,

@@ -5,7 +5,7 @@
  * Es de cada dispositivo: se guarda aparte de las notas y no viaja con ellas.
  */
 
-import type { Result, StorageError } from "#core/index"
+import type { Logger, Result, StorageError } from "#core/index"
 
 export type Phosphor = "amber" | "green"
 
@@ -44,11 +44,13 @@ export interface PhosphorSettingDeps {
   readonly persistence: PhosphorPersistence
   /** Lo pinta en pantalla. Se llama al crearlo y en cada cambio. */
   readonly apply: (phosphor: Phosphor) => void
+  readonly logger: Logger
 }
 
 export const createPhosphorSetting = ({
   persistence,
   apply,
+  logger,
 }: PhosphorSettingDeps): PhosphorSetting => {
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer, el de siempre: lo único que se pierde es un color. */
@@ -60,9 +62,10 @@ export const createPhosphorSetting = ({
       if (phosphor === actual) return
       actual = phosphor
       apply(actual)
-      /* Un fallo al guardar se descarta a sabiendas, como el de las ventanas: el
-         color se ve igual y sólo se pierde al recargar. */
-      void persistence.save(actual)
+      /* Un fallo al guardar no se avisa, como el de las ventanas: el color se
+         ve igual y sólo se pierde al recargar. Queda en la consola. */
+      const guardado: Result<void, StorageError> = persistence.save(actual)
+      if (!guardado.ok) logger.failure("no se guardó el fósforo", guardado.error)
     },
   }
 }

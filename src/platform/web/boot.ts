@@ -17,6 +17,7 @@ import type {
   Diagram,
   IdGenerator,
   ItemRef,
+  Logger,
   MigrationError,
   MigrationResult,
   Note,
@@ -43,6 +44,7 @@ export interface BootDeps {
   readonly blobs: BlobStore
   readonly clock: Clock
   readonly ids: IdGenerator
+  readonly logger: Logger
   /**
    * Si un fichero ilegible se salta —y la app arranca con el resto, diciendo
    * cuáles en `App.corrupt`— o impide arrancar. Por defecto, lo impide.
@@ -71,6 +73,7 @@ export const boot = async ({
   blobs,
   clock,
   ids,
+  logger,
   skipCorrupt = false,
   onError,
   delayMs,
@@ -140,6 +143,7 @@ export const boot = async ({
     delayMs,
     schedule,
     onError,
+    logger,
   })
   store.subscribe(writer.onState)
 

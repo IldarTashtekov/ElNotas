@@ -12,7 +12,7 @@
  * encima de todo, la hoja que pregunta antes de borrar.
  */
 
-import type { DiagramId, NoteId, StorageError, Store, UseCases } from "#core/index"
+import type { DiagramId, Logger, NoteId, Result, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
@@ -47,6 +47,7 @@ export interface AppDeps {
   readonly backup: BackupActions
   /** La versión publicada, para el pie de la configuración; `null` en desarrollo. */
   readonly version: string | null
+  readonly logger: Logger
 }
 
 /** Lo que la app ofrece a quien la monta. */
@@ -69,12 +70,13 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
       configuración no lleva `abierta`: al recargar no se vuelve a ella. */
   let capas: ReadonlyArray<{ readonly elemento: HTMLElement; readonly abierta: OpenLayer | null }> = []
 
-  /* Un fallo al guardar se descarta a sabiendas, como el de las ventanas: sólo se
-     pierde volver a lo abierto al recargar. */
+  /* Un fallo al guardar no se avisa, como el de las ventanas: sólo se pierde
+     volver a lo abierto al recargar. Queda en la consola. */
   const guardarAbiertas = (): void => {
-    void deps.openLayers.save(
+    const guardado: Result<void, StorageError> = deps.openLayers.save(
       capas.flatMap(({ abierta }): ReadonlyArray<OpenLayer> => (abierta === null ? [] : [abierta])),
     )
+    if (!guardado.ok) deps.logger.failure("no se guardó lo abierto encima", guardado.error)
   }
 
   /** Monta algo encima de lo que se ve. `montar` devuelve cómo se desmonta. */

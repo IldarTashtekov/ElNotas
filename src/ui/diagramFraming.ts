@@ -7,7 +7,7 @@
  * guarda aparte de las notas y no viaja con ellas.
  */
 
-import type { AppState, DiagramId, Result, StorageError, Store } from "#core/index"
+import type { AppState, DiagramId, Logger, Result, StorageError, Store } from "#core/index"
 import { diagramId } from "#core/index"
 import type { Framing } from "./viewport.js"
 import { clampScale } from "./viewport.js"
@@ -77,9 +77,10 @@ export interface DiagramFraming {
 export interface DiagramFramingDeps {
   readonly store: Store
   readonly persistence: FramingPersistence
+  readonly logger: Logger
 }
 
-export const createDiagramFraming = ({ store, persistence }: DiagramFramingDeps): DiagramFraming => {
+export const createDiagramFraming = ({ store, persistence, logger }: DiagramFramingDeps): DiagramFraming => {
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer, todos se abren centrados: sólo se pierde dónde se miraba. */
   let encuadres: Framings = guardFramings(
@@ -98,9 +99,10 @@ export const createDiagramFraming = ({ store, persistence }: DiagramFramingDeps)
       if (!sucio) return
       encuadres = guardFramings(encuadres, store.getState())
       sucio = false
-      /* Un fallo al guardar se descarta a sabiendas, como el de las ventanas: el
-         encuadre sigue en memoria y sólo se pierde al recargar. */
-      void persistence.save(encuadres)
+      /* Un fallo al guardar no se avisa, como el de las ventanas: el encuadre
+         sigue en memoria y sólo se pierde al recargar. Queda en la consola. */
+      const guardado: Result<void, StorageError> = persistence.save(encuadres)
+      if (!guardado.ok) logger.failure("no se guardó el encuadre", guardado.error)
     },
   }
 }

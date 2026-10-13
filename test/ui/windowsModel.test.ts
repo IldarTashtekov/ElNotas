@@ -20,6 +20,8 @@ import type {
 import { createStore, createUseCases, emptyAppState, err, ok } from "#core/index"
 import type { WindowRef, WindowsLayout, WindowsModel, WindowsPersistence } from "#ui/index"
 import { DEFAULT_LAYOUT, GENERAL, createWindowsModel } from "#ui/index"
+import type { RecordingLogger } from "../core/ports/FakeLogger"
+import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 
 interface Escenario {
   readonly store: Store
@@ -62,7 +64,7 @@ const ventana = (id: ContextId): WindowRef => ({ kind: "context", id })
 test("sin nada guardado, empieza con el General y no escribe", (): void => {
   const { store } = escenario()
   const guardado: AlmacenFalso = almacen()
-  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: guardado })
 
   assert.strictEqual(model.getLayout(), DEFAULT_LAYOUT)
   assert.deepEqual(guardado.guardados(), [])
@@ -71,6 +73,7 @@ test("sin nada guardado, empieza con el General y no escribe", (): void => {
 test("si no se puede leer, empieza con el General", (): void => {
   const { store } = escenario()
   const model: WindowsModel = createWindowsModel({
+    logger: silentLogger,
     store,
     persistence: almacen(err({ kind: "io", cause: "x" })),
   })
@@ -81,7 +84,7 @@ test("borrar un contexto que es ventana la quita EN LA MISMA SESIÓN, y se guard
   const { store, useCases, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const guardado: AlmacenFalso = almacen(ok({ windows: [ventana(casa), GENERAL], active: ventana(casa) }))
-  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: guardado })
 
   let avisos: number = 0
   model.subscribe((): void => {
@@ -98,7 +101,7 @@ test("un cambio que no toca ninguna ventana ni avisa ni escribe", (): void => {
   const { store, useCases, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const guardado: AlmacenFalso = almacen(ok({ windows: [ventana(casa)], active: ventana(casa) }))
-  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: guardado })
   const antes: WindowsLayout = model.getLayout()
 
   let avisos: number = 0
@@ -118,7 +121,7 @@ test("lo leído con referencias rotas se limpia también en el almacén al arran
   const guardado: AlmacenFalso = almacen(
     ok({ windows: [{ kind: "context", id: "borrado" }, GENERAL], active: GENERAL }),
   )
-  createWindowsModel({ store, persistence: guardado })
+  createWindowsModel({ logger: silentLogger, store, persistence: guardado })
 
   assert.deepEqual(guardado.guardados(), [{ windows: [GENERAL], active: GENERAL }])
 })
@@ -127,7 +130,7 @@ test("setActive cambia la activa y la guarda", (): void => {
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const guardado: AlmacenFalso = almacen(ok({ windows: [GENERAL, ventana(casa)], active: GENERAL }))
-  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: guardado })
 
   model.setActive(ventana(casa))
 
@@ -139,7 +142,7 @@ test("setActive a la que ya es activa, o a una que no está, no hace nada", (): 
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const guardado: AlmacenFalso = almacen(ok({ windows: [GENERAL], active: GENERAL }))
-  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: guardado })
   const antes: WindowsLayout = model.getLayout()
 
   model.setActive(GENERAL)
@@ -155,6 +158,7 @@ test("quitar la ventana activa pasa la activa a la primera que quede", (): void 
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const model: WindowsModel = createWindowsModel({
+    logger: silentLogger,
     store,
     persistence: almacen(ok({ windows: [GENERAL, ventana(casa)], active: ventana(casa) })),
   })
@@ -166,7 +170,7 @@ test("quitar la ventana activa pasa la activa a la primera que quede", (): void 
 
 test("quitar la última deja la pantalla vacía, y se permite", (): void => {
   const { store } = escenario()
-  const model: WindowsModel = createWindowsModel({ store, persistence: almacen() })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: almacen() })
   model.removeAt(0)
   assert.deepEqual(model.getLayout(), { windows: [], active: null })
 })
@@ -175,6 +179,7 @@ test("añadir la primera a una lista vacía la deja activa", (): void => {
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const model: WindowsModel = createWindowsModel({
+    logger: silentLogger,
     store,
     persistence: almacen(ok({ windows: [], active: null })),
   })
@@ -187,7 +192,7 @@ test("añadir la primera a una lista vacía la deja activa", (): void => {
 test("una edición que apunta a un contexto inexistente no hace nada, ni guarda", (): void => {
   const { store } = escenario()
   const guardado: AlmacenFalso = almacen()
-  const model: WindowsModel = createWindowsModel({ store, persistence: guardado })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: guardado })
   const antes: WindowsLayout = model.getLayout()
 
   model.insertAfter(0, { kind: "context", id: "no-existe" as ContextId })
@@ -199,7 +204,7 @@ test("una edición que apunta a un contexto inexistente no hace nada, ni guarda"
 test("con Casa en las dos ventanas, borrar Casa deja la pantalla vacía", (): void => {
   const { store, useCases, creado } = escenario()
   const casa: ContextId = creado("Casa")
-  const model: WindowsModel = createWindowsModel({ store, persistence: almacen() })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence: almacen() })
 
   model.insertAfter(0, ventana(casa))
   model.replaceAt(0, ventana(casa)) // el General pasa a enseñar Casa: dos ventanas de Casa
@@ -215,6 +220,7 @@ test("borrar desde el General una nota que es ventana la quita EN LA MISMA SESI�
   if (nota === null) assert.fail("la nota tenía que crearse")
   const deNota: WindowRef = { kind: "note", id: nota.id }
   const model: WindowsModel = createWindowsModel({
+    logger: silentLogger,
     store,
     persistence: almacen(ok({ windows: [GENERAL, deNota], active: deNota })),
   })
@@ -230,7 +236,7 @@ test("move reordena y lo guarda; al mismo sitio, ni avisa ni escribe", (): void 
   const casa: ContextId = creado("Casa")
   const obra: ContextId = creado("Obra")
   const persistence: AlmacenFalso = almacen(ok({ windows: [GENERAL, ventana(casa), ventana(obra)], active: GENERAL }))
-  const model: WindowsModel = createWindowsModel({ store, persistence })
+  const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence })
   const antes: WindowsLayout = model.getLayout()
 
   model.move(1, 1)
@@ -241,4 +247,22 @@ test("move reordena y lo guarda; al mismo sitio, ni avisa ni escribe", (): void 
   assert.deepEqual(model.getLayout().windows, [ventana(obra), GENERAL, ventana(casa)])
   assert.deepEqual(model.getLayout().active, GENERAL)
   assert.equal(persistence.guardados().length, 1)
+})
+
+test("un fallo al guardar la lista queda en el registro", (): void => {
+  const { store, creado } = escenario()
+  const casa: ContextId = creado("Casa")
+  const registro: RecordingLogger = createRecordingLogger()
+  const model: WindowsModel = createWindowsModel({
+    logger: registro.logger,
+    store,
+    persistence: {
+      load: (): Result<unknown, StorageError> => ok(null),
+      save: (): Result<void, StorageError> => err({ kind: "io", cause: "lleno" }),
+    },
+  })
+
+  model.insertAfter(0, ventana(casa))
+
+  assert.deepEqual(registro.logged(), ["no se guardaron las ventanas"])
 })

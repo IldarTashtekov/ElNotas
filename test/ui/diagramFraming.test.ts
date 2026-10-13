@@ -26,6 +26,8 @@ import {
   guardFramings,
   parseFramings,
 } from "#ui/index"
+import type { RecordingLogger } from "../core/ports/FakeLogger"
+import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 
 interface Escenario {
   readonly store: Store
@@ -112,7 +114,7 @@ test("si no sobra ninguno, devuelve LOS MISMOS encuadres", (): void => {
 
 test("sin nada guardado, ningún diagrama tiene encuadre", (): void => {
   const { store, creado } = escenario()
-  const encuadre: DiagramFraming = createDiagramFraming({ store, persistence: almacen() })
+  const encuadre: DiagramFraming = createDiagramFraming({ logger: silentLogger, store, persistence: almacen() })
   assert.equal(encuadre.get(creado("Plano")), null)
 })
 
@@ -120,6 +122,7 @@ test("lo guardado se lee al crearlo, sin los diagramas que ya no están", (): vo
   const { store, creado } = escenario()
   const plano: DiagramId = creado("Plano")
   const encuadre: DiagramFraming = createDiagramFraming({
+    logger: silentLogger,
     store,
     persistence: almacen(ok({ [plano]: { x: 5, y: 6, scale: 2 }, borrado: { x: 0, y: 0, scale: 1 } })),
   })
@@ -129,6 +132,7 @@ test("lo guardado se lee al crearlo, sin los diagramas que ya no están", (): vo
 test("si no se puede leer, se empieza sin encuadres y sin fallar", (): void => {
   const { store, creado } = escenario()
   const encuadre: DiagramFraming = createDiagramFraming({
+    logger: silentLogger,
     store,
     persistence: almacen(err({ kind: "io", cause: "bloqueado" })),
   })
@@ -139,7 +143,7 @@ test("apuntar un encuadre se ve en el momento, pero no escribe nada", (): void =
   const { store, creado } = escenario()
   const plano: DiagramId = creado("Plano")
   const persistence: AlmacenFalso = almacen()
-  const encuadre: DiagramFraming = createDiagramFraming({ store, persistence })
+  const encuadre: DiagramFraming = createDiagramFraming({ logger: silentLogger, store, persistence })
   encuadre.remember(plano, { x: 3, y: 4, scale: 2 })
   assert.deepEqual(encuadre.get(plano), { x: 3, y: 4, scale: 2 })
   assert.equal(persistence.guardados().length, 0)
@@ -149,7 +153,7 @@ test("guardar escribe lo apuntado una vez; sin nada nuevo, no vuelve a escribir"
   const { store, creado } = escenario()
   const plano: DiagramId = creado("Plano")
   const persistence: AlmacenFalso = almacen()
-  const encuadre: DiagramFraming = createDiagramFraming({ store, persistence })
+  const encuadre: DiagramFraming = createDiagramFraming({ logger: silentLogger, store, persistence })
   encuadre.save()
   assert.equal(persistence.guardados().length, 0)
   encuadre.remember(plano, { x: 3, y: 4, scale: 2 })
@@ -163,11 +167,28 @@ test("al guardar se olvida el encuadre de un diagrama borrado entre medias", ():
   const plano: DiagramId = creado("Plano")
   const otro: DiagramId = creado("Otro")
   const persistence: AlmacenFalso = almacen()
-  const encuadre: DiagramFraming = createDiagramFraming({ store, persistence })
+  const encuadre: DiagramFraming = createDiagramFraming({ logger: silentLogger, store, persistence })
   encuadre.remember(plano, { x: 1, y: 1, scale: 1 })
   encuadre.remember(otro, { x: 2, y: 2, scale: 2 })
   useCases.deleteDiagram(otro)
   encuadre.save()
   assert.deepEqual(persistence.guardados(), [{ [plano]: { x: 1, y: 1, scale: 1 } }])
   assert.equal(encuadre.get(otro), null)
+})
+
+test("un fallo al guardar queda en el registro", (): void => {
+  const { store, creado } = escenario()
+  const plano: DiagramId = creado("Plano")
+  const registro: RecordingLogger = createRecordingLogger()
+  const encuadre: DiagramFraming = createDiagramFraming({
+    logger: registro.logger,
+    store,
+    persistence: {
+      load: (): Result<unknown, StorageError> => ok(null),
+      save: (): Result<void, StorageError> => err({ kind: "io", cause: "lleno" }),
+    },
+  })
+  encuadre.remember(plano, { x: 1, y: 1, scale: 1 })
+  encuadre.save()
+  assert.deepEqual(registro.logged(), ["no se guardó el encuadre"])
 })

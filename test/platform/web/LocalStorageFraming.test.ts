@@ -14,6 +14,7 @@ import { FRAMING_KEY, createLocalStorageFraming } from "#platform/index"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
+import { silentLogger } from "../../core/ports/FakeLogger"
 
 const ENCUADRES: Framings = { d1: { x: 10, y: -20, scale: 2 } }
 
@@ -61,6 +62,7 @@ test("AL RECARGAR, el diagrama vuelve a donde se miraba", (): void => {
   if (plano === null) assert.fail("el diagrama tenía que crearse")
 
   const antes: DiagramFraming = createDiagramFraming({
+    logger: silentLogger,
     store,
     persistence: createLocalStorageFraming(almacen),
   })
@@ -68,6 +70,7 @@ test("AL RECARGAR, el diagrama vuelve a donde se miraba", (): void => {
   antes.save()
 
   const despues: DiagramFraming = createDiagramFraming({
+    logger: silentLogger,
     store,
     persistence: createLocalStorageFraming(almacen),
   })

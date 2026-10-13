@@ -29,6 +29,7 @@ import { boot } from "#platform/index"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
+import { silentLogger } from "../../core/ports/FakeLogger"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 
@@ -45,6 +46,7 @@ const nuncaSalta = (): Cancel => (): void => undefined
 /** Arranca como lo haría la página, sobre el almacén que se le pase. */
 const arrancar = (almacen: Storage, skipCorrupt: boolean = false): Promise<Result<App, BootError>> =>
   boot({
+    logger: silentLogger,
     blobs: createLocalStorageBlobStore(almacen),
     clock: reloj,
     ids: idsSecuenciales(),

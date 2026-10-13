@@ -501,10 +501,24 @@ guardianes nuevos.
 
 #### B. Guardianes nuevos
 
-- [ ] **B1. Las promesas sueltas.** Primero **medir** cuántas hay: 98 usos de `async`, `.then` o
-      `Promise` en `src/`. Una promesa que falla sin que nadie la espere se salta las fronteras sin
-      `throw` ni llamada visible. Luego, un guardián con el analizador de TypeScript, como
-      `check-fronteras`. **Se cierra** con 0 en `src/` y el guardián roto a propósito.
+- [x] **B1. Las promesas sueltas, y los `Result` sin mirar** ✅ *(aprobado por el usuario el
+      2026-10-13)*. Medido: ninguna suelta por descuido, pero 11 descartes con `void` (uno en
+      `writeBehind`, que no salía buscando texto), y `iniciar()` sin ninguna frontera: un fallo
+      inesperado al arrancar dejaba la pantalla en blanco sin rastro. **La regla, del usuario:** un
+      error se mira siempre, aunque sea para registrarlo; `void` no tapa nada y no hay lista de
+      excepciones. El guardián, `npm run check:descartes` (`tools/check-descartes.mjs`, con los
+      tipos de TypeScript, sólo `src/`: en `test/` cada `test(…)` es una promesa que nadie espera, a
+      propósito), falla si un `Result` o una promesa se tiran: sueltos, con `void`, un `await` que
+      tira el `Result`, un `.catch` sobre una promesa que trae un `Result`, o una función que
+      devuelve uno de los dos donde se espera una que no devuelve nada. **El registro, transversal:**
+      un sexto puerto, `Logger` (sólo el tipo, en `src/core/ports/`), con `consoleLogger` en
+      `platform/web/` (prefijo `ElNotas:`), obligatorio en las dependencias de quien registra.
+      **Reabre dos decisiones cerradas, con el visto bueno del usuario:** «los cinco puertos» y «la
+      Fase 9 no toca el core» (entra un tipo, sin lógica). Pasan a E1. `check` en verde con **845
+      pruebas** (4 nuevas: el fallo se registra en fósforo, ventanas, encuadre y guardado
+      programado; rota cada una a propósito, cae); el guardián, roto con nueve formas de descartar
+      y un control que pasa; en el panel, `localStorage` roto a propósito deja la línea en la
+      consola. Corre también en el hook de editar (unos 2 s).
 - [ ] **B2. Las roturas a propósito, automáticas.** Un script en `tools/` con una lista de roturas
       conocidas: quitar una guarda, devolver un objeto nuevo donde iba el mismo, sacar una llamada
       de su `try`. Aplica cada una, lanza las pruebas, exige que caiga alguna y lo deja todo como

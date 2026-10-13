@@ -46,6 +46,7 @@ import {
 
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import { createWriteBehind } from "#storage/writeBehind"
+import { silentLogger } from "../core/ports/FakeLogger"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 
@@ -134,6 +135,7 @@ const montar = async () => {
   })
 
   const wb = createWriteBehind({
+    logger: silentLogger,
     adapter,
     initial: ESTADO_INICIAL, // lo que ya está guardado
     schedule: () => () => undefined,

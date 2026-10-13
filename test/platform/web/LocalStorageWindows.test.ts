@@ -14,6 +14,7 @@ import { WINDOWS_KEY, createLocalStorageWindows } from "#platform/index"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
+import { silentLogger } from "../../core/ports/FakeLogger"
 
 const errorDe = <T>(r: Result<T, StorageError>): StorageError => {
   if (r.ok) assert.fail("tenía que fallar")
@@ -68,6 +69,7 @@ test("AL RECARGAR se vuelve a la ventana activa", (): void => {
   /* Una sesión deja la lista con dos ventanas y la de Casa activa… */
   createLocalStorageWindows(almacen).save({ windows: [GENERAL, ventanaCasa], active: GENERAL })
   const primera: WindowsModel = createWindowsModel({
+    logger: silentLogger,
     store,
     persistence: createLocalStorageWindows(almacen),
   })
@@ -75,6 +77,7 @@ test("AL RECARGAR se vuelve a la ventana activa", (): void => {
 
   /* …y la siguiente, con todo nuevo salvo el almacén, vuelve a ella. */
   const segunda: WindowsModel = createWindowsModel({
+    logger: silentLogger,
     store,
     persistence: createLocalStorageWindows(almacen),
   })

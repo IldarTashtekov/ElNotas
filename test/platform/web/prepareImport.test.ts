@@ -27,6 +27,7 @@ import { prepareImport } from "#platform/web/prepareImport"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
+import { silentLogger } from "../../core/ports/FakeLogger"
 
 const reloj: Clock = { now: (): number => 1000 }
 
@@ -39,6 +40,7 @@ const nuncaSalta = (): Cancel => (): void => undefined
 const copiaDeVerdad = async (): Promise<Backup> => {
   const origen: FakeStorage = createFakeStorage()
   const arrancada: Result<App, BootError> = await boot({
+    logger: silentLogger,
     blobs: createLocalStorageBlobStore(origen),
     clock: reloj,
     ids: ids(),
@@ -73,6 +75,7 @@ const escena = (): Escena => {
   return {
     almacen,
     deps: {
+      logger: silentLogger,
       almacen,
       clock: reloj,
       ids: ids(),

@@ -13,6 +13,7 @@
 
 import type {
   AppState,
+  Logger,
   Result,
   StateDiff,
   StorageAdapter,
@@ -46,6 +47,8 @@ export interface WriteBehindDeps {
    * nadie mira lo que devuelve el temporizador.
    */
   readonly onError?: OnError | undefined
+  /** Dónde queda un guardado programado que falla: nadie espera su resultado. */
+  readonly logger: Logger
 }
 
 export interface WriteBehind {
@@ -105,6 +108,7 @@ export const createWriteBehind = ({
   delayMs = DEMORA_POR_DEFECTO_MS,
   schedule = porSetTimeout,
   onError,
+  logger,
 }: WriteBehindDeps): WriteBehind => {
   /** El último estado que se sabe guardado. El diff siempre se hace contra éste. */
   let escrito: AppState = initial
@@ -240,6 +244,16 @@ export const createWriteBehind = ({
     return siguiente
   }
 
+  /* Lo que falla aquí ya se ha tratado dentro —se reintenta o se avisa con
+     `onError`—, pero nadie espera este guardado: queda en el registro. */
+  const guardarProgramado = (): void => {
+    flush()
+      .then((guardado: Result<void, StorageError>): void => {
+        if (!guardado.ok) logger.failure("falló un guardado programado", guardado.error)
+      })
+      .catch((fallo: unknown): void => logger.failure("se rompió un guardado programado", fallo))
+  }
+
   return {
     onState: (state: AppState): void => {
       /* El estado se recuerda pase lo que pase: aunque el escritor esté
@@ -249,7 +263,7 @@ export const createWriteBehind = ({
       /* Pero no se programa nada si está detenido: esa espera sólo serviría para
          volver a fallar igual. */
       cancelarEspera =
-        detenido !== null ? null : schedule((): void => void flush(), delayMs)
+        detenido !== null ? null : schedule(guardarProgramado, delayMs)
     },
     flush,
   }

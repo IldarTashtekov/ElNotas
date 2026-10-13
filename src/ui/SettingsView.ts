@@ -9,7 +9,7 @@
  * no sobrevive a salir y volver.
  */
 
-import type { AppState, Context, Unsubscribe, Store, UseCases } from "#core/index"
+import type { AppState, Context, Logger, Unsubscribe, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { BackupActions, ExportResult, ImportPreparation } from "./backup.js"
 import { elemento } from "./dom.js"
@@ -54,6 +54,7 @@ export interface SettingsViewDeps {
   readonly backup: BackupActions
   /** La versión publicada; `null` en desarrollo. */
   readonly version: string | null
+  readonly logger: Logger
 }
 
 const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonElement => {
@@ -78,6 +79,7 @@ export const mountSettingsView = (
     onResetAll,
     backup,
     version,
+    logger,
   }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
@@ -330,14 +332,15 @@ export const mountSettingsView = (
     estadoCopia.hidden = texto === null
   }
 
+  const exportarCopia = async (): Promise<void> => {
+    ocupar(true)
+    decir(null)
+    const resultado: ExportResult = await backup.exportAll()
+    ocupar(false)
+    decir(exportMessage(resultado))
+  }
   const exportar: HTMLButtonElement = boton("Exportar copia", (): void => {
-    void (async (): Promise<void> => {
-      ocupar(true)
-      decir(null)
-      const resultado: ExportResult = await backup.exportAll()
-      ocupar(false)
-      decir(exportMessage(resultado))
-    })()
+    exportarCopia().catch((fallo: unknown): void => logger.failure("falló exportar la copia", fallo))
   })
 
   /* El selector de ficheros del sistema, escondido: lo abre el botón. */
@@ -349,7 +352,9 @@ export const mountSettingsView = (
     const fichero: File | undefined = elegirFichero.files?.[0]
     /* Vacío otra vez: así elegir el mismo fichero dos veces vuelve a avisar. */
     elegirFichero.value = ""
-    if (fichero !== undefined) void importar(fichero)
+    if (fichero !== undefined) {
+      importar(fichero).catch((fallo: unknown): void => logger.failure("falló importar la copia", fallo))
+    }
   })
   const importarBoton: HTMLButtonElement = boton("Importar copia", (): void => elegirFichero.click())
 
