@@ -5,5 +5,8 @@ dist/
 # JS compilado de los tests (node --test no ejecuta TS directamente)
 tmp-test/
 
+# Lo que check:roturas deja roto si se corta a medias; lo restaura la siguiente pasada
+.rotura-en-curso.json
+
 # Overrides personales de Claude Code. Lo compartido va en .claude/settings.json
 .claude/settings.local.json

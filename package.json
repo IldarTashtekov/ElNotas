@@ -29,6 +29,7 @@
     "check:fronteras": "node tools/check-fronteras.mjs",
     "check:extensiones": "node tools/check-extensiones.mjs",
     "check:descartes": "node tools/check-descartes.mjs",
+    "check:roturas": "node tools/check-roturas.mjs",
     "build:web": "node tools/clean-dist.mjs && tsc -p tsconfig.web.json",
     "build:pages": "node tools/build-pages.mjs",
     "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm run check:fronteras && npm run check:extensiones && npm run check:descartes && npm test"

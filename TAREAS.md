@@ -519,11 +519,26 @@ guardianes nuevos.
       programado; rota cada una a propósito, cae); el guardián, roto con nueve formas de descartar
       y un control que pasa; en el panel, `localStorage` roto a propósito deja la línea en la
       consola. Corre también en el hook de editar (unos 2 s).
-- [ ] **B2. Las roturas a propósito, automáticas.** Un script en `tools/` con una lista de roturas
-      conocidas: quitar una guarda, devolver un objeto nuevo donde iba el mismo, sacar una llamada
-      de su `try`. Aplica cada una, lanza las pruebas, exige que caiga alguna y lo deja todo como
-      estaba, también si se interrumpe. **Se cierra** con la primera lista sacada de las roturas
-      que ya se hicieron a mano en las fases anteriores, todas cazadas.
+- [x] **B2. Las roturas a propósito, automáticas** ✅ *(aprobado por el usuario el 2026-10-13)*.
+      Pruebas de mutación (*mutation testing*) a mano, con una lista elegida y sin Stryker: no
+      prueban el código, prueban **que las pruebas sigan vigilando**, para el día en que una se
+      reescriba y deje de hacerlo sin que nada avise. `npm run check:roturas`
+      (`tools/check-roturas.mjs`) pasa la lista de `tools/roturas.mjs`: cada rotura cambia un texto
+      exacto de un fichero de verdad, lanza **sólo lo que tiene que cazarla** (las pruebas, y cuál
+      tiene que caer, o un guardián) y lo restaura. Falla si una **sobrevive**, si **caducó** (su
+      texto ya no está, o está dos veces), si cae otra prueba o si no compila. Lo roto se apunta
+      en `.rotura-en-curso.json` (en `.gitignore`): Ctrl-C restaura en el acto y para la pasada, y
+      tras un corte que no da tiempo (un `kill -9`) la pasada siguiente lo restaura antes de nada.
+      Con la base en rojo no empieza. **No va en `check` ni en los hooks** (unos 4 minutos): se
+      lanza al cerrar cada tarea que toque `src/` y al cerrar la fase; `-- fósforo` pasa sólo las
+      que lo lleven en el nombre. **La primera lista, 32, todas cazadas:** las apuntadas en las
+      fases anteriores (fósforo, ventanas, capas, encuadre, copia, el `LocalStorageBlobStore`, el
+      hueco del editor), la identidad y la integridad del core, `writeBehind`, los cuatro registros
+      de B1, la verja y los cuatro guardianes. Ocho salieron al principio «no compila»: con A3, una
+      rotura que deja una variable sin usar la caza el compilador antes que las pruebas; se
+      reescribieron para que compilen. El script, roto a propósito: una que sobrevive, dos
+      caducadas, otra prueba, la base en rojo, Ctrl-C y `kill -9`. **Pasa a E1:** la regla «cada
+      guarda se rompe a propósito» de `CLAUDE.md` se cumple ahora añadiendo su rotura a la lista.
 - [ ] **B3. `check:fronteras`, de lista negra a lista blanca.** Hoy avisa sólo de lo apuntado como
       «esto lanza», y una API nueva que nadie apuntó pasa sin aviso. Al revés, el olvido da un falso
       aviso y no un agujero. **Primero medir el ruido**; con eso se decide con el usuario si entra.
