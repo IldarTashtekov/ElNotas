@@ -1059,17 +1059,18 @@ error— porque es donde más se lee mal el reparto de §6.1:
 ```
 
 **Las fronteras del dibujo son todas las de la persistencia**, y con la de `runMigrations`
-suman diez. Con las veintiuna de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
-lista de ventanas), dos en `LocalStoragePhosphor` (leer y escribir el color de la pantalla, desde
+suman diez. Con las veintitrés de `platform/web/` —dos en `LocalStorageWindows` (leer y escribir la
+lista de ventanas), dos en `LocalStorageOpenLayers` (leer y escribir lo abierto encima de la
+ventana, desde el 2026-10-13, §7.4), dos en `LocalStoragePhosphor` (leer y escribir el color de la pantalla, desde
 la Fase 8, §9.13), dos en `LocalStorageFraming` (leer y escribir dónde se miraba cada diagrama,
 desde el 2026-10-13, §9.11), dos en `resetStorage` (`requestReset` apunta la marca de «Borrar todo» y
 `resetIfRequested` borra al arrancar, §7.4) una en `main.ts` (`window.localStorage` **lanza**
 si el navegador tiene bloqueados los datos del sitio) y doce de la copia de seguridad (dos en
 `exportBackup`, tres en `saveFile`, cinco en `importStorage` y dos en `prepareImport`, §9.14)— son
-**treinta y un `try` en todo el código de producción, y cero `throw`**, medido el 2026-10-13. Eran
+**treinta y tres `try` en todo el código de producción, y cero `throw`**, medido el 2026-10-13. Eran
 seis al cerrar la Fase 3, ocho tras tapar dos fugas (más abajo), la Fase 4 trajo cinco, «Borrar
-todo» dos, el fósforo dos, la copia de seguridad doce y los encuadres las dos últimas. Las dos de
-`LocalStorageFraming` no pidieron patrones nuevos en `check:fronteras`: ya vigilaba
+todo» dos, el fósforo dos, la copia de seguridad doce, los encuadres dos y lo abierto encima las
+dos últimas. Las de `LocalStorageFraming` y `LocalStorageOpenLayers` no pidieron patrones nuevos en `check:fronteras`: ya vigilaba
 `almacen.getItem`/`setItem`. `ui/` no
 tiene ninguno. Qué significa cada `kind` y por qué son esos
 cinco está en §6.5; que el `kind` llegue arriba intacto es lo que hace posible la última rama
@@ -2247,13 +2248,31 @@ configuración** —ni la vista diagrama ni una nota abierta desde él llevan �
 borrar el contexto de debajo mientras estás dentro de una nota suya. El caso raro no se trata: no
 se puede producir.
 
-**Al recargar, vuelves a la ventana en la que estabas; lo que hubiera encima, no.** *(Decidido el
-2026-09-27.)* La ventana activa se guarda junto a la lista de ventanas, en `localStorage` y fuera
+**Al recargar, vuelves a la ventana en la que estabas y a la nota o el diagrama que hubiera
+encima.** *(Lo de encima, desde el 2026-10-13; antes no se recordaba.)* La ventana activa se guarda junto a la lista de ventanas, en `localStorage` y fuera
 del core, y se guarda **como referencia a la ventana, no como índice**: un índice se desplaza en
 cuanto se quita una ventana anterior y acabaría señalando a otra. Si esa referencia ya no está
 entre las visibles —la guarda la ha quitado—, se abre **la primera**, o la pantalla vacía si no
-queda ninguna. Esa regla es parte de la guarda pura (abajo), con sus pruebas. La vista nota o la
-configuración que hubiera abierta **no se recuerda**: al recargar se ve la ventana.
+queda ninguna. Esa regla es parte de la guarda pura (abajo), con sus pruebas.
+
+Lo abierto encima se guarda aparte, en `elnotas:capas` (`src/ui/openLayers.ts` y
+`src/platform/web/LocalStorageOpenLayers.ts`): una lista de abajo arriba, `{ kind: "note" |
+"diagram", id }`, que se reescribe al abrir y al cerrar cada vista. Al arrancar se vuelve a abrir
+en orden, con su entrada en el historial, así que el atrás sigue funcionando. **El motivo:** el
+móvil cierra la app en segundo plano para liberar memoria, y al volver se recargaba en la ventana;
+si era un diagrama y estabas en una nota suya, te devolvía al diagrama. Tres reglas:
+
+- **La configuración no se recuerda**: volver a ella al reabrir sería más raro que útil.
+- **Sólo las formas que la app produce**: una nota, un diagrama, o un diagrama con una nota
+  encima. Lo leído se corta en la primera capa sin forma o fuera de sitio.
+- **Lo que ya no está se corta, y lo de encima con ello**: si borraron el diagrama, tampoco se
+  abre su nota. Ni avisa ni falla.
+
+**`localStorage` y no `sessionStorage`** *(elegido por el usuario, opción A)*: `sessionStorage` se
+vacía al cerrar la app desde las recientes, pero cuándo se vacía lo decide cada navegador y no
+estaba claro que sobreviviera a que el sistema la cierre, que es justo el caso. Con
+`localStorage` lo borra sólo la app, al salir de la vista. No viaja con las notas ni entra en la
+copia: es pasajero. «Borrar todo» e importar lo quitan, como toda clave `elnotas:`.
 
 **El atrás del navegador equivale a exit** en cualquier vista secundaria —incluido el gesto o
 botón atrás del sistema en Chrome para Android, que es web—, y en la vista ventanas no hace nada
@@ -3008,6 +3027,12 @@ caso, como prueba de la cadena de punta a punta, y el catálogo fue la Fase 2 (�
   (§7.5); el encuadre de cada diagrama se recuerda en el dispositivo y entra en la copia (§9.11,
   §9.14); y una mira para volver al origen (§9.11). Dos decisiones cerradas cambian con ellas: «en
   ⚙, sólo contexto» y «el encuadre no se recuerda». **Sin dependencias nuevas y sin tocar el core.**
+
+- **Volver a lo abierto al recargar, sin fase. ✅ 2026-10-13**, tras la `v1.0.0`, con **844 pruebas**
+  y validado por el usuario en el móvil.
+  Al recargar —o al volver después de que el móvil cerrara la app— se reabre la nota o el diagrama
+  que hubiera encima de la ventana (§7.4). Cambia la decisión «lo de encima no se recuerda». **Sin
+  dependencias nuevas y sin tocar el core.**
 
 ### 9.3 Las operaciones de contenido
 

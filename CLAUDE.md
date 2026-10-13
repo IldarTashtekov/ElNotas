@@ -82,9 +82,9 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
   ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§9.3).
-- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **treinta y una fronteras**:
+- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **treinta y tres fronteras**:
   cinco en `FileStorageAdapter` y en `importStorage`; tres en `saveFile`; dos en `LocalStorageWindows`,
-  `LocalStoragePhosphor`, `LocalStorageFraming`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
+  `LocalStorageOpenLayers`, `LocalStoragePhosphor`, `LocalStorageFraming`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
   `MemoryStorageAdapter`, cada `BlobStore`, `runMigrations` y `main.ts`. Por encima nada
   lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.5).
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Si algo de plataforma o un aviso
@@ -162,6 +162,8 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Cuatro vistas: ventanas, nota, diagrama, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
 - Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
+- Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
+  `sessionStorage`); ⚙ no. Lo que ya no está se corta, y lo de encima con ello (desde el 2026-10-13).
 - Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí y en
   ⚙ se crea contexto, nota o diagrama; los dos últimos, sin contexto (⚙, desde el 2026-10-13).
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
@@ -236,6 +238,8 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
   (§7.5), el encuadre del diagrama se recuerda y va en la copia, y la mira (§9.11, §9.14).
 - **Versión 1.** ✅ Cerrada el 2026-10-13 por el usuario, con **828 pruebas**: etiqueta `v1.0.0`.
   Pasan a la siguiente: **pasar la lista manual de la copia** y **las tres preguntas del editor**.
+- **Volver a lo abierto al recargar** (sin fase). 2026-10-13, tras la `v1.0.0`, con **844 pruebas**:
+  la nota o el diagrama de encima se reabren al volver a la app (§7.4). Validado por el usuario en el móvil.
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar a Markdown, pasar de

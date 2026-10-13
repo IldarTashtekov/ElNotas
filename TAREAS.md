@@ -533,6 +533,20 @@ en el ordenador.
   `framingOf`, importar, leer y exportar sin encuadres, `lastLine` y el nombre del contexto en
   `createAsWindow`. Listas manuales al día en `test/ui/`: `VERIFICACION-SENTADA.md` y las de
   editor, lienzo y copia.
+- [x] **Volver a lo abierto al recargar** ✅ *(pedido por el usuario el 2026-10-13, tras la
+      `v1.0.0`, y construido ese día con **844 pruebas** —eran 828—; validado por él en el móvil)*. Al volver a la app después
+      de que el móvil la cerrara en segundo plano, se veía la ventana —el diagrama— y no la nota
+      que había encima. Ahora se guarda lo abierto encima en `elnotas:capas` y se reabre al
+      arrancar, con su atrás; ⚙ no. **Cambia la decisión «lo de encima no se recuerda»**; el
+      usuario eligió `localStorage` (A) frente a `sessionStorage` (B). Dos fronteras nuevas: de 31
+      a 33. Sin dependencias y sin tocar el core. §7.4.
+
+  Cada guarda se verificó rompiéndola a propósito: el corte de lo borrado, la identidad, la forma
+  de las capas y la guarda al arrancar. Probado en el navegador del panel: nota sola, nota encima
+  de un diagrama y el atrás tras recargar.
+  - [x] **Pasar la lista manual**, `test/ui/VERIFICACION-MANUAL-CAPAS.md` ✅ *(validado por el
+        usuario en el móvil el 2026-10-13, por la red de casa y sin instalar)*. No se anotó paso
+        a paso; C6 con la app instalada, al probar la copia publicada.
 - [ ] **Exportar a Markdown**, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
       modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
       Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
@@ -657,7 +671,8 @@ que se cita.
 - **De la navegación y el alcance (Fase 4)** — ✅ el 2026-09-27: sin bundler de entrada; `onError`
   y la validación al final de Fase 4 · Notas; el aviso de `onError` sólo informa; las ventanas, en
   `localStorage` (opción C; la B, aparcada); la fase partida en Contextos y Notas; «Mover a…»
-  mueve; al recargar se recuerda sólo la ventana activa; una nota vacía se mantiene. §7.4, §8.6,
+  mueve; al recargar se recuerda sólo la ventana activa *(desde el 2026-10-13, también la nota o el
+  diagrama de encima: Sin fase asignada)*; una nota vacía se mantiene. §7.4, §8.6,
   §9.10.
 - **Al construir el editor y las ventanas (Fase 4)** — ✅ el 2026-09-29, una a una con el usuario:
   `.js` en los imports (opción A); el interruptor «☐ Casilla»; Intro en un texto crea con `after`;
