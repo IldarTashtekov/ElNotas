@@ -68,6 +68,7 @@ const PELIGROSAS = [
   [/\.text$/, "lectura del File"],
   [/\.showSaveFilePicker$/, "«Guardar como»: cancelar es un AbortError"],
   [/^URL\.createObjectURL$/, "la descarga"],
+  [/history\.(pushState|replaceState)$/, "el historial: SecurityError si se llama demasiado deprisa"],
   [/^flujo\.(write|close)$/, "escritura del fichero"],
   [/^paso\.migrate$/, "CÓDIGO AJENO: la migración"],
   [/^onCorrupt$/, "CÓDIGO AJENO: el aviso de un fichero ilegible"],

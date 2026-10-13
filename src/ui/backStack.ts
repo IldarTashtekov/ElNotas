@@ -8,6 +8,8 @@
  * modo selección, y el atrás cierra primero la de arriba.
  */
 
+import type { Logger } from "#core/index"
+
 export interface BackStack {
   /** Abre una capa encima de las que haya. */
   readonly open: (alCerrar: () => void) => void
@@ -19,8 +21,14 @@ export interface BackStack {
   readonly isOpen: () => boolean
 }
 
-export const createBackStack = (): BackStack => {
-  let capas: ReadonlyArray<() => void> = []
+interface Capa {
+  readonly cerrar: () => void
+  /** Si llegó a tener su entrada en el historial: sin ella, se cierra sin ir atrás. */
+  readonly conEntrada: boolean
+}
+
+export const createBackStack = (logger: Logger): BackStack => {
+  let capas: ReadonlyArray<Capa> = []
   /* Cuántas se han pedido cerrar y aún esperan su `popstate`. Entre el `back()`
      y su `popstate` pasa un rato, y un `back()` de más ahí se saldría de la
      página: se van pidiendo de una en una. */
@@ -30,21 +38,37 @@ export const createBackStack = (): BackStack => {
      al elegir en una hoja algo que abre otra capa. */
   let pendientes: ReadonlyArray<() => void> = []
 
+  /* `pushState` LANZA si se llama demasiado deprisa (Safari: unas cien veces cada
+     treinta segundos). La capa se abre igual; sólo el atrás no la cerrará. */
+  const entrarEnHistorial = (capa: number): boolean => {
+    try {
+      window.history.pushState({ capa }, "")
+      return true
+    } catch (fallo: unknown) {
+      logger.failure("no se pudo apuntar la capa en el historial", fallo)
+      return false
+    }
+  }
+
   const apuntar = (cerrar: () => void): void => {
-    capas = [...capas, cerrar]
-    window.history.pushState({ capa: capas.length }, "")
+    const conEntrada: boolean = entrarEnHistorial(capas.length + 1)
+    capas = [...capas, { cerrar, conEntrada }]
   }
 
   /* Al recargar, lo que hubiera abierto no se recuerda. */
-  window.history.replaceState(null, "")
+  try {
+    window.history.replaceState(null, "")
+  } catch (fallo: unknown) {
+    logger.failure("no se pudo limpiar la entrada del historial", fallo)
+  }
   window.addEventListener("popstate", (): void => {
-    const cerrar: (() => void) | undefined = capas[capas.length - 1]
-    if (cerrar === undefined) {
+    const arriba: Capa | undefined = capas[capas.length - 1]
+    if (arriba === undefined) {
       porCerrar = 0
     } else {
       capas = capas.slice(0, -1)
       porCerrar = Math.max(0, porCerrar - 1)
-      cerrar()
+      arriba.cerrar()
     }
     if (porCerrar > 0) {
       window.history.back()
@@ -61,6 +85,13 @@ export const createBackStack = (): BackStack => {
       else apuntar(cerrar)
     },
     close: (): void => {
+      /* Sin entrada que deshacer, ir atrás se saldría de la página: se cierra aquí. */
+      const arriba: Capa | undefined = capas[capas.length - 1]
+      if (porCerrar === 0 && arriba !== undefined && !arriba.conEntrada) {
+        capas = capas.slice(0, -1)
+        arriba.cerrar()
+        return
+      }
       if (porCerrar >= capas.length) return
       porCerrar += 1
       if (porCerrar === 1) window.history.back()

@@ -539,9 +539,18 @@ guardianes nuevos.
       reescribieron para que compilen. El script, roto a propósito: una que sobrevive, dos
       caducadas, otra prueba, la base en rojo, Ctrl-C y `kill -9`. **Pasa a E1:** la regla «cada
       guarda se rompe a propósito» de `CLAUDE.md` se cumple ahora añadiendo su rotura a la lista.
-- [ ] **B3. `check:fronteras`, de lista negra a lista blanca.** Hoy avisa sólo de lo apuntado como
-      «esto lanza», y una API nueva que nadie apuntó pasa sin aviso. Al revés, el olvido da un falso
-      aviso y no un agujero. **Primero medir el ruido**; con eso se decide con el usuario si entra.
+- [x] **B3. `check:fronteras`, de lista negra a lista blanca** — ✅ *medida y descartada por el
+      usuario el 2026-10-13: sería sobreingeniería.* En `src/` hay 2.273 llamadas: 1.467 a código
+      propio y **760 a 162 funciones de fuera sin `try`**, casi todas seguras (`Array`, `Map`,
+      `Math`, el DOM con valores fijos) o ya en la lista negra. Una lista blanca daría 162 avisos
+      para encontrar **un** agujero. **Lo que sí entró:** ese agujero, `history.pushState` y
+      `replaceState` en `src/ui/backStack.ts` (Safari lanza si se llaman unas cien veces en
+      treinta segundos), a la lista negra de `check:fronteras` y dentro de su `try`. Una capa que
+      no llega a tener su entrada se abre igual, lo registra el `Logger`, y se cierra sin ir atrás:
+      un `back()` sin entrada se saldría de la página. Dos fronteras más, dos roturas más en la
+      lista de B2, cazadas. Probado en el panel: con el historial normal, abrir una nota y
+      cerrarla con «atrás» y con «Salir»; con `pushState` fallando a propósito, la nota se abre,
+      deja la línea en la consola y «Salir» la cierra sin salir de la app. `check` en verde con 845.
 - [ ] **B4. Un guardián de `§`**, con el alcance que se decida arriba.
 - [ ] **B5. Exportaciones muertas:** lo que exporta un `index.ts` y nadie importa fuera de su
       módulo. **Se cierra** con 0 y el guardián roto a propósito.

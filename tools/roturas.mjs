@@ -261,6 +261,20 @@ export const ROTURAS = [
     caza: "check:fronteras",
   },
   {
+    nombre: "check:fronteras: pushState fuera de su try",
+    fichero: "src/ui/backStack.ts",
+    buscar: "    try {\n      window.history.pushState({ capa }, \"\")\n",
+    poner: "    window.history.pushState({ capa }, \"\")\n    try {\n",
+    caza: "check:fronteras",
+  },
+  {
+    nombre: "check:fronteras: replaceState fuera de su try",
+    fichero: "src/ui/backStack.ts",
+    buscar: "  try {\n    window.history.replaceState(null, \"\")\n",
+    poner: "  window.history.replaceState(null, \"\")\n  try {\n",
+    caza: "check:fronteras",
+  },
+  {
     nombre: "check:extensiones: un import relativo sin .js",
     fichero: "src/ui/App.ts",
     buscar: 'import { createBackStack } from "./backStack.js"',

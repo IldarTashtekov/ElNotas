@@ -57,7 +57,7 @@ export interface MountedApp {
 }
 
 export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
-  const back: BackStack = createBackStack()
+  const back: BackStack = createBackStack(deps.logger)
   /* Propia y no `window.confirm`: hay navegadores que la contestan «no» sin enseñarla. */
   const pregunta: Sheet = createSheet(back)
   const confirm: Confirm = createConfirm(pregunta)
