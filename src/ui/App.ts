@@ -5,7 +5,8 @@
  *
  * Lo de encima y el modo selección se cierran también con el atrás del
  * navegador —el del móvil incluido—, y comparten para eso un mismo historial.
- * Pasar de ventana no se apunta: el atrás no recorre ventanas.
+ * Pasar de ventana no se apunta: el atrás no recorre ventanas. La nota o el
+ * diagrama abiertos encima se guardan, y al recargar se vuelven a abrir.
  *
  * Arriba de todo, en cualquier vista, el aviso de que no se está guardando; y
  * encima de todo, la hoja que pregunta antes de borrar.
@@ -20,6 +21,8 @@ import { mountDiagramView } from "./DiagramView.js"
 import { elemento } from "./dom.js"
 import { describeStorageError } from "./messages.js"
 import { mountNoteView } from "./NoteView.js"
+import type { OpenLayer, OpenLayersPersistence } from "./openLayers.js"
+import { layersToRestore } from "./openLayers.js"
 import type { PhosphorSetting } from "./phosphor.js"
 import { mountSettingsView } from "./SettingsView.js"
 import type { Confirm, Sheet } from "./sheet.js"
@@ -35,6 +38,8 @@ export interface AppDeps {
   readonly framing: DiagramFraming
   /** El color de la pantalla, que se elige en la configuración. */
   readonly phosphor: PhosphorSetting
+  /** Dónde se guarda lo abierto encima de la ventana, para volver a ello al recargar. */
+  readonly openLayers: OpenLayersPersistence
   readonly corrupt: ReadonlyArray<StorageError>
   /** «Borrar todo» de la configuración: lo hace quien sabe dónde se guarda. */
   readonly onResetAll: () => boolean
@@ -60,15 +65,25 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   aviso.setAttribute("role", "alert")
   aviso.hidden = true
   const principal: HTMLElement = elemento("div")
-  /** Lo abierto encima de la ventana, de abajo arriba. Sólo se ve el último. */
-  let capas: ReadonlyArray<HTMLElement> = []
+  /** Lo abierto encima de la ventana, de abajo arriba. Sólo se ve el último. La
+      configuración no lleva `abierta`: al recargar no se vuelve a ella. */
+  let capas: ReadonlyArray<{ readonly elemento: HTMLElement; readonly abierta: OpenLayer | null }> = []
+
+  /* Un fallo al guardar se descarta a sabiendas, como el de las ventanas: sólo se
+     pierde volver a lo abierto al recargar. */
+  const guardarAbiertas = (): void => {
+    void deps.openLayers.save(
+      capas.flatMap(({ abierta }): ReadonlyArray<OpenLayer> => (abierta === null ? [] : [abierta])),
+    )
+  }
 
   /** Monta algo encima de lo que se ve. `montar` devuelve cómo se desmonta. */
-  const abrirEncima = (montar: (raiz: HTMLElement) => () => void): void => {
-    const debajo: HTMLElement = capas[capas.length - 1] ?? principal
+  const abrirEncima = (abierta: OpenLayer | null, montar: (raiz: HTMLElement) => () => void): void => {
+    const debajo: HTMLElement = capas[capas.length - 1]?.elemento ?? principal
     const capa: HTMLElement = elemento("div")
     raiz.insertBefore(capa, pregunta.element)
-    capas = [...capas, capa]
+    capas = [...capas, { elemento: capa, abierta }]
+    guardarAbiertas()
     /* Lo de debajo se esconde ANTES de montar: lo que se monte puede querer el
        foco, y en algo que va a esconderse no se quedaría. */
     debajo.hidden = true
@@ -77,23 +92,24 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     back.open((): void => {
       desmontar()
       capa.remove()
-      capas = capas.filter((c: HTMLElement): boolean => c !== capa)
+      capas = capas.filter(({ elemento }): boolean => elemento !== capa)
+      guardarAbiertas()
       debajo.hidden = false
     })
   }
 
   /* Salir ES ir atrás: así el exit y el atrás del navegador no pueden divergir. */
   const abrirConfiguracion = (): void =>
-    abrirEncima((raiz: HTMLElement): (() => void) =>
+    abrirEncima(null, (raiz: HTMLElement): (() => void) =>
       mountSettingsView(raiz, { ...deps, confirm, back, onExit: back.close }),
     )
   const abrirNota = (noteId: NoteId): void =>
-    abrirEncima((raiz: HTMLElement): (() => void) =>
+    abrirEncima({ kind: "note", id: noteId }, (raiz: HTMLElement): (() => void) =>
       mountNoteView(raiz, { ...deps, noteId, onExit: back.close }),
     )
 
   const abrirDiagrama = (diagramId: DiagramId, editName: boolean): void =>
-    abrirEncima((raiz: HTMLElement): (() => void) =>
+    abrirEncima({ kind: "diagram", id: diagramId }, (raiz: HTMLElement): (() => void) =>
       mountDiagramView(raiz, {
         ...deps,
         back,
@@ -113,6 +129,11 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     onOpenNote: abrirNota,
     onOpenDiagram: abrirDiagrama,
   })
+  /* Lo que había abierto antes de recargar, en el mismo orden, con su atrás. */
+  for (const abierta of layersToRestore(deps.openLayers, deps.store.getState())) {
+    if (abierta.kind === "note") abrirNota(abierta.id)
+    else abrirDiagrama(abierta.id, false)
+  }
 
   return {
     showSaveError: (fallo: StorageError): void => {

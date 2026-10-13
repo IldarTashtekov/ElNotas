@@ -2,8 +2,8 @@
  * La entrada de la app en el navegador: la carga `index.html`.
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
- * navegador, las notas, las ventanas, el color de la pantalla y dónde se miraba
- * cada diagrama en `localStorage`—,
+ * navegador, las notas, las ventanas, el color de la pantalla, dónde se miraba
+ * cada diagrama y lo abierto encima de la ventana en `localStorage`—,
  * termina una importación pedida, arranca y monta la app, con la copia de
  * seguridad en la configuración. Si no arranca, lo dice en pantalla en vez de
  * quedarse en blanco.
@@ -36,6 +36,7 @@ import { exportBackup } from "./exportBackup.js"
 import type { ImportAtBoot } from "./importStorage.js"
 import { cancelImport, importIfRequested } from "./importStorage.js"
 import { createLocalStorageFraming } from "./LocalStorageFraming.js"
+import { createLocalStorageOpenLayers } from "./LocalStorageOpenLayers.js"
 import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
 import { prepareImport } from "./prepareImport.js"
@@ -195,6 +196,7 @@ const iniciar = async (): Promise<void> => {
     windows,
     framing,
     phosphor,
+    openLayers: createLocalStorageOpenLayers(almacen),
     corrupt: app.corrupt,
     /* Sólo apunta el borrado y recarga: se hace al arrancar, antes de leer nada. */
     onResetAll: (): boolean => {

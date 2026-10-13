@@ -102,6 +102,13 @@ export {
   guardFramings,
   parseFramings,
 } from "./diagramFraming.js"
+export type { OpenLayer, OpenLayers, OpenLayersPersistence } from "./openLayers.js"
+export {
+  NO_LAYERS,
+  guardOpenLayers,
+  layersToRestore,
+  parseOpenLayers,
+} from "./openLayers.js"
 export { paintOrder, raise } from "./paintOrder.js"
 export type { Box, FanItem, RelationCurve } from "./relationGeometry.js"
 export {
