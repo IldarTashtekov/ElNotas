@@ -469,9 +469,14 @@ guardianes nuevos.
       `git branch *`, `git tag *`, `gh run *`, `git merge *`, `rm -r …/assets`), y unas 80 de un solo
       uso. El fichero no va en git (`.gitignore`). **Para que no vuelva a crecer:** a una orden de
       una sola vez, «permitir una vez», no «siempre».
-- [ ] **A2. Pasar de Node 20 a uno con soporte** (22 o 24). Es la tarea de *Sin fase asignada*,
-      que entra aquí: sin soporte desde abril de 2026. **Se cierra** como dice allí: casa y
-      `publicar.yml` con la misma versión, y `npm run check` en verde.
+- [x] **A2. Pasar de Node 20 a uno con soporte** ✅ *(2026-10-13; la 26, elegida por el usuario
+      porque `@types/node` ya era la 26)*. Es la tarea de *Sin fase asignada*. Casa y publicación
+      leen la versión del mismo fichero, `.nvmrc` (`node-version-file` en `publicar.yml`), y ya no
+      pueden separarse. `npm run check` en verde con la 26.11.1. **Salen 841 pruebas, no 844, y
+      no falta ninguna:** Node 20, con la carpeta `tmp-test/test`, ejecutaba todos los `.js` y
+      contaba como prueba cada uno de los tres ayudantes (`FakeStorage`, `storageContract`,
+      `FakeBlobStore`), que no tienen ninguna; Node 26 sólo ejecuta los `*.test.js`. Comparadas las
+      dos listas de nombres, ésa es la única diferencia. Los recuentos de antes llevaban tres de más.
 - [ ] **A3. Las opciones estrictas de TypeScript que ya se cumplen**, en `tsconfig.base.json`:
       `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noImplicitOverride`,
       `noPropertyAccessFromIndexSignature` y `exactOptionalPropertyTypes`. Medido el 2026-10-13:
@@ -688,7 +693,7 @@ en el ordenador.
       Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
       nuevas, sin ida y vuelta. Es otra cosa que la copia: el JSON es para restaurar, el Markdown
       para leer, y los diagramas no caben en él.
-- [ ] **Pasar de Node 20 a uno con soporte**, en casa y en la receta de publicación
+- [x] ✅ *Hecha en la Fase 9 (A2), con la 26.* **Pasar de Node 20 a uno con soporte**, en casa y en la receta de publicación
       (`.github/workflows/publicar.yml`) a la vez. Node 20 dejó de tener soporte en abril de 2026;
       la Fase 6 lo dejó en 20 porque es el de casa y con el que pasan las pruebas. Se cierra
       cuando las dos digan lo mismo y `npm run check` siga en verde.
