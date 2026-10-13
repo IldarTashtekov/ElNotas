@@ -488,9 +488,16 @@ guardianes nuevos.
       quien llama. `check` en verde con **841 pruebas**, y cada una de las seis rota a propósito en
       un fichero temporal (variable y parámetro sin usar, un camino sin `return`, un método
       redefinido sin `override`, `registro.clave`, `campo: undefined`): las seis tumban `check`.
-- [ ] **A4. Hooks en `.claude/settings.json`** *(lo aprueba el usuario)*. Al editar en `src/`,
-      `typecheck` y los guardianes; antes de que el agente dé algo por terminado, `npm run check`.
-      **Se cierra** cuando una rotura a propósito la caza el hook, sin que nadie lance nada.
+- [x] **A4. Hooks en `.claude/settings.json`** ✅ *(aprobado por el usuario el 2026-10-13)*. Cambia
+      quién se acuerda de pasar los checks, no los checks. Dos, en `.claude/hooks/checks.mjs`:
+      **al editar** un fichero de `src/`, `test/` o `tools/`, los tipos y los guardianes, sin las
+      pruebas (rápido, y una edición a medias puede tumbar pruebas sin que haya nada mal); **al
+      terminar el turno**, si hay cambios sin comitear en esas carpetas, `npm run check` entero,
+      que en rojo no deja terminar, sólo una vez seguida (para poder parar y preguntar sin bucle).
+      `checks.sh` los lanza con la Node de `.nvmrc` por `nvm-exec`: la sesión de Claude hereda el
+      PATH de cuando se abrió la app, y caía en la v12 de `/usr/bin`. **Probado de verdad:** una
+      variable sin usar escrita a propósito la cazó el hook al guardar y el de terminar no dejó
+      acabar el turno, sin que nadie lanzara nada.
 
 #### B. Guardianes nuevos
 
