@@ -16,6 +16,15 @@
     // que "ese id no existe" sea un error de compilación y no un fallo en runtime,
     // que con un estado normalizado por IDs es justo la clase de bug que importa.
     "noUncheckedIndexedAccess": true,
+    // Lo que sobra o falta, como error de compilación: variables y parámetros
+    // sin usar, caminos que no devuelven, `override` explícito, corchetes para
+    // las claves de un diccionario, y "puede faltar" distinto de "vale undefined".
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
 
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

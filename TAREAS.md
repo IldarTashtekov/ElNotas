@@ -477,12 +477,17 @@ guardianes nuevos.
       contaba como prueba cada uno de los tres ayudantes (`FakeStorage`, `storageContract`,
       `FakeBlobStore`), que no tienen ninguna; Node 26 sólo ejecuta los `*.test.js`. Comparadas las
       dos listas de nombres, ésa es la única diferencia. Los recuentos de antes llevaban tres de más.
-- [ ] **A3. Las opciones estrictas de TypeScript que ya se cumplen**, en `tsconfig.base.json`:
-      `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noImplicitOverride`,
-      `noPropertyAccessFromIndexSignature` y `exactOptionalPropertyTypes`. Medido el 2026-10-13:
-      **0 errores** en `src/` y `test/` con las cinco primeras; con la última, uno en
-      `src/platform/web/boot.ts:137` (pasa `delayMs: undefined` donde se espera «número o nada») y
-      dos en `test/`. **Se cierra** con `check` en verde y cada opción rota a propósito.
+- [x] **A3. Las opciones estrictas de TypeScript que ya se cumplen** ✅ *(aprobado por el usuario
+      el 2026-10-13)*, en `tsconfig.base.json`: `noUnusedLocals`, `noUnusedParameters`,
+      `noImplicitReturns`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature` y
+      `exactOptionalPropertyTypes`. Con Node 26, **0 errores** con las cinco primeras; con la
+      última, dos (no tres, como se midió antes): `src/platform/web/boot.ts:137` y
+      `test/storage/writeBehind.test.ts:503`, los dos por pasar a `createWriteBehind` un valor que
+      puede ser `undefined`. Arreglado en el sitio que lo recibe: los campos opcionales de
+      `WriteBehindDeps` se declaran `?: T | undefined` («puede faltar o venir vacío»), sin tocar a
+      quien llama. `check` en verde con **841 pruebas**, y cada una de las seis rota a propósito en
+      un fichero temporal (variable y parámetro sin usar, un camino sin `return`, un método
+      redefinido sin `override`, `registro.clave`, `campo: undefined`): las seis tumban `check`.
 - [ ] **A4. Hooks en `.claude/settings.json`** *(lo aprueba el usuario)*. Al editar en `src/`,
       `typecheck` y los guardianes; antes de que el agente dé algo por terminado, `npm run check`.
       **Se cierra** cuando una rotura a propósito la caza el hook, sin que nadie lance nada.

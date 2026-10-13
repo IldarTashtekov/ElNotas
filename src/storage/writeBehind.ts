@@ -38,14 +38,14 @@ export interface WriteBehindDeps {
    */
   readonly initial: AppState
   /** Milisegundos de calma antes de escribir. */
-  readonly delayMs?: number
-  readonly schedule?: Schedule
+  readonly delayMs?: number | undefined
+  readonly schedule?: Schedule | undefined
   /**
    * Se llama UNA vez, cuando un fallo que no se arregla reintentando detiene al
    * escritor. Sin esto, el fallo de un guardado automático no lo vería nadie:
    * nadie mira lo que devuelve el temporizador.
    */
-  readonly onError?: OnError
+  readonly onError?: OnError | undefined
 }
 
 export interface WriteBehind {
