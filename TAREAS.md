@@ -420,6 +420,140 @@ commit lleva la etiqueta **`v1.0.0`**, para poder volver a esta versión exacta.
 Lo demás pendiente (la nube, Markdown, Node 20, el negro repetido en el manifiesto, el formato de
 texto) sigue sin fase, como estaba.
 
+### Fase 9 — Meta-desarrollo: que trabajar con agentes sea más automático — PLANIFICADA el 2026-10-13
+
+**Sin empezar y sin una línea de código.** Decidida con el usuario el 2026-10-13, tras una revisión
+de la deuda, las fugas de memoria y lo que la arquitectura está dando al programar con agentes.
+
+**Qué es:** convertir en automático lo que hoy depende de que el agente se acuerde o de que el
+usuario mire. Es el patrón que ya funciona —la verja del core, los guardianes, `npm run check` que
+no pasa en falso—, llevado más lejos. **No cambia la app:** ni el DOM, ni el comportamiento, ni el
+core. Al cerrarla, `npm run check` da **las mismas pruebas que al empezar** más las de los
+guardianes nuevos.
+
+**Decidido con el usuario el 2026-10-13:**
+- **Sin dependencias nuevas.** Lo que haga falta, con Node, TypeScript (el analizador ya está) o
+  `.claude/`. Fuera ESLint entero, Biome, SonarQube y `jscpd`; CodeQL, no hasta que llegue la nube.
+- **Un análisis vale si falla el build, es rápido y casi nunca se equivoca.** Un aviso que se puede
+  ignorar, el agente lo ignora; un informe o un panel no sirven aquí.
+- **No se toca lo que da los frutos:** el core puro, la verja por `tsconfig`, `Result`, sin bundler
+  y `node:test`.
+- En una rama (`fase-9-meta`), una tarea cada vez, y cada guardián nuevo **roto a propósito**.
+- **Ni `push` a otras ramas ni *pull requests*:** el `deny` de `git push` sigue entero y publicar
+  sigue siendo cosa del usuario. Por eso C4 queda descartada.
+- **Las listas manuales las puede pasar Claude con el navegador del panel** *(el usuario,
+  2026-10-13: «parece muy útil para usar todo el poder de Claude en el testing, sin una herramienta
+  externa como Playwright»)*. Siguiendo los `VERIFICACION-*.md`, con una anotación por paso y
+  capturas en lo visual, sin pruebas guardadas en el repo ni nada instalado. No reabre «a mano, sin
+  runner de navegador»: la precisa. La PWA, el móvil de verdad y los diálogos del sistema siguen
+  siendo del usuario. Ver C5.
+- **`ARCHITECTURE.md` lleva lo estructural, no la bitácora** *(el usuario, 2026-10-13)*: decisiones
+  de estructura, paradigmas, convenciones, buenas prácticas y los porqués de los métodos que se
+  eligen; **no** cada decisión con su detalle y su fecha. **Entra en esta fase**, como E2, y va la
+  última: cuando los guardianes ya existan, el documento puede soltar las reglas que ellos vigilan.
+
+**Sin decidir, antes de la tarea que lo necesita:**
+- **El uso de agentes, en el aire** *(el usuario, 2026-10-13)*: hay que replantearlo en esta fase,
+  y por ahora no se decide nada. Lo dejan en suspenso C2 y C3, y la pregunta de quién edita las
+  fichas de `.claude/agents/` (hoy Claude no puede: `deny`).
+- **El alcance de la regla de `§`** (B4), que depende de E2. Hoy hay `§` en
+  `tools/check-fronteras.mjs` (2), `tools/require-tests.mjs` (1) y `test/ui/editor.test.ts` (1).
+  La propuesta: vigilar `src/`, `test/` y `tools/`, y señalar por fichero y título de sección.
+
+#### A. La base: casi gratis y con mucho efecto
+
+- [ ] **A1. Podar `.claude/settings.local.json`** *(lo aprueba el usuario: es `.claude/`)*. Fuera los
+      `allow` que ejecutan código cualquiera (`node -e '…'`, `python3 -`, `python3 -c '…'`), que se
+      saltan en la práctica los `deny` de `curl` y de instalar paquetes, y las órdenes de un solo
+      uso (`cp` de iconos, `rm -r …/assets`, `git -C … merge`…). **Se cierra** cuando no quede
+      ninguno de los dos tipos.
+- [ ] **A2. Pasar de Node 20 a uno con soporte** (22 o 24). Es la tarea de *Sin fase asignada*,
+      que entra aquí: sin soporte desde abril de 2026. **Se cierra** como dice allí: casa y
+      `publicar.yml` con la misma versión, y `npm run check` en verde.
+- [ ] **A3. Las opciones estrictas de TypeScript que ya se cumplen**, en `tsconfig.base.json`:
+      `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noImplicitOverride`,
+      `noPropertyAccessFromIndexSignature` y `exactOptionalPropertyTypes`. Medido el 2026-10-13:
+      **0 errores** en `src/` y `test/` con las cinco primeras; con la última, uno en
+      `src/platform/web/boot.ts:137` (pasa `delayMs: undefined` donde se espera «número o nada») y
+      dos en `test/`. **Se cierra** con `check` en verde y cada opción rota a propósito.
+- [ ] **A4. Hooks en `.claude/settings.json`** *(lo aprueba el usuario)*. Al editar en `src/`,
+      `typecheck` y los guardianes; antes de que el agente dé algo por terminado, `npm run check`.
+      **Se cierra** cuando una rotura a propósito la caza el hook, sin que nadie lance nada.
+
+#### B. Guardianes nuevos
+
+- [ ] **B1. Las promesas sueltas.** Primero **medir** cuántas hay: 98 usos de `async`, `.then` o
+      `Promise` en `src/`. Una promesa que falla sin que nadie la espere se salta las fronteras sin
+      `throw` ni llamada visible. Luego, un guardián con el analizador de TypeScript, como
+      `check-fronteras`. **Se cierra** con 0 en `src/` y el guardián roto a propósito.
+- [ ] **B2. Las roturas a propósito, automáticas.** Un script en `tools/` con una lista de roturas
+      conocidas: quitar una guarda, devolver un objeto nuevo donde iba el mismo, sacar una llamada
+      de su `try`. Aplica cada una, lanza las pruebas, exige que caiga alguna y lo deja todo como
+      estaba, también si se interrumpe. **Se cierra** con la primera lista sacada de las roturas
+      que ya se hicieron a mano en las fases anteriores, todas cazadas.
+- [ ] **B3. `check:fronteras`, de lista negra a lista blanca.** Hoy avisa sólo de lo apuntado como
+      «esto lanza», y una API nueva que nadie apuntó pasa sin aviso. Al revés, el olvido da un falso
+      aviso y no un agujero. **Primero medir el ruido**; con eso se decide con el usuario si entra.
+- [ ] **B4. Un guardián de `§`**, con el alcance que se decida arriba.
+- [ ] **B5. Exportaciones muertas:** lo que exporta un `index.ts` y nadie importa fuera de su
+      módulo. **Se cierra** con 0 y el guardián roto a propósito.
+
+#### C. La forma de trabajar
+
+- [ ] **C1. «Se cierra cuando…» comprobable en cada tarea** de este fichero: qué pruebas, qué
+      guardián o qué lista. Esta fase ya lo lleva; se añade a la disciplina de la cabecera.
+- [ ] **C2. El `frontend-agent`: definirlo o borrarlo** *(el usuario)*. Viene de la Fase 4.
+      **En el aire**, con el resto del uso de agentes.
+- [ ] **C3. Un agente que verifica** *(el usuario, en `.claude/agents/`)*: lee el cambio de otro,
+      rompe a propósito y pasa las listas, sin haber escrito el código. Quien escribe no se da el
+      visto bueno. **En el aire**, con el resto del uso de agentes.
+- ~~**C4. Ramas, *pull requests* y CI en los PR**~~ — ❌ **descartada por el usuario el
+      2026-10-13**: no hay `push` a otras ramas.
+- [ ] **C5. Pasar las listas manuales con el navegador del panel.** La primera, la parte de
+      ordenador de `test/ui/VERIFICACION-MANUAL-COPIA.md`, la deuda de la Versión 1; el usuario pasa
+      después sólo lo de móvil (I6–I7) y F, que en el panel no se puede provocar. La forma de
+      anotar la pasada (✅, ❌ o «no se puede aquí» por paso, con sus capturas) se escribe una vez
+      y vale para todas las listas. **Se cierra** con la lista de la copia anotada entera, entre
+      los dos, y la forma de pasarlas escrita.
+
+#### D. Limpieza
+
+- [ ] **D1. Los *worktrees* viejos** de `.claude/worktrees/` (`agitated-franklin-6f5c2d` y
+      `eloquent-mayer-7cf937`) y sus ramas `claude/*`, mirando antes que no tengan nada sin fusionar.
+- [ ] **D2. Las dos cabeceras que nombran a Drive** y el `--noResolve` caducado de
+      `test/storage/blobs/VERIFICACION-MANUAL.md` (de *Sin fase asignada*).
+- [ ] **D3. El `unobserve` de los pósits borrados** en `src/ui/DiagramCanvas.ts`: el lienzo los
+      sigue vigilando hasta cerrarse. Es la única fuga de memoria encontrada el 2026-10-13, leyendo
+      el código: diminuta y que se libera sola.
+
+#### E. Documentación, en un solo pase al cerrar
+
+**Al final de la fase, con todo lo demás hecho, y E2 antes que E1** *(el usuario, 2026-10-13)*:
+E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre lo que quede.
+
+- [ ] **E1. `CLAUDE.md` pasa a «lo que nada automático vigila»:** fuera los recuentos que se
+      desactualizan (pruebas, fronteras) y cada regla que gane guardián deja una línea con su
+      comando. Con los guardianes y las opciones nuevas en *Comandos*, la fase en *Plan por fases*,
+      y en *Decisiones cerradas* la precisión de «a mano»: también la puede pasar Claude en el panel.
+- [ ] **E2. `ARCHITECTURE.md`, de bitácora a arquitectura.** Hoy tiene 4.190 líneas, y la tercera
+      parte (§9, «El plan por fases, razonado», ~1.270) es crónica: fechas, mediciones, qué se
+      decidió cada día. **Se queda** lo de §1–§8: la filosofía, los conceptos, los patrones, los
+      puertos, el dominio, la persistencia, la UI y la infraestructura, sin las fechas ni los
+      «medido el…». **Lo duradero de §9** (el modelo de los diagramas, la estrategia de la PWA, la
+      copia) se muda a su capítulo. **La crónica no se muda a ningún sitio nuevo:** ya está en
+      `TAREAS.md` (las fases cerradas, resumidas) y en `git log`. Las referencias `§` de
+      `CLAUDE.md` (26) y `TAREAS.md` (54) se rehacen a la vez. **El criterio, por frase:** se queda
+      qué se eligió, por qué y qué se descartó, y las convenciones y los patrones; fuera cuándo se
+      decidió, quién, en qué fase, cómo era antes y las mediciones de un día, salvo que expliquen
+      un porqué que sigue en pie. **Un capítulo cada vez**, revisado por el usuario antes del
+      siguiente, y nada se borra sin estar en `git log`, en `TAREAS.md` o en el capítulo nuevo.
+      **Se cierra** sin una sección de fase ni una fecha de decisión en el documento, y sin `§`
+      rotos.
+
+**Fuera de esta fase:** las tres preguntas del editor, la otra deuda de la Versión 1, siguen como
+estaban. Partir
+`DiagramCanvas.ts` y renombrar `NoteList` son código de la app y se hacen al tocar esa zona.
+
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
 Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
