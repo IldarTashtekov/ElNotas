@@ -462,11 +462,13 @@ guardianes nuevos.
 
 #### A. La base: casi gratis y con mucho efecto
 
-- [ ] **A1. Podar `.claude/settings.local.json`** *(lo aprueba el usuario: es `.claude/`)*. Fuera los
-      `allow` que ejecutan código cualquiera (`node -e '…'`, `python3 -`, `python3 -c '…'`), que se
-      saltan en la práctica los `deny` de `curl` y de instalar paquetes, y las órdenes de un solo
-      uso (`cp` de iconos, `rm -r …/assets`, `git -C … merge`…). **Se cierra** cuando no quede
-      ninguno de los dos tipos.
+- [x] **A1. Podar `.claude/settings.local.json`** ✅ *(aprobado por el usuario el 2026-10-13)*. De
+      103 reglas a 8, todas de leer o consultar. Fuera las que ejecutan código cualquiera
+      (`node -e`, `python3 -c`, `python3 -`, `perl -0pi -e`), que se saltaban los `deny` de `curl` y
+      de instalar; las demasiado amplias (`git config *`, `npm version *`, `Read(//home/ubuntu/**)`,
+      `git branch *`, `git tag *`, `gh run *`, `git merge *`, `rm -r …/assets`), y unas 80 de un solo
+      uso. El fichero no va en git (`.gitignore`). **Para que no vuelva a crecer:** a una orden de
+      una sola vez, «permitir una vez», no «siempre».
 - [ ] **A2. Pasar de Node 20 a uno con soporte** (22 o 24). Es la tarea de *Sin fase asignada*,
       que entra aquí: sin soporte desde abril de 2026. **Se cierra** como dice allí: casa y
       `publicar.yml` con la misma versión, y `npm run check` en verde.
