@@ -282,6 +282,13 @@ export const ROTURAS = [
     caza: "check:extensiones",
   },
   {
+    nombre: "check:paragrafos: un documento señalado por número de sección",
+    fichero: "src/core/domain/Result.ts",
+    buscar: " * El fallo como valor de retorno, no como excepción.\n",
+    poner: " * El fallo como valor de retorno, no como excepción (ARCHITECTURE.md \u00a76.5).\n",
+    caza: "check:paragrafos",
+  },
+  {
     nombre: "check:descartes: un Result tirado con void",
     fichero: "src/ui/phosphor.ts",
     buscar: "const guardado: Result<void, StorageError> = persistence.save(actual)",

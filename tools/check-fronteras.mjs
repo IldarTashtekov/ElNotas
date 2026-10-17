@@ -1,6 +1,6 @@
 /**
  * Falla si una llamada a algo que LANZA puede llegar a escaparse por una firma
- * que promete `Result` (`ARCHITECTURE.md` §6.5, principio 2).
+ * que promete `Result` (`ARCHITECTURE.md`, «Los errores no se propagan», principio 2).
  *
  * ── Por qué existe, y por qué no vale con vigilar `throw` ──────────────────
  *
@@ -245,7 +245,7 @@ if (infracciones.length > 0) {
       "  lanza, y ésta la traduce a err(...).",
       "",
       "  Mételo en un try, pásalo por frontera()/transaction(), o llámalo desde",
-      "  un ayudante que ya esté cubierto. ARCHITECTURE.md §6.5.",
+      "  un ayudante que ya esté cubierto. ARCHITECTURE.md, «Los errores no se propagan».",
       "",
     ].join("\n"),
   )

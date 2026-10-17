@@ -1,5 +1,5 @@
 /**
- * El editor contra las tablas del teclado de `ARCHITECTURE.md` §7.3, fila a
+ * El editor contra las tablas del teclado de `ARCHITECTURE.md` («El teclado»), fila a
  * fila, sobre el `Store` y los casos de uso de verdad.
  *
  * El contenido se dibuja como texto para que cada prueba se lea sola:

@@ -20,6 +20,7 @@ const RAPIDOS = [
   "check:fronteras",
   "check:extensiones",
   "check:descartes",
+  "check:paragrafos",
 ]
 const LINEAS = 60
 

@@ -121,7 +121,8 @@
           anota(`${nombre} → ${comoTexto(await fn())}`)
         } catch (fallo) {
           /* Si algo aparece aquí, el almacén ha LANZADO, y eso es un fallo de
-             la verificación: el puerto promete que nada lanza (§6.5). */
+             la verificación: el puerto promete que nada lanza (`ARCHITECTURE.md`,
+             «Los errores no se propagan»). */
           anota(`⚠️ ¡HA LANZADO! ${nombre}: ${fallo}`)
         }
       }

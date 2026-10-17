@@ -456,9 +456,8 @@ guardianes nuevos.
 - **El uso de agentes, en el aire** *(el usuario, 2026-10-13)*: hay que replantearlo en esta fase,
   y por ahora no se decide nada. Lo dejan en suspenso C2 y C3, y la pregunta de quién edita las
   fichas de `.claude/agents/` (hoy Claude no puede: `deny`).
-- **El alcance de la regla de `§`** (B4), que depende de E2. Hoy hay `§` en
-  `tools/check-fronteras.mjs` (2), `tools/require-tests.mjs` (1) y `test/ui/editor.test.ts` (1).
-  La propuesta: vigilar `src/`, `test/` y `tools/`, y señalar por fichero y título de sección.
+- ~~**El alcance de la regla de `§`** (B4)~~ — decidido el 2026-10-14: el código de `src/`,
+  `test/`, `tools/` y `.claude/hooks/`, sin los `.md`. Ver B4.
 
 #### A. La base: casi gratis y con mucho efecto
 
@@ -551,7 +550,14 @@ guardianes nuevos.
       lista de B2, cazadas. Probado en el panel: con el historial normal, abrir una nota y
       cerrarla con «atrás» y con «Salir»; con `pushState` fallando a propósito, la nota se abre,
       deja la línea en la consola y «Salir» la cierra sin salir de la app. `check` en verde con 845.
-- [ ] **B4. Un guardián de `§`**, con el alcance que se decida arriba.
+- [x] **B4. Un guardián de `§`** ✅ *(aprobado por el usuario el 2026-10-14)*. `npm run
+      check:paragrafos` (`tools/check-paragrafos.mjs`, búsqueda de texto, milisegundos) falla si
+      un fichero de código (`.ts`, `.mjs`, `.js`, `.html`, `.css`, `.sh`) de `src/`, `test/`,
+      `tools/` o `.claude/hooks/` señala un documento por número de sección. Los `.md` no entran:
+      son documentos y se remiten entre ellos. Los que había, cinco y no cuatro (también un
+      comentario de `test/storage/blobs/verificacion-manual.html`), señalan ahora fichero y título
+      de sección; sus títulos, a revisar en E2. En `check`, en el hook de editar y con su rotura
+      en la lista de B2, cazada. `check` en verde con 845.
 - [ ] **B5. Exportaciones muertas:** lo que exporta un `index.ts` y nadie importa fuera de su
       módulo. **Se cierra** con 0 y el guardián roto a propósito.
 
@@ -599,7 +605,8 @@ E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre l
       «medido el…». **Lo duradero de §9** (el modelo de los diagramas, la estrategia de la PWA, la
       copia) se muda a su capítulo. **La crónica no se muda a ningún sitio nuevo:** ya está en
       `TAREAS.md` (las fases cerradas, resumidas) y en `git log`. Las referencias `§` de
-      `CLAUDE.md` (26) y `TAREAS.md` (54) se rehacen a la vez. **El criterio, por frase:** se queda
+      `CLAUDE.md` (26) y `TAREAS.md` (54) se rehacen a la vez, y también las 29 de las listas
+      manuales (`test/**/VERIFICACION-*.md`) y los cinco títulos que B4 dejó en el código. **El criterio, por frase:** se queda
       qué se eligió, por qué y qué se descartó, y las convenciones y los patrones; fuera cuándo se
       decidió, quién, en qué fase, cómo era antes y las mediciones de un día, salvo que expliquen
       un porqué que sigue en pie. **Un capítulo cada vez**, revisado por el usuario antes del

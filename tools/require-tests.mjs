@@ -4,7 +4,7 @@
  * Por qué existe: `node --test` sobre un directorio sin ficheros de prueba imprime
  * `1..0` y **sale con código 0**. Sin esta comprobación, `npm run check` pasaría
  * entero sin verificar ni un comportamiento, y "los tests pasan" no significaría
- * nada. Es el punto 6 del criterio de cierre de la Fase 1 (`ARCHITECTURE.md` §9.5).
+ * nada. Es el punto 6 del criterio de cierre de la Fase 1, en `ARCHITECTURE.md`.
  *
  * Mira la salida compilada y no las fuentes **a propósito**: así caza los dos
  * fallos, el de no haber escrito pruebas y el de haberlas escrito pero no llegar a
