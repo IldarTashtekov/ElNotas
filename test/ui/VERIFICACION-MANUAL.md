@@ -3,7 +3,7 @@
 **Esto no es documentación de diseño: es un procedimiento.** Vive en `test/ui/`, junto a las
 pruebas de la UI, porque es una prueba más de ese código; lo único que la distingue de sus
 vecinas es que la ejecutan unas manos y no `node --test`. Es el punto 8 del criterio de cierre
-de Fase 4 · Contextos (`ARCHITECTURE.md` §9.10).
+de Fase 4 · Contextos.
 
 ## Por qué existe
 

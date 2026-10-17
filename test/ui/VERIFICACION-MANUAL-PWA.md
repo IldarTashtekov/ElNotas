@@ -1,7 +1,7 @@
 # Verificación manual de la PWA (Fase 6)
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Pasarla en el
-móvil es el último punto del criterio de cierre de la Fase 6 (`ARCHITECTURE.md` §9.12).
+móvil es el último punto del criterio de cierre de la Fase 6.
 
 ## Por qué existe
 
@@ -110,15 +110,15 @@ para el móvil, la misma versión.
 ## Conocidos
 
 - **La primera apertura tras publicar enseña la versión anterior**; la nueva, en la siguiente.
-  Es la actualización en silencio, por decisión (§9.12).
+  Es la actualización en silencio, por decisión (§8.6).
 - ~~**La barra de estado es azul también en modo oscuro**~~: decisión del 2026-10-09, revisada en la Fase 7 (color del sistema).
 - **El icono puede salir con un borde o un fondo** en algunos lanzadores: no tiene versión
-  *maskable*, por decisión (§9.12).
+  *maskable*, por decisión.
 - **En MIUI, «Instalar» puede no poner el icono** si Chrome no tiene permiso para crear accesos
   directos: *Ajustes → Aplicaciones → Chrome → Otros permisos → «Accesos directos en la pantalla
   de inicio»*. Se anota si hizo falta.
 - **Lo escrito en la versión de la red de casa no aparece en la instalada**: es otro sitio, y el
-  usuario aceptó perderlo (§9.12).
+  usuario aceptó perderlo.
 
 ---
 

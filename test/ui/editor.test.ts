@@ -1,6 +1,6 @@
 /**
- * El editor contra las tablas del teclado de `ARCHITECTURE.md` («El teclado»), fila a
- * fila, sobre el `Store` y los casos de uso de verdad.
+ * El editor, tecla a tecla y caso a caso, sobre el `Store` y los casos de uso de
+ * verdad. Estas pruebas son la especificación del teclado.
  *
  * El contenido se dibuja como texto para que cada prueba se lea sola:
  *

@@ -6,7 +6,7 @@ nativos, más adelante (shells sobre la misma UI web).
 | Fichero | Qué hay dentro |
 |---|---|
 | **`CLAUDE.md`** (este) | las reglas. Corto a propósito: se carga en cada sesión |
-| **`ARCHITECTURE.md`** | el diseño, sus **por qués**, los conceptos explicados desde cero y el plan por fases razonado |
+| **`ARCHITECTURE.md`** | el fundamento: los principios con su **porqué** y los conceptos explicados desde cero |
 | **`TAREAS.md`** | qué está pendiente, qué está **sin decidir**, y las ideas aparcadas |
 
 ## Estado actual del repo
@@ -21,14 +21,14 @@ Publicada en `https://ildartashtekov.github.io/ElNotas/`.
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
 - **`src/storage/`** — los adaptadores de memoria y fichero, las dos de `BlobStore` y el `writeBehind`.
 - **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, encuadres, «Borrar todo», la copia de seguridad y `main.ts`.
-- **`src/ui/`** — vanilla: las cuatro vistas (§7.4), el editor y el lienzo de diagramas (§7.5).
+- **`src/ui/`** — vanilla: las cuatro vistas, el editor y el lienzo de diagramas.
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
 aparte (§6.3). En la UI, lo que decide es pura y con pruebas en Node; el DOM, **a mano** con las
 listas de `test/ui/`. La PWA, en un navegador de verdad: el del panel no registra *service workers*.
 
 **`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` falla si no hay ningún
-`*.test.js` en `tmp-test/test/`. **No lo «arregles» quitando el guardián** (§8.3).
+`*.test.js` en `tmp-test/test/`. **No lo «arregles» quitando el guardián** (§1).
 
 ⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y viendo caer las
 pruebas. Una prueba que no salta al romper lo que vigila no vale nada.
@@ -48,8 +48,8 @@ src/
 ├── ui/            # ← vanilla, con styles/ (un CSS por vista). Conoce sólo al core
 └── platform/      # ← web/: composición, el ÚNICO sitio que inyecta adaptadores. Nadie la importa
 test/              # LAS PRUEBAS: espejo de src/, partido por capa, con las listas manuales
-index.html         # carga dist/web/ con un importmap, sin bundler (§8.6)
-manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la PWA (§9.12)
+index.html         # carga dist/web/ con un importmap, sin bundler (§8.5)
+manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la PWA (§8.6)
 ```
 
 - **La verja de pureza es un error de compilación:** `src/core/tsconfig.json` va sin `DOM` y con
@@ -81,12 +81,12 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
 - **Tests de identidad con `assert.strictEqual`, nunca `deepEqual`.** Única excepción: la suite de
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
-  ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§9.3).
+  ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§5).
 - **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **treinta y tres fronteras**:
   cinco en `FileStorageAdapter` y en `importStorage`; tres en `saveFile`; dos en `LocalStorageWindows`,
   `LocalStorageOpenLayers`, `LocalStoragePhosphor`, `LocalStorageFraming`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
   `MemoryStorageAdapter`, cada `BlobStore`, `runMigrations` y `main.ts`. Por encima nada
-  lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.5).
+  lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.4).
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Si algo de plataforma o un aviso
   ajeno puede lanzar, va dentro de una frontera. Lo vigila `check:fronteras`, pero **su lista de lo
   peligroso se mantiene a mano**: una API nueva que lanza, se añade ahí.
@@ -107,13 +107,13 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
 - **Comentarios en castellano.** La **cabecera** responde a «¿para qué sirve esto?» en 3-8 líneas,
   sin porqués (van en `ARCHITECTURE.md`). **⚠️ NADA de `§` en el código**: si hay que señalar un
   documento, se nombra el fichero. **Los comentarios de dentro se quedan**; al quitar una cabecera,
-  lo que no esté en `ARCHITECTURE.md` se mueve allí (§8.6, al final).
+  si explicaba un principio que no está en `ARCHITECTURE.md`, se mueve allí (§8.7).
 
 ## Dependencias
 
 **Sólo cuando la fase las usa de verdad**, y fuera si dejan de usarse; antes, mirar si Node,
 TypeScript o el navegador ya lo hacen. Cero de runtime. Hoy: **`typescript` y `@types/node`** (tres
-paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (§8.4).
+paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (§8.5).
 
 ## Decisiones cerradas — no volver a proponer alternativas
 
@@ -158,7 +158,7 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - La forma de lo leído se valida en `storage/file/schema.ts`, no en el core.
 - «Borrar todo»: marca y recarga; `main.ts` borra al arrancar, sólo claves `elnotas:`.
 
-**Navegación y UI** (§7.4)
+**Navegación y UI**
 - Cuatro vistas: ventanas, nota, diagrama, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
 - Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
@@ -171,14 +171,14 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí.
 - Título sólo en la cabecera, renombrable. `defaultView`, sin uso.
 
-**Aspecto** (§9.13)
+**Aspecto**
 - Terminal de fósforo: **ámbar o verde, a elegir en ⚙**, ámbar por defecto; **siempre en oscuro**.
 - El fósforo es de cada dispositivo: `localStorage` (`elnotas:phosphor`), fuera del core, no viaja.
 - Letra monoespaciada **del sistema**, sin fuente propia. Sin esquinas redondeadas ni sombras.
 - Crear o confirmar, en **vídeo inverso**; el rojo, sólo para borrar y los errores. Sin verde «de crear».
 - CRT suave y **fijo**: brillo leve y líneas de barrido con `pointer-events: none`. Nada se mueve.
 
-**Diagramas** (§9.11)
+**Diagramas**
 - Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería.
 - El encuadre (punto del centro y escala, no píxeles) se recuerda **por dispositivo** en `elnotas:framing`,
   fuera del core; se escribe al soltar el lienzo, sin temporizador. La mira vuelve al origen a ×1.
@@ -188,7 +188,7 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Gestos «doble = menú o crear», sin selección; mover guarda al soltar. Móvil = escritorio.
 - Nota creada desde el lienzo: a todos los contextos del diagrama. Un diagrama se borra como una nota.
 
-**PWA** (§9.12)
+**PWA**
 - GitHub Pages, rutas relativas. Publica Actions al subir a `main`, sólo si `check` pasa.
 - Actualización en silencio (`skipWaiting`); un `import()` dinámico la reabriría.
 - `persist()` en `main.ts`, fuera de `try` y de `check:fronteras`.
@@ -197,14 +197,14 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Icono: el dibujo del «nerd» con lluvia de letras verdes sobre negro (Fase 8; era azul).
 - Barras del móvil con el color del sistema (Fase 7: fuera `theme-color` y `theme_color`).
 
-**Copia de seguridad** (§9.14)
+**Copia de seguridad**
 - Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el fósforo y los encuadres.
 - Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
 - «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
 - Antes de borrar, un ensayo con el mismo `boot`, en memoria. Luego en dos tiempos, como «Borrar todo».
 - A medias, la app no arranca: «Reintentar» o «Abandonar la importación».
 
-El porqué de cada una está en `ARCHITECTURE.md`. Si crees que una está mal, **plantéalo como
+Los principios de los que salen, en `ARCHITECTURE.md`. Si crees que una está mal, **plantéalo como
 duda**; no la cambies por tu cuenta.
 
 ## Fuera de alcance por ahora
@@ -220,26 +220,26 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 
 ## Plan por fases
 
-- **Fases 0 a 3** — andamiaje, dominio puro, acciones y persistencia, fichero local. ✅ (§9.5–§9.9)
-- **Fase 4 — UI, sólo web.** ✅ Con deuda: **las tres preguntas del editor, sin contestar** (§9.10).
-- **Fase 5 — Diagramas.** ✅ Modelo, Lienzo y Relaciones (§9.11).
-- **Fase 6 — PWA.** ✅ Publicada e instalada en el móvil del usuario (§9.12).
+- **Fases 0 a 3** — andamiaje, dominio puro, acciones y persistencia, fichero local. ✅
+- **Fase 4 — UI, sólo web.** ✅ Con deuda: **las tres preguntas del editor, sin contestar** (`TAREAS.md`).
+- **Fase 5 — Diagramas.** ✅ Modelo, Lienzo y Relaciones.
+- **Fase 6 — PWA.** ✅ Publicada e instalada en el móvil del usuario.
 - **Fase 7 — Refactor.** ✅ Cerrada el 2026-10-12 con **729 pruebas**, probada en el móvil: la
   barra de la nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media
   intensidad, pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado,
   documentación adelgazada y nota o diagrama nuevos desde el «+».
 - **Fase 8 — Aspecto de terminal.** ✅ Cerrada el 2026-10-12 con **742 pruebas**, sin deuda: el
-  usuario la revisó y la dio por hecha (§9.13). Fósforo ámbar o verde, letra monoespaciada, formas
+  usuario la revisó y la dio por hecha. Fósforo ámbar o verde, letra monoespaciada, formas
   rectas, CRT suave, icono nuevo y fuera el emoji de la papelera.
 - **Copia de seguridad** (sin fase). ✅ 2026-10-12 con **803 pruebas**, probada por el usuario:
-  exportar e importar en ⚙ → Datos (§9.14). Pendiente, pasar su lista manual.
+  exportar e importar en ⚙ → Datos. Pendiente, pasar su lista manual.
 - **Ventanas, hueco y encuadre** (sin fase). ✅ 2026-10-13 con **828 pruebas**, validado por el
-  usuario en el móvil: ⚙ crea lo mismo que el «+» (§7.4), tocar el hueco de la nota escribe al final
-  (§7.5), el encuadre del diagrama se recuerda y va en la copia, y la mira (§9.11, §9.14).
+  usuario en el móvil: ⚙ crea lo mismo que el «+», tocar el hueco de la nota escribe al final,
+  el encuadre del diagrama se recuerda y va en la copia, y la mira.
 - **Versión 1.** ✅ Cerrada el 2026-10-13 por el usuario, con **828 pruebas**: etiqueta `v1.0.0`.
   Pasan a la siguiente: **pasar la lista manual de la copia** y **las tres preguntas del editor**.
 - **Volver a lo abierto al recargar** (sin fase). 2026-10-13, tras la `v1.0.0`, con **844 pruebas**:
-  la nota o el diagrama de encima se reabren al volver a la app (§7.4). Validado por el usuario en el móvil.
+  la nota o el diagrama de encima se reabren al volver a la app. Validado por el usuario en el móvil.
 
 **Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
 de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar a Markdown, pasar de

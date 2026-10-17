@@ -4,8 +4,7 @@
  *
  * Cada acción ejecuta las operaciones que tocan —con los casos de uso, sin tocar
  * el core— y devuelve dónde queda el cursor y cómo queda el modo. No sabe nada
- * del DOM, así que se prueba en Node contra las tablas del teclado de
- * `ARCHITECTURE.md`.
+ * del DOM, así que se prueba en Node, tecla a tecla y caso a caso.
  */
 
 import type { Content, ContentId, Note, NoteId, Position, UseCases } from "#core/index"

@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como su vecina
 `VERIFICACION-MANUAL.md`, que cubre Fase 4 · Contextos. Es el punto 10 del criterio de cierre de
-Fase 4 · Notas (`ARCHITECTURE.md` §9.10).
+Fase 4 · Notas.
 
 ## Por qué existe
 
@@ -98,7 +98,7 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
   casilla (un texto no cabe ahí), pero el interruptor se apaga.
 - **E3.** Con la casilla apagada, **↳ Anidar** está desactivado.
 - **E4.** Armado, el botón **se ve distinto** (borde discontinuo) y dice «↳ Anidar armado». ¿Se entiende sin que
-  nadie lo explique? *(Anotar la impresión: es una de las tres preguntas de §9.10.)*
+  nadie lo explique? *(Anotar la impresión: es una de las tres preguntas del editor, en `TAREAS.md`.)*
 - **E5.** Pulsar los botones de la barra **no cambia de línea** el cursor, y en el móvil **no cierra
   el teclado**.
 
@@ -184,7 +184,7 @@ No son fallos; se anotan para que no se marquen como tales, y para decidir si se
 - **Varias «Nueva Nota» iguales** en el selector de ventanas: toda nota nace con ese nombre. Es
   decisión (2026-09-29): pueden existir notas con el mismo nombre; lo que las distingue es su id.
 - **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y
-  **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas de §9.10.
+  **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas del editor, en `TAREAS.md`.
 
 ---
 

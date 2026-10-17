@@ -1,6 +1,6 @@
 # Tareas de ElNotas
 
-Qué está pendiente, qué está sin decidir y qué ideas hay aparcadas. El diseño y sus por qués
+Qué está pendiente, qué está sin decidir y qué ideas hay aparcadas. Los principios y su porqué
 están en `ARCHITECTURE.md`; las reglas para agentes, en `CLAUDE.md`.
 
 **La disciplina que mantiene vivo este fichero: cada entrada tiene que ser cerrable.**
@@ -18,7 +18,9 @@ entera; en una decisión del usuario, dónde queda escrita. Lo vigila `npm run c
 
 Las fases cerradas van **resumidas**: qué se hizo, cuándo y con cuántas pruebas, la deuda si la
 hubo y sus commits clave, para leer la historia de corrido. La crónica entera está en `git log`;
-el diseño y sus porqués, en `ARCHITECTURE.md`.
+los principios, en `ARCHITECTURE.md`. **El `ARCHITECTURE.md` viejo**, el de antes de la Fase 9,
+contaba también el diseño de cada funcionalidad, y las entradas cerradas lo citaban por sección;
+está entero en `git show ef1bcc6:ARCHITECTURE.md`.
 
 ### Fase 1 — Dominio puro ✅ TERMINADA
 
@@ -26,7 +28,7 @@ El helper de copia por camino en sus dos primitivas (`updateContent.ts`, `update
 `Position` con sus tres casos, **las ocho operaciones de contenido** —fuera `indent`, `outdent` y
 `move`—, los puertos `Clock` e `IdGenerator` (sólo interfaces) y la rebanada vertical (`Action`,
 `reduce`, `Store`, `createUseCases`), que demostró que **tres despachos redundantes dan un solo
-aviso** y no tocan `updatedAt`. Cada fila de no-op de §9.3 con su prueba `strictEqual`, y cada
+aviso** y no tocan `updatedAt`. Cada caso no-op con su prueba `strictEqual`, y cada
 guarda rota a propósito. **Cerrada el 2026-09-06 con 99 pruebas**, sin deuda.
 Commits clave: `475a585` (`npm test` deja de poder pasar en falso), `286e297` (el helper),
 `26ed57a` (la primitiva B), `e1d5f7f` (`Position`), `9a6feee` (las ocho), `3a7f718` (los puertos),
@@ -52,7 +54,7 @@ Commits clave: `0591435` (memoria y write-behind), `0f128cb` (el catálogo de ac
 
 Primero **el paso 0**: `Result<T, E>` y las dos taxonomías de error en `domain/errors/`, los
 puertos y `runMigrations` sin un `throw`, y el write-behind con su estado *detenido*. Luego
-`FileStorageAdapter` (formato de §6.2), que pasa la suite de contratos **sin tocarla**, las dos
+`FileStorageAdapter`, que pasa la suite de contratos **sin tocarla**, las dos
 implementaciones de `BlobStore` y una **tercera pasada** del contrato sobre `LocalStorageBlobStore`
 real, que no estaba prevista y cazó fallos que las otras dos no veían. `check:fronteras` nació de
 dos fugas reales —`encodeURIComponent` en `caminoDe` y `paso.migrate()`— que un guardián de
@@ -110,7 +112,7 @@ fugas y `check:fronteras`), `f34d7c9` (la fase, TERMINADA).
 
 ### Fase 4 — UI ✅ CERRADA el 2026-10-03, por decisión del usuario y CON DEUDA
 
-Sólo web, partida en **Fase 4 · Contextos** y **Fase 4 · Notas** (§9.10). Nacen
+Sólo web, partida en **Fase 4 · Contextos** y **Fase 4 · Notas**. Nacen
 `src/platform/web/` —`SystemClock`, `CryptoIdGenerator`, `boot`, la lista de ventanas en
 `localStorage`— y `src/ui/`: las vistas ventanas, configuración y nota, la lista de un contexto
 con selección y «Mover a…», la reconciliación por clave, el editor con casillas anidadas y los
@@ -127,7 +129,7 @@ el DOM), `f406d96` (`onError`), `935de4e` (la escritura condicional), `38b583d` 
 
 **Pendiente de la fase:**
 
-- [ ] **Contestar por escrito las tres preguntas de §9.10** —`move`, `indent`/`outdent`, y si el
+- [ ] **Contestar por escrito las tres preguntas del editor** —`move`, `indent`/`outdent`, y si el
       disparador de anidar se entiende solo— **después de usar la app de verdad varios días**,
       no tras una demo. Un «no se aguanta» reabre la decisión correspondiente, y es un resultado
       válido. **Sin contestar el 2026-09-29, y sigue pendiente el 2026-10-03.**
@@ -141,18 +143,18 @@ el DOM), `f406d96` (`onError`), `935de4e` (la escritura condicional), `38b583d` 
       tercio. **En notas, unas 4.000** de un título y seis líneas (~1.300 caracteres cada una),
       estimado el 2026-10-11 en la Fase 7: el techo llega antes que la lentitud. **Y desde el 2026-09-27, un tercer cabo:** la lista de ventanas vive en su propia
       clave de `localStorage`, fuera del almacén, así que **no viaja con las notas** — un cambio
-      de destino o de dispositivo la pierde (`ARCHITECTURE.md` §7.4, riesgo aceptado). **Y desde
+      de destino o de dispositivo la pierde (riesgo aceptado). **Y desde
       el 2026-10-04, un cuarto:** «Borrar todo» vacía las claves `elnotas:` del `localStorage` de
       ese navegador; con otro destino —carpeta, OPFS— **hay que revisar qué borra** y si sigue
-      teniendo sentido en dos tiempos (`ARCHITECTURE.md` §7.4). **Y desde el 2026-10-08, un
+      teniendo sentido en dos tiempos. **Y desde el 2026-10-08, un
       quinto:** la app publicada de la Fase 6 es **otro origen** y empieza vacía; no ve lo escrito
-      en la red de casa. **El usuario acepta perderlo** (`ARCHITECTURE.md` §9.12).
+      en la red de casa. **El usuario acepta perderlo**.
       **Se cierra cuando** el usuario elige migrar o perder lo escrito, y queda en *Decisiones
       cerradas* de `CLAUDE.md`.
 
 ### Fase 5 — Diagramas ✅ CERRADA el 2026-10-08, con deuda; la deuda, saldada el 2026-10-10
 
-Un lienzo libre con nodos y relaciones, partido en tres (§9.11): **Modelo** —el `Diagram` nuevo,
+Un lienzo libre con nodos y relaciones, partido en tres: **Modelo** —el `Diagram` nuevo,
 las trece acciones (17 → 30), los catorce casos de uso y «Nota perdida» en `delete-note` y
 `hydrate`—, hecho el 2026-10-03 con **643 pruebas**; **Lienzo** —la vista diagrama, los pósits,
 los nodos-nota, «+ Diagrama» y el diagrama como ventana— con **693**; y **Relaciones** —las
@@ -184,7 +186,7 @@ todo»).
 
 Que ElNotas se instale en el móvil como una app —icono, pantalla completa, sin conexión,
 actualizándose sola—: manifiesto, iconos, *service worker* en `pwa/sw.js`, `npm run build:pages` y
-GitHub Pages publicada por GitHub Actions. Las doce decisiones y su porqué, en §9.12. Construida el
+GitHub Pages publicada por GitHub Actions. Las doce decisiones y su porqué, en el `ARCHITECTURE.md` viejo. Construida el
 2026-10-09 y publicada el 2026-10-10 en **https://ildartashtekov.github.io/ElNotas/**, con **725
 pruebas**, sin dependencias nuevas y sin tocar el core. El usuario la instaló, la probó y la dio
 por cerrada, **sin anotar paso a paso** su lista (`test/ui/VERIFICACION-MANUAL-PWA.md`); su bloque
@@ -207,7 +209,7 @@ documentación adelgazada), `1815a2b` (nota o diagrama desde el «+»).
 construyó por adelantado o puede no aguantar el volumen, **con números y no a ojo**. Si al medir
 algo resulta que no duele, el punto se cierra sin tocar código. **Negrita, cursiva, tachado y
 subrayado NO entran, ni el texto más grande**, por decisión del usuario: están juntos en *Sin
-fase asignada*. Reflejada en el plan de `CLAUDE.md` y de `ARCHITECTURE.md` (§9.2) en el pase de
+fase asignada*. Reflejada en el plan de `CLAUDE.md` y de `ARCHITECTURE.md` en el pase de
 documentación.
 
 #### Ajustes de diseño (pedidos por el usuario el 2026-10-11, con capturas del móvil)
@@ -313,8 +315,8 @@ real (carpeta, OPFS o Supabase). Se hace al construir ese adaptador.
 
 Planificada, construida y **cerrada el 2026-10-12 con 742 pruebas**, sin dependencias nuevas y
 **sin deuda**, en la rama `fase-8-terminal`: el usuario la revisó y la dio por hecha, **sin
-anotar paso a paso** la lista manual. El diseño y sus porqués, en `ARCHITECTURE.md`
-§9.13. Commits clave: `d832ac1` (el ámbar), `d2214b2` (el verde a elegir), `1157c81` (el icono).
+anotar paso a paso** la lista manual. El diseño y sus porqués, en
+el `ARCHITECTURE.md` viejo. Commits clave: `d832ac1` (el ámbar), `d2214b2` (el verde a elegir), `1157c81` (el icono).
 
 **Qué es:** cambiar el aspecto de la app para que parezca una terminal de los 80, de las de
 fósforo, a partir de capturas que trajo el usuario (Cool Retro Term y otras parecidas). **Sólo
@@ -398,7 +400,7 @@ de documentación:
 - [x] **6. Verificar.** `npm run check`: 742 de 742, y `build:pages` arma la copia. La lista
       manual, `test/ui/VERIFICACION-MANUAL-TERMINAL.md`: las cuatro vistas, las hojas, el lienzo y
       los gestos. **Sin pasar**: la fase se cerró antes, por decisión del usuario (abajo).
-- [x] **7. Documentación**, en un solo pase al cerrar: hecho el 2026-10-12, con §9.13 nueva en
+- [x] **7. Documentación**, en un solo pase al cerrar: hecho el 2026-10-12, con una sección nueva en
       `ARCHITECTURE.md` y las listas manuales al día. Lo que pedía: las decisiones reabiertas en `CLAUDE.md`
       (*Decisiones cerradas* y *Plan por fases*) y en `ARCHITECTURE.md`. También **las listas
       manuales viejas**, que aún hablan del «+ verde», el «+ azul», la «raya azul» y la «sombra
@@ -657,21 +659,33 @@ E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre l
       *Comandos* y las decisiones reabiertas en la fase (seis puertos, sin `platform/index.ts`, las
       fronteras, las roturas en su lista) están al día, y corregido «el del panel no registra
       *service workers*»: sí los registra (visto en C5).
-- [ ] **E2. `ARCHITECTURE.md`, de bitácora a arquitectura.** Hoy tiene 4.190 líneas, y la tercera
-      parte (§9, «El plan por fases, razonado», ~1.270) es crónica: fechas, mediciones, qué se
-      decidió cada día. **Se queda** lo de §1–§8: la filosofía, los conceptos, los patrones, los
-      puertos, el dominio, la persistencia, la UI y la infraestructura, sin las fechas ni los
-      «medido el…». **Lo duradero de §9** (el modelo de los diagramas, la estrategia de la PWA, la
-      copia) se muda a su capítulo. **La crónica no se muda a ningún sitio nuevo:** ya está en
-      `TAREAS.md` (las fases cerradas, resumidas) y en `git log`. Las referencias `§` de
-      `CLAUDE.md` (26) y `TAREAS.md` (54) se rehacen a la vez, y también las 29 de las listas
-      manuales (`test/**/VERIFICACION-*.md`) y los cinco títulos que B4 dejó en el código. **El criterio, por frase:** se queda
-      qué se eligió, por qué y qué se descartó, y las convenciones y los patrones; fuera cuándo se
-      decidió, quién, en qué fase, cómo era antes y las mediciones de un día, salvo que expliquen
-      un porqué que sigue en pie. **Un capítulo cada vez**, revisado por el usuario antes del
-      siguiente, y nada se borra sin estar en `git log`, en `TAREAS.md` o en el capítulo nuevo.
-      **Se cierra** sin una sección de fase ni una fecha de decisión en el documento, y sin `§`
-      rotos.
+- [x] **E2. `ARCHITECTURE.md`, de anatomía a fundamento** ✅ *(replanteada con el usuario y
+      dada por terminada el 2026-10-17)*. **Hecho:** de 4.215 a 754 líneas; `check:arquitectura`
+      en `check` y en el hook de editar un `.md`, con cuatro roturas cazadas (43 en la lista);
+      las referencias `§` rehechas a mano, también las que no salían rotas pero ya apuntaban a otra
+      cosa; el documento viejo, en `git show ef1bcc6:ARCHITECTURE.md`. **El informe:** casi todas
+      las decisiones cerradas salen de un principio; las de producto no lo necesitan; cuatro huecos
+      (`defaultView` sin uso, el porqué del «no monorepo», el helper y los detalles del teclado en
+      `CLAUDE.md`), los dos últimos para E1. Las 12 `§` de `.claude/agents/back-dev-agent.md`, sin
+      tocar: la carpeta está denegada a Claude.
+      **Lo planteado:** Hoy tiene 4.215 líneas y 42 commits: describe cómo está hecho cada trozo y
+      crece con cada funcionalidad, cuando debería ser casi estático. **La idea, del usuario:** el
+      documento es el fundamento del que sale todo cambio, no el registro de cada decisión. **Se
+      queda** lo que seguiría siendo verdad si mañana se reescribe esa parte del código: los
+      principios con su porqué y los conceptos que hacen falta para entenderlos. **Fuera, sin
+      mudarse a ningún sitio:** la anatomía (qué fichero hace qué, cómo se monta cada vista), que
+      ya la cuentan el código, sus cabeceras y las pruebas; las decisiones de cada funcionalidad,
+      sin porqué escrito aparte (las reglas de una línea siguen en `CLAUDE.md`, y su historia en
+      `git log`); y la crónica, que está en `TAREAS.md` y `git log`. Una decisión que no se
+      explica desde ningún principio no pide un porqué: o falta un principio o sobra la decisión.
+      **Los criterios, aprobados por el usuario:** en un guardián dentro de `check`, (1) no nombra
+      ficheros de `src/` ni de `test/`, (2) ni fechas ni «Fase N», (3) 800 líneas como mucho, y de
+      paso ninguna referencia `§` rota en los `.md`; validados por Claude, con un informe, (4) cada
+      decisión cerrada de `CLAUDE.md` se explica desde algún principio, y las que no se le enseñan
+      al usuario, y (5) lo que se quita está en el código y las pruebas, en `git log`, o no hacía
+      falta. Las referencias `§` de `CLAUDE.md`, `TAREAS.md`, las listas manuales y el código se
+      rehacen a la vez. **Se cierra cuando** el guardián está en `check` con su rotura cazada, el
+      documento lo pasa y el informe de (4) y (5) se le ha enseñado al usuario.
 
 **Fuera de esta fase:** las tres preguntas del editor, la otra deuda de la Versión 1, siguen como
 estaban. Partir
@@ -680,7 +694,7 @@ estaban. Partir
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
 Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
-código.** El diseño pasa a `ARCHITECTURE.md` (§6) cuando se construya; hasta entonces vive aquí.
+código.** Lo que tenga de principio pasa a `ARCHITECTURE.md` (§6) cuando se construya; hasta entonces vive aquí.
 **Para qué, las dos cosas:** copia de seguridad, y las mismas notas en el móvil (Android, la PWA) y
 en el ordenador.
 
@@ -737,7 +751,7 @@ en el ordenador.
   espera y ⚙ ofrece «Reconectar», sin interrumpir.
 - **«Quitar»** desconecta, invalida la sesión en Supabase y la olvida. La copia remota se queda.
 - **El código, incluido pero dormido**: se activa en ⚙. Sin `import()` dinámico, que reabriría la
-  actualización en silencio de la PWA (§9.12).
+  actualización en silencio de la PWA (§8.6).
 - **La pausa del plan gratuito** (una semana sin actividad): **una tarea programada en GitHub
   Actions** que hace una consulta cada pocos días, con la dirección del proyecto en los *secrets*
   del repo. El aviso «la nube no responde» en ⚙, igualmente, por si la tarea falla.
@@ -771,23 +785,23 @@ una tarea con su cierre.
       mano. En ⚙ → Datos, **Exportar copia** (con «Guardar como» si el navegador lo tiene; si no, a
       Descargas) e **Importar copia**, que **sustituye todo** tras un ensayo y una pregunta. Lleva
       los ficheros guardados tal cual, las ventanas y el fósforo (y desde el 2026-10-13, los
-      encuadres de los diagramas). Sin dependencias y sin tocar el core. Mezclar en vez de sustituir, aparcado (*Ideas aparcadas*). Diseño y porqués,
-      `ARCHITECTURE.md` §9.14.
+      encuadres de los diagramas). Sin dependencias y sin tocar el core. Mezclar en vez de sustituir, aparcado (*Ideas aparcadas*). Diseño y porqués, en
+      el `ARCHITECTURE.md` viejo.
   - Su lista manual, por pasar: ahora es **C5** de la Fase 9.
 - [x] **Ventanas, hueco y encuadre** ✅ *(pedido por el usuario el 2026-10-13 y construido ese día
       en la rama `feat/ventanas-hueco-encuadre`, con **828 pruebas** —eran 803—; validado por él en
       el móvil)*. Sin dependencias y sin tocar el core. Cuatro cosas:
   - **⚙ → Ventanas ofrece lo mismo que el «+» de la última ventana**: contexto, nota o diagrama
     nuevos, con `newWindowButtons.ts` para los dos. Desde ⚙ se quedan con su nombre por defecto.
-    **Cambia la decisión «en ⚙, sólo contexto»**. §7.4.
+    **Cambia la decisión «en ⚙, sólo contexto»**.
   - **Tocar el hueco de la nota**: vacía, empieza a escribir; con líneas, cursor al final de la
-    última que se ve (`lastLine`). §7.5.
+    última que se ve (`lastLine`).
   - **El encuadre de cada diagrama se recuerda**, en el dispositivo (`elnotas:framing`), y **entra
     en la copia** sin subir `backupVersion`. **Cambia la decisión «el encuadre no se recuerda»**;
     el usuario eligió la opción B (en el dispositivo) frente a A (en memoria) y C (dentro del
-    diagrama). Dos fronteras nuevas: de 29 a 31. §9.11, §9.14.
+    diagrama). Dos fronteras nuevas: de 29 a 31.
   - **La mira**, que vuelve al origen a ×1: en la barra de la vista diagrama, y flotando abajo a la
-    derecha en una ventana de diagrama. §9.11.
+    derecha en una ventana de diagrama.
 
   Cada guarda se verificó rompiéndola a propósito: `guardFramings`, el `sucio`, el centro en
   `framingOf`, importar, leer y exportar sin encuadres, `lastLine` y el nombre del contexto en
@@ -799,7 +813,7 @@ una tarea con su cierre.
       que había encima. Ahora se guarda lo abierto encima en `elnotas:capas` y se reabre al
       arrancar, con su atrás; ⚙ no. **Cambia la decisión «lo de encima no se recuerda»**; el
       usuario eligió `localStorage` (A) frente a `sessionStorage` (B). Dos fronteras nuevas: de 31
-      a 33. Sin dependencias y sin tocar el core. §7.4.
+      a 33. Sin dependencias y sin tocar el core.
 
   Cada guarda se verificó rompiéndola a propósito: el corte de lo borrado, la identidad, la forma
   de las capas y la guarda al arrancar. Probado en el navegador del panel: nota sola, nota encima
@@ -865,7 +879,7 @@ documentación**.
       que **compilan**; no es un `grep`, borra comentarios y cadenas antes de buscar. Aparte, se
       corrigieron los comentarios de `Versioned.ts` y de `src/core/tsconfig.json` que lo negaban.
 - [x] **Las pruebas se mudan a `test/`, espejo de `src/`** (`61fe72a`), con las 314 de antes y
-      después. Desaparecen tres listas negras y los ayudantes pierden el `.test`. §8.5.
+      después. Desaparecen tres listas negras y los ayudantes pierden el `.test`. §8.3.
 - [x] **Tipo explícito en todo `src/`** (`2f74a06`): el JavaScript emitido salió idéntico, y la
       regla se ensanchó a parámetros y retornos. **La única excepción registrada a «si tocas
       `DirectoryHandleBlobStore.ts` se repasa su lista»:** su emitido salió con el mismo sha256
@@ -876,9 +890,9 @@ documentación**.
       repasa.
 - [x] **Las cabeceras del código, cortas** (`3135831`, 2026-09-19): de 1035 a 328 líneas en
       `src/`, y las 123 referencias `§` del código, a 0. Tres razonamientos se movieron a
-      `ARCHITECTURE.md` en vez de borrarse. La regla, en `CLAUDE.md`; §8.6.
+      `ARCHITECTURE.md` en vez de borrarse. La regla, en `CLAUDE.md`; §8.7.
 - [x] **`.js` en los imports relativos de `src/` y `check:extensiones`** (`1037ea1`), porque el
-      `importmap` sólo resuelve los alias. §8.6.
+      `importmap` sólo resuelve los alias. §8.2.
 - [x] **`npm run build:web` e `index.html`** (`473f566`): `src/` a `dist/web/` en ESM, sin bundler.
 - [x] **Una declaración sin tipo en `test/ui/editor.test.ts`** *(de `back-dev-agent`)*. ✅ Hecho
       en `5e49a5a` (2026-09-29): `const NOTA: NoteId = noteId("nota")`, comprobado en el fichero.
@@ -912,47 +926,46 @@ excepciones y sólo en `src/`. Está probado; el motivo de arriba no cambia por 
 
 ### Cerradas, en una línea
 
-Registro de lo que estuvo abierto y cómo se cerró; el porqué, en la sección de `ARCHITECTURE.md`
-que se cita.
+Registro de lo que estuvo abierto y cómo se cerró. El principio del que sale, en la sección de
+`ARCHITECTURE.md` que se cita; el detalle de entonces, en el `ARCHITECTURE.md` viejo.
 
 - **Las siete de la Fase 1** — ✅ cerradas las siete. Las letras no se reciclan, porque
-  `ARCHITECTURE.md` las cita: **(a)** `indent` sobre un texto, **(c)** el ciclo de `move` y
+  el `ARCHITECTURE.md` viejo las cita: **(a)** `indent` sobre un texto, **(c)** el ciclo de `move` y
   **(g)** los hermanos al hacer `outdent`, cerradas por eliminación —esas operaciones no existen—;
   **(b)** `remove` sobre una casilla con hijas es no-op; **(d)** `Position` tiene tres casos;
-  **(e)** el helper son dos primitivas; **(f)** las operaciones son ocho. §5.4, §9.3 y §9.4.
+  **(e)** el helper son dos primitivas; **(f)** las operaciones son ocho.
 - **Del editor (Fase 4)** — ✅ las siete, el 2026-09-20: anidar se consume y actúa sobre la línea
   **siguiente**, con un botón aparte; las cuatro esquinas del teclado, tal cual; el nombre
   `WritingMode` (público en inglés, maquinaria interna en castellano); el alcance de `onCorrupt`,
   `onError` y la validación; y `LocalStorageBlobStore` para salir del paso. Ni una línea del
-  núcleo. §7.2, §7.3, §9.4.
+  núcleo.
 - **De la navegación y el alcance (Fase 4)** — ✅ el 2026-09-27: sin bundler de entrada; `onError`
   y la validación al final de Fase 4 · Notas; el aviso de `onError` sólo informa; las ventanas, en
   `localStorage` (opción C; la B, aparcada); la fase partida en Contextos y Notas; «Mover a…»
   mueve; al recargar se recuerda sólo la ventana activa *(desde el 2026-10-13, también la nota o el
-  diagrama de encima: Sin fase asignada)*; una nota vacía se mantiene. §7.4, §8.6,
-  §9.10.
+  diagrama de encima: Sin fase asignada)*; una nota vacía se mantiene.
 - **Al construir el editor y las ventanas (Fase 4)** — ✅ el 2026-09-29, una a una con el usuario:
   `.js` en los imports (opción A); el interruptor «☐ Casilla»; Intro en un texto crea con `after`;
-  los cuatro huecos de §7.3; ventanas sin nada guardado, duplicadas y sin aviso al fallar; varias
+  los cuatro huecos del teclado; ventanas sin nada guardado, duplicadas y sin aviso al fallar; varias
   notas con el mismo nombre. Y un bloque de decisiones de implementación **aceptadas en bloque**,
-  que no son accidentes: están en §7.4 y §7.5. §7.2–§7.5, §8.6.
+  que no son accidentes: estaban en el `ARCHITECTURE.md` viejo.
 - **De los Diagramas (Fase 5)** — ✅ el 2026-10-03: lienzo libre, `DiagramRelation` en un
   multigrafo, «Nota perdida», vista mixta desde cero, «doble = menú o crear», la nota nueva en todos
-  los contextos del diagrama, un nivel más de navegación, y la fase partida en tres. §7.4, §9.11.
+  los contextos del diagrama, un nivel más de navegación, y la fase partida en tres.
 - **Dos decisiones cerradas que el usuario cambió el 2026-10-13** — ✅ **⚙ crea lo mismo que el
   «+»** (antes, sólo contexto), para que los dos sitios ofrezcan lo mismo; y **el encuadre del
   diagrama se recuerda** (antes, no), en el dispositivo (opción B; descartadas A, en memoria, y C,
   dentro del diagrama, que tocaba el core y el formato y no sirve entre pantallas distintas), y va
-  en la copia. §7.4, §9.11, §9.14.
+  en la copia.
 - **Escritura condicional y conflicto entre dos pestañas** — ✅ decidida y construida el
   2026-10-03: la opción c, escritura condicional con `revision`, porque es la que se reutilizará con
   la sincronización; ante `stale`, avisar y ofrecer Recargar. Descartadas **a** (una sola pestaña
   con Web Locks), **b** (recargar con el evento `storage`), **d** (b + c) y *guardar como copia en
   conflicto*. §6.5.
 - **La justificación escrita de `schemaVersion`** — ✅ la real: `schemaVersion` *es* el mecanismo
-  de migración y llega con el runner; vive en `StorageAdapter`, no en `AppState`. §9.7.
+  de migración y llega con el runner; vive en `StorageAdapter`, no en `AppState`. §6.1.
 - **El arranque de la app no tenía fase** — ✅ tenía dos: la mitad pura en la Fase 2 y `boot.ts`
-  en la Fase 4 (`473f566`). §9.7.
+  en la Fase 4 (`473f566`).
 - **Cómo se verifica la Fase 3** — ✅ a mano, con una lista escrita en el repo, y sin runner de
   navegador. Lo que no se automatiza es `DirectoryHandleBlobStore`, sin lógica interesante: un
   doble prueba **lo que uno cree que hace la API** —un `Map` pasa en verde con el `close()`
@@ -962,7 +975,7 @@ que se cita.
 
 ### Qué devuelven los casos de uso — ✅ **cerrada y CONSTRUIDA: la entidad protagonista, o `null`**
 
-`ARCHITECTURE.md` §9.7 remite aquí para el registro, así que se queda en un párrafo. **Construida
+El registro, en un párrafo. **Construida
 el 2026-09-19** (`646f44f`), cuando eran dieciocho; hoy son treinta y dos con la misma forma. Sin
 retorno, «hecho» y «no aplicaba» eran indistinguibles desde la llamada. **`Result` se descartó**:
 un no-op no es un fallo y no habría `E` posible. El no-op sale de la invariante de identidad con
@@ -991,7 +1004,7 @@ pila con su propio diseño. Tres lecciones de las pruebas, que conviene no desha
 - ~~**Cuatro reglas `deny` de `.claude/settings.json`**~~ sobre carpetas que ya no existían — ✅
   quitadas el 2026-10-03 (`a5da04e`).
 - ~~**Borrar una rama de casillas**~~ — ✅ cerrada el 2026-10-03: no se construye; una casilla con
-  hijas se borra una a una. §9.3.
+  hijas se borra una a una. §5.
 - ~~**El disparador de Snabbdom, por tamaño**~~ — ✅ cerrada el 2026-10-03: el disparador pasa de
   tamaño a fallos de sincronizar el DOM; ninguno de los seis fallos de UI de ese día lo era.
   *Ideas aparcadas*.
@@ -1016,12 +1029,12 @@ Se dejaron abiertos a conciencia: decidirlos de paso habría cambiado el alcance
 puerta de atrás. **Dos están cerrados:** la lista manual vive junto a las pruebas de su rincón
 (`test/storage/blobs/VERIFICACION-MANUAL.md`), con las pasadas acumuladas en su «Hoja de
 resultados», la más reciente arriba; y el `manifest.json` lleva sólo `{ schemaVersion }`, sin
-índice (§6.2). El de OPFS **sigue sin contestarse formalmente**:
+índice (§6.1). El de OPFS **sigue sin contestarse formalmente**:
 
-- **¿Entra OPFS en la Fase 3? — LA ÚNICA QUE SIGUE ABIERTA.** §6.1 dice que es **la misma**
+- **¿Entra OPFS en la Fase 3? — LA ÚNICA QUE SIGUE ABIERTA.** El `ARCHITECTURE.md` viejo decía que es **la misma**
   `DirectoryHandleBlobStore` y que lo único que cambia es **cómo se consigue el handle**
   (`showDirectoryPicker()` frente a `navigator.storage.getDirectory()`). Si eso es «quién abre el
-  storage», es composición y cae en la Fase 4 por §9.7; si se considera parte del adaptador,
+  storage», es composición y cae en la Fase 4; si se considera parte del adaptador,
   entonces la lista manual necesita **una segunda pasada**. El criterio de cierre pide una pasada
   sobre la carpeta real y no se pronuncia sobre la otra.
   **Cómo se dejó mientras tanto, sin decidirlo por la puerta de atrás:** la lista manual lleva
@@ -1051,24 +1064,24 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | ~~**Adaptador de Google Drive**~~ — ❌ **descartado el 2026-10-12** | Drive guarda **ficheros**, y la app es de «manda el modelo» (*Pendiente → La nube*): una base de datos da de serie la escritura condicional y el «qué cambió desde…», que sobre Drive habría que construir. Además, sin servidor la sesión dura una hora y no se renueva sola. **Una carpeta pública no lo arregla:** escribir **siempre** exige OAuth (scope `drive.file`), y lo público deja las notas a la vista de quien tenga el enlace. **Tampoco SQLite dentro de Drive:** se sube y se baja el fichero entero, y dos dispositivos se pisan la base completa. | Que se reabra «manda el fichero». Ese día un `DriveBlobStore` encaja tal cual bajo `FileStorageAdapter`. |
 | ~~**`CompositeStorage` y outbox durable**~~ — ✅ **ya no está aparcado: diseñado el 2026-10-12** | Estaba aquí por falta de un segundo backend. | **Desbloqueado por la nube** (*Pendiente → La nube*), pero con otra forma: no hay `CompositeStorage` repartiendo cada escritura entre réplicas. El core habla sólo con lo local, y un sincronizador sube lo pendiente (la cola) y baja lo nuevo, que entra por el core. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
-| **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco de §6.2 y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** (§6.1) y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. **Reconsiderado el 2026-10-12** con «manda el modelo» y Postgres en la nube, y la conclusión no cambia: SQLite en el navegador es posible (wasm sobre OPFS, en un *Worker*), pero sin búsqueda ni volumen no tiene consumidor. Y «un fichero por entidad» se relee como **un documento por entidad**: lo que decide es el grano, no que sea un fichero. |
+| **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco (§6.1) y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. **Reconsiderado el 2026-10-12** con «manda el modelo» y Postgres en la nube, y la conclusión no cambia: SQLite en el navegador es posible (wasm sobre OPFS, en un *Worker*), pero sin búsqueda ni volumen no tiene consumidor. Y «un fichero por entidad» se relee como **un documento por entidad**: lo que decide es el grano, no que sea un fichero. |
 | **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. ⚠️ **Desde la Fase 4 hay dos suscriptores** —la UI y el write-behind— y esto **no se ha reabierto**: la UI se escribió con el `Listener` tal cual. **No confundir con el caso que quedaba vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo veía nadie — no se arreglaba con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo fue el `onError`, **hecho en la Fase 4** (`f406d96`). |
-| ~~**El editor de grafos de los Diagramas**~~ — ✅ **ya no está aparcado: planificado el 2026-10-03** | Estaba aquí porque no tenía diseño: el boceto del usuario decía que aún no sabía cómo plantear la interfaz. | **Desbloqueada:** cerró la Fase 4 y se planificó la 5 —un lienzo libre, partido en Modelo, Lienzo y Relaciones— en `ARCHITECTURE.md` §9.11 y en *Pendiente*. Lo que estaba anotado aquí, que `Diagram.nodes` pasara de array a `Record`, entra en Fase 5 · Modelo. |
-| **Una librería pequeña sólo para mover y acercar el lienzo** (pan/zoom, sin dependencias propias) | Decidido el 2026-10-03 hacer el lienzo **desde cero**: las librerías de lienzo completas exigen React o guardan su propio estado (`ARCHITECTURE.md` §9.11), y mover y acercar son unas pocas cuentas puras que se prueban en Node. | **Que el pellizco o el arrastre no se dejen domar en el móvil real.** El lienzo se hizo sin ella, y **aún no se ha probado en el móvil**: se sabrá al pasar su lista, que desde el 2026-10-04 va al final de la Fase 5, con las relaciones ya encima. Ese día se evalúa una que haga **sólo** eso y no guarde estado; sería la primera dependencia de runtime, así que con el mismo cuidado que Snabbdom. |
+| ~~**El editor de grafos de los Diagramas**~~ — ✅ **ya no está aparcado: planificado el 2026-10-03** | Estaba aquí porque no tenía diseño: el boceto del usuario decía que aún no sabía cómo plantear la interfaz. | **Desbloqueada:** cerró la Fase 4 y se planificó la 5 —un lienzo libre, partido en Modelo, Lienzo y Relaciones— en el `ARCHITECTURE.md` viejo y en *Pendiente*. Lo que estaba anotado aquí, que `Diagram.nodes` pasara de array a `Record`, entra en Fase 5 · Modelo. |
+| **Una librería pequeña sólo para mover y acercar el lienzo** (pan/zoom, sin dependencias propias) | Decidido el 2026-10-03 hacer el lienzo **desde cero**: las librerías de lienzo completas exigen React o guardan su propio estado, y mover y acercar son unas pocas cuentas puras que se prueban en Node. | **Que el pellizco o el arrastre no se dejen domar en el móvil real.** El lienzo se hizo sin ella, y **aún no se ha probado en el móvil**: se sabrá al pasar su lista, que desde el 2026-10-04 va al final de la Fase 5, con las relaciones ya encima. Ese día se evalúa una que haga **sólo** eso y no guarde estado; sería la primera dependencia de runtime, así que con el mismo cuidado que Snabbdom. |
 | **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web. Ese build existe desde la Fase 4 (`npm run build:web`, a `dist/web/`), y desde la Fase 6 se publica como PWA, que ya da la app instalada en el móvil. | Era «una Fase 4 terminada», y ya se cumple. **Qué lo reabre ahora, sin decidir con el usuario.** Y ese es el momento de reconsiderar los workspaces de npm, no antes. **Desde el 2026-10-12, dos motivos con nombre:** el peer-to-peer automático (abajo) y guardar la sesión de la nube en el llavero del sistema. *Decidido ese día: se sigue con la PWA.* |
 | ~~**Sync entre dispositivos**~~ — ✅ **diseñado el 2026-10-12** · **CRDTs y colaboración en tiempo real**, siguen aparcados | El sync, con su política de conflictos (copia en conflicto), está en *Pendiente → La nube*. Los CRDTs son un salto enorme de complejidad para un problema que en una app personal es raro. | CRDTs: colaborar con otras personas en la misma nota. |
-| **Importar una copia mezclándola** con lo que hay, en vez de sustituir (con la copia en conflicto de *La nube*) | Estudiada el 2026-10-12 al construir la copia de seguridad (`ARCHITECTURE.md` §9.14), y el usuario eligió sustituir porque **mezclar toca el core** y sustituir no. Cómo sería: lo que no está, se añade; con la misma `revision`, nada; con otra, la local se queda como oficial y la de la copia entra como «‹nombre› (conflicto)», en los mismos contextos; los contextos suman referencias. Sus dos pegas: **restaurar una copia vieja llena la app de «(conflicto)»** —sin recordar qué `revision` se vio la última vez, una versión antigua de la nota no se distingue de una edición hecha en otro sitio— y **lo borrado reaparece**, porque no hay registro de borrados. Habría que añadir la regla de no repetir una copia «(conflicto)» con el mismo contenido, para que importar dos veces no duplique. | **Empezar la nube.** La acción «aplicar lo remoto» y su política de conflictos son la misma pieza del core que necesita el sincronizador: hecha para uno, la otra sale casi gratis, y entonces importar puede ofrecer «Sustituir todo» o «Añadir a lo que hay». O querer pasar notas entre dispositivos a mano con un fichero. |
+| **Importar una copia mezclándola** con lo que hay, en vez de sustituir (con la copia en conflicto de *La nube*) | Estudiada el 2026-10-12 al construir la copia de seguridad, y el usuario eligió sustituir porque **mezclar toca el core** y sustituir no. Cómo sería: lo que no está, se añade; con la misma `revision`, nada; con otra, la local se queda como oficial y la de la copia entra como «‹nombre› (conflicto)», en los mismos contextos; los contextos suman referencias. Sus dos pegas: **restaurar una copia vieja llena la app de «(conflicto)»** —sin recordar qué `revision` se vio la última vez, una versión antigua de la nota no se distingue de una edición hecha en otro sitio— y **lo borrado reaparece**, porque no hay registro de borrados. Habría que añadir la regla de no repetir una copia «(conflicto)» con el mismo contenido, para que importar dos veces no duplique. | **Empezar la nube.** La acción «aplicar lo remoto» y su política de conflictos son la misma pieza del core que necesita el sincronizador: hecha para uno, la otra sale casi gratis, y entonces importar puede ofrecer «Sustituir todo» o «Añadir a lo que hay». O querer pasar notas entre dispositivos a mano con un fichero. |
 | **Fusión a tres bandas en los conflictos** | Elegida primero por el usuario el 2026-10-12 y cambiada ese mismo día por la copia en conflicto: el conflicto es raro en una app personal, y la fusión exige **guardar la base** de cada entidad (lo local se duplica) y escribir la función de fusión, la pieza más cara del sync. Lo que se decidió de ella, por si vuelve: fusionar **por campos**; **editar gana a borrar** en todos los niveles; en un choque real (el mismo campo en los dos lados) **gana el más nuevo**, usando la `updatedAt` de la entidad y aceptando que se pierde la otra versión; las inserciones en el mismo sitio se quedan las dos, la más nueva primero; y en los diagramas, nodo a nodo y relación a relación. La facilitan los ids de línea, que no exista `move` y los `Record` del diagrama. ⚠️ «Gana el más nuevo» aquí **no** reabre el «gana el último» descartado: aquél era sobre la entidad entera; éste, sólo sobre el campo que chocó después de fusionar. | Que las copias en conflicto salgan **más de lo esperado** usando la app. Ese día se empieza a guardar la base; no hace falta migrar lo ya guardado. |
 | **Sincronizar sin nube, entre pares** (*peer-to-peer*) | Preguntado el 2026-10-12, y al usuario le atraía más que la base de datos. Tres variantes, cada una con su pega. **(1) Manual, en la PWA, con WebRTC:** los dos dispositivos se presentan con QR, pero son **dos escaneos** (oferta y respuesta) **cada vez**, o un servicio público sólo para el saludo; y las dos apps abiertas a la vez. **(2) Automático** («enciendo el ordenador y se sincroniza»): una PWA no puede escuchar conexiones ni correr en segundo plano, y una página HTTPS no puede llamar a `http://192.168.x.x`. Pide **app nativa en los dos lados**. **(3) PWA más un servicio Kotlin aparte en cada dispositivo**, hablando por `localhost`: es la versión frágil de la (2). Chrome está poniendo permiso a que las webs públicas lleguen a la red local, Android exige una notificación fija para el segundo plano, y son dos programas más por dispositivo. Lo limpio es **Capacitor con plugins en Kotlin**, que es la (2). Ninguna da copia fuera de casa. | **(1):** querer prescindir de la nube y aceptar que sincronizar sea un gesto. **(2):** la app nativa (fila de los shells). Las dos entrarían como **un servicio más** en la sección «Nube» de ⚙, con el puerto sin Supabase dentro y la misma política de conflictos. |
 | **Markdown como formato de guardado** | Preguntado el 2026-10-12. Una nota es un dato estructurado y un `.md` es texto libre: los ids de línea no tienen sitio, lo que el usuario escribe y parece Markdown hay que escaparlo, los diagramas y los contextos no caben, y si se edita fuera la app no lo entiende ni se entera (la `revision` no cambia). Con «manda el modelo», Markdown es **sólo para exportar** (*Sin fase asignada*). | Que se reabra «manda el fichero»: editar las notas en Obsidian o en cualquier editor. Es otro proyecto, no una ampliación del almacenamiento. |
 | **Cifrar la sesión guardada de la nube** (con una llave de WebCrypto que no se puede sacar) | El 2026-10-12 se decidió guardar la sesión en el navegador sin cifrar. Cifrarla impide que copiar el almacén baste para llevarse el token, pero no protege de un script malicioso dentro de la app, que podría usar la llave. Hoy no hay código de terceros ni dependencias. | Que la app cargue código ajeno, o que se comparta con más gente. |
 | **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, 156 líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** adaptador sobre navegador con lógica de verdad —el de Supabase, con su sesión y sus reintentos; hasta el 2026-10-12 decía «el de Drive»— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | ⚠️ **Superada el 2026-09-27:** webpack ya **no** es el bundler previsto para la Fase 4 — la fase arranca con el `importmap`, sin bundler. La elección entre bundlers no afecta a la arquitectura, así que no urge. | Que algo concreto exija un bundler. Ese día se comparan los que haya, no sólo estos dos; y se reinstala **sólo** el elegido. |
-| **Las ventanas como entidad del core** (la opción B de `ARCHITECTURE.md` §7.4: algo como `Layout`, en su fichero junto a las notas) | Es la opción más limpia —una sola fuente, viaja con las notas, el reducer vigila la integridad—, pero reabre `StorageAdapter`, la suite de contratos, `FileStorageAdapter` y el catálogo de acciones, todo cerrado. Se eligió la C (`localStorage`) para salir del paso. | Que lleguen las **entidades «meta» de UX/UI** al core, que el usuario prevé; o que duela de verdad que las ventanas no viajen con las notas (un cambio de destino o de dispositivo). Ese día la guarda de la presentación se sustituye por la integridad del reducer. |
+| **Las ventanas como entidad del core** (la opción B de el `ARCHITECTURE.md` viejo: algo como `Layout`, en su fichero junto a las notas) | Es la opción más limpia —una sola fuente, viaja con las notas, el reducer vigila la integridad—, pero reabre `StorageAdapter`, la suite de contratos, `FileStorageAdapter` y el catálogo de acciones, todo cerrado. Se eligió la C (`localStorage`) para salir del paso. | Que lleguen las **entidades «meta» de UX/UI** al core, que el usuario prevé; o que duela de verdad que las ventanas no viajen con las notas (un cambio de destino o de dispositivo). Ese día la guarda de la presentación se sustituye por la integridad del reducer. |
 | **Revisar `Context.defaultView`** (y su acción `set-default-view`) | Se queda sin consumidor en la Fase 4: «abrir directamente una nota» lo hace ahora una ventana de tipo nota. No se quita porque el dominio está cerrado y quitarlo toca modelo, reducer, pruebas y formato en disco por algo que no molesta. | Lo mismo que la fila anterior: cuando lleguen las entidades «meta» de UX. Ahí se decide si se elimina o si recupera un sentido. |
-| **Tres candidatas más para la barra de modo**: «al marcar una casilla, marcar también sus hijas», «esconder las marcadas», «mandar las marcadas al final» | Fuera de la Fase 4. Cumplen la regla de la barra (`ARCHITECTURE.md` §7.2), pero nadie las ha echado de menos todavía con un editor delante. | El mismo disparador que las tres preguntas de §9.10: **si usando el editor se echan en falta**, se reabren. La primera es además donde se compondría la cascada de `setChecked`, que irá plegada en una sola acción (§9.3). |
-| **Un botón «reintentar» en el aviso de `onError`** | Con `localStorage` como destino no hay nada que reanudar, y está cerrado que un write-behind detenido no se reanuda. El aviso sólo informa. | Que el destino sea **la carpeta del usuario**: ahí reanudar sí significa algo —volver a pedir la carpeta— y va con el botón de «reconectar carpeta» (§6.1, §6.5). |
-| **Prototipo desechable del editor** (solo DOM, sin core y sin persistencia) | Es trabajo que se tira. ⚠️ **Matizada el 2026-09-20**, al plantearse hacerlo en una carpeta `/frontend-temporal`: lo desechable no sale gratis aquí. `src/scripts/` fue la prueba —el prototipo viejo siguió en el repo sin construirse hasta la Fase 4, y `CLAUDE.md` gastaba un párrafo por sesión diciendo que no se imitara—, y para arrancar cualquier cosa hacen falta `Clock`, `IdGenerator` y un arranque, que **son** `src/platform/`, o sea Fase 4 literal: se escribirían para tirarlos y se reescribirían igual. | **Partida en dos, que es lo que la resuelve.** *(a)* Para «¿encaja la pila entera?» un **script de Node** de ~100 líneas, sin navegador, ejecutable ya con `node --conditions=compiled`: ése sí es desechable de verdad. *(b)* Para «¿cómo se siente escribir?» **no vale código de usar y tirar**, porque lo que se descubre son las tres preguntas de §9.10 y una respuesta obtenida con un juguete no cierra ninguna. Eso es el editor de Fase 4 · Notas, feo al principio pero en `src/ui/` y `src/platform/`. *(Hasta el 2026-09-27 decía «la primera rebanada vertical de la Fase 4»; desde que la fase se parte, esa rebanada es la de Contextos y no toca el editor.)* |
+| **Tres candidatas más para la barra de modo**: «al marcar una casilla, marcar también sus hijas», «esconder las marcadas», «mandar las marcadas al final» | Fuera de la Fase 4. Cumplen la regla de la barra (el `ARCHITECTURE.md` viejo), pero nadie las ha echado de menos todavía con un editor delante. | El mismo disparador que las tres preguntas del editor: **si usando el editor se echan en falta**, se reabren. La primera es además donde se compondría la cascada de `setChecked`, que irá plegada en una sola acción (§5). |
+| **Un botón «reintentar» en el aviso de `onError`** | Con `localStorage` como destino no hay nada que reanudar, y está cerrado que un write-behind detenido no se reanuda. El aviso sólo informa. | Que el destino sea **la carpeta del usuario**: ahí reanudar sí significa algo —volver a pedir la carpeta— y va con el botón de «reconectar carpeta» (§6.5). |
+| **Prototipo desechable del editor** (solo DOM, sin core y sin persistencia) | Es trabajo que se tira. ⚠️ **Matizada el 2026-09-20**, al plantearse hacerlo en una carpeta `/frontend-temporal`: lo desechable no sale gratis aquí. `src/scripts/` fue la prueba —el prototipo viejo siguió en el repo sin construirse hasta la Fase 4, y `CLAUDE.md` gastaba un párrafo por sesión diciendo que no se imitara—, y para arrancar cualquier cosa hacen falta `Clock`, `IdGenerator` y un arranque, que **son** `src/platform/`, o sea Fase 4 literal: se escribirían para tirarlos y se reescribirían igual. | **Partida en dos, que es lo que la resuelve.** *(a)* Para «¿encaja la pila entera?» un **script de Node** de ~100 líneas, sin navegador, ejecutable ya con `node --conditions=compiled`: ése sí es desechable de verdad. *(b)* Para «¿cómo se siente escribir?» **no vale código de usar y tirar**, porque lo que se descubre son las tres preguntas del editor y una respuesta obtenida con un juguete no cierra ninguna. Eso es el editor de Fase 4 · Notas, feo al principio pero en `src/ui/` y `src/platform/`. *(Hasta el 2026-09-27 decía «la primera rebanada vertical de la Fase 4»; desde que la fase se parte, esa rebanada es la de Contextos y no toca el editor.)* |
 | **Tailwind, o cualquier CSS que pida compilación** (UnoCSS, Sass, CSS Modules) | Preguntado el 2026-10-03. Pide un paso de compilación y una dependencia, **duplica** las variables CSS que ya llevan los colores en claro y oscuro, y mete el estilo en el TypeScript (`className = "…"` con quince clases). Sass y CSS Modules, compilación también, y el anidamiento ya es nativo. Se hizo lo contrario: CSS nativo partido por vista en `src/ui/styles/`. | Que el CSS crezca hasta que **los choques de cascada** entre ficheros se vuelvan inmanejables, o que haya un equipo diseñando muchas pantallas. Ese día se mira primero **`@layer` por vista**, que es nativo. |
 | **Snabbdom, o cualquier DOM virtual mínimo** | Preguntado el 2026-09-20. Es el **único candidato honesto** de todos los que se plantearon, porque aporta sólo *diffing* (~3 KB) y no duplica nada: el estado ya está resuelto. Aun así no ahora, y el motivo es el mismo que hace difícil a esta app — lo que describe §7, *reconciliar por `data-id`* y **saltarse el nodo enfocado**, es un vdom a mano recortado alrededor de la única excepción que un vdom genérico expresa mal. Daría el 90% y habría que pelearse con él justo en el 10% que decide si la app se siente bien. Sería además la **primera dependencia de runtime** del proyecto. | **Cambiado con el usuario el 2026-10-03: ya no cuenta el tamaño, cuentan los fallos.** Se reabre cuando aparezcan **fallos de sincronizar el DOM** —un dato que cambia y no se repinta, un nodo que se repinta de más, una lista que se desordena al repintar—, que son los que el *diffing* evita. El tamaño (~600 líneas) se descartó como disparador: se pasó sin que saliera ni un fallo de ésos. ⚠️ Ese día se evalúa **Snabbdom, no React ni Svelte ni Angular**: los frameworks traen estado, y el estado ya está construido. |
 | **Un motor de edición** (ProseMirror, Lexical, CodeMirror) | Preguntado el 2026-09-20, y es **lo único que ahorraría semanas de verdad**: resuelven cursor, selección, deshacer y anidamiento, que es literalmente la Fase 4. Por eso mismo es lo más caro: **traen su propio modelo de documento**. `Note`, `Content`, las ocho operaciones, la lógica del editor de `src/ui/` y buena parte de las pruebas pasarían a ser redundantes. No complementan el core, **lo sustituyen**. | Querer **texto rico** — negritas, enlaces, tablas. Hoy `Content` es `Text \| CheckBox` con cadenas planas y no hay nada que ganar. Ese día la pregunta ya no es «qué librería de vistas», es **«¿se rehace el núcleo?»**, y es una decisión de otro tamaño: conviene no llegar a ella por accidente, añadiendo formato poco a poco. |

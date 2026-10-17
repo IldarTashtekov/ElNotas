@@ -254,7 +254,7 @@ En el móvil, con el **borrar del teclado** (es también ED-H2).
 - **ED-E3.** Con la casilla apagada, **↳ Anidar** está desactivado.
 - **ED-E4.** Armado, el botón **se ve distinto** (borde discontinuo) y dice «↳ Anidar armado».
   **¿Se entiende sin que nadie lo explique?** Anotar la impresión: es una de las tres preguntas del
-  editor (§9.10).
+  editor (`TAREAS.md`).
 - **ED-E5.** Pulsar los botones de la barra **no cambia de línea** el cursor, y 📱 **no cierra el
   teclado**.
 
@@ -610,26 +610,26 @@ No son fallos; se anotan para no marcarlos como tales, y para decidir si se agua
 - **Varias «Nueva Nota» iguales** en los selectores: toda nota nace con ese nombre, y pueden
   existir notas con el mismo nombre; lo que las distingue es su id (2026-09-29).
 - **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y
-  **no se puede reordenar**: no hay `move`. Las dos son preguntas abiertas del editor (§9.10).
+  **no se puede reordenar**: no hay `move`. Las dos son preguntas abiertas del editor (`TAREAS.md`).
 
 **De la Fase 5:**
 
 - **El lienzo y las líneas no se manejan con teclado**: pendiente en `TAREAS.md`.
 - **Con el modo de conectar activo, «✕ Salir» primero lo cancela** y hay que pulsarlo otra vez: el
   modo es una capa del atrás, como una hoja.
-- **No se puede unir un pósit consigo mismo**: tocarlo como destino cancela (§9.11).
+- **No se puede unir un pósit consigo mismo**: tocarlo como destino cancela.
 
 **De la Fase 6:**
 
 - **La primera apertura tras publicar enseña la versión anterior**; la nueva, en la siguiente. Es
-  la actualización en silencio (§9.12).
+  la actualización en silencio (§8.6).
 - ~~**La barra de estado es azul también en modo oscuro**~~: decisión del 2026-10-09, revisada en la Fase 7 (color del sistema).
 - **El icono puede salir con un borde o un fondo** en algunos lanzadores: no tiene versión
-  *maskable* (§9.12).
+  *maskable*.
 - **En MIUI, «Instalar» puede no poner el icono** si Chrome no tiene permiso para crear accesos
   directos: *Ajustes → Aplicaciones → Chrome → Otros permisos → «Accesos directos en la pantalla de
   inicio»*. Se anota si hizo falta.
-- **Lo escrito en la versión de la red de casa no aparece en la instalada**: es otro sitio (§9.12).
+- **Lo escrito en la versión de la red de casa no aparece en la instalada**: es otro sitio.
 
 ---
 

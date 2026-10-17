@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas
 `VERIFICACION-MANUAL.md` y `VERIFICACION-MANUAL-EDITOR.md`. Pasarla en escritorio **y** en el
-móvil es el criterio de cierre de Fase 5 · Lienzo (`ARCHITECTURE.md` §9.11).
+móvil es el criterio de cierre de Fase 5 · Lienzo.
 
 ## Por qué existe
 

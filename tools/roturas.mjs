@@ -327,4 +327,32 @@ export const ROTURAS = [
     poner: "void persistence.save(actual); const guardado: Result<void, StorageError> = ok(undefined)",
     caza: "check:descartes",
   },
+  {
+    nombre: "check:arquitectura: ARCHITECTURE.md vuelve a llevar una fecha",
+    fichero: "ARCHITECTURE.md",
+    buscar: "**Cuándo se toca.** Casi nunca.",
+    poner: "**Cuándo se toca.** Casi nunca (decidido el 2026-10-17).",
+    caza: "check:arquitectura",
+  },
+  {
+    nombre: "check:arquitectura: ARCHITECTURE.md vuelve a nombrar un fichero de código",
+    fichero: "ARCHITECTURE.md",
+    buscar: "**Antes de destruir, un ensayo.**",
+    poner: "**Antes de destruir, un ensayo** (en rehearseImport.ts).",
+    caza: "check:arquitectura",
+  },
+  {
+    nombre: "check:arquitectura: ARCHITECTURE.md pasa del tope de líneas",
+    fichero: "ARCHITECTURE.md",
+    buscar: "## 9. Cómo se trabaja\n",
+    poner: "## 9. Cómo se trabaja\n" + "\n".repeat(60),
+    caza: "check:arquitectura",
+  },
+  {
+    nombre: "check:arquitectura: CLAUDE.md señala una sección que no existe",
+    fichero: "CLAUDE.md",
+    buscar: "se mueve allí (\u00a78.7)",
+    poner: "se mueve allí (\u00a78.9)",
+    caza: "check:arquitectura",
+  },
 ]

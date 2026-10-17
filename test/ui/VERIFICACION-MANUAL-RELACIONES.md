@@ -1,8 +1,7 @@
 # Verificación manual de las relaciones (Fase 5 · Relaciones)
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Pasarla en
-escritorio **y** en el móvil es el criterio de cierre de Fase 5 · Relaciones (`ARCHITECTURE.md`
-§9.11). Se pasa **en la misma sentada** que `VERIFICACION-MANUAL-LIENZO.md` y que la deuda
+escritorio **y** en el móvil es el criterio de cierre de Fase 5 · Relaciones. Se pasa **en la misma sentada** que `VERIFICACION-MANUAL-LIENZO.md` y que la deuda
 móvil de la Fase 4: decisión del usuario del 2026-10-04.
 
 ## Por qué existe
@@ -104,8 +103,7 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 
 - **Con el modo de conectar activo, «✕ Salir» primero lo cancela** y hay que pulsarlo otra vez:
   el modo es una capa del atrás, como una hoja.
-- **No se puede unir un pósit consigo mismo**: tocarlo como destino cancela. Es decisión
-  (§9.11).
+- **No se puede unir un pósit consigo mismo**: tocarlo como destino cancela. Es decisión.
 - **Las líneas no se manejan con teclado**: pendiente, como el resto del lienzo.
 
 ---

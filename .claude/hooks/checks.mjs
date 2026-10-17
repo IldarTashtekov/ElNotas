@@ -2,8 +2,8 @@
  * Los hooks de Claude Code: lanzan los checks sin que el agente se acuerde.
  *
  * `editar` (tras cada Edit o Write): si el fichero es de `src/`, `test/` o
- * `tools/`, los tipos y los guardianes, sin las pruebas; si es `TAREAS.md`, su
- * guardián.
+ * `tools/`, los tipos y los guardianes, sin las pruebas; si es un `.md`, el de
+ * `ARCHITECTURE.md`, y si es `TAREAS.md`, también el suyo.
  * `terminar` (antes de dar el turno por acabado): si hay cambios sin comitear
  * en esas carpetas, `npm run check` entero; en rojo, no deja terminar, pero
  * sólo una vez seguida.
@@ -52,8 +52,15 @@ const editar = () => {
   const fichero = entrada.tool_input?.file_path
   if (typeof fichero !== "string") return
   const camino = relative(raiz, resolve(raiz, fichero)).split("\\").join("/")
-  /* TAREAS.md tiene su propio guardián, y basta con ése. */
-  const scripts = camino === "TAREAS.md" ? ["check:tareas"] : vigilado(camino) ? RAPIDOS : []
+  /* Los documentos tienen sus propios guardianes, y basta con ésos. */
+  const scripts =
+    camino === "TAREAS.md"
+      ? ["check:tareas", "check:arquitectura"]
+      : camino.endsWith(".md")
+        ? ["check:arquitectura"]
+        : vigilado(camino)
+          ? RAPIDOS
+          : []
   for (const script of scripts) {
     const r = lanzar(script)
     if (!r.ok) fallar(`Hook tras editar ${camino}: falla \`npm run ${script}\`.`, r.salida)

@@ -15,8 +15,8 @@ lo que hace. El ejemplo que zanjó la discusión es el paso **A** de abajo: escr
 `close()` final que es **lo que vuelca los datos al disco**, y un `BlobStore` de mentira sobre
 un `Map` pasa en verde con ese `close()` olvidado. Contra una carpeta de verdad, no.
 
-Así que la red de seguridad de ese fichero es esta lista. `ARCHITECTURE.md` §9.9, punto 5, la
-exige **escrita y ejecutada al menos una vez, con fecha, navegador y resultado anotados**.
+Así que la red de seguridad de ese fichero es esta lista. El punto 5 del criterio de cierre de la Fase 3 la
+exigía **escrita y ejecutada al menos una vez, con fecha, navegador y resultado anotados**.
 
 ## Cuándo hay que volver a pasarla
 
@@ -147,7 +147,7 @@ Esto es lo que ninguna prueba automática puede ver.
 6. Pulsa **`list(notes/)`**.
    - [ ] devuelve `["notes/manual.json"]`, con el camino **completo**, no sólo el nombre
 7. Pulsa **`read(no/existe.json)`**.
-   - [ ] devuelve `ok(null)`, **no** un `err`. Ausencia no es fallo (§6.5)
+   - [ ] devuelve `ok(null)`, **no** un `err`. Ausencia no es fallo (§6.4)
 
 ## B · Lo escrito se relee en una sesión nueva
 
@@ -165,7 +165,7 @@ Que el fichero esté en disco no basta: hay que poder volver a él.
 
 ## C · Revocar el permiso sale por `Result`, no por excepción
 
-El punto entero de que los errores sean valores (§6.5). Si esto saliera como excepción, el
+El punto entero de que los errores sean valores (§6.4). Si esto saliera como excepción, el
 write-behind se rompería en vez de detenerse.
 
 12. Con la página abierta y la carpeta ya concedida, **revoca el permiso**. En Chrome: candado
@@ -199,9 +199,9 @@ write-behind se rompería en vez de detenerse.
 18. Pulsa **`list(notes/)`**.
     - [ ] devuelve `ok []`, una lista vacía, y no un error
 
-## E · OPFS *(opcional: no lo exige §9.9)*
+## E · OPFS *(opcional: no lo exigía el cierre de la Fase 3)*
 
-Es **el mismo fichero de código** con otro handle (§6.1), así que esto no verifica líneas
+Es **el mismo fichero de código** con otro handle, así que esto no verifica líneas
 nuevas: verifica que la suposición «las dos APIs son la misma» es cierta. Si entra o no en la
 Fase 3 está sin decidir (`TAREAS.md`), así que se pasa si se quiere y se anota.
 
@@ -336,11 +336,11 @@ Notas (lo que no encajó en una casilla, mensajes exactos, sorpresas de la API):
       read   → ok(45 bytes) con el JSON de `escritoA` bien formado y legible
       list   → ok ["notes/manual.json"]   ← camino COMPLETO, no sólo el nombre
       delete → ok undefined
-      read de ausente → ok(null)          ← ausencia, que no es fallo (§6.5)
+      read de ausente → ok(null)          ← ausencia, que no es fallo (§6.4)
 
 - Qué vale esta pasada y qué no. Vale: es la primera vez que las 156 líneas
   corren contra una API de navegador real, y el `list` recursivo con su prefijo
-  se comportó. No vale como cierre del punto 5 de §9.9, y no por tecnicismo: lo
+  se comportó. No vale como cierre del punto 5 del criterio de cierre de la Fase 3, y no por tecnicismo: lo
   que ese punto exige es lo que un doble no puede ver, y las tres cosas que
   enumera —bytes al disco, relectura en sesión nueva, permiso revocado por
   `Result`— necesitan la carpeta real. La propia sección E lo dice: no sustituye
@@ -349,7 +349,7 @@ Notas (lo que no encajó en una casilla, mensajes exactos, sorpresas de la API):
   lista entera.
 
 - ⚠️ LO QUE SIGUE SIN VERIFICAR, y es lo que más importa: el clasificador de
-  excepciones. Según §6.3 es justo la parte que creció y la que ningún doble
+  excepciones. Según el `ARCHITECTURE.md` viejo es justo la parte que creció y la que ningún doble
   puede probar, y es la que necesita los pasos C y D.
 
 - Siguiente pasada: Brave 1.95.101, que está instalado en esta máquina por snap
@@ -357,6 +357,6 @@ Notas (lo que no encajó en una casilla, mensajes exactos, sorpresas de la API):
   tiene `showDirectoryPicker()`.
 ```
 
-**El punto 5 del criterio de cierre de la Fase 3 (§9.9) queda CUMPLIDO** con la pasada de
+**El punto 5 del criterio de cierre de la Fase 3 queda CUMPLIDO** con la pasada de
 Brave: A, B, C y D pasan, y E también. La de Firefox se conserva debajo porque documenta lo
 que hace un navegador sin `showDirectoryPicker()`, que es información y no ruido.
