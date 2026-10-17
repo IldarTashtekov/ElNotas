@@ -428,9 +428,13 @@ commit lleva la etiqueta **`v1.0.0`**, para poder volver a esta versión exacta.
 Lo demás pendiente (la nube, Markdown, Node 20, el negro repetido en el manifiesto, el formato de
 texto) sigue sin fase, como estaba.
 
-### Fase 9 — Meta-desarrollo: que trabajar con agentes sea más automático — PLANIFICADA el 2026-10-13
+### Fase 9 — Meta-desarrollo: que trabajar con agentes sea más automático ✅ CERRADA el 2026-10-17
 
-**Sin empezar y sin una línea de código.** Decidida con el usuario el 2026-10-13, tras una revisión
+**Cerrada el 2026-10-17 con 846 pruebas** (841 al empezar con Node 26, más las cinco nuevas de
+los registros y de `reconcile`) y 43 roturas a propósito, todas cazadas; fusionada en `main` por
+*fast-forward*, sin `push`. **Queda en el aire, sin fase:** C2 y C3, el uso de agentes.
+
+**Al planificarla, sin empezar y sin una línea de código.** Decidida con el usuario el 2026-10-13, tras una revisión
 de la deuda, las fugas de memoria y lo que la arquitectura está dando al programar con agentes.
 
 **Qué es:** convertir en automático lo que hoy depende de que el agente se acuerde o de que el
@@ -623,7 +627,8 @@ guardianes nuevos.
 
 #### D. Limpieza
 
-- [ ] **D1. Los *worktrees* viejos** — **hecho salvo el de esta fase** *(2026-10-17)*. Comprobado
+- [x] **D1. Los *worktrees* viejos** ✅ *(2026-10-17)*: al cerrar la fase, `fase-9-meta` entra en
+      `main` por *fast-forward* y su *worktree* se quita desde la carpeta principal, con la rama. Comprobado
       con `git log main..rama` que las tres ramas `claude/*` (`agitated-franklin-6f5c2d`,
       `eloquent-mayer-7cf937` y `youthful-rubin-e5263b`) no tenían nada fuera de `main`, y que el
       worktree `eloquent-mayer-7cf937` no tenía nada sin comitear: el worktree, quitado con `git
