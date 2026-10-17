@@ -620,20 +620,23 @@ guardianes nuevos.
 
 #### D. Limpieza
 
-- [ ] **D1. Los *worktrees* viejos** de `.claude/worktrees/` (`agitated-franklin-6f5c2d` y
-      `eloquent-mayer-7cf937`) y sus ramas `claude/*`, mirando antes que no tengan nada sin fusionar.
-      Ojo: `agitated-franklin-6f5c2d` es el de esta fase (`fase-9-meta`), así que va el último o
-      desde la carpeta principal; y hay una tercera rama, `claude/youthful-rubin-e5263b`. **Se
-      cierra cuando** `git worktree list` y `git branch` ya no los muestran, tras comprobar con `git
-      log main..rama` que no se pierde nada.
-- [ ] **D2. Las dos cabeceras que nombran a Drive** y el `--noResolve` caducado de
-      `test/storage/blobs/VERIFICACION-MANUAL.md` (de *Sin fase asignada*).
-      Es también la tarea de *Infraestructura* «Comentarios y textos que se quedaron atrás»: la
-      preparación de esa lista explica el `--noResolve` por imports sin extensión que desde
-      `1037ea1` ya no hay. Tocar ese `.md` no obliga a repasar la lista, pero sin cambiar sus pasos.
-      **Se cierra cuando** `grep -n Drive src/core/ports/BlobStore.ts
-      src/storage/file/FileStorageAdapter.ts` no da nada y el `--noResolve` dice su motivo de
-      verdad.
+- [ ] **D1. Los *worktrees* viejos** — **hecho salvo el de esta fase** *(2026-10-17)*. Comprobado
+      con `git log main..rama` que las tres ramas `claude/*` (`agitated-franklin-6f5c2d`,
+      `eloquent-mayer-7cf937` y `youthful-rubin-e5263b`) no tenían nada fuera de `main`, y que el
+      worktree `eloquent-mayer-7cf937` no tenía nada sin comitear: el worktree, quitado con `git
+      worktree remove`, y las ramas, con `git branch -d`, que se niega si falta algo por fusionar.
+      Con el visto bueno del usuario, también `checkout`, `fase-8-terminal` y
+      `feat/volver-a-lo-abierto`, enteras en `main`: quedan `main` y `fase-9-meta`.
+      Queda `agitated-franklin-6f5c2d`, que es donde se trabaja la fase (`fase-9-meta`). **Se
+      cierra cuando**, acabada la fase, se quita desde la carpeta principal y `git worktree list`
+      sólo muestra esa carpeta.
+- [x] **D2. Las dos cabeceras que nombran a Drive** y el `--noResolve` de
+      `test/storage/blobs/VERIFICACION-MANUAL.md` ✅ *(2026-10-17)*. Fuera Drive de
+      `src/core/ports/BlobStore.ts` y `src/storage/file/FileStorageAdapter.ts` (`grep -rn Drive
+      src` no da nada). El `--noResolve` dice ahora su motivo de verdad —sin él, `tsc` sigue
+      `#core/index` y compila el core entero, y la página sólo necesita `err` y `ok`— y el número
+      de errores que imprime: dos, no siete, comprobado compilando como dice el paso, sin cambiar
+      los pasos. `DirectoryHandleBlobStore.ts` no se tocó: su lista no hay que repasarla.
 - [ ] **D3. El `unobserve` de los pósits borrados** en `src/ui/DiagramCanvas.ts`: el lienzo los
       sigue vigilando hasta cerrarse. Es la única fuga de memoria encontrada el 2026-10-13, leyendo
       el código: diminuta y que se libera sola.

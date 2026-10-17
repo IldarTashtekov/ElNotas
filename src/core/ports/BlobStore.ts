@@ -1,8 +1,8 @@
 /**
  * Mueve bytes y nada más: no sabe qué es una Nota.
  *
- * Existe para que guardar en la carpeta del usuario, en el navegador o en Drive
- * sea sólo cambiar dónde van los bytes, sin tocar nada de lo de arriba.
+ * Existe para que guardar en la carpeta del usuario o en el navegador sea sólo
+ * cambiar dónde van los bytes, sin tocar nada de lo de arriba.
  */
 
 import type { Result } from "../domain/Result.js"

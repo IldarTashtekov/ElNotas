@@ -4,7 +4,7 @@
  *
  * Es la pieza que sabe de formato: convierte una entidad en texto y decide cómo
  * se llama su fichero. Dónde acaban esos bytes —el navegador, una carpeta tuya,
- * OPFS, Drive— lo pone el `BlobStore` que reciba.
+ * OPFS— lo pone el `BlobStore` que reciba.
  *
  * Un fichero ilegible se salta al leerlos todos, y se avisa de cuál con
  * `onCorrupt`. ⚠️ Sin ese aviso, tumba la lectura entera: saltarlo en silencio

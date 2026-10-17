@@ -74,10 +74,11 @@ que si uno va y el otro no, el problema no es la URL.
   --target ES2020 --module ES2020 --lib ES2020,DOM,DOM.AsyncIterable --skipLibCheck
 ```
 
-⚠️ **Ese comando imprime siete errores de tipos y es lo esperado.** Son de `--noResolve`, que
-es lo que impide a `tsc` arrastrar el core entero (y con él un montón de imports sin extensión
-que el navegador no sabe resolver). `tsc` **emite el JavaScript igualmente**, que es lo que
-hace falta. El typecheck de verdad es `npm run typecheck`, y ése tiene que estar limpio.
+⚠️ **Ese comando imprime dos errores de tipos y es lo esperado:** `Cannot find module
+'#core/index'`, uno por import. Son de `--noResolve`, que es lo que impide a `tsc` seguir
+`#core/index` y compilar el core entero: la página sólo necesita `err` y `ok`, y su `importmap`
+apunta ese alias a `Result.js`. `tsc` **emite el JavaScript igualmente**, que es lo que hace
+falta. El typecheck de verdad es `npm run typecheck`, y ése tiene que estar limpio.
 
 Comprueba que han salido los dos ficheros:
 
