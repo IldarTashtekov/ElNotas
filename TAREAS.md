@@ -792,6 +792,12 @@ una tarea con su cierre.
 
 ### Sin fase asignada
 
+- [x] **Que `CLAUDE.md` no vuelva a llenarse de lo que caduca** ✅ *(pedido por el usuario el
+      2026-10-17, tras cerrar la Fase 9)*. `check:arquitectura` mira también `CLAUDE.md`: falla si
+      pasa de **300 líneas**, si lleva una **fecha** o si **cuenta las pruebas**. Sólo esas tres,
+      a propósito: son las que no se equivocan. Una lista de palabras para cazar cualquier recuento
+      («fronteras», números en letra) avisaría de lo que está bien —«seis puertos» es una
+      decisión, no un recuento—, y se descartó. Tres roturas más en la lista, cazadas.
 - [x] **Exportar e importar las notas (JSON)** ✅ *(construida el 2026-10-12 en la rama
       `feat/backup`, con **803 pruebas**, y probada por el usuario ese día: «funciona perfecto»)*.
       Fuera de la Fase 6 por decisión del usuario el 2026-10-08; hacía falta porque las notas

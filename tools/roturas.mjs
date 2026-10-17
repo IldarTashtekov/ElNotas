@@ -355,4 +355,25 @@ export const ROTURAS = [
     poner: "se mueve allí (\u00a78.9)",
     caza: "check:arquitectura",
   },
+  {
+    nombre: "check:arquitectura: CLAUDE.md vuelve a llevar una fecha",
+    fichero: "CLAUDE.md",
+    buscar: "**Versión 1 cerrada** (etiqueta `v1.0.0`)",
+    poner: "**Versión 1 cerrada el 2026-10-13** (etiqueta `v1.0.0`)",
+    caza: "check:arquitectura",
+  },
+  {
+    nombre: "check:arquitectura: CLAUDE.md vuelve a contar las pruebas",
+    fichero: "CLAUDE.md",
+    buscar: "falla si no hay ninguna prueba compilada.",
+    poner: "falla si no hay ninguna prueba compilada. Hoy son 846 pruebas.",
+    caza: "check:arquitectura",
+  },
+  {
+    nombre: "check:arquitectura: CLAUDE.md pasa del tope de líneas",
+    fichero: "CLAUDE.md",
+    buscar: "## Comandos\n",
+    poner: "## Comandos\n" + "\n".repeat(40),
+    caza: "check:arquitectura",
+  },
 ]

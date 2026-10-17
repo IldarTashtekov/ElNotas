@@ -5,7 +5,7 @@ nativos, más adelante (shells sobre la misma UI web).
 
 | Fichero | Qué hay dentro |
 |---|---|
-| **`CLAUDE.md`** (este) | las reglas que **nada automático vigila**. Corto a propósito: se carga en cada sesión |
+| **`CLAUDE.md`** (este) | las reglas que **nada automático vigila**. Corto a propósito: se carga en cada sesión. Sin fechas ni recuentos de pruebas, y 300 líneas como mucho (`check:arquitectura`) |
 | **`ARCHITECTURE.md`** | el fundamento: los principios con su **porqué** y los conceptos explicados desde cero |
 | **`TAREAS.md`** | qué está pendiente, qué está **sin decidir**, las ideas aparcadas y la historia de las fases |
 
@@ -247,7 +247,8 @@ npm run check:descartes      # falla si un Result o una promesa se tiran sin mir
 npm run check:paragrafos     # falla si el código señala un documento por número de sección
 npm run check:exportaciones  # falla si un index.ts anuncia lo que ningún otro módulo usa
 npm run check:tareas         # falla si una tarea abierta no dice cómo se cierra
-npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o crónica, o hay § rotas
+npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o crónica, si CLAUDE.md
+                             # pasa de 300 líneas o lleva fechas o recuentos de pruebas, o hay § rotas
 npm test                     # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
 npm run check:roturas        # FUERA de check (~4 min): rompe a propósito y exige que algo caiga
 npm run build:web            # compila src/ a dist/web/ en ESM, para el navegador
