@@ -924,6 +924,18 @@ excepciones y sólo en `src/`. Está probado; el motivo de arriba no cambia por 
 
 **No las resuelva por su cuenta quien implemente.** Si te topas con una, pregunta.
 
+- [ ] **`Context.defaultView`, sin uso** *(salió en E2 de la Fase 9, 2026-10-17)*. Sigue en el
+      modelo con su acción `set-default-view`, y nadie lo usa desde que una ventana puede ser una
+      nota o un diagrama. Choca con el principio de que lo que deja de usarse se quita
+      (`ARCHITECTURE.md` §5). O se acepta como excepción, o se quita, y quitarlo toca el core, el
+      reducer, las pruebas y el formato en disco.
+      **Se cierra cuando** el usuario elige: excepción, escrita en *Decisiones cerradas* de
+      `CLAUDE.md`, o una tarea con fase para quitarlo.
+- [ ] **El porqué de «carpetas con `tsconfig`, no monorepo»** *(salió en E2 de la Fase 9,
+      2026-10-17)*. Es una decisión cerrada de `CLAUDE.md` cuyo motivo nunca se escribió.
+      **Se cierra cuando** el usuario da el porqué y entra en `ARCHITECTURE.md` §8.1, o decide que
+      se queda como decisión sin porqué escrito.
+
 ### Cerradas, en una línea
 
 Registro de lo que estuvo abierto y cómo se cerró. El principio del que sale, en la sección de
