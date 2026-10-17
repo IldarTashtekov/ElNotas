@@ -605,12 +605,18 @@ guardianes nuevos.
       sobre un cambio.
 - ~~**C4. Ramas, *pull requests* y CI en los PR**~~ — ❌ **descartada por el usuario el
       2026-10-13**: no hay `push` a otras ramas.
-- [ ] **C5. Pasar las listas manuales con el navegador del panel.** La primera, la parte de
-      ordenador de `test/ui/VERIFICACION-MANUAL-COPIA.md`, la deuda de la Versión 1; el usuario pasa
-      después sólo lo de móvil (I6–I7) y F, que en el panel no se puede provocar. La forma de
-      anotar la pasada (✅, ❌ o «no se puede aquí» por paso, con sus capturas) se escribe una vez
-      y vale para todas las listas. **Se cierra** con la lista de la copia anotada entera, entre
-      los dos, y la forma de pasarlas escrita.
+- [ ] **C5. Pasar las listas manuales con el navegador del panel.** La primera, la de la copia
+      (`test/ui/VERIFICACION-MANUAL-COPIA.md`), la deuda de la Versión 1. **Pasada por Claude el
+      2026-10-17, anotada en la lista:** 20 de 22 pasos, 10 de ellos simulados (los diálogos del
+      sistema, sustituidos dentro de la página: E3 y E4, que parecían imposibles, también) y F
+      entera, que el plan daba por imposible en el panel. Sin un solo ❌ de la app; **dos fallos
+      de la lista**, corregidos en ella: F4 no salía sin vaciar antes el origen, y el script de F
+      no llenaba nada en un navegador con más de 20 millones de caracteres (el panel admite unos
+      52). La forma de pasarlas, escrita en `test/PASAR-LAS-LISTAS.md`, y `web-8001` en
+      `.claude/launch.json` para lo que borra. **Salieron de paso** una tarea nueva (el `default`
+      de `insert` y del reducer, en *Sin fase asignada*) y dos cosas para E1: el panel **sí**
+      registra *service workers*, y la publicada se puso al día en silencio con una recarga.
+      **Se cierra cuando** el usuario pasa en el móvil E5 e I6 y quedan anotados en la lista.
 
 #### D. Limpieza
 
@@ -645,7 +651,8 @@ E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre l
       y en *Decisiones cerradas* la precisión de «a mano»: también la puede pasar Claude en el panel.
       **Se cierra cuando** no queda ningún recuento en `CLAUDE.md`, están los guardianes en
       *Comandos* y las decisiones reabiertas en la fase (seis puertos, sin `platform/index.ts`, las
-      fronteras, las roturas en su lista) están al día.
+      fronteras, las roturas en su lista) están al día, y corregido «el del panel no registra
+      *service workers*»: sí los registra (visto en C5).
 - [ ] **E2. `ARCHITECTURE.md`, de bitácora a arquitectura.** Hoy tiene 4.190 líneas, y la tercera
       parte (§9, «El plan por fases, razonado», ~1.270) es crónica: fechas, mediciones, qué se
       decidió cada día. **Se queda** lo de §1–§8: la filosofía, los conceptos, los patrones, los
@@ -827,6 +834,18 @@ una tarea con su cierre.
       dispositivo en `localStorage` con su clave `elnotas:`, y con dos fronteras nuevas.
       **Se cierra cuando** el usuario decide cómo se guarda el formato y cómo se aplica: entonces se
       parte en tareas propias, cada una con su cierre.
+
+- [ ] **Que una posición o una acción desconocidas no hagan nada** *(salió pasando la lista de la
+      copia el 2026-10-17)*. El `default` del `switch` de `insert` (`src/core/domain/operations.ts`)
+      devuelve **la posición** como si fuera el contenido, y el del reducer
+      (`src/core/app/reduce.ts`) devuelve **la acción** como si fuera el estado. El tipo lo
+      impide desde el código (no compila), pero llegando sin tipos —la consola con `?depurar`,
+      o algo que un día lea sin validar— la nota, o la app entera, quedan estropeadas en disco, en
+      vez de cumplir «una operación que no aplica no hace nada». Visto con `?depurar`: una
+      posición mal escrita guardó `"content": {"kind": "root-end"}`. **Se cierra cuando** los dos
+      devuelven lo que recibieron (el contenido, el estado) sin perder la comprobación de que el
+      `switch` cubre todos los casos, con una prueba de cada uno que pase un valor desconocido a
+      la fuerza y su rotura en `tools/roturas.mjs`.
 
 ### Infraestructura (`infra-agent`)
 

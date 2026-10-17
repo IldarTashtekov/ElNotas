@@ -89,6 +89,8 @@ fósforo en verde.**
 Hace falta un navegador con el espacio normal (unos 5 MB; Chrome de escritorio vale). **En un
 origen vacío** (`localhost:8001`), abrir la consola y pegar esto: llena el almacén con una clave
 ajena hasta dejar poco hueco, y apunta una copia que cabe al apuntarla pero no al escribirla.
+Busca el tope hasta 20 millones de caracteres: si el navegador deja más (el del panel de Claude,
+unos 52 millones), `alto = 200_000_000`, o la copia entra y F1 no sale.
 
 ```js
 let bajo = 0, alto = 20_000_000
@@ -112,7 +114,9 @@ location.reload()
 - **F3.** En la consola, `localStorage.removeItem("prueba:relleno")`, y **Reintentar**: ahora
   entra. Arranca y avisa de que **`notes/relleno.json` no se puede leer**, que es lo que tiene que
   decir de ese relleno.
-- **F4.** Repetir el script y, en el aviso, **«Abandonar la importación»**: arranca **con lo que
+- **F4.** **Vaciar el origen** (`localStorage.clear()` en la consola) y repetir el script; si no,
+  el `notes/relleno.json` de F3 sigue ahí, importar lo borra antes de escribir, libera su sitio y
+  la copia cabe. En el aviso, **«Abandonar la importación»**: arranca **con lo que
   haya entrado** (aquí, nada) y no vuelve a intentarlo al recargar. Limpiar con
   `localStorage.removeItem("prueba:relleno")` y **Borrar todo**.
 
@@ -127,4 +131,48 @@ location.reload()
 
 ## Pasadas
 
-*(Ninguna todavía.)*
+Cómo se pasa y cómo se marca cada paso: `test/PASAR-LAS-LISTAS.md`.
+
+```
+Fecha:        2026-10-17
+Navegador:    el del panel de Claude (Chromium 152.0.7977.130, Linux)
+Quién:        Claude, en el panel
+Commit:       6a00f9f, con dos cambios sin comitear que no tocan la app
+              (test/PASAR-LAS-LISTAS.md y la entrada web-8001 de .claude/launch.json)
+Origen:       localhost:8001, vacío al empezar; I7, en la publicada (2026-10-13 · 2fa7b591)
+
+E1  🔁 simulado — el «Guardar como», por uno que guarda en memoria: propone
+       elnotas-backup-2026-10-17.json, escribe, cierra y dice «Copia guardada.»
+E2  ✅ — "app": "elnotas", los 5 ficheros, las 3 ventanas, "phosphor": "green" y el encuadre
+E3  🔁 simulado — el diálogo lanza el AbortError de cerrarlo: ni mensaje ni error, botones activos
+E4  🔁 simulado — sin showSaveFilePicker y con el enlace de descarga interceptado: mismo nombre,
+       la misma copia, «Copia guardada.» Nada se descargó
+E5  ⏭ no se puede aquí — el móvil; lo pasa el usuario
+E6  ✅ — con el diálogo en espera, los dos botones desactivados y otro clic no pide otro diálogo
+I1  🔁 simulado — el selector de ficheros: el botón lo pide (accept .json), y el fichero se le da
+       por código. Sube «La copia trae 2 notas, 1 diagrama y 1 contexto. ¿Sustituir por ella todo
+       lo de este navegador? Lo de ahora se pierde.» y «Sustituir todo» en rojo
+I2  ✅ — «Cancelar»: la hoja se cierra; «Sobra», el ámbar y el encuadre movido, igual
+I3  ✅ — recarga y queda como la copia: sin «Sobra», tres ventanas con «Casa» activa, verde, y el
+       diagrama en (140, -60) ×1,75, el de la exportación, no el movido
+I4  🔁 simulado — el selector queda vacío tras cada elección, y la hoja vuelve a salir
+I5  🔁 simulado — un .json cualquiera y un texto: «Ese fichero no es una copia de ElNotas.»
+I6  ⏭ no se puede aquí — el selector de Android; lo pasa el usuario
+I7  🔁 simulado (el selector) — la copia de localhost:8001 entra entera en la publicada
+I8  🔁 simulado — el atrás del navegador por el del móvil: cierra sólo la hoja, sin importar
+F1  ✅ — con el tope a 200 millones (ver F): el aviso, «Reintentar» en vídeo inverso,
+       «Abandonar la importación» en hueco, el borde de los avisos y nada en rojo
+F2  ✅ — recarga y el mismo aviso
+F3  ✅ — entra, arranca y avisa «No se entiende el fichero notes/relleno.json»
+F4  ✅ — tras vaciar el origen (corregido arriba): arranca vacía y no vuelve a intentarlo
+V1  ✅ — explicación, los dos botones sin color y «Borrar todo» en rojo
+V2  ✅ — a 375 px, los dos botones en una fila y sin desplazamiento lateral
+
+Notas:
+- F4, tal como estaba escrito, no salía: tras F3, `notes/relleno.json` sigue guardado, importar lo
+  borra antes de escribir y la copia cabe. Corregido el paso: vaciar el origen antes.
+- El panel deja guardar unos 52 millones de caracteres, no 5 MB: el script de F, con su tope de
+  20 millones, no llenaba nada. Apuntado en F.
+- La publicada salió primero en una versión vieja (2026-10-11), del service worker del panel;
+  una recarga la puso al día en silencio. El panel sí registra service workers.
+```
