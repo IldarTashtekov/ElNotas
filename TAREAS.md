@@ -651,7 +651,15 @@ guardianes nuevos.
 **Al final de la fase, con todo lo demás hecho, y E2 antes que E1** *(el usuario, 2026-10-13)*:
 E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre lo que quede.
 
-- [ ] **E1. `CLAUDE.md` pasa a «lo que nada automático vigila»:** fuera los recuentos que se
+- [x] **E1. `CLAUDE.md` pasa a «lo que nada automático vigila»** ✅ *(2026-10-17)*. **Hecho:**
+      fuera las treinta y tres fronteras contadas a mano, las pruebas de cada fase y la historia del
+      plan (a `TAREAS.md`); cada guardián, una línea con su comando, y los seis nuevos en
+      *Comandos*, con `check:roturas` fuera de `check`; seis puertos (`Logger`), sin
+      `platform/index.ts`, la rotura en su lista, Node por `.nvmrc`, los hooks, las listas que pasa
+      Claude en el panel (que **sí** registra *service workers*); y, del informe de E2, fuera el
+      helper, «Fase 1 = bajo `Versioned`» y los detalles del teclado, que fijan sus pruebas. Mide
+      lo mismo (264 líneas frente a 267): sale lo que se desactualiza y entra lo que vigila.
+      **Lo planteado:** fuera los recuentos que se
       desactualizan (pruebas, fronteras) y cada regla que gane guardián deja una línea con su
       comando. Con los guardianes y las opciones nuevas en *Comandos*, la fase en *Plan por fases*,
       y en *Decisiones cerradas* la precisión de «a mano»: también la puede pasar Claude en el panel.

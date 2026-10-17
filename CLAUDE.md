@@ -5,33 +5,42 @@ nativos, más adelante (shells sobre la misma UI web).
 
 | Fichero | Qué hay dentro |
 |---|---|
-| **`CLAUDE.md`** (este) | las reglas. Corto a propósito: se carga en cada sesión |
+| **`CLAUDE.md`** (este) | las reglas que **nada automático vigila**. Corto a propósito: se carga en cada sesión |
 | **`ARCHITECTURE.md`** | el fundamento: los principios con su **porqué** y los conceptos explicados desde cero |
-| **`TAREAS.md`** | qué está pendiente, qué está **sin decidir**, y las ideas aparcadas |
+| **`TAREAS.md`** | qué está pendiente, qué está **sin decidir**, las ideas aparcadas y la historia de las fases |
+
+Lo que caza el compilador o un guardián va aquí en una línea con su comando: si lo rompes,
+`npm run check` te lo dice. Lo demás tienes que recordarlo tú.
 
 ## Estado actual del repo
 
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Versión 1 cerrada el 2026-10-13** (etiqueta `v1.0.0`): fases 0 a 8 y dos tandas sin fase (la
-copia de seguridad; ventanas, hueco y encuadre). La siguiente, sin decidir.
-Publicada en `https://ildartashtekov.github.io/ElNotas/`.
+**Versión 1 cerrada** (etiqueta `v1.0.0`), publicada en `https://ildartashtekov.github.io/ElNotas/`.
+Qué fase hay en curso y qué queda, en `TAREAS.md`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
 - **`src/storage/`** — los adaptadores de memoria y fichero, las dos de `BlobStore` y el `writeBehind`.
-- **`src/platform/web/`** — la composición: reloj, ids, `boot`, ventanas, fósforo, encuadres, «Borrar todo», la copia de seguridad y `main.ts`.
+- **`src/platform/web/`** — la composición: los adaptadores de la web, el arranque y `main.ts`.
 - **`src/ui/`** — vanilla: las cuatro vistas, el editor y el lienzo de diagramas.
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
 aparte (§6.3). En la UI, lo que decide es pura y con pruebas en Node; el DOM, **a mano** con las
-listas de `test/ui/`. La PWA, en un navegador de verdad: el del panel no registra *service workers*.
+listas `VERIFICACION-*.md` de `test/`, que también puede pasar Claude con el navegador del panel
+(cómo, en `test/PASAR-LAS-LISTAS.md`; lo que borra, en `localhost:8001`, `web-8001`). El panel **sí**
+registra *service workers*; lo que sólo se ve en el móvil —la PWA instalada, el selector de
+Android— lo pasa el usuario.
 
-**`npm run check` no puede pasar en falso:** `tools/require-tests.mjs` falla si no hay ningún
-`*.test.js` en `tmp-test/test/`. **No lo «arregles» quitando el guardián** (§1).
+**`npm run check` no puede pasar en falso:** falla si no hay ninguna prueba compilada. **No lo
+«arregles» quitando el guardián** (§1).
 
-⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y viendo caer las
-pruebas. Una prueba que no salta al romper lo que vigila no vale nada.
+⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y viendo caer lo que la
+vigila. **Una guarda nueva, una rotura nueva en `tools/roturas.mjs`**; `npm run check:roturas` las
+pasa todas (unos 4 minutos): al cerrar cada tarea que toque `src/` y al cerrar una fase.
+
+**Node, el de `.nvmrc`.** Si la sesión no lo tiene en el `PATH`, antepón
+`~/.nvm/versions/node/<versión>/bin`; los hooks ya lo cogen solos.
 
 ## Estructura y límites
 
@@ -40,36 +49,35 @@ src/
 ├── core/          # dominio + casos de uso + puertos. CERO plataforma
 │   ├── domain/    # ← modelo, Position, helper, operaciones, Result
 │   │   └── errors/#   ← StorageError y MigrationError. Sin index.ts, como domain/
-│   ├── ports/     # ← los CINCO: Clock, IdGenerator, Repository, StorageAdapter, BlobStore
+│   ├── ports/     # ← los SEIS: Clock, IdGenerator, Repository, StorageAdapter, BlobStore, Logger
 │   ├── app/       # ← acciones + reduce + Store + useCases + diffState
 │   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← memory/ · file/ · blobs/ (BlobStore es OTRO puerto). Conoce al core; él a ella no
 ├── ui/            # ← vanilla, con styles/ (un CSS por vista). Conoce sólo al core
-└── platform/      # ← web/: composición, el ÚNICO sitio que inyecta adaptadores. Nadie la importa
+└── platform/      # ← web/: composición, el ÚNICO sitio que inyecta adaptadores. Nadie la importa: sin index.ts
 test/              # LAS PRUEBAS: espejo de src/, partido por capa, con las listas manuales
 index.html         # carga dist/web/ con un importmap, sin bundler (§8.5)
 manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la PWA (§8.6)
 ```
 
-- **La verja de pureza es un error de compilación:** `src/core/tsconfig.json` va sin `DOM` y con
-  `"types": []`; un `document.` o un `crypto.randomUUID()` en el core **no compila**. IDs, hora y
-  azar entran **por puerto** (`IdGenerator`, `Clock`).
-- **El reloj y el azar no los para el compilador:** `Date.now()`, `new Date()` y `Math.random()`
-  **sí compilan** en el core; los caza `npm run check:purity`.
+- **La verja de pureza:** `document.`, `crypto` o un temporizador en el core no compilan
+  (`typecheck:core`); el reloj y el azar sí, y los caza `check:purity`. IDs, hora y azar entran
+  **por puerto** (`IdGenerator`, `Clock`).
 - **Ni `baseUrl` ni `paths`.** Los alias van en el campo `imports` de `package.json` y se calcan
   en el `importmap` de `index.html`: **un alias nuevo, en los dos sitios**, y sólo cuando el
-  módulo exista. Hoy: `#core/*`, `#storage/*`, `#platform/*`, `#ui/*`.
-- **Un `index.ts` por módulo** como API pública: lo que no esté ahí no existe para los demás.
+  módulo exista. **Nada comprueba el `importmap`**: un alias olvidado ahí se ve al abrir la app.
+- **Un `index.ts` por módulo** (menos `platform/`), y **sólo exporta lo que importa otro módulo de
+  `src/`**, sin `export *` (`check:exportaciones`).
 - **Las pruebas van en `test/`, espejo de `src/`** (`src/core/domain/operations.ts` →
-  `test/core/domain/operations.test.ts`). Desde `test/` se importa **por alias, incluso lo que
-  `index.ts` no exporta** (entre ficheros de `test/`, relativo); un ayudante sin pruebas **no
-  lleva `.test`**; y las listas de verificación manual también viven ahí.
+  `test/core/domain/operations.test.ts`). Desde `test/` se importa **por alias y por su fichero**
+  lo que el `index.ts` no anuncia (`#ui/noteActions`); entre ficheros de `test/`, relativo. Un
+  ayudante sin pruebas **no lleva `.test`**.
 
 ## Reglas al escribir código
 
-- **Cruzar de módulo, por alias contra el `index.ts`; dentro, relativo y CON `.js`** (el navegador
-  no adivina extensiones; lo vigila `check:extensiones`):
+- **Cruzar de módulo, por alias contra el `index.ts`; dentro, relativo y CON `.js`**
+  (`check:extensiones`):
   ```ts
   import { Note } from "#core/index"      // ✅ desde otro módulo; "../../core/domain/Note", ❌
   import { Note } from "./domain/Note.js" // ✅ dentro del core; sin .js, 404 en el navegador
@@ -82,38 +90,35 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
   ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§5).
-- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive en **treinta y tres fronteras**:
-  cinco en `FileStorageAdapter` y en `importStorage`; tres en `saveFile`; dos en `LocalStorageWindows`,
-  `LocalStorageOpenLayers`, `LocalStoragePhosphor`, `LocalStorageFraming`, `resetStorage`, `exportBackup` y `prepareImport`; y una en `writeBehind`,
-  `MemoryStorageAdapter`, cada `BlobStore`, `runMigrations` y `main.ts`. Por encima nada
-  lanza, ni el código ajeno. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.4).
-- **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Si algo de plataforma o un aviso
-  ajeno puede lanzar, va dentro de una frontera. Lo vigila `check:fronteras`, pero **su lista de lo
-  peligroso se mantiene a mano**: una API nueva que lanza, se añade ahí.
+- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive sólo en las
+  **fronteras**, donde se habla con algo que lanza. **Ausencia no es fallo:** `get` de lo que no
+  está es `ok(null)` (§6.4).
+- **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Lo vigila `check:fronteras`, pero
+  **su lista de lo peligroso se mantiene a mano**: si llamas a una API nueva que lanza, añádela ahí.
+- **Un error se mira siempre**, aunque sea para registrarlo con el `Logger`: ni un `Result` ni una
+  promesa se tiran, tampoco con `void` (`check:descartes`).
 - **Un error nace en `src/core/domain/errors/`**, no donde se produce; `Result.ts`, en `domain/`.
 - **`setChecked`, no `toggleChecked`:** un `toggle` nunca es no-op. Vale al nombrar cualquier operación.
 - **Integridad referencial:** ninguna referencia a lo que **no está en el almacén** (una nota ilegible
   sí está). Borrar una nota la quita de sus contextos; referenciar lo que no existe es no-op.
-- **`noUncheckedIndexedAccess` activo:** indexar un `Record` da `T | undefined`; trata el caso.
 - **TODO lleva tipo explícito**, aunque se infiera: declaraciones, parámetros y retornos, callbacks
   de una línea incluidos, en `src/` y en `test/`. **Cuatro excepciones:** `for…of` (TS2483), la
   constante que ES una función (sus parámetros y retorno sí), `as const` y destructuring. Las
   pruebas viejas de `test/core/` y `test/storage/` no la cumplen (deuda); lo que toques, sí. **Sin
   comprobación automática, a propósito: no la propongas** (§2.4).
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Diagram)[]`.** No negociable.
-- **Nada de credenciales en el repo ni en el bundle.** Web: la sesión de un servicio externo se
-  guarda en el navegador, conectada y revocable desde ⚙ (hasta el 2026-10-12, «token en memoria»;
-  sin construir, en `TAREAS.md` → *La nube*). Desktop: keychain.
+- **Nada de credenciales en el repo ni en el bundle.** Web: la sesión de un servicio externo, en el
+  navegador, revocable desde ⚙ (sin construir: `TAREAS.md` → *La nube*). Desktop: keychain.
 - **Comentarios en castellano.** La **cabecera** responde a «¿para qué sirve esto?» en 3-8 líneas,
-  sin porqués (van en `ARCHITECTURE.md`). **⚠️ NADA de `§` en el código**: si hay que señalar un
-  documento, se nombra el fichero. **Los comentarios de dentro se quedan**; al quitar una cabecera,
-  si explicaba un principio que no está en `ARCHITECTURE.md`, se mueve allí (§8.7).
+  sin porqués. **Los comentarios de dentro se quedan.** Al quitar una cabecera, si explicaba un
+  principio que no está en `ARCHITECTURE.md`, se mueve allí (§8.7). Sin `§` en el código
+  (`check:paragrafos`).
+- **Un porqué de una sola funcionalidad no va en `ARCHITECTURE.md`**: allí sólo los principios.
 
 ## Dependencias
 
-**Sólo cuando la fase las usa de verdad**, y fuera si dejan de usarse; antes, mirar si Node,
-TypeScript o el navegador ya lo hacen. Cero de runtime. Hoy: **`typescript` y `@types/node`** (tres
-paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (§8.5).
+**Sólo cuando se usan de verdad**, y fuera si dejan de usarse; antes, mirar si Node, TypeScript o
+el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrollo** (§8.5).
 
 ## Decisiones cerradas — no volver a proponer alternativas
 
@@ -123,24 +128,27 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - CSS nativo, sin Tailwind ni preprocesador: un fichero por vista **en el orden de la cascada**,
   anidamiento nativo, `@layer base`, colores sólo en `base.css`. Al tocarlo, comparar el estilo calculado.
 - Sin bundler: `importmap` y `.js` en los relativos. `node:test`, no vitest. Pruebas en `test/`.
-- Navegador y UI se verifican **a mano**, no con Playwright. Si tocas `DirectoryHandleBlobStore.ts`,
-  se vuelve a pasar su lista (`test/storage/blobs/`; la única excepción, en `TAREAS.md`).
+- Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o Claude en el
+  panel. Si tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`;
+  la única excepción, en `TAREAS.md`).
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
+- Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el
+  build, es rápido y casi nunca se equivoca. Las roturas, con una lista a mano, no con Stryker.
+- Hooks en `.claude/settings.json`: al editar, los tipos y los guardianes; al terminar, `check`
+  entero si hay cambios sin comitear en `src/`, `test/` o `tools/`.
 
-**Dominio y editor**
-- Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca. Fase 1 = bajo `Versioned`.
-- El helper de copia por camino son DOS primitivas, con la recursión escrita una vez.
+**Dominio**
+- Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca.
 - `Position`: `root-end`, `after`, `last-child-of`, sólo para `insert`. ⚠️ No la justifiques por la barra.
 - Ocho operaciones; **ni `move` ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente.
 - Marcar una casilla NO arrastra a sus hijas; la cascada, si llega, en una sola acción.
 - `remove`, `merge` y `convertToText` de una línea con hijas: no-op. No existe «borrar una rama».
-- Retroceso en una casilla: `convertToText`, y luego `merge` con la línea que se ve encima.
-- `WritingMode` = «☐ Casilla» + anidar (sólo con casilla, actúa una vez). No se persiste.
-- Intro al final de un texto: `after`, debajo (`root-end`, sólo en nota vacía). Desde una casilla
-  anidada con el interruptor apagado —Intro o partir—, sale texto bajo su casilla de la raíz.
-- Anidar armado en un texto crea casilla hermana; `split` no anida. Marcar: Ctrl/Cmd+Intro.
+- `WritingMode` = «☐ Casilla» + anidar (sólo con casilla, actúa una vez). No se persiste. El resto
+  del teclado lo fijan las pruebas del editor: si una cae, era una decisión.
 - Una acción, una operación. Los casos de uso devuelven la entidad protagonista o `null`: ⚠️ no es undo.
 - Lo público, en inglés; la maquinaria interna, en castellano. Diagrama (`Diagram`), no Plan.
+- Seis puertos: el sexto, `Logger` (sólo el tipo), con `consoleLogger` en `platform/web/`; lo
+  reciben en sus dependencias quienes registran.
 
 **Persistencia y errores**
 - **Manda el modelo, no el fichero:** un fichero o una fila es la copia guardada de una entidad.
@@ -163,13 +171,15 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
 - Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
 - Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
-  `sessionStorage`); ⚙ no. Lo que ya no está se corta, y lo de encima con ello (desde el 2026-10-13).
+  `sessionStorage`); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
 - Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí y en
-  ⚙ se crea contexto, nota o diagrama; los dos últimos, sin contexto (⚙, desde el 2026-10-13).
+  ⚙ se crea contexto, nota o diagrama; los dos últimos, sin contexto.
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
 - Selección por pulsación larga. «Mover a…» mueve y no confirma.
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí.
-- Título sólo en la cabecera, renombrable. `defaultView`, sin uso.
+- Título sólo en la cabecera, renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
+- El atrás del navegador cierra lo de encima; abrir una capa que no consigue su entrada en el
+  historial no se cae, y se cierra sin ir atrás.
 
 **Aspecto**
 - Terminal de fósforo: **ámbar o verde, a elegir en ⚙**, ámbar por defecto; **siempre en oscuro**.
@@ -194,8 +204,8 @@ paquetes en el `package-lock.json`). **Sin bundler ni servidor de desarrollo** (
 - `persist()` en `main.ts`, fuera de `try` y de `check:fronteras`.
 - *Service worker* en JS plano, `pwa/sw.js`, sólo en la copia publicada.
 - Icono `purpose: "any"`, orientación libre, versión a la vista en ⚙, pantalla de carga negra.
-- Icono: el dibujo del «nerd» con lluvia de letras verdes sobre negro (Fase 8; era azul).
-- Barras del móvil con el color del sistema (Fase 7: fuera `theme-color` y `theme_color`).
+- Icono: el dibujo del «nerd» con lluvia de letras verdes sobre negro.
+- Barras del móvil con el color del sistema: sin `theme-color` ni `theme_color`.
 
 **Copia de seguridad**
 - Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el fósforo y los encuadres.
@@ -214,52 +224,39 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - Reordenar y re-anidar líneas (`move`, `indent`, `outdent`), hasta contestar las tres preguntas
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
-- La nube con Supabase (diseñada el 2026-10-12, sin fase: `TAREAS.md` → *La nube*) · `storageTarget`
+- La nube con Supabase (diseñada, sin fase: `TAREAS.md` → *La nube*) · `storageTarget`
 - Exportar a Markdown · importar mezclando · formato de texto y texto más grande (sin fase)
 - Shells de desktop y móvil (Tauri / Capacitor) · sync entre pares · CRDTs, colaboración
 
 ## Plan por fases
 
-- **Fases 0 a 3** — andamiaje, dominio puro, acciones y persistencia, fichero local. ✅
-- **Fase 4 — UI, sólo web.** ✅ Con deuda: **las tres preguntas del editor, sin contestar** (`TAREAS.md`).
-- **Fase 5 — Diagramas.** ✅ Modelo, Lienzo y Relaciones.
-- **Fase 6 — PWA.** ✅ Publicada e instalada en el móvil del usuario.
-- **Fase 7 — Refactor.** ✅ Cerrada el 2026-10-12 con **729 pruebas**, probada en el móvil: la
-  barra de la nota sube con el teclado, barras del móvil sin color propio, puntos del lienzo a media
-  intensidad, pósits a `8rem`, arranque medido (no duele), arrastre de nodos optimizado,
-  documentación adelgazada y nota o diagrama nuevos desde el «+».
-- **Fase 8 — Aspecto de terminal.** ✅ Cerrada el 2026-10-12 con **742 pruebas**, sin deuda: el
-  usuario la revisó y la dio por hecha. Fósforo ámbar o verde, letra monoespaciada, formas
-  rectas, CRT suave, icono nuevo y fuera el emoji de la papelera.
-- **Copia de seguridad** (sin fase). ✅ 2026-10-12 con **803 pruebas**, probada por el usuario:
-  exportar e importar en ⚙ → Datos. Pendiente, pasar su lista manual.
-- **Ventanas, hueco y encuadre** (sin fase). ✅ 2026-10-13 con **828 pruebas**, validado por el
-  usuario en el móvil: ⚙ crea lo mismo que el «+», tocar el hueco de la nota escribe al final,
-  el encuadre del diagrama se recuerda y va en la copia, y la mira.
-- **Versión 1.** ✅ Cerrada el 2026-10-13 por el usuario, con **828 pruebas**: etiqueta `v1.0.0`.
-  Pasan a la siguiente: **pasar la lista manual de la copia** y **las tres preguntas del editor**.
-- **Volver a lo abierto al recargar** (sin fase). 2026-10-13, tras la `v1.0.0`, con **844 pruebas**:
-  la nota o el diagrama de encima se reabren al volver a la app. Validado por el usuario en el móvil.
-
-**Abierto** (`TAREAS.md`): si entra OPFS y qué pasa con lo guardado en `localStorage` al cambiar
-de destino. Sin fase: la nube con Supabase (diseñada el 2026-10-12), exportar a Markdown, pasar de
-Node 20 y el negro repetido en el manifiesto.
+Las fases 0 a 8 y las tandas sin fase están cerradas, resumidas en `TAREAS.md` con sus commits.
+**Deuda que arrastran:** las tres preguntas del editor, sin contestar. **En curso:** la que diga
+`TAREAS.md` → *Pendiente*.
 
 ## Comandos
 
 ```bash
-npm run check              # las seis de abajo, en orden. Esto antes de commit.
-npm run typecheck          # tsc de la app: sólo src/, que es donde vive el código
-npm run typecheck:core     # LA VERJA: falla si el core toca plataforma
-npm run check:purity       # GUARDIÁN: falla si el core lee el reloj o el azar
-npm run check:fronteras    # GUARDIÁN: falla si una excepción puede escaparse de su frontera
-npm run check:extensiones  # GUARDIÁN: falla si un import relativo de src/ no lleva .js
-npm test                   # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
-npm run build:web          # compila src/ a dist/web/ en ESM, para el navegador
+npm run check                # todo lo de abajo hasta npm test, en orden. Esto antes de commit
+npm run typecheck            # tsc de la app, con las opciones estrictas
+npm run typecheck:core       # LA VERJA: falla si el core toca plataforma
+npm run check:purity         # falla si el core lee el reloj o el azar
+npm run check:fronteras      # falla si una excepción puede escaparse de su frontera
+npm run check:extensiones    # falla si un import relativo de src/ no lleva .js
+npm run check:descartes      # falla si un Result o una promesa se tiran sin mirarlos
+npm run check:paragrafos     # falla si el código señala un documento por número de sección
+npm run check:exportaciones  # falla si un index.ts anuncia lo que ningún otro módulo usa
+npm run check:tareas         # falla si una tarea abierta no dice cómo se cierra
+npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o crónica, o hay § rotas
+npm test                     # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
+npm run check:roturas        # FUERA de check (~4 min): rompe a propósito y exige que algo caiga
+npm run build:web            # compila src/ a dist/web/ en ESM, para el navegador
 python3 -m http.server 8000                # y se abre http://localhost:8000
 python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000
-npm run build:pages        # tras build:web: arma dist/pages/ (lo publicado). Niega rutas absolutas
+npm run build:pages          # tras build:web: arma dist/pages/ (lo publicado). Niega rutas absolutas
 ```
+
+`npm run check:roturas -- fósforo` pasa sólo las que lo lleven en el nombre.
 
 **Publicar es hacer `push` a `main`**; lo hace el usuario (denegado aquí en `.claude/settings.json`,
 a propósito). Lo publicado se prueba sirviendo `dist/pages/` en una subcarpeta de `localhost`.
