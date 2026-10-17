@@ -607,7 +607,8 @@ guardianes nuevos.
       sobre un cambio.
 - ~~**C4. Ramas, *pull requests* y CI en los PR**~~ — ❌ **descartada por el usuario el
       2026-10-13**: no hay `push` a otras ramas.
-- [ ] **C5. Pasar las listas manuales con el navegador del panel.** La primera, la de la copia
+- [x] **C5. Pasar las listas manuales con el navegador del panel.** ✅ *(2026-10-17: E5 e I6, en
+      el móvil, por el usuario, que ya los había probado; anotados en la lista con su palabra)*. La primera, la de la copia
       (`test/ui/VERIFICACION-MANUAL-COPIA.md`), la deuda de la Versión 1. **Pasada por Claude el
       2026-10-17, anotada en la lista:** 20 de 22 pasos, 10 de ellos simulados (los diálogos del
       sistema, sustituidos dentro de la página: E3 y E4, que parecían imposibles, también) y F

@@ -134,6 +134,20 @@ location.reload()
 Cómo se pasa y cómo se marca cada paso: `test/PASAR-LAS-LISTAS.md`.
 
 ```
+Fecha:        anotada el 2026-10-17; probado antes, sin fecha exacta
+Navegador:    la PWA instalada en el móvil del usuario (Android)
+Quién:        el usuario, en su móvil
+Commit:       el publicado entonces en main, no esta rama
+Origen:       la publicada
+
+E5  ✅ — según el usuario: «ya la probé con anterioridad y sí hace correcto»
+I6  ✅ — según el usuario, la misma respuesta
+
+Notas: los dos pasos que el panel no podía, completan la pasada de abajo. Sin anotar paso a
+paso: lo que consta es la palabra del usuario.
+```
+
+```
 Fecha:        2026-10-17
 Navegador:    el del panel de Claude (Chromium 152.0.7977.130, Linux)
 Quién:        Claude, en el panel
