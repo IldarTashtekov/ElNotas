@@ -99,6 +99,11 @@ directamente.
 - **C6.** **Marcar hecho** lo atenúa y lo tacha; el menú dice entonces **Desmarcar hecho**.
 - **C7.** **Borrar** lo quita **sin preguntar**, y con él sus líneas.
 - **C8.** Un texto largo se parte en líneas y **el pósit crece hacia abajo**; el ancho no cambia.
+- **C9.** *(Con la consola.)* Borrar un pósit **deja de vigilarlo**: el lienzo no sigue
+  midiéndolo hasta cerrarse. Antes de abrir el diagrama, en la consola:
+  `const u = ResizeObserver.prototype.unobserve; ResizeObserver.prototype.unobserve = function (el)
+  { console.log("suelto", el.textContent); return u.call(this, el) }`. Abrirlo, borrar un pósit
+  (C7): sale **«suelto»** con su texto, una vez, y ninguno de los que se quedan.
 
 ## D. Mover un pósit
 

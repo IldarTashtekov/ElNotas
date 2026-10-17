@@ -228,6 +228,24 @@ export const ROTURAS = [
     prueba: "si la copia no trae ventanas, fósforo ni encuadres, los de antes también se van",
   },
 
+  /* ── reconcile ── */
+  {
+    nombre: "reconcile: avisa con cada uno que sobra antes de quitarlo",
+    fichero: "src/ui/reconcile.ts",
+    buscar: "    remove?.(sobra)\n    contenedor.removeChild(sobra)\n",
+    poner: "    void remove\n    contenedor.removeChild(sobra)\n",
+    caza: "pruebas",
+    prueba: "remove se llama con cada fila que sobra, antes de quitarla, y con ninguna más",
+  },
+  {
+    nombre: "reconcile: el aviso llega antes de quitarlo, no después",
+    fichero: "src/ui/reconcile.ts",
+    buscar: "    remove?.(sobra)\n    contenedor.removeChild(sobra)\n",
+    poner: "    contenedor.removeChild(sobra)\n    remove?.(sobra)\n",
+    caza: "pruebas",
+    prueba: "remove se llama con cada fila que sobra, antes de quitarla, y con ninguna más",
+  },
+
   /* ── El editor ── */
   {
     nombre: "editor: tocar el hueco escribe tras la última línea",
@@ -298,8 +316,8 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una tarea abierta sin decir cómo se cierra",
     fichero: "TAREAS.md",
-    buscar: "      **Se cierra cuando** borrar un pósit deja de vigilarlo,",
-    poner: "      Cuando borrar un pósit deja de vigilarlo,",
+    buscar: "**Se cierra cuando** el usuario decide si existe;",
+    poner: "Cuando el usuario decide si existe;",
     caza: "check:tareas",
   },
   {

@@ -25,12 +25,14 @@ export interface ReconcileSteps<T, E> {
   readonly create: (item: T) => E
   /** Tiene que tocar sólo lo que cambió: se llama también con los que siguen. */
   readonly update: (el: E, item: T) => void
+  /** Antes de quitar uno que sobra: para soltar lo que `create` le enganchó. */
+  readonly remove?: ((el: E) => void) | undefined
 }
 
 export const reconcile = <T, E>(
   contenedor: KeyedContainer<E>,
   items: ReadonlyArray<T>,
-  { key, keyOf, create, update }: ReconcileSteps<T, E>,
+  { key, keyOf, create, update, remove }: ReconcileSteps<T, E>,
 ): void => {
   /* Índice local de lo que ya hay. Lo que quede en él al final, sobra. */
   const existentes: Map<string, E> = new Map<string, E>()
@@ -49,7 +51,10 @@ export const reconcile = <T, E>(
     if (contenedor.children[i] !== el) contenedor.insertBefore(el, contenedor.children[i] ?? null)
   })
 
-  for (const sobra of existentes.values()) contenedor.removeChild(sobra)
+  for (const sobra of existentes.values()) {
+    remove?.(sobra)
+    contenedor.removeChild(sobra)
+  }
 }
 
 /** Para los `update`: escribe el texto sólo si es otro. */

@@ -158,3 +158,25 @@ test("una lista vacía quita todo", (): void => {
   reconcile(c, [], cuenta.pasos)
   assert.deepEqual(c.hijos(), [])
 })
+
+test("remove se llama con cada fila que sobra, antes de quitarla, y con ninguna más", (): void => {
+  const c: Falso = contenedor()
+  const cuenta: Cuenta = pasos()
+  reconcile(c, [item("a"), item("b"), item("c")], cuenta.pasos)
+  const [, b] = c.hijos()
+  let soltadas: ReadonlyArray<Fila> = []
+  let seguiaDentro: boolean = false
+
+  reconcile(c, [item("a"), item("c")], {
+    ...cuenta.pasos,
+    remove: (fila: Fila): void => {
+      soltadas = [...soltadas, fila]
+      seguiaDentro = c.hijos().includes(fila)
+    },
+  })
+
+  assert.equal(soltadas.length, 1)
+  assert.strictEqual(soltadas[0], b)
+  assert.equal(seguiaDentro, true, "remove tiene que llegar antes de quitarla")
+  assert.deepEqual(textos(c), ["a", "c"])
+})

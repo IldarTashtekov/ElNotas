@@ -637,11 +637,12 @@ guardianes nuevos.
       `#core/index` y compila el core entero, y la página sólo necesita `err` y `ok`— y el número
       de errores que imprime: dos, no siete, comprobado compilando como dice el paso, sin cambiar
       los pasos. `DirectoryHandleBlobStore.ts` no se tocó: su lista no hay que repasarla.
-- [ ] **D3. El `unobserve` de los pósits borrados** en `src/ui/DiagramCanvas.ts`: el lienzo los
-      sigue vigilando hasta cerrarse. Es la única fuga de memoria encontrada el 2026-10-13, leyendo
-      el código: diminuta y que se libera sola.
-      **Se cierra cuando** borrar un pósit deja de vigilarlo, con su paso en la lista manual del
-      lienzo, comprobado en el panel.
+- [x] **D3. El `unobserve` de los pósits borrados** ✅ *(2026-10-17)*. `reconcile` gana un paso
+      opcional, `remove`, que llega con cada elemento que sobra **antes** de quitarlo, y el lienzo
+      lo usa para `tamanos.unobserve`. `reconcile` es pura: una prueba nueva (846) y dos roturas
+      en la lista (no avisar; avisar después de quitar), cazadas. Lo del DOM, comprobado en el
+      panel: con dos pósits vigilados, borrar uno deja de vigilar justo ése y sigue con el otro.
+      Paso nuevo en `test/ui/VERIFICACION-MANUAL-LIENZO.md`, C9.
 
 #### E. Documentación, en un solo pase al cerrar
 

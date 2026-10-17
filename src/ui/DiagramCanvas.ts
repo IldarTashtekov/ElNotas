@@ -311,6 +311,8 @@ export const createDiagramCanvas = ({
         tamanos.observe(el)
         return el
       },
+      /* Si no, el lienzo lo seguiría vigilando hasta cerrarse. */
+      remove: (el: Element): void => tamanos.unobserve(el),
       update: (el: Element, nodo: DiagramNode): void => {
         if (!(el instanceof HTMLElement)) return
         /* El que se arrastra lo coloca el dedo, no el estado. */
