@@ -8,16 +8,14 @@ import assert from "node:assert/strict"
 
 import type { Clock, IdGenerator, Result, StorageError } from "#core/index"
 import { CURRENT_SCHEMA_VERSION } from "#core/index"
-import type { Cancel } from "#storage/index"
+import type { Cancel } from "#storage/writeBehind"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type { ImportPreparation } from "#ui/index"
-import type { App, BootError } from "#platform/index"
-import {
-  boot,
-  createLocalStorageFraming,
-  createLocalStoragePhosphor,
-  createLocalStorageWindows,
-} from "#platform/index"
+import type { App, BootError } from "#platform/web/boot"
+import { boot } from "#platform/web/boot"
+import { createLocalStorageFraming } from "#platform/web/LocalStorageFraming"
+import { createLocalStoragePhosphor } from "#platform/web/LocalStoragePhosphor"
+import { createLocalStorageWindows } from "#platform/web/LocalStorageWindows"
 import type { Backup } from "#platform/web/backup"
 import { BACKUP_VERSION, makeBackup } from "#platform/web/backup"
 import { collectBackup } from "#platform/web/exportBackup"

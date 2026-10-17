@@ -7,8 +7,8 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { KeyedContainer, ReconcileSteps } from "#ui/index"
-import { reconcile } from "#ui/index"
+import type { KeyedContainer, ReconcileSteps } from "#ui/reconcile"
+import { reconcile } from "#ui/reconcile"
 
 interface Fila {
   readonly clave: string

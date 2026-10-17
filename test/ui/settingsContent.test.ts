@@ -6,17 +6,20 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Context, Diagram, Note } from "#core/index"
-import { contextId, diagramId, emptyAppState, noteId, revision } from "#core/index"
-import type { SettingsContent, WindowRef, WindowRow } from "#ui/index"
+import { contextId, diagramId, noteId } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
+import { revision } from "#core/domain/Ids"
+import type { SettingsContent, WindowRow } from "#ui/settingsContent"
+import type { WindowRef } from "#ui/windows"
+import { GENERAL } from "#ui/windows"
+import { GENERAL_TITLE } from "#ui/windowView"
 import {
-  GENERAL,
-  GENERAL_TITLE,
   addWindowChoices,
   choiceGroupLabel,
   resetQuestion,
   settingsContent,
   versionLine,
-} from "#ui/index"
+} from "#ui/settingsContent"
 
 const contexto = (id: string, name: string): Context => ({
   id: contextId(id),

@@ -10,19 +10,22 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Context } from "#core/index"
-import { contextId, diagramId, emptyAppState, noteId, revision } from "#core/index"
-import type { WindowRef, WindowsLayout } from "#ui/index"
+import { contextId, diagramId, noteId } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
+import { revision } from "#core/domain/Ids"
+import type { WindowRef } from "#ui/windows"
+import type { WindowsLayout } from "#ui/index"
 import {
   DEFAULT_LAYOUT,
   GENERAL,
   guardWindows,
   insertWindowAfter,
   moveWindow,
-  parseWindowsLayout,
   removeWindowAt,
   replaceWindowAt,
   sameWindow,
-} from "#ui/index"
+} from "#ui/windows"
+import { parseWindowsLayout } from "#ui/index"
 
 const contexto = (id: string): Context => ({
   id: contextId(id),

@@ -7,8 +7,8 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { IdGenerator } from "#core/index"
-import type { RandomSource } from "#platform/index"
-import { createCryptoIdGenerator } from "#platform/index"
+import type { RandomSource } from "#platform/web/CryptoIdGenerator"
+import { createCryptoIdGenerator } from "#platform/web/CryptoIdGenerator"
 
 const UUID_V4: RegExp = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 

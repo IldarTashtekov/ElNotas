@@ -6,7 +6,8 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Box, FanItem, Point, RelationCurve } from "#ui/index"
+import type { Box, FanItem, RelationCurve } from "#ui/relationGeometry"
+import type { Point } from "#ui/viewport"
 import {
   FAN_SPACING,
   borderPoint,
@@ -16,7 +17,7 @@ import {
   labelPath,
   relationCurve,
   relationsOf,
-} from "#ui/index"
+} from "#ui/relationGeometry"
 
 /** Un pósit de 100 × 40 centrado en el origen, y otro igual 300 a su derecha. */
 const A: Box = { x: 0, y: 0, width: 100, height: 40 }

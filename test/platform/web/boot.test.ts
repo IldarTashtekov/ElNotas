@@ -22,10 +22,10 @@ import type {
   StorageError,
 } from "#core/index"
 import { CURRENT_SCHEMA_VERSION, noteRef } from "#core/index"
-import type { Cancel } from "#storage/index"
+import type { Cancel } from "#storage/writeBehind"
 import { createFileStorageAdapter, createLocalStorageBlobStore } from "#storage/index"
-import type { App, BootError } from "#platform/index"
-import { boot } from "#platform/index"
+import type { App, BootError } from "#platform/web/boot"
+import { boot } from "#platform/web/boot"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"

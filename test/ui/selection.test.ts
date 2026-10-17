@@ -7,8 +7,8 @@ import assert from "node:assert/strict"
 
 import type { NoteId } from "#core/index"
 import { diagramId, diagramRef, noteId, noteRef } from "#core/index"
-import type { Selection } from "#ui/index"
-import { NO_SELECTION, itemKey, pruneSelected, toggleSelected } from "#ui/index"
+import type { Selection } from "#ui/selection"
+import { NO_SELECTION, itemKey, pruneSelected, toggleSelected } from "#ui/selection"
 
 const A: NoteId = noteId("a")
 const B: NoteId = noteId("b")

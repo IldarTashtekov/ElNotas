@@ -7,8 +7,9 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Content } from "#core/index"
-import { checkBox, contentId, text } from "#core/index"
-import { inReadingOrder, lastLine, lineBeside, mergeTarget, rootAncestor } from "#ui/index"
+import { checkBox, text } from "#core/domain/Content"
+import { contentId } from "#core/index"
+import { inReadingOrder, lastLine, lineBeside, mergeTarget, rootAncestor } from "#ui/noteTree"
 
 /*
     T intro

@@ -17,9 +17,12 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
-import { createStore, createUseCases, emptyAppState, err, ok } from "#core/index"
-import type { WindowRef, WindowsLayout, WindowsModel, WindowsPersistence } from "#ui/index"
-import { DEFAULT_LAYOUT, GENERAL, createWindowsModel } from "#ui/index"
+import { createStore, createUseCases, err, ok } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
+import type { WindowRef } from "#ui/windows"
+import type { WindowsLayout, WindowsModel, WindowsPersistence } from "#ui/index"
+import { DEFAULT_LAYOUT, GENERAL } from "#ui/windows"
+import { createWindowsModel } from "#ui/index"
 import type { RecordingLogger } from "../core/ports/FakeLogger"
 import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 

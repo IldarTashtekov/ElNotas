@@ -17,9 +17,10 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
-import { createStore, createUseCases, diagramId, emptyAppState, err, noteId, ok } from "#core/index"
+import { createStore, createUseCases, diagramId, err, noteId, ok } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
 import type { OpenLayers, OpenLayersPersistence } from "#ui/index"
-import { NO_LAYERS, guardOpenLayers, layersToRestore, parseOpenLayers } from "#ui/index"
+import { NO_LAYERS, guardOpenLayers, layersToRestore, parseOpenLayers } from "#ui/openLayers"
 
 interface Escenario {
   readonly store: Store

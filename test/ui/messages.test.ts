@@ -7,7 +7,8 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { MigrationError, StorageError } from "#core/index"
-import { describeBootError, describeMigrationError, describeStorageError } from "#ui/index"
+import { describeBootError } from "#ui/index"
+import { describeMigrationError, describeStorageError } from "#ui/messages"
 
 const CORRUPTO: StorageError = { kind: "corrupt", path: "notes/rota.json", cause: "x" }
 const DEL_FUTURO: MigrationError = { kind: "schema-from-future", stored: 9, supported: 1 }

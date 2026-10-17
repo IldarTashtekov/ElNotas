@@ -27,7 +27,8 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Note, Result, StorageAdapter, StorageError } from "#core/index"
-import { err, noteId, revision } from "#core/index"
+import { err, noteId } from "#core/index"
+import { revision } from "#core/domain/Ids"
 
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import type { Schedule } from "#storage/writeBehind"

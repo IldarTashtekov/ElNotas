@@ -10,13 +10,12 @@ import type { MigrationError, StorageError } from "#core/index"
 import type { ImportPreparation, ImportSummary } from "#ui/index"
 import {
   IMPORT_NOT_APPLIED,
-  describeImportFailure,
-  describeMigrationError,
-  describeStorageError,
   exportMessage,
   importProblem,
   importQuestion,
-} from "#ui/index"
+} from "#ui/settingsContent"
+import { describeImportFailure } from "#ui/index"
+import { describeMigrationError, describeStorageError } from "#ui/messages"
 
 const resumen = (cambios: Partial<ImportSummary>): ImportSummary => ({
   notes: 0,

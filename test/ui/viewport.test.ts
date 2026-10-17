@@ -6,7 +6,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Framing, Point, Viewport } from "#ui/index"
+import type { Framing, Point, Viewport } from "#ui/viewport"
 import {
   MAX_SCALE,
   MIN_SCALE,
@@ -19,7 +19,7 @@ import {
   viewportFor,
   wheelFactor,
   zoomAround,
-} from "#ui/index"
+} from "#ui/viewport"
 
 /** El corcho desplazado (100, 50) y a escala 2. */
 const V: Viewport = { offsetX: 100, offsetY: 50, scale: 2 }

@@ -6,14 +6,14 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Tap } from "#ui/index"
+import type { Tap } from "#ui/gestures"
 import {
   DOUBLE_TAP_DISTANCE_PX,
   DOUBLE_TAP_MS,
   MOVE_TOLERANCE_PX,
   isDoubleTap,
   movedBeyondTolerance,
-} from "#ui/index"
+} from "#ui/gestures"
 
 const PRIMERO: Tap = { x: 100, y: 100, time: 1000, target: "nodo-a" }
 

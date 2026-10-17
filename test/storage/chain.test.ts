@@ -33,16 +33,9 @@ import type {
   StorageAdapter,
   StorageError,
 } from "#core/index"
-import {
-  checkBox,
-  contentId,
-  createStore,
-  createUseCases,
-  isCheckBox,
-  noteId,
-  revision,
-  text,
-} from "#core/index"
+import { checkBox, text } from "#core/domain/Content"
+import { contentId, createStore, createUseCases, isCheckBox, noteId } from "#core/index"
+import { revision } from "#core/domain/Ids"
 
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import { createWriteBehind } from "#storage/writeBehind"

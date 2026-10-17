@@ -6,7 +6,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { RESET_KEY, requestReset, resetIfRequested } from "#platform/index"
+import { RESET_KEY, requestReset, resetIfRequested } from "#platform/web/resetStorage"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage } from "../../storage/blobs/FakeStorage"

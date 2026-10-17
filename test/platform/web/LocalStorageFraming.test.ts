@@ -7,10 +7,11 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Clock, Diagram, IdGenerator, Result, StorageError, Store, UseCases } from "#core/index"
-import { createStore, createUseCases, emptyAppState } from "#core/index"
+import { createStore, createUseCases } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
 import type { DiagramFraming, FramingPersistence, Framings } from "#ui/index"
 import { createDiagramFraming } from "#ui/index"
-import { FRAMING_KEY, createLocalStorageFraming } from "#platform/index"
+import { FRAMING_KEY, createLocalStorageFraming } from "#platform/web/LocalStorageFraming"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"

@@ -17,15 +17,12 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
-import { createStore, createUseCases, emptyAppState, err, ok } from "#core/index"
+import { createStore, createUseCases, err, ok } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
 import type { DiagramFraming, FramingPersistence, Framings } from "#ui/index"
-import {
-  MAX_SCALE,
-  NO_FRAMINGS,
-  createDiagramFraming,
-  guardFramings,
-  parseFramings,
-} from "#ui/index"
+import { MAX_SCALE } from "#ui/viewport"
+import { NO_FRAMINGS, guardFramings } from "#ui/diagramFraming"
+import { createDiagramFraming, parseFramings } from "#ui/index"
 import type { RecordingLogger } from "../core/ports/FakeLogger"
 import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 

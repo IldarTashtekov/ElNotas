@@ -9,12 +9,8 @@ import assert from "node:assert/strict"
 import type { Result, StorageError } from "#core/index"
 import type { Phosphor, PhosphorPersistence, PhosphorSetting } from "#ui/index"
 import { createPhosphorSetting } from "#ui/index"
-import {
-  PHOSPHOR_KEY,
-  createLocalStoragePhosphor,
-  requestReset,
-  resetIfRequested,
-} from "#platform/index"
+import { PHOSPHOR_KEY, createLocalStoragePhosphor } from "#platform/web/LocalStoragePhosphor"
+import { requestReset, resetIfRequested } from "#platform/web/resetStorage"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"

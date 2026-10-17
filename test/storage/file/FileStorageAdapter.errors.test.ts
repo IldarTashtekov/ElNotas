@@ -16,17 +16,16 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Context, Diagram, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import { checkBox, text } from "#core/domain/Content"
 import {
-  checkBox,
   contentId,
   contextId,
   diagramId,
   diagramNodeId,
   diagramRelationId,
   noteId,
-  revision,
-  text,
 } from "#core/index"
+import { revision } from "#core/domain/Ids"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
 import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"

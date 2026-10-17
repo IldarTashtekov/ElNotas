@@ -5,7 +5,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { dropIndex } from "#ui/index"
+import { dropIndex } from "#ui/dropIndex"
 
 const CENTROS: ReadonlyArray<number> = [50, 150, 250, 350]
 

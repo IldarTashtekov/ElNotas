@@ -25,27 +25,20 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
+import { checkBox, text } from "#core/domain/Content"
+import { contentId, createStore, createUseCases, isCheckBox, noteId } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
+import { revision } from "#core/domain/Ids"
+import type { Caret, EditResult, EditorDeps } from "#ui/editor"
+import type { WritingMode } from "#ui/writingMode"
+import { INITIAL_MODE, toggleNest } from "#ui/writingMode"
 import {
-  checkBox,
-  contentId,
-  createStore,
-  createUseCases,
-  emptyAppState,
-  isCheckBox,
-  noteId,
-  revision,
-  text,
-} from "#core/index"
-import type { Caret, EditResult, EditorDeps, WritingMode } from "#ui/index"
-import {
-  INITIAL_MODE,
   pressBackspaceAtStart,
   pressEnter,
   startWriting,
   toggleCheckbox,
   toggleChecked,
-  toggleNest,
-} from "#ui/index"
+} from "#ui/editor"
 
 /* ─────────────────────────────── El escenario ───────────────────────────── */
 

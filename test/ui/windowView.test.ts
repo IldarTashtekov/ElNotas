@@ -7,9 +7,14 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Context, Diagram, ItemRef, Note } from "#core/index"
-import { contextId, diagramId, diagramRef, emptyAppState, noteId, noteRef, revision } from "#core/index"
-import type { ListItem, WindowRef, WindowView, WindowsLayout } from "#ui/index"
-import { GENERAL, GENERAL_TITLE, windowView } from "#ui/index"
+import { contextId, diagramId, diagramRef, noteId, noteRef } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
+import { revision } from "#core/domain/Ids"
+import type { ListItem, WindowView } from "#ui/windowView"
+import type { WindowRef } from "#ui/windows"
+import type { WindowsLayout } from "#ui/index"
+import { GENERAL } from "#ui/windows"
+import { GENERAL_TITLE, windowView } from "#ui/windowView"
 
 const nota = (id: string, name: string): Note => ({
   id: noteId(id),

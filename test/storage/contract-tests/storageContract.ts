@@ -19,7 +19,8 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Context, Diagram, Note, Result, StorageAdapter, StorageError } from "#core/index"
-import { contextId, diagramId, err, noteId, noteRef, ok, revision } from "#core/index"
+import { contextId, diagramId, err, noteId, noteRef, ok } from "#core/index"
+import { revision } from "#core/domain/Ids"
 
 /* ──────────────────── Abrir el sobre, fallando si no toca ─────────────────── */
 

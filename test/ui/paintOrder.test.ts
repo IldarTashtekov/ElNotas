@@ -5,7 +5,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { paintOrder, raise } from "#ui/index"
+import { paintOrder, raise } from "#ui/paintOrder"
 
 test("sin levantar ninguno, se pintan en su orden de creación", (): void => {
   assert.deepEqual(paintOrder(["a", "b", "c"], []), ["a", "b", "c"])

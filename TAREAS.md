@@ -558,8 +558,21 @@ guardianes nuevos.
       comentario de `test/storage/blobs/verificacion-manual.html`), señalan ahora fichero y título
       de sección; sus títulos, a revisar en E2. En `check`, en el hook de editar y con su rotura
       en la lista de B2, cazada. `check` en verde con 845.
-- [ ] **B5. Exportaciones muertas:** lo que exporta un `index.ts` y nadie importa fuera de su
-      módulo. **Se cierra** con 0 y el guardián roto a propósito.
+- [x] **B5. Exportaciones muertas** ✅ *(aprobado por el usuario el 2026-10-14, opción a)*.
+      **Código muerto no había:** lo único que nadie usa es `createDirectoryHandleBlobStore`,
+      aparcado a propósito. Lo que sobraba eran **líneas de escaparate**: de 296 exportaciones de
+      `core`, `storage` y `ui`, 100 no las usaba nadie fuera de su módulo y 109 sólo las pruebas
+      (el de `ui` anunciaba 168 piezas y `platform/` usa 25). **La regla:** un `index.ts` sólo
+      exporta lo que importa otro módulo de `src/`; las pruebas importan lo demás por su fichero
+      (`#ui/noteActions`), que `CLAUDE.md` ya permitía. Quedan 87 (54, 8 y 25), y 33 pruebas
+      cambian sólo sus imports. **`src/platform/index.ts` desaparece**, y con él su entrada del
+      `importmap` de `index.html`: nadie importa `platform` por diseño, y lo que exportaba lo
+      usaban sólo las pruebas (`#platform/*` de `package.json` sigue, para ellas). **Pasa a E1:**
+      la regla «un `index.ts` por módulo» de `CLAUDE.md`, con esa excepción. El guardián,
+      `npm run check:exportaciones` (`tools/check-exportaciones.mjs`, analizador de TypeScript,
+      menos de un segundo), también rechaza `export *`. En `check`, en el hook de editar y con su
+      rotura en la lista de B2, cazada. `check` en verde con 845; las 36 roturas, cazadas; en el
+      panel, la app arranca sin errores con el `importmap` nuevo, y `build:pages` arma la copia.
 
 #### C. La forma de trabajar
 

@@ -289,6 +289,13 @@ export const ROTURAS = [
     caza: "check:paragrafos",
   },
   {
+    nombre: "check:exportaciones: el escaparate de ui anuncia una pieza interna",
+    fichero: "src/ui/index.ts",
+    buscar: 'export { mountApp } from "./App.js"\n',
+    poner: 'export { mountApp } from "./App.js"\nexport { mountNoteView } from "./NoteView.js"\n',
+    caza: "check:exportaciones",
+  },
+  {
     nombre: "check:descartes: un Result tirado con void",
     fichero: "src/ui/phosphor.ts",
     buscar: "const guardado: Result<void, StorageError> = persistence.save(actual)",

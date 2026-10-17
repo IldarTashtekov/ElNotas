@@ -8,18 +8,13 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Clock, IdGenerator, Note, Result, StorageError } from "#core/index"
-import type { Cancel } from "#storage/index"
+import type { Cancel } from "#storage/writeBehind"
 import { createLocalStorageBlobStore } from "#storage/index"
-import type { App, BootError } from "#platform/index"
-import {
-  FRAMING_KEY,
-  PHOSPHOR_KEY,
-  WINDOWS_KEY,
-  boot,
-  createLocalStorageFraming,
-  createLocalStoragePhosphor,
-  createLocalStorageWindows,
-} from "#platform/index"
+import type { App, BootError } from "#platform/web/boot"
+import { FRAMING_KEY, createLocalStorageFraming } from "#platform/web/LocalStorageFraming"
+import { PHOSPHOR_KEY, createLocalStoragePhosphor } from "#platform/web/LocalStoragePhosphor"
+import { WINDOWS_KEY, createLocalStorageWindows } from "#platform/web/LocalStorageWindows"
+import { boot } from "#platform/web/boot"
 import type { Backup } from "#platform/web/backup"
 import { makeBackup } from "#platform/web/backup"
 import { collectBackup } from "#platform/web/exportBackup"

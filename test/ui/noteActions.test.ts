@@ -20,10 +20,12 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
-import { createStore, createUseCases, diagramRef, emptyAppState, noteId, noteRef } from "#core/index"
-import type { ListItem, WindowRef } from "#ui/index"
+import { createStore, createUseCases, diagramRef, noteId, noteRef } from "#core/index"
+import { emptyAppState } from "#core/domain/AppState"
+import type { ListItem } from "#ui/windowView"
+import type { WindowRef } from "#ui/windows"
+import { GENERAL } from "#ui/windows"
 import {
-  GENERAL,
   NEW_CONTEXT_NAME,
   NEW_DIAGRAM_NAME,
   NEW_NOTE_NAME,
@@ -37,7 +39,7 @@ import {
   moveTargets,
   trashDeletes,
   trashItems,
-} from "#ui/index"
+} from "#ui/noteActions"
 
 interface Escenario {
   readonly store: Store
