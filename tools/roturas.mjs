@@ -296,6 +296,13 @@ export const ROTURAS = [
     caza: "check:exportaciones",
   },
   {
+    nombre: "check:tareas: una tarea abierta sin decir cómo se cierra",
+    fichero: "TAREAS.md",
+    buscar: "      **Se cierra cuando** borrar un pósit deja de vigilarlo,",
+    poner: "      Cuando borrar un pósit deja de vigilarlo,",
+    caza: "check:tareas",
+  },
+  {
     nombre: "check:descartes: un Result tirado con void",
     fichero: "src/ui/phosphor.ts",
     buscar: "const guardado: Result<void, StorageError> = persistence.save(actual)",

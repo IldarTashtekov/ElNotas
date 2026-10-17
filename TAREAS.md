@@ -8,6 +8,10 @@ están en `ARCHITECTURE.md`; las reglas para agentes, en `CLAUDE.md`.
 test" sí. Si una entrada no se puede marcar como hecha, o está mal escrita o es una idea
 aparcada.
 
+**Y cada tarea abierta acaba en «Se cierra cuando…»**, con lo que lo demuestra: en código, qué
+prueba o qué guardián pasa y qué rotura a propósito lo caza; en una lista manual, que quede anotada
+entera; en una decisión del usuario, dónde queda escrita. Lo vigila `npm run check:tareas`.
+
 ---
 
 ## Pendiente
@@ -78,6 +82,8 @@ fugas y `check:fronteras`), `f34d7c9` (la fase, TERMINADA).
       **Qué hay que hacer:** borrar la interfaz, el `entradasDe` que castea, cambiar la llamada
       a `carpeta.values()` y borrar el párrafo del comentario que dice algo falso — el propio
       fichero ya avisa de que «si algún día se activa esa lib, esto se borra y no cambia nada».
+      **Se cierra cuando** la interfaz sale, `check` pasa en verde y se repasa la lista manual de
+      `test/storage/blobs/`, como exige `CLAUDE.md` al tocar ese fichero.
 
       **⚠️ CUÁNDO: agrupado con la Fase 4, NO suelto. El reparto de coste es el que manda:**
       el cambio son ~15 minutos; **repasar la lista de verificación manual que obliga es una
@@ -125,12 +131,8 @@ el DOM), `f406d96` (`onError`), `935de4e` (la escritura condicional), `38b583d` 
       disparador de anidar se entiende solo— **después de usar la app de verdad varios días**,
       no tras una demo. Un «no se aguanta» reabre la decisión correspondiente, y es un resultado
       válido. **Sin contestar el 2026-09-29, y sigue pendiente el 2026-10-03.**
-- [ ] **Acordar la definición del `frontend-agent`.** **Sin hacer, y la fase se hizo sin él.**
-      Su ficha (`.claude/agents/frontend-agent.md`) sigue siendo el stub que dice «si te han
-      invocado, para». Se redactó una ficha nueva que no se aplicó: **el usuario dijo que no
-      hacía falta**. Queda abierta porque la ficha dice cosas que ya no son verdad —que «hoy no
-      existen ni `src/ui/` ni `src/platform/`», que el CSS del prototipo se reutiliza, que llega
-      webpack o Vite—, y eso es de `.claude/`, que es del usuario. Ver *Sin decidir*.
+      **Se cierra cuando** el usuario contesta las tres por escrito aquí, y cada «no se aguanta»
+      abre su propia tarea.
 - [ ] **Qué pasa con las notas de `localStorage` al cambiar de destino.** Arrancar en
       `LocalStorageBlobStore` fue decidido «para salir del paso», y es barato de revertir porque
       el destino se inyecta en un solo sitio. Lo que **no** es gratis son las notas ya escritas:
@@ -145,6 +147,8 @@ el DOM), `f406d96` (`onError`), `935de4e` (la escritura condicional), `38b583d` 
       teniendo sentido en dos tiempos (`ARCHITECTURE.md` §7.4). **Y desde el 2026-10-08, un
       quinto:** la app publicada de la Fase 6 es **otro origen** y empieza vacía; no ve lo escrito
       en la red de casa. **El usuario acepta perderlo** (`ARCHITECTURE.md` §9.12).
+      **Se cierra cuando** el usuario elige migrar o perder lo escrito, y queda en *Decisiones
+      cerradas* de `CLAUDE.md`.
 
 ### Fase 5 — Diagramas ✅ CERRADA el 2026-10-08, con deuda; la deuda, saldada el 2026-10-10
 
@@ -168,11 +172,13 @@ todo»).
       `c8a37db` lista notas **y diagramas**, así que el nombre ya no dice lo que es. Se dejó así
       para no mezclar el cambio de nombre con el de la tarea. *Pedido por el usuario el
       2026-10-04.* El nombre nuevo, por decidir con él.
-- [ ] **Manejar el lienzo con teclado.** Pendiente, como reordenar las fichas de ⚙ con teclado:
-      el usuario lo dejó para más adelante. No bloquea el cierre de ninguna de las tres partes.
+      **Se cierra cuando** el usuario elige el nombre, `grep -rn NoteList src test` no da nada y
+      `check` pasa en verde.
 - [ ] **¿Etiquetas de texto junto a los «+»?** Su boceto (el del usuario, 2026-10-04) las lleva.
       **Pregunta abierta al usuario, sin contestar**; hasta que conteste, los botones siguen sin
       texto.
+      **Se cierra cuando** el usuario contesta; si es que sí, construidas y con su paso en la lista
+      manual.
 
 ### Fase 6 — PWA: instalar la app en el móvil ✅ CERRADA el 2026-10-10
 
@@ -576,13 +582,27 @@ guardianes nuevos.
 
 #### C. La forma de trabajar
 
-- [ ] **C1. «Se cierra cuando…» comprobable en cada tarea** de este fichero: qué pruebas, qué
-      guardián o qué lista. Esta fase ya lo lleva; se añade a la disciplina de la cabecera.
+- [x] **C1. «Se cierra cuando…» comprobable en cada tarea** ✅ *(aprobado por el usuario el
+      2026-10-17)*. De 28 abiertas, sólo 4 decían qué demuestra que están hechas. **Revisadas
+      una a una:** tres repetidas, fusionadas (el `frontend-agent` de la Fase 4 con C2, la lista
+      de la copia con C5, los comentarios atrasados de *Infraestructura* con D2); dos sin cierre
+      posible, a *Ideas aparcadas* (el lienzo con teclado; los tipos de las pruebas viejas, deuda
+      aceptada); y cinco de la nube pasan a «al construirla», sin casilla: sólo tienen sentido al
+      construirla; asignarle fase sigue abierta, y se cierra cuando el usuario se la asigne.
+      Quedan **17** sin contar ésta, todas con su cierre. La regla, en la cabecera;
+      el guardián, `npm run check:tareas` (`tools/check-tareas.mjs`, milisegundos), en `check`,
+      con su rotura en la lista y en el hook: editar `TAREAS.md` lanza sólo ése. Probado de
+      verdad: quitar a propósito el cierre de D3 lo cazó el hook al guardar.
 - [ ] **C2. El `frontend-agent`: definirlo o borrarlo** *(el usuario)*. Viene de la Fase 4.
       **En el aire**, con el resto del uso de agentes.
+      Era también una tarea de la Fase 4: su ficha dice cosas que ya no son verdad (que no existen
+      `src/ui/` ni `src/platform/`, que llega webpack o Vite). **Se cierra cuando** su ficha se
+      reescribe o se borra, por el usuario: `.claude/agents/` está denegado a Claude.
 - [ ] **C3. Un agente que verifica** *(el usuario, en `.claude/agents/`)*: lee el cambio de otro,
       rompe a propósito y pasa las listas, sin haber escrito el código. Quien escribe no se da el
       visto bueno. **En el aire**, con el resto del uso de agentes.
+      **Se cierra cuando** el usuario decide si existe; si es que sí, con su ficha y una pasada real
+      sobre un cambio.
 - ~~**C4. Ramas, *pull requests* y CI en los PR**~~ — ❌ **descartada por el usuario el
       2026-10-13**: no hay `push` a otras ramas.
 - [ ] **C5. Pasar las listas manuales con el navegador del panel.** La primera, la parte de
@@ -596,11 +616,23 @@ guardianes nuevos.
 
 - [ ] **D1. Los *worktrees* viejos** de `.claude/worktrees/` (`agitated-franklin-6f5c2d` y
       `eloquent-mayer-7cf937`) y sus ramas `claude/*`, mirando antes que no tengan nada sin fusionar.
+      Ojo: `agitated-franklin-6f5c2d` es el de esta fase (`fase-9-meta`), así que va el último o
+      desde la carpeta principal; y hay una tercera rama, `claude/youthful-rubin-e5263b`. **Se
+      cierra cuando** `git worktree list` y `git branch` ya no los muestran, tras comprobar con `git
+      log main..rama` que no se pierde nada.
 - [ ] **D2. Las dos cabeceras que nombran a Drive** y el `--noResolve` caducado de
       `test/storage/blobs/VERIFICACION-MANUAL.md` (de *Sin fase asignada*).
+      Es también la tarea de *Infraestructura* «Comentarios y textos que se quedaron atrás»: la
+      preparación de esa lista explica el `--noResolve` por imports sin extensión que desde
+      `1037ea1` ya no hay. Tocar ese `.md` no obliga a repasar la lista, pero sin cambiar sus pasos.
+      **Se cierra cuando** `grep -n Drive src/core/ports/BlobStore.ts
+      src/storage/file/FileStorageAdapter.ts` no da nada y el `--noResolve` dice su motivo de
+      verdad.
 - [ ] **D3. El `unobserve` de los pósits borrados** en `src/ui/DiagramCanvas.ts`: el lienzo los
       sigue vigilando hasta cerrarse. Es la única fuga de memoria encontrada el 2026-10-13, leyendo
       el código: diminuta y que se libera sola.
+      **Se cierra cuando** borrar un pósit deja de vigilarlo, con su paso en la lista manual del
+      lienzo, comprobado en el panel.
 
 #### E. Documentación, en un solo pase al cerrar
 
@@ -611,6 +643,9 @@ E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre l
       desactualizan (pruebas, fronteras) y cada regla que gane guardián deja una línea con su
       comando. Con los guardianes y las opciones nuevas en *Comandos*, la fase en *Plan por fases*,
       y en *Decisiones cerradas* la precisión de «a mano»: también la puede pasar Claude en el panel.
+      **Se cierra cuando** no queda ningún recuento en `CLAUDE.md`, están los guardianes en
+      *Comandos* y las decisiones reabiertas en la fase (seis puertos, sin `platform/index.ts`, las
+      fronteras, las roturas en su lista) están al día.
 - [ ] **E2. `ARCHITECTURE.md`, de bitácora a arquitectura.** Hoy tiene 4.190 líneas, y la tercera
       parte (§9, «El plan por fases, razonado», ~1.270) es crónica: fechas, mediciones, qué se
       decidió cada día. **Se queda** lo de §1–§8: la filosofía, los conceptos, los patrones, los
@@ -697,19 +732,24 @@ en el ordenador.
   del repo. El aviso «la nube no responde» en ⚙, igualmente, por si la tarea falla.
 - **Se sigue con la PWA.** Capacitor o Tauri, más adelante y como complemento, no como sustituto.
 
+**Sin fase por ahora** *(el usuario, 2026-10-17)*. Lo de abajo, salvo asignarle fase, no son
+tareas pendientes: es lo que hay que hacer **al construirla**, y entonces cada punto pasa a ser
+una tarea con su cierre.
+
 **Propuesto, sin objeción del usuario, por confirmar al construir:**
 
-- [ ] **«Borrar todo» se lleva también la conexión**, porque borra las claves `elnotas:`.
+- **«Borrar todo» se lleva también la conexión**, porque borra las claves `elnotas:`.
 
 **Por comprobar antes de construir**, porque se dijo de memoria:
 
-- [ ] Qué cuenta como «actividad» para la pausa de Supabase, y si basta con la consulta de la tarea.
-- [ ] Que GitHub desactiva las tareas programadas de un repo público tras 60 días sin actividad, y
+- Qué cuenta como «actividad» para la pausa de Supabase, y si basta con la consulta de la tarea.
+- Que GitHub desactiva las tareas programadas de un repo público tras 60 días sin actividad, y
       qué se hace entonces (reactivarla a mano, con el aviso por correo).
-- [ ] El inicio de sesión de Supabase con `fetch` y sin su librería: el código por correo, la
+- El inicio de sesión de Supabase con `fetch` y sin su librería: el código por correo, la
       renovación del token y su rotación.
-- [ ] Que Supabase acepta peticiones desde `ildartashtekov.github.io` (CORS).
-- [ ] **Asignarle fase**, con el usuario.
+- Que Supabase acepta peticiones desde `ildartashtekov.github.io` (CORS).
+
+- [ ] **Asignarle fase**, con el usuario. **Se cierra cuando** el usuario se la asigna.
 
 ### Sin fase asignada
 
@@ -722,9 +762,7 @@ en el ordenador.
       los ficheros guardados tal cual, las ventanas y el fósforo (y desde el 2026-10-13, los
       encuadres de los diagramas). Sin dependencias y sin tocar el core. Mezclar en vez de sustituir, aparcado (*Ideas aparcadas*). Diseño y porqués,
       `ARCHITECTURE.md` §9.14.
-  - [ ] **Pasar la lista manual**, `test/ui/VERIFICACION-MANUAL-COPIA.md`, y anotar la pasada:
-        sobre todo **F**, la importación a medias, que en el navegador del panel no se puede
-        provocar, e **I6–I7**, el selector de Android y pasar de `localhost` a la publicada.
+  - Su lista manual, por pasar: ahora es **C5** de la Fase 9.
 - [x] **Ventanas, hueco y encuadre** ✅ *(pedido por el usuario el 2026-10-13 y construido ese día
       en la rama `feat/ventanas-hueco-encuadre`, con **828 pruebas** —eran 803—; validado por él en
       el móvil)*. Sin dependencias y sin tocar el core. Cuatro cosas:
@@ -763,6 +801,8 @@ en el ordenador.
       Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
       nuevas, sin ida y vuelta. Es otra cosa que la copia: el JSON es para restaurar, el Markdown
       para leer, y los diagramas no caben en él.
+      **Se cierra cuando** la conversión de una nota a Markdown tiene sus pruebas, el botón de ⚙
+      descarga el fichero y la lista manual tiene su paso.
 - [x] ✅ *Hecha en la Fase 9 (A2), con la 26.* **Pasar de Node 20 a uno con soporte**, en casa y en la receta de publicación
       (`.github/workflows/publicar.yml`) a la vez. Node 20 dejó de tener soporte en abril de 2026;
       la Fase 6 lo dejó en 20 porque es el de casa y con el que pasan las pruebas. Se cierra
@@ -785,6 +825,8 @@ en el ordenador.
       Android (Accesibilidad), sin código; o un ajuste en ⚙ con tres pasos (100, 115 y 130 %) que
       cambie el tamaño base de la página —crece todo junto, como un zoom—, guardado por
       dispositivo en `localStorage` con su clave `elnotas:`, y con dos fronteras nuevas.
+      **Se cierra cuando** el usuario decide cómo se guarda el formato y cómo se aplica: entonces se
+      parte en tareas propias, cada una con su cierre.
 
 ### Infraestructura (`infra-agent`)
 
@@ -817,25 +859,6 @@ documentación**.
 - [x] **`npm run build:web` e `index.html`** (`473f566`): `src/` a `dist/web/` en ESM, sin bundler.
 - [x] **Una declaración sin tipo en `test/ui/editor.test.ts`** *(de `back-dev-agent`)*. ✅ Hecho
       en `5e49a5a` (2026-09-29): `const NOTA: NoteId = noteId("nota")`, comprobado en el fichero.
-- [ ] **Comentarios y textos que se quedaron atrás** *(de `back-dev-agent`; la documentación no
-      toca `src/` ni `test/`)*. Dos de los tres se arreglaron en `5e49a5a` —los comentarios de
-      `src/storage/index.ts` sobre `platform/`, y el número de punto que la lista del editor daba
-      a las tres preguntas—. **Queda uno**, comprobado el 2026-10-11:
-  - `test/storage/blobs/VERIFICACION-MANUAL.md`, en su preparación: explica el `--noResolve`
-    por «un montón de imports sin extensión que el navegador no sabe resolver», y desde
-    `1037ea1` ya no los hay. ⚠️ **Tocar ese procedimiento no obliga a repasar la lista** —es el
-    `.md`, no `DirectoryHandleBlobStore.ts`—, pero conviene no cambiar los pasos al corregirlo.
-  - **Desde el 2026-10-12, dos cabeceras nombran a Drive**, que ya está descartado (*Ideas
-    aparcadas*): `src/core/ports/BlobStore.ts` («o en Drive») y
-    `src/storage/file/FileStorageAdapter.ts` («OPFS, Drive»). Con quitar a Drive de las dos basta.
-- [ ] **Las pruebas viejas — 942 anotaciones** (423 variables, 412 retornos, 107 parámetros,
-      medido el 2026-09-19), **deuda aceptada a sabiendas y no un olvido.** Es trabajo mecánico
-      que no arregla ni caza ningún fallo, y el diff sería irrevisable. **Lo que se escriba o se
-      toque en `test/` a partir de ahora sí cumple la regla**, que es lo que impide que esto
-      crezca. **Recomprobado el 2026-09-29** con una sonda sobre el AST, que cuenta distinto: la
-      deuda sigue en `test/core/` y `test/storage/` (981 huecos con su recuento, no comparables
-      con los 942), y **`test/platform/` y `test/ui/`, escritas en la Fase 4, la cumplen**; la
-      única línea que fallaba se arregló en `5e49a5a`.
 
 **❌ DESCARTADO: un guardián para la regla de tipos explícitos, y el motivo vale como criterio
 para la próxima vez que alguien proponga un guardián.** Esta regla **no caza ni un solo fallo**:
@@ -998,6 +1021,8 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
+| **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
+| **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
 | **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
 | **Adaptador de MongoDB** (o cualquier base de datos con servidor propio) | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. **Reconsiderado el 2026-10-12** al elegir la nube, y lo mismo vale para SQL con servidor propio: el usuario no quiere mantener un servidor, así que se eligió Supabase (*Pendiente → La nube*). | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
 | ~~**Adaptador de Google Drive**~~ — ❌ **descartado el 2026-10-12** | Drive guarda **ficheros**, y la app es de «manda el modelo» (*Pendiente → La nube*): una base de datos da de serie la escritura condicional y el «qué cambió desde…», que sobre Drive habría que construir. Además, sin servidor la sesión dura una hora y no se renueva sola. **Una carpeta pública no lo arregla:** escribir **siempre** exige OAuth (scope `drive.file`), y lo público deja las notas a la vista de quien tenga el enlace. **Tampoco SQLite dentro de Drive:** se sube y se baja el fichero entero, y dos dispositivos se pisan la base completa. | Que se reabra «manda el fichero». Ese día un `DriveBlobStore` encaja tal cual bajo `FileStorageAdapter`. |
