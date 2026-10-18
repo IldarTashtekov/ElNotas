@@ -20,7 +20,7 @@ la página al borrar—.
 ## Cuándo hay que volver a pasarla
 
 - antes de cerrar Fase 4 · Contextos (es parte del criterio);
-- al tocar `src/ui/NoteList.ts`, `src/ui/backStack.ts`, `src/ui/sheet.ts`, `src/ui/dragReorder.ts`,
+- al tocar `src/ui/ItemList.ts`, `src/ui/backStack.ts`, `src/ui/sheet.ts`, `src/ui/dragReorder.ts`,
   `src/ui/SettingsView.ts` o `src/ui/App.ts`, que es donde viven los
   gestos y el historial;
 - al probar un navegador nuevo.

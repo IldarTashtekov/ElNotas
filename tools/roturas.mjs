@@ -360,8 +360,8 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una casilla marcada fuera de la fase en curso",
     fichero: "TAREAS.md",
-    buscar: "- [ ] **Renombrar `NoteList`",
-    poner: "- [x] **Renombrar `NoteList`",
+    buscar: "- [ ] **¿Etiquetas de texto junto a los «+»?**",
+    poner: "- [x] **¿Etiquetas de texto junto a los «+»?**",
     caza: "check:tareas",
   },
   {

@@ -38,7 +38,7 @@ import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
 import { sameWindow } from "./windows.js"
 
-export interface NoteListDeps {
+export interface ItemListDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly back: BackStack
@@ -50,7 +50,7 @@ export interface NoteListDeps {
   readonly onOpenDiagram: (id: DiagramId, editName: boolean) => void
 }
 
-export interface NoteList {
+export interface ItemList {
   readonly element: HTMLElement
   /** Lo que tiene que enseñar ahora. `null` en la pantalla vacía. */
   readonly update: (ventana: WindowRef | null, items: ReadonlyArray<ListItem>) => void
@@ -68,7 +68,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
   return b
 }
 
-export const createNoteList = ({
+export const createItemList = ({
   store,
   useCases,
   back,
@@ -76,7 +76,7 @@ export const createNoteList = ({
   onSelectingChange,
   onOpenNote,
   onOpenDiagram,
-}: NoteListDeps): NoteList => {
+}: ItemListDeps): ItemList => {
   let ventana: WindowRef | null = null
   let items: ReadonlyArray<ListItem> = []
   let seleccion: Selection = NO_SELECTION

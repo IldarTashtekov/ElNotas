@@ -27,8 +27,8 @@ import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
 import type { NoteEditor } from "./NoteEditor.js"
 import { createNoteEditor } from "./NoteEditor.js"
-import type { NoteList } from "./NoteList.js"
-import { createNoteList } from "./NoteList.js"
+import type { ItemList } from "./ItemList.js"
+import { createItemList } from "./ItemList.js"
 import { newWindowButtons } from "./newWindowButtons.js"
 import type { WindowRow } from "./settingsContent.js"
 import { addWindowChoices, choiceGroupLabel } from "./settingsContent.js"
@@ -111,7 +111,7 @@ export const mountWindowsView = (
       b.classList.toggle("apagado", seleccionando)
     }
   }
-  const notas: NoteList = createNoteList({
+  const notas: ItemList = createItemList({
     store,
     useCases,
     back,

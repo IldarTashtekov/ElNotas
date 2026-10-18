@@ -67,12 +67,6 @@ resumen, en `TERMINADAS.md`.
 
 #### De la Fase 5 — Diagramas
 
-- [ ] **Renombrar `NoteList` (`src/ui/NoteList.ts`, `createNoteList`, `NoteListDeps`)**: desde
-      `c8a37db` lista notas **y diagramas**, así que el nombre ya no dice lo que es. Se dejó así
-      para no mezclar el cambio de nombre con el de la tarea. *Pedido por el usuario el
-      2026-10-04.* El nombre nuevo, por decidir con él.
-      **Se cierra cuando** el usuario elige el nombre, `grep -rn NoteList src test` no da nada y
-      `check` pasa en verde.
 - [ ] **¿Etiquetas de texto junto a los «+»?** Su boceto (el del usuario, 2026-10-04) las lleva.
       **Pregunta abierta al usuario, sin contestar**; hasta que conteste, los botones siguen sin
       texto.

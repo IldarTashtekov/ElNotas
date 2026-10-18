@@ -183,6 +183,8 @@ cierre).
   `satisfies never` y devolver lo recibido en `insert` y en el reducer; dos pruebas, tres roturas.
 - **Los colores de la app, repetidos fuera de `base.css`** ✅ 2026-10-18, rama `fase-9.1`: `build:pages`
   falla si el `background_color` del manifiesto no es el `--ground`; con su rotura.
+- **Renombrar `NoteList`** ✅ 2026-10-18, rama `fase-9.1`: ahora `ItemList`, la palabra del dominio
+  (`Context.items`, `ItemRef`), elegida por el usuario.
 - **`npm test` no puede pasar en falso** ✅ (`475a585`): `require-tests.mjs` y `clean-tmp-test.mjs`.
 - **`check:purity`** ✅ (`2abaaaf`): el reloj y el azar en el core, quitando comentarios y cadenas.
 - **Las pruebas, a `test/`, espejo de `src/`** ✅ (`61fe72a`), con las mismas 314. §8.3.
