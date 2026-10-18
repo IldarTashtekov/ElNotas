@@ -13,6 +13,13 @@
     ]
   },
 
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "network": { "deniedDomains": ["*"] }
+  },
+
   "permissions": {
     "defaultMode": "default",
 
@@ -53,7 +60,9 @@
       "Edit(./.claude/**)",
       "Write(./.claude/**)",
       "Edit(./.claude/agents/**)",
-      "Write(./.claude/agents/**)"
+      "Write(./.claude/agents/**)",
+      "Edit(./tmp-test/**)",
+      "Write(./tmp-test/**)"
     ],
 
     "deny": [
@@ -80,8 +89,6 @@
       "Bash(corepack:*)",
       "Edit(./node_modules/**)",
       "Write(./node_modules/**)",
-      "Edit(./tmp-test/**)",
-      "Write(./tmp-test/**)",
       "Edit(./package-lock.json)",
       "Write(./package-lock.json)",
       "Read(./.env)",

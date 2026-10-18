@@ -753,11 +753,21 @@ pendientes que ya estaban en este fichero.
       pierde el nombre del agente. Las menciones de las fases cerradas son historia y se quedan.
       **Se cierra cuando** `.claude/agents/` está vacía, el `deny` es `ask`, un `grep` de los cuatro
       nombres no da nada fuera de las fases cerradas y `check` pasa.
-- [ ] **2. Sandbox sin red**, en `.claude/settings.json` (`bubblewrap` y `socat` ya están). Los
+- [x] **2. Sandbox sin red** ✅ *(2026-10-18)*, en `.claude/settings.json` (`bubblewrap` y `socat` ya están). Los
       nombres de la configuración, de la documentación de Claude Code, no de memoria. **Se cierra
       cuando**, roto a propósito, fallan un `curl`, un `fetch` desde un script de Node y escribir
       fuera del proyecto; y siguen funcionando `npm run check`, los dos hooks, `check:roturas` y el
       servidor del panel.
+      **Hecho:** `enabled`, `failIfUnavailable`, `allowUnsandboxedCommands: false` y
+      `deniedDomains: ["*"]`. Rotos a propósito: el `fetch` de Node, sin ruta; Python, `403` del
+      proxy; escribir en `~`, sólo lectura. `curl` no se lanzó: ya lo niegan los permisos y va por
+      el proxy como Python. `check`, las 46 roturas, los dos hooks (corren fuera del sandbox) y el
+      panel, en verde. **Dos cosas que salieron:** el sandbox vuelve **no escribibles** las rutas
+      de los `deny` de `Edit`, y `allowWrite` no lo levanta; `tmp-test/` pasó de `deny` a `ask`
+      (decidido por el usuario) para que compile `npm test`. Y, dentro del sandbox, las rutas
+      protegidas que no existen (`.bashrc`, `.mcp.json`, `.claude/agents`…) se tapan con un
+      `/dev/null` que `git status` ve como sin seguimiento; fuera no existen. **Por eso, `git add`
+      siempre por nombre, nunca `-A` ni `.`** (a la regla de la tarea 6).
 - [ ] **3. Permisos ampliados** encima del sandbox: `defaultMode` a `acceptEdits`; permitidos los
       intérpretes (`node`, `python3`), los de leer (`cat`, `head`, `tail`, `sed`, `awk`),
       `git rm`, `git mv`, `git branch`, `git add`, `git commit`, `git switch` y el navegador del
