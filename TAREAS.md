@@ -539,18 +539,6 @@ una tarea con su cierre.
       **Se cierra cuando** el usuario decide cómo se guarda el formato y cómo se aplica: entonces se
       parte en tareas propias, cada una con su cierre.
 
-- [ ] **Que una posición o una acción desconocidas no hagan nada** *(salió pasando la lista de la
-      copia el 2026-10-17)*. El `default` del `switch` de `insert` (`src/core/domain/operations.ts`)
-      devuelve **la posición** como si fuera el contenido, y el del reducer
-      (`src/core/app/reduce.ts`) devuelve **la acción** como si fuera el estado. El tipo lo
-      impide desde el código (no compila), pero llegando sin tipos —la consola con `?depurar`,
-      o algo que un día lea sin validar— la nota, o la app entera, quedan estropeadas en disco, en
-      vez de cumplir «una operación que no aplica no hace nada». Visto con `?depurar`: una
-      posición mal escrita guardó `"content": {"kind": "root-end"}`. **Se cierra cuando** los dos
-      devuelven lo que recibieron (el contenido, el estado) sin perder la comprobación de que el
-      `switch` cubre todos los casos, con una prueba de cada uno que pase un valor desconocido a
-      la fuerza y su rotura en `tools/roturas.mjs`.
-
 ---
 
 ## Sin decidir

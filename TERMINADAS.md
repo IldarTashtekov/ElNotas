@@ -179,6 +179,8 @@ cierre).
 - **Pasar de Node 20 a uno con soporte** ✅ 2026-10-13: la 26, en la Fase 9 (A2). `018d576`.
 - **Que `CLAUDE.md` no vuelva a llenarse de lo que caduca** ✅ 2026-10-17: `check:arquitectura`
   falla con más de 300 líneas, una fecha o un recuento de pruebas. `ddb542a`.
+- **Que una posición o una acción desconocidas no hagan nada** ✅ 2026-10-18, rama `fase-9.1`:
+  `satisfies never` y devolver lo recibido en `insert` y en el reducer; dos pruebas, tres roturas.
 - **`npm test` no puede pasar en falso** ✅ (`475a585`): `require-tests.mjs` y `clean-tmp-test.mjs`.
 - **`check:purity`** ✅ (`2abaaaf`): el reloj y el azar en el core, quitando comentarios y cadenas.
 - **Las pruebas, a `test/`, espejo de `src/`** ✅ (`61fe72a`), con las mismas 314. §8.3.

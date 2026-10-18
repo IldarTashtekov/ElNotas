@@ -13,6 +13,7 @@ import assert from "node:assert/strict"
 import type { CheckBox, Content } from "#core/domain/Content"
 import { checkBox, isCheckBox, text } from "#core/domain/Content"
 import { contentId } from "#core/domain/Ids"
+import type { Position } from "#core/domain/Position"
 import { after, lastChildOf, rootEnd } from "#core/domain/Position"
 import {
   convertToCheckBox,
@@ -225,6 +226,13 @@ test("insert root-end: no copia lo que ya estaba", () => {
   assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0))
   assert.strictEqual(bloqueEn(despues, 1), bloqueEn(antes, 1))
   assert.strictEqual(bloqueEn(despues, 2), bloqueEn(antes, 2))
+})
+
+test("insert con una posición desconocida, llegada sin tipos: no hace nada", () => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  const desconocida: Position = { at: "rot-end" } as unknown as Position
+
+  assert.strictEqual(insert(antes, casillaNueva(), desconocida), antes)
 })
 
 test("insert after: mete justo detrás, en la raíz", () => {

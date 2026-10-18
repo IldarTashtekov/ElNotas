@@ -474,16 +474,18 @@ export const reduce = (state: AppState, action: Action): AppState => {
         removeRelation(d, action.relationId),
       )
 
-    default: {
-      /* ⚠️ Esto NO es un caso por defecto que trague acciones desconocidas: es la
-         comprobación de exhaustividad. Si se añade una acción y no se trata
-         arriba, `action` deja de ser `never` aquí y **no compila**.
+    default:
+      /* ⚠️ Esto es, ante todo, la comprobación de exhaustividad. Si se añade una
+         acción y no se trata arriba, `action` deja de ser `never` aquí y **no
+         compila**.
 
          Con una sola acción en el catálogo este truco no servía —una unión de un
          miembro no es una unión— y hacía el trabajo la ausencia de `default`.
-         Ahora que son ocho, ésta es la forma que da un mensaje de error legible. */
-      const nunca: never = action
-      return nunca
-    }
+         Ahora que son ocho, ésta es la forma que da un mensaje de error legible.
+
+         Y una acción que llega sin tipos (la consola con `?depurar`) no hace
+         nada: devolverla a ella dejaba la acción en el sitio del estado. */
+      action satisfies never
+      return state
   }
 }

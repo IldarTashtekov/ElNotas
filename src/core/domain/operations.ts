@@ -140,12 +140,13 @@ export const insert = (
           isCheckBox(block) ? { ...target, children: [...target.children, block] } : target,
       })
 
-    default: {
+    default:
       // Exhaustividad: si `Position` gana un caso algún día, esto deja de
-      // compilar en vez de tratarlo en silencio.
-      const nunca: never = position
-      return nunca
-    }
+      // compilar en vez de tratarlo en silencio. Y una posición que llega sin
+      // tipos (la consola con `?depurar`) no hace nada: devolverla a ella
+      // guardaba la posición como si fuera el contenido.
+      position satisfies never
+      return content
   }
 }
 

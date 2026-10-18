@@ -41,6 +41,29 @@ export const ROTURAS = [
     caza: "pruebas",
     prueba: "delete-note de una nota que no está en ningún contexto no toca ninguno",
   },
+  {
+    nombre: "core: una posición desconocida no hace nada",
+    fichero: "src/core/domain/operations.ts",
+    buscar: "      position satisfies never\n      return content\n",
+    poner: "      position satisfies never\n      return position as unknown as ReadonlyArray<Content>\n",
+    caza: "pruebas",
+    prueba: "insert con una posición desconocida, llegada sin tipos: no hace nada",
+  },
+  {
+    nombre: "core: una acción desconocida no hace nada",
+    fichero: "src/core/app/reduce.ts",
+    buscar: "      action satisfies never\n      return state\n",
+    poner: "      action satisfies never\n      return action as unknown as AppState\n",
+    caza: "pruebas",
+    prueba: "una acción desconocida, llegada sin tipos, no hace nada",
+  },
+  {
+    nombre: "core: el switch de insert cubre todas las posiciones",
+    fichero: "src/core/domain/operations.ts",
+    buscar: '    case "root-end":\n      return [...content, block]\n',
+    poner: "",
+    caza: "typecheck:core",
+  },
 
   /* ── storage ── */
   {

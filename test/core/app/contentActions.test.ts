@@ -25,7 +25,7 @@ import { checkBox, isCheckBox, isText, text } from "#core/domain/Content"
 import { contentId, noteId, revision } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import { after, lastChildOf, rootEnd } from "#core/domain/Position"
-import type { ActionMeta } from "#core/app/Action"
+import type { Action, ActionMeta } from "#core/app/Action"
 import { reduce } from "#core/app/reduce"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
@@ -339,6 +339,13 @@ test("todas las acciones de contenido sobre una nota inexistente son no-op", () 
     assert.strictEqual(reduce(antes, accion), antes, `${accion.type} ha tocado el estado`)
   }
   assert.equal(todas.length, 8, "el catálogo de contenido son OCHO")
+})
+
+test("una acción desconocida, llegada sin tipos, no hace nada", () => {
+  const antes: AppState = estado()
+  const desconocida: Action = { type: "set-chekced", meta: META } as unknown as Action
+
+  assert.strictEqual(reduce(antes, desconocida), antes)
 })
 
 test("todas las acciones de contenido sobre una línea inexistente son no-op", () => {
