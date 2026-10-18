@@ -599,11 +599,8 @@ guardianes nuevos.
       el guardián, `npm run check:tareas` (`tools/check-tareas.mjs`, milisegundos), en `check`,
       con su rotura en la lista y en el hook: editar `TAREAS.md` lanza sólo ése. Probado de
       verdad: quitar a propósito el cierre de D3 lo cazó el hook al guardar.
-- [ ] **C2. El `frontend-agent`: definirlo o borrarlo** *(el usuario)*. Viene de la Fase 4.
-      **En el aire**, con el resto del uso de agentes.
-      Era también una tarea de la Fase 4: su ficha dice cosas que ya no son verdad (que no existen
-      `src/ui/` ni `src/platform/`, que llega webpack o Vite). **Se cierra cuando** su ficha se
-      reescribe o se borra, por el usuario: `.claude/agents/` está denegado a Claude.
+- [x] **C2. El `frontend-agent`: definirlo o borrarlo** ✅ *(2026-10-18, Fase 9.1 tarea 1)*:
+      borrado, con los otros tres agentes, por decisión del usuario.
 - [ ] **C3. Un agente que verifica** *(el usuario, en `.claude/agents/`)*: lee el cambio de otro,
       rompe a propósito y pasa las listas, sin haber escrito el código. Quien escribe no se da el
       visto bueno. **En el aire**, con el resto del uso de agentes.
@@ -742,9 +739,14 @@ pendientes que ya estaban en este fichero.
   documentación al final de cada fase** (tareas 6 y 11).
 - **Las tareas 0 a 9, con la correa corta**, una a una y con el visto bueno del usuario: son las
   que cambian las reglas. La 10 ya con la correa larga, y la 11 cierra la fase.
+- **Orden (2026-10-18), las baratas primero** por el límite semanal de uso: 1 → 2 → 5 → 3 → 4 →
+  6 → 9, y luego 8 → 7 → 10 → 11. La 2 antes de la 3 (los permisos se amplían sobre el sandbox);
+  la 5 antes de la 3 (comitear sin preguntar, con `main` ya cerrada); la 3 antes de la 4 (se poda
+  lo que ya esté en `settings.json`); la 7 tras la 8 (su hook lee lo pendiente de este fichero ya
+  partido).
 
 - [x] **0. Apuntar la fase** ✅ *(2026-10-18)*: esta entrada.
-- [ ] **1. Borrar los cuatro agentes** (`back-dev-agent`, `infra-agent`, `doc-agent`,
+- [x] **1. Borrar los cuatro agentes** ✅ *(2026-10-18)* (`back-dev-agent`, `infra-agent`, `doc-agent`,
       `frontend-agent`). Quedan en `git log`. El `deny` de `.claude/agents/` pasa a `ask`: las
       fichas futuras las podrá escribir Claude, con permiso en cada edición. C2 se cierra (borrado);
       la nota de *Sin decidir* sobre las fichas desfasadas, también; el título de *Infraestructura*
@@ -1133,7 +1135,7 @@ una tarea con su cierre.
       `switch` cubre todos los casos, con una prueba de cada uno que pase un valor desconocido a
       la fuerza y su rotura en `tools/roturas.mjs`.
 
-### Infraestructura (`infra-agent`)
+### Infraestructura
 
 Todas son de `src/`, `package.json` o los tsconfig, así que **no las toca el rol de
 documentación**.
@@ -1292,15 +1294,8 @@ pila con su propio diseño. Tres lecciones de las pruebas, que conviene no desha
 - ~~**El disparador de Snabbdom, por tamaño**~~ — ✅ cerrada el 2026-10-03: el disparador pasa de
   tamaño a fallos de sincronizar el DOM; ninguno de los seis fallos de UI de ese día lo era.
   *Ideas aparcadas*.
-
-**La que sigue abierta:**
-
-- **Las fichas de agentes están desfasadas**, y también son del usuario. `frontend-agent.md` sigue
-  siendo el stub que dice «si te han invocado, para» y que `src/ui/` y `src/platform/` no
-  existen; se redactó una ficha nueva que no se aplicó, porque **el usuario dijo que no hacía
-  falta**. `infra-agent.md` todavía manda reinstalar webpack en la Fase 4 y habla de
-  `webpack.config.js`, que ya no está. Por eso la casilla «Acordar la definición del
-  `frontend-agent`» sigue **sin hacer**.
+- ~~**Las fichas de agentes, desfasadas**~~ — ✅ cerrada el 2026-10-18: los cuatro agentes,
+  borrados (Fase 9.1, tarea 1).
 
 **Y las que ya estaban abiertas siguen igual:** **si OPFS entra en juego** (abajo, *Tres
 huecos…*) y **qué pasa con lo guardado en `localStorage` al cambiar de destino**, que desde el

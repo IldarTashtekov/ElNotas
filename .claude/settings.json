@@ -51,12 +51,12 @@
       "Bash(git merge:*)",
       "Bash(git rebase:*)",
       "Edit(./.claude/**)",
-      "Write(./.claude/**)"
+      "Write(./.claude/**)",
+      "Edit(./.claude/agents/**)",
+      "Write(./.claude/agents/**)"
     ],
 
     "deny": [
-      "Edit(./.claude/agents/**)",
-      "Write(./.claude/agents/**)",
       "Bash(git push:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean:*)",
