@@ -705,6 +705,90 @@ E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre l
 estaban. Partir
 `DiagramCanvas.ts` y renombrar `NoteList` son código de la app y se hacen al tocar esa zona.
 
+### Fase 9.1 — Correa larga: encadenar tareas y parar sólo ante decisiones — EN CURSO
+
+**Decidida con el usuario el 2026-10-18**, tras repasar los patrones de trabajo con agentes. Hoy
+Claude trabaja con la correa corta: cada edición pide permiso, se para tras cada tarea y no
+comitea. **Qué es:** que encadene las tareas de una lista acordada y sólo pare ante lo que es del
+usuario, sin perder seguridad. **No cambia la app** salvo en la tanda de prueba (tarea 9), que son
+pendientes que ya estaban en este fichero.
+
+**Decidido con el usuario el 2026-10-18:**
+- **Los cuatro agentes de `.claude/agents/` se borran** y se empieza de cero: estaban desfasados y
+  repartían el trabajo por carpetas, cuando las tareas cruzan todas las capas.
+- **La seguridad, del sandbox y no de los patrones de permisos.** Un patrón mira el texto de la
+  orden y tiene rodeos (un script en `tools/` lanzado con `node tools/*` hace lo que `curl` no
+  puede); el sandbox limita lo que **cualquier** orden puede hacer. **Sin red**: `npm audit` lo
+  lanza el usuario. Con él debajo, los permisos se amplían.
+- **Lo prohibido no se mueve:** `push`, instalar dependencias, `reset --hard`, `clean`, `.env` y
+  `~/.ssh`. Editar `.claude/` sigue preguntando.
+- **Commits:** uno por tarea, en una rama por bloque, en esta misma carpeta (sin *worktree*).
+  Juntar con `main` y publicar siguen siendo del usuario. Un hook impide comitear en `main`.
+- **Tandas de un bloque**, al menos al principio. **Las roturas, como hasta ahora:** al cerrar cada
+  tarea que toque `src/`.
+- **Cuándo para Claude:** una decisión no cerrada o que choque con una cerrada; elegir entre
+  soluciones con consecuencias distintas; una dependencia; cambiar el modelo del dominio o un
+  puerto; un fallo que no consigue arreglar. Una duda que no bloquea va a *Sin decidir* y sigue.
+- **Cada tarea, etiquetada al planificarla:** *(mecánica)* —el cómo ya está decidido— la hace un
+  subagente con Sonnet, que para ante cualquier decisión, y Claude la revisa; *(pensar)*, Claude
+  con Opus.
+- **Lo cerrado sale de este fichero** a `TERMINADAS.md`, para que lo que se lee al trabajar no
+  crezca sin medida (tarea 8).
+- **Las tareas 0 a 8, con la correa corta**, una a una y con el visto bueno del usuario: son las
+  que cambian las reglas. La 9 ya con la correa larga. En la rama `fase-9.1-correa`.
+
+- [x] **0. Apuntar la fase** ✅ *(2026-10-18)*: esta entrada.
+- [ ] **1. Borrar los cuatro agentes** (`back-dev-agent`, `infra-agent`, `doc-agent`,
+      `frontend-agent`). Quedan en `git log`. El `deny` de `.claude/agents/` pasa a `ask`: las
+      fichas futuras las podrá escribir Claude, con permiso en cada edición. C2 se cierra (borrado);
+      la nota de *Sin decidir* sobre las fichas desfasadas, también; el título de *Infraestructura*
+      pierde el nombre del agente. Las menciones de las fases cerradas son historia y se quedan.
+      **Se cierra cuando** `.claude/agents/` está vacía, el `deny` es `ask`, un `grep` de los cuatro
+      nombres no da nada fuera de las fases cerradas y `check` pasa.
+- [ ] **2. Sandbox sin red**, en `.claude/settings.json` (`bubblewrap` y `socat` ya están). Los
+      nombres de la configuración, de la documentación de Claude Code, no de memoria. **Se cierra
+      cuando**, roto a propósito, fallan un `curl`, un `fetch` desde un script de Node y escribir
+      fuera del proyecto; y siguen funcionando `npm run check`, los dos hooks, `check:roturas` y el
+      servidor del panel.
+- [ ] **3. Permisos ampliados** encima del sandbox: `defaultMode` a `acceptEdits`; permitidos los
+      intérpretes (`node`, `python3`), los de leer (`cat`, `head`, `tail`, `sed`, `awk`),
+      `git rm`, `git mv`, `git branch`, `git add`, `git commit`, `git switch` y el navegador del
+      panel. Los `deny`, intactos. **Se cierra cuando** una tanda normal no pregunta por ediciones
+      ni por órdenes de rutina, y una orden de la lista de prohibidas sigue prohibida.
+- [ ] **4. Podar `.claude/settings.local.json`**, otra vez: han vuelto `python3 -`,
+      `python3 -c '*'` y `Read(//home/ubuntu/**)`, que A1 había quitado. **Se cierra cuando** sólo
+      quedan reglas de leer o consultar que no estén ya en `settings.json`.
+- [ ] **5. Un hook que impide comitear en `main`**: un patrón de permisos no distingue la rama.
+      **Se cierra cuando**, roto a propósito, un commit en `main` se bloquea y en otra rama pasa.
+- [ ] **6. La regla de trabajo, escrita** en `CLAUDE.md`: cuándo para, un commit por tarea en una
+      rama por bloque, las roturas, la etiqueta *(mecánica)* o *(pensar)*. Y al día las memorias de
+      Claude que la contradicen («confirmar tras cada tarea», «no comitear»). **Se cierra cuando**
+      `CLAUDE.md` la recoge, `check:arquitectura` pasa y las memorias dicen lo mismo.
+- [ ] **7. Compactar antes y retomar solo.** El umbral de compactación automática, a la mitad de
+      la ventana; una sección «Compact Instructions» en `CLAUDE.md` (fase, tarea, rama, lista con
+      ✅, dudas, lo que estaba a medias y el siguiente paso); y un hook tras compactar
+      (`SessionStart` con `compact`) que añade la rama, lo que hay sin comitear, los commits de la
+      rama y lo pendiente de la fase en curso, acotado a eso. Manda el repo sobre el resumen.
+      **Se cierra cuando** una compactación forzada con `/compact` a mitad de una tarea retoma sola
+      donde estaba, con la rama y la lista correctas.
+- [ ] **8. Partir este fichero: lo cerrado, a `TERMINADAS.md`.** Se mueve **cada entrada, no
+      cada sección**, cuando ya no pide nada a nadie. A `TERMINADAS.md`: las fases cerradas,
+      resumidas en 20 líneas como mucho (qué, cuándo, la deuda que dejó, commits clave); las
+      tareas sueltas, **al terminarlas**; las descartadas, las decisiones cerradas y los hitos, en
+      una línea. Se quedan aquí: la deuda de las fases cerradas, con su origen, en una sección
+      propia; la fase en curso entera, hasta cerrarla; lo pendiente, lo sin decidir, las ideas
+      aparcadas y la nube. Al día la tabla de `CLAUDE.md`, la cabecera de este fichero y las
+      referencias rotas. Al cerrar cada fase, además, un repaso de la memoria de Claude. **Se
+      cierra cuando** `check:tareas` falla, roto a propósito, con una fase cerrada o un `[x]` o un
+      tachado fuera de la fase en curso aquí, y con una fase de más de 20 líneas en
+      `TERMINADAS.md`; sus roturas están en la lista, y el fichero partido lo pasa.
+- [ ] **9. La tanda de prueba, con la correa larga**: cuatro pendientes pequeñas que no dependen de
+      ninguna decisión, encadenadas sin parar: quitar `CarpetaRecorrible` (Fase 3), renombrar
+      `NoteList` (Fase 5), los colores repetidos fuera de `base.css` y que una posición o una acción
+      desconocidas no hagan nada (*Sin fase asignada*). Cada una cierra como dice su entrada. **Se
+      cierra cuando** las cuatro están comiteadas en su rama, y el usuario ha revisado la tanda y
+      dicho qué ajustar de la regla.
+
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
 Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
