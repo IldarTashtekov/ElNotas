@@ -778,9 +778,13 @@ pendientes que ya estaban en este fichero.
       una Node 20 desinstalada y la 12 del sistema delante de la 26, y `PATH=… npm` pregunta
       siempre; el usuario lo arregló con `nvm alias default 26` y reiniciando la app. Tras eso,
       `npm run check`, `git add` y un `git commit --dry-run` no preguntan.
-- [ ] **4. Podar `.claude/settings.local.json`**, otra vez: han vuelto `python3 -`,
+- [x] **4. Podar `.claude/settings.local.json`** ✅ *(2026-10-18)*, otra vez: han vuelto `python3 -`,
       `python3 -c '*'` y `Read(//home/ubuntu/**)`, que A1 había quitado. **Se cierra cuando** sólo
       quedan reglas de leer o consultar que no estén ya en `settings.json`.
+      **Hecho:** de 33 reglas quedan 8 (tres `WebFetch`, `WebSearch`, dos `Read` acotados,
+      `git check-ignore` y `git rev-list`). Fuera lo que ya cubre la tarea 3, `Read(//home/ubuntu/**)`,
+      los `bash -lc`/`-ic` y las comprobaciones de una sola vez. Vuelven cada vez que se responde
+      «sí, y no volver a preguntar»: se poda en el repaso de cierre de fase. El fichero no se versiona.
 - [x] **5. Un hook que impide comitear en `main`** ✅ *(2026-10-18)*: un patrón de permisos no distingue la rama.
       **Se cierra cuando**, roto a propósito, un commit en `main` se bloquea y en otra rama pasa.
       **Hecho:** modo `comitear` de `.claude/hooks/checks.mjs`, en `PreToolUse` de Bash; bloquea
