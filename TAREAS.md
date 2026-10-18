@@ -233,12 +233,16 @@ pendientes que ya estaban en este fichero.
       `.claude/`; **no** `TAREAS.md` ni `TERMINADAS.md`, que nombran a propósito lo que aún no
       existe o ya no existe. **Se cierra cuando**, roto a propósito con cada uno de los tres
       casos, falla; sus roturas están en la lista, y los documentos de hoy lo pasan.
-- [ ] **10. La tanda de prueba, con la correa larga**: cuatro pendientes pequeñas que no dependen de
+- [x] **10. La tanda de prueba, con la correa larga** ✅ *(2026-10-18)*: cuatro pendientes pequeñas que no dependen de
       ninguna decisión, encadenadas sin parar: quitar `CarpetaRecorrible` (Fase 3), renombrar
       `NoteList` (Fase 5), los colores repetidos fuera de `base.css` y que una posición o una acción
       desconocidas no hagan nada (*Sin fase asignada*). Cada una cierra como dice su entrada. **Se
       cierra cuando** las cuatro están comiteadas en su rama, y el usuario ha revisado la tanda y
       dicho qué ajustar de la regla.
+      Hecho: `be97cad`, `ff6b16c`, `689cbbd` (falta su lista de `test/storage/blobs/`) y `90feb1d`.
+      Paró dos veces, las dos previstas: el nombre de `ItemList` y la lista a mano. De la
+      revisión, tres cambios en la regla: lo mecánico corto lo hace Claude, lo suelto se cierra en
+      `TERMINADAS.md` y el check se mira por su código de salida (un `| tail` coló un commit en rojo).
 - [ ] **11. La auditoría de la documentación, la primera** *(pensar)*: el ritual con el que se
       cerrará cada fase. Un subagente, sin haber escrito nada de la fase, lee los documentos
       vigentes contra el repo (`CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas

@@ -49,17 +49,17 @@ pasa todas (unos 4 minutos): al cerrar cada tarea que toque `src/` y al cerrar u
 tanda**, sin pedir permiso entre una y otra. Las órdenes corren en un *sandbox* sin red y que sólo
 escribe en el proyecto; `npm audit` y lo que necesite red, lo lanza el usuario.
 
-- **Una rama por bloque**, en esta carpeta (sin *worktree*); **un commit por tarea**, al cerrarla.
-  Juntar con `main` y publicar, del usuario; un hook impide comitear en `main`. **`git add` por
-  nombre, nunca `-A` ni `.`**: el *sandbox* tapa con `/dev/null` rutas protegidas que no existen,
-  y `git status` las ve como ficheros nuevos.
-- **Cada tarea, etiquetada al planificarla:** *(mecánica)*, cuando el cómo ya está decidido: la
-  hace un subagente con Sonnet, que para ante cualquier decisión, y Claude la revisa. *(pensar)*:
-  Claude, con Opus.
-- **Se para y se pregunta** ante una decisión no cerrada o que choque con una cerrada; al elegir
-  entre soluciones con consecuencias distintas; ante una dependencia; al cambiar el modelo del
-  dominio o un puerto; y ante un fallo que no se consigue arreglar. **Una duda que no bloquea** va
-  a `TAREAS.md` → *Sin decidir*, y se sigue.
+- **Una rama por bloque**, sin *worktree*; **un commit por tarea**. Juntar con `main` y publicar,
+  del usuario; un hook impide comitear en `main`. **`git add` por nombre, nunca `-A` ni `.`**: el
+  *sandbox* tapa con `/dev/null` rutas que no existen, y `git status` las ve como nuevas.
+- **Cada tarea, etiquetada al planificarla:** *(mecánica)*, cuando el cómo ya está decidido: si es
+  larga, un subagente con Sonnet, que para ante cualquier decisión, y Claude la revisa; si es
+  corta, Claude, que el subagente cuesta más que el cambio. *(pensar)*: Claude, con Opus.
+- **Al cerrar cada tarea**, lo suelto sale de `TAREAS.md` a `TERMINADAS.md` en una línea, sin ✅.
+  Antes del commit, si el check pasa se mira en su código de salida: un `| tail` lo tapa.
+- **Se para y se pregunta** ante una decisión no cerrada o que choque con una cerrada, al elegir
+  entre soluciones con consecuencias distintas, ante una dependencia, un cambio del dominio o de un
+  puerto, o un fallo sin arreglo. **Una duda que no bloquea**, a `TAREAS.md` → *Sin decidir*.
 - **Al acabar la tanda**, al usuario: lo hecho, los commits, las dudas apuntadas y **lo que falta**.
 
 **Al cerrar una fase**, además de `check:roturas` entera:
