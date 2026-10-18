@@ -884,6 +884,51 @@ probar el 4 en el móvil antes de construir el Markdown encima.
       integridad referencial llega también a las referencias dentro del texto**. **Se cierra
       cuando** los dos lo recogen, `check:arquitectura` pasa y `check:roturas` pasa entera.
 
+### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
+
+**Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
+filtros antes de llegar al usuario. Va después de la 10 a propósito: la correa larga se prueba
+primero con funcionalidades de verdad, y lo que salga de ahí cambiará este diseño. **No cambia la
+app.** **Se apoya en la 9.1 y no la repite:** el sandbox y los permisos, `.claude/agents/` en
+`ask`, la regla de cuándo para Claude, un commit por tarea en su rama, la etiqueta *(mecánica)* o
+*(pensar)*, que también elige el modelo de cada agente, y compactar y retomar solo. Lo nuevo son
+los dos agentes y el recorrido.
+
+**Decidido con el usuario el 2026-10-18:**
+- **Claude, en la sesión principal, dirige y escribe el código**; no hay agente coordinador: un
+  subagente no lanza a otros. Plan y Explore, los de serie, cuando hagan falta. Un desarrollador
+  delegado, sólo si las tandas se alargan y el contexto no aguanta.
+- **El recorrido de cada tarea:** código → `check` → **revisor**, que si encuentra algo lo devuelve
+  y Claude corrige, con un tope de vueltas (unas 3; si no se resuelve, la tarea se aparca como
+  duda) → **verificador**, sólo si se ve en el navegador → roturas, sólo si toca `src/` → commit.
+- **Las roturas no son un agente:** son una orden fija sin criterio; se lanza en segundo plano y se
+  lee el resumen.
+- **Al principio, sin votación de dos revisores ni Workflow**: lo primero si al revisor se le
+  escapan cosas; lo segundo cuando el recorrido lleve unas tandas sin cambiar.
+
+- [x] **0. Apuntar la fase** ✅ *(2026-10-18)*: esta entrada.
+- [ ] **1. ¿Puede un subagente usar el navegador del panel?** *(mecánica)* Un subagente de prueba
+      abre la app, lee la página y hace una captura. **Se cierra cuando** el resultado está
+      escrito aquí: si puede, hay verificador (tarea 3); si no, la 3 se tacha y las listas las
+      sigue pasando Claude.
+- [ ] **2. El revisor** *(pensar)*, en `.claude/agents/`, con Opus y sólo de lectura: lee el cambio
+      sin haberlo escrito y mira lo que ningún guardián vigila —las reglas de `CLAUDE.md` que
+      «tienes que recordar tú»—, fallos, pruebas que faltan para el no-op, decisiones cerradas que
+      el cambio contradice y documentos que dejaría diciendo algo falso. Devuelve una lista con
+      fichero y línea, o «nada que objetar». Corto: remite a `CLAUDE.md`, no lo copia. Cierra C3
+      de la Fase 9. **Se cierra cuando** su ficha está escrita y, sobre un cambio con un fallo
+      metido a propósito que ningún guardián caza, lo encuentra.
+- [ ] **3. El verificador** *(pensar)*, si la 1 dice que puede: pasa las listas `VERIFICACION-*.md`
+      siguiendo `test/PASAR-LAS-LISTAS.md`, sin editar código, y devuelve cada paso con ✅ o ❌ y
+      lo que vio. Candidato a Sonnet, porque sigue una lista escrita. **Se cierra cuando** su ficha
+      está escrita y ha pasado una lista entera, anotada, con un fallo metido a propósito cazado.
+- [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
+      con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
+      rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
+- [ ] **5. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
+      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. **Se cierra
+      cuando** los dos lo recogen y `check:arquitectura` pasa.
+
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
 Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
