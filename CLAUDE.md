@@ -18,7 +18,7 @@ Lo que caza el compilador o un guardián va aquí en una línea con su comando: 
 **Verificado, no copiado.** Antes de afirmar qué existe, cuánto hay o si algo pasa:
 `find src test -name '*.ts' | sort`, `npm run check`, `git log --oneline`. Manda `npm test`.
 
-**Versión 1 cerrada** (etiqueta `v1.0.0`), publicada en `https://ildartashtekov.github.io/ElNotas/`.
+**Versión 1 cerrada** (última etiqueta, `v1.1.0`), publicada en `https://ildartashtekov.github.io/ElNotas/`.
 Qué fase hay en curso y qué queda, en `TAREAS.md`.
 
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.

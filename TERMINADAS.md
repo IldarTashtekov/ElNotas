@@ -166,6 +166,25 @@ Commits clave: `018d576` (Node 26), `d9fc809` (los hooks), `f365120` (`Logger` y
 de la copia, en el panel), `db502a6` (`ARCHITECTURE.md`), `e9eaed9` (`CLAUDE.md`), `d3097d7` (el
 cierre).
 
+### Fase 9.1 — Correa larga: encadenar tareas y parar sólo ante decisiones ✅ CERRADA el 2026-10-18
+
+Decidida y cerrada el 2026-10-18, con 848 pruebas y 58 roturas a propósito, todas cazadas. Que
+Claude encadene las tareas de una lista y sólo pare ante lo que es del usuario, **sin perder
+seguridad**. **La base:** los agentes viejos de `.claude/agents/`, fuera; un *sandbox* sin red y
+sin escape, y los permisos ampliados encima; un hook que impide comitear en `main`;
+`settings.local.json` podado. **La regla**, en `CLAUDE.md` → *Cómo se trabaja*: una rama por
+bloque, un commit por tarea, *(mecánica)* y *(pensar)*, cuándo se para y el ritual de cierre.
+**La documentación:** `check:referencias`, lo cerrado a este fichero (`check:tareas` lo exige) y
+la primera auditoría, con 7 afirmaciones falsas corregidas. **Compactar:** umbral a 500.000
+tokens, *Compact instructions* y un hook que, tras compactar, trae rama, cambios y pendientes.
+**La tanda de prueba** (cuatro pendientes viejas, seguidas): lo desconocido no hace nada,
+`build:pages` vigila el fondo del manifiesto, fuera `CarpetaRecorrible` y `NoteList` → `ItemList`.
+De ella, tres ajustes a la regla. **Deuda:** la lista de `test/storage/blobs/` por pasar y ver el
+umbral en una sesión nueva (en `TAREAS.md`).
+Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10` (la regla),
+`ecb4734` (`check:referencias`), `b766ed3` (compactar), `3abee67` (la regla ajustada), `c1aad28`
+(la auditoría).
+
 ---
 
 ## Tareas sueltas terminadas
@@ -181,6 +200,8 @@ cierre).
   falla con más de 300 líneas, una fecha o un recuento de pruebas. `ddb542a`.
 - **Que una posición o una acción desconocidas no hagan nada** ✅ 2026-10-18, rama `fase-9.1`:
   `satisfies never` y devolver lo recibido en `insert` y en el reducer; dos pruebas, tres roturas.
+- **El porqué de «carpetas con `tsconfig`, no monorepo»** ✅ 2026-10-18: vale el de
+  `ARCHITECTURE.md` §8.1, por decisión del usuario.
 - **Los colores de la app, repetidos fuera de `base.css`** ✅ 2026-10-18, rama `fase-9.1`: `build:pages`
   falla si el `background_color` del manifiesto no es el `--ground`; con su rotura.
 - **Renombrar `NoteList`** ✅ 2026-10-18, rama `fase-9.1`: ahora `ItemList`, la palabra del dominio
@@ -237,3 +258,5 @@ cierre).
 
 - **Versión 1**, 2026-10-13, etiqueta **`v1.0.0`** (`4a3b708`), con 828 pruebas: las fases 0 a 8 y
   las dos tandas sin fase.
+- **Versión 1.1**, 2026-10-13, etiqueta **`v1.1.0`** (`0558b4a`), con 844 pruebas: la 1 más volver a
+  lo abierto al recargar.
