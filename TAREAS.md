@@ -776,8 +776,14 @@ pendientes que ya estaban en este fichero.
 - [ ] **4. Podar `.claude/settings.local.json`**, otra vez: han vuelto `python3 -`,
       `python3 -c '*'` y `Read(//home/ubuntu/**)`, que A1 había quitado. **Se cierra cuando** sólo
       quedan reglas de leer o consultar que no estén ya en `settings.json`.
-- [ ] **5. Un hook que impide comitear en `main`**: un patrón de permisos no distingue la rama.
+- [x] **5. Un hook que impide comitear en `main`** ✅ *(2026-10-18)*: un patrón de permisos no distingue la rama.
       **Se cierra cuando**, roto a propósito, un commit en `main` se bloquea y en otra rama pasa.
+      **Hecho:** modo `comitear` de `.claude/hooks/checks.mjs`, en `PreToolUse` de Bash; bloquea
+      `git commit` en `main` o en la orden que cambia a `main`. Rotos a propósito: `git switch main
+      && git commit`, bloqueado con el hook vivo; en un repositorio de juguete en `main`, bloqueado,
+      y en otra rama o sin `commit`, pasa. Sin rotura en `tools/roturas.mjs`, como los otros dos
+      modos: el sandbox no deja escribir en `.claude/hooks/` y `check-roturas` sólo lanza scripts
+      de npm.
 - [ ] **6. La regla de trabajo, escrita** en `CLAUDE.md`: cuándo para, un commit por tarea en una
       rama por bloque, las roturas, la etiqueta *(mecánica)* o *(pensar)*, y el ritual de cierre de
       fase: la auditoría de la documentación (tarea 11) y el repaso de la memoria. Y al día las

@@ -7,6 +7,8 @@
  * `terminar` (antes de dar el turno por acabado): si hay cambios sin comitear
  * en esas carpetas, `npm run check` entero; en rojo, no deja terminar, pero
  * sólo una vez seguida.
+ * `comitear` (antes de cada orden de Bash): bloquea un `git commit` en `main`,
+ * o en la misma orden que cambia a `main`.
  * Un fallo sale con código 2 y el error en stderr, que es lo que lee el agente.
  */
 import { spawnSync } from "node:child_process"
@@ -81,7 +83,23 @@ const terminar = () => {
   }
 }
 
+/* Mira el texto de la orden: un patrón de permisos no distingue la rama. */
+const comitear = () => {
+  const orden = entrada.tool_input?.command
+  if (typeof orden !== "string" || !/\bgit\b[^;&|\n]*\bcommit\b/.test(orden)) return
+  const rama = spawnSync("git", ["branch", "--show-current"], { cwd: raiz, encoding: "utf8" })
+  const enMain = rama.status === 0 && rama.stdout.trim() === "main"
+  const vaAMain = /\bgit\s+(switch|checkout)\s+main\b/.test(orden)
+  if (enMain || vaAMain) {
+    fallar(
+      "Hook antes de Bash: no se comitea en `main`. Comitea en la rama del bloque; juntar con `main` es del usuario.",
+      "",
+    )
+  }
+}
+
 const modo = process.argv[2]
 if (modo === "editar") editar()
 else if (modo === "terminar") terminar()
-else fallar(`checks.mjs: modo desconocido «${modo}»; se espera «editar» o «terminar».`, "")
+else if (modo === "comitear") comitear()
+else fallar(`checks.mjs: modo desconocido «${modo}»; se espera «editar», «terminar» o «comitear».`, "")
