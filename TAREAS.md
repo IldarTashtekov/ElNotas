@@ -768,11 +768,16 @@ pendientes que ya estaban en este fichero.
       protegidas que no existen (`.bashrc`, `.mcp.json`, `.claude/agents`…) se tapan con un
       `/dev/null` que `git status` ve como sin seguimiento; fuera no existen. **Por eso, `git add`
       siempre por nombre, nunca `-A` ni `.`** (a la regla de la tarea 6).
-- [ ] **3. Permisos ampliados** encima del sandbox: `defaultMode` a `acceptEdits`; permitidos los
+- [x] **3. Permisos ampliados** ✅ *(2026-10-18)* encima del sandbox: `defaultMode` a `acceptEdits`; permitidos los
       intérpretes (`node`, `python3`), los de leer (`cat`, `head`, `tail`, `sed`, `awk`),
       `git rm`, `git mv`, `git branch`, `git add`, `git commit`, `git switch` y el navegador del
       panel. Los `deny`, intactos. **Se cierra cuando** una tanda normal no pregunta por ediciones
       ni por órdenes de rutina, y una orden de la lista de prohibidas sigue prohibida.
+      **Hecho:** `npm install` y `git push` siguen denegados, y `nodejs.org` sigue sin red aunque
+      su `WebFetch` esté permitido (manda `deniedDomains`). La sesión había heredado un `PATH` con
+      una Node 20 desinstalada y la 12 del sistema delante de la 26, y `PATH=… npm` pregunta
+      siempre; el usuario lo arregló con `nvm alias default 26` y reiniciando la app. Tras eso,
+      `npm run check`, `git add` y un `git commit --dry-run` no preguntan.
 - [ ] **4. Podar `.claude/settings.local.json`**, otra vez: han vuelto `python3 -`,
       `python3 -c '*'` y `Read(//home/ubuntu/**)`, que A1 había quitado. **Se cierra cuando** sólo
       quedan reglas de leer o consultar que no estén ya en `settings.json`.
