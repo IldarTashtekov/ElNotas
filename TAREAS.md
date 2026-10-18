@@ -29,20 +29,6 @@ casilla marcada ni ningún tachado. También lo vigila `check:tareas`.
 Lo que las fases cerradas dejaron sin hacer o sin contestar, con la fase de la que viene. Su
 resumen, en `TERMINADAS.md`.
 
-#### De la Fase 3 — Fichero local
-
-- [ ] **Quitar la interfaz `CarpetaRecorrible` de `DirectoryHandleBlobStore.ts`, que sobraba**:
-      `values()` ya viene en `lib.dom.d.ts` (TypeScript 6.0.3), con la misma unión de tipos.
-      **Hecho en la rama `fase-9.1` (2026-10-18):** fuera la interfaz, `entradasDe` y su
-      comentario, que mentía; la llamada es `carpeta.values()`, y `check` pasa. **Falta pasar la
-      lista** de `test/storage/blobs/` en Chromium, que pide elegir carpeta y revocar el permiso:
-      las manos del usuario, antes de juntar la rama con `main`. El JavaScript emitido cambia, así
-      que no le vale la excepción de «emitido idéntico».
-      **Pasada con OPFS por Claude (2026-10-18)**: A, B y D, en verde, y con ellos el recorrido
-      que cambió; sin probar la carpeta del sistema ni la C.
-      **Se cierra cuando** el usuario da por buena esa pasada como excepción, o pasa la lista
-      entera en un Chromium con la API encendida, y queda anotado en su hoja de resultados.
-
 #### De la Fase 4 — UI
 
 - [ ] **Contestar por escrito las tres preguntas del editor** —`move`, `indent`/`outdent`, y si el

@@ -202,6 +202,8 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   `satisfies never` y devolver lo recibido en `insert` y en el reducer; dos pruebas, tres roturas.
 - **El porqué de «carpetas con `tsconfig`, no monorepo»** ✅ 2026-10-18: vale el de
   `ARCHITECTURE.md` §8.1, por decisión del usuario.
+- **Quitar `CarpetaRecorrible`** ✅ 2026-10-18 (`689cbbd`): `values()` ya viene en `lib.dom`. **Segunda
+  excepción** a repasar la lista entera: el usuario dio por buena la pasada con OPFS (A, B y D).
 - **Los colores de la app, repetidos fuera de `base.css`** ✅ 2026-10-18, rama `fase-9.1`: `build:pages`
   falla si el `background_color` del manifiesto no es el `--ground`; con su rotura.
 - **Renombrar `NoteList`** ✅ 2026-10-18, rama `fase-9.1`: ahora `ItemList`, la palabra del dominio
@@ -209,7 +211,7 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **`npm test` no puede pasar en falso** ✅ (`475a585`): `require-tests.mjs` y `clean-tmp-test.mjs`.
 - **`check:purity`** ✅ (`2abaaaf`): el reloj y el azar en el core, quitando comentarios y cadenas.
 - **Las pruebas, a `test/`, espejo de `src/`** ✅ (`61fe72a`), con las mismas 314. §8.3.
-- **Tipo explícito en todo `src/`** ✅ (`2f74a06`), con la **única excepción** a repasar la lista
+- **Tipo explícito en todo `src/`** ✅ (`2f74a06`), con la **primera excepción** a repasar la lista
   de `DirectoryHandleBlobStore.ts`: mismo código una vez quitados los comentarios, medido por sha256.
 - **Las cabeceras del código, cortas** ✅ (`3135831`, 2026-09-19): de 1035 a 328 líneas. §8.7.
 - **`.js` en los imports relativos y `check:extensiones`** ✅ (`1037ea1`). §8.2.

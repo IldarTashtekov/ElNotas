@@ -158,7 +158,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Sin bundler: `importmap` y `.js` en los relativos. `node:test`, no vitest. Pruebas en `test/`.
 - Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o Claude en el
   panel. Si tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`;
-  la única excepción, en `TERMINADAS.md`).
+  las dos excepciones, en `TERMINADAS.md`).
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
 - Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el
   build, es rápido y casi nunca se equivoca. Las roturas, con una lista a mano, no con Stryker.
