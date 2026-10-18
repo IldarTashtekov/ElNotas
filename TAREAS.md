@@ -38,7 +38,10 @@ resumen, en `TERMINADAS.md`.
       lista** de `test/storage/blobs/` en Chromium, que pide elegir carpeta y revocar el permiso:
       las manos del usuario, antes de juntar la rama con `main`. El JavaScript emitido cambia, así
       que no le vale la excepción de «emitido idéntico».
-      **Se cierra cuando** la lista está pasada y anotada en su hoja de resultados.
+      **Pasada con OPFS por Claude (2026-10-18)**: A, B y D, en verde, y con ellos el recorrido
+      que cambió; sin probar la carpeta del sistema ni la C.
+      **Se cierra cuando** el usuario da por buena esa pasada como excepción, o pasa la lista
+      entera en un Chromium con la API encendida, y queda anotado en su hoja de resultados.
 
 #### De la Fase 4 — UI
 

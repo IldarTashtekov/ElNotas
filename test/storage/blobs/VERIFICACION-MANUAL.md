@@ -237,6 +237,34 @@ Notas (lo que no encajó en una casilla, mensajes exactos, sorpresas de la API):
 ### Pasadas
 
 ```
+Fecha:        2026-10-18
+Navegador:    el panel de Claude (Electron, Chrome 152.0.7977.130)
+Sistema:      Ubuntu
+Quién:        Claude, en el panel, por decisión del usuario
+Commit:       df1a54d — la de quitar CarpetaRecorrible (`carpeta.values()`
+              directo), compilada a dist/manual con la orden de «Preparación»
+
+A · bytes al disco           [ ] pasa   [ ] falla   [x] no se ha podido probar
+B · sesión nueva             [ ] pasa   [ ] falla   [x] no se ha podido probar
+C · permiso revocado         [ ] pasa   [ ] falla   [x] no se ha podido probar
+D · borrado                  [ ] pasa   [ ] falla   [x] no se ha podido probar
+E · OPFS (opcional)          [x] pasa   [ ] falla   [ ] no se ha probado
+
+Notas (lo que no encajó en una casilla, mensajes exactos, sorpresas de la API):
+
+- SÓLO OPFS: el diálogo de elegir carpeta y el candado de los permisos no los
+  maneja Claude. Con OPFS, los pasos de A, B y D: write → ok; read → ok(45
+  bytes) con el JSON; list → ok ["notes/manual.json"], camino completo; read
+  ausente → ok(null). Tras recargar, read devuelve el JSON de antes y list lo
+  sigue viendo. delete → ok, otra vez → ok, list → ok [].
+- Lo que cambió el commit, el recorrido con `values()`, es lo que usa `list`:
+  queda probado. Sin probar: el fichero en una carpeta del sistema y la C.
+  El usuario decide si basta para este cambio (TAREAS.md, deuda de la Fase 3).
+- En Brave, el usuario vio `ReferenceError: showDirectoryPicker is not
+  defined`: la API, apagada otra vez (ver «Preparación»).
+```
+
+```
 Fecha:        2026-09-13
 Navegador:    Brave 1.95.101 (Chromium 153.0.8010.37), build de snap, Wayland
               ⚠️ arrancado con --enable-features=FileSystemAccessAPI. De fábrica
