@@ -518,13 +518,6 @@ una tarea con su cierre.
       para leer, y los diagramas no caben en él.
       **Se cierra cuando** la conversión de una nota a Markdown tiene sus pruebas, el botón de ⚙
       descarga el fichero y la lista manual tiene su paso.
-- [ ] **Los colores de la app, repetidos fuera de `base.css`**: el azul `#3552d6` (`--accent`) está
-      también en el `background_color` de `manifest.webmanifest` (la pantalla de carga), porque el
-      manifiesto no lee variables de CSS. Si cambia `--accent`, hay que cambiarlo a mano. Desde
-      el 2026-10-11 es el único sitio: la `theme-color` de `index.html` y el `theme_color` se
-      quitaron (Fase 7). Se cierra con una comprobación en `build:pages` que falle si no
-      coinciden, o decidiendo con el usuario que se aguanta. **La Fase 8 lo cambia de valor**:
-      pasa a ser el negro de `--ground`, sigue repetido.
 - [ ] **Negrita, cursiva, tachado y subrayado en el editor.** *Pedido por el usuario el
       2026-10-11*, tras usar la app en el móvil. **Fuera de la fase de refactor, por decisión
       suya**: va aparte. Hoy el texto de una línea es una cadena plana en el

@@ -7,7 +7,8 @@
  * index.html copiado la versión y el registro del service worker: en desarrollo
  * no hay service worker, porque el index.html del repo no lo registra.
  * Se niega a terminar si index.html o el manifiesto piden algo con ruta absoluta
- * o algo que no se publica: es el fallo que sólo se notaría en el móvil.
+ * o algo que no se publica: es el fallo que sólo se notaría en el móvil. También,
+ * si el fondo del manifiesto no es el `--ground` de base.css.
  */
 import { createHash } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
@@ -33,6 +34,24 @@ const ABSOLUTA = /^(?:\/|[a-z][a-z0-9+.-]*:)/i
 function fallar([primera, ...resto]) {
   console.error(["", `✗ ${primera}`, ...resto, ""].join("\n"))
   process.exit(1)
+}
+
+// El manifiesto no lee variables CSS: su fondo de la pantalla de carga es una copia
+// del `--ground` de base.css. Sólo se define una vez, en `:root`, y vale para el
+// ámbar y para el verde (el verde no lo cambia): es el que se compara.
+const BASE_CSS = "src/ui/styles/base.css"
+const suelo = readFileSync(BASE_CSS, "utf8").match(/--ground:\s*(#[0-9a-f]+)\s*;/i)?.[1]
+const fondo = JSON.parse(readFileSync("manifest.webmanifest", "utf8")).background_color
+if (suelo === undefined) {
+  fallar([`No se encontró \`--ground\` en ${BASE_CSS}: no se puede comparar con el manifiesto.`])
+}
+if (fondo?.toLowerCase() !== suelo.toLowerCase()) {
+  fallar([
+    "El fondo del manifiesto no coincide con el de la app. La pantalla de carga se",
+    "  vería de otro color. Los dos tienen que valer lo mismo:",
+    `    manifest.webmanifest  background_color: ${fondo}`,
+    `    ${BASE_CSS}  --ground: ${suelo}`,
+  ])
 }
 
 if (!existsSync("dist/web")) {

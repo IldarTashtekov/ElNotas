@@ -295,6 +295,13 @@ export const ROTURAS = [
     caza: "check:purity",
   },
   {
+    nombre: "build:pages: el fondo del manifiesto no es el --ground",
+    fichero: "manifest.webmanifest",
+    buscar: '"background_color": "#050301"',
+    poner: '"background_color": "#050302"',
+    caza: "build:pages",
+  },
+  {
     nombre: "check:fronteras: getItem fuera de su try",
     fichero: "src/platform/web/LocalStoragePhosphor.ts",
     buscar: "    try {\n      return ok(almacen.getItem(PHOSPHOR_KEY))\n",
