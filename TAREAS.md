@@ -817,7 +817,11 @@ pendientes que ya estaban en este fichero.
       cierra cuando** `check:tareas` falla, roto a propósito, con una fase cerrada o un `[x]` o un
       tachado fuera de la fase en curso aquí, y con una fase de más de 20 líneas en
       `TERMINADAS.md`; sus roturas están en la lista, y el fichero partido lo pasa.
-- [ ] **9. Un guardián de referencias en la documentación** (`check:referencias`, en `check` y en
+- [x] **9. Un guardián de referencias en la documentación** ✅ *(2026-10-18; `tools/check-referencias.mjs`,
+      con sus tres roturas cazadas y `check` en verde. Mira sólo lo versionado, y cuenta como
+      existente lo ignorado por git, para que dé lo mismo en Actions. Las rutas que no empiezan
+      por una carpeta del repo ni son de código, como `notes/rota.json`, son del almacén y no
+      se miran)* (`check:referencias`, en `check` y en
       el hook de editar un `.md`): falla si un documento cita entre comillas de código un fichero o
       carpeta que no existe, una orden `npm run …` que no está en `package.json` o un alias `#…`
       que tampoco. Lleva a ficheros, órdenes y alias lo que `check:arquitectura` ya hace con las

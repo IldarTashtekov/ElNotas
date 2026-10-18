@@ -3,7 +3,7 @@
  *
  * `editar` (tras cada Edit o Write): si el fichero es de `src/`, `test/` o
  * `tools/`, los tipos y los guardianes, sin las pruebas; si es un `.md`, el de
- * `ARCHITECTURE.md`, y si es `TAREAS.md`, también el suyo.
+ * `ARCHITECTURE.md` y el de las referencias, y si es `TAREAS.md`, también el suyo.
  * `terminar` (antes de dar el turno por acabado): si hay cambios sin comitear
  * en esas carpetas, `npm run check` entero; en rojo, no deja terminar, pero
  * sólo una vez seguida.
@@ -59,7 +59,7 @@ const editar = () => {
     camino === "TAREAS.md"
       ? ["check:tareas", "check:arquitectura"]
       : camino.endsWith(".md")
-        ? ["check:arquitectura"]
+        ? ["check:arquitectura", "check:referencias"]
         : vigilado(camino)
           ? RAPIDOS
           : []

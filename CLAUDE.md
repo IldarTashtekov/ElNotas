@@ -277,6 +277,7 @@ npm run check:exportaciones  # falla si un index.ts anuncia lo que ningún otro 
 npm run check:tareas         # falla si una tarea abierta no dice cómo se cierra
 npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o crónica, si CLAUDE.md
                              # pasa de 300 líneas o lleva fechas o recuentos de pruebas, o hay § rotas
+npm run check:referencias    # falla si un documento nombra un fichero, una orden o un alias que no existe
 npm test                     # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
 npm run check:roturas        # FUERA de check (~4 min): rompe a propósito y exige que algo caiga
 npm run build:web            # compila src/ a dist/web/ en ESM, para el navegador

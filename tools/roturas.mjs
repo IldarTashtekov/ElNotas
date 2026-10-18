@@ -376,4 +376,27 @@ export const ROTURAS = [
     poner: "## Comandos\n" + "\n".repeat(40),
     caza: "check:arquitectura",
   },
+
+  /* ── Las referencias de los documentos ── */
+  {
+    nombre: "check:referencias: CLAUDE.md nombra un fichero que no existe",
+    fichero: "CLAUDE.md",
+    buscar: "`test/PASAR-LAS-LISTAS.md`",
+    poner: "`test/PASAR-LAS-LISTAS-VIEJO.md`",
+    caza: "check:referencias",
+  },
+  {
+    nombre: "check:referencias: CLAUDE.md nombra una orden de npm que no existe",
+    fichero: "CLAUDE.md",
+    buscar: "npm run check:roturas -- fósforo",
+    poner: "npm run check:rotas -- fósforo",
+    caza: "check:referencias",
+  },
+  {
+    nombre: "check:referencias: CLAUDE.md nombra un alias que no existe",
+    fichero: "CLAUDE.md",
+    buscar: "(`#ui/noteActions`)",
+    poner: "(`#vista/noteActions`)",
+    caza: "check:referencias",
+  },
 ]

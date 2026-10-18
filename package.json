@@ -33,10 +33,11 @@
     "check:exportaciones": "node tools/check-exportaciones.mjs",
     "check:tareas": "node tools/check-tareas.mjs",
     "check:arquitectura": "node tools/check-arquitectura.mjs",
+    "check:referencias": "node tools/check-referencias.mjs",
     "check:roturas": "node tools/check-roturas.mjs",
     "build:web": "node tools/clean-dist.mjs && tsc -p tsconfig.web.json",
     "build:pages": "node tools/build-pages.mjs",
-    "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm run check:fronteras && npm run check:extensiones && npm run check:descartes && npm run check:paragrafos && npm run check:exportaciones && npm run check:tareas && npm run check:arquitectura && npm test"
+    "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm run check:fronteras && npm run check:extensiones && npm run check:descartes && npm run check:paragrafos && npm run check:exportaciones && npm run check:tareas && npm run check:arquitectura && npm run check:referencias && npm test"
   },
   "repository": {
     "type": "git",
