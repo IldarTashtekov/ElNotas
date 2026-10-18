@@ -789,6 +789,101 @@ pendientes que ya estaban en este fichero.
       cierra cuando** las cuatro están comiteadas en su rama, y el usuario ha revisado la tanda y
       dicho qué ajustar de la regla.
 
+### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto y Markdown — PLANIFICADA, empieza al cerrar la 9.1
+
+**Decidida con el usuario el 2026-10-18**, a partir de una lista que trajo de usar la app. De
+siete ideas entran cinco; los subcontextos se aparcan (*Ideas aparcadas*) y «fijar» se descarta
+porque reordenar lo cubre. **Sin dependencias y sin migrar**: ningún cambio obliga a convertir lo
+guardado. **Orden:** lo previsible primero (1-3), el editor al final (4-6), con una parada para
+probar el 4 en el móvil antes de construir el Markdown encima.
+
+**Decidido con el usuario el 2026-10-18:**
+- **Ocultos, por contexto** (al estilo de los archivados de WhatsApp): lo oculto **sigue siendo del
+  contexto** —en «Mover a…», en los enlaces, en el lienzo—, sólo no sale en su lista. Para
+  limpiar la lista de lo que ya se ve dentro de un diagrama. El General lo enseña todo. En
+  pantalla, «Ocultar» / «Mostrar» y la fila «Ocultos (n)» arriba, con un icono SVG monocromo del
+  color del fósforo (un emoji saldría a color).
+- **Ocultos como `hidden` ⊆ `items`**, no dos listas que se repartan los elementos ni una marca
+  dentro de cada entrada de `items` (eso cambiaría su tipo, decisión cerrada, y pediría migrar).
+  El tipo permite el estado incoherente; lo impiden el reducer, `hydrate` y su rotura, como el
+  resto de la integridad referencial.
+- **Reordenar, no fijar.** Con el `⠿` del modo selección, en el lateral de cada fila. El General
+  no se reordena: va por nombre.
+- **Selección en el lienzo, sin desmarcar:** el rectángulo selecciona, el arrastre mueve; para
+  cambiar la selección, otro rectángulo. Mover desde un nodo marcado, no desde el área. Por ahora,
+  sólo mover. **Cambia la decisión cerrada «sin selección»** del lienzo.
+- **El texto de una línea pasa a ser Markdown**, un subconjunto, leído línea a línea: la cadena
+  del modelo es la misma en el core, en el disco y en la pantalla; la pantalla sólo la lee para
+  pintarla. Ni motor de edición ni texto rico propio. Los enlaces internos van **por
+  identificador**: renombrar no los rompe.
+- **Seleccionar texto como en cualquier página**, por encima de varias líneas, y copiar **texto
+  plano**: los enlaces como su texto visible, las casillas sólo con su texto. Ni «copiar nota» ni
+  «copiar desde aquí».
+
+- [x] **0. Apuntar la fase** ✅ *(2026-10-18)*: esta entrada.
+- [ ] **1. Ocultos por contexto** *(pensar)*. En el core, `Context.hidden` (ausente = vacío, sin
+      migrar) con dos acciones, ocultar y mostrar, que reciben varios elementos; ocultar lo que no
+      está en `items` no hace nada. Quitar un elemento del contexto o borrarlo lo saca también de
+      `hidden`; `hydrate` y `schema.ts` tiran lo de `hidden` que no esté en `items`. **Lo creado
+      desde el lienzo nace oculto** en los contextos del diagrama; lo que ya existía y se pone en
+      el lienzo, no. «Mover a…» desde un contexto lo deja visible en el destino. En pantalla:
+      «Ocultar» en la barra del modo selección; la fila «Ocultos (n)», sólo si hay alguno, abre su
+      lista encima, con «Mostrar», «Mover a…» y la papelera, sin reordenar. Al mostrar, vuelve a su
+      sitio. **Se cierra cuando** la invariante tiene sus pruebas y su rotura en
+      `tools/roturas.mjs`, `check` pasa y la lista manual de las ventanas tiene sus pasos, pasados.
+- [ ] **2. Reordenar en un contexto** *(pensar)*. Una acción que mueve **varios** elementos a una
+      posición, como un bloque pegado y en su orden relativo; soltarlos donde estaban no hace nada
+      y devuelve el mismo contexto (`strictEqual`). En pantalla: en el modo selección sale el `⠿`
+      en todas las filas; arrastrar uno mueve todo lo seleccionado, y si la fila no lo estaba, se
+      suma antes. Al soltar se sigue en el modo selección. En el General no hay `⠿`. Reutiliza lo
+      que se pueda de `dragReorder.ts` y `dropIndex.ts`. **Se cierra cuando** la acción tiene sus
+      pruebas de no-op y su rotura, `check` pasa y la lista manual tiene sus pasos, en el ordenador
+      y en el móvil.
+- [ ] **3. Selección de nodos en el lienzo** *(pensar)*. Un botón junto a la mira activa el modo,
+      en vídeo inverso. Arrastrar sobre vacío **o sobre un nodo sin marcar** dibuja un rectángulo:
+      al soltar, se marca **todo lo que toca** y sustituye a la selección anterior, y el
+      rectángulo desaparece. Arrastrar un nodo marcado mueve el grupo, con **una sola acción** y un
+      solo guardado al soltar. Dentro del modo, el lienzo se desplaza con dos dedos o con la rueda.
+      Volver a pulsar el botón sale y quita la selección. **Además, para todo arrastre de nodos**,
+      dentro o fuera del modo: con el dedo en una franja junto al borde (unos 40 px), el lienzo
+      avanza hacia ese lado a velocidad **fija y moderada**; el encuadre se guarda al soltar, como
+      hoy. **Se cierra cuando** la acción de mover varios tiene sus pruebas y su rotura, la decisión
+      «sin selección» está cambiada en `CLAUDE.md`, y las listas del lienzo tienen sus pasos,
+      pasados en el ordenador y en el móvil.
+- [ ] **4. Seleccionar y copiar texto en una nota** *(pensar)*. Hoy cada línea es un elemento
+      editable aparte y el navegador no deja que una selección salga de él. **Sólo es editable la
+      línea activa**; las demás son texto normal, que se selecciona de corrido (arrastrar, o
+      pulsación larga y asas en el móvil). Un toque sin arrastrar hace editable esa línea con el
+      cursor donde cayó (`caretPositionFromPoint`). Al copiar, sólo texto plano: una línea por
+      línea, sin las marcas de casilla. Intro, Retroceso y las flechas, como hoy: si cae una
+      prueba del editor, era una decisión. **Se cierra cuando** `check` pasa, la lista del editor
+      tiene sus pasos, y **el usuario lo ha probado en su móvil y da el visto bueno antes de
+      empezar el 5**.
+- [ ] **5. Markdown en el core: los enlaces y su integridad** *(pensar)*. Encontrar los enlaces
+      internos dentro de un texto (`[texto](nota:id)`, `diagrama:id`, `contexto:id`), puro y en el
+      core: al dominio sólo le importan los enlaces, no la negrita. **Borrar** una nota, un
+      diagrama o un contexto cambia los enlaces que apuntaban a él por `[texto](perdido)` en todas
+      las notas; `hydrate` hace lo mismo con los que lleguen rotos del disco. **Se cierra cuando**
+      la invariante («ningún enlace a lo que no está») tiene sus pruebas, incluida la de identidad
+      cuando ninguna nota enlazaba a lo borrado, y su rotura en `tools/roturas.mjs`, y `check`
+      pasa.
+- [ ] **6. Markdown en pantalla** *(pensar)*. El subconjunto: `**negrita**` (más brillo),
+      `*cursiva*`, `# ` al principio de la línea (título), `[texto](https://…)` y los internos del
+      5; además, lo que empiece por `http://`, `https://` o `www.` se detecta solo (`www.` se abre
+      con `https://` delante; un dominio pelado, no). La barra invertida escribe las marcas
+      literales. **La línea activa se ve en crudo; las demás, formateadas.** Con el cursor dentro de
+      un enlace sale una **burbuja** con «↗ Abrir» (y «Cambiar» y «Quitar» si es un enlace
+      guardado); un interno se abre apilado encima; uno perdido se ve «texto (perdido)». En la
+      barra de la nota, **«Enlazar…»**: pegar una dirección o elegir nota, diagrama o contexto en
+      una lista como la de «Mover a…», y se escribe el enlace donde está el cursor. Leer el formato
+      es una pieza pura, con pruebas en Node. **Se cierra cuando** esa pieza tiene sus pruebas,
+      `check` pasa y la lista del editor tiene sus pasos, pasados en el ordenador y en el móvil.
+- [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: «sin selección» del lienzo
+      cambiada, el texto como Markdown, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y
+      sólo es editable la línea activa. En `ARCHITECTURE.md`, el principio que sale del 5: **la
+      integridad referencial llega también a las referencias dentro del texto**. **Se cierra
+      cuando** los dos lo recogen, `check:arquitectura` pasa y `check:roturas` pasa entera.
+
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
 Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
@@ -1039,6 +1134,10 @@ excepciones y sólo en `src/`. Está probado; el motivo de arriba no cambia por 
       2026-10-17)*. Es una decisión cerrada de `CLAUDE.md` cuyo motivo nunca se escribió.
       **Se cierra cuando** el usuario da el porqué y entra en `ARCHITECTURE.md` §8.1, o decide que
       se queda como decisión sin porqué escrito.
+- [ ] **Enlaces en los nodos del lienzo** *(salió al planificar la Fase 10, 2026-10-18; el usuario
+      se lo piensa)*. Con el texto en Markdown, la pregunta es si el texto de un nodo simple también
+      admite formato y enlaces, con la misma burbuja. El nodo-nota se queda como está. **Se cierra
+      cuando** el usuario decide: una tarea con fase, o a *Ideas aparcadas*.
 
 ### Cerradas, en una línea
 
@@ -1173,6 +1272,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
+| **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10, una nota ya puede enlazar un contexto con `[texto](contexto:id)`. | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
 | **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
 | **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
 | **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
