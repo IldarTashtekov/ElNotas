@@ -33,7 +33,7 @@ dice qué se comprueba; esto dice cómo se pasa y cómo se apunta.
 
 ## Cómo se apunta
 
-Al final de la lista, en **Pasadas**, **la más reciente arriba**:
+Al final de la lista, en su sección de resultados (**Pasadas** u **Hoja de resultados**), **la más reciente arriba**:
 
 ```
 Fecha:        AAAA-MM-DD

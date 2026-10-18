@@ -96,7 +96,7 @@ el modelo mental entero: **la app es un `reduce` sobre las acciones del usuario.
   que recibió. «El usuario pulsó algo raro» no es motivo para tumbar la app.
 
 **Store.** La caja que guarda el estado actual, recibe acciones y avisa a quien escuche. Su
-`state = next` es **la única reasignación del sistema**: los datos siguen siendo inmutables; lo que
+`state = next` es **la única reasignación del estado**: los datos siguen siendo inmutables; lo que
 cambia es qué foto es «la actual». Una app interactiva tiene por definición un «ahora» distinto de su
 «antes», así que no se evita la mutación: se confina en **un sitio pequeño y localizable**. Es una
 clausura y no una clase, porque la UI recibe `dispatch` suelto y una clase lo perdería con su `this`.

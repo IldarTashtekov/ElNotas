@@ -93,9 +93,9 @@ resumen, en `TERMINADAS.md`.
 
 ### Fase 9.1 — Correa larga: encadenar tareas y parar sólo ante decisiones — EN CURSO
 
-**Decidida con el usuario el 2026-10-18**, tras repasar los patrones de trabajo con agentes. Hoy
-Claude trabaja con la correa corta: cada edición pide permiso, se para tras cada tarea y no
-comitea. **Qué es:** que encadene las tareas de una lista acordada y sólo pare ante lo que es del
+**Decidida con el usuario el 2026-10-18**, tras repasar los patrones de trabajo con agentes. Hasta
+entonces Claude trabajaba con la correa corta: cada edición pedía permiso, se paraba tras cada tarea y no
+comiteaba. **Qué es:** que encadene las tareas de una lista acordada y sólo pare ante lo que es del
 usuario, sin perder seguridad. **No cambia la app** salvo en la tanda de prueba (tarea 10), que son
 pendientes que ya estaban en este fichero.
 
@@ -243,13 +243,16 @@ pendientes que ya estaban en este fichero.
       Paró dos veces, las dos previstas: el nombre de `ItemList` y la lista a mano. De la
       revisión, tres cambios en la regla: lo mecánico corto lo hace Claude, lo suelto se cierra en
       `TERMINADAS.md` y el check se mira por su código de salida (un `| tail` coló un commit en rojo).
-- [ ] **11. La auditoría de la documentación, la primera** *(pensar)*: el ritual con el que se
+- [x] **11. La auditoría de la documentación, la primera** ✅ *(2026-10-18)* *(pensar)*: el ritual con el que se
       cerrará cada fase. Un subagente, sin haber escrito nada de la fase, lee los documentos
       vigentes contra el repo (`CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas
       de `test/` y lo de `.claude/`) y devuelve cada afirmación falsa, con fichero, línea y por qué.
       Claude las corrige y el informe se le enseña al usuario. Cómo se pide, escrito en
       `CLAUDE.md` con la regla de la tarea 6. **Se cierra cuando** el informe está enseñado, lo
       falso corregido y `check` pasa.
+      Hecho: un subagente con Sonnet encontró 7 afirmaciones falsas y un texto citado a medias
+      (README, ARCHITECTURE, la sentada, la lista del almacén, PASAR-LAS-LISTAS, `defaultView`);
+      corregidas. Coste: unos 194.000 tokens.
 
 ### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto y Markdown — PLANIFICADA, empieza al cerrar la 9.1
 
@@ -507,7 +510,7 @@ una tarea con su cierre.
 
 - [ ] **`Context.defaultView`, sin uso** *(salió en E2 de la Fase 9, 2026-10-17)*. Sigue en el
       modelo con su acción `set-default-view`, y nadie lo usa desde que una ventana puede ser una
-      nota o un diagrama. Choca con el principio de que lo que deja de usarse se quita
+      nota o un diagrama. Choca con el principio de no construir lo que no tiene quien lo use
       (`ARCHITECTURE.md` §5). O se acepta como excepción, o se quita, y quitarlo toca el core, el
       reducer, las pruebas y el formato en disco.
       **Se cierra cuando** el usuario elige: excepción, escrita en *Decisiones cerradas* de

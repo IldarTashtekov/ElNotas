@@ -1,7 +1,7 @@
 # La sentada: todas las verificaciones manuales pendientes, en una
 
 **Esto no es documentación de diseño: es un procedimiento.** Junta en un solo recorrido las cinco
-listas manuales que quedan sin pasar, para hacerlas de una vez en el móvil —con la app ya
+listas manuales que quedaban sin pasar (pasada el 2026-10-10), para hacerlas de una vez en el móvil —con la app ya
 instalada— y en el escritorio:
 
 | Prefijo | Lista original | Qué verifica |
@@ -109,7 +109,7 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 - **CTX-B2.** Tocar el título de un contexto lo convierte en un campo. **Intro** guarda;
   **Escape** 💻 cancela; **tocar fuera** guarda. El nombre nuevo sobrevive a recargar.
 - **CTX-B3.** Tocar el título del **General no hace nada**.
-- **CTX-B4.** Un contexto sin notas dice «Esta ventana no tiene notas».
+- **CTX-B4.** Un contexto sin notas dice «Esta ventana no tiene notas ni diagramas.».
 - **CTX-B5.** Quitar todas las ventanas desde ⚙: sale «No hay ninguna ventana» **con el ⚙**, que
   sigue funcionando. *(Luego, volver a poner General y Compra.)*
 

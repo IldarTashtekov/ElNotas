@@ -37,14 +37,14 @@ aparece en la publicada: para pasarlo, se exporta una copia en una y se importa 
 | Fichero | Qué hay dentro |
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) | las reglas del proyecto y el estado real del repo |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | el diseño y sus **por qués**, los conceptos desde cero, el plan por fases |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | el diseño y sus **por qués**, los conceptos desde cero |
 | [`TAREAS.md`](TAREAS.md) | qué está pendiente, qué está sin decidir, qué ideas hay aparcadas |
 | [`TERMINADAS.md`](TERMINADAS.md) | lo cerrado: las fases resumidas, y las tareas, los descartes y las decisiones |
 
 ## Comandos
 
 ```bash
-npm run check             # las seis de abajo. Esto antes de commit
+npm run check             # éstas y el resto de guardianes (CLAUDE.md → Comandos). Antes de commit
 npm run typecheck         # tsc de la app: sólo src/
 npm run typecheck:core    # la verja: falla si el core toca la plataforma
 npm run check:purity      # guardián: falla si el core lee el reloj o el azar

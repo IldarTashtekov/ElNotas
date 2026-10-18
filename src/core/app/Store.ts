@@ -49,7 +49,7 @@ export const createStore = (initial: AppState): Store => {
       const next: AppState = reduce(state, action)
       if (next === state) return // nada cambió → nadie se entera
 
-      state = next // ← LA mutación. Aquí, y en ningún otro sitio del proyecto.
+      state = next // ← LA mutación del estado. Aquí, y en ningún otro sitio.
       for (const listener of listeners) listener(next)
     },
 

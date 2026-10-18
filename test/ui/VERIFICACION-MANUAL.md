@@ -94,7 +94,7 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
 - **B2.** Tocar el título de un contexto lo convierte en un campo. **Intro** guarda; **Escape**
   cancela; **tocar fuera** guarda. El nombre nuevo sobrevive a recargar.
 - **B3.** Tocar el título del **General no hace nada**.
-- **B4.** Un contexto sin notas dice «Esta ventana no tiene notas».
+- **B4.** Un contexto sin notas dice «Esta ventana no tiene notas ni diagramas.».
 - **B5.** Quitar todas las ventanas desde ⚙: sale «No hay ninguna ventana» **con el ⚙**, que
   sigue funcionando.
 

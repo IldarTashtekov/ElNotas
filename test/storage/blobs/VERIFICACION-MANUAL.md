@@ -8,7 +8,7 @@ motivo por el que están ahí ellas: esto es una prueba de `DirectoryHandleBlobS
 
 ## Por qué existe
 
-`DirectoryHandleBlobStore.ts` es **el único fichero del proyecto sin pruebas automáticas**, y
+`DirectoryHandleBlobStore.ts` es **el único fichero de `storage/` sin pruebas automáticas**, y
 es una decisión, no un descuido (`ARCHITECTURE.md` §6.3): no tiene lógica propia, sólo traduce
 a la API del navegador, y un doble ahí probaría lo que uno *cree* que hace esa API en vez de
 lo que hace. El ejemplo que zanjó la discusión es el paso **A** de abajo: escribir exige un
