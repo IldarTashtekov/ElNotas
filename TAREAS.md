@@ -710,7 +710,7 @@ estaban. Partir
 **Decidida con el usuario el 2026-10-18**, tras repasar los patrones de trabajo con agentes. Hoy
 Claude trabaja con la correa corta: cada edición pide permiso, se para tras cada tarea y no
 comitea. **Qué es:** que encadene las tareas de una lista acordada y sólo pare ante lo que es del
-usuario, sin perder seguridad. **No cambia la app** salvo en la tanda de prueba (tarea 9), que son
+usuario, sin perder seguridad. **No cambia la app** salvo en la tanda de prueba (tarea 10), que son
 pendientes que ya estaban en este fichero.
 
 **Decidido con el usuario el 2026-10-18:**
@@ -734,8 +734,14 @@ pendientes que ya estaban en este fichero.
   con Opus.
 - **Lo cerrado sale de este fichero** a `TERMINADAS.md`, para que lo que se lee al trabajar no
   crezca sin medida (tarea 8).
-- **Las tareas 0 a 8, con la correa corta**, una a una y con el visto bueno del usuario: son las
-  que cambian las reglas. La 9 ya con la correa larga.
+- **La documentación, vigilada como el código.** Se pudre cuando afirma algo del repo que cambia
+  sin ella: donde la Fase 9 puso guardianes no ha vuelto a pasar, y los agentes, que quedaron
+  fuera, sí. Tres capas: escribir menos que pueda pudrirse (remitir, no copiar; nada de recuentos
+  ni de «hoy existe…»; ningún documento sin dueño); un guardián para las referencias que se
+  pueden comprobar (tarea 9); y, para lo que sólo se ve leyendo, **una auditoría de la
+  documentación al final de cada fase** (tareas 6 y 11).
+- **Las tareas 0 a 9, con la correa corta**, una a una y con el visto bueno del usuario: son las
+  que cambian las reglas. La 10 ya con la correa larga, y la 11 cierra la fase.
 
 - [x] **0. Apuntar la fase** ✅ *(2026-10-18)*: esta entrada.
 - [ ] **1. Borrar los cuatro agentes** (`back-dev-agent`, `infra-agent`, `doc-agent`,
@@ -761,8 +767,9 @@ pendientes que ya estaban en este fichero.
 - [ ] **5. Un hook que impide comitear en `main`**: un patrón de permisos no distingue la rama.
       **Se cierra cuando**, roto a propósito, un commit en `main` se bloquea y en otra rama pasa.
 - [ ] **6. La regla de trabajo, escrita** en `CLAUDE.md`: cuándo para, un commit por tarea en una
-      rama por bloque, las roturas, la etiqueta *(mecánica)* o *(pensar)*. Y al día las memorias de
-      Claude que la contradicen («confirmar tras cada tarea», «no comitear»). **Se cierra cuando**
+      rama por bloque, las roturas, la etiqueta *(mecánica)* o *(pensar)*, y el ritual de cierre de
+      fase: la auditoría de la documentación (tarea 11) y el repaso de la memoria. Y al día las
+      memorias de Claude que la contradicen («confirmar tras cada tarea», «no comitear»). **Se cierra cuando**
       `CLAUDE.md` la recoge, `check:arquitectura` pasa y las memorias dicen lo mismo.
 - [ ] **7. Compactar antes y retomar solo.** El umbral de compactación automática, a la mitad de
       la ventana; una sección «Compact Instructions» en `CLAUDE.md` (fase, tarea, rama, lista con
@@ -782,12 +789,27 @@ pendientes que ya estaban en este fichero.
       cierra cuando** `check:tareas` falla, roto a propósito, con una fase cerrada o un `[x]` o un
       tachado fuera de la fase en curso aquí, y con una fase de más de 20 líneas en
       `TERMINADAS.md`; sus roturas están en la lista, y el fichero partido lo pasa.
-- [ ] **9. La tanda de prueba, con la correa larga**: cuatro pendientes pequeñas que no dependen de
+- [ ] **9. Un guardián de referencias en la documentación** (`check:referencias`, en `check` y en
+      el hook de editar un `.md`): falla si un documento cita entre comillas de código un fichero o
+      carpeta que no existe, una orden `npm run …` que no está en `package.json` o un alias `#…`
+      que tampoco. Lleva a ficheros, órdenes y alias lo que `check:arquitectura` ya hace con las
+      `§`. Mira `CLAUDE.md`, `ARCHITECTURE.md`, `README.md`, los `.md` de `test/` y los de
+      `.claude/`; **no** `TAREAS.md` ni `TERMINADAS.md`, que nombran a propósito lo que aún no
+      existe o ya no existe. **Se cierra cuando**, roto a propósito con cada uno de los tres
+      casos, falla; sus roturas están en la lista, y los documentos de hoy lo pasan.
+- [ ] **10. La tanda de prueba, con la correa larga**: cuatro pendientes pequeñas que no dependen de
       ninguna decisión, encadenadas sin parar: quitar `CarpetaRecorrible` (Fase 3), renombrar
       `NoteList` (Fase 5), los colores repetidos fuera de `base.css` y que una posición o una acción
       desconocidas no hagan nada (*Sin fase asignada*). Cada una cierra como dice su entrada. **Se
       cierra cuando** las cuatro están comiteadas en su rama, y el usuario ha revisado la tanda y
       dicho qué ajustar de la regla.
+- [ ] **11. La auditoría de la documentación, la primera** *(pensar)*: el ritual con el que se
+      cerrará cada fase. Un subagente, sin haber escrito nada de la fase, lee los documentos
+      vigentes contra el repo (`CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas
+      de `test/` y lo de `.claude/`) y devuelve cada afirmación falsa, con fichero, línea y por qué.
+      Claude las corrige y el informe se le enseña al usuario. Cómo se pide, escrito en
+      `CLAUDE.md` con la regla de la tarea 6. **Se cierra cuando** el informe está enseñado, lo
+      falso corregido y `check` pasa.
 
 ### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto y Markdown — PLANIFICADA, empieza al cerrar la 9.1
 
@@ -881,8 +903,9 @@ probar el 4 en el móvil antes de construir el Markdown encima.
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: «sin selección» del lienzo
       cambiada, el texto como Markdown, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y
       sólo es editable la línea activa. En `ARCHITECTURE.md`, el principio que sale del 5: **la
-      integridad referencial llega también a las referencias dentro del texto**. **Se cierra
-      cuando** los dos lo recogen, `check:arquitectura` pasa y `check:roturas` pasa entera.
+      integridad referencial llega también a las referencias dentro del texto**. Y la auditoría
+      de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
+      `check:arquitectura` pasa, `check:roturas` pasa entera y la auditoría no deja nada falso.
 
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
@@ -914,8 +937,8 @@ los dos agentes y el recorrido.
 - [ ] **2. El revisor** *(pensar)*, en `.claude/agents/`, con Opus y sólo de lectura: lee el cambio
       sin haberlo escrito y mira lo que ningún guardián vigila —las reglas de `CLAUDE.md` que
       «tienes que recordar tú»—, fallos, pruebas que faltan para el no-op, decisiones cerradas que
-      el cambio contradice y documentos que dejaría diciendo algo falso. Devuelve una lista con
-      fichero y línea, o «nada que objetar». Corto: remite a `CLAUDE.md`, no lo copia. Cierra C3
+      el cambio contradice. **Sólo el código:** la documentación la revisa la auditoría de cierre
+      de fase, no cada tarea. Devuelve una lista con fichero y línea, o «nada que objetar». Corto: remite a `CLAUDE.md`, no lo copia. Cierra C3
       de la Fase 9. **Se cierra cuando** su ficha está escrita y, sobre un cambio con un fallo
       metido a propósito que ningún guardián caza, lo encuentra.
 - [ ] **3. El verificador** *(pensar)*, si la 1 dice que puede: pasa las listas `VERIFICACION-*.md`
@@ -926,8 +949,9 @@ los dos agentes y el recorrido.
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
 - [ ] **5. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
-      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. **Se cierra
-      cuando** los dos lo recogen y `check:arquitectura` pasa.
+      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. Y la auditoría
+      de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
+      `check:arquitectura` pasa y la auditoría no deja nada falso.
 
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
