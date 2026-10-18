@@ -7,7 +7,8 @@ nativos, más adelante (shells sobre la misma UI web).
 |---|---|
 | **`CLAUDE.md`** (este) | las reglas que **nada automático vigila**. Corto a propósito: se carga en cada sesión. Sin fechas ni recuentos de pruebas, y 300 líneas como mucho (`check:arquitectura`) |
 | **`ARCHITECTURE.md`** | el fundamento: los principios con su **porqué** y los conceptos explicados desde cero |
-| **`TAREAS.md`** | qué está pendiente, qué está **sin decidir**, las ideas aparcadas y la historia de las fases |
+| **`TAREAS.md`** | qué está pendiente, la deuda de las fases cerradas, qué está **sin decidir** y las ideas aparcadas |
+| **`TERMINADAS.md`** | lo cerrado: las fases, resumidas, y en una línea las tareas, los descartes, las decisiones y los hitos |
 
 Lo que caza el compilador o un guardián va aquí en una línea con su comando: si lo rompes,
 `npm run check` te lo dice. Lo demás tienes que recordarlo tú.
@@ -157,7 +158,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Sin bundler: `importmap` y `.js` en los relativos. `node:test`, no vitest. Pruebas en `test/`.
 - Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o Claude en el
   panel. Si tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`;
-  la única excepción, en `TAREAS.md`).
+  la única excepción, en `TERMINADAS.md`).
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
 - Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el
   build, es rápido y casi nunca se equivoca. Las roturas, con una lista a mano, no con Stryker.
@@ -258,9 +259,8 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 
 ## Plan por fases
 
-Las fases 0 a 8 y las tandas sin fase están cerradas, resumidas en `TAREAS.md` con sus commits.
-**Deuda que arrastran:** las tres preguntas del editor, sin contestar. **En curso:** la que diga
-`TAREAS.md` → *Pendiente*.
+Las fases cerradas y las tandas sin fase, resumidas en `TERMINADAS.md` con sus commits. **Su
+deuda**, en `TAREAS.md` → *Deuda de las fases cerradas*. **En curso:** la que lleve «EN CURSO».
 
 ## Comandos
 

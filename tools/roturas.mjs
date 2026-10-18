@@ -321,6 +321,34 @@ export const ROTURAS = [
     caza: "check:tareas",
   },
   {
+    nombre: "check:tareas: una fase cerrada sigue en TAREAS.md",
+    fichero: "TAREAS.md",
+    buscar: "— PLANIFICADA, empieza al cerrar la 9.1\n",
+    poner: "✅ CERRADA\n",
+    caza: "check:tareas",
+  },
+  {
+    nombre: "check:tareas: una casilla marcada fuera de la fase en curso",
+    fichero: "TAREAS.md",
+    buscar: "- [ ] **Renombrar `NoteList`",
+    poner: "- [x] **Renombrar `NoteList`",
+    caza: "check:tareas",
+  },
+  {
+    nombre: "check:tareas: un tachado fuera de la fase en curso",
+    fichero: "TAREAS.md",
+    buscar: "| **Manejar el lienzo con teclado**",
+    poner: "| ~~**Manejar el lienzo con teclado**~~",
+    caza: "check:tareas",
+  },
+  {
+    nombre: "check:tareas: una fase de más de 20 líneas en TERMINADAS.md",
+    fichero: "TERMINADAS.md",
+    buscar: "guarda rota a propósito. **Cerrada el 2026-09-06 con 99 pruebas**, sin deuda.\n",
+    poner: "guarda rota a propósito. **Cerrada el 2026-09-06 con 99 pruebas**, sin deuda.\n" + "Y una línea más.\n".repeat(15),
+    caza: "check:tareas",
+  },
+  {
     nombre: "check:descartes: un Result tirado con void",
     fichero: "src/ui/phosphor.ts",
     buscar: "const guardado: Result<void, StorageError> = persistence.save(actual)",
@@ -353,6 +381,13 @@ export const ROTURAS = [
     fichero: "CLAUDE.md",
     buscar: "se mueve allí (\u00a78.7)",
     poner: "se mueve allí (\u00a78.9)",
+    caza: "check:arquitectura",
+  },
+  {
+    nombre: "check:arquitectura: TERMINADAS.md señala una sección que no existe",
+    fichero: "TERMINADAS.md",
+    buscar: "con una lista escrita y sin runner de navegador. \u00a76.3.",
+    poner: "con una lista escrita y sin runner de navegador. \u00a76.9.",
     caza: "check:arquitectura",
   },
   {

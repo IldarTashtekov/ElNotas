@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas
 `VERIFICACION-MANUAL.md` y `VERIFICACION-MANUAL-TERMINAL.md`. Pasarla en escritorio **y** en el
-móvil es el criterio de cierre de exportar e importar (`TAREAS.md`).
+móvil es el criterio de cierre de exportar e importar (`TERMINADAS.md`).
 
 ## Por qué existe
 

@@ -1,7 +1,7 @@
 # Verificación manual de `DirectoryHandleBlobStore`
 
-**Esto no es documentación de diseño: es un procedimiento.** Los tres documentos del
-proyecto —`CLAUDE.md`, `ARCHITECTURE.md` y `TAREAS.md`— siguen siendo tres. Esta lista vive
+**Esto no es documentación de diseño: es un procedimiento**, y no uno más de los documentos
+del proyecto (`CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md` y `TERMINADAS.md`). Esta lista vive
 en `test/storage/blobs/`, **junto a las pruebas del mismo rincón del código**, por el mismo
 motivo por el que están ahí ellas: esto es una prueba de `DirectoryHandleBlobStore.ts`, y lo
 único que la distingue de sus vecinas es que la ejecutan unas manos y no `node --test`.

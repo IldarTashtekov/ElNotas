@@ -39,6 +39,7 @@ aparece en la publicada: para pasarlo, se exporta una copia en una y se importa 
 | [`CLAUDE.md`](CLAUDE.md) | las reglas del proyecto y el estado real del repo |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | el diseño y sus **por qués**, los conceptos desde cero, el plan por fases |
 | [`TAREAS.md`](TAREAS.md) | qué está pendiente, qué está sin decidir, qué ideas hay aparcadas |
+| [`TERMINADAS.md`](TERMINADAS.md) | lo cerrado: las fases resumidas, y las tareas, los descartes y las decisiones |
 
 ## Comandos
 

@@ -7,7 +7,7 @@ los conceptos que hacen falta para entenderlos. Se lee a demanda, no en cada ses
 reescribe esa parte del código?* Si sí, es un principio y va aquí. Si no, es anatomía —qué fichero
 hace qué, cómo se monta una pantalla—, y ya la cuentan el código, sus cabeceras y las pruebas, que
 cambian a la vez que lo que describen. Las decisiones de cada funcionalidad son reglas de una línea
-en `CLAUDE.md`; su historia, en `TAREAS.md` y en `git log`. Lo vigila `npm run check:arquitectura`.
+en `CLAUDE.md`; su historia, en `TERMINADAS.md` y en `git log`. Lo vigila `npm run check:arquitectura`.
 
 **Cuándo se toca.** Casi nunca. Una decisión nueva que no se explica desde ningún principio de aquí
 no pide escribirle un porqué: o falta un principio, o la decisión está mal. Sólo lo primero es motivo

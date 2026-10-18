@@ -5,19 +5,19 @@
  *
  * `ARCHITECTURE.md`: ni ficheros de código, ni fechas, ni fases. `CLAUDE.md`: ni
  * fechas ni recuentos de pruebas. Los dos, con un tope de líneas. Las referencias
- * por número de sección se miran en `CLAUDE.md`, `TAREAS.md`, `README.md` y los
- * `.md` de `test/`.
+ * por número de sección se miran en `CLAUDE.md`, `TAREAS.md`, `TERMINADAS.md`,
+ * `README.md` y los `.md` de `test/`.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 
 const FICHERO = "ARCHITECTURE.md"
-const QUE_SENALAN = ["CLAUDE.md", "TAREAS.md", "README.md"]
+const QUE_SENALAN = ["CLAUDE.md", "TAREAS.md", "TERMINADAS.md", "README.md"]
 /* El signo de párrafo, por su código: check:paragrafos no lo deja escrito en el código. */
 const PARRAFO = String.fromCharCode(0xa7)
 const REFERENCIA = new RegExp(`${PARRAFO}(\\d+(?:\\.\\d+)*)`, "g")
 
-const FECHA = { patron: /\b\d{4}-\d{2}-\d{2}\b/, porque: "lleva una fecha: es crónica, y vive en TAREAS.md y git log" }
+const FECHA = { patron: /\b\d{4}-\d{2}-\d{2}\b/, porque: "lleva una fecha: es crónica, y vive en TERMINADAS.md y git log" }
 
 const REGLAS_ARQUITECTURA = [
   {
@@ -29,7 +29,7 @@ const REGLAS_ARQUITECTURA = [
     porque: "nombra un fichero de código: es anatomía, y ya la cuentan el código y las pruebas",
   },
   FECHA,
-  { patron: /\bfases? \d/i, porque: "señala una fase: es crónica, y vive en TAREAS.md y git log" },
+  { patron: /\bfases? \d/i, porque: "señala una fase: es crónica, y vive en TERMINADAS.md y git log" },
 ]
 
 const mds = (dir, acc = []) => {
@@ -88,7 +88,7 @@ if (fallos.length > 0) {
       "",
       `  ${FICHERO} es el fundamento: lo que seguiría siendo verdad si mañana se`,
       "  reescribe esa parte del código. Cómo está hecho cada trozo lo cuentan el",
-      "  código y las pruebas; cuándo y quién decidió, TAREAS.md y git log.",
+      "  código y las pruebas; cuándo y quién decidió, TERMINADAS.md y git log.",
       "  CLAUDE.md se carga en cada sesión: corto, y sin datos que caducan solos.",
       "",
     ].join("\n"),
