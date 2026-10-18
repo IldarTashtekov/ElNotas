@@ -225,13 +225,18 @@ pendientes que ya estaban en este fichero.
       fase: la auditoría de la documentación (tarea 11) y el repaso de la memoria. Y al día las
       memorias de Claude que la contradicen («confirmar tras cada tarea», «no comitear»). **Se cierra cuando**
       `CLAUDE.md` la recoge, `check:arquitectura` pasa y las memorias dicen lo mismo.
-- [ ] **7. Compactar antes y retomar solo.** El umbral de compactación automática, a la mitad de
+- [x] **7. Compactar antes y retomar solo** ✅ *(2026-10-18)*. El umbral de compactación automática, a la mitad de
       la ventana; una sección «Compact Instructions» en `CLAUDE.md` (fase, tarea, rama, lista con
       ✅, dudas, lo que estaba a medias y el siguiente paso); y un hook tras compactar
       (`SessionStart` con `compact`) que añade la rama, lo que hay sin comitear, los commits de la
       rama y lo pendiente de la fase en curso, acotado a eso. Manda el repo sobre el resumen.
       **Se cierra cuando** una compactación forzada con `/compact` a mitad de una tarea retoma sola
       donde estaba, con la rama y la lista correctas.
+      Hecho: `autoCompactWindow: 500000` en `settings.json`; `## Compact instructions` al final
+      de `CLAUDE.md`; y el modo `retomar` de `.claude/hooks/checks.mjs` en `SessionStart` con
+      `compact`. Un `/compact` a mitad de esta misma tarea volvió con la rama, los cuatro ficheros
+      sin comitear, los commits y las tareas 7, 10 y 11. **Sin ver:** que una sesión nueva
+      compacte antes del 97 % (la que escribió el ajuste seguía en 97 %).
 - [x] **8. Partir este fichero: lo cerrado, a `TERMINADAS.md`** ✅ *(2026-10-18)*. Se mueve **cada entrada, no
       cada sección**, cuando ya no pide nada a nadie. A `TERMINADAS.md`: las fases cerradas,
       resumidas en 20 líneas como mucho (qué, cuándo, la deuda que dejó, commits clave); las

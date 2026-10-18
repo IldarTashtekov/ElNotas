@@ -1,5 +1,13 @@
 {
+  "autoCompactWindow": 500000,
+
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/checks.sh retomar", "timeout": 10 }]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",

@@ -9,6 +9,8 @@
  * sólo una vez seguida.
  * `comitear` (antes de cada orden de Bash): bloquea un `git commit` en `main`,
  * o en la misma orden que cambia a `main`.
+ * `retomar` (al arrancar tras compactar): escribe la rama, lo sin comitear, los
+ * commits de la rama y lo pendiente de la fase en curso, para seguir donde estaba.
  * Un fallo sale con código 2 y el error en stderr, que es lo que lee el agente.
  */
 import { spawnSync } from "node:child_process"
@@ -98,8 +100,42 @@ const comitear = () => {
   }
 }
 
+/* Lo que sale por stdout entra en la conversación; el tope es de 10 000 caracteres. */
+const TOPE_RETOMAR = 9500
+
+const retomar = () => {
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: raiz, encoding: "utf8" })
+    return r.status === 0 ? r.stdout.trimEnd() : `(falló git ${args[0]})`
+  }
+  const rama = git("branch", "--show-current")
+  const sinComitear = git("status", "--short")
+  const commits = rama === "main" ? "" : git("log", "--oneline", "main..HEAD")
+  const lineas = (() => {
+    try {
+      return readFileSync(resolve(raiz, "TAREAS.md"), "utf8").split("\n")
+    } catch {
+      return []
+    }
+  })()
+  const inicio = lineas.findIndex((l) => /^### .*\bEN CURSO\b/.test(l))
+  const fin = lineas.findIndex((l, i) => i > inicio && /^#{1,3} /.test(l))
+  const fase = inicio < 0 ? [] : lineas.slice(inicio, fin < 0 ? undefined : fin)
+  const pendiente =
+    inicio < 0
+      ? "(ninguna fase lleva «EN CURSO» en TAREAS.md)"
+      : [fase[0].replace(/^### /, ""), ...fase.filter((l) => /^- \[ \]/.test(l)).map((l) => l.slice(0, 160))].join("\n")
+  const texto =
+    "Tras compactar, el estado del repo, que manda sobre el resumen:\n\n" +
+    `Rama: ${rama}\n\nSin comitear:\n${sinComitear || "(nada)"}\n\n` +
+    `Commits de la rama sobre main:\n${commits || "(ninguno)"}\n\n` +
+    `Fase en curso: ${pendiente}\n`
+  process.stdout.write(texto.slice(0, TOPE_RETOMAR))
+}
+
 const modo = process.argv[2]
 if (modo === "editar") editar()
 else if (modo === "terminar") terminar()
 else if (modo === "comitear") comitear()
-else fallar(`checks.mjs: modo desconocido «${modo}»; se espera «editar», «terminar» o «comitear».`, "")
+else if (modo === "retomar") retomar()
+else fallar(`checks.mjs: modo desconocido «${modo}»; se espera «editar», «terminar», «comitear» o «retomar».`, "")

@@ -292,3 +292,8 @@ npm run build:pages          # tras build:web: arma dist/pages/ (lo publicado). 
 a propósito). Lo publicado se prueba sirviendo `dist/pages/` en una subcarpeta de `localhost`.
 
 `?depurar` en la dirección deja `window.elnotas = { store, useCases }` en la consola.
+
+## Compact instructions
+
+Al resumir, conserva fase, tarea, rama, la lista con ✅, las dudas, lo que estaba a medias y el
+siguiente paso. **Tras compactar manda el repo**: un hook añade rama, cambios, commits y pendientes.
