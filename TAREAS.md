@@ -31,45 +31,14 @@ resumen, en `TERMINADAS.md`.
 
 #### De la Fase 3 — Fichero local
 
-- [ ] **Quitar la interfaz `CarpetaRecorrible` de `DirectoryHandleBlobStore.ts`, que hoy sobra**.
-      Se declaró a mano `values()` con este motivo escrito en el fichero: que el recorrido de entradas «vive en
-      `lib.dom.asynciterable.d.ts`, una `lib` aparte que este proyecto no activa».
-      **Medido, y ya no es cierto con el TypeScript que hay instalado (6.0.3):** ese fichero es
-      hoy un stub de compatibilidad de 18 líneas —«This file's contents are now included in the
-      main types file»— y `FileSystemDirectoryHandle.values()` está declarado dentro de
-      `lib.dom.d.ts`, que la app ya carga (`lib: ["ES2020", "DOM", "DOM.Iterable"]`).
-      **Recomprobado el 2026-09-19 mirando los ficheros de `node_modules/typescript/lib`, no
-      con una sonda:** `lib.dom.asynciterable.d.ts` son **18 líneas** —licencia y una nota de
-      compatibilidad, ya no declara nada— y `values()` está en **`lib.dom.d.ts:45115`**, dentro
-      de una segunda declaración de `FileSystemDirectoryHandle` que se fusiona con la primera.
-      **Qué hay que hacer:** borrar la interfaz, el `entradasDe` que castea, cambiar la llamada
-      a `carpeta.values()` y borrar el párrafo del comentario que dice algo falso — el propio
-      fichero ya avisa de que «si algún día se activa esa lib, esto se borra y no cambia nada».
-      **Se cierra cuando** la interfaz sale, `check` pasa en verde y se repasa la lista manual de
-      `test/storage/blobs/`, como exige `CLAUDE.md` al tocar ese fichero.
-
-      **⚠️ CUÁNDO: agrupado con la Fase 4, NO suelto. El reparto de coste es el que manda:**
-      el cambio son ~15 minutos; **repasar la lista de verificación manual que obliga es una
-      tarde** con Chromium y las manos del usuario. Y obliga, sin escapatoria:
-  - **`entradasDe` no es un tipo, es un `const` con una función dentro**, o sea que existe en
-    tiempo de ejecución. Al quitarlo desaparece una función del módulo y cambia el sitio de la
-    llamada: **el JavaScript emitido cambia**, así que la excepción registrada en la casilla del
-    tipado —«emitido idéntico ⇒ no se repite la lista»— **no le aplica**.
-  - **Ni siquiera tocar sólo el comentario se escapa:** `removeComments` no está puesto en
-    ningún `tsconfig`, comprobado, así que los comentarios **viajan al emitido** y un cambio
-    sólo en el comentario también movería bytes. Dentro de un comentario, pero los movería.
-
-      **Qué lo desbloquea:** cualquier trabajo que abra ese fichero de todas formas, porque ese
-      día la lista se repasa igualmente y este refactor viaja gratis. *(Aquí decía que el
-      `onError` y el `onCorrupt` pasarían por este fichero, y **no pasaron**: los dos se hicieron
-      en la Fase 4 sin tocarlo, y tampoco lo tocó el `.js` de los imports, porque sólo importa
-      por alias. Así que sigue pendiente, y lo único previsto que lo abriría es el botón de
-      «reconectar carpeta», que está fuera de la Fase 4.)*
-      **Mientras tanto, y cuesta cero:** el daño de hoy no es el código muerto sino que el
-      comentario **miente** y alguien se lo va a creer. Eso se tapa sin tocar el fichero, con
-      una línea en la decisión cerrada de `CLAUDE.md` sobre declarar tipos de plataforma a mano
-      —que es donde mira quien se plantee declarar otro— diciendo que el que hay ya es un caso
-      de eso y está aquí anotado.
+- [ ] **Quitar la interfaz `CarpetaRecorrible` de `DirectoryHandleBlobStore.ts`, que sobraba**:
+      `values()` ya viene en `lib.dom.d.ts` (TypeScript 6.0.3), con la misma unión de tipos.
+      **Hecho en la rama `fase-9.1` (2026-10-18):** fuera la interfaz, `entradasDe` y su
+      comentario, que mentía; la llamada es `carpeta.values()`, y `check` pasa. **Falta pasar la
+      lista** de `test/storage/blobs/` en Chromium, que pide elegir carpeta y revocar el permiso:
+      las manos del usuario, antes de juntar la rama con `main`. El JavaScript emitido cambia, así
+      que no le vale la excepción de «emitido idéntico».
+      **Se cierra cuando** la lista está pasada y anotada en su hoja de resultados.
 
 #### De la Fase 4 — UI
 

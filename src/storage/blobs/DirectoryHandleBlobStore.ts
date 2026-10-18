@@ -15,33 +15,6 @@
 import type { BlobStore, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 
-/* ═════════════════════════ Los tipos que hay que declarar ══════════════════ */
-
-/**
- * **Lo único de la File System Access API que no viene en los tipos de
- * TypeScript**, y por eso se declara a mano en vez de instalar un paquete.
- *
- * `lib.dom.d.ts` trae `FileSystemDirectoryHandle` entero —`getFileHandle`,
- * `getDirectoryHandle`, `removeEntry`— pero **el recorrido de entradas vive en
- * `lib.dom.asynciterable.d.ts`**, que es una `lib` aparte que este proyecto no
- * activa. Se declara aquí lo mínimo que se usa —`values()` y nada más— porque
- * la alternativa era instalar tipos para tres líneas o tocar un `tsconfig`, y
- * ninguna de las dos vale lo que cuesta.
- *
- * **No es un puerto ni sale de este fichero.** Si algún día el proyecto activa
- * esa `lib`, esto se borra y no cambia nada más.
- */
-interface CarpetaRecorrible {
-  readonly values: () => AsyncIterableIterator<
-    FileSystemDirectoryHandle | FileSystemFileHandle
-  >
-}
-
-const entradasDe = (
-  carpeta: FileSystemDirectoryHandle,
-): AsyncIterableIterator<FileSystemDirectoryHandle | FileSystemFileHandle> =>
-  (carpeta as FileSystemDirectoryHandle & CarpetaRecorrible).values()
-
 /* ══════════════════════════ Caminos → nombres ══════════════════════════════ */
 
 interface CaminoPartido {
@@ -223,7 +196,7 @@ const caminosBajo = async (
 ): Promise<ReadonlyArray<string>> => {
   const encontrados: string[] = []
 
-  for await (const entrada of entradasDe(carpeta)) {
+  for await (const entrada of carpeta.values()) {
     const camino: string = `${prefijo}${entrada.name}`
 
     if (entrada.kind === "file") {
