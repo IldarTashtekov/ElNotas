@@ -42,6 +42,33 @@ pasa todas (unos 4 minutos): al cerrar cada tarea que toque `src/` y al cerrar u
 **Node, el de `.nvmrc`.** Si la sesión no lo tiene en el `PATH`, antepón
 `~/.nvm/versions/node/<versión>/bin`; los hooks ya lo cogen solos.
 
+## Cómo se trabaja
+
+**Correa larga:** se encadenan las tareas de una lista acordada con el usuario, **un bloque por
+tanda**, sin pedir permiso entre una y otra. Las órdenes corren en un *sandbox* sin red y que sólo
+escribe en el proyecto; `npm audit` y lo que necesite red, lo lanza el usuario.
+
+- **Una rama por bloque**, en esta carpeta (sin *worktree*); **un commit por tarea**, al cerrarla.
+  Juntar con `main` y publicar, del usuario; un hook impide comitear en `main`. **`git add` por
+  nombre, nunca `-A` ni `.`**: el *sandbox* tapa con `/dev/null` rutas protegidas que no existen,
+  y `git status` las ve como ficheros nuevos.
+- **Cada tarea, etiquetada al planificarla:** *(mecánica)*, cuando el cómo ya está decidido: la
+  hace un subagente con Sonnet, que para ante cualquier decisión, y Claude la revisa. *(pensar)*:
+  Claude, con Opus.
+- **Se para y se pregunta** ante una decisión no cerrada o que choque con una cerrada; al elegir
+  entre soluciones con consecuencias distintas; ante una dependencia; al cambiar el modelo del
+  dominio o un puerto; y ante un fallo que no se consigue arreglar. **Una duda que no bloquea** va
+  a `TAREAS.md` → *Sin decidir*, y se sigue.
+- **Al acabar la tanda**, al usuario: lo hecho, los commits, las dudas apuntadas y **lo que falta**.
+
+**Al cerrar una fase**, además de `check:roturas` entera:
+1. **Auditoría de la documentación.** Un subagente que no ha escrito nada de la fase lee contra el
+   repo `CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas de `test/` y lo de
+   `.claude/`, y devuelve cada afirmación falsa con fichero, línea y por qué. Claude la corrige y
+   le enseña el informe al usuario.
+2. **Repaso de la memoria de Claude**: lo que el repo ya cuenta o ha dejado de ser verdad, fuera; y
+   `.claude/settings.local.json`, podado a lo de leer o consultar.
+
 ## Estructura y límites
 
 ```
@@ -134,8 +161,9 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
 - Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el
   build, es rápido y casi nunca se equivoca. Las roturas, con una lista a mano, no con Stryker.
-- Hooks en `.claude/settings.json`: al editar, los tipos y los guardianes; al terminar, `check`
-  entero si hay cambios sin comitear en `src/`, `test/` o `tools/`.
+- Hooks en `.claude/settings.json`: antes de Bash, nada de comitear en `main`; al editar, los
+  tipos y los guardianes; al terminar, `check` entero si hay cambios sin comitear en `src/`,
+  `test/` o `tools/`.
 
 **Dominio**
 - Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca.

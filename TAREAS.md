@@ -793,7 +793,8 @@ pendientes que ya estaban en este fichero.
       y en otra rama o sin `commit`, pasa. Sin rotura en `tools/roturas.mjs`, como los otros dos
       modos: el sandbox no deja escribir en `.claude/hooks/` y `check-roturas` sólo lanza scripts
       de npm.
-- [ ] **6. La regla de trabajo, escrita** en `CLAUDE.md`: cuándo para, un commit por tarea en una
+- [x] **6. La regla de trabajo, escrita** ✅ *(2026-10-18; `CLAUDE.md` → *Cómo se trabaja*, en 293 de
+      las 300 líneas: la 7 y la 8 tendrán que hacerse sitio)* en `CLAUDE.md`: cuándo para, un commit por tarea en una
       rama por bloque, las roturas, la etiqueta *(mecánica)* o *(pensar)*, y el ritual de cierre de
       fase: la auditoría de la documentación (tarea 11) y el repaso de la memoria. Y al día las
       memorias de Claude que la contradicen («confirmar tras cada tarea», «no comitear»). **Se cierra cuando**
