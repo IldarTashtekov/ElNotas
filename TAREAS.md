@@ -705,7 +705,7 @@ E2 rehace las referencias `§` de `CLAUDE.md`, y E1 adelgaza `CLAUDE.md` sobre l
 estaban. Partir
 `DiagramCanvas.ts` y renombrar `NoteList` son código de la app y se hacen al tocar esa zona.
 
-### Fase 9.1 — Correa larga: encadenar tareas y parar sólo ante decisiones — EN CURSO
+### Fase 9.1 — Correa larga: encadenar tareas y parar sólo ante decisiones — PLANIFICADA, sin empezar
 
 **Decidida con el usuario el 2026-10-18**, tras repasar los patrones de trabajo con agentes. Hoy
 Claude trabaja con la correa corta: cada edición pide permiso, se para tras cada tarea y no
@@ -735,7 +735,7 @@ pendientes que ya estaban en este fichero.
 - **Lo cerrado sale de este fichero** a `TERMINADAS.md`, para que lo que se lee al trabajar no
   crezca sin medida (tarea 8).
 - **Las tareas 0 a 8, con la correa corta**, una a una y con el visto bueno del usuario: son las
-  que cambian las reglas. La 9 ya con la correa larga. En la rama `fase-9.1-correa`.
+  que cambian las reglas. La 9 ya con la correa larga.
 
 - [x] **0. Apuntar la fase** ✅ *(2026-10-18)*: esta entrada.
 - [ ] **1. Borrar los cuatro agentes** (`back-dev-agent`, `infra-agent`, `doc-agent`,
