@@ -103,6 +103,9 @@ export interface UseCases {
   readonly deleteContext: (contextId: ContextId) => Context | null
   readonly addItem: (contextId: ContextId, item: ItemRef) => Context | null
   readonly removeItem: (contextId: ContextId, item: ItemRef) => Context | null
+  /** Varios a la vez, en una sola acción: lo que se ocultó junto se escribe junto. */
+  readonly hideItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>) => Context | null
+  readonly showItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>) => Context | null
   readonly setDefaultView: (
     contextId: ContextId,
     view: DefaultView,
@@ -301,6 +304,12 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     removeItem: (contextId: ContextId, item: ItemRef): Context | null =>
       trasContexto(contextId, { type: "remove-item", contextId, item, meta: meta() }),
+
+    hideItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>): Context | null =>
+      trasContexto(contextId, { type: "hide-items", contextId, items, meta: meta() }),
+
+    showItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>): Context | null =>
+      trasContexto(contextId, { type: "show-items", contextId, items, meta: meta() }),
 
     setDefaultView: (contextId: ContextId, view: DefaultView): Context | null =>
       trasContexto(contextId, {

@@ -103,6 +103,8 @@ export const contextProblem = (o: Registro): Problem =>
     (): Problem => versionada(o),
     (): Problem => vistaPorDefecto(o["defaultView"]),
     (): Problem => cadaUno(o, "items", referencia),
+    /* Ausente es vacío: lo guardado antes de que existiera no lo lleva. */
+    (): Problem => (o["hidden"] === undefined ? null : cadaUno(o, "hidden", referencia)),
   )
 
 /* ────────────────────────────── Diagramas ──────────────────────────────── */

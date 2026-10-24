@@ -152,7 +152,7 @@ Con dos o tres notas en Compra (el botón **+** grande, varias veces):
   (Tab), **Espacio** entra o alterna.
 - **E6.** Se sale con **Escape** y con **atrás** (en Android, el del sistema), sin salir de la
   app.
-- **E7.** Durante la selección: abajo la barra con la cuenta, la papelera y *Mover a…*; **el botón + desaparece**; **◀ ▶ y ⚙ se apagan** y no responden.
+- **E7.** Durante la selección: abajo la barra con la cuenta, la papelera, *Mover a…* y, en un contexto, *Ocultar*; **el botón + desaparece**; **◀ ▶ y ⚙ se apagan** y no responden.
 - **E8.** En un contexto la papelera dice **«Quitar»**, **no pregunta**, y las notas **siguen en el
   General**.
 - **E9.** En el General dice **«Borrar»** y **pregunta** con la hoja de abajo. Con *Cancelar*,
@@ -209,6 +209,31 @@ el navegador **resalta en color los nodos que cambian**.
   cambiado lo mismo que esta…»** con un botón **Recargar**. En A, la nota sigue «Desde A».
 - **J3.** **Recargar** en B: la nota dice «Desde A» y el aviso desaparece.
 
+## K. Los ocultos de un contexto
+
+Con Compra con cuatro notas y un diagrama, y una segunda ventana de contexto, Casa:
+
+- **K1.** Sin nada oculto, **no hay fila «Ocultos»**. En la selección de un contexto, la barra
+  lleva **«Ocultar»**; en la del General, **no**.
+- **K2.** Seleccionar dos notas y **«Ocultar»**: se sale de la selección, las dos **desaparecen
+  de la lista** y arriba sale **«Ocultos (2)»** con un ojo tachado del color del fósforo, en
+  trazo, no un emoji. En el **General siguen las dos**. Sobrevive a recargar.
+- **K3.** Tocar «Ocultos (2)» abre **su lista encima**: la fila pasa a ser su título, con **◀**
+  delante, y debajo sólo las dos ocultas, en el orden de la lista; **los + desaparecen**. Se
+  cierra tocando la fila, y con el **atrás** (en Android, el del sistema), sin salir de la app.
+- **K4.** Dentro, la selección funciona igual y la barra lleva **«Mostrar»**, *Mover a…* y la
+  papelera. **«Mostrar»** una: vuelve a **su sitio** en la lista del contexto, y la de los
+  ocultos **sigue abierta** con «Ocultos (1)». **«Mostrar»** la última: la lista de los ocultos
+  **se cierra sola** y la fila desaparece. En ningún caso se sale de la app.
+- **K5.** Una oculta, **abrirla** desde la lista de los ocultos: se abre como desde la del
+  contexto.
+- **K6.** Una oculta en Compra, ***Mover a…* Casa** desde los ocultos: sale de Compra y en Casa
+  se ve **en la lista, no oculta**. Lo mismo si ya estaba oculta en Casa.
+- **K7.** La papelera en los ocultos dice **«Quitar»**: la saca del contexto, y sigue en el
+  General.
+- **K8.** Un diagrama de Compra, abierto: crear una nota **desde el lienzo**. De vuelta en
+  Compra, la nota nueva **no sale en la lista**: está en «Ocultos».
+
 ## H. No se pierde nada al salir
 
 - **H1.** Crear una nota y **cerrar la pestaña enseguida**, sin esperar. Al volver a abrir, está.
@@ -248,6 +273,7 @@ qué.
 | H1 | |
 | I1–I6 | |
 | J1–J3 | |
+| K1–K8 | |
 
 ### Pasada 2 — móvil
 
@@ -267,3 +293,4 @@ qué.
 | E1–E11 (E3 y E6 son los que importan aquí) | |
 | H2 | |
 | I1–I5 (I5 con el atrás del sistema) | |
+| K1–K8 (K3 con el atrás del sistema) | |

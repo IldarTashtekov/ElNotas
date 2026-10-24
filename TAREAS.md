@@ -87,7 +87,7 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto, Markdown y calendario — PLANIFICADA, empieza al cerrar la 9.1
+### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto, Markdown y calendario — EN CURSO
 
 **Decidida con el usuario el 2026-10-18**, a partir de una lista que trajo de usar la app. De
 siete ideas entran cinco; los subcontextos se aparcan (*Ideas aparcadas*) y «fijar» se descarta

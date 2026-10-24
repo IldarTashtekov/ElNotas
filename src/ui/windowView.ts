@@ -41,8 +41,10 @@ export type WindowView =
       readonly editsNote: NoteId | null
       /** El diagrama que enseña la ventana, si es de tipo diagrama. Su título lo renombra. */
       readonly editsDiagram: DiagramId | null
-      /** La lista de la ventana. Vacía en una de nota o de diagrama: ahí va lo suyo. */
+      /** La lista de la ventana, sin lo oculto. Vacía en una de nota o de diagrama: ahí va lo suyo. */
       readonly items: ReadonlyArray<ListItem>
+      /** Lo oculto del contexto, en su orden. Vacío fuera de una ventana de contexto. */
+      readonly hidden: ReadonlyArray<ListItem>
       /** Sin anterior en la primera ni siguiente en la última: no es circular. */
       readonly prev: WindowRef | null
       readonly next: WindowRef | null
@@ -84,9 +86,19 @@ const fila = (item: ItemRef, state: AppState): ReadonlyArray<ListItem> => {
   return d === undefined ? [] : [deDiagrama(d)]
 }
 
-/** Un contexto enseña lo suyo en el orden en que lo lista. */
-const deContexto = (ctx: Context, state: AppState): ReadonlyArray<ListItem> =>
-  ctx.items.flatMap((item: ItemRef): ReadonlyArray<ListItem> => fila(item, state))
+/** Si el contexto tiene oculta esta referencia. */
+const oculto = (ctx: Context, item: ItemRef): boolean =>
+  (ctx.hidden ?? []).some((h: ItemRef): boolean => h.kind === item.kind && h.id === item.id)
+
+/** Lo de un contexto, oculto o no, en el orden en que lo lista. */
+const deContexto = (
+  ctx: Context,
+  state: AppState,
+  ocultos: boolean,
+): ReadonlyArray<ListItem> =>
+  ctx.items
+    .filter((item: ItemRef): boolean => oculto(ctx, item) === ocultos)
+    .flatMap((item: ItemRef): ReadonlyArray<ListItem> => fila(item, state))
 
 export const windowView = (layout: WindowsLayout, state: AppState): WindowView => {
   const activa: WindowRef | null = layout.active
@@ -108,6 +120,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       editsNote: null,
       editsDiagram: null,
       items: todo(state),
+      hidden: [],
       ...vecinas,
     }
   }
@@ -123,6 +136,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       editsNote: nota.id,
       editsDiagram: null,
       items: [],
+      hidden: [],
       ...vecinas,
     }
   }
@@ -138,6 +152,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       editsNote: null,
       editsDiagram: diagrama.id,
       items: [],
+      hidden: [],
       ...vecinas,
     }
   }
@@ -153,7 +168,8 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     renames: ctx.id,
     editsNote: null,
     editsDiagram: null,
-    items: deContexto(ctx, state),
+    items: deContexto(ctx, state, false),
+    hidden: deContexto(ctx, state, true),
     ...vecinas,
   }
 }

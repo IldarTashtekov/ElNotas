@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son treinta. Aquí están las ocho de contenido; las de Nota, Contexto y
+ * Son treinta y dos. Aquí están las ocho de contenido; las de Nota, Contexto y
  * Diagrama, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -173,7 +173,7 @@ export interface DeleteNote {
 
 export type NoteAction = CreateNote | RenameNote | DeleteNote
 
-/* ────────────────────────── Las seis de Contexto ──────────────────────────── */
+/* ────────────────────────── Las ocho de Contexto ──────────────────────────── */
 
 export interface CreateContext {
   readonly type: "create-context"
@@ -219,6 +219,25 @@ export interface SetDefaultView {
   readonly meta: ActionMeta
 }
 
+/**
+ * «Estos dejan de salir en la lista del contexto», sin dejar de ser suyos. Lo
+ * que no está en el contexto o ya estaba oculto no cuenta.
+ */
+export interface HideItems {
+  readonly type: "hide-items"
+  readonly contextId: ContextId
+  readonly items: ReadonlyArray<ItemRef>
+  readonly meta: ActionMeta
+}
+
+/** «Estos vuelven a la lista», a su sitio de siempre. Lo que no estaba oculto no cuenta. */
+export interface ShowItems {
+  readonly type: "show-items"
+  readonly contextId: ContextId
+  readonly items: ReadonlyArray<ItemRef>
+  readonly meta: ActionMeta
+}
+
 export type ContextAction =
   | CreateContext
   | RenameContext
@@ -226,6 +245,8 @@ export type ContextAction =
   | AddItem
   | RemoveItem
   | SetDefaultView
+  | HideItems
+  | ShowItems
 
 /* ────────────────────────── Las trece de Diagrama ─────────────────────────── */
 
@@ -349,5 +370,5 @@ export type DiagramAction =
   | SetRelationLabel
   | RemoveRelation
 
-/** El catálogo entero: 8 + 3 + 6 + 13 = **treinta**. */
+/** El catálogo entero: 8 + 3 + 8 + 13 = **treinta y dos**. */
 export type Action = ContentAction | NoteAction | ContextAction | DiagramAction

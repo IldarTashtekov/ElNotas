@@ -114,6 +114,39 @@ input.titulo {
   place-items: center;
   text-shadow: none;
 }
+/* «Ocultos (n)», encima de la lista: una fila más tenue, y abierta, de título. */
+.fila-ocultos {
+  align-items: center;
+  background: none;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+  &[aria-expanded="true"] {
+    border-style: solid;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  & .icono {
+    fill: none;
+    flex: none;
+    height: 1.1rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+    width: 1.1rem;
+  }
+}
 ul.ajustes > li {
   align-items: center;
   display: flex;

@@ -1,7 +1,7 @@
 /**
  * Lo que se hace sobre lo que lista una ventana: crear una nota o un diagrama, la
- * papelera y «Mover a…»; crear una nota desde un diagrama; y crear un contexto,
- * una nota o un diagrama como ventana nueva.
+ * papelera, «Mover a…» y ocultar; crear una nota desde un diagrama; y crear un
+ * contexto, una nota o un diagrama como ventana nueva.
  *
  * Cada una compone casos de uso que ya existen —crear y añadir, quitar y
  * añadir—, así que el core no se toca y cada acción sigue siendo una operación.
@@ -87,7 +87,8 @@ export const trashItems = (
 /**
  * Mueve, no copia: las quita de este contexto y las añade al destino. Desde el
  * General sólo añade —no es un contexto—, y es como se devuelve a un contexto
- * una nota que se quitó. Si ya estaba en el destino, añadirla no hace nada.
+ * una nota que se quitó. Si ya estaba en el destino, añadirla no hace nada. En
+ * el destino quedan a la vista, aunque allí estuvieran ocultas.
  */
 export const moveItems = (
   useCases: UseCases,
@@ -99,6 +100,7 @@ export const moveItems = (
     useCases.addItem(destino, ref)
     if (desde.kind === "context") useCases.removeItem(desde.id, ref)
   }
+  useCases.showItems(destino, refs)
 }
 
 /** Adónde se puede mover: los contextos, ni el General ni el de esta ventana. */
@@ -133,7 +135,8 @@ export const contextsWith = (state: AppState, ref: ItemRef): ReadonlyArray<Conte
 
 /**
  * Una «Nueva Nota» creada desde un diagrama: va a TODOS los contextos donde está
- * el diagrama; si no está en ninguno, a ninguno, y se ve en el General.
+ * el diagrama, oculta, porque ya se ve en el lienzo; si no está en ninguno, a
+ * ninguno, y se ve en el General.
  */
 export const createNoteForDiagram = (
   useCases: UseCases,
@@ -144,6 +147,7 @@ export const createNoteForDiagram = (
   if (nota === null) return null
   for (const ctx of contextsWith(state, diagramRef(diagramId))) {
     useCases.addItem(ctx.id, noteRef(nota.id))
+    useCases.hideItems(ctx.id, [noteRef(nota.id)])
   }
   return nota
 }

@@ -1,11 +1,14 @@
 /**
- * La lista de una ventana —sus notas y sus diagramas—, con «+ Nota», «+ Diagrama»
- * y el modo selección.
+ * La lista de una ventana —sus notas y sus diagramas—, con «+ Nota», «+ Diagrama»,
+ * el modo selección y, en un contexto con algo oculto, la fila «Ocultos (n)».
  *
  * Se entra a seleccionar con una pulsación larga, con clic derecho, con
  * Ctrl/Cmd+clic o con la barra espaciadora; dentro, cada toque selecciona. Se
  * sale al quedarse sin nada, con Escape o con el atrás. Mientras dura, abajo
- * aparece la barra con la papelera y «Mover a…».
+ * aparece la barra con la papelera, «Mover a…» y, en un contexto, «Ocultar».
+ *
+ * La fila de los ocultos abre su lista encima de la del contexto, y se cierra con
+ * ella o con el atrás. Ahí se selecciona igual, y la barra dice «Mostrar».
  */
 
 import type {
@@ -52,8 +55,12 @@ export interface ItemListDeps {
 
 export interface ItemList {
   readonly element: HTMLElement
-  /** Lo que tiene que enseñar ahora. `null` en la pantalla vacía. */
-  readonly update: (ventana: WindowRef | null, items: ReadonlyArray<ListItem>) => void
+  /** Lo que tiene que enseñar ahora, y lo oculto aparte. `null` en la pantalla vacía. */
+  readonly update: (
+    ventana: WindowRef | null,
+    items: ReadonlyArray<ListItem>,
+    ocultos: ReadonlyArray<ListItem>,
+  ) => void
 }
 
 /** Lo que dura una pulsación larga, y cuánto se puede mover el dedo sin anularla. */
@@ -68,6 +75,27 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
   return b
 }
 
+const SVG = "http://www.w3.org/2000/svg" as const
+
+/** Un ojo tachado, de trazo y en el color del texto: un emoji saldría a color. */
+const iconoOculto = (): SVGSVGElement => {
+  const icono: SVGSVGElement = document.createElementNS(SVG, "svg")
+  icono.setAttribute("viewBox", "0 0 24 24")
+  icono.setAttribute("aria-hidden", "true")
+  icono.classList.add("icono")
+  for (const d of ["M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z", "M4 4l16 16"]) {
+    const trazo: SVGPathElement = document.createElementNS(SVG, "path")
+    trazo.setAttribute("d", d)
+    icono.append(trazo)
+  }
+  const pupila: SVGCircleElement = document.createElementNS(SVG, "circle")
+  pupila.setAttribute("cx", "12")
+  pupila.setAttribute("cy", "12")
+  pupila.setAttribute("r", "3")
+  icono.append(pupila)
+  return icono
+}
+
 export const createItemList = ({
   store,
   useCases,
@@ -79,9 +107,18 @@ export const createItemList = ({
 }: ItemListDeps): ItemList => {
   let ventana: WindowRef | null = null
   let items: ReadonlyArray<ListItem> = []
+  let ocultos: ReadonlyArray<ListItem> = []
   let seleccion: Selection = NO_SELECTION
   let seleccionando: boolean = false
   let moviendo: boolean = false
+  let viendoOcultos: boolean = false
+  /* Ya se pidió cerrar la capa y su `popstate` no ha llegado: otro cierre
+     cerraría la de debajo. */
+  let saliendo: boolean = false
+  let cerrandoOcultos: boolean = false
+
+  /** Lo que enseña la lista ahora: lo del contexto, o lo oculto si está abierto. */
+  const mostradas = (): ReadonlyArray<ListItem> => (viendoOcultos ? ocultos : items)
 
   const lista: HTMLUListElement = elemento("ul")
   lista.className = "notas"
@@ -110,23 +147,36 @@ export const createItemList = ({
     moviendo = !moviendo
     pintar()
   })
+  const ocultar: HTMLButtonElement = boton("", (): void => alternarOcultos())
   const destinos: HTMLElement = elemento("div")
   destinos.className = "selector"
   const barra: HTMLElement = elemento("div")
   barra.className = "barra"
-  barra.append(cuenta, papelera, mover, destinos)
+  barra.append(cuenta, papelera, mover, ocultar, destinos)
+
+  /* Abierta, la fila hace de título de la lista, y la flecha dice que la cierra. */
+  const flechaOcultos: HTMLSpanElement = elemento("span", "◀")
+  flechaOcultos.setAttribute("aria-hidden", "true")
+  const textoOcultos: HTMLSpanElement = elemento("span")
+  const filaOcultos: HTMLButtonElement = boton("", (): void => {
+    if (viendoOcultos) cerrarOcultos()
+    else abrirOcultos()
+  }, "fila-ocultos")
+  filaOcultos.append(flechaOcultos, iconoOculto(), textoOcultos)
 
   const element: HTMLElement = elemento("div")
-  element.append(lista, sinNotas, masDiagrama, mas, barra)
+  element.append(filaOcultos, lista, sinNotas, masDiagrama, mas, barra)
 
   /* ── Entrar y salir del modo selección ── */
 
   const empezar = (clave: string): void => {
     seleccion = toggleSelected(NO_SELECTION, clave)
     seleccionando = true
+    saliendo = false
     back.open((): void => {
       seleccion = NO_SELECTION
       seleccionando = false
+      saliendo = false
       moviendo = false
       onSelectingChange(false)
       pintar()
@@ -136,7 +186,30 @@ export const createItemList = ({
   }
 
   /* Salir es ir atrás: el `popstate` hace el resto, por el botón que sea. */
-  const salir = (): void => back.close()
+  const salir = (): void => {
+    if (!seleccionando || saliendo) return
+    saliendo = true
+    back.close()
+  }
+
+  /* ── Abrir y cerrar la lista de los ocultos, encima de la del contexto ── */
+
+  const abrirOcultos = (): void => {
+    viendoOcultos = true
+    cerrandoOcultos = false
+    back.open((): void => {
+      viendoOcultos = false
+      cerrandoOcultos = false
+      pintar()
+    })
+    pintar()
+  }
+
+  const cerrarOcultos = (): void => {
+    if (!viendoOcultos || cerrandoOcultos) return
+    cerrandoOcultos = true
+    back.close()
+  }
 
   const alternar = (clave: string): void => {
     seleccion = toggleSelected(seleccion, clave)
@@ -147,7 +220,7 @@ export const createItemList = ({
   const elegida = (clave: string): void => (seleccionando ? alternar(clave) : empezar(clave))
 
   const seleccionadas = (): ReadonlyArray<ListItem> =>
-    items.filter((i: ListItem): boolean => seleccion.has(itemKey(i.ref)))
+    mostradas().filter((i: ListItem): boolean => seleccion.has(itemKey(i.ref)))
 
   const refsSeleccionadas = (): ReadonlyArray<ItemRef> =>
     seleccionadas().map((i: ListItem): ItemRef => i.ref)
@@ -171,6 +244,15 @@ export const createItemList = ({
     salir()
   }
 
+  /** «Ocultar» en la lista del contexto, «Mostrar» en la de los ocultos. */
+  const alternarOcultos = (): void => {
+    if (ventana?.kind !== "context") return
+    const refs: ReadonlyArray<ItemRef> = refsSeleccionadas()
+    if (viendoOcultos) useCases.showItems(ventana.id, refs)
+    else useCases.hideItems(ventana.id, refs)
+    salir()
+  }
+
   /* ── Los gestos sobre una fila ── */
 
   /** La clave de la fila sobre la que cayó el gesto, o `null` si no cayó en ninguna. */
@@ -182,7 +264,7 @@ export const createItemList = ({
 
   /** Abrir una fila: la nota en la vista nota, el diagrama en la vista diagrama. */
   const abrir = (clave: string): void => {
-    const item: ListItem | undefined = items.find(
+    const item: ListItem | undefined = mostradas().find(
       (i: ListItem): boolean => itemKey(i.ref) === clave,
     )
     if (item === undefined) return
@@ -264,7 +346,7 @@ export const createItemList = ({
 
   const pintar = (): void => {
     /* Por `data-key`: seleccionar una fila no rehace las demás. */
-    reconcile<ListItem, Element>(lista, items, {
+    reconcile<ListItem, Element>(lista, mostradas(), {
       key: (item: ListItem): string => itemKey(item.ref),
       keyOf: (el: Element): string | null => el.getAttribute("data-key"),
       create: (item: ListItem): Element => {
@@ -286,15 +368,23 @@ export const createItemList = ({
       },
     })
     lista.classList.toggle("seleccionando", seleccionando)
-    sinNotas.hidden = items.length > 0 || ventana === null
-    mas.hidden = seleccionando || ventana === null
+    sinNotas.hidden = mostradas().length > 0 || ventana === null
+    mas.hidden = seleccionando || viendoOcultos || ventana === null
     masDiagrama.hidden = mas.hidden
+    /* Sólo si hay alguno; mientras se selecciona, sólo si está abierta, de título. */
+    filaOcultos.hidden = ocultos.length === 0 || (seleccionando && !viendoOcultos)
+    filaOcultos.disabled = seleccionando
+    filaOcultos.setAttribute("aria-expanded", viendoOcultos ? "true" : "false")
+    flechaOcultos.hidden = !viendoOcultos
+    setTextIfChanged(textoOcultos, `Ocultos (${ocultos.length})`)
 
     barra.hidden = !seleccionando
     if (!seleccionando || ventana === null) return
     cuenta.textContent =
       seleccion.size === 1 ? "1 seleccionada" : `${seleccion.size} seleccionadas`
     papelera.textContent = trashDeletes(ventana) ? "Borrar" : "Quitar"
+    ocultar.hidden = ventana.kind !== "context"
+    ocultar.textContent = viendoOcultos ? "Mostrar" : "Ocultar"
     const estado: AppState = store.getState()
     const posibles: ReadonlyArray<Context> = moveTargets(estado, ventana)
     mover.disabled = posibles.length === 0
@@ -316,20 +406,27 @@ export const createItemList = ({
 
   return {
     element,
-    update: (nueva: WindowRef | null, nuevos: ReadonlyArray<ListItem>): void => {
+    update: (
+      nueva: WindowRef | null,
+      nuevos: ReadonlyArray<ListItem>,
+      nuevosOcultos: ReadonlyArray<ListItem>,
+    ): void => {
       const otraVentana: boolean =
         nueva === null || ventana === null || !sameWindow(nueva, ventana)
       ventana = nueva
       items = nuevos
+      ocultos = nuevosOcultos
       /* Lo que ya no está no sigue seleccionado; sin nada, se sale. */
       const quedan: Selection = otraVentana
         ? NO_SELECTION
-        : pruneSelected(seleccion, nuevos.map((i: ListItem): string => itemKey(i.ref)))
+        : pruneSelected(seleccion, mostradas().map((i: ListItem): string => itemKey(i.ref)))
       if (seleccionando && quedan.size === 0) {
         seleccion = NO_SELECTION
         salir()
       }
       seleccion = quedan
+      /* En otra ventana, o sin nada oculto, la lista de los ocultos se cierra. */
+      if (otraVentana || ocultos.length === 0) cerrarOcultos()
       pintar()
     },
   }

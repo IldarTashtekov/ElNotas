@@ -113,6 +113,42 @@ test("el General enseña también las notas que no están en ningún contexto", 
   assert.ok(nombres(vista.items).includes("Suelta"))
 })
 
+/** Compra, con Aceite oculto. */
+const CON_OCULTO: AppState = {
+  ...ESTADO,
+  contexts: {
+    ...ESTADO.contexts,
+    [contextId("compra")]: {
+      ...contexto("compra", "Compra", [noteRef(LECHE.id), noteRef(ACEITE.id), noteRef(INFORME.id)]),
+      hidden: [noteRef(INFORME.id), noteRef(ACEITE.id)],
+    },
+  },
+}
+
+const vistaCon = (estado: AppState, activa: WindowRef): Extract<WindowView, { kind: "window" }> => {
+  const vista: WindowView = windowView({ windows: TRES, active: activa }, estado)
+  if (vista.kind !== "window") assert.fail("tenía que enseñar una ventana")
+  return vista
+}
+
+test("lo oculto de un contexto no sale en su lista, y se enseña aparte en el orden de la lista", (): void => {
+  const vista: Extract<WindowView, { kind: "window" }> = vistaCon(CON_OCULTO, COMPRA)
+  assert.deepEqual(nombres(vista.items), ["Leche"])
+  assert.deepEqual(nombres(vista.hidden), ["Aceite", "Informe"])
+})
+
+test("el General lo enseña todo, también lo oculto en un contexto", (): void => {
+  const vista: Extract<WindowView, { kind: "window" }> = vistaCon(CON_OCULTO, GENERAL)
+  assert.deepEqual(nombres(vista.items), ["Aceite", "Informe", "Leche"])
+  assert.deepEqual(vista.hidden, [])
+})
+
+test("lo oculto en un contexto se ve en otro que lo tenga sin ocultar", (): void => {
+  const vista: Extract<WindowView, { kind: "window" }> = vistaCon(CON_OCULTO, TRABAJO)
+  assert.deepEqual(nombres(vista.items), ["Informe"])
+  assert.deepEqual(vista.hidden, [])
+})
+
 test("una activa que ya no está en la lista enseña la pantalla vacía, no otra", (): void => {
   /* La guarda lo evita, pero si fallara no se enseña una ventana cualquiera. */
   assert.deepEqual(windowView({ windows: [GENERAL], active: COMPRA }, ESTADO), { kind: "empty" })

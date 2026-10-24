@@ -8,7 +8,8 @@
  *
  * Por eso aquí se limpian, en silencio, las referencias que apuntan a algo que ya
  * no existe. Fallar al arrancar y dejar al usuario sin sus notas porque sobra una
- * referencia sería mucho peor que la basura que se tira.
+ * referencia sería mucho peor que la basura que se tira. Lo oculto de un contexto
+ * que ya no esté en él, igual.
  *
  * Lo que existe pero no se pudo leer es otra cosa: su referencia se conserva,
  * para que arreglar el fichero lo devuelva a su contexto.
@@ -94,12 +95,17 @@ export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegi
   const contexts: AppState["contexts"] = porId(
     stored.contexts.map((ctx: Context): Context => {
       const items: ReadonlyArray<ItemRef> = ctx.items.filter(existe)
+      /* Lo oculto, sólo si sigue en `items`: ocultar es de lo que el contexto tiene. */
+      const enItems = (h: ItemRef): boolean =>
+        items.some((i: ItemRef): boolean => i.kind === h.kind && i.id === h.id)
+      const hidden: ReadonlyArray<ItemRef> | undefined = ctx.hidden?.filter(enItems)
       /* Si no sobraba ninguna, se devuelve el contexto TAL CUAL. `filter` crea
          siempre un array nuevo, y un contexto nuevo al arrancar saldría sucio en
          el primer diff y se reescribiría en disco sin haber cambiado nada.
          Con un arranque normal —donde no sobra ninguna referencia— esto tiene
          que devolver exactamente lo que le entró. */
-      return items.length === ctx.items.length ? ctx : { ...ctx, items }
+      if (items.length === ctx.items.length && hidden?.length === ctx.hidden?.length) return ctx
+      return hidden === undefined ? { ...ctx, items } : { ...ctx, items, hidden }
     }),
   )
 

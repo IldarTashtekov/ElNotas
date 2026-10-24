@@ -272,6 +272,34 @@ test("la nota nueva de un diagrama va a TODOS los contextos donde está el diagr
   assert.ok(refsDe(store.getState(), casa).some((r: ItemRef): boolean => r.id === nota.id))
 })
 
+test("la nota nueva de un diagrama nace OCULTA en cada contexto del diagrama", (): void => {
+  const { store, useCases, compra, casa, mudanza } = conDiagrama()
+  useCases.addItem(casa, diagramRef(mudanza))
+  const nota: Note | null = createNoteForDiagram(useCases, store.getState(), mudanza)
+  if (nota === null) assert.fail("la nota tenía que crearse")
+
+  assert.deepEqual(store.getState().contexts[compra]?.hidden, [noteRef(nota.id)])
+  assert.deepEqual(store.getState().contexts[casa]?.hidden, [noteRef(nota.id)])
+})
+
+test("Mover a… deja a la vista en el destino lo que allí estaba oculto", (): void => {
+  const { store, useCases, compra, casa, leche, pan } = escenario()
+  useCases.addItem(casa, noteRef(leche))
+  useCases.hideItems(casa, [noteRef(leche)])
+  moveItems(useCases, { kind: "context", id: compra }, casa, [noteRef(leche), noteRef(pan)])
+
+  assert.deepEqual(store.getState().contexts[casa]?.hidden, [])
+  assert.deepEqual(itemsDe(store.getState(), casa), [leche, pan])
+})
+
+test("Mover a… sale de lo oculto del origen, al salir del origen", (): void => {
+  const { store, useCases, compra, casa, leche } = escenario()
+  useCases.hideItems(compra, [noteRef(leche)])
+  moveItems(useCases, { kind: "context", id: compra }, casa, [noteRef(leche)])
+
+  assert.deepEqual(store.getState().contexts[compra]?.hidden, [])
+})
+
 test("la nota nueva de un diagrama que no está en ningún contexto no va a ninguno", (): void => {
   const { store, useCases, compra, casa } = escenario()
   const suelto: Diagram | null = createDiagramIn(useCases, GENERAL)

@@ -23,4 +23,10 @@ export interface Context extends Versioned {
   readonly name: string
   readonly defaultView: DefaultView
   readonly items: ReadonlyArray<ItemRef>
+  /**
+   * Lo de `items` que no sale en su lista, aunque siga siendo del contexto.
+   * Siempre un subconjunto de `items`: el tipo no lo impide, lo impiden el
+   * reducer y el arranque. Ausente es vacío, y así lo guardado antes no se migra.
+   */
+  readonly hidden?: ReadonlyArray<ItemRef>
 }

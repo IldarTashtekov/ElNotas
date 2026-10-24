@@ -547,6 +547,22 @@ test("FileStorageAdapter: un contexto con una referencia rota de forma es corrup
   assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
 })
 
+test("FileStorageAdapter: un contexto con hidden que no es una lista de referencias es corrupt", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "contexts/casa.json", { ...CASA, hidden: [{ kind: "nota", id: "x" }] })
+  assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
+  escribirJson(blobs, "contexts/casa.json", { ...CASA, hidden: "todo" })
+  assert.equal(errorDe(await s.contexts.get(CASA.id)).kind, "corrupt")
+})
+
+test("FileStorageAdapter: un contexto sin hidden, o con él bien formado, se lee", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "contexts/casa.json", { ...CASA, hidden: undefined })
+  assert.equal(valorDe(await s.contexts.get(CASA.id))?.hidden, undefined)
+  escribirJson(blobs, "contexts/casa.json", { ...CASA, hidden: [{ kind: "note", id: "compra" }] })
+  assert.deepEqual(valorDe(await s.contexts.get(CASA.id))?.hidden, [{ kind: "note", id: "compra" }])
+})
+
 test("FileStorageAdapter: un contexto sin defaultView es corrupt", async (): Promise<void> => {
   const { blobs, s } = montar()
   escribirJson(blobs, "contexts/casa.json", { ...CASA, defaultView: undefined })

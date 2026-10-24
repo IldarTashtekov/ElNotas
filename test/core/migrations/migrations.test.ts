@@ -166,6 +166,38 @@ test("la nota ilegible NO entra en el estado: sólo se conserva su referencia", 
   assert.equal(state.notes[ID_ROTA], undefined)
 })
 
+/* Lo oculto de un contexto: siempre dentro de `items`. */
+
+test("hydrate tira de hidden lo que no está en items, y lo que ya no existe", (): void => {
+  const casa: Context = {
+    ...contexto(ID_CASA, [noteRef(ID_COMPRA), noteRef(ID_FANTASMA)]),
+    hidden: [noteRef(ID_COMPRA), noteRef(ID_FANTASMA), diagramRef(diagramId("suelto"))],
+  }
+  const state = hydrate({ notes: [COMPRA], diagrams: [], contexts: [casa] })
+  assert.deepEqual(state.contexts[ID_CASA]?.hidden, [noteRef(ID_COMPRA)])
+})
+
+test("hydrate CONSERVA oculta una nota ilegible del contexto", (): void => {
+  const casa: Context = { ...contexto(ID_CASA, [noteRef(ID_ROTA)]), hidden: [noteRef(ID_ROTA)] }
+  const state = hydrate({ notes: [], diagrams: [], contexts: [casa] }, esRota)
+  assert.strictEqual(state.contexts[ID_CASA], casa)
+})
+
+test("con algo oculto y nada que tirar, el contexto queda INTACTO, por referencia", (): void => {
+  const casa: Context = { ...contexto(ID_CASA, [noteRef(ID_COMPRA)]), hidden: [noteRef(ID_COMPRA)] }
+  const state = hydrate({ notes: [COMPRA], diagrams: [], contexts: [casa] })
+  assert.strictEqual(state.contexts[ID_CASA], casa)
+})
+
+test("hydrate no se inventa un hidden en un contexto que no lo tenía", (): void => {
+  const state = hydrate({
+    notes: [],
+    diagrams: [],
+    contexts: [contexto(ID_CASA, [noteRef(ID_FANTASMA)])],
+  })
+  assert.equal(state.contexts[ID_CASA] !== undefined && "hidden" in state.contexts[ID_CASA], false)
+})
+
 /* ─────────────────────────── hydrate y los diagramas ───────────────────────────
     Dos limpiezas: la relación con un extremo que no está (o de un nodo a sí
     mismo) se tira, y el nodo de una nota que ya no existe —y no está ilegible—

@@ -1,5 +1,5 @@
 /**
- * Las nueve acciones de entidad: tres de Nota y seis de Contexto.
+ * Las once acciones de entidad: tres de Nota y ocho de Contexto.
  *
  * A diferencia de las de contenido, éstas **no se apoyan en ninguna operación de
  * la Fase 1**: la lógica está aquí, y por eso hay más que probar.
@@ -345,6 +345,116 @@ test("set-default-view a la misma nota que ya apuntaba es no-op", () => {
   )
 })
 
+/* ──────────── hide-items y show-items: lo oculto, siempre dentro de items ──── */
+
+/** Casa, con Diario oculto. */
+const conOculto = (): AppState => {
+  const s: AppState = estado()
+  return {
+    ...s,
+    contexts: { ...s.contexts, [ID_CASA]: { ...ctx(s, ID_CASA), hidden: [noteRef(ID_DIARIO)] } },
+  }
+}
+
+test("hide-items oculta lo del contexto, sin sacarlo de items", (): void => {
+  const s: AppState = reduce(estado(), {
+    type: "hide-items",
+    contextId: ID_CASA,
+    items: [noteRef(ID_COMPRA)],
+    meta: META,
+  })
+
+  assert.deepEqual(ctx(s, ID_CASA).hidden, [noteRef(ID_COMPRA)])
+  assert.deepEqual(ctx(s, ID_CASA).items, [noteRef(ID_COMPRA), noteRef(ID_DIARIO)])
+  assert.equal(ctx(s, ID_CASA).updatedAt, META.now)
+})
+
+test("hide-items oculta varios a la vez, y cada uno una sola vez", (): void => {
+  const s: AppState = reduce(estado(), {
+    type: "hide-items",
+    contextId: ID_CASA,
+    items: [noteRef(ID_DIARIO), noteRef(ID_COMPRA), noteRef(ID_DIARIO)],
+    meta: META,
+  })
+  assert.deepEqual(ctx(s, ID_CASA).hidden, [noteRef(ID_DIARIO), noteRef(ID_COMPRA)])
+})
+
+test("hide-items de lo que NO está en el contexto es no-op", (): void => {
+  const antes: AppState = estado()
+  // Compra está en Trabajo, pero el diagrama no: ocultarlo dejaría `hidden` fuera de `items`.
+  assert.strictEqual(
+    reduce(antes, { type: "hide-items", contextId: ID_TRABAJO, items: [diagramRef(ID_MUDANZA)], meta: META }),
+    antes,
+  )
+})
+
+test("hide-items de lo que ya estaba oculto es no-op", (): void => {
+  const antes: AppState = conOculto()
+  assert.strictEqual(
+    reduce(antes, { type: "hide-items", contextId: ID_CASA, items: [noteRef(ID_DIARIO)], meta: META }),
+    antes,
+  )
+})
+
+test("show-items lo devuelve a la lista", (): void => {
+  const s: AppState = reduce(conOculto(), {
+    type: "show-items",
+    contextId: ID_CASA,
+    items: [noteRef(ID_DIARIO)],
+    meta: META,
+  })
+  assert.deepEqual(ctx(s, ID_CASA).hidden, [])
+  assert.deepEqual(ctx(s, ID_CASA).items, [noteRef(ID_COMPRA), noteRef(ID_DIARIO)])
+})
+
+test("show-items de lo que no estaba oculto es no-op, también sin hidden guardado", (): void => {
+  const antes: AppState = conOculto()
+  assert.strictEqual(
+    reduce(antes, { type: "show-items", contextId: ID_CASA, items: [noteRef(ID_COMPRA)], meta: META }),
+    antes,
+  )
+  const sinHidden: AppState = estado()
+  assert.strictEqual(
+    reduce(sinHidden, { type: "show-items", contextId: ID_CASA, items: [noteRef(ID_COMPRA)], meta: META }),
+    sinHidden,
+  )
+})
+
+test("remove-item lo saca también de hidden", (): void => {
+  const s: AppState = reduce(conOculto(), {
+    type: "remove-item",
+    contextId: ID_CASA,
+    item: noteRef(ID_DIARIO),
+    meta: META,
+  })
+  assert.deepEqual(ctx(s, ID_CASA).items, [noteRef(ID_COMPRA)])
+  assert.deepEqual(ctx(s, ID_CASA).hidden, [])
+})
+
+test("delete-note la saca también de hidden", (): void => {
+  const s: AppState = reduce(conOculto(), { type: "delete-note", noteId: ID_DIARIO, meta: META })
+  assert.deepEqual(ctx(s, ID_CASA).items, [noteRef(ID_COMPRA)])
+  assert.deepEqual(ctx(s, ID_CASA).hidden, [])
+})
+
+test("remove-item de lo que no estaba es no-op, también con algo oculto", (): void => {
+  const antes: AppState = conOculto()
+  assert.strictEqual(
+    reduce(antes, { type: "remove-item", contextId: ID_CASA, item: diagramRef(ID_MUDANZA), meta: META }),
+    antes,
+  )
+})
+
+test("remove-item de un contexto sin hidden guardado no se lo inventa", (): void => {
+  const s: AppState = reduce(estado(), {
+    type: "remove-item",
+    contextId: ID_CASA,
+    item: noteRef(ID_COMPRA),
+    meta: META,
+  })
+  assert.equal("hidden" in ctx(s, ID_CASA), false, "ha escrito un hidden que no había")
+})
+
 /* ────────────────────── Lo transversal: contexto inexistente ──────────────── */
 
 test("todas las acciones de Contexto sobre uno inexistente son no-op", () => {
@@ -357,6 +467,8 @@ test("todas las acciones de Contexto sobre uno inexistente son no-op", () => {
     { type: "add-item", contextId: fantasma, item: noteRef(ID_COMPRA), meta: META },
     { type: "remove-item", contextId: fantasma, item: noteRef(ID_COMPRA), meta: META },
     { type: "set-default-view", contextId: fantasma, view: { type: "context" }, meta: META },
+    { type: "hide-items", contextId: fantasma, items: [noteRef(ID_COMPRA)], meta: META },
+    { type: "show-items", contextId: fantasma, items: [noteRef(ID_COMPRA)], meta: META },
   ] as const
 
   for (const accion of todas) {

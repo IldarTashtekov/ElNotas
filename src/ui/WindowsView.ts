@@ -257,7 +257,7 @@ export const mountWindowsView = (
 
     if (vista.kind === "empty") {
       cabecera.hidden = true
-      notas.update(null, [])
+      notas.update(null, [], [])
       soltarEditor()
       soltarLienzo()
       sinVentanas.hidden = false
@@ -280,19 +280,19 @@ export const mountWindowsView = (
       vista.editsNote === null ? undefined : estado.notes[vista.editsNote]
     if (vista.editsNote !== null && nota !== undefined) {
       notas.element.hidden = true
-      notas.update(null, [])
+      notas.update(null, [], [])
       soltarLienzo()
       montarEditor(vista.editsNote, nota)
     } else if (vista.editsDiagram !== null) {
       notas.element.hidden = true
-      notas.update(null, [])
+      notas.update(null, [], [])
       soltarEditor()
       montarLienzo(vista.editsDiagram)
     } else {
       soltarEditor()
       soltarLienzo()
       notas.element.hidden = false
-      notas.update(vista.ref, vista.items)
+      notas.update(vista.ref, vista.items, vista.hidden)
     }
   }
 

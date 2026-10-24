@@ -141,6 +141,29 @@ const existeItem = (state: AppState, item: ItemRef): boolean =>
     ? state.notes[item.id] !== undefined
     : state.diagrams[item.id] !== undefined
 
+const contiene = (lista: ReadonlyArray<ItemRef>, item: ItemRef): boolean =>
+  lista.some((i: ItemRef): boolean => mismoItem(i, item))
+
+/** Lo oculto de un contexto: ausente es vacío. */
+const ocultos = (ctx: Context): ReadonlyArray<ItemRef> => ctx.hidden ?? []
+
+/**
+ * El contexto sin esta referencia, en `items` y en `hidden`: lo que sale del
+ * contexto no puede seguir oculto en él. Si no estaba, el MISMO contexto.
+ */
+const sinItem = (ctx: Context, item: ItemRef): Context => {
+  const items: ReadonlyArray<ItemRef> = ctx.items.filter(
+    (i: ItemRef): boolean => !mismoItem(i, item),
+  )
+  const hidden: ReadonlyArray<ItemRef> = ocultos(ctx).filter(
+    (i: ItemRef): boolean => !mismoItem(i, item),
+  )
+  // `filter` SIEMPRE devuelve array nuevo: sin esta comparación, quitar algo
+  // que no estaba ensuciaría el contexto y lo reescribiría en disco.
+  if (items.length === ctx.items.length && hidden.length === ocultos(ctx).length) return ctx
+  return ctx.hidden === undefined ? { ...ctx, items } : { ...ctx, items, hidden }
+}
+
 const mismaVista = (a: DefaultView, b: DefaultView): boolean =>
   a.type === b.type && (a.type === "context" || b.type === "context" || a.id === b.id)
 
@@ -162,13 +185,12 @@ const sinReferenciasA = (
   meta: ActionMeta,
 ): AppState["contexts"] => {
   const afectados: ReadonlyArray<Context> = Object.values<Context>(contexts).filter(
-    (ctx: Context): boolean => ctx.items.some((i: ItemRef): boolean => mismoItem(i, item)),
+    (ctx: Context): boolean => contiene(ctx.items, item),
   )
   if (afectados.length === 0) return contexts
 
   const limpios: ReadonlyArray<Context> = afectados.map((ctx: Context): Context => ({
-    ...ctx,
-    items: ctx.items.filter((i: ItemRef): boolean => !mismoItem(i, item)),
+    ...sinItem(ctx, item),
     ...stamp(meta),
   }))
 
@@ -362,18 +384,35 @@ export const reduce = (state: AppState, action: Action): AppState => {
         // El otro lado de la integridad referencial: no se mete una referencia
         // a algo que no existe.
         if (!existeItem(state, action.item)) return ctx
-        if (ctx.items.some((i: ItemRef): boolean => mismoItem(i, action.item))) return ctx
+        if (contiene(ctx.items, action.item)) return ctx
         return { ...ctx, items: [...ctx.items, action.item] }
       })
 
     case "remove-item":
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context =>
+        sinItem(ctx, action.item),
+      )
+
+    case "hide-items":
       return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
-        const items: ReadonlyArray<ItemRef> = ctx.items.filter(
-          (i: ItemRef): boolean => !mismoItem(i, action.item),
+        const ya: ReadonlyArray<ItemRef> = ocultos(ctx)
+        /* Sólo lo del contexto que aún se ve, y cada uno una vez. */
+        const nuevos: ReadonlyArray<ItemRef> = action.items.filter(
+          (i: ItemRef, n: number, todos: ReadonlyArray<ItemRef>): boolean =>
+            contiene(ctx.items, i) &&
+            !contiene(ya, i) &&
+            todos.findIndex((otro: ItemRef): boolean => mismoItem(otro, i)) === n,
         )
-        // `filter` SIEMPRE devuelve array nuevo: sin esta comparación, quitar
-        // algo que no estaba ensuciaría el contexto y lo reescribiría en disco.
-        return items.length === ctx.items.length ? ctx : { ...ctx, items }
+        return nuevos.length === 0 ? ctx : { ...ctx, hidden: [...ya, ...nuevos] }
+      })
+
+    case "show-items":
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
+        const ya: ReadonlyArray<ItemRef> = ocultos(ctx)
+        const quedan: ReadonlyArray<ItemRef> = ya.filter(
+          (i: ItemRef): boolean => !contiene(action.items, i),
+        )
+        return quedan.length === ya.length ? ctx : { ...ctx, hidden: quedan }
       })
 
     case "set-default-view":
