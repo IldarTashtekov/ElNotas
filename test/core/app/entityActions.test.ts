@@ -1,5 +1,5 @@
 /**
- * Las once acciones de entidad: tres de Nota y ocho de Contexto.
+ * Las doce acciones de entidad: tres de Nota y nueve de Contexto.
  *
  * A diferencia de las de contenido, éstas **no se apoyan en ninguna operación de
  * la Fase 1**: la lógica está aquí, y por eso hay más que probar.
@@ -22,6 +22,7 @@ import assert from "node:assert/strict"
 
 import type { AppState } from "#core/domain/AppState"
 import type { Context } from "#core/domain/Context"
+import type { ItemRef } from "#core/domain/Ids"
 import { contextId, diagramId, diagramRef, noteId, noteRef, revision } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import type { Diagram } from "#core/domain/Diagram"
@@ -455,6 +456,88 @@ test("remove-item de un contexto sin hidden guardado no se lo inventa", (): void
   assert.equal("hidden" in ctx(s, ID_CASA), false, "ha escrito un hidden que no había")
 })
 
+/* ─────────────── reorder-items: varios, como un bloque, en su orden ────────── */
+
+const ID_PAN = noteId("pan")
+
+/** Casa con cuatro: compra · diario · pan · mudanza. */
+const conCuatro = (): AppState => {
+  const s: AppState = estado()
+  return {
+    ...s,
+    notes: { ...s.notes, [ID_PAN]: nota(ID_PAN, "Pan") },
+    contexts: {
+      ...s.contexts,
+      [ID_CASA]: {
+        ...ctx(s, ID_CASA),
+        items: [noteRef(ID_COMPRA), noteRef(ID_DIARIO), noteRef(ID_PAN), diagramRef(ID_MUDANZA)],
+      },
+    },
+  }
+}
+
+const reordenar = (
+  s: AppState,
+  items: ReadonlyArray<ItemRef>,
+  before: ItemRef | null,
+): AppState => reduce(s, { type: "reorder-items", contextId: ID_CASA, items, before, meta: META })
+
+test("reorder-items mueve varios juntos, en el orden en que los lista el contexto", (): void => {
+  // Pedidos al revés: se quedan en su orden relativo, no en el de la petición.
+  const s: AppState = reordenar(conCuatro(), [diagramRef(ID_MUDANZA), noteRef(ID_COMPRA)], noteRef(ID_PAN))
+  assert.deepEqual(ctx(s, ID_CASA).items, [
+    noteRef(ID_DIARIO),
+    noteRef(ID_COMPRA),
+    diagramRef(ID_MUDANZA),
+    noteRef(ID_PAN),
+  ])
+  assert.equal(ctx(s, ID_CASA).updatedAt, META.now)
+})
+
+test("reorder-items con before null los pone al final", (): void => {
+  const s: AppState = reordenar(conCuatro(), [noteRef(ID_COMPRA), noteRef(ID_DIARIO)], null)
+  assert.deepEqual(ctx(s, ID_CASA).items, [
+    noteRef(ID_PAN),
+    diagramRef(ID_MUDANZA),
+    noteRef(ID_COMPRA),
+    noteRef(ID_DIARIO),
+  ])
+})
+
+test("reorder-items que los suelta donde estaban es no-op", (): void => {
+  const antes: AppState = conCuatro()
+  // Diario y Pan, delante de Mudanza: ya estaban ahí, juntos.
+  assert.strictEqual(reordenar(antes, [noteRef(ID_DIARIO), noteRef(ID_PAN)], diagramRef(ID_MUDANZA)), antes)
+  assert.strictEqual(reordenar(antes, [diagramRef(ID_MUDANZA)], null), antes)
+})
+
+test("reorder-items con un before que no está, o que se mueve, es no-op", (): void => {
+  const antes: AppState = conCuatro()
+  assert.strictEqual(reordenar(antes, [noteRef(ID_COMPRA)], noteRef(noteId("no-existe"))), antes)
+  assert.strictEqual(reordenar(antes, [noteRef(ID_COMPRA), noteRef(ID_PAN)], noteRef(ID_PAN)), antes)
+})
+
+test("reorder-items de lo que no está en el contexto es no-op, y lo que no está no cuenta", (): void => {
+  const antes: AppState = conCuatro()
+  assert.strictEqual(reordenar(antes, [noteRef(noteId("no-existe"))], null), antes)
+
+  const s: AppState = reordenar(antes, [noteRef(noteId("no-existe")), noteRef(ID_COMPRA)], null)
+  assert.deepEqual(ctx(s, ID_CASA).items[3], noteRef(ID_COMPRA))
+  assert.equal(ctx(s, ID_CASA).items.length, 4)
+})
+
+test("reorder-items no toca lo oculto", (): void => {
+  const oculto: AppState = reduce(conCuatro(), {
+    type: "hide-items",
+    contextId: ID_CASA,
+    items: [noteRef(ID_PAN)],
+    meta: META,
+  })
+  const s: AppState = reordenar(oculto, [noteRef(ID_PAN)], noteRef(ID_COMPRA))
+  assert.strictEqual(ctx(s, ID_CASA).hidden, ctx(oculto, ID_CASA).hidden)
+  assert.deepEqual(ctx(s, ID_CASA).items[0], noteRef(ID_PAN))
+})
+
 /* ────────────────────── Lo transversal: contexto inexistente ──────────────── */
 
 test("todas las acciones de Contexto sobre uno inexistente son no-op", () => {
@@ -469,6 +552,7 @@ test("todas las acciones de Contexto sobre uno inexistente son no-op", () => {
     { type: "set-default-view", contextId: fantasma, view: { type: "context" }, meta: META },
     { type: "hide-items", contextId: fantasma, items: [noteRef(ID_COMPRA)], meta: META },
     { type: "show-items", contextId: fantasma, items: [noteRef(ID_COMPRA)], meta: META },
+    { type: "reorder-items", contextId: fantasma, items: [noteRef(ID_COMPRA)], before: null, meta: META },
   ] as const
 
   for (const accion of todas) {

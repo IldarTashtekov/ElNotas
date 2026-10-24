@@ -37,6 +37,7 @@ import {
   deleteQuestion,
   moveItems,
   moveTargets,
+  reorderBefore,
   trashDeletes,
   trashItems,
 } from "#ui/noteActions"
@@ -309,4 +310,25 @@ test("la nota nueva de un diagrama que no está en ningún contexto no va a ning
   assert.notEqual(nota, null)
   assert.equal(refsDe(store.getState(), compra).length, 2)
   assert.equal(refsDe(store.getState(), casa).length, 0)
+})
+
+/* ─────────────────────────── Reordenar arrastrando ──────────────────────────── */
+
+test("reorderBefore: el hueco cuenta sólo las filas que no se mueven", (): void => {
+  const [a, b, c, d] = ["a", "b", "c", "d"].map((x: string): ItemRef => noteRef(noteId(x)))
+  if (a === undefined || b === undefined || c === undefined || d === undefined) return assert.fail()
+  const visibles: ReadonlyArray<ItemRef> = [a, b, c, d]
+
+  assert.deepEqual(reorderBefore(visibles, [b, d], 0), a)
+  assert.deepEqual(reorderBefore(visibles, [b, d], 1), c)
+  assert.equal(reorderBefore(visibles, [b, d], 2), null, "por debajo de todas: al final")
+})
+
+test("reorderBefore + reorder-items: soltar el bloque donde estaba no cambia nada", (): void => {
+  const { store, useCases, compra, leche, pan } = escenario()
+  const antes: Context | undefined = store.getState().contexts[compra]
+  // Leche, encima de Pan: el hueco 0 de las que quedan es Pan.
+  const before: ItemRef | null = reorderBefore([noteRef(leche), noteRef(pan)], [noteRef(leche)], 0)
+  assert.equal(useCases.reorderItems(compra, [noteRef(leche)], before), null)
+  assert.strictEqual(store.getState().contexts[compra], antes)
 })

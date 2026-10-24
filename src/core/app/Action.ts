@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son treinta y dos. Aquí están las ocho de contenido; las de Nota, Contexto y
+ * Son treinta y tres. Aquí están las ocho de contenido; las de Nota, Contexto y
  * Diagrama, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -173,7 +173,7 @@ export interface DeleteNote {
 
 export type NoteAction = CreateNote | RenameNote | DeleteNote
 
-/* ────────────────────────── Las ocho de Contexto ──────────────────────────── */
+/* ────────────────────────── Las nueve de Contexto ──────────────────────────── */
 
 export interface CreateContext {
   readonly type: "create-context"
@@ -238,6 +238,20 @@ export interface ShowItems {
   readonly meta: ActionMeta
 }
 
+/**
+ * «Estos van aquí»: se sacan de donde estén y se ponen juntos, en el orden en que
+ * los lista el contexto, delante de `before`, que es lo que queda justo detrás
+ * del bloque y no se mueve; `null`, al final. Lo que no está en el contexto no
+ * cuenta, y un `before` que no está o que se mueve no hace nada.
+ */
+export interface ReorderItems {
+  readonly type: "reorder-items"
+  readonly contextId: ContextId
+  readonly items: ReadonlyArray<ItemRef>
+  readonly before: ItemRef | null
+  readonly meta: ActionMeta
+}
+
 export type ContextAction =
   | CreateContext
   | RenameContext
@@ -247,6 +261,7 @@ export type ContextAction =
   | SetDefaultView
   | HideItems
   | ShowItems
+  | ReorderItems
 
 /* ────────────────────────── Las trece de Diagrama ─────────────────────────── */
 
@@ -370,5 +385,5 @@ export type DiagramAction =
   | SetRelationLabel
   | RemoveRelation
 
-/** El catálogo entero: 8 + 3 + 8 + 13 = **treinta y dos**. */
+/** El catálogo entero: 8 + 3 + 9 + 13 = **treinta y tres**. */
 export type Action = ContentAction | NoteAction | ContextAction | DiagramAction

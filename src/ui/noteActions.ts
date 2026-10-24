@@ -103,6 +103,21 @@ export const moveItems = (
   useCases.showItems(destino, refs)
 }
 
+/**
+ * Delante de cuál caen los que se arrastran: `hueco` cuenta las filas que NO se
+ * mueven y quedan por encima. Por debajo de todas, `null`, que es al final.
+ */
+export const reorderBefore = (
+  visibles: ReadonlyArray<ItemRef>,
+  mueven: ReadonlyArray<ItemRef>,
+  hueco: number,
+): ItemRef | null => {
+  const quedan: ReadonlyArray<ItemRef> = visibles.filter(
+    (v: ItemRef): boolean => !mueven.some((m: ItemRef): boolean => m.kind === v.kind && m.id === v.id),
+  )
+  return quedan[hueco] ?? null
+}
+
 /** Adónde se puede mover: los contextos, ni el General ni el de esta ventana. */
 export const moveTargets = (state: AppState, desde: WindowRef): ReadonlyArray<Context> =>
   [...Object.values<Context>(state.contexts)]

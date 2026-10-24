@@ -234,6 +234,28 @@ Con Compra con cuatro notas y un diagrama, y una segunda ventana de contexto, Ca
 - **K8.** Un diagrama de Compra, abierto: crear una nota **desde el lienzo**. De vuelta en
   Compra, la nota nueva **no sale en la lista**: está en «Ocultos».
 
+## L. Reordenar un contexto
+
+Con Compra con cinco elementos, alguno oculto:
+
+- **L1.** En la selección de un contexto, **cada fila** lleva un **⠿** a la derecha. Fuera de la
+  selección, no. En la selección del **General** y en la lista de los **ocultos**, tampoco.
+- **L2.** Con la selección, la fila «Ocultos (n)» **se queda en su sitio**, apagada: la lista
+  **no sube** al entrar en la selección.
+- **L3.** Con dos filas seleccionadas que no están juntas, **arrastrar el ⠿** de una: esa fila
+  sigue al dedo y una **raya del fósforo** dice dónde caerán. Al soltar, las dos quedan
+  **juntas, ahí, en el orden que tenían**, y **se sigue en la selección**, con las dos marcadas.
+  Sobrevive a recargar.
+- **L4.** Arrastrar el ⠿ de una fila **no seleccionada**: se suma a la selección y se mueve con
+  las demás.
+- **L5.** Soltar el bloque **donde estaba** no cambia nada. Tocar el ⠿ sin moverse **no marca
+  ni desmarca** la fila.
+- **L6.** Arrastrar por debajo de la última fila los deja **al final**. Lo oculto sigue oculto y
+  en «Ocultos».
+- **L7.** En el móvil, arrastrar el ⠿ **no desliza la página** ni selecciona texto; con la
+  lista más larga que la pantalla, llevar el dedo al borde de arriba o de abajo **la desliza
+  sola**.
+
 ## H. No se pierde nada al salir
 
 - **H1.** Crear una nota y **cerrar la pestaña enseguida**, sin esperar. Al volver a abrir, está.
@@ -299,6 +321,7 @@ Android, en el móvil, sin pasar.
 | I1–I6 | |
 | J1–J3 | |
 | K1–K8 | |
+| L1–L6 | |
 
 ### Pasada 2 — móvil
 
@@ -319,3 +342,4 @@ Android, en el móvil, sin pasar.
 | H2 | |
 | I1–I5 (I5 con el atrás del sistema) | |
 | K1–K8 (K3 con el atrás del sistema) | |
+| L1–L7 (L7 es el que importa aquí) | |

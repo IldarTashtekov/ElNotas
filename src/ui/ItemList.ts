@@ -9,6 +9,10 @@
  *
  * La fila de los ocultos abre su lista encima de la del contexto, y se cierra con
  * ella o con el atrás. Ahí se selecciona igual, y la barra dice «Mostrar».
+ *
+ * En la selección de un contexto, cada fila lleva un ⠿ al lado: arrastrarlo mueve
+ * todo lo seleccionado —y esa fila, si no lo estaba— como un bloque, y al soltar
+ * se sigue seleccionando. Ni en el General ni en los ocultos.
  */
 
 import type {
@@ -25,6 +29,7 @@ import type {
 import type { BackStack } from "./backStack.js"
 import type { Confirm } from "./sheet.js"
 import { elemento } from "./dom.js"
+import { dropIndex } from "./dropIndex.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import {
   createDiagramIn,
@@ -32,6 +37,7 @@ import {
   deleteQuestion,
   moveItems,
   moveTargets,
+  reorderBefore,
   trashDeletes,
   trashItems,
 } from "./noteActions.js"
@@ -66,6 +72,19 @@ export interface ItemList {
 /** Lo que dura una pulsación larga, y cuánto se puede mover el dedo sin anularla. */
 const PULSACION_LARGA_MS: number = 500
 const TOLERANCIA_PX: number = 10
+/** Arrastrando cerca del borde de arriba o de abajo, la página se desliza sola. */
+const BORDE_PX: number = 40
+const PASO_PX: number = 10
+
+/** Lo que dura un arrastre del ⠿: medido al empezar, como en `dragReorder`. */
+interface Arrastre {
+  readonly el: HTMLElement
+  readonly inicio: number
+  /** Las filas que no se mueven, y sus centros en la página (con su scroll). */
+  readonly quedan: ReadonlyArray<HTMLElement>
+  readonly centros: ReadonlyArray<number>
+  hueco: number
+}
 
 const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonElement => {
   const b: HTMLButtonElement = elemento("button", texto)
@@ -283,6 +302,76 @@ export const createItemList = ({
     espera = null
   }
 
+  /* ── Reordenar con el ⠿ ── */
+
+  let arrastre: Arrastre | null = null
+
+  const puedeReordenar = (): boolean =>
+    seleccionando && ventana?.kind === "context" && !viendoOcultos
+
+  const enAsa = (objetivo: EventTarget | null): boolean =>
+    objetivo instanceof Element && objetivo.closest(".asa") !== null
+
+  const marcarHueco = (a: Arrastre): void => {
+    a.quedan.forEach((f: HTMLElement, j: number): void => {
+      if (f.classList.contains("cae-antes") !== (j === a.hueco)) f.classList.toggle("cae-antes")
+    })
+    lista.classList.toggle("cae-al-final", a.hueco === a.quedan.length)
+  }
+
+  const levantar = (el: HTMLElement, y: number): void => {
+    const filas: ReadonlyArray<HTMLElement> = [...lista.querySelectorAll<HTMLElement>("li[data-key]")]
+    const quedan: ReadonlyArray<HTMLElement> = filas.filter(
+      (f: HTMLElement): boolean => !seleccion.has(f.dataset["key"] ?? ""),
+    )
+    const centros: ReadonlyArray<number> = quedan.map((f: HTMLElement): number => {
+      const r: DOMRect = f.getBoundingClientRect()
+      return r.top + window.scrollY + r.height / 2
+    })
+    const a: Arrastre = { el, inicio: y + window.scrollY, quedan, centros, hueco: 0 }
+    a.hueco = dropIndex(centros, -1, a.inicio)
+    arrastre = a
+    el.classList.add("levantada")
+    lista.classList.add("arrastrando")
+    marcarHueco(a)
+  }
+
+  const soltarArrastre = (aplicar: boolean): void => {
+    const a: Arrastre | null = arrastre
+    arrastre = null
+    if (a === null) return
+    a.el.style.transform = ""
+    a.el.classList.remove("levantada")
+    lista.classList.remove("arrastrando", "cae-al-final")
+    for (const f of a.quedan) f.classList.remove("cae-antes")
+    if (!aplicar || ventana?.kind !== "context") return
+    const visibles: ReadonlyArray<ItemRef> = mostradas().map((i: ListItem): ItemRef => i.ref)
+    const mueven: ReadonlyArray<ItemRef> = refsSeleccionadas()
+    useCases.reorderItems(ventana.id, mueven, reorderBefore(visibles, mueven, a.hueco))
+  }
+
+  window.addEventListener("pointermove", (evento: PointerEvent): void => {
+    const a: Arrastre | null = arrastre
+    if (a === null) return
+    if (evento.clientY < BORDE_PX) window.scrollBy(0, -PASO_PX)
+    else if (evento.clientY > window.innerHeight - BORDE_PX) window.scrollBy(0, PASO_PX)
+    const y: number = evento.clientY + window.scrollY
+    a.el.style.transform = `translateY(${y - a.inicio}px)`
+    a.hueco = dropIndex(a.centros, -1, y)
+    marcarHueco(a)
+  })
+  window.addEventListener("pointerup", (): void => soltarArrastre(true))
+  window.addEventListener("pointercancel", (): void => soltarArrastre(false))
+  /* Con el ⠿ levantado, el dedo arrastra y no desliza la página. No pasivo: uno
+     pasivo no puede impedirlo. */
+  lista.addEventListener(
+    "touchmove",
+    (evento: TouchEvent): void => {
+      if (arrastre !== null) evento.preventDefault()
+    },
+    { passive: false },
+  )
+
   lista.addEventListener("pointerdown", (evento: PointerEvent): void => {
     ultimoPuntero = evento.pointerType
     /* Cada pulsación empieza limpia: si la anterior repintó la fila, su `click`
@@ -290,6 +379,19 @@ export const createItemList = ({
     tragarClick = false
     const clave: string | null = claveDe(evento.target)
     if (clave === null || evento.button !== 0) return
+    const objetivo: EventTarget | null = evento.target
+    if (objetivo instanceof Element && enAsa(objetivo) && puedeReordenar()) {
+      evento.preventDefault()
+      cancelarEspera()
+      /* La fila que no estaba seleccionada se suma antes de arrastrar. */
+      if (!seleccion.has(clave)) {
+        seleccion = toggleSelected(seleccion, clave)
+        pintar()
+      }
+      const fila: HTMLElement | null = objetivo.closest<HTMLElement>("li[data-key]")
+      if (fila !== null) levantar(fila, evento.clientY)
+      return
+    }
     origen = { x: evento.clientX, y: evento.clientY }
     cancelarEspera()
     espera = setTimeout((): void => {
@@ -309,6 +411,8 @@ export const createItemList = ({
   }
 
   lista.addEventListener("click", (evento: MouseEvent): void => {
+    /* El ⠿ arrastra; tocarlo sin moverse no marca ni desmarca. */
+    if (enAsa(evento.target)) return
     if (tragarClick) {
       tragarClick = false
       return
@@ -324,6 +428,7 @@ export const createItemList = ({
     const clave: string | null = claveDe(evento.target)
     if (clave === null) return
     evento.preventDefault()
+    if (enAsa(evento.target)) return
     /* En táctil, el menú contextual llega con la pulsación larga, que ya actúa. */
     if (ultimoPuntero !== "touch") elegida(clave)
   })
@@ -356,11 +461,18 @@ export const createItemList = ({
         fila.setAttribute("role", "option")
         /* La clase no cambia: la clave lleva dentro si es nota o diagrama. */
         if (item.ref.kind === "diagram") fila.classList.add("diagrama")
+        const nombre: HTMLSpanElement = elemento("span")
+        nombre.className = "nombre"
+        const asa: HTMLSpanElement = elemento("span", "⠿")
+        asa.className = "asa"
+        asa.setAttribute("aria-hidden", "true")
+        fila.append(nombre, asa)
         return fila
       },
       update: (fila: Element, item: ListItem): void => {
         const marcada: boolean = seleccion.has(itemKey(item.ref))
-        setTextIfChanged(fila, item.name)
+        const nombre: Element | null = fila.querySelector(".nombre")
+        if (nombre !== null) setTextIfChanged(nombre, item.name)
         setAttrIfChanged(fila, "aria-selected", marcada ? "true" : "false")
         if (fila.classList.contains("seleccionada") !== marcada) {
           fila.classList.toggle("seleccionada", marcada)
@@ -368,11 +480,13 @@ export const createItemList = ({
       },
     })
     lista.classList.toggle("seleccionando", seleccionando)
+    lista.classList.toggle("reordenable", puedeReordenar())
     sinNotas.hidden = mostradas().length > 0 || ventana === null
     mas.hidden = seleccionando || viendoOcultos || ventana === null
     masDiagrama.hidden = mas.hidden
-    /* Sólo si hay alguno; mientras se selecciona, sólo si está abierta, de título. */
-    filaOcultos.hidden = ocultos.length === 0 || (seleccionando && !viendoOcultos)
+    /* Sólo si hay alguno. Mientras se selecciona se queda, apagada: si se fuera,
+       la lista subiría una fila bajo el dedo. */
+    filaOcultos.hidden = ocultos.length === 0
     filaOcultos.disabled = seleccionando
     filaOcultos.setAttribute("aria-expanded", viendoOcultos ? "true" : "false")
     flechaOcultos.hidden = !viendoOcultos

@@ -5,7 +5,7 @@
  * tentación es no probarla. Pero es la **única** que lee el mundo, y hay tres
  * cosas que sólo pasan aquí y que ninguna prueba del reducer puede ver:
  *
- *   1. **el cableado**: treinta y cuatro bloques casi idénticos uno debajo de otro son
+ *   1. **el cableado**: treinta y cinco bloques casi idénticos uno debajo de otro son
  *      justo donde se cuela un copy-paste, y un `renameNote` que despachara
  *      `delete-note` borraría notas al renombrarlas sin que fallara nada en el
  *      reducer, que haría exactamente lo que le piden;
@@ -147,7 +147,7 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
   contexts: Object.fromEntries(ctxs.map((c: Context): [ContextId, Context] => [c.id, c])),
 })
 
-/* ──────────────────── (1) El cableado: los treinta y cuatro─────────────────── */
+/* ──────────────────── (1) El cableado: los treinta y cinco ─────────────────── */
 
 /**
  * Cada caso de uso con el `type` que tiene que despachar. Si alguien añade uno y
@@ -176,6 +176,7 @@ const CABLEADO: ReadonlyArray<
   ["set-default-view", (u) => u.setDefaultView(ID_CONTEXTO, { type: "context" })],
   ["hide-items", (u: UseCases): Context | null => u.hideItems(ID_CONTEXTO, [noteRef(ID_NOTA)])],
   ["show-items", (u: UseCases): Context | null => u.showItems(ID_CONTEXTO, [noteRef(ID_NOTA)])],
+  ["reorder-items", (u: UseCases): Context | null => u.reorderItems(ID_CONTEXTO, [noteRef(ID_NOTA)], null)],
   ["create-diagram", (u: UseCases): Diagram | null => u.createDiagram("Mudanza")],
   ["rename-diagram", (u: UseCases): Diagram | null => u.renameDiagram(ID_DIAGRAMA, "Otro")],
   ["delete-diagram", (u: UseCases): Diagram | null => u.deleteDiagram(ID_DIAGRAMA)],
@@ -235,18 +236,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **treinta y cuatro casos de uso para treinta y dos acciones**: `insert` tiene dos
+      Son **treinta y cinco casos de uso para treinta y tres acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 34, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 34, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 35, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 35, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 32, "el catálogo son TREINTA Y DOS acciones: 8 + 3 + 8 + 13")
+  assert.equal(tipos.size, 33, "el catálogo son TREINTA Y TRES acciones: 8 + 3 + 9 + 13")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */
@@ -280,10 +281,10 @@ test("dos notas seguidas reciben ids DISTINTOS", () => {
 
 /* ────────── (2b) Qué devuelven: los cuatro caminos, uno por uno ──────────── */
 
-test("⚠️ los TREINTA Y UNO que no crean devuelven null si no hay a qué aplicarlos", () => {
+test("⚠️ los TREINTA Y DOS que no crean devuelven null si no hay a qué aplicarlos", () => {
   /*
       Barrido sobre la lista entera, y por la misma razón que existe la lista:
-      son treinta y cuatro líneas casi idénticas, que es donde se cuela un copy-paste.
+      son treinta y cinco líneas casi idénticas, que es donde se cuela un copy-paste.
       Los tipos marcados impiden equivocarse de ayudante —`trasNota` no acepta un
       `ContextId`— pero no impiden olvidarse de pasar por él.
 
@@ -359,11 +360,13 @@ const NO_OP_CON_CONTEXTO: ReadonlyArray<
   // Ocultar lo que no está en el contexto, o mostrar lo que no estaba oculto.
   ["hideItems", (u: UseCases): Context | null => u.hideItems(ID_CONTEXTO, [noteRef(ID_NOTA)])],
   ["showItems", (u: UseCases): Context | null => u.showItems(ID_CONTEXTO, [noteRef(ID_NOTA)])],
+  // Mover lo que no está en el contexto.
+  ["reorderItems", (u: UseCases): Context | null => u.reorderItems(ID_CONTEXTO, [noteRef(ID_NOTA)], null)],
   // `contextoCon` lo llama "Casa": renombrarlo igual es no-op.
   ["renameContext", (u) => u.renameContext(ID_CONTEXTO, "Casa")],
 ]
 
-test("⚠️ un no-op devuelve null AUNQUE el contexto exista — las seis", () => {
+test("⚠️ un no-op devuelve null AUNQUE el contexto exista — las siete", () => {
   for (const [nombre, llamar] of NO_OP_CON_CONTEXTO) {
     const ctx: Context = contextoCon(ID_CONTEXTO, [])
     const { store, useCases } = montarDeVerdad(conContextos(ctx))

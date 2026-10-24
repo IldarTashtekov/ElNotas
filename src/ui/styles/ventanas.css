@@ -114,6 +114,53 @@ input.titulo {
   place-items: center;
   text-shadow: none;
 }
+/* El ⠿ de reordenar: al lado de cada fila, sólo en la selección de un contexto. */
+.notas li .nombre {
+  flex: 1;
+  min-width: 0;
+}
+.notas li .asa {
+  display: none;
+}
+.notas.reordenable li .asa {
+  color: var(--muted);
+  cursor: grab;
+  display: block;
+  font-size: 1.2rem;
+  line-height: 1;
+  margin: -0.65rem -0.8rem -0.65rem 0;
+  padding: 0.65rem 0.8rem;
+  /* El dedo sobre el ⠿ arrastra la fila, no la página. */
+  touch-action: none;
+}
+.notas li.levantada {
+  border-color: var(--accent);
+  position: relative;
+  z-index: 3;
+}
+.notas.arrastrando,
+.notas.arrastrando li .asa {
+  cursor: grabbing;
+}
+/* Dónde caerá el bloque: una raya del fósforo encima de la fila, o al final. */
+.notas li.cae-antes {
+  position: relative;
+
+  &::after {
+    background: var(--accent);
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: calc(-0.225rem - 1px);
+  }
+}
+.notas.cae-al-final::after {
+  background: var(--accent);
+  content: "";
+  height: 2px;
+}
 /* «Ocultos (n)», encima de la lista: una fila más tenue, y abierta, de título. */
 .fila-ocultos {
   align-items: center;
@@ -131,6 +178,10 @@ input.titulo {
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
+  }
+  &:disabled {
+    color: var(--dim);
+    cursor: default;
   }
   &[aria-expanded="true"] {
     border-style: solid;

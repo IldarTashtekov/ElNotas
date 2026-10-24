@@ -66,6 +66,22 @@ export const ROTURAS = [
     prueba: "hydrate tira de hidden lo que no está en items, y lo que ya no existe",
   },
   {
+    nombre: "core: reordenar donde ya estaban devuelve el mismo contexto",
+    fichero: "src/core/app/reduce.ts",
+    buscar: "        return igual ? ctx : { ...ctx, items }\n",
+    poner: "        return igual ? { ...ctx } : { ...ctx, items }\n",
+    caza: "pruebas",
+    prueba: "reorder-items que los suelta donde estaban es no-op",
+  },
+  {
+    nombre: "core: reordenar mueve el bloque en el orden del contexto",
+    fichero: "src/core/app/reduce.ts",
+    buscar: "          ...mueven,\n",
+    poner: "          ...action.items,\n",
+    caza: "pruebas",
+    prueba: "reorder-items mueve varios juntos, en el orden en que los lista el contexto",
+  },
+  {
     nombre: "core: una posición desconocida no hace nada",
     fichero: "src/core/domain/operations.ts",
     buscar: "      position satisfies never\n      return content\n",

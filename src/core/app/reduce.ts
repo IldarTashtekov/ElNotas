@@ -415,6 +415,31 @@ export const reduce = (state: AppState, action: Action): AppState => {
         return quedan.length === ya.length ? ctx : { ...ctx, hidden: quedan }
       })
 
+    case "reorder-items":
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
+        const mueven: ReadonlyArray<ItemRef> = ctx.items.filter(
+          (i: ItemRef): boolean => contiene(action.items, i),
+        )
+        if (mueven.length === 0) return ctx
+        const quedan: ReadonlyArray<ItemRef> = ctx.items.filter(
+          (i: ItemRef): boolean => !contiene(action.items, i),
+        )
+        const antes: ItemRef | null = action.before
+        const donde: number =
+          antes === null
+            ? quedan.length
+            : quedan.findIndex((i: ItemRef): boolean => mismoItem(i, antes))
+        if (donde === -1) return ctx
+        const items: ReadonlyArray<ItemRef> = [
+          ...quedan.slice(0, donde),
+          ...mueven,
+          ...quedan.slice(donde),
+        ]
+        /* Soltarlos donde estaban da el mismo orden en un array nuevo: el mismo contexto. */
+        const igual: boolean = items.every((i: ItemRef, n: number): boolean => i === ctx.items[n])
+        return igual ? ctx : { ...ctx, items }
+      })
+
     case "set-default-view":
       return onContext(state, action.contextId, action.meta, (ctx: Context): Context =>
         mismaVista(ctx.defaultView, action.view)
