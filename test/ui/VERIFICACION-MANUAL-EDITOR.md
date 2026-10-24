@@ -179,13 +179,14 @@ setTimeout(() => console.log("cambios en pantalla:", cambios), 700)
 
 ## M. Seleccionar y copiar
 
-Con una nota de un texto, una casilla marcada con dos hijas, y otro texto.
+Con una nota de un texto, una línea vacía, una casilla marcada con dos hijas, y otro texto.
 
 - **M1.** Al abrir la nota, **ninguna línea tiene cursor**. Tocar en medio de una palabra pone el
   cursor **donde se tocó**, y sólo esa línea se edita. *(Con la consola.)*
   `document.querySelectorAll("[contenteditable]").length` vale **1**.
 - **M2.** *(Escritorio.)* Arrastrar desde la mitad de la primera línea hasta la mitad de una hija:
-  la selección va **de corrido**, cruzando la casilla, en **vídeo inverso**.
+  la selección va **de corrido**, cruzando la casilla, en **vídeo inverso**. ⚠️ Hacia arriba
+  igual, y **la línea vacía también se pinta**: un hueco ahí era el fallo de la pasada 4.
 - **M3.** ⚠️ Copiar (Ctrl/Cmd + C) y pegarlo **fuera de la app**, en un editor de texto: **una
   línea por renglón**, sin ✓ ni renglones vacíos de más, la primera y la última cortadas donde
   empezaba y acababa la selección.
@@ -193,7 +194,7 @@ Con una nota de un texto, una casilla marcada con dos hijas, y otro texto.
   escribiendo: sale la selección del sistema, con sus **asas**, que **cruzan líneas**. *Copiar*,
   en su menú, copia como en M3.
 - **M5.** Con algo seleccionado, **un toque sin arrastrar** en una línea la hace editable con el
-  cursor ahí, y la selección se va.
+  cursor ahí, y la selección se va. ⚠️ También tocando **encima** de lo seleccionado.
 - **M6.** Intro, Retroceso al principio y las flechas, como en C, D y G: **la que se edita pasa a
   ser la línea a la que va el cursor**, y la anterior deja de serlo.
 
@@ -281,3 +282,21 @@ siempre.
 
 Notas: un arrastre entre líneas soltaba un clic en el hueco que llevaba el cursor a la última
 línea y perdía la selección; arreglado antes del commit.
+
+### Pasada 4 — escritorio, sólo M2 y M5 (tras el aviso del usuario)
+
+| | |
+|---|---|
+| Fecha | 2026-10-24 |
+| Navegador y versión | Chrome 152, el navegador del panel (Claude/3.1623.0) |
+| Quién | Claude, en el panel |
+| Commit | el siguiente a `82ca056`; pasada sobre el mismo código, justo antes de comitearlo |
+| Origen | `localhost:8001`, con la nota de M |
+
+| Paso | Resultado |
+|---|---|
+| M2 | ❌ → ✅ — el usuario vio la selección cortada en una línea vacía: no tenía nada que pintar y quedaba un hueco. Ahora lleva un `<br>` y se pinta; la copia ya salía entera |
+| M5 | ❌ → ✅ — tocar encima de la selección no activaba la línea: el navegador la quita después del `click`. Ahora cuenta lo que se movió el puntero |
+
+Notas: la pasada 3 dio M5 por bueno tocando fuera de la selección. Escribir en una línea vacía,
+partirla con Intro y juntarla con Retroceso siguen igual. ⏭ en el móvil, el usuario.

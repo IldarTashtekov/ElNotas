@@ -59,6 +59,14 @@ const leerCursor = (campo: HTMLElement): number | null => {
 /** Si el cursor es un punto y no una selección de varios caracteres. */
 const cursorColapsado = (): boolean => window.getSelection()?.isCollapsed ?? true
 
+/** Lo que puede moverse el dedo en un toque antes de que cuente como arrastre. */
+const ARRASTRE_PX: number = 5
+
+/** Una línea vacía lleva un `<br>`: sin nada dentro, la selección no la pinta y salta por encima. */
+const rellenarSiVacia = (campo: Element): void => {
+  if (campo.firstChild === null) campo.append(document.createElement("br"))
+}
+
 const ponerCursorEn = (campo: HTMLElement, offset: number): void => {
   campo.focus()
   const sel: Selection | null = window.getSelection()
@@ -203,6 +211,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
            haya cambiado una orden. */
         if (campo !== null && (enOrden || campo !== document.activeElement)) {
           setTextIfChanged(campo, l.text)
+          rellenarSiVacia(campo)
         }
         if (!isCheckBox(l)) return
         const marca: Element | null = fila.querySelector(":scope > .marca")
@@ -243,6 +252,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
 
   const desactivar = (): void => {
     activa?.removeAttribute("contenteditable")
+    if (activa !== null) rellenarSiVacia(activa)
     activa = null
   }
 
@@ -259,12 +269,22 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     desactivar()
   })
 
+  /* Dónde bajó el dedo: un `click` lejos de ahí acaba un arrastre. No basta con
+     mirar si queda selección: al tocar encima de una, el navegador la quita
+     después del `click`. */
+  let bajada: { readonly x: number; readonly y: number } | null = null
+  element.addEventListener("pointerdown", (evento: PointerEvent): void => {
+    bajada = { x: evento.clientX, y: evento.clientY }
+  })
+  const arrastro = (evento: MouseEvent): boolean =>
+    bajada !== null && Math.hypot(evento.clientX - bajada.x, evento.clientY - bajada.y) > ARRASTRE_PX
+
   /* Un toque sin arrastrar en otra línea la activa, con el cursor donde cayó. Tras
      arrastrar para seleccionar también llega un `click`: ése no edita nada. */
   lineas.addEventListener("click", (evento: MouseEvent): void => {
     const campo: HTMLElement | null =
       evento.target instanceof Element ? evento.target.closest<HTMLElement>(".texto") : null
-    if (campo === null || campo === activa || !cursorColapsado()) return
+    if (campo === null || campo === activa || arrastro(evento)) return
     ponerCursor(campo, offsetEnPunto(campo, evento.clientX, evento.clientY))
   })
 
@@ -446,7 +466,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
   element.addEventListener("click", (evento: MouseEvent): void => {
     if (evento.target !== element && evento.target !== lineas) return
     /* Arrastrar de una línea a otra acaba en un `click` sobre las líneas: es una selección. */
-    if (!cursorColapsado()) return
+    if (arrastro(evento)) return
     const nota: Note | undefined = deps.note()
     if (nota === undefined) return
     const ultima: Content | null = lastLine(nota.content)

@@ -156,7 +156,7 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       prueba del editor, era una decisión. **Se cierra cuando** `check` pasa, la lista del editor
       tiene sus pasos, y **el usuario lo ha probado en su móvil y da el visto bueno antes de
       empezar el 5**.
-      **Hecho en el ordenador** (sección M de `VERIFICACION-MANUAL-EDITOR.md`, pasada 3). **Falta
+      **Hecho en el ordenador** (sección M de `VERIFICACION-MANUAL-EDITOR.md`, pasadas 3 y 4). **Falta
       la prueba del usuario en el móvil**: M4 (pulsación larga y asas) y escribir como siempre.
 - [ ] **5. Markdown en el core: los enlaces y su integridad** *(pensar)*. Encontrar los enlaces
       internos dentro de un texto (`[texto](nota:id)`, `diagrama:id`, `contexto:id`), puro y en el
@@ -358,10 +358,6 @@ una tarea con su cierre.
       se lo piensa)*. Con el texto en Markdown, la pregunta es si el texto de un nodo simple también
       admite formato y enlaces, con la misma burbuja. El nodo-nota se queda como está. **Se cierra
       cuando** el usuario decide: una tarea con fase, o a *Ideas aparcadas*.
-- [ ] **Qué hace un toque en el modo de seleccionar del lienzo** *(salió en la tarea 3 de la Fase
-      10, 2026-10-24)*. La tarea no lo decía; se hizo así: un toque en un pósit lo marca o lo
-      desmarca, en el fondo no hace nada, y en el modo no hay menús ni se entra en las notas.
-      **Se cierra cuando** el usuario lo da por bueno o pide otra cosa.
 
 ### Si OPFS entra en juego: lo que queda del criterio de la Fase 3
 

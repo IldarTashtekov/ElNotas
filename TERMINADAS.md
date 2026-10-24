@@ -257,6 +257,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **El `manifest.json` lleva sólo `{ schemaVersion }`**, sin índice. §6.1.
 - **`CompositeStorage` y el outbox**, desaparcados el 2026-10-12: un sincronizador, en *La nube*.
 - **El editor de grafos de los Diagramas**, desaparcado el 2026-10-03: fue la Fase 5.
+- **Tres de la Fase 10, dadas por buenas**, 2026-10-24: en el modo de seleccionar del lienzo un
+  toque marca o desmarca el pósit; «Salir» y cambiar de ventana cierran antes el modo abierto; lo
+  seleccionado de una nota, en vídeo inverso.
 - **El sync entre dispositivos**, diseñado el 2026-10-12 con la copia en conflicto (*La nube*).
 
 ## Hitos
