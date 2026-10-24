@@ -228,6 +228,8 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - ❌ **`check:fronteras` de lista negra a lista blanca** (Fase 9, B3), 2026-10-13: sobreingeniería.
 - ❌ **Ramas, *pull requests* y CI en los PR** (Fase 9, C4), 2026-10-13: no hay `push` a otras ramas.
 - ❌ **Un adaptador de Google Drive**, 2026-10-12: guarda ficheros, y manda el modelo (*La nube*).
+- ❌ **Los enlaces del texto en el core** (Fase 10, tarea 5), 2026-10-24: pasarlos a «perdido» al
+  borrar costaba mucho; un enlace roto se ve roto en pantalla y vuelve si vuelve lo que señalaba.
 
 ## Decisiones cerradas
 

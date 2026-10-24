@@ -110,6 +110,13 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
   del modelo es la misma en el core, en el disco y en la pantalla; la pantalla sólo la lee para
   pintarla. Ni motor de edición ni texto rico propio. Los enlaces internos van **por
   identificador**: renombrar no los rompe.
+- **Un enlace interno es `[texto](#id)`** (2026-10-24): el id con que nace la entidad, sin tipo
+  ni nombre delante, para que renombrar un tipo o la app no deje viejo lo guardado. El `#` dice
+  que es interno aunque ya no exista nada con ese id; `https://…` es web, y lo demás, texto.
+- **Los enlaces del texto, fuera de la integridad referencial** (2026-10-24): el core no los lee
+  ni los toca, y borrar algo no los cambia. **Uno roto se ve roto**, sin aviso al abrir la nota;
+  al pulsarlo no lleva a ningún sitio y sale «El enlace ya no existe» durante segundo y medio.
+  Para contextos y lienzo, la regla sigue igual.
 - **Seleccionar texto como en cualquier página**, por encima de varias líneas, y copiar **texto
   plano**: los enlaces como su texto visible, las casillas sólo con su texto. Ni «copiar nota» ni
   «copiar desde aquí».
@@ -158,21 +165,16 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       empezar el 5**.
       **Hecho** (`17ddeb6`, `67102cd`; sección M de `VERIFICACION-MANUAL-EDITOR.md`, pasadas 3 y
       4), y el usuario lo dio por bueno en su móvil el 2026-10-24.
-- [ ] **5. Markdown en el core: los enlaces y su integridad** *(pensar)*. Encontrar los enlaces
-      internos dentro de un texto (`[texto](nota:id)`, `diagrama:id`, `contexto:id`), puro y en el
-      core: al dominio sólo le importan los enlaces, no la negrita. **Borrar** una nota, un
-      diagrama o un contexto cambia los enlaces que apuntaban a él por `[texto](perdido)` en todas
-      las notas; `hydrate` hace lo mismo con los que lleguen rotos del disco. **Se cierra cuando**
-      la invariante («ningún enlace a lo que no está») tiene sus pruebas, incluida la de identidad
-      cuando ninguna nota enlazaba a lo borrado, y su rotura en `tools/roturas.mjs`, y `check`
-      pasa.
+- **5. Markdown en el core**: descartada el 2026-10-24 (`TERMINADAS.md` → *Descartadas*).
 - [ ] **6. Markdown en pantalla** *(pensar)*. El subconjunto: `**negrita**` (más brillo),
-      `*cursiva*`, `# ` al principio de la línea (título), `[texto](https://…)` y los internos del
-      5; además, lo que empiece por `http://`, `https://` o `www.` se detecta solo (`www.` se abre
+      `*cursiva*`, `# ` al principio de la línea (título), `[texto](https://…)` y los internos,
+      `[texto](#id)`; además, lo que empiece por `http://`, `https://` o `www.` se detecta solo (`www.` se abre
       con `https://` delante; un dominio pelado, no). La barra invertida escribe las marcas
       literales. **La línea activa se ve en crudo; las demás, formateadas.** Con el cursor dentro de
       un enlace sale una **burbuja** con «↗ Abrir» (y «Cambiar» y «Quitar» si es un enlace
-      guardado); un interno se abre apilado encima; uno perdido se ve «texto (perdido)». En la
+      guardado); un interno se abre apilado encima; uno roto (su id ya no existe) se ve «texto
+      (perdido)», y al pulsarlo sale «El enlace ya no existe» durante segundo y medio. La
+      barra invertida delante de un enlace, a decidir al plantear esta tarea. En la
       barra de la nota, **«Enlazar…»**: pegar una dirección o elegir nota, diagrama o contexto en
       una lista como la de «Mover a…», y se escribe el enlace donde está el cursor. Leer el formato
       es una pieza pura, con pruebas en Node. **Se cierra cuando** esa pieza tiene sus pruebas,
@@ -183,8 +185,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       está planteado con el usuario y esta entrada se sustituye por sus tareas, cada una con su
       etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a *Ideas aparcadas*.
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
-      los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. En `ARCHITECTURE.md`, el principio que sale del 5: **la
-      integridad referencial llega también a las referencias dentro del texto**. Y la auditoría
+      los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
+      y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa, `check:roturas` pasa entera y la auditoría no deja nada falso.
 
@@ -354,10 +356,6 @@ una tarea con su cierre.
       reducer, las pruebas y el formato en disco.
       **Se cierra cuando** el usuario elige: excepción, escrita en *Decisiones cerradas* de
       `CLAUDE.md`, o una tarea con fase para quitarlo.
-- [ ] **Enlaces en los nodos del lienzo** *(salió al planificar la Fase 10, 2026-10-18; el usuario
-      se lo piensa)*. Con el texto en Markdown, la pregunta es si el texto de un nodo simple también
-      admite formato y enlaces, con la misma burbuja. El nodo-nota se queda como está. **Se cierra
-      cuando** el usuario decide: una tarea con fase, o a *Ideas aparcadas*.
 
 ### Si OPFS entra en juego: lo que queda del criterio de la Fase 3
 
@@ -390,7 +388,8 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
-| **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10, una nota ya puede enlazar un contexto con `[texto](contexto:id)`. | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
+| **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10, una nota ya puede enlazar un contexto con `[texto](#id)`. |
+| **Formato y enlaces en los pósits de texto del lienzo** | Aparcado por el usuario el 2026-10-24: le gusta, pero no hace falta ahora. Al core no le pediría nada (los enlaces del texto no entran en la integridad); lo difícil son los gestos, porque un toque en el lienzo ya mueve, marca o abre el menú. **Y podría jubilar el nodo-nota**: un pósit con un enlace a la nota haría lo mismo. | Usar los enlaces de las notas (tarea 6) y echarlos en falta en el lienzo. Ese día se decide cómo se abre un enlace desde un pósit y si el nodo-nota sigue. | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
 | **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
 | **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
 | **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
