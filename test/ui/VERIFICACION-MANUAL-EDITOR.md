@@ -259,3 +259,25 @@ siempre.
 | F1, F4 | |
 | H1–H4 | |
 | I1–I4 | |
+
+### Pasada 3 — escritorio, sólo M (seleccionar y copiar, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-24 |
+| Navegador y versión | Chrome 152, el navegador del panel (Claude/3.1623.0) |
+| Quién | Claude, en el panel |
+| Commit | `17ddeb6`; pasada sobre el mismo código, justo antes de comitearlo |
+| Origen | `localhost:8001`, con la nota de M |
+
+| Paso | Resultado |
+|---|---|
+| M1 | ✅ — una sola línea editable, y el cursor donde se toca |
+| M2 | ✅ |
+| M3 | ✅ con un `copy` lanzado desde la consola: «ro del día\nCompra\nLeche\nPa». ⏭ pegarlo fuera de la app, el usuario |
+| M4 | ⏭ móvil, el usuario |
+| M5 | ✅ |
+| M6 | ✅ — Retroceso, ↓, Intro y juntar líneas |
+
+Notas: un arrastre entre líneas soltaba un clic en el hueco que llevaba el cursor a la última
+línea y perdía la selección; arreglado antes del commit.
