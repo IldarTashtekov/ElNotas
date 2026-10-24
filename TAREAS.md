@@ -117,6 +117,10 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
   ni los toca, y borrar algo no los cambia. **Uno roto se ve roto**, sin aviso al abrir la nota;
   al pulsarlo no lleva a ningún sitio y sale «El enlace ya no existe» durante segundo y medio.
   Para contextos y lienzo, la regla sigue igual.
+- **Contextos fuera de los enlaces, por ahora** (2026-10-25): «Enlazar…» sólo ofrece notas y
+  diagramas; un `#id` de contexto escrito a mano se ve como roto. **Capas en cadena**: cualquier
+  nota o diagrama se abre encima de cualquier otro y al recargar vuelve toda la cadena.
+  El enlace roto se ve **apagado** (color), sin añadir texto.
 - **Seleccionar texto como en cualquier página**, por encima de varias líneas, y copiar **texto
   plano**: los enlaces como su texto visible, las casillas sólo con su texto. Ni «copiar nota» ni
   «copiar desde aquí».
@@ -187,13 +191,16 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       los pasos de la lista y pasarlos en el panel: Sonnet *(mecánica)*, con especificación
       cerrada, parando ante cualquier decisión, y Opus revisa antes del commit. Haiku, sólo para
       búsquedas y resumir salidas largas, no para código.
+      **Hecho en el ordenador** (6a `36bce45`, 6b `971ada1`, 6c `d34dee4`, 6d `225385d`, y los pasos
+      de la lista en `6359079`; secciones N a Q de `VERIFICACION-MANUAL-EDITOR.md`, pasada 5;
+      `check:roturas` entera, 70 caen). **Falta pasar en el móvil** la pasada 6: M4, N, O, P y Q.
 - [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24;
       **todavía sin plantear**: qué es, qué pide al dominio y a la pantalla, y si cambia alguna
       decisión cerrada. Va después del Markdown y antes de la documentación. **Se cierra cuando**
       está planteado con el usuario y esta entrada se sustituye por sus tareas, cada una con su
       etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a *Ideas aparcadas*.
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
-      los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
+      las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa, `check:roturas` pasa entera y la auditoría no deja nada falso.
