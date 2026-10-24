@@ -7,7 +7,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
-import { readMarkdownLine } from "#ui/markdownLine"
+import { rawOffset, readMarkdownLine, visibleText } from "#ui/markdownLine"
 
 // Resume una línea en una cadena: marcas `m:"…"`, texto con prefijo B / I / L(destino).
 const resumen = (linea: FormattedLine): string => {
@@ -243,5 +243,55 @@ test("propiedades sobre 20 000 cadenas generadas con semilla fija", (): void => 
       raw += alfabeto[siguiente() % alfabeto.length] ?? ""
     }
     cumpleLasPropiedades(raw, readMarkdownLine(raw))
+  }
+})
+
+/* ── De lo que se ve a la cadena cruda ── */
+
+test("lo que se ve: sin marcas, con los escapes resueltos", (): void => {
+  assert.equal(visibleText(readMarkdownLine("# a **b** [c](#id) \\*")), "a b c *")
+  assert.equal(visibleText(readMarkdownLine("")), "")
+  assert.equal(visibleText(readMarkdownLine("# ")), "")
+})
+
+// Entrada cruda, posición en lo que se ve y posición esperada en la cruda.
+const POSICIONES: ReadonlyArray<readonly [string, string, number, number]> = [
+  ["vacía", "", 0, 0],
+  ["texto llano, en medio", "hola", 2, 2],
+  ["texto llano, al final", "hola", 4, 4],
+  ["al principio, antes de las marcas", "**b**", 0, 0],
+  ["dentro de la negrita", "**bc**", 1, 3],
+  ["al final, tras las marcas que cierran", "**b**", 1, 5],
+  ["entre dos tramos, pegada a la izquierda", "a **b** c", 2, 2],
+  ["tras la negrita, antes de su cierre", "a **b** c", 3, 5],
+  ["en el texto de un enlace", "ver [web](#id)", 5, 6],
+  ["un enlace al final: el final de la cadena", "ver [web](#id)", 7, 14],
+  ["título: el principio va tras el «# »", "# Título", 0, 2],
+  ["título vacío", "# ", 0, 2],
+  ["un escape: lo visible salta la barra", "\\*x", 1, 2],
+  ["más allá de lo que se ve, el final", "a*b*", 9, 4],
+  ["antes del principio, el principio", "a", -1, 0],
+  ["emoji (par sustituto), antes del cierre", "**😀**x", 2, 4],
+]
+
+for (const [que, raw, visible, esperado] of POSICIONES) {
+  test(`posición cruda: ${que}`, (): void => {
+    assert.equal(rawOffset(readMarkdownLine(raw), visible), esperado)
+  })
+}
+
+test("posición cruda: llevar cada posición visible y volver da la misma, en toda la tabla", (): void => {
+  for (const [, raw] of CASOS) {
+    const linea: FormattedLine = readMarkdownLine(raw)
+    const visible: string = visibleText(linea)
+    for (let v: number = 1; v < visible.length; v++) {
+      const crudo: number = rawOffset(linea, v)
+      /* Lo que se ve a la izquierda de la posición cruda es lo de antes de v. */
+      const izquierda: string = linea.spans
+        .filter((s: LineSpan): boolean => s.kind === "text" && s.start < crudo)
+        .map((s: LineSpan): string => s.text.slice(0, crudo - s.start))
+        .join("")
+      assert.equal(izquierda, visible.slice(0, v), `${JSON.stringify(raw)} en ${v}`)
+    }
   }
 })

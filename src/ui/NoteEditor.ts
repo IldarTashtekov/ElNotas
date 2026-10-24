@@ -5,8 +5,9 @@
  *
  * Qué hace cada tecla lo decide `editor.ts`; aquí sólo se leen los eventos y se
  * pone el cursor donde toca. La línea que se está escribiendo no se repinta
- * nunca: ahí manda lo que se teclea. Sólo ella es editable; las demás son
- * texto que se selecciona de una a otra, y se copia como texto plano.
+ * nunca: ahí manda lo que se teclea. Sólo ella es editable, y se ve en crudo;
+ * las demás, formateadas, son texto que se selecciona de una a otra, y se copia
+ * como texto plano.
  */
 
 import type { Content, ContentId, Note, NoteId, UseCases } from "#core/index"
@@ -21,6 +22,8 @@ import {
   toggleCheckbox,
   toggleChecked,
 } from "./editor.js"
+import type { FormattedLine, LineSpan, TextSpan } from "./markdownLine.js"
+import { rawOffset, readMarkdownLine } from "./markdownLine.js"
 import { lastLine, lineBeside, locate } from "./noteTree.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { WritingMode } from "./writingMode.js"
@@ -95,14 +98,48 @@ const puntoDeTexto = (x: number, y: number): { readonly nodo: Node; readonly off
   return r === null ? null : { nodo: r.startContainer, offset: r.startOffset }
 }
 
-/** La letra del campo donde cayó el dedo; si no se sabe, el final de la línea. */
-const offsetEnPunto = (campo: HTMLElement, x: number, y: number): number => {
+/** La letra de lo que se ve en el campo donde cayó el dedo, o `null` si no se sabe. */
+const offsetEnPunto = (campo: HTMLElement, x: number, y: number): number | null => {
   const punto: { readonly nodo: Node; readonly offset: number } | null = puntoDeTexto(x, y)
-  if (punto === null || !campo.contains(punto.nodo)) return campo.textContent?.length ?? 0
+  if (punto === null || !campo.contains(punto.nodo)) return null
   const hasta: Range = document.createRange()
   hasta.selectNodeContents(campo)
   hasta.setEnd(punto.nodo, punto.offset)
   return hasta.toString().length
+}
+
+/* ────────────────────────── Crudo o formateado ──────────────────────────── */
+
+/** Pinta la línea formateada: un `span` por tramo visible, con su estilo; las marcas no se pintan. */
+const pintarFormateada = (campo: HTMLElement, raw: string): void => {
+  const linea: FormattedLine = readMarkdownLine(raw)
+  const tramos: ReadonlyArray<HTMLSpanElement> = linea.spans
+    .filter((s: LineSpan): s is TextSpan => s.kind === "text")
+    .map((s: TextSpan): HTMLSpanElement => {
+      const el: HTMLSpanElement = elemento("span", s.text)
+      el.classList.toggle("md-negrita", s.bold)
+      el.classList.toggle("md-cursiva", s.italic)
+      /* Sólo el aspecto: abrirlo es de la burbuja. Un `<a>` se iría al tocarlo. */
+      el.classList.toggle("md-enlace", s.link !== null)
+      return el
+    })
+  campo.replaceChildren(...tramos)
+  campo.classList.toggle("md-titulo", linea.heading)
+  rellenarSiVacia(campo)
+}
+
+/** Si el campo ya muestra esa cadena en crudo, en un solo nodo de texto. */
+const muestraEnCrudo = (campo: HTMLElement, raw: string): boolean =>
+  raw === ""
+    ? campo.textContent === "" && campo.querySelector("span") === null
+    : campo.childNodes.length === 1 &&
+      campo.firstChild?.nodeType === Node.TEXT_NODE &&
+      campo.textContent === raw
+
+const pintarEnCrudo = (campo: HTMLElement, raw: string): void => {
+  campo.classList.remove("md-titulo")
+  if (!muestraEnCrudo(campo, raw)) campo.textContent = raw
+  rellenarSiVacia(campo)
 }
 
 /** Si el cursor está en la primera (o la última) fila visual del campo. */
@@ -206,13 +243,10 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
       },
       create: crearLinea,
       update: (fila: Element, l: Content): void => {
-        const campo: Element | null = fila.querySelector(":scope > .texto")
+        const campo: HTMLElement | null = fila.querySelector<HTMLElement>(":scope > .texto")
         /* ⚠️ La regla del editor: el campo con el foco no se toca, salvo que lo
            haya cambiado una orden. */
-        if (campo !== null && (enOrden || campo !== document.activeElement)) {
-          setTextIfChanged(campo, l.text)
-          rellenarSiVacia(campo)
-        }
+        if (campo !== null && (enOrden || campo !== document.activeElement)) pintarCampo(campo, l.text)
         if (!isCheckBox(l)) return
         const marca: Element | null = fila.querySelector(":scope > .marca")
         if (marca !== null) {
@@ -237,23 +271,61 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     empezar.hidden = nota.content.length > 0
   }
 
-  /* ── La línea activa: la única editable ── */
+  /* ── La línea activa: la única editable, y en crudo ── */
 
   /* Una línea editable es un mundo aparte: la selección no sale de ella. Las
      demás son texto normal, que se selecciona de corrido y se copia. */
   const editable: string = textoPlano ? "plaintext-only" : "true"
   let activa: HTMLElement | null = null
+  /** Lo último que se pintó formateado en cada campo: si no cambió, no se rehace. */
+  const formateadoCon: WeakMap<HTMLElement, string> = new WeakMap<HTMLElement, string>()
+
+  /** La activa, en crudo; las demás, formateadas. */
+  const pintarCampo = (campo: HTMLElement, raw: string): void => {
+    if (campo === activa) {
+      formateadoCon.delete(campo)
+      pintarEnCrudo(campo, raw)
+      return
+    }
+    if (formateadoCon.get(campo) === raw) return
+    formateadoCon.set(campo, raw)
+    pintarFormateada(campo, raw)
+  }
+
+  /** La cadena cruda de la línea de ese campo, según la nota; si ya no está, lo que se ve. */
+  const crudoDe = (campo: HTMLElement): string => {
+    const id: ContentId | null = idDe(campo)
+    const nota: Note | undefined = deps.note()
+    const linea: Content | undefined =
+      id === null || nota === undefined ? undefined : locate(nota.content, id)?.line
+    return linea?.text ?? campo.textContent ?? ""
+  }
+
+  /** De una letra de lo que se ve en el campo a su sitio en la cadena cruda. */
+  const aCrudo = (campo: HTMLElement, mostrado: number): number =>
+    campo === activa ? mostrado : rawOffset(readMarkdownLine(crudoDe(campo)), mostrado)
+
+  /** Deja de editar ese campo y lo vuelve a pintar formateado, si sigue en la nota. */
+  const apagar = (campo: HTMLElement): void => {
+    campo.removeAttribute("contenteditable")
+    if (campo.isConnected) pintarCampo(campo, crudoDe(campo))
+  }
 
   const activar = (campo: HTMLElement): void => {
-    if (activa !== null && activa !== campo) activa.removeAttribute("contenteditable")
+    if (activa === campo) return
+    const anterior: HTMLElement | null = activa
     activa = campo
+    if (anterior !== null) apagar(anterior)
+    /* Se pinta en crudo antes de hacerla editable y de poner el cursor: el
+       offset que llega cuenta la cadena cruda. */
+    pintarCampo(campo, crudoDe(campo))
     if (campo.getAttribute("contenteditable") !== editable) campo.contentEditable = editable
   }
 
   const desactivar = (): void => {
-    activa?.removeAttribute("contenteditable")
-    if (activa !== null) rellenarSiVacia(activa)
+    const anterior: HTMLElement | null = activa
     activa = null
+    if (anterior !== null) apagar(anterior)
   }
 
   /** Pone el cursor en esa línea, que pasa a ser la activa. */
@@ -285,12 +357,17 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const campo: HTMLElement | null =
       evento.target instanceof Element ? evento.target.closest<HTMLElement>(".texto") : null
     if (campo === null || campo === activa || arrastro(evento)) return
-    ponerCursor(campo, offsetEnPunto(campo, evento.clientX, evento.clientY))
+    /* Se toca lo formateado: la letra de lo que se ve se lleva a la cadena cruda. */
+    const visto: number | null = offsetEnPunto(campo, evento.clientX, evento.clientY)
+    ponerCursor(campo, visto === null ? crudoDe(campo).length : aCrudo(campo, visto))
   })
 
-  /* ── Copiar: texto plano, una línea por renglón ── */
+  /* ── Copiar: texto plano, una línea por renglón, como se ve ── */
 
-  /** Dónde empieza o acaba la selección, en una línea; si cae entre líneas, en la más cercana de dentro. */
+  /**
+   * Dónde empieza o acaba la selección, en una línea, contando lo que se ve; si
+   * cae entre líneas, en la más cercana de dentro.
+   */
   const extremo = (rango: Range, cual: "inicio" | "fin"): Caret | null => {
     const nodo: Node = cual === "inicio" ? rango.startContainer : rango.endContainer
     const offset: number = cual === "inicio" ? rango.startOffset : rango.endOffset
@@ -322,7 +399,8 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const desde: Caret | null = extremo(rango, "inicio")
     const hasta: Caret | null = extremo(rango, "fin")
     if (nota === undefined || desde === null || hasta === null) return
-    evento.clipboardData.setData("text/plain", copiedText(nota.content, desde, hasta))
+    const enCrudo: ContentId | null = activa === null ? null : idDe(activa)
+    evento.clipboardData.setData("text/plain", copiedText(nota.content, desde, hasta, enCrudo))
     evento.preventDefault()
   }
   document.addEventListener("copy", copiar)
@@ -444,7 +522,8 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const id: ContentId | null = idDe(nodo instanceof Element ? nodo : (nodo?.parentElement ?? null))
     const campo: HTMLElement | null = id === null ? null : campoDe(id)
     const offset: number | null = campo === null ? null : leerCursor(campo)
-    return id === null || offset === null ? null : { line: id, offset }
+    /* Si cae en una formateada —tras seleccionar—, la letra vista se lleva a la cruda. */
+    return id === null || campo === null || offset === null ? null : { line: id, offset: aCrudo(campo, offset) }
   }
   const recordarCursor = (): void => {
     const ahora: Caret | null = cursorEnVivo()
@@ -472,7 +551,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const ultima: Content | null = lastLine(nota.content)
     if (ultima === null) return empezarAEscribir()
     const campo: HTMLElement | null = campoDe(ultima.id)
-    if (campo !== null) ponerCursor(campo, campo.textContent?.length ?? 0)
+    if (campo !== null) ponerCursor(campo, ultima.text.length)
   })
 
   /* ── La barra: el interruptor de casilla y anidar ── */

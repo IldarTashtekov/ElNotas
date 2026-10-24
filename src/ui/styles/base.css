@@ -30,6 +30,8 @@
     --velo: rgb(0 0 0 / 0.6);
     /* El efecto de pantalla vieja: el halo de las letras y las líneas de barrido. */
     --brillo: 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent);
+    /* Más brillo: la negrita y los títulos de una nota. */
+    --brillo-fuerte: 0 0 3px var(--ink), 0 0 8px color-mix(in srgb, var(--ink) 70%, transparent);
     --barrido: rgb(0 0 0 / 0.22);
     /* Los puntos del lienzo: --dim a media intensidad. */
     --rejilla: color-mix(in srgb, var(--dim) 50%, transparent);

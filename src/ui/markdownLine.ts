@@ -361,3 +361,34 @@ export const readMarkdownLine = (raw: string): FormattedLine => {
   leer(raw, heading ? 2 : 0, raw.length, { bold: false, italic: false, link: null }, true, salida, enlaces)
   return { heading, spans: salida, links: enlaces }
 }
+
+/* ───────────────────── De lo que se ve a la cadena cruda ───────────────────── */
+
+const tramosDeTexto = (line: FormattedLine): ReadonlyArray<TextSpan> =>
+  line.spans.filter((s: LineSpan): s is TextSpan => s.kind === "text")
+
+/** Lo que se ve de la línea formateada: sus tramos de texto, sin las marcas. */
+export const visibleText = (line: FormattedLine): string =>
+  tramosDeTexto(line)
+    .map((s: TextSpan): string => s.text)
+    .join("")
+
+/**
+ * Dónde cae en la cadena cruda la posición `visible` de lo que se ve (cuántos
+ * caracteres visibles quedan a su izquierda). Al principio, tras el `# ` si es
+ * título; al final, el final de la cadena. En medio, pegada al carácter de su
+ * izquierda: entre dos tramos, antes de las marcas que los separan.
+ */
+export const rawOffset = (line: FormattedLine, visible: number): number => {
+  const ultimo: LineSpan | undefined = line.spans[line.spans.length - 1]
+  const largo: number = ultimo === undefined ? 0 : ultimo.end
+  if (visible <= 0) return line.heading ? 2 : 0
+  if (visible >= visibleText(line).length) return largo
+  let antes: number = 0
+  for (const s of tramosDeTexto(line)) {
+    const tramo: number = s.end - s.start
+    if (visible <= antes + tramo) return s.start + (visible - antes)
+    antes += tramo
+  }
+  return largo
+}

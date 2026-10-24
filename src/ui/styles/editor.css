@@ -1,6 +1,7 @@
 /*
  * La nota: una línea por renglón, la casilla que se rellena con el ✓, las
- * marcadas tachadas y las hijas sangradas.
+ * marcadas tachadas, las hijas sangradas y el formato de las líneas que no se
+ * están escribiendo.
  */
 
 .vista-nota {
@@ -38,6 +39,25 @@
     tab-size: 4;
     white-space: pre-wrap;
     word-break: break-word;
+
+    /* El formato: sólo en las que no se escriben; la activa se ve en crudo. */
+    & .md-negrita {
+      font-weight: 700;
+      text-shadow: var(--brillo-fuerte);
+    }
+    & .md-cursiva {
+      font-style: italic;
+    }
+    & .md-enlace {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    /* El título, sin letra más grande: más brillo y una raya debajo. */
+    &.md-titulo {
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+      text-shadow: var(--brillo-fuerte);
+    }
   }
 }
 /* La casilla: una caja que se rellena con el ✓. */
