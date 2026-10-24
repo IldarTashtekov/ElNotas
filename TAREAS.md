@@ -137,6 +137,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       que se pueda de `dragReorder.ts` y `dropIndex.ts`. **Se cierra cuando** la acción tiene sus
       pruebas de no-op y su rotura, `check` pasa y la lista manual tiene sus pasos, en el ordenador
       y en el móvil.
+      **Hecho en el ordenador** (`1023db8`, `618ad5b`; sección L, pasada 4). **Falta L7 en el
+      móvil**, que pasa el usuario.
 - [ ] **3. Selección de nodos en el lienzo** *(pensar)*. Un botón junto a la mira activa el modo,
       en vídeo inverso. Arrastrar sobre vacío **o sobre un nodo sin marcar** dibuja un rectángulo:
       al soltar, se marca **todo lo que toca** y sustituye a la selección anterior, y el

@@ -274,6 +274,31 @@ siempre.
 Una tabla por pasada. En *Resultado*: ✅, ❌ con lo que pasó, o «no se puede probar aquí» y por
 qué.
 
+### Pasada 4 — escritorio, sólo L (reordenar, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-24 |
+| Navegador y versión | Chrome 152, el navegador del panel (Claude/3.1623.0) |
+| Quién | Claude, en el panel |
+| Commit | `618ad5b`, árbol limpio |
+| Origen | `localhost:8001`, con lo de la pasada 3 |
+
+| Paso | Resultado |
+|---|---|
+| L1 | ✅ |
+| L2 | ✅ |
+| L3 | ✅ — Huevos y Pan, separadas, quedan juntas delante de Plano; sobrevive a recargar |
+| L4 | ✅ |
+| L5 | ✅ — la revisión del contexto no cambia |
+| L6 | ✅ — «Nueva Nota» sigue oculta |
+| L7 | ⏭ no se puede aquí — el arrastre con el dedo; lo pasa el usuario en el móvil |
+
+Notas: en la primera vuelta, sobre `1023db8`, L5 cayó (❌): tocar el ⠿ de una fila sin
+seleccionar la sumaba y movía el bloque. Arreglado en `618ad5b`: el arrastre empieza al mover
+el dedo. La raya de dónde caerá se miró a mitad de arrastre con eventos de puntero lanzados
+desde la consola.
+
 ### Pasada 3 — escritorio, sólo K (los ocultos, Fase 10)
 
 | | |
