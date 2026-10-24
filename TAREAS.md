@@ -89,7 +89,7 @@ siete ideas entran cinco; los subcontextos se aparcan (*Ideas aparcadas*) y «fi
 porque reordenar lo cubre. **Sin dependencias y sin migrar**: ningún cambio obliga a convertir lo
 guardado. **Orden:** lo previsible primero (1-3), el editor al final (4-6), con una parada para
 probar el 4 en el móvil antes de construir el Markdown encima. **El calendario**, propuesto el
-2026-10-24, **sale de esta fase** (2026-10-25) a la 11, con el formato y los enlaces en los pósits.
+2026-10-24, **sale de esta fase** (2026-10-25) a la 10.2, con el formato y los enlaces en los pósits.
 
 **Decidido con el usuario el 2026-10-18:**
 - **Ocultos, por contexto** (al estilo de los archivados de WhatsApp): lo oculto **sigue siendo del
@@ -245,7 +245,7 @@ los dos agentes y el recorrido.
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa y la auditoría no deja nada falso.
 
-### Fase 11 — Calendario, y formato y enlaces en los pósits del lienzo — PLANIFICADA, empieza al cerrar la 10.1
+### Fase 10.2 — Calendario, y formato y enlaces en los pósits del lienzo — PLANIFICADA, empieza al cerrar la 10.1
 
 **Decidida con el usuario el 2026-10-25**: dos ideas que estaban sin hueco, juntas en una fase
 detrás de la 10.1. **Las dos, sin plantear**: se plantean con el usuario antes de construir nada.
