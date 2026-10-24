@@ -5,11 +5,13 @@
  *
  * Qué hace cada tecla lo decide `editor.ts`; aquí sólo se leen los eventos y se
  * pone el cursor donde toca. La línea que se está escribiendo no se repinta
- * nunca: ahí manda lo que se teclea.
+ * nunca: ahí manda lo que se teclea. Sólo ella es editable; las demás son
+ * texto que se selecciona de una a otra, y se copia como texto plano.
  */
 
 import type { Content, ContentId, Note, NoteId, UseCases } from "#core/index"
 import { contentId, isCheckBox } from "#core/index"
+import { copiedText } from "./copyText.js"
 import { elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
 import {
@@ -71,6 +73,28 @@ const ponerCursorEn = (campo: HTMLElement, offset: number): void => {
   rango.collapse(true)
   sel.removeAllRanges()
   sel.addRange(rango)
+}
+
+/** El punto del texto que cae bajo (x, y), con lo que tenga el navegador. */
+const puntoDeTexto = (x: number, y: number): { readonly nodo: Node; readonly offset: number } | null => {
+  if (typeof document.caretPositionFromPoint === "function") {
+    const p: CaretPosition | null = document.caretPositionFromPoint(x, y)
+    return p === null ? null : { nodo: p.offsetNode, offset: p.offset }
+  }
+  /* Safari antiguo sólo tiene el de antes, con otro nombre. */
+  const r: Range | null =
+    typeof document.caretRangeFromPoint === "function" ? document.caretRangeFromPoint(x, y) : null
+  return r === null ? null : { nodo: r.startContainer, offset: r.startOffset }
+}
+
+/** La letra del campo donde cayó el dedo; si no se sabe, el final de la línea. */
+const offsetEnPunto = (campo: HTMLElement, x: number, y: number): number => {
+  const punto: { readonly nodo: Node; readonly offset: number } | null = puntoDeTexto(x, y)
+  if (punto === null || !campo.contains(punto.nodo)) return campo.textContent?.length ?? 0
+  const hasta: Range = document.createRange()
+  hasta.selectNodeContents(campo)
+  hasta.setEnd(punto.nodo, punto.offset)
+  return hasta.toString().length
 }
 
 /** Si el cursor está en la primera (o la última) fila visual del campo. */
@@ -144,9 +168,9 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const fila: HTMLElement = elemento("div")
     fila.dataset["id"] = content.id
     fila.className = isCheckBox(content) ? "linea casilla" : "linea"
+    /* Nace sin editar: sólo lo es la línea activa, y lo pone `activar`. */
     const campo: HTMLSpanElement = elemento("span")
     campo.className = "texto"
-    campo.contentEditable = textoPlano ? "plaintext-only" : "true"
     campo.spellcheck = true
     if (isCheckBox(content)) {
       const marca: HTMLButtonElement = elemento("button")
@@ -204,6 +228,85 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     empezar.hidden = nota.content.length > 0
   }
 
+  /* ── La línea activa: la única editable ── */
+
+  /* Una línea editable es un mundo aparte: la selección no sale de ella. Las
+     demás son texto normal, que se selecciona de corrido y se copia. */
+  const editable: string = textoPlano ? "plaintext-only" : "true"
+  let activa: HTMLElement | null = null
+
+  const activar = (campo: HTMLElement): void => {
+    if (activa !== null && activa !== campo) activa.removeAttribute("contenteditable")
+    activa = campo
+    if (campo.getAttribute("contenteditable") !== editable) campo.contentEditable = editable
+  }
+
+  const desactivar = (): void => {
+    activa?.removeAttribute("contenteditable")
+    activa = null
+  }
+
+  /** Pone el cursor en esa línea, que pasa a ser la activa. */
+  const ponerCursor = (campo: HTMLElement, offset: number): void => {
+    activar(campo)
+    ponerCursorEn(campo, offset)
+  }
+
+  /* Bajar el dedo fuera de la activa la apaga: si arrastra, selecciona de corrido. */
+  lineas.addEventListener("pointerdown", (evento: PointerEvent): void => {
+    if (activa === null) return
+    if (evento.target instanceof Node && activa.contains(evento.target)) return
+    desactivar()
+  })
+
+  /* Un toque sin arrastrar en otra línea la activa, con el cursor donde cayó. Tras
+     arrastrar para seleccionar también llega un `click`: ése no edita nada. */
+  lineas.addEventListener("click", (evento: MouseEvent): void => {
+    const campo: HTMLElement | null =
+      evento.target instanceof Element ? evento.target.closest<HTMLElement>(".texto") : null
+    if (campo === null || campo === activa || !cursorColapsado()) return
+    ponerCursor(campo, offsetEnPunto(campo, evento.clientX, evento.clientY))
+  })
+
+  /* ── Copiar: texto plano, una línea por renglón ── */
+
+  /** Dónde empieza o acaba la selección, en una línea; si cae entre líneas, en la más cercana de dentro. */
+  const extremo = (rango: Range, cual: "inicio" | "fin"): Caret | null => {
+    const nodo: Node = cual === "inicio" ? rango.startContainer : rango.endContainer
+    const offset: number = cual === "inicio" ? rango.startOffset : rango.endOffset
+    const el: Element | null = nodo instanceof Element ? nodo : nodo.parentElement
+    const dentro: HTMLElement | null = el?.closest<HTMLElement>(".texto") ?? null
+    if (dentro !== null && lineas.contains(dentro)) {
+      const id: ContentId | null = idDe(dentro)
+      const hasta: Range = document.createRange()
+      hasta.selectNodeContents(dentro)
+      hasta.setEnd(nodo, offset)
+      return id === null ? null : { line: id, offset: hasta.toString().length }
+    }
+    const campos: ReadonlyArray<HTMLElement> = [...lineas.querySelectorAll<HTMLElement>(".texto")]
+    const campo: HTMLElement | undefined =
+      cual === "inicio"
+        ? campos.find((c: HTMLElement): boolean => rango.comparePoint(c, 0) >= 0)
+        : [...campos].reverse().find((c: HTMLElement): boolean => rango.comparePoint(c, c.childNodes.length) <= 0)
+    const id: ContentId | null = campo === undefined ? null : idDe(campo)
+    if (campo === undefined || id === null) return null
+    return { line: id, offset: cual === "inicio" ? 0 : (campo.textContent?.length ?? 0) }
+  }
+
+  const copiar = (evento: ClipboardEvent): void => {
+    const sel: Selection | null = window.getSelection()
+    if (sel === null || sel.rangeCount === 0 || sel.isCollapsed || evento.clipboardData === null) return
+    const rango: Range = sel.getRangeAt(0)
+    if (!lineas.contains(rango.commonAncestorContainer)) return
+    const nota: Note | undefined = deps.note()
+    const desde: Caret | null = extremo(rango, "inicio")
+    const hasta: Caret | null = extremo(rango, "fin")
+    if (nota === undefined || desde === null || hasta === null) return
+    evento.clipboardData.setData("text/plain", copiedText(nota.content, desde, hasta))
+    evento.preventDefault()
+  }
+  document.addEventListener("copy", copiar)
+
   /* ── Aplicar lo que decide el editor ── */
 
   /** Ejecuta una orden del editor y pone el cursor y el modo que devuelva. */
@@ -220,7 +323,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     ultimo = resultado.caret
     if (resultado.caret === null) return
     const campo: HTMLElement | null = campoDe(resultado.caret.line)
-    if (campo !== null) ponerCursorEn(campo, resultado.caret.offset)
+    if (campo !== null) ponerCursor(campo, resultado.caret.offset)
   }
 
   const cursorActual = (evento: Event): Caret | null => {
@@ -255,7 +358,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     evento.preventDefault()
     /* Con ↑ ↓ se conserva la columna si cabe; con ← → se va al borde de la otra. */
     const offset: number = alBorde ? (hacia === "prev" ? otra.text.length : 0) : caret.offset
-    ponerCursorEn(campo, offset)
+    ponerCursor(campo, offset)
   }
 
   lineas.addEventListener("keydown", (evento: KeyboardEvent): void => {
@@ -279,7 +382,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
       const nuevo: string = `${texto.slice(0, caret.offset)}\t${texto.slice(caret.offset)}`
       campo.textContent = nuevo
       useCases.setText(noteId, caret.line, nuevo)
-      ponerCursorEn(campo, caret.offset + 1)
+      ponerCursor(campo, caret.offset + 1)
       return
     }
     if (campo === null || !cursorColapsado()) return
@@ -342,12 +445,14 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
      escribir; si tiene líneas, al final de la última que se ve. */
   element.addEventListener("click", (evento: MouseEvent): void => {
     if (evento.target !== element && evento.target !== lineas) return
+    /* Arrastrar de una línea a otra acaba en un `click` sobre las líneas: es una selección. */
+    if (!cursorColapsado()) return
     const nota: Note | undefined = deps.note()
     if (nota === undefined) return
     const ultima: Content | null = lastLine(nota.content)
     if (ultima === null) return empezarAEscribir()
     const campo: HTMLElement | null = campoDe(ultima.id)
-    if (campo !== null) ponerCursorEn(campo, campo.textContent?.length ?? 0)
+    if (campo !== null) ponerCursor(campo, campo.textContent?.length ?? 0)
   })
 
   /* ── La barra: el interruptor de casilla y anidar ── */
@@ -375,7 +480,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     pintarBarra()
     const caret: Caret | null = cursorRecordado()
     const campo: HTMLElement | null = caret === null ? null : campoDe(caret.line)
-    if (caret !== null && campo !== null) ponerCursorEn(campo, caret.offset)
+    if (caret !== null && campo !== null) ponerCursor(campo, caret.offset)
   })
   anidar.classList.add("anidar")
 
@@ -395,6 +500,9 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     element,
     modeButtons: [casilla, anidar],
     refresh,
-    destroy: (): void => document.removeEventListener("selectionchange", recordarCursor),
+    destroy: (): void => {
+      document.removeEventListener("selectionchange", recordarCursor)
+      document.removeEventListener("copy", copiar)
+    },
   }
 }

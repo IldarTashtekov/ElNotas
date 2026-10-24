@@ -156,6 +156,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       prueba del editor, era una decisión. **Se cierra cuando** `check` pasa, la lista del editor
       tiene sus pasos, y **el usuario lo ha probado en su móvil y da el visto bueno antes de
       empezar el 5**.
+      **Hecho en el ordenador** (sección M de `VERIFICACION-MANUAL-EDITOR.md`, pasada 3). **Falta
+      la prueba del usuario en el móvil**: M4 (pulsación larga y asas) y escribir como siempre.
 - [ ] **5. Markdown en el core: los enlaces y su integridad** *(pensar)*. Encontrar los enlaces
       internos dentro de un texto (`[texto](nota:id)`, `diagrama:id`, `contexto:id`), puro y en el
       core: al dominio sólo le importan los enlaces, no la negrita. **Borrar** una nota, un

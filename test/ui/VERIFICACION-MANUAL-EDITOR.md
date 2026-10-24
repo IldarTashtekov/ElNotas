@@ -177,6 +177,26 @@ setTimeout(() => console.log("cambios en pantalla:", cambios), 700)
 
 ---
 
+## M. Seleccionar y copiar
+
+Con una nota de un texto, una casilla marcada con dos hijas, y otro texto.
+
+- **M1.** Al abrir la nota, **ninguna línea tiene cursor**. Tocar en medio de una palabra pone el
+  cursor **donde se tocó**, y sólo esa línea se edita. *(Con la consola.)*
+  `document.querySelectorAll("[contenteditable]").length` vale **1**.
+- **M2.** *(Escritorio.)* Arrastrar desde la mitad de la primera línea hasta la mitad de una hija:
+  la selección va **de corrido**, cruzando la casilla, en **vídeo inverso**.
+- **M3.** ⚠️ Copiar (Ctrl/Cmd + C) y pegarlo **fuera de la app**, en un editor de texto: **una
+  línea por renglón**, sin ✓ ni renglones vacíos de más, la primera y la última cortadas donde
+  empezaba y acababa la selección.
+- **M4.** *(Móvil.)* ⚠️ **Pulsación larga** en una palabra de una línea que no se está
+  escribiendo: sale la selección del sistema, con sus **asas**, que **cruzan líneas**. *Copiar*,
+  en su menú, copia como en M3.
+- **M5.** Con algo seleccionado, **un toque sin arrastrar** en una línea la hace editable con el
+  cursor ahí, y la selección se va.
+- **M6.** Intro, Retroceso al principio y las flechas, como en C, D y G: **la que se edita pasa a
+  ser la línea a la que va el cursor**, y la anterior deja de serlo.
+
 ## Comportamientos conocidos
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:
@@ -185,6 +205,8 @@ No son fallos; se anotan para que no se marquen como tales, y para decidir si se
   decisión (2026-09-29): pueden existir notas con el mismo nombre; lo que las distingue es su id.
 - **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y
   **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas del editor, en `TAREAS.md`.
+- **Una selección que empieza en la línea que se está escribiendo no sale de ella**: el navegador
+  no deja que salga de un campo editable. Para seleccionar varias, se empieza en otra línea.
 
 ---
 
