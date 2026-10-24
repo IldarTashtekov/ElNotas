@@ -225,12 +225,12 @@ export const ROTURAS = [
     prueba: "si están todas, devuelve LAS MISMAS capas",
   },
   {
-    nombre: "capas: sólo una nota encima de un diagrama",
+    nombre: "capas: la cadena se corta en la primera capa sin forma",
     fichero: "src/ui/openLayers.ts",
-    buscar: "if (capa === null || !cabeEncima(capas, capa)) break",
-    poner: "if (capa === null || (!cabeEncima(capas, capa) && (false as boolean))) break",
+    buscar: "if (capa === null) break",
+    poner: "if (capa === null) continue",
     caza: "pruebas",
-    prueba: "lo que en la app no puede abrirse así se corta: sólo una nota encima de un diagrama",
+    prueba: "se queda con las de abajo hasta la primera que no tiene forma",
   },
   {
     nombre: "capas: al arrancar se reabre sólo lo que existe",
@@ -239,6 +239,32 @@ export const ROTURAS = [
     poner: "leido.ok ? ([parseOpenLayers(leido.value), state][0] as OpenLayers) : NO_LAYERS",
     caza: "pruebas",
     prueba: "al arrancar, lo guardado que ya no está no se abre",
+  },
+
+  /* ── Los enlaces de una línea ── */
+  {
+    nombre: "enlaces: «constructor» o «__proto__» no son ids de nada",
+    fichero: "src/ui/linkActions.ts",
+    buscar: "Object.prototype.hasOwnProperty.call(registro, id)",
+    poner: "(registro as Record<string, unknown>)[id] !== undefined",
+    caza: "pruebas",
+    prueba: "resolveLink: los nombres de las propiedades de un objeto no son ids",
+  },
+  {
+    nombre: "enlaces: el cursor ha de estar estrictamente dentro",
+    fichero: "src/ui/linkActions.ts",
+    buscar: "l.start < offset && offset < l.end",
+    poner: "l.start <= offset && offset <= l.end",
+    caza: "pruebas",
+    prueba: "linkAtCursor: estrictamente dentro, en la cadena cruda",
+  },
+  {
+    nombre: "enlaces: quitar uno conserva lo escrito dentro, escapes incluidos",
+    fichero: "src/ui/linkActions.ts",
+    buscar: "raw.slice(link.start + 1, cierre.start)",
+    poner: "line.spans.filter((s: LineSpan): boolean => s.kind === \"text\" && s.link === link).map((s: LineSpan): string => s.text).join(\"\")",
+    caza: "pruebas",
+    prueba: "removeLink: los escapes y las marcas de dentro se conservan tal cual",
   },
 
   /* ── El encuadre de los diagramas ── */

@@ -107,7 +107,13 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     )
   const abrirNota = (noteId: NoteId): void =>
     abrirEncima({ kind: "note", id: noteId }, (raiz: HTMLElement): (() => void) =>
-      mountNoteView(raiz, { ...deps, noteId, onExit: back.close }),
+      mountNoteView(raiz, {
+        ...deps,
+        noteId,
+        onExit: back.close,
+        onOpenNote: abrirNota,
+        onOpenDiagram: (id: DiagramId): void => abrirDiagrama(id, false),
+      }),
     )
 
   const abrirDiagrama = (diagramId: DiagramId, editName: boolean): void =>

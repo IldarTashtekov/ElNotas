@@ -148,6 +148,9 @@ export const mountWindowsView = (
         useCases,
         noteId: id,
         note: (): Note | undefined => store.getState().notes[id],
+        state: store.getState,
+        onOpenNote,
+        onOpenDiagram: (otro: DiagramId): void => onOpenDiagram(otro, false),
       })
       const barra: HTMLElement = elemento("div")
       barra.className = "barra barra-modo"

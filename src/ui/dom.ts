@@ -1,7 +1,7 @@
 /**
- * Ayudantes de DOM que comparten las vistas: crear un elemento con su texto, y el
+ * Ayudantes de DOM que comparten las vistas: crear un elemento con su texto, el
  * aviso de ficheros que no se pudieron leer al arrancar, que flota arriba unos
- * segundos y se difumina.
+ * segundos y se difumina, y el aviso breve que se quita solo.
  */
 
 import type { StorageError } from "#core/index"
@@ -56,5 +56,27 @@ export const corruptNotice = (corrupt: ReadonlyArray<StorageError>): HTMLElement
     clearTimeout(espera)
     irse()
   })
+  return aviso
+}
+
+/** El aviso breve que ya está en pantalla, si hay uno. */
+let breveActual: HTMLElement | null = null
+
+/**
+ * Un aviso que flota arriba y en medio y se quita solo a los `ms`, con un
+ * temporizador y no con `transitionend`. Si ya hay uno en pantalla no se apila
+ * otro: se devuelve ése. Lo cuelga de `document.body`.
+ */
+export const briefNotice = (texto: string, ms: number): HTMLElement => {
+  if (breveActual !== null && breveActual.isConnected) return breveActual
+  const aviso: HTMLElement = elemento("p", texto)
+  aviso.className = "aviso aviso-breve"
+  aviso.setAttribute("role", "status")
+  document.body.append(aviso)
+  breveActual = aviso
+  setTimeout((): void => {
+    aviso.remove()
+    if (breveActual === aviso) breveActual = null
+  }, ms)
   return aviso
 }

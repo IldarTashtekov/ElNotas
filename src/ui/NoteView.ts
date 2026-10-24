@@ -6,7 +6,7 @@
  * nace al abrirla y muere al salir.
  */
 
-import type { Note, NoteId, Store, Unsubscribe, UseCases } from "#core/index"
+import type { DiagramId, Note, NoteId, Store, Unsubscribe, UseCases } from "#core/index"
 import { elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
@@ -18,12 +18,15 @@ export interface NoteViewDeps {
   readonly useCases: UseCases
   readonly noteId: NoteId
   readonly onExit: () => void
+  /** Abrir lo que enlaza un enlace de la nota, apilado encima de ella. */
+  readonly onOpenNote: (id: NoteId) => void
+  readonly onOpenDiagram: (id: DiagramId) => void
 }
 
 /** Devuelve la función que la desmonta. */
 export const mountNoteView = (
   raiz: HTMLElement,
-  { store, useCases, noteId, onExit }: NoteViewDeps,
+  { store, useCases, noteId, onExit, onOpenNote, onOpenDiagram }: NoteViewDeps,
 ): (() => void) => {
   const nota = (): Note | undefined => store.getState().notes[noteId]
 
@@ -34,7 +37,14 @@ export const mountNoteView = (
   cabecera.className = "cabecera"
   cabecera.append(titulo.element)
 
-  const editor: NoteEditor = createNoteEditor({ useCases, noteId, note: nota })
+  const editor: NoteEditor = createNoteEditor({
+    useCases,
+    noteId,
+    note: nota,
+    state: store.getState,
+    onOpenNote,
+    onOpenDiagram,
+  })
 
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")
   salir.type = "button"

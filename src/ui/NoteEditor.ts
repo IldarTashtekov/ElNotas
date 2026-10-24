@@ -10,10 +10,10 @@
  * como texto plano.
  */
 
-import type { Content, ContentId, Note, NoteId, UseCases } from "#core/index"
+import type { AppState, Content, ContentId, DiagramId, Note, NoteId, UseCases } from "#core/index"
 import { contentId, isCheckBox } from "#core/index"
 import { copiedText } from "./copyText.js"
-import { elemento } from "./dom.js"
+import { briefNotice, elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
 import {
   pressBackspaceAtStart,
@@ -22,7 +22,11 @@ import {
   toggleCheckbox,
   toggleChecked,
 } from "./editor.js"
-import type { FormattedLine, LineSpan, TextSpan } from "./markdownLine.js"
+import type { LinkBubble } from "./linkBubble.js"
+import { createLinkBubble } from "./linkBubble.js"
+import type { ResolvedLink } from "./linkActions.js"
+import { linkAtCursor, removeLink, resolveLink } from "./linkActions.js"
+import type { FormattedLine, LineLink, LineSpan, TextSpan } from "./markdownLine.js"
 import { rawOffset, readMarkdownLine } from "./markdownLine.js"
 import { lastLine, lineBeside, locate } from "./noteTree.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
@@ -33,6 +37,24 @@ export interface NoteEditorDeps {
   readonly useCases: UseCases
   readonly noteId: NoteId
   readonly note: () => Note | undefined
+  /** El estado entero: los enlaces internos se comprueban contra él. */
+  readonly state: () => AppState
+  /** Abrir lo que enlaza un enlace interno, apilado encima de esta nota. */
+  readonly onOpenNote: (id: NoteId) => void
+  readonly onOpenDiagram: (id: DiagramId) => void
+}
+
+/** Lo que dura «El enlace ya no existe». */
+const AVISO_ROTO_MS: number = 1500
+
+/** Donde está el cursor, dentro de un enlace de la línea activa. */
+interface EnlaceBajoCursor {
+  readonly campo: HTMLElement
+  readonly id: ContentId
+  readonly raw: string
+  readonly linea: FormattedLine
+  readonly link: LineLink
+  readonly rawCursor: number
 }
 
 export interface NoteEditor {
@@ -110,17 +132,29 @@ const offsetEnPunto = (campo: HTMLElement, x: number, y: number): number | null 
 
 /* ────────────────────────── Crudo o formateado ──────────────────────────── */
 
-/** Pinta la línea formateada: un `span` por tramo visible, con su estilo; las marcas no se pintan. */
-const pintarFormateada = (campo: HTMLElement, raw: string): void => {
-  const linea: FormattedLine = readMarkdownLine(raw)
-  const tramos: ReadonlyArray<HTMLSpanElement> = linea.spans
-    .filter((s: LineSpan): s is TextSpan => s.kind === "text")
+/**
+ * Pinta la línea formateada: un `span` por tramo visible, con su estilo; las
+ * marcas no se pintan. Un enlace roto lleva `md-roto` en su último tramo.
+ */
+const pintarFormateada = (
+  campo: HTMLElement,
+  linea: FormattedLine,
+  rotos: ReadonlySet<LineLink>,
+): void => {
+  const visibles: ReadonlyArray<TextSpan> = linea.spans.filter(
+    (s: LineSpan): s is TextSpan => s.kind === "text",
+  )
+  const ultimoDe: Map<LineLink, TextSpan> = new Map<LineLink, TextSpan>()
+  for (const s of visibles) if (s.link !== null) ultimoDe.set(s.link, s)
+  const tramos: ReadonlyArray<HTMLSpanElement> = visibles
     .map((s: TextSpan): HTMLSpanElement => {
       const el: HTMLSpanElement = elemento("span", s.text)
       el.classList.toggle("md-negrita", s.bold)
       el.classList.toggle("md-cursiva", s.italic)
       /* Sólo el aspecto: abrirlo es de la burbuja. Un `<a>` se iría al tocarlo. */
       el.classList.toggle("md-enlace", s.link !== null)
+      /* El `(perdido)` lo añade el CSS: ni el texto ni sus letras cambian. */
+      el.classList.toggle("md-roto", s.link !== null && rotos.has(s.link) && ultimoDe.get(s.link) === s)
       return el
     })
   campo.replaceChildren(...tramos)
@@ -174,7 +208,14 @@ const soportaTextoPlano = (): boolean => {
   return prueba.contentEditable === "plaintext-only"
 }
 
-export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): NoteEditor => {
+export const createNoteEditor = ({
+  useCases,
+  noteId,
+  note,
+  state,
+  onOpenNote,
+  onOpenDiagram,
+}: NoteEditorDeps): NoteEditor => {
   const deps: EditorDeps = { useCases, noteId, note }
   /* Nace apagado al abrir la nota y muere con ella: no se guarda en ningún sitio. */
   let modo: WritingMode = INITIAL_MODE
@@ -195,7 +236,11 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
   empezar.setAttribute("role", "button")
   const element: HTMLElement = elemento("div")
   element.className = "contenido"
-  element.append(lineas, empezar)
+  const burbuja: LinkBubble = createLinkBubble({
+    onOpen: (): void => abrirEnlace(),
+    onRemove: (): void => quitarEnlace(),
+  })
+  element.append(lineas, empezar, burbuja.element)
 
   /* ── Las líneas ── */
 
@@ -263,12 +308,20 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
   }
 
   let pintada: Note | null = null
+  /* Los enlaces internos dependen de qué notas y diagramas hay: si cambian, se repinta. */
+  let pintadasNotas: AppState["notes"] | null = null
+  let pintadosDiagramas: AppState["diagrams"] | null = null
   const refresh = (nota: Note): void => {
-    /* La MISMA nota si nada cambió —un `set-checked` redundante incluido—: ni se mira el DOM. */
-    if (nota === pintada) return
+    const estado: AppState = state()
+    /* La MISMA nota si nada cambió —un `set-checked` redundante incluido—, y las mismas
+       notas y diagramas contra los que se comprueban sus enlaces: ni se mira el DOM. */
+    if (nota === pintada && estado.notes === pintadasNotas && estado.diagrams === pintadosDiagramas) return
     pintada = nota
+    pintadasNotas = estado.notes
+    pintadosDiagramas = estado.diagrams
     pintarLista(lineas, nota.content)
     empezar.hidden = nota.content.length > 0
+    actualizarBurbuja()
   }
 
   /* ── La línea activa: la única editable, y en crudo ── */
@@ -277,8 +330,12 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
      demás son texto normal, que se selecciona de corrido y se copia. */
   const editable: string = textoPlano ? "plaintext-only" : "true"
   let activa: HTMLElement | null = null
-  /** Lo último que se pintó formateado en cada campo: si no cambió, no se rehace. */
-  const formateadoCon: WeakMap<HTMLElement, string> = new WeakMap<HTMLElement, string>()
+  /**
+   * Lo último que se pintó formateado en cada campo: la cadena cruda y si cada
+   * enlace interno resolvía. Si no cambió, no se rehace.
+   */
+  const formateadoCon: WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }> =
+    new WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }>()
 
   /** La activa, en crudo; las demás, formateadas. */
   const pintarCampo = (campo: HTMLElement, raw: string): void => {
@@ -287,9 +344,23 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
       pintarEnCrudo(campo, raw)
       return
     }
-    if (formateadoCon.get(campo) === raw) return
-    formateadoCon.set(campo, raw)
-    pintarFormateada(campo, raw)
+    /* Sólo una línea con `](#` puede llevar un enlace interno: las demás ni se leen aquí. */
+    const linea: FormattedLine = readMarkdownLine(raw)
+    const rotos: Set<LineLink> = new Set<LineLink>()
+    let enlaces: string = ""
+    if (raw.includes("](#")) {
+      const estado: AppState = state()
+      for (const l of linea.links) {
+        if (l.target.kind !== "internal") continue
+        const roto: boolean = resolveLink(estado, l.target.id) === null
+        if (roto) rotos.add(l)
+        enlaces += roto ? "0" : "1"
+      }
+    }
+    const previo: { readonly raw: string; readonly enlaces: string } | undefined = formateadoCon.get(campo)
+    if (previo !== undefined && previo.raw === raw && previo.enlaces === enlaces) return
+    formateadoCon.set(campo, { raw, enlaces })
+    pintarFormateada(campo, linea, rotos)
   }
 
   /** La cadena cruda de la línea de ese campo, según la nota; si ya no está, lo que se ve. */
@@ -326,12 +397,74 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     const anterior: HTMLElement | null = activa
     activa = null
     if (anterior !== null) apagar(anterior)
+    burbuja.hide()
   }
 
   /** Pone el cursor en esa línea, que pasa a ser la activa. */
   const ponerCursor = (campo: HTMLElement, offset: number): void => {
     activar(campo)
     ponerCursorEn(campo, offset)
+    actualizarBurbuja()
+  }
+
+  /* ── La burbuja del enlace: sale con el cursor de la línea activa dentro de uno ── */
+
+  /** El enlace bajo el cursor, si la línea activa se ve, el cursor es un punto y está dentro de uno. */
+  const enlaceBajoCursor = (): EnlaceBajoCursor | null => {
+    const campo: HTMLElement | null = activa
+    /* Sin cajas, la línea está escondida bajo otra capa: no se ofrece nada. */
+    if (campo === null || !campo.isConnected || campo.getClientRects().length === 0) return null
+    if (!cursorColapsado()) return null
+    const rawCursor: number | null = leerCursor(campo)
+    const id: ContentId | null = idDe(campo)
+    if (rawCursor === null || id === null) return null
+    const raw: string = campo.textContent ?? ""
+    const linea: FormattedLine = readMarkdownLine(raw)
+    const link: LineLink | null = linkAtCursor(linea, rawCursor)
+    return link === null ? null : { campo, id, raw, linea, link, rawCursor }
+  }
+
+  const actualizarBurbuja = (): void => {
+    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    if (e === null) {
+      burbuja.hide()
+      return
+    }
+    const rectangulo: DOMRect | undefined = window.getSelection()?.getRangeAt(0).getClientRects()[0]
+    burbuja.show(e.link.saved, e.campo, element, rectangulo?.left ?? e.campo.getBoundingClientRect().left)
+  }
+
+  const abrirEnlace = (): void => {
+    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    if (e === null) return
+    if (e.link.target.kind === "web") {
+      window.open(e.link.target.href, "_blank", "noopener,noreferrer")
+      return
+    }
+    const destino: ResolvedLink = resolveLink(state(), e.link.target.id)
+    if (destino === null) {
+      briefNotice("El enlace ya no existe", AVISO_ROTO_MS)
+      return
+    }
+    /* Lo que se abre encima esconde esta nota: su burbuja no se queda colgada. */
+    burbuja.hide()
+    if (destino.kind === "note") onOpenNote(destino.id)
+    else onOpenDiagram(destino.id)
+  }
+
+  /** Quita las marcas del enlace guardado y deja su texto, como el Tabulador cambia el de la línea. */
+  const quitarEnlace = (): void => {
+    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    if (e === null) return
+    const nuevo: { readonly text: string; readonly cursor: number } = removeLink(
+      e.raw,
+      e.linea,
+      e.link,
+      e.rawCursor,
+    )
+    e.campo.textContent = nuevo.text
+    useCases.setText(noteId, e.id, nuevo.text)
+    ponerCursor(e.campo, nuevo.cursor)
   }
 
   /* Bajar el dedo fuera de la activa la apaga: si arrastra, selecciona de corrido. */
@@ -504,6 +637,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
     if (id === null || campo === null) return
     /* Cada tecla va al estado: el guardado diferido ya agrupa lo que va al disco. */
     useCases.setText(noteId, id, campo.textContent ?? "")
+    actualizarBurbuja()
   })
 
   if (!textoPlano) {
@@ -528,6 +662,7 @@ export const createNoteEditor = ({ useCases, noteId, note }: NoteEditorDeps): No
   const recordarCursor = (): void => {
     const ahora: Caret | null = cursorEnVivo()
     if (ahora !== null) ultimo = ahora
+    actualizarBurbuja()
   }
   document.addEventListener("selectionchange", recordarCursor)
 

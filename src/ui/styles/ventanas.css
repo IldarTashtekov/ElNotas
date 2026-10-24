@@ -270,6 +270,18 @@ ul.ajustes > li {
     pointer-events: none;
   }
 }
+/* El breve, como «El enlace ya no existe»: arriba y en medio, sin tocarse, y se va solo. */
+.aviso-breve {
+  left: 50%;
+  margin: 0;
+  max-width: calc(min(40rem, 100vw) - 2rem);
+  pointer-events: none;
+  position: fixed;
+  top: 0.75rem;
+  transform: translateX(-50%);
+  width: max-content;
+  z-index: 20;
+}
 @keyframes bajar {
   from {
     opacity: 0;

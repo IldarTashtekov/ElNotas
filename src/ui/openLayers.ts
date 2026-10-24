@@ -1,6 +1,7 @@
 /**
- * Lo que había abierto encima de la ventana —una nota, un diagrama, o un
- * diagrama y una nota suya—, para volver a abrirlo cuando la app se recarga,
+ * Lo que había abierto encima de la ventana —notas y diagramas, apilados en
+ * cualquier orden: de una nota se abre otra por un enlace—, para volver a abrirlo
+ * cuando la app se recarga,
  * también cuando el sistema la cierra en segundo plano.
  *
  * Aquí, cómo se lee lo guardado y qué se descarta; dónde se guarda lo pone
@@ -38,16 +39,6 @@ const leerCapa = (x: unknown): OpenLayer | null => {
   return null
 }
 
-/**
- * Si esa capa puede ir encima de las de debajo, tal como se abren en la app: un
- * diagrama sólo desde la ventana, y una nota desde la ventana o desde un diagrama.
- */
-const cabeEncima = (debajo: OpenLayers, capa: OpenLayer): boolean => {
-  const anterior: OpenLayer | undefined = debajo[debajo.length - 1]
-  if (anterior === undefined) return true
-  return debajo.length === 1 && anterior.kind === "diagram" && capa.kind === "note"
-}
-
 /** Lo guardado → las capas. Se queda con las de abajo hasta la primera que no tenga forma. */
 export const parseOpenLayers = (guardado: unknown): OpenLayers => {
   if (!Array.isArray(guardado)) return NO_LAYERS
@@ -55,7 +46,7 @@ export const parseOpenLayers = (guardado: unknown): OpenLayers => {
   let capas: OpenLayers = NO_LAYERS
   for (const valor of leidas) {
     const capa: OpenLayer | null = leerCapa(valor)
-    if (capa === null || !cabeEncima(capas, capa)) break
+    if (capa === null) break
     capas = [...capas, capa]
   }
   return capas

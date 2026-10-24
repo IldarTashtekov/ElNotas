@@ -69,13 +69,20 @@ test("se queda con las de abajo hasta la primera que no tiene forma", (): void =
   assert.deepEqual(parseOpenLayers([null, diagrama]), [])
 })
 
-test("lo que en la app no puede abrirse así se corta: sólo una nota encima de un diagrama", (): void => {
+test("cualquier nota o diagrama puede ir encima de cualquier otra capa, y se conserva toda la cadena", (): void => {
+  const nota: unknown = { kind: "note", id: "n" }
+  const otra: unknown = { kind: "note", id: "m" }
+  const diagrama: unknown = { kind: "diagram", id: "d" }
+  assert.deepEqual(parseOpenLayers([nota, otra]), [nota, otra])
+  assert.deepEqual(parseOpenLayers([nota, diagrama]), [nota, diagrama])
+  assert.deepEqual(parseOpenLayers([diagrama, diagrama]), [diagrama, diagrama])
+  assert.deepEqual(parseOpenLayers([diagrama, nota, diagrama, otra]), [diagrama, nota, diagrama, otra])
+})
+
+test("la cadena se corta en la primera capa sin forma, con lo de encima", (): void => {
   const nota: unknown = { kind: "note", id: "n" }
   const diagrama: unknown = { kind: "diagram", id: "d" }
-  assert.deepEqual(parseOpenLayers([nota, nota]), [nota])
-  assert.deepEqual(parseOpenLayers([nota, diagrama]), [nota])
-  assert.deepEqual(parseOpenLayers([diagrama, diagrama]), [diagrama])
-  assert.deepEqual(parseOpenLayers([diagrama, nota, nota]), [diagrama, nota])
+  assert.deepEqual(parseOpenLayers([nota, diagrama, { kind: "note" }, nota]), [nota, diagrama])
 })
 
 /* ── Lo que ya no está ── */

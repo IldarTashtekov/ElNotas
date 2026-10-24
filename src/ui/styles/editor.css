@@ -21,6 +21,8 @@
 .contenido {
   flex: 1;
   padding: 0.25rem 0 1rem;
+  /* La burbuja del enlace se coloca contra él. */
+  position: relative;
 }
 .linea {
   align-items: baseline;
@@ -51,6 +53,11 @@
     & .md-enlace {
       text-decoration: underline;
       text-underline-offset: 0.2em;
+    }
+    /* Un enlace interno cuyo destino ya no está: lo dice con un añadido que no es texto. */
+    & .md-roto::after {
+      content: " (perdido)";
+      text-decoration: none;
     }
     /* El título, sin letra más grande: más brillo y una raya debajo. */
     &.md-titulo {
@@ -96,4 +103,24 @@
 .empezar {
   cursor: text;
   font-style: italic;
+}
+/* La burbuja de un enlace: bajo la línea activa, con «↗ Abrir» y «Quitar». */
+.burbuja-enlace {
+  background: var(--row);
+  border: 1px solid var(--line);
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  position: absolute;
+  z-index: 1;
+
+  & button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.65rem;
+  }
 }
