@@ -150,6 +150,13 @@ export interface UseCases {
     positionX: number,
     positionY: number,
   ) => Diagram | null
+  /** Desplaza lo mismo varios nodos, con una sola acción: el grupo arrastrado. */
+  readonly shiftNodes: (
+    diagramId: DiagramId,
+    nodeIds: ReadonlyArray<DiagramNodeId>,
+    dx: number,
+    dy: number,
+  ) => Diagram | null
   readonly setNodeDone: (
     diagramId: DiagramId,
     nodeId: DiagramNodeId,
@@ -402,6 +409,14 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         positionY,
         meta: meta(),
       }),
+
+    shiftNodes: (
+      diagramId: DiagramId,
+      nodeIds: ReadonlyArray<DiagramNodeId>,
+      dx: number,
+      dy: number,
+    ): Diagram | null =>
+      trasDiagrama(diagramId, { type: "shift-nodes", diagramId, nodeIds, dx, dy, meta: meta() }),
 
     setNodeDone: (diagramId: DiagramId, nodeId: DiagramNodeId, done: boolean): Diagram | null =>
       trasDiagrama(diagramId, { type: "set-node-done", diagramId, nodeId, done, meta: meta() }),

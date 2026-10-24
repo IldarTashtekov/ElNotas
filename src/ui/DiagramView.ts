@@ -1,6 +1,7 @@
 /**
  * La vista diagrama: la cabecera con el nombre —que se renombra tocándolo—, el
- * lienzo, y abajo la barra con la mira, que lo devuelve al inicio, y el exit.
+ * lienzo, y abajo la barra con la mira, que lo devuelve al inicio, el botón de
+ * seleccionar nodos y el exit.
  *
  * Se sale con el exit o con el atrás. Un nodo-nota abre su nota encima, y al
  * salir de ella se vuelve aquí. Un diagrama que es ventana enseña el mismo
@@ -11,7 +12,8 @@ import type { Diagram, DiagramId, NoteId, Store, Unsubscribe, UseCases } from "#
 import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
-import { createDiagramCanvas, crosshairButton } from "./DiagramCanvas.js"
+import { crosshairButton } from "./canvasButtons.js"
+import { createDiagramCanvas } from "./DiagramCanvas.js"
 import { elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
@@ -61,10 +63,13 @@ export const mountDiagramView = (
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")
   salir.type = "button"
   salir.className = "salir"
-  salir.addEventListener("click", onExit)
+  salir.addEventListener("click", (): void => {
+    lienzo.closeModes()
+    onExit()
+  })
   const barra: HTMLElement = elemento("div")
   barra.className = "barra barra-diagrama"
-  barra.append(crosshairButton(lienzo.recenter), salir)
+  barra.append(crosshairButton(lienzo.recenter), lienzo.selectButton, salir)
 
   const pintar = (): void => {
     const actual: Diagram | undefined = diagrama()

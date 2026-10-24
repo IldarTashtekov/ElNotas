@@ -25,6 +25,7 @@ import {
   setRelationDirected,
   setRelationEnds,
   setRelationLabel,
+  shiftNodes,
 } from "#core/domain/diagramOperations"
 
 /* ─────────────────────────── El diagrama de pruebas ───────────────────────────
@@ -181,6 +182,49 @@ test("setNodePosition: con una posición no finita, devuelve el MISMO diagrama",
 test("setNodePosition: con un nodo que no existe, devuelve el MISMO diagrama", (): void => {
   const d: Diagram = mudanza()
   assert.strictEqual(setNodePosition(d, ID_NODO_INEXISTENTE, 1, 1), d)
+})
+
+/* ────────────────────────────── shiftNodes ────────────────────────────── */
+
+test("shiftNodes desplaza lo mismo a todos los que nombra, y sólo a ellos", (): void => {
+  const d: Diagram = mudanza()
+  const r: Diagram = shiftNodes(d, [ID_CAJAS, ID_COMPRA], 10, -5)
+  assert.equal(nodo(r, ID_CAJAS).positionX, 10)
+  assert.equal(nodo(r, ID_CAJAS).positionY, -5)
+  assert.equal(nodo(r, ID_COMPRA).positionX, 110)
+  assert.equal(nodo(r, ID_COMPRA).positionY, -5)
+  assert.strictEqual(r.nodes[ID_FURGONETA], d.nodes[ID_FURGONETA])
+  assert.strictEqual(r.relations, d.relations)
+})
+
+test("shiftNodes: un id repetido desplaza una vez", (): void => {
+  const d: Diagram = mudanza()
+  const r: Diagram = shiftNodes(d, [ID_CAJAS, ID_CAJAS], 3, 0)
+  assert.equal(nodo(r, ID_CAJAS).positionX, 3)
+})
+
+test("shiftNodes: los que no existen se saltan y los demás se desplazan", (): void => {
+  const d: Diagram = mudanza()
+  const r: Diagram = shiftNodes(d, [ID_NODO_INEXISTENTE, ID_CAJAS], 0, 7)
+  assert.equal(nodo(r, ID_CAJAS).positionY, 7)
+  assert.equal(r.nodes[ID_NODO_INEXISTENTE], undefined)
+})
+
+test("shiftNodes: sin desplazamiento, devuelve el MISMO diagrama", (): void => {
+  const d: Diagram = mudanza()
+  assert.strictEqual(shiftNodes(d, [ID_CAJAS, ID_COMPRA], 0, 0), d)
+})
+
+test("shiftNodes: con un desplazamiento no finito, devuelve el MISMO diagrama", (): void => {
+  const d: Diagram = mudanza()
+  assert.strictEqual(shiftNodes(d, [ID_CAJAS], Number.NaN, 1), d)
+  assert.strictEqual(shiftNodes(d, [ID_CAJAS], 1, Number.POSITIVE_INFINITY), d)
+})
+
+test("shiftNodes: sin ningún nodo que exista, o sin ninguno, devuelve el MISMO diagrama", (): void => {
+  const d: Diagram = mudanza()
+  assert.strictEqual(shiftNodes(d, [ID_NODO_INEXISTENTE], 1, 1), d)
+  assert.strictEqual(shiftNodes(d, [], 1, 1), d)
 })
 
 /* ────────────────────────────── setNodeDone ────────────────────────────── */

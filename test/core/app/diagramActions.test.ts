@@ -1,5 +1,5 @@
 /**
- * Las trece acciones de Diagrama, a través del reducer.
+ * Las catorce acciones de Diagrama, a través del reducer.
  *
  * Las operaciones de dentro de un diagrama ya tienen sus pruebas en
  * `diagramOperations.test.ts`; aquí se prueba lo que añade el reducer: que cada
@@ -146,6 +146,12 @@ const CASOS: ReadonlyArray<Caso> = [
     nombre: "set-node-position",
     cambia: { type: "set-node-position", diagramId: d, nodeId: ID_CAJAS, positionX: 5, positionY: 6, meta: META },
     noAplica: { type: "set-node-position", diagramId: d, nodeId: ID_CAJAS, positionX: 0, positionY: 0, meta: META },
+    comprobar: (x: Diagram): boolean => x.nodes[ID_CAJAS]?.positionX === 5 && x.nodes[ID_CAJAS]?.positionY === 6,
+  },
+  {
+    nombre: "shift-nodes",
+    cambia: { type: "shift-nodes", diagramId: d, nodeIds: [ID_CAJAS], dx: 5, dy: 6, meta: META },
+    noAplica: { type: "shift-nodes", diagramId: d, nodeIds: [ID_CAJAS], dx: 0, dy: 0, meta: META },
     comprobar: (x: Diagram): boolean => x.nodes[ID_CAJAS]?.positionX === 5 && x.nodes[ID_CAJAS]?.positionY === 6,
   },
   {

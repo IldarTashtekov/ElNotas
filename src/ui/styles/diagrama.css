@@ -84,8 +84,23 @@
     stroke: none;
   }
 }
+/* Seleccionar: un rectángulo de trazos, dibujado como la mira. */
+.seleccionar {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+
+  & > svg {
+    fill: none;
+    height: 1.5rem;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    width: 1.5rem;
+  }
+}
 /* En una ventana, que no tiene barra: flotando abajo a la derecha del lienzo. */
-.lienzo > .mira {
+.lienzo > .mira,
+.lienzo > .seleccionar {
   background: var(--screen);
   border: 1px solid var(--line);
   bottom: 0.75rem;
@@ -101,6 +116,35 @@
   &:hover {
     background: var(--row);
   }
+}
+/* A la izquierda de la mira; con el modo puesto, en vídeo inverso. */
+.lienzo > .seleccionar {
+  right: 3.75rem;
+
+  &[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+}
+.barra-diagrama .seleccionar {
+  padding: 0.3rem 0.5rem;
+
+  &[aria-pressed="true"] {
+    background: var(--accent-ink);
+    color: var(--accent);
+  }
+}
+/* En el modo, el fondo no se agarra: se dibuja encima. */
+.lienzo.seleccionando {
+  cursor: crosshair;
+}
+.rectangulo {
+  background: var(--accent-soft);
+  border: 1px dashed var(--accent);
+  opacity: 0.6;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
 }
 
 /* ── Las líneas, debajo de los pósits: el SVG no mide nada y deja ver lo que se sale ── */
@@ -180,6 +224,11 @@
   &.hecho .texto {
     opacity: 0.55;
     text-decoration: line-through;
+  }
+  /* Marcado en el modo de seleccionar, como una fila elegida de la lista. */
+  &.marcado {
+    background: var(--accent-soft);
+    border-color: var(--accent);
   }
   &.levantado {
     border-color: var(--accent);

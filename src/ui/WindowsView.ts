@@ -189,11 +189,16 @@ export const mountWindowsView = (
     lienzo = { diagrama: id, instancia }
   }
 
+  /* Cambiar de ventana rehace el lienzo: los modos del que se va, cerrados antes. */
   anterior.addEventListener("click", (): void => {
-    if (vista.kind === "window" && vista.prev !== null) windows.setActive(vista.prev)
+    if (vista.kind !== "window" || vista.prev === null) return
+    lienzo?.instancia.closeModes()
+    windows.setActive(vista.prev)
   })
   siguiente.addEventListener("click", (): void => {
-    if (vista.kind === "window" && vista.next !== null) windows.setActive(vista.next)
+    if (vista.kind !== "window" || vista.next === null) return
+    lienzo?.instancia.closeModes()
+    windows.setActive(vista.next)
   })
 
   /* ── El «+»: añadir una ventana detrás de la última, e ir a ella ── */
@@ -202,6 +207,7 @@ export const mountWindowsView = (
 
   const anadir = (ref: WindowRef): void => {
     hoja.close()
+    lienzo?.instancia.closeModes()
     windows.insertAfter(windows.getLayout().windows.length - 1, ref)
     windows.setActive(ref)
   }

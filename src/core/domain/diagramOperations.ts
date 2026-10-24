@@ -92,6 +92,31 @@ export const setNodePosition = (
 }
 
 /**
+ * Desplaza varios nodos a la vez lo mismo, `dx` y `dy`: lo que hay debajo de
+ * arrastrar un grupo. Un id repetido cuenta una vez; uno que no existe, nada.
+ *
+ * **No hace nada si:** el desplazamiento es cero o no es un número finito ·
+ * ningún nodo existe.
+ */
+export const shiftNodes = (
+  diagram: Diagram,
+  ids: ReadonlyArray<DiagramNodeId>,
+  dx: number,
+  dy: number,
+): Diagram => {
+  if (!posicionValida(dx, dy) || (dx === 0 && dy === 0)) return diagram
+  return [...new Set<DiagramNodeId>(ids)].reduce(
+    (d: Diagram, id: DiagramNodeId): Diagram =>
+      enNodo(d, id, (node: DiagramNode): DiagramNode => {
+        const positionX: number = node.positionX + dx
+        const positionY: number = node.positionY + dy
+        return posicionValida(positionX, positionY) ? { ...node, positionX, positionY } : node
+      }),
+    diagram,
+  )
+}
+
+/**
  * Marca o desmarca un nodo como hecho. `set` y no `toggle`, como `setChecked`.
  *
  * **No hace nada si:** el nodo no existe · ya está en ese valor.

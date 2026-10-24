@@ -224,7 +224,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
 - Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`.
 - Nodo-nota con el título en directo; sin nota, «Nota perdida» (en `delete-note` y `hydrate`).
-- Gestos «doble = menú o crear», sin selección; mover guarda al soltar. Móvil = escritorio.
+- Gestos «doble = menú o crear»; seleccionar, en un modo junto a la mira; mover guarda al soltar. Móvil = escritorio.
 - Nota creada desde el lienzo: a todos los contextos del diagrama. Un diagrama se borra como una nota.
 
 **PWA**

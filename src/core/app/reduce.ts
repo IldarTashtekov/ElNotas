@@ -29,6 +29,7 @@ import {
   setRelationDirected,
   setRelationEnds,
   setRelationLabel,
+  shiftNodes,
 } from "../domain/diagramOperations.js"
 import type { ContextId, DiagramId, ItemRef, NoteId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
@@ -501,6 +502,11 @@ export const reduce = (state: AppState, action: Action): AppState => {
     case "set-node-position":
       return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
         setNodePosition(d, action.nodeId, action.positionX, action.positionY),
+      )
+
+    case "shift-nodes":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        shiftNodes(d, action.nodeIds, action.dx, action.dy),
       )
 
     case "set-node-done":

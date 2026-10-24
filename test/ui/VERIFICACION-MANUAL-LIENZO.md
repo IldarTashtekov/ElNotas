@@ -16,7 +16,7 @@ pellizco y la pulsación larga sólo se ven en un móvil de verdad.**
 ## Cuándo hay que volver a pasarla
 
 - antes de cerrar Fase 5 · Lienzo;
-- al tocar `src/ui/DiagramCanvas.ts`, que es donde viven los gestos;
+- al tocar `src/ui/DiagramCanvas.ts`, que es donde viven los gestos, o `src/ui/canvasSelection.ts`;
 - al probar un navegador o un móvil nuevos.
 
 **Cada pasada se anota abajo, debajo de la anterior.**
@@ -155,6 +155,39 @@ directamente.
 - **H1.** Con un menú abierto, el **atrás** (en Android, el del sistema) lo cierra **y nada más**.
 - **H2.** Tras F1, contar los atrás: nota → diagrama → ventana. **Ninguno de más** sale de la
   página.
+
+## I. Seleccionar nodos
+
+Con un diagrama de cuatro pósits o más y alguna línea entre ellos.
+
+- **I1.** El botón de **seleccionar** (un rectángulo de trazos) está **junto a la mira**: en la
+  barra, en la vista diagrama; flotando a su izquierda, en una ventana. Pulsarlo lo pone en
+  **vídeo inverso**.
+- **I2.** En el modo, arrastrar sobre el fondo **dibuja un rectángulo de trazos**; al soltar
+  desaparece y quedan **marcados** (fondo del fósforo) **todos los pósits que toca**, aunque sea
+  con un borde. El corcho no se mueve.
+- **I3.** Otro rectángulo **sustituye** la selección. Empezarlo sobre un pósit **sin marcar**
+  también dibuja el rectángulo, no mueve el pósit.
+- **I4.** **Un toque** en un pósit lo marca o lo desmarca; en el fondo, nada. Ni el doble toque ni
+  el clic derecho abren menús, y un nodo-nota **no entra** en su nota.
+- **I5.** ⚠️ Arrastrar un **marcado** mueve **todo el grupo** a la vez, y las líneas lo siguen.
+  *(Con la consola.)* `n = 0; elnotas.store.subscribe(() => n++)` antes de arrastrar: al soltar,
+  `n` vale **1**. Recargar: siguen donde se dejaron.
+- **I6.** En el modo, el corcho se desplaza **con dos dedos** *(móvil)* o **con la rueda**
+  *(escritorio)*; Ctrl + rueda, o el pellizco del trackpad, acerca y aleja.
+- **I7.** **Volver a pulsar** el botón sale del modo y **quita las marcas**. El **atrás** también,
+  y nada más: la vista sigue abierta.
+- **I8.** Con el modo puesto, **✕ Salir** sale de la vista **de una vez**. En una ventana, ◀ ▶
+  cambian de ventana, y luego **ningún atrás** se gasta sin hacer nada.
+
+## J. El avance por los bordes
+
+- **J1.** ⚠️ Arrastrando un pósit, **fuera del modo**, hasta **unos 40 px de un borde**: el corcho
+  **avanza hacia ese lado**, a velocidad fija, mientras el dedo siga ahí, y el pósit **no se
+  despega del dedo**. Al salir de la franja, se para. En una esquina, en diagonal.
+- **J2.** Lo mismo con **un grupo** en el modo de seleccionar.
+- **J3.** Al soltar se guarda donde quedó; **recargar**: el diagrama se mira desde donde llevó el
+  avance.
 
 ---
 

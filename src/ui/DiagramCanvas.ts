@@ -14,7 +14,11 @@
  * la sigue, sin salir nunca boca abajo. Un toque en un nodo-nota entra en su nota, tras esperar un
  * instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
  * ratón, o manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez,
- * al soltar.
+ * al soltar; con el dedo junto a un borde, el corcho avanza hacia ese lado.
+ *
+ * El botón de seleccionar, junto a la mira, cambia de modo: arrastrar dibuja un
+ * rectángulo que marca lo que toca, arrastrar un marcado mueve el grupo, un
+ * toque marca o desmarca, y el corcho se desplaza con dos dedos o con la rueda.
  *
  * Es el mismo en la vista diagrama y en una ventana de diagrama: cada una le pone
  * su marco alrededor.
@@ -36,6 +40,9 @@ import type {
 } from "#core/index"
 import { diagramNodeId, diagramRelationId } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import { crosshairButton, selectButton, svg } from "./canvasButtons.js"
+import type { Rect } from "./canvasSelection.js"
+import { EDGE_SPEED_PX_S, boxesTouching, edgeDirection, rectBetween } from "./canvasSelection.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
@@ -84,6 +91,14 @@ export interface DiagramCanvas {
   readonly element: HTMLElement
   /** Vuelve al origen en el centro y a ×1, como un diagrama nuevo. Lo hace la mira. */
   readonly recenter: () => void
+  /** El botón de seleccionar. Con la mira flotante ya va en el lienzo; si no, a la barra. */
+  readonly selectButton: HTMLButtonElement
+  /**
+   * Cierra sus modos —seleccionar, conectar—, que son capas del atrás. Antes de
+   * salir de la vista o de cambiar de ventana: si no, lo primero que cerraría el
+   * exit sería el modo, o quedaría una capa sin lienzo.
+   */
+  readonly closeModes: () => void
   /** Suelta lo que escucha fuera del lienzo y guarda dónde se miraba. */
   readonly destroy: () => void
 }
@@ -94,47 +109,6 @@ const REJILLA: number = 24
 const MARGEN_TECLADO_PX: number = 16
 /** El `target` de un toque en el fondo, para distinguirlo de uno en un pósit. */
 const FONDO: string = "fondo"
-
-/** Un elemento SVG: `elemento` crea los de HTML, y éstos van en otro espacio de nombres. */
-const svg = <K extends keyof SVGElementTagNameMap>(etiqueta: K): SVGElementTagNameMap[K] =>
-  document.createElementNS("http://www.w3.org/2000/svg", etiqueta)
-
-/** El dibujo de la mira: un círculo con cuatro marcas y un punto, en el color del texto. */
-const dibujoMira = (): SVGSVGElement => {
-  const dibujo: SVGSVGElement = svg("svg")
-  dibujo.setAttribute("viewBox", "0 0 24 24")
-  dibujo.setAttribute("aria-hidden", "true")
-  const circulo: SVGCircleElement = svg("circle")
-  circulo.setAttribute("cx", "12")
-  circulo.setAttribute("cy", "12")
-  circulo.setAttribute("r", "7")
-  const marcas: SVGPathElement = svg("path")
-  marcas.setAttribute("d", "M12 1v6M12 17v6M1 12h6M17 12h6")
-  const punto: SVGCircleElement = svg("circle")
-  punto.setAttribute("class", "punto")
-  punto.setAttribute("cx", "12")
-  punto.setAttribute("cy", "12")
-  punto.setAttribute("r", "1.5")
-  dibujo.append(circulo, marcas, punto)
-  return dibujo
-}
-
-/**
- * El botón de la mira, para el lienzo o para una barra. No es del lienzo: tocarlo
- * no arrastra el corcho ni abre ningún menú.
- */
-export const crosshairButton = (alPulsar: () => void): HTMLButtonElement => {
-  const mira: HTMLButtonElement = elemento("button")
-  mira.type = "button"
-  mira.className = "mira"
-  mira.setAttribute("aria-label", "Volver al inicio")
-  mira.title = "Volver al inicio"
-  mira.append(dibujoMira())
-  mira.addEventListener("pointerdown", (evento: PointerEvent): void => evento.stopPropagation())
-  mira.addEventListener("contextmenu", (evento: MouseEvent): void => evento.stopPropagation())
-  mira.addEventListener("click", alPulsar)
-  return mira
-}
 
 /** Para que la punta de flecha de cada lienzo tenga su id: puede haber dos montados. */
 let lienzosCreados: number = 0
@@ -157,16 +131,20 @@ interface Gesto {
   /** La línea sobre la que bajó, o `null`. Arrastrarla arrastra el corcho. */
   readonly relacion: DiagramRelationId | null
   readonly origen: Point
-  /** Dónde estaba el pósit al empezar, en el corcho. */
-  readonly inicioNodo: Point
+  /** Los pósits que se mueven si se levanta: el suyo, o los marcados si es uno de ellos. */
+  readonly grupo: ReadonlyArray<DiagramNodeId>
+  /** Dibuja el rectángulo de seleccionar, en vez de mover nada. */
+  readonly rectangulo: boolean
   /** Se movió más de la tolerancia: ya no es un toque. */
   movido: boolean
-  /** El pósit va pegado al dedo. */
+  /** El grupo va pegado al dedo. */
   levantado: boolean
   /** Arrastra el corcho, no el pósit. */
   arrastraFondo: boolean
-  /** Dónde soltarlo, en el corcho. */
-  destino: Point | null
+  /** Lo que ha avanzado el corcho por los bordes mientras tanto, en píxeles. */
+  avance: Point
+  /** Cuánto se ha desplazado el grupo, en el corcho. */
+  desplazamiento: Point | null
 }
 
 export const createDiagramCanvas = ({
@@ -288,9 +266,24 @@ export const createDiagramCanvas = ({
     el.style.top = `${p.y}px`
   }
 
+  /** Dónde se ve un pósit: donde está, o donde lo lleva el dedo si va en el grupo arrastrado. */
+  const dondeSeVe = (nodo: DiagramNode): Point => {
+    const d: Point | null =
+      gesto !== null && gesto.levantado && gesto.grupo.includes(nodo.id)
+        ? gesto.desplazamiento
+        : null
+    return { x: nodo.positionX + (d?.x ?? 0), y: nodo.positionY + (d?.y ?? 0) }
+  }
+
   const pintar = (): void => {
     const actual: Diagram | undefined = diagrama()
     if (actual === undefined) return
+    /* Un marcado que se borra deja de estarlo. */
+    if ([...marcados].some((id: DiagramNodeId): boolean => actual.nodes[id] === undefined)) {
+      marcados = new Set<DiagramNodeId>(
+        [...marcados].filter((id: DiagramNodeId): boolean => actual.nodes[id] !== undefined),
+      )
+    }
     const estado: AppState = store.getState()
     const orden: ReadonlyArray<string> = paintOrder(Object.keys(actual.nodes), levantados)
     const nodos: ReadonlyArray<DiagramNode> = orden.flatMap(
@@ -315,11 +308,9 @@ export const createDiagramCanvas = ({
       remove: (el: Element): void => tamanos.unobserve(el),
       update: (el: Element, nodo: DiagramNode): void => {
         if (!(el instanceof HTMLElement)) return
-        /* El que se arrastra lo coloca el dedo, no el estado. */
-        if (gesto?.nodo !== nodo.id || !gesto.levantado) {
-          colocar(el, { x: nodo.positionX, y: nodo.positionY })
-        }
+        colocar(el, dondeSeVe(nodo))
         el.classList.toggle("hecho", nodo.done)
+        el.classList.toggle("marcado", marcados.has(nodo.id))
         el.classList.toggle("nota", nodo.type === "note-node")
         const texto: Element | null = el.querySelector(".texto")
         const nuevo: string = textoDe(nodo, estado)
@@ -350,14 +341,8 @@ export const createDiagramCanvas = ({
    * unidades del corcho. `null` si todavía no está pintado.
    */
   const cajaDe = (nodo: DiagramNode, el: HTMLElement): Box => {
-    const arrastrado: Point | null =
-      gesto !== null && gesto.nodo === nodo.id && gesto.levantado ? gesto.destino : null
-    return {
-      x: arrastrado?.x ?? nodo.positionX,
-      y: arrastrado?.y ?? nodo.positionY,
-      width: el.offsetWidth,
-      height: el.offsetHeight,
-    }
+    const centro: Point = dondeSeVe(nodo)
+    return { x: centro.x, y: centro.y, width: el.offsetWidth, height: el.offsetHeight }
   }
 
   /** Lo ya pintado en `contenedor`, por su `data-id`: una pasada, no una búsqueda por cada uno. */
@@ -386,11 +371,11 @@ export const createDiagramCanvas = ({
   }
 
   /**
-   * Redibuja las líneas; con `soloDe`, sólo las de ese nodo, que es lo único que
+   * Redibuja las líneas; con `soloDe`, sólo las de esos nodos, que es lo único que
    * se mueve mientras se arrastra. Primero se mide todo y después se escribe:
    * alternar haría que el navegador recalculase la página antes de cada medida.
    */
-  const pintarRelaciones = (soloDe: DiagramNodeId | null = null): void => {
+  const pintarRelaciones = (soloDe: ReadonlyArray<DiagramNodeId> | null = null): void => {
     const actual: Diagram | undefined = diagrama()
     if (actual === undefined) return
     const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(
@@ -398,8 +383,17 @@ export const createDiagramCanvas = ({
     )
     /* El abanico se reparte con todas, aunque sólo se redibujen unas. */
     const curvas: ReadonlyMap<string, number> = fanOffsets(relaciones)
+    /* Una línea entre dos del grupo sale dos veces: el `Set` la deja en una. */
     const afectadas: ReadonlyArray<DiagramRelation> =
-      soloDe === null ? relaciones : relationsOf(relaciones, soloDe)
+      soloDe === null
+        ? relaciones
+        : [
+            ...new Set<DiagramRelation>(
+              soloDe.flatMap((id: DiagramNodeId): ReadonlyArray<DiagramRelation> =>
+                relationsOf(relaciones, id),
+              ),
+            ),
+          ]
 
     /* Medir. Una caja por nodo y no por relación: un nodo con muchas se mide una vez. */
     const posits: Map<string, Element> = porId(nodosCapa)
@@ -641,6 +635,91 @@ export const createDiagramCanvas = ({
     if (hasta !== null && hasta !== desde) useCases.addRelation(diagramId, desde, hasta)
   }
 
+  /* ── Seleccionar: un modo, con su botón junto a la mira ── */
+
+  let seleccionando: boolean = false
+  /** Los marcados. Sólo hay mientras dura el modo. */
+  let marcados: ReadonlySet<DiagramNodeId> = new Set<DiagramNodeId>()
+
+  /** El rectángulo que se dibuja con el dedo, sobre el lienzo y fuera de la capa. */
+  const rectangulo: HTMLElement = elemento("div")
+  rectangulo.className = "rectangulo"
+  rectangulo.hidden = true
+  lienzo.append(rectangulo)
+
+  const marcar = (siguientes: ReadonlySet<DiagramNodeId>): void => {
+    marcados = siguientes
+    for (const el of nodosCapa.querySelectorAll<HTMLElement>(".posit[data-id]")) {
+      const id: string | undefined = el.dataset["id"]
+      el.classList.toggle("marcado", id !== undefined && marcados.has(diagramNodeId(id)))
+    }
+  }
+
+  const pintarModo = (): void => {
+    botonSeleccion.setAttribute("aria-pressed", String(seleccionando))
+    lienzo.classList.toggle("seleccionando", seleccionando)
+  }
+
+  /* Como *Conectar*, es una capa: el atrás sale del modo, y el botón también. */
+  const alternarSeleccion = (): void => {
+    if (seleccionando) {
+      back.close()
+      return
+    }
+    if (conectando !== null) terminarDeConectar(null)
+    seleccionando = true
+    pintarModo()
+    back.open((): void => {
+      seleccionando = false
+      marcar(new Set<DiagramNodeId>())
+      pintarModo()
+    })
+  }
+
+  const botonSeleccion: HTMLButtonElement = selectButton(alternarSeleccion)
+  /* Con la mira flotante, junto a ella; si no, quien monta el lienzo lo pone en su barra. */
+  if (floatingCrosshair) lienzo.append(botonSeleccion)
+
+  const dibujarRectangulo = (a: Point, b: Point): void => {
+    const r: Rect = rectBetween(a, b)
+    rectangulo.hidden = false
+    rectangulo.style.left = `${r.left}px`
+    rectangulo.style.top = `${r.top}px`
+    rectangulo.style.width = `${r.right - r.left}px`
+    rectangulo.style.height = `${r.bottom - r.top}px`
+  }
+
+  /** Marca lo que toca el rectángulo entre `a` y `b`, en píxeles del lienzo; lo de antes se va. */
+  const marcarEnRectangulo = (a: Point, b: Point): void => {
+    rectangulo.hidden = true
+    const actual: Diagram | undefined = diagrama()
+    if (actual === undefined) return
+    const posits: Map<string, Element> = porId(nodosCapa)
+    const cajas: Map<string, Box> = new Map<string, Box>()
+    for (const nodo of Object.values<DiagramNode>(actual.nodes)) {
+      const el: Element | undefined = posits.get(nodo.id)
+      if (el instanceof HTMLElement) cajas.set(nodo.id, cajaDe(nodo, el))
+    }
+    const tocados: ReadonlyArray<string> = boxesTouching(
+      cajas,
+      rectBetween(toCanvas(vista, a), toCanvas(vista, b)),
+    )
+    marcar(new Set<DiagramNodeId>(tocados.map((id: string): DiagramNodeId => diagramNodeId(id))))
+  }
+
+  /** Un toque en el modo: marca o desmarca el pósit. En el fondo no hace nada. */
+  const tocadoSeleccionando = (g: Gesto): void => {
+    const id: DiagramNodeId | null = g.nodo
+    if (id === null) return
+    marcar(
+      new Set<DiagramNodeId>(
+        marcados.has(id)
+          ? [...marcados].filter((m: DiagramNodeId): boolean => m !== id)
+          : [...marcados, id],
+      ),
+    )
+  }
+
   /** Escribir el texto de una línea: un campo en su punto medio. Vacío, sin texto. */
   const editarTexto = (id: DiagramRelationId): void => {
     const r: DiagramRelation | undefined = diagrama()?.relations[id]
@@ -742,11 +821,74 @@ export const createDiagramCanvas = ({
   }
 
   const levantar = (g: Gesto): void => {
-    if (g.nodo === null) return
+    if (g.grupo.length === 0) return
     g.levantado = true
-    levantados = raise(levantados, g.nodo)
+    levantados = g.grupo.reduce(
+      (orden: ReadonlyArray<string>, id: DiagramNodeId): ReadonlyArray<string> => raise(orden, id),
+      levantados,
+    )
     pintar()
-    positDe(g.nodo)?.classList.add("levantado")
+    for (const id of g.grupo) positDe(id)?.classList.add("levantado")
+  }
+
+  /** Suelta el grupo sin guardar nada: vuelve a pintarse donde está. */
+  const posar = (g: Gesto): void => {
+    for (const id of g.grupo) positDe(id)?.classList.remove("levantado")
+  }
+
+  /** Lleva el grupo bajo el dedo, en `ahora`, descontando lo que ha avanzado el corcho. */
+  const arrastrar = (g: Gesto, ahora: Point): void => {
+    g.desplazamiento = {
+      x: (ahora.x - g.origen.x - g.avance.x) / vista.scale,
+      y: (ahora.y - g.origen.y - g.avance.y) / vista.scale,
+    }
+    const actual: Diagram | undefined = diagrama()
+    for (const id of g.grupo) {
+      const nodo: DiagramNode | undefined = actual?.nodes[id]
+      const el: HTMLElement | null = positDe(id)
+      if (nodo !== undefined && el !== null) colocar(el, dondeSeVe(nodo))
+    }
+    pintarRelaciones(g.grupo)
+  }
+
+  /* ── El avance por los bordes, mientras se arrastran pósits ── */
+
+  let avanceFrame: number | null = null
+  /** La hora del fotograma anterior, para avanzar lo mismo por segundo a cualquier refresco. */
+  let ultimoFrame: number | null = null
+
+  const pararAvance = (): void => {
+    if (avanceFrame !== null) cancelAnimationFrame(avanceFrame)
+    avanceFrame = null
+    ultimoFrame = null
+  }
+
+  const avanzar = (ahora: number): void => {
+    avanceFrame = null
+    const g: Gesto | null = gesto
+    const dedo: Point | undefined = g === null ? undefined : punteros.get(g.puntero)
+    if (g === null || !g.levantado || dedo === undefined) {
+      ultimoFrame = null
+      return
+    }
+    const hacia: Point = edgeDirection(dedo, lienzo.clientWidth, lienzo.clientHeight)
+    if (hacia.x === 0 && hacia.y === 0) {
+      ultimoFrame = null
+      return
+    }
+    /* Tras una pausa larga —la pestaña en segundo plano—, no da un salto. */
+    const ms: number = ultimoFrame === null ? 16 : Math.min(ahora - ultimoFrame, 50)
+    ultimoFrame = ahora
+    const paso: number = (EDGE_SPEED_PX_S * ms) / 1000
+    encuadrar(panBy(vista, hacia.x * paso, hacia.y * paso))
+    g.avance = { x: g.avance.x + hacia.x * paso, y: g.avance.y + hacia.y * paso }
+    arrastrar(g, dedo)
+    avanceFrame = requestAnimationFrame(avanzar)
+  }
+
+  /** Con el grupo levantado, si el dedo está en una franja, el corcho empieza a avanzar. */
+  const quizaAvanzar = (): void => {
+    if (avanceFrame === null) avanceFrame = requestAnimationFrame(avanzar)
   }
 
   const empezarPellizco = (): void => {
@@ -803,33 +945,40 @@ export const createDiagramCanvas = ({
     if (punteros.size === 2) {
       /* El segundo dedo es un pellizco: lo que hiciera el primero se olvida. */
       cancelarEspera()
-      if (gesto?.levantado === true && gesto.nodo !== null) {
-        positDe(gesto.nodo)?.classList.remove("levantado")
+      pararAvance()
+      rectangulo.hidden = true
+      const antes: Gesto | null = gesto
+      gesto = null
+      if (antes?.levantado === true) {
+        posar(antes)
         pintar()
       }
-      gesto = null
       empezarPellizco()
       return
     }
     if (punteros.size !== 1) return
 
     const nodo: DiagramNodeId | null = nodoDe(evento.target)
-    const n: DiagramNode | undefined = nodo === null ? undefined : diagrama()?.nodes[nodo]
+    /* En el modo, un marcado arrastra a todos los marcados; lo demás, el rectángulo. */
+    const deGrupo: boolean = seleccionando && nodo !== null && marcados.has(nodo)
     const g: Gesto = {
       puntero: evento.pointerId,
       tipo: evento.pointerType,
       nodo,
       relacion: nodo === null ? relacionDe(evento.target) : null,
       origen: donde,
-      inicioNodo: { x: n?.positionX ?? 0, y: n?.positionY ?? 0 },
+      grupo: deGrupo ? [...marcados] : nodo === null || seleccionando ? [] : [nodo],
+      rectangulo: seleccionando && !deGrupo,
       movido: false,
       levantado: false,
-      arrastraFondo: nodo === null,
-      destino: null,
+      arrastraFondo: nodo === null && !seleccionando,
+      avance: { x: 0, y: 0 },
+      desplazamiento: null,
     }
     gesto = g
-    /* Con el dedo, el pósit se levanta manteniéndolo pulsado; con el ratón, arrastrando. */
-    if (nodo !== null && evento.pointerType !== "mouse") {
+    /* Con el dedo, el pósit se levanta manteniéndolo pulsado; con el ratón, arrastrando.
+       En el modo, el grupo marcado se arrastra sin esperar, con los dos. */
+    if (nodo !== null && evento.pointerType !== "mouse" && !seleccionando) {
       espera = setTimeout((): void => {
         espera = null
         if (gesto === g && !g.movido) levantar(g)
@@ -858,23 +1007,21 @@ export const createDiagramCanvas = ({
     if (!g.movido && movedBeyondTolerance(g.origen, ahora)) {
       g.movido = true
       cancelarEspera()
-      /* Con el ratón, arrastrar un pósit lo levanta; con el dedo sin esperar, arrastra el corcho. */
-      if (g.nodo !== null && !g.levantado) {
-        if (g.tipo === "mouse") levantar(g)
+      /* Con el ratón, arrastrar un pósit lo levanta; con el dedo sin esperar, arrastra el
+         corcho. En el modo, el grupo se levanta con los dos. */
+      if (g.grupo.length > 0 && !g.levantado) {
+        if (g.tipo === "mouse" || seleccionando) levantar(g)
         else g.arrastraFondo = true
       }
       if (g.arrastraFondo) lienzo.classList.add("moviendo")
     }
     if (!g.movido) return
 
-    if (g.levantado && g.nodo !== null) {
-      g.destino = {
-        x: g.inicioNodo.x + (ahora.x - g.origen.x) / vista.scale,
-        y: g.inicioNodo.y + (ahora.y - g.origen.y) / vista.scale,
-      }
-      const el: HTMLElement | null = positDe(g.nodo)
-      if (el !== null) colocar(el, g.destino)
-      pintarRelaciones(g.nodo)
+    if (g.rectangulo) {
+      dibujarRectangulo(g.origen, ahora)
+    } else if (g.levantado) {
+      arrastrar(g, ahora)
+      quizaAvanzar()
     } else if (g.arrastraFondo) {
       encuadrar(panBy(vista, ahora.x - antes.x, ahora.y - antes.y))
     }
@@ -932,18 +1079,32 @@ export const createDiagramCanvas = ({
 
     const g: Gesto | null = gesto
     cancelarEspera()
+    pararAvance()
     gesto = null
     lienzo.classList.remove("moviendo")
     if (g === null || g.puntero !== evento.pointerId) return
 
-    if (g.levantado && g.nodo !== null) {
-      positDe(g.nodo)?.classList.remove("levantado")
-      /* Se guarda una vez, al soltar. Si no se movió, no hay nada que guardar. */
-      if (g.destino !== null) useCases.setNodePosition(diagramId, g.nodo, g.destino.x, g.destino.y)
+    if (g.rectangulo && g.movido) {
+      if (evento.type === "pointerup") marcarEnRectangulo(g.origen, donde)
+      rectangulo.hidden = true
+      return
+    }
+    if (g.levantado) {
+      posar(g)
+      /* Se guarda una vez, al soltar, con una sola acción. Si no se movió, nada. */
+      const d: Point | null = g.desplazamiento
+      const [solo] = g.grupo
+      const n: DiagramNode | undefined = solo === undefined ? undefined : diagrama()?.nodes[solo]
+      if (d !== null && seleccionando) useCases.shiftNodes(diagramId, g.grupo, d.x, d.y)
+      else if (d !== null && solo !== undefined && n !== undefined) {
+        useCases.setNodePosition(diagramId, solo, n.positionX + d.x, n.positionY + d.y)
+      }
       pintar()
       return
     }
-    if (!g.movido && evento.type === "pointerup") tocado(g, donde, evento.timeStamp)
+    if (g.movido || evento.type !== "pointerup") return
+    if (seleccionando) tocadoSeleccionando(g)
+    else tocado(g, donde, evento.timeStamp)
   }
 
   window.addEventListener("pointermove", mover)
@@ -955,7 +1116,8 @@ export const createDiagramCanvas = ({
   lienzo.addEventListener("contextmenu", (evento: MouseEvent): void => {
     evento.preventDefault()
     if (evento instanceof PointerEvent && evento.pointerType !== "mouse") return
-    if (gesto?.levantado === true) return
+    /* En el modo de seleccionar no hay menús. */
+    if (gesto?.levantado === true || seleccionando) return
     const nodo: DiagramNodeId | null = nodoDe(evento.target)
     cancelarApertura()
     /* Conectando, el clic derecho cancela, como un toque en el fondo. */
@@ -970,11 +1132,19 @@ export const createDiagramCanvas = ({
   })
 
   /* No pasivo: uno pasivo no puede impedir que la rueda desplace la página. El
-     pellizco del trackpad también llega por aquí, como rueda con Ctrl. */
+     pellizco del trackpad también llega por aquí, como rueda con Ctrl. En el modo
+     de seleccionar, sin Ctrl, la rueda desplaza el corcho, que el ratón no puede
+     arrastrar: arrastrar dibuja el rectángulo. */
   lienzo.addEventListener(
     "wheel",
     (evento: WheelEvent): void => {
       evento.preventDefault()
+      if (seleccionando && !evento.ctrlKey) {
+        /* Hay ratones que cuentan la rueda en líneas, no en píxeles. */
+        const linea: number = evento.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : 1
+        encuadrar(panBy(vista, -evento.deltaX * linea, -evento.deltaY * linea))
+        return
+      }
       encuadrar(zoomAround(vista, enLienzo(evento), wheelFactor(evento.deltaY)))
     },
     { passive: false },
@@ -987,11 +1157,17 @@ export const createDiagramCanvas = ({
   return {
     element: marco,
     recenter,
+    selectButton: botonSeleccion,
+    /* Los dos no pueden estar a la vez: entrar a seleccionar acaba con *Conectar*. */
+    closeModes: (): void => {
+      if (seleccionando || conectando !== null) back.close()
+    },
     destroy: (): void => {
       framing.save()
       baja()
       cancelarEspera()
       cancelarApertura()
+      pararAvance()
       medida.disconnect()
       tamanos.disconnect()
       window.visualViewport?.removeEventListener("resize", asomar)

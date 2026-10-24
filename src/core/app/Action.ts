@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son treinta y tres. Aquí están las ocho de contenido; las de Nota, Contexto y
+ * Son treinta y cuatro. Aquí están las ocho de contenido; las de Nota, Contexto y
  * Diagrama, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -263,7 +263,7 @@ export type ContextAction =
   | ShowItems
   | ReorderItems
 
-/* ────────────────────────── Las trece de Diagrama ─────────────────────────── */
+/* ────────────────────────── Las catorce de Diagrama ────────────────────────── */
 
 /** «Se creó un diagrama vacío». El id llega hecho, del `IdGenerator`. */
 export interface CreateDiagram {
@@ -310,6 +310,16 @@ export interface SetNodePosition {
   readonly nodeId: DiagramNodeId
   readonly positionX: number
   readonly positionY: number
+  readonly meta: ActionMeta
+}
+
+/** «Se soltó el grupo aquí»: los nodos marcados, desplazados lo mismo, de una vez. */
+export interface ShiftNodes {
+  readonly type: "shift-nodes"
+  readonly diagramId: DiagramId
+  readonly nodeIds: ReadonlyArray<DiagramNodeId>
+  readonly dx: number
+  readonly dy: number
   readonly meta: ActionMeta
 }
 
@@ -377,6 +387,7 @@ export type DiagramAction =
   | AddNode
   | SetNodeText
   | SetNodePosition
+  | ShiftNodes
   | SetNodeDone
   | RemoveNode
   | AddRelation
@@ -385,5 +396,5 @@ export type DiagramAction =
   | SetRelationLabel
   | RemoveRelation
 
-/** El catálogo entero: 8 + 3 + 9 + 13 = **treinta y tres**. */
+/** El catálogo entero: 8 + 3 + 9 + 14 = **treinta y cuatro**. */
 export type Action = ContentAction | NoteAction | ContextAction | DiagramAction

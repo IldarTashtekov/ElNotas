@@ -82,6 +82,22 @@ export const ROTURAS = [
     prueba: "reorder-items mueve varios juntos, en el orden en que los lista el contexto",
   },
   {
+    nombre: "core: desplazar un grupo cuenta cada nodo una vez",
+    fichero: "src/core/domain/diagramOperations.ts",
+    buscar: "  return [...new Set<DiagramNodeId>(ids)].reduce(\n",
+    poner: "  return [...ids].reduce(\n",
+    caza: "pruebas",
+    prueba: "shiftNodes: un id repetido desplaza una vez",
+  },
+  {
+    nombre: "core: desplazar un grupo sin moverlo devuelve el mismo diagrama",
+    fichero: "src/core/domain/diagramOperations.ts",
+    buscar: "  if (!posicionValida(dx, dy) || (dx === 0 && dy === 0)) return diagram\n",
+    poner: "  if (!posicionValida(dx, dy)) return diagram\n",
+    caza: "pruebas",
+    prueba: "shiftNodes: sin desplazamiento, devuelve el MISMO diagrama",
+  },
+  {
     nombre: "core: una posición desconocida no hace nada",
     fichero: "src/core/domain/operations.ts",
     buscar: "      position satisfies never\n      return content\n",

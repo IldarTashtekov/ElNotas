@@ -5,7 +5,7 @@
  * tentación es no probarla. Pero es la **única** que lee el mundo, y hay tres
  * cosas que sólo pasan aquí y que ninguna prueba del reducer puede ver:
  *
- *   1. **el cableado**: treinta y cinco bloques casi idénticos uno debajo de otro son
+ *   1. **el cableado**: treinta y seis bloques casi idénticos uno debajo de otro son
  *      justo donde se cuela un copy-paste, y un `renameNote` que despachara
  *      `delete-note` borraría notas al renombrarlas sin que fallara nada en el
  *      reducer, que haría exactamente lo que le piden;
@@ -147,7 +147,7 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
   contexts: Object.fromEntries(ctxs.map((c: Context): [ContextId, Context] => [c.id, c])),
 })
 
-/* ──────────────────── (1) El cableado: los treinta y cinco ─────────────────── */
+/* ──────────────────── (1) El cableado: los treinta y seis ──────────────────── */
 
 /**
  * Cada caso de uso con el `type` que tiene que despachar. Si alguien añade uno y
@@ -187,6 +187,7 @@ const CABLEADO: ReadonlyArray<
     "set-node-position",
     (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 1, 2),
   ],
+  ["shift-nodes", (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 1, 2)],
   ["set-node-done", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true)],
   ["remove-node", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO)],
   [
@@ -236,18 +237,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **treinta y cinco casos de uso para treinta y tres acciones**: `insert` tiene dos
+      Son **treinta y seis casos de uso para treinta y cuatro acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 35, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 35, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 36, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 36, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 33, "el catálogo son TREINTA Y TRES acciones: 8 + 3 + 9 + 13")
+  assert.equal(tipos.size, 34, "el catálogo son TREINTA Y CUATRO acciones: 8 + 3 + 9 + 14")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */
@@ -281,10 +282,10 @@ test("dos notas seguidas reciben ids DISTINTOS", () => {
 
 /* ────────── (2b) Qué devuelven: los cuatro caminos, uno por uno ──────────── */
 
-test("⚠️ los TREINTA Y DOS que no crean devuelven null si no hay a qué aplicarlos", () => {
+test("⚠️ los TREINTA Y TRES que no crean devuelven null si no hay a qué aplicarlos", () => {
   /*
       Barrido sobre la lista entera, y por la misma razón que existe la lista:
-      son treinta y cinco líneas casi idénticas, que es donde se cuela un copy-paste.
+      son treinta y seis líneas casi idénticas, que es donde se cuela un copy-paste.
       Los tipos marcados impiden equivocarse de ayudante —`trasNota` no acepta un
       `ContextId`— pero no impiden olvidarse de pasar por él.
 
@@ -420,6 +421,7 @@ const NO_OP_CON_DIAGRAMA: ReadonlyArray<readonly [string, (u: UseCases) => Diagr
   ["addNoteNode", (u: UseCases): Diagram | null => u.addNoteNode(ID_DIAGRAMA, ID_NOTA, 0, 0)],
   ["setNodeText", (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "Cajas")],
   ["setNodePosition", (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 0, 0)],
+  ["shiftNodes", (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 0, 0)],
   ["setNodeDone", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, false)],
   ["removeNode", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, diagramNodeId("fantasma"))],
   ["addRelation", (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_NODO)],
@@ -439,7 +441,7 @@ const NO_OP_CON_DIAGRAMA: ReadonlyArray<readonly [string, (u: UseCases) => Diagr
   ],
 ]
 
-test("⚠️ un no-op devuelve null AUNQUE el diagrama exista — los doce", (): void => {
+test("⚠️ un no-op devuelve null AUNQUE el diagrama exista — los trece", (): void => {
   for (const [nombre, llamar] of NO_OP_CON_DIAGRAMA) {
     const d: Diagram = mudanza()
     const { store, useCases } = montarDeVerdad(conDiagrama(d))
@@ -636,6 +638,7 @@ test("las acciones que NO crean nada piden un solo id: el de la revisión", () =
     (u: UseCases): Diagram | null => u.deleteDiagram(ID_DIAGRAMA),
     (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "x"),
     (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 1, 1),
+    (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 1, 1),
     (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true),
     (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO),
     (u: UseCases): Diagram | null =>

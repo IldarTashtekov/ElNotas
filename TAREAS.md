@@ -76,7 +76,9 @@ resumen, en `TERMINADAS.md`.
   dibujo con permiso o propio.
 - **Revisar los puertos cuando llegue su segundo uso real** (Fase 7): carpeta, OPFS o Supabase. Se
   hace al construir ese adaptador.
-- **Partir `DiagramCanvas.ts`** (Fase 9): es código de la app y se hace al tocar esa zona.
+- **Partir `DiagramCanvas.ts`** (Fase 9): es código de la app y se hace al tocar esa zona. En la
+  tarea 3 de la Fase 10 salieron los botones (`canvasButtons.ts`) y las cuentas de la selección
+  (`canvasSelection.ts`), pero el modo lo hizo crecer: queda partir las líneas y los gestos.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
@@ -143,6 +145,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       hoy. **Se cierra cuando** la acción de mover varios tiene sus pruebas y su rotura, la decisión
       «sin selección» está cambiada en `CLAUDE.md`, y las listas del lienzo tienen sus pasos,
       pasados en el ordenador y en el móvil.
+      **Hecho en el ordenador** (secciones I y J de `VERIFICACION-MANUAL-LIENZO.md`, pasada 3).
+      **Falta pasar I y J en el móvil**: dos dedos, el arrastre del grupo y el avance por los bordes.
 - [ ] **4. Seleccionar y copiar texto en una nota** *(pensar)*. Hoy cada línea es un elemento
       editable aparte y el navegador no deja que una selección salga de él. **Sólo es editable la
       línea activa**; las demás son texto normal, que se selecciona de corrido (arrastrar, o
@@ -176,9 +180,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       decisión cerrada. Va después del Markdown y antes de la documentación. **Se cierra cuando**
       está planteado con el usuario y esta entrada se sustituye por sus tareas, cada una con su
       etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a *Ideas aparcadas*.
-- [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: «sin selección» del lienzo
-      cambiada, el texto como Markdown, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y
-      sólo es editable la línea activa. En `ARCHITECTURE.md`, el principio que sale del 5: **la
+- [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
+      los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. En `ARCHITECTURE.md`, el principio que sale del 5: **la
       integridad referencial llega también a las referencias dentro del texto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa, `check:roturas` pasa entera y la auditoría no deja nada falso.
@@ -353,6 +356,10 @@ una tarea con su cierre.
       se lo piensa)*. Con el texto en Markdown, la pregunta es si el texto de un nodo simple también
       admite formato y enlaces, con la misma burbuja. El nodo-nota se queda como está. **Se cierra
       cuando** el usuario decide: una tarea con fase, o a *Ideas aparcadas*.
+- [ ] **Qué hace un toque en el modo de seleccionar del lienzo** *(salió en la tarea 3 de la Fase
+      10, 2026-10-24)*. La tarea no lo decía; se hizo así: un toque en un pósit lo marca o lo
+      desmarca, en el fondo no hace nada, y en el modo no hay menús ni se entra en las notas.
+      **Se cierra cuando** el usuario lo da por bueno o pide otra cosa.
 
 ### Si OPFS entra en juego: lo que queda del criterio de la Fase 3
 
