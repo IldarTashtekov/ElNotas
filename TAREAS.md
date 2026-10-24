@@ -179,6 +179,14 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       una lista como la de «Mover a…», y se escribe el enlace donde está el cursor. Leer el formato
       es una pieza pura, con pruebas en Node. **Se cierra cuando** esa pieza tiene sus pruebas,
       `check` pasa y la lista del editor tiene sus pasos, pasados en el ordenador y en el móvil.
+      **Por piezas, un commit cada una** (acordado el 2026-10-24): **6a**, el lector de formato
+      puro con sus pruebas: la especificación, con todos los casos raros y la barra invertida, la
+      escribe Opus *(pensar)*; la construye un subagente con Sonnet *(mecánica)*. **6b**, pintar
+      las líneas y que un toque en una formateada deje el cursor en su sitio del texto en crudo:
+      Opus *(pensar)*. **6c**, la burbuja y el aviso del enlace roto; **6d**, «Enlazar…»; **6e**,
+      los pasos de la lista y pasarlos en el panel: Sonnet *(mecánica)*, con especificación
+      cerrada, parando ante cualquier decisión, y Opus revisa antes del commit. Haiku, sólo para
+      búsquedas y resumir salidas largas, no para código.
 - [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24;
       **todavía sin plantear**: qué es, qué pide al dominio y a la pantalla, y si cambia alguna
       decisión cerrada. Va después del Markdown y antes de la documentación. **Se cierra cuando**
