@@ -305,6 +305,9 @@ export const createItemList = ({
   /* ── Reordenar con el ⠿ ── */
 
   let arrastre: Arrastre | null = null
+  /* El ⠿ pulsado que aún no se ha movido: un toque sin moverse no hace nada. */
+  let asaPulsada: { readonly clave: string; readonly fila: HTMLElement; readonly y: number } | null =
+    null
 
   const puedeReordenar = (): boolean =>
     seleccionando && ventana?.kind === "context" && !viendoOcultos
@@ -337,6 +340,7 @@ export const createItemList = ({
   }
 
   const soltarArrastre = (aplicar: boolean): void => {
+    asaPulsada = null
     const a: Arrastre | null = arrastre
     arrastre = null
     if (a === null) return
@@ -351,6 +355,17 @@ export const createItemList = ({
   }
 
   window.addEventListener("pointermove", (evento: PointerEvent): void => {
+    const pulsada: typeof asaPulsada = asaPulsada
+    if (arrastre === null && pulsada !== null) {
+      if (Math.abs(evento.clientY - pulsada.y) <= TOLERANCIA_PX) return
+      asaPulsada = null
+      /* La fila que no estaba seleccionada se suma antes de arrastrar. */
+      if (!seleccion.has(pulsada.clave)) {
+        seleccion = toggleSelected(seleccion, pulsada.clave)
+        pintar()
+      }
+      levantar(pulsada.fila, pulsada.y)
+    }
     const a: Arrastre | null = arrastre
     if (a === null) return
     if (evento.clientY < BORDE_PX) window.scrollBy(0, -PASO_PX)
@@ -383,13 +398,8 @@ export const createItemList = ({
     if (objetivo instanceof Element && enAsa(objetivo) && puedeReordenar()) {
       evento.preventDefault()
       cancelarEspera()
-      /* La fila que no estaba seleccionada se suma antes de arrastrar. */
-      if (!seleccion.has(clave)) {
-        seleccion = toggleSelected(seleccion, clave)
-        pintar()
-      }
       const fila: HTMLElement | null = objetivo.closest<HTMLElement>("li[data-key]")
-      if (fila !== null) levantar(fila, evento.clientY)
+      if (fila !== null) asaPulsada = { clave, fila, y: evento.clientY }
       return
     }
     origen = { x: evento.clientX, y: evento.clientY }
