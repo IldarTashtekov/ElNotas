@@ -12,6 +12,7 @@ import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
 import type { NoteEditor } from "./NoteEditor.js"
 import { createNoteEditor } from "./NoteEditor.js"
+import type { Sheet } from "./sheet.js"
 
 export interface NoteViewDeps {
   readonly store: Store
@@ -21,12 +22,14 @@ export interface NoteViewDeps {
   /** Abrir lo que enlaza un enlace de la nota, apilado encima de ella. */
   readonly onOpenNote: (id: NoteId) => void
   readonly onOpenDiagram: (id: DiagramId) => void
+  /** La hoja de la app, donde se elige a qué enlazar. */
+  readonly sheet: Sheet
 }
 
 /** Devuelve la función que la desmonta. */
 export const mountNoteView = (
   raiz: HTMLElement,
-  { store, useCases, noteId, onExit, onOpenNote, onOpenDiagram }: NoteViewDeps,
+  { store, useCases, noteId, onExit, onOpenNote, onOpenDiagram, sheet }: NoteViewDeps,
 ): (() => void) => {
   const nota = (): Note | undefined => store.getState().notes[noteId]
 
@@ -44,6 +47,7 @@ export const mountNoteView = (
     state: store.getState,
     onOpenNote,
     onOpenDiagram,
+    sheet,
   })
 
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")

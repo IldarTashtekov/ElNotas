@@ -25,11 +25,20 @@ import {
 import type { LinkBubble } from "./linkBubble.js"
 import { createLinkBubble } from "./linkBubble.js"
 import type { ResolvedLink } from "./linkActions.js"
-import { linkAtCursor, removeLink, resolveLink } from "./linkActions.js"
+import {
+  buildLink,
+  changeLinkTarget,
+  linkAtCursor,
+  linkChoices,
+  removeLink,
+  resolveLink,
+} from "./linkActions.js"
+import { openLinkSheet } from "./linkSheet.js"
 import type { FormattedLine, LineLink, LineSpan, TextSpan } from "./markdownLine.js"
 import { rawOffset, readMarkdownLine } from "./markdownLine.js"
 import { lastLine, lineBeside, locate } from "./noteTree.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
+import type { Sheet } from "./sheet.js"
 import type { WritingMode } from "./writingMode.js"
 import { INITIAL_MODE, toggleNest } from "./writingMode.js"
 
@@ -42,6 +51,8 @@ export interface NoteEditorDeps {
   /** Abrir lo que enlaza un enlace interno, apilado encima de esta nota. */
   readonly onOpenNote: (id: NoteId) => void
   readonly onOpenDiagram: (id: DiagramId) => void
+  /** La hoja donde se elige a qué enlazar. */
+  readonly sheet: Sheet
 }
 
 /** Lo que dura «El enlace ya no existe». */
@@ -57,10 +68,17 @@ interface EnlaceBajoCursor {
   readonly rawCursor: number
 }
 
+/** Una selección dentro de una línea, en la cadena CRUDA de esa línea; sin texto elegido, `from === to`. */
+interface Seleccion {
+  readonly line: ContentId
+  readonly from: number
+  readonly to: number
+}
+
 export interface NoteEditor {
   /** Las líneas, o la invitación a escribir si la nota está vacía. */
   readonly element: HTMLElement
-  /** Los dos botones del modo, para la barra de abajo. */
+  /** Los botones del modo y de enlazar, para la barra de abajo. */
   readonly modeButtons: ReadonlyArray<HTMLElement>
   /** Repinta si la nota cambió. Lo llama quien escucha al `Store`. */
   readonly refresh: (nota: Note) => void
@@ -80,6 +98,9 @@ const leerCursor = (campo: HTMLElement): number | null => {
   hasta.setEnd(sel.focusNode, sel.focusOffset)
   return hasta.toString().length
 }
+
+/** Lo que `[` y `]` rompen: una selección que los lleve no sirve de texto de un enlace. */
+const sirveDeTexto = (elegido: string): boolean => elegido.trim() !== "" && !/[[\]]/.test(elegido)
 
 /** Si el cursor es un punto y no una selección de varios caracteres. */
 const cursorColapsado = (): boolean => window.getSelection()?.isCollapsed ?? true
@@ -213,6 +234,7 @@ export const createNoteEditor = ({
   state,
   onOpenNote,
   onOpenDiagram,
+  sheet,
 }: NoteEditorDeps): NoteEditor => {
   const deps: EditorDeps = { useCases, noteId, note }
   /* Nace apagado al abrir la nota y muere con ella: no se guarda en ningún sitio. */
@@ -236,6 +258,7 @@ export const createNoteEditor = ({
   element.className = "contenido"
   const burbuja: LinkBubble = createLinkBubble({
     onOpen: (): void => abrirEnlace(),
+    onChange: (): void => cambiarEnlace(),
     onRemove: (): void => quitarEnlace(),
   })
   element.append(lineas, empezar, burbuja.element)
@@ -450,6 +473,22 @@ export const createNoteEditor = ({
     else onOpenDiagram(destino.id)
   }
 
+  /** La línea deja de ser lo que era: nuevo texto, línea activa en crudo y cursor en su sitio, con el foco. */
+  const escribirLinea = (id: ContentId, texto: string, cursor: number): void => {
+    const campo: HTMLElement | null = campoDe(id)
+    if (campo === null) return
+    /* Como el Tabulador: la línea activa no se repinta sola, se le pone el texto. */
+    if (campo === activa) campo.textContent = texto
+    useCases.setText(noteId, id, texto)
+    ponerCursor(campo, cursor)
+  }
+
+  /** El texto de esa línea según la nota, o `undefined` si ya no está. */
+  const textoDe = (id: ContentId): string | undefined => {
+    const nota: Note | undefined = deps.note()
+    return nota === undefined ? undefined : locate(nota.content, id)?.line.text
+  }
+
   /** Quita las marcas del enlace guardado y deja su texto, como el Tabulador cambia el de la línea. */
   const quitarEnlace = (): void => {
     const e: EnlaceBajoCursor | null = enlaceBajoCursor()
@@ -460,9 +499,35 @@ export const createNoteEditor = ({
       e.link,
       e.rawCursor,
     )
-    e.campo.textContent = nuevo.text
-    useCases.setText(noteId, e.id, nuevo.text)
-    ponerCursor(e.campo, nuevo.cursor)
+    escribirLinea(e.id, nuevo.text, nuevo.cursor)
+  }
+
+  /** Abre la hoja y, al elegir otro destino, lo pone en el enlace con el texto que tenía. */
+  const cambiarEnlace = (): void => {
+    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    if (e === null || !e.link.saved) return
+    const { id, raw, linea, link }: EnlaceBajoCursor = e
+    const poner = (destino: string): void => {
+      /* Si la línea cambió o ya no está, el enlace capturado no vale. */
+      if (textoDe(id) !== raw) return
+      if (destino.includes(")")) {
+        briefNotice("Esa dirección no se puede enlazar", AVISO_ROTO_MS)
+        return
+      }
+      const nuevo: { readonly text: string; readonly cursor: number } = changeLinkTarget(
+        raw,
+        linea,
+        link,
+        destino,
+      )
+      if (nuevo.text !== raw) escribirLinea(id, nuevo.text, nuevo.cursor)
+    }
+    openLinkSheet(sheet, {
+      title: "Cambiar enlace",
+      choices: linkChoices(state(), noteId),
+      onPickAddress: poner,
+      onPick: (_tipo: "note" | "diagram", destino: string): void => poner(`#${destino}`),
+    })
   }
 
   /* Bajar el dedo fuera de la activa la apaga: si arrastra, selecciona de corrido. */
@@ -703,6 +768,51 @@ export const createNoteEditor = ({
       : null
   }
 
+  /** Lo elegido en la línea de ahora; si el móvil ya cerró el teclado, el último cursor, sin selección. */
+  const seleccionRecordada = (): Seleccion | null => {
+    const sel: Selection | null = window.getSelection()
+    if (sel !== null && sel.rangeCount > 0) {
+      const rango: Range = sel.getRangeAt(0)
+      const inicio: Caret | null = extremo(rango, "inicio")
+      const fin: Caret | null = extremo(rango, "fin")
+      const campo: HTMLElement | null = fin === null ? null : campoDe(fin.line)
+      if (lineas.contains(rango.commonAncestorContainer) && inicio !== null && fin !== null && campo !== null) {
+        const hasta: number = aCrudo(campo, fin.offset)
+        /* Varias líneas: se trata como un cursor en su extremo final. */
+        const desde: number = inicio.line === fin.line ? aCrudo(campo, inicio.offset) : hasta
+        return { line: fin.line, from: desde, to: hasta }
+      }
+    }
+    const caret: Caret | null = cursorRecordado()
+    return caret === null ? null : { line: caret.line, from: caret.offset, to: caret.offset }
+  }
+
+  const enlazar: HTMLButtonElement = botonDeBarra("Enlazar…", (): void => {
+    const sel: Seleccion | null = seleccionRecordada()
+    const raw: string | undefined = sel === null ? undefined : textoDe(sel.line)
+    /* Sin cursor no hay dónde escribirlo, como en «☐ Casilla»: no hace nada. */
+    if (sel === null || raw === undefined) return
+    const from: number = Math.min(sel.from, raw.length)
+    const to: number = Math.min(sel.to, raw.length)
+    const elegido: string = raw.slice(from, to)
+    /* Una selección que no sirve de texto no se pierde: el enlace va tras ella. */
+    const usable: boolean = sirveDeTexto(elegido)
+    const desde: number = usable ? from : to
+    const poner = (enlace: string): void => {
+      /* Con la hoja abierta la línea pudo borrarse o cambiar: entonces no se escribe. */
+      if (textoDe(sel.line) !== raw) return
+      escribirLinea(sel.line, raw.slice(0, desde) + enlace + raw.slice(to), desde + enlace.length)
+    }
+    openLinkSheet(sheet, {
+      title: "Enlazar",
+      choices: linkChoices(state(), noteId),
+      onPickAddress: (direccion: string): void =>
+        poner((usable ? buildLink(elegido, direccion) : null) ?? direccion),
+      onPick: (_tipo: "note" | "diagram", destino: string, nombre: string): void =>
+        poner(buildLink(usable ? elegido : nombre, `#${destino}`) ?? nombre),
+    })
+  })
+
   const casilla: HTMLButtonElement = botonDeBarra("☐ Casilla", (): void => {
     const caret: Caret | null = cursorRecordado()
     ordenar((): EditResult => toggleCheckbox(deps, caret, modo))
@@ -730,7 +840,7 @@ export const createNoteEditor = ({
 
   return {
     element,
-    modeButtons: [casilla, anidar],
+    modeButtons: [casilla, anidar, enlazar],
     refresh,
     destroy: (): void => {
       document.removeEventListener("selectionchange", recordarCursor)

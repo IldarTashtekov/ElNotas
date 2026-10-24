@@ -151,6 +151,7 @@ export const mountWindowsView = (
         state: store.getState,
         onOpenNote,
         onOpenDiagram: (otro: DiagramId): void => onOpenDiagram(otro, false),
+        sheet: hoja,
       })
       const barra: HTMLElement = elemento("div")
       barra.className = "barra barra-modo"

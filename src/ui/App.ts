@@ -113,6 +113,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
         onExit: back.close,
         onOpenNote: abrirNota,
         onOpenDiagram: (id: DiagramId): void => abrirDiagrama(id, false),
+        sheet: pregunta,
       }),
     )
 

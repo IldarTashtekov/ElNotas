@@ -266,6 +266,23 @@ export const ROTURAS = [
     caza: "pruebas",
     prueba: "removeLink: los escapes y las marcas de dentro se conservan tal cual",
   },
+  {
+    nombre: "enlaces: construir uno escapa los corchetes del texto",
+    fichero: "src/ui/linkActions.ts",
+    buscar: 'replace(/[\\\\[\\]*]/g, "\\\\$&")',
+    /* `$$` en `poner`: `replace` lee `$&` como «lo encontrado». */
+    poner: 'replace(/[\\\\[*]/g, "\\\\$$&")',
+    caza: "pruebas",
+    prueba: "buildLink: escapa la barra, los corchetes y el asterisco del texto",
+  },
+  {
+    nombre: "enlaces: cambiar el destino de uno no deja el viejo",
+    fichero: "src/ui/linkActions.ts",
+    buscar: "text: raw.slice(0, cierre.start) + nuevaMarca + raw.slice(link.end),",
+    poner: "text: raw.slice(0, cierre.start) + raw.slice(cierre.start, link.end) + nuevaMarca + raw.slice(link.end),",
+    caza: "pruebas",
+    prueba: "changeLinkTarget: cambia el destino, deja el texto y el cursor tras el enlace",
+  },
 
   /* ── El encuadre de los diagramas ── */
   {

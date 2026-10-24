@@ -1,6 +1,7 @@
 /**
  * Los enlaces de una línea: a qué lleva uno interno, cuál hay bajo el cursor y
- * cómo se quita su marca, con los casos raros (ids que son propiedades de un
+ * cómo se quita su marca, qué se puede enlazar, cómo se escribe un enlace y cómo
+ * se cambia su destino, con los casos raros (ids que son propiedades de un
  * objeto, bordes, escapes, enlaces sueltos).
  */
 
@@ -11,9 +12,18 @@ import type { Clock, Context, Diagram, IdGenerator, Note, Store, UseCases } from
 import { createStore, createUseCases } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { AppState } from "#core/index"
-import type { FormattedLine, LineLink } from "#ui/markdownLine"
+import type { FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
 import { readMarkdownLine } from "#ui/markdownLine"
-import { linkAtCursor, removeLink, resolveLink } from "#ui/linkActions"
+import type { LinkChoices } from "#ui/linkActions"
+import {
+  buildLink,
+  changeLinkTarget,
+  isWebAddress,
+  linkAtCursor,
+  linkChoices,
+  removeLink,
+  resolveLink,
+} from "#ui/linkActions"
 
 interface Escenario {
   readonly store: Store
@@ -158,4 +168,131 @@ test("removeLink: un enlace que no es de esa línea no cambia nada", (): void =>
 test("removeLink: lo quitado ya no se lee como enlace", (): void => {
   const { text }: { readonly text: string } = quitar("ve a [aquí](#x) ya", 8)
   assert.strictEqual(readMarkdownLine(text).links.length, 0)
+})
+
+/* ── isWebAddress ── */
+
+test("isWebAddress: http, https y www, sin distinguir mayúsculas, con algo detrás", (): void => {
+  for (const ok of ["http://a.es", "https://a.es/x?y=1#z", "www.a.es", "HTTPS://A.ES", "WwW.a.es", "  https://a.es  "]) {
+    assert.strictEqual(isWebAddress(ok), true, ok)
+  }
+})
+
+test("isWebAddress: sin nada detrás del prefijo, con espacios dentro o sin prefijo, no", (): void => {
+  for (const mal of ["", "  ", "https://", "http://", "www.", "a.es", "ftp://a.es", "https://a b", "mira https://a.es", "https:/a.es", "#id"]) {
+    assert.strictEqual(isWebAddress(mal), false, mal)
+  }
+})
+
+/* ── linkChoices ── */
+
+test("linkChoices: las demás notas y todos los diagramas, por nombre, sin contextos", (): void => {
+  const { store, useCases, nota, diagrama }: Escenario = escenario()
+  const zeta: Note | null = useCases.createNote("zeta")
+  const alfa: Note | null = useCases.createNote("Álamo")
+  const otro: Diagram | null = useCases.createDiagram("Árbol")
+  if (zeta === null || alfa === null || otro === null) assert.fail("tenían que crearse")
+  const r: LinkChoices = linkChoices(store.getState(), nota.id)
+  assert.deepEqual(r.notes.map((n: { readonly name: string }): string => n.name), ["Álamo", "zeta"])
+  assert.deepEqual(r.diagrams.map((d: { readonly name: string }): string => d.name), ["Árbol", "Plano"])
+  assert.ok(r.diagrams.some((d: { readonly id: string }): boolean => d.id === diagrama.id))
+  assert.ok(!r.notes.some((n: { readonly id: string }): boolean => n.id === nota.id))
+})
+
+test("linkChoices: el orden ignora tildes y mayúsculas; sin nada que enlazar, listas vacías", (): void => {
+  const { store, useCases, nota }: Escenario = escenario()
+  useCases.createNote("b")
+  useCases.createNote("Á")
+  useCases.createNote("a")
+  const nombres: ReadonlyArray<string> = linkChoices(store.getState(), nota.id).notes.map((n: { readonly name: string }): string => n.name)
+  assert.strictEqual(nombres[2], "b")
+  assert.deepEqual(linkChoices(emptyAppState(), nota.id), { notes: [], diagrams: [] })
+})
+
+/* ── buildLink ── */
+
+test("buildLink: [texto](destino), con los destinos tal cual", (): void => {
+  assert.strictEqual(buildLink("hola", "#id-1"), "[hola](#id-1)")
+  assert.strictEqual(buildLink("a", "www.a.es"), "[a](www.a.es)")
+  assert.strictEqual(buildLink("a", "https://a.es/x?y=1"), "[a](https://a.es/x?y=1)")
+})
+
+test("buildLink: escapa la barra, los corchetes y el asterisco del texto", (): void => {
+  assert.strictEqual(buildLink("a\\b [c] *d*", "#x"), "[a\\\\b \\[c\\] \\*d\\*](#x)")
+})
+
+test("buildLink: un texto vacío o en blanco pasa a «enlace»", (): void => {
+  assert.strictEqual(buildLink("", "#x"), "[enlace](#x)")
+  assert.strictEqual(buildLink("  \t ", "#x"), "[enlace](#x)")
+})
+
+test("buildLink: un destino con `)` no se enlaza", (): void => {
+  assert.strictEqual(buildLink("a", "https://a.es/x_(y)"), null)
+  assert.strictEqual(buildLink("a", ")"), null)
+})
+
+test("buildLink: lo escrito se lee de vuelta con ese texto y ese destino", (): void => {
+  const raw: string = buildLink("a]b[c\\d*e", "#x") ?? assert.fail("tenía que construirse")
+  const linea: FormattedLine = readMarkdownLine(raw)
+  assert.strictEqual(linea.links.length, 1)
+  assert.deepEqual(linea.links[0]?.target, { kind: "internal", id: "x" })
+  assert.strictEqual(linea.links[0]?.saved, true)
+  const visto: string = linea.spans
+    .map((s: LineSpan): string => (s.kind === "text" ? s.text : ""))
+    .join("")
+  assert.strictEqual(visto, "a]b[c\\d*e")
+  const web: string = buildLink("w", "www.a.es") ?? assert.fail("tenía que construirse")
+  assert.deepEqual(readMarkdownLine(web).links[0]?.target, { kind: "web", href: "https://www.a.es" })
+})
+
+/* ── changeLinkTarget ── */
+
+const cambiar = (
+  raw: string,
+  offset: number,
+  destino: string,
+): { readonly text: string; readonly cursor: number } => {
+  const linea: FormattedLine = readMarkdownLine(raw)
+  const l: LineLink | null = linkAtCursor(linea, offset)
+  if (l === null) assert.fail("tenía que haber enlace")
+  return changeLinkTarget(raw, linea, l, destino)
+}
+
+test("changeLinkTarget: cambia el destino, deja el texto y el cursor tras el enlace", (): void => {
+  assert.deepEqual(cambiar("[hola](#x)", 3, "#y"), { text: "[hola](#y)", cursor: 10 })
+  assert.deepEqual(cambiar("a [hola](https://b.es) c", 5, "#y"), { text: "a [hola](#y) c", cursor: 12 })
+  assert.deepEqual(cambiar("[a](#x) y [b](#y)", 12, "www.c.es"), { text: "[a](#x) y [b](www.c.es)", cursor: 23 })
+})
+
+test("changeLinkTarget: el texto con escapes y marcas queda tal cual", (): void => {
+  assert.deepEqual(cambiar("[**a** \\] b](#x)", 3, "#z"), { text: "[**a** \\] b](#z)", cursor: 16 })
+  assert.deepEqual(cambiar("# [t](#x)", 4, "#z"), { text: "# [t](#z)", cursor: 9 })
+})
+
+test("changeLinkTarget: un destino con paréntesis se sustituye entero", (): void => {
+  assert.deepEqual(cambiar("[w](https://a.es/x_(y))!", 2, "#z"), { text: "[w](#z)!", cursor: 7 })
+})
+
+test("changeLinkTarget: lo cambiado se lee como enlace al destino nuevo", (): void => {
+  const { text }: { readonly text: string } = cambiar("ve a [aquí](#x) ya", 8, "https://b.es")
+  const l: LineLink | undefined = readMarkdownLine(text).links[0]
+  assert.deepEqual(l?.target, { kind: "web", href: "https://b.es" })
+  assert.strictEqual(l?.saved, true)
+})
+
+test("changeLinkTarget: una dirección suelta, un enlace ajeno o un destino con `)` no cambian nada", (): void => {
+  const suelta: string = "mira https://a.es"
+  const ls: FormattedLine = readMarkdownLine(suelta)
+  const s: LineLink | null = linkAtCursor(ls, 10)
+  if (s === null) assert.fail("tenía que haber enlace")
+  assert.deepEqual(changeLinkTarget(suelta, ls, s, "#y"), { text: suelta, cursor: s.end })
+
+  const ajeno: LineLink = readMarkdownLine("[a](#x)").links[0] as LineLink
+  const otra: FormattedLine = readMarkdownLine("otra cosa distinta")
+  assert.deepEqual(changeLinkTarget("otra cosa distinta", otra, ajeno, "#y"), {
+    text: "otra cosa distinta",
+    cursor: ajeno.end,
+  })
+
+  assert.deepEqual(cambiar("[a](#x)", 2, "https://a.es/x_(y)"), { text: "[a](#x)", cursor: 7 })
 })

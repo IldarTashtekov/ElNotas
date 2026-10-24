@@ -123,3 +123,27 @@
     padding: 0.3rem 0.65rem;
   }
 }
+/* Pegar una dirección en la hoja de enlazar: el campo y su botón en una fila. */
+.enlazar-direccion {
+  display: flex;
+  gap: 0.5rem;
+
+  & input {
+    flex: 1;
+    min-width: 0;
+
+    /* Lo que se pegó no es una dirección: sólo se marca, sin mensaje. */
+    &.invalido {
+      border-color: var(--danger);
+    }
+  }
+  & button {
+    background: var(--accent);
+    border: none;
+    color: var(--accent-ink);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.45rem 0.9rem;
+    text-shadow: none;
+  }
+}

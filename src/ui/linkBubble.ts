@@ -1,7 +1,8 @@
 /**
  * La burbuja de un enlace: un elemento con «↗ Abrir» y, si el enlace está
- * guardado, «Quitar», que se coloca bajo la línea que se escribe. Quien la usa
- * decide cuándo sale y qué hace cada botón; aquí sólo se dibuja y se coloca.
+ * guardado, «Cambiar» y «Quitar», que se coloca bajo la línea que se escribe.
+ * Quien la usa decide cuándo sale y qué hace cada botón; aquí sólo se dibuja y
+ * se coloca.
  */
 
 import { elemento } from "./dom.js"
@@ -27,18 +28,21 @@ const HUECO_PX: number = 2
 
 export const createLinkBubble = (acciones: {
   readonly onOpen: () => void
+  readonly onChange: () => void
   readonly onRemove: () => void
 }): LinkBubble => {
   const element: HTMLElement = elemento("div")
   element.className = "burbuja-enlace"
   element.hidden = true
   const abrir: HTMLButtonElement = boton("↗ Abrir", acciones.onOpen)
+  const cambiar: HTMLButtonElement = boton("Cambiar", acciones.onChange)
   const quitar: HTMLButtonElement = boton("Quitar", acciones.onRemove)
-  element.append(abrir, quitar)
+  element.append(abrir, cambiar, quitar)
 
   return {
     element,
     show: (saved: boolean, campo: HTMLElement, contenedor: HTMLElement, x: number): void => {
+      cambiar.hidden = !saved
       quitar.hidden = !saved
       /* Visible antes de medirla. */
       element.hidden = false
