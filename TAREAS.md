@@ -70,13 +70,6 @@ resumen, en `TERMINADAS.md`.
       **Se cierra cuando** el usuario decide si existe; si es que sí, con su ficha y una pasada real
       sobre un cambio.
 
-#### De la Fase 9.1 — Correa larga
-
-- [ ] **Ver que una sesión nueva compacta antes del 97 %**: `autoCompactWindow: 500000` está en
-      `.claude/settings.json`, pero la sesión que lo escribió seguía en el 97 %.
-      **Se cierra cuando** una sesión nueva muestra el umbral por debajo del 97 %, o se ve que el
-      ajuste no hace nada y se quita.
-
 #### Avisos sin tarea, cada uno con lo que lo dispara
 
 - **El icono parece una ilustración de otra persona** (Fase 6): si la app se comparte, conviene un

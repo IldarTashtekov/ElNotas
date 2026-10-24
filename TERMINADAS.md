@@ -189,6 +189,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 
 ## Tareas sueltas terminadas
 
+- **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
+  indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
+  para compactar hacia los 250.000.
 - **Exportar e importar las notas (JSON)** ✅ 2026-10-12, rama `feat/backup`, 803 pruebas: en ⚙ →
   Datos, sustituye todo tras un ensayo; su lista, pasada en la Fase 9 (C5). `9e1288e`.
 - **Ventanas, hueco y encuadre** ✅ 2026-10-13, 828 pruebas: ⚙ crea lo mismo que el «+», tocar el
