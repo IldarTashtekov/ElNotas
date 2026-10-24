@@ -87,13 +87,14 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto y Markdown — PLANIFICADA, empieza al cerrar la 9.1
+### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto, Markdown y calendario — PLANIFICADA, empieza al cerrar la 9.1
 
 **Decidida con el usuario el 2026-10-18**, a partir de una lista que trajo de usar la app. De
 siete ideas entran cinco; los subcontextos se aparcan (*Ideas aparcadas*) y «fijar» se descarta
 porque reordenar lo cubre. **Sin dependencias y sin migrar**: ningún cambio obliga a convertir lo
 guardado. **Orden:** lo previsible primero (1-3), el editor al final (4-6), con una parada para
-probar el 4 en el móvil antes de construir el Markdown encima.
+probar el 4 en el móvil antes de construir el Markdown encima. **El calendario (7), añadido el
+2026-10-24, está sin plantear**: se plantea con el usuario antes de construirlo.
 
 **Decidido con el usuario el 2026-10-18:**
 - **Ocultos, por contexto** (al estilo de los archivados de WhatsApp): lo oculto **sigue siendo del
@@ -175,7 +176,12 @@ probar el 4 en el móvil antes de construir el Markdown encima.
       una lista como la de «Mover a…», y se escribe el enlace donde está el cursor. Leer el formato
       es una pieza pura, con pruebas en Node. **Se cierra cuando** esa pieza tiene sus pruebas,
       `check` pasa y la lista del editor tiene sus pasos, pasados en el ordenador y en el móvil.
-- [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: «sin selección» del lienzo
+- [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24;
+      **todavía sin plantear**: qué es, qué pide al dominio y a la pantalla, y si cambia alguna
+      decisión cerrada. Va después del Markdown y antes de la documentación. **Se cierra cuando**
+      está planteado con el usuario y esta entrada se sustituye por sus tareas, cada una con su
+      etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a *Ideas aparcadas*.
+- [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: «sin selección» del lienzo
       cambiada, el texto como Markdown, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y
       sólo es editable la línea activa. En `ARCHITECTURE.md`, el principio que sale del 5: **la
       integridad referencial llega también a las referencias dentro del texto**. Y la auditoría
