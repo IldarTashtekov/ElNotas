@@ -82,14 +82,14 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto, Markdown y calendario — EN CURSO
+### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto, y Markdown — EN CURSO
 
 **Decidida con el usuario el 2026-10-18**, a partir de una lista que trajo de usar la app. De
 siete ideas entran cinco; los subcontextos se aparcan (*Ideas aparcadas*) y «fijar» se descarta
 porque reordenar lo cubre. **Sin dependencias y sin migrar**: ningún cambio obliga a convertir lo
 guardado. **Orden:** lo previsible primero (1-3), el editor al final (4-6), con una parada para
-probar el 4 en el móvil antes de construir el Markdown encima. **El calendario (7), añadido el
-2026-10-24, está sin plantear**: se plantea con el usuario antes de construirlo.
+probar el 4 en el móvil antes de construir el Markdown encima. **El calendario**, propuesto el
+2026-10-24, **sale de esta fase** (2026-10-25) a la 11, con el formato y los enlaces en los pósits.
 
 **Decidido con el usuario el 2026-10-18:**
 - **Ocultos, por contexto** (al estilo de los archivados de WhatsApp): lo oculto **sigue siendo del
@@ -194,12 +194,7 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       **Hecho en el ordenador** (6a `36bce45`, 6b `971ada1`, 6c `d34dee4`, 6d `225385d`, y los pasos
       de la lista en `6359079`; secciones N a Q de `VERIFICACION-MANUAL-EDITOR.md`, pasada 5;
       `check:roturas` entera, 70 caen). **Falta pasar en el móvil** la pasada 6: M4, N, O, P y Q.
-- [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24;
-      **todavía sin plantear**: qué es, qué pide al dominio y a la pantalla, y si cambia alguna
-      decisión cerrada. Va después del Markdown y antes de la documentación. **Se cierra cuando**
-      está planteado con el usuario y esta entrada se sustituye por sus tareas, cada una con su
-      etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a *Ideas aparcadas*.
-- [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
+- [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
@@ -249,6 +244,22 @@ los dos agentes y el recorrido.
       agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa y la auditoría no deja nada falso.
+
+### Fase 11 — Calendario, y formato y enlaces en los pósits del lienzo — PLANIFICADA, empieza al cerrar la 10.1
+
+**Decidida con el usuario el 2026-10-25**: dos ideas que estaban sin hueco, juntas en una fase
+detrás de la 10.1. **Las dos, sin plantear**: se plantean con el usuario antes de construir nada.
+
+- [ ] **1. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24:
+      qué es, qué pide al dominio y a la pantalla, y si cambia alguna decisión cerrada.
+      **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
+      tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
+      *Ideas aparcadas*.
+- [ ] **2. Formato y enlaces en los pósits de texto del lienzo** *(a plantear)*. Salió de
+      *Ideas aparcadas*, donde decía: Aparcado por el usuario el 2026-10-24: le gusta, pero no hace falta ahora. Al core no le pediría nada (los enlaces del texto no entran en la integridad); lo difícil son los gestos, porque un toque en el lienzo ya mueve, marca o abre el menú. **Y podría jubilar el nodo-nota**: un pósit con un enlace a la nota haría lo mismo. **Qué lo desbloquea:** Usar los enlaces de las notas (tarea 6) y echarlos en falta en el lienzo. Ese día se decide cómo se abre un enlace desde un pósit y si el nodo-nota sigue.
+      **Se cierra cuando** está planteado con el usuario —cómo se abre un enlace desde un pósit y
+      si el nodo-nota sigue— y esta entrada se sustituye por sus tareas, cada una con su etiqueta
+      y su cierre.
 
 ### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
 
@@ -403,8 +414,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
-| **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10, una nota ya puede enlazar un contexto con `[texto](#id)`. |
-| **Formato y enlaces en los pósits de texto del lienzo** | Aparcado por el usuario el 2026-10-24: le gusta, pero no hace falta ahora. Al core no le pediría nada (los enlaces del texto no entran en la integridad); lo difícil son los gestos, porque un toque en el lienzo ya mueve, marca o abre el menú. **Y podría jubilar el nodo-nota**: un pósit con un enlace a la nota haría lo mismo. | Usar los enlaces de las notas (tarea 6) y echarlos en falta en el lienzo. Ese día se decide cómo se abre un enlace desde un pósit y si el nodo-nota sigue. | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
+| **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10 una nota puede enlazar notas y diagramas con `[texto](#id)`; los contextos, no, por ahora (2026-10-25). | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
 | **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
 | **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
 | **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
