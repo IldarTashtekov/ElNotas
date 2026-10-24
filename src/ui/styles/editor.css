@@ -54,10 +54,9 @@
       text-decoration: underline;
       text-underline-offset: 0.2em;
     }
-    /* Un enlace interno cuyo destino ya no está: lo dice con un añadido que no es texto. */
-    & .md-roto::after {
-      content: " (perdido)";
-      text-decoration: none;
+    /* Un enlace interno cuyo destino ya no está: se apaga. */
+    & .md-roto {
+      color: var(--dim);
     }
     /* El título, sin letra más grande: más brillo y una raya debajo. */
     &.md-titulo {

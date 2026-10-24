@@ -172,8 +172,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       con `https://` delante; un dominio pelado, no). La barra invertida escribe las marcas
       literales. **La línea activa se ve en crudo; las demás, formateadas.** Con el cursor dentro de
       un enlace sale una **burbuja** con «↗ Abrir» (y «Cambiar» y «Quitar» si es un enlace
-      guardado); un interno se abre apilado encima; uno roto (su id ya no existe) se ve «texto
-      (perdido)», y al pulsarlo sale «El enlace ya no existe» durante segundo y medio. La
+      guardado); un interno se abre apilado encima; uno roto (su id ya no existe) se ve apagado, con
+      el color de `--dim` y sin añadir texto (2026-10-24), y al pulsarlo sale «El enlace ya no existe» durante segundo y medio. La
       barra invertida delante de un enlace, a decidir al plantear esta tarea. En la
       barra de la nota, **«Enlazar…»**: pegar una dirección o elegir nota, diagrama o contexto en
       una lista como la de «Mover a…», y se escribe el enlace donde está el cursor. Leer el formato

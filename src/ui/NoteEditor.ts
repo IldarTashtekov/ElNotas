@@ -134,7 +134,7 @@ const offsetEnPunto = (campo: HTMLElement, x: number, y: number): number | null 
 
 /**
  * Pinta la línea formateada: un `span` por tramo visible, con su estilo; las
- * marcas no se pintan. Un enlace roto lleva `md-roto` en su último tramo.
+ * marcas no se pintan. Un enlace roto lleva `md-roto` en todos sus tramos.
  */
 const pintarFormateada = (
   campo: HTMLElement,
@@ -144,8 +144,6 @@ const pintarFormateada = (
   const visibles: ReadonlyArray<TextSpan> = linea.spans.filter(
     (s: LineSpan): s is TextSpan => s.kind === "text",
   )
-  const ultimoDe: Map<LineLink, TextSpan> = new Map<LineLink, TextSpan>()
-  for (const s of visibles) if (s.link !== null) ultimoDe.set(s.link, s)
   const tramos: ReadonlyArray<HTMLSpanElement> = visibles
     .map((s: TextSpan): HTMLSpanElement => {
       const el: HTMLSpanElement = elemento("span", s.text)
@@ -153,8 +151,8 @@ const pintarFormateada = (
       el.classList.toggle("md-cursiva", s.italic)
       /* Sólo el aspecto: abrirlo es de la burbuja. Un `<a>` se iría al tocarlo. */
       el.classList.toggle("md-enlace", s.link !== null)
-      /* El `(perdido)` lo añade el CSS: ni el texto ni sus letras cambian. */
-      el.classList.toggle("md-roto", s.link !== null && rotos.has(s.link) && ultimoDe.get(s.link) === s)
+      /* Roto: sólo cambia el color, el texto es el mismo. */
+      el.classList.toggle("md-roto", s.link !== null && rotos.has(s.link))
       return el
     })
   campo.replaceChildren(...tramos)
