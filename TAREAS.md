@@ -119,7 +119,7 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
   plano**: los enlaces como su texto visible, las casillas sólo con su texto. Ni «copiar nota» ni
   «copiar desde aquí».
 
-- [ ] **1. Ocultos por contexto** *(pensar)*. En el core, `Context.hidden` (ausente = vacío, sin
+- [x] **1. Ocultos por contexto** *(pensar)*. En el core, `Context.hidden` (ausente = vacío, sin
       migrar) con dos acciones, ocultar y mostrar, que reciben varios elementos; ocultar lo que no
       está en `items` no hace nada. Quitar un elemento del contexto o borrarlo lo saca también de
       `hidden`; `hydrate` y `schema.ts` tiran lo de `hidden` que no esté en `items`. **Lo creado

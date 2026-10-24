@@ -377,7 +377,7 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una fase cerrada sigue en TAREAS.md",
     fichero: "TAREAS.md",
-    buscar: "— PLANIFICADA, empieza al cerrar la 9.1\n",
+    buscar: "— PLANIFICADA, empieza al cerrar la 10\n",
     poner: "✅ CERRADA\n",
     caza: "check:tareas",
   },
@@ -447,8 +447,8 @@ export const ROTURAS = [
   {
     nombre: "check:arquitectura: CLAUDE.md vuelve a llevar una fecha",
     fichero: "CLAUDE.md",
-    buscar: "**Versión 1 cerrada** (etiqueta `v1.0.0`)",
-    poner: "**Versión 1 cerrada el 2026-10-13** (etiqueta `v1.0.0`)",
+    buscar: "**Versión 1 cerrada** (última etiqueta, `v1.1.0`)",
+    poner: "**Versión 1 cerrada el 2026-10-13** (última etiqueta, `v1.1.0`)",
     caza: "check:arquitectura",
   },
   {

@@ -252,6 +252,31 @@ siempre.
 Una tabla por pasada. En *Resultado*: ✅, ❌ con lo que pasó, o «no se puede probar aquí» y por
 qué.
 
+### Pasada 3 — escritorio, sólo K (los ocultos, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-24 |
+| Navegador y versión | Chrome 152, el navegador del panel (Claude/3.1623.0) |
+| Quién | Claude, en el panel |
+| Commit | `6b5329d`, árbol limpio |
+| Origen | `localhost:8001`, empezando vacío |
+
+| Paso | Resultado |
+|---|---|
+| K1 | ✅ |
+| K2 | ✅ — sigue tras recargar; en el General, las cinco |
+| K3 | ✅ — también Escape con la hoja «Añadir ventana» encima: cierra sólo la hoja |
+| K4 | ✅ — el historial vuelve a la entrada base |
+| K5 | ✅ — y el atrás de la nota vuelve a la lista de los ocultos |
+| K6 | ✅ — Pan, oculta en Casa, queda a la vista |
+| K7 | ✅ |
+| K8 | ✅ |
+
+Notas: el escenario de K6 y K7 —ocultar más, y Pan en Casa, oculta— se preparó con
+`?depurar` desde la consola; lo probado es la pantalla. La de K3 con el atrás del sistema de
+Android, en el móvil, sin pasar.
+
 ### Pasada 1 — escritorio
 
 | | |
