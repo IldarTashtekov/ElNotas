@@ -179,17 +179,22 @@ setTimeout(() => console.log("cambios en pantalla:", cambios), 700)
 
 ## M. Seleccionar y copiar
 
-Con una nota de un texto, una línea vacía, una casilla marcada con dos hijas, y otro texto.
+Con una nota de un texto, una línea vacía, una casilla marcada con dos hijas, y otro texto. (Desde
+la Fase 10 las líneas que no se escriben se ven **formateadas**, sección N: lo copiado ya no lleva
+las marcas de formato.)
 
 - **M1.** Al abrir la nota, **ninguna línea tiene cursor**. Tocar en medio de una palabra pone el
   cursor **donde se tocó**, y sólo esa línea se edita. *(Con la consola.)*
   `document.querySelectorAll("[contenteditable]").length` vale **1**.
 - **M2.** *(Escritorio.)* Arrastrar desde la mitad de la primera línea hasta la mitad de una hija:
-  la selección va **de corrido**, cruzando la casilla, en **vídeo inverso**. ⚠️ Hacia arriba
+  la selección va **de corrido**, cruzando la casilla, en **vídeo inverso** (también sobre texto
+  formateado). ⚠️ Hacia arriba
   igual, y **la línea vacía también se pinta**: un hueco ahí era el fallo de la pasada 4.
 - **M3.** ⚠️ Copiar (Ctrl/Cmd + C) y pegarlo **fuera de la app**, en un editor de texto: **una
   línea por renglón**, sin ✓ ni renglones vacíos de más, la primera y la última cortadas donde
-  empezaba y acababa la selección.
+  empezaba y acababa la selección. **Sin marcas de formato**: si alguna línea lleva `**negrita**`
+  o un enlace, sale su texto sin `**` ni `[](…)`. (Con la consola se puede lanzar el `copy` y leer
+  el resultado, como en la pasada 3.)
 - **M4.** *(Móvil.)* ⚠️ **Pulsación larga** en una palabra de una línea que no se está
   escribiendo: sale la selección del sistema, con sus **asas**, que **cruzan líneas**. *Copiar*,
   en su menú, copia como en M3.
@@ -197,6 +202,114 @@ Con una nota de un texto, una línea vacía, una casilla marcada con dos hijas, 
   cursor ahí, y la selección se va. ⚠️ También tocando **encima** de lo seleccionado.
 - **M6.** Intro, Retroceso al principio y las flechas, como en C, D y G: **la que se edita pasa a
   ser la línea a la que va el cursor**, y la anterior deja de serlo.
+
+## N. Formato de las líneas
+
+Las líneas que **no se escriben** se ven formateadas; **la activa, en crudo**. Con una nota nueva
+y, en cada línea, uno de estos textos (la consola es la de la sección M):
+
+```
+una **negrita** y una *cursiva* y \*suelta\*
+# Un título
+mira [la web](https://example.com) o www.example.com.
+**sin cerrar y *esta tampoco
+```
+
+- **N1.** Al abrir la nota, ninguna línea está activa y todas se ven formateadas: la **negrita**
+  con **más brillo**, la *cursiva* inclinada, **sin ver los `**` ni los `*`**; el título
+  (`# `) con una **raya debajo** y **sin letra mayor** que las demás ni el `# `; los enlaces
+  **subrayados** y sin los corchetes ni el paréntesis.
+- **N2.** `www.example.com.` se detecta **solo** como enlace, **sin el punto final** (el punto
+  queda fuera del subrayado).
+- **N3.** Con `\*suelta\*` se ve `*suelta*`, con los asteriscos, **sin cursiva**: la barra invertida
+  escribe la marca literal y no se ve. Una marca **sin cerrar** (`**sin cerrar y *esta tampoco`) se
+  ve **como texto**, con sus asteriscos.
+- **N4.** Tocar la línea la **activa en crudo**: salen todas las marcas (`**`, `[`, `](…)`, la
+  barra, el `# `), sin formato. Tocar **otra** línea la devuelve a formateada, y la nueva pasa a
+  crudo.
+- **N5.** ⚠️ Un toque **en medio de una palabra formateada** (dentro de la negrita, de un enlace)
+  deja el cursor **en su sitio del texto crudo**, sobre la misma letra que se tocó, **aunque haya
+  marcas delante** (escribir una letra la pone ahí). En el **borde** de un enlace o de una negrita
+  cae **a la izquierda de las marcas**. Tocar al principio de un título lo deja tras el `# `.
+- **N6.** Tocar **el hueco bajo la última línea** deja el cursor **al final de la última, en
+  crudo**, aunque estuviera formateada (como B5).
+- **N7.** `document.querySelectorAll("[contenteditable]").length` sigue valiendo **1**: sólo la
+  activa es editable (como M1).
+- **N8.** ⚠️ Seleccionar con el ratón desde la mitad de una línea formateada hasta la mitad de otra
+  y **copiar**: sale **texto plano sin marcas** (sin `**`, `*`, `# ` ni `[](…)`; un enlace, **como
+  su texto**), una línea por renglón. Si la selección incluye **la línea activa**, ésa sale **en
+  crudo**. *(Con un `copy` lanzado desde la consola; pegarlo fuera de la app, el usuario.)*
+- **N9.** Escribir en la línea activa una marca cerrada (`*x*`) no la formatea **hasta que se
+  deja**; al tocar otra línea se ve formateada.
+
+## O. Burbuja y enlaces
+
+Con una nota con un enlace **a la web** (`[la web](https://example.com)`), una dirección suelta
+(`www.example.com`), un enlace **a otra nota** (`[la otra](#id)`, que se crea con P) y uno a un
+diagrama.
+
+- **O1.** Con el cursor **estrictamente dentro** de un enlace guardado (no en el borde) sale, **bajo
+  la línea**, la burbuja con **«↗ Abrir»**, **«Cambiar»** y **«Quitar»**. En una **dirección suelta**,
+  sólo **«↗ Abrir»**. Fuera del enlace, o en el borde, **se va**.
+- **O2.** Mover el cursor con **← →** a través del enlace la saca y la esconde; tocar otra línea la
+  esconde.
+- **O3.** ⚠️ Pulsar un botón de la burbuja **no quita el foco ni mueve el cursor** (en el móvil, el
+  teclado no se cierra). *(Móvil, el teclado.)*
+- **O4.** «↗ Abrir» en un enlace **web** abre una pestaña nueva. *(En el panel se simula:
+  registrando `window.open`; se apunta como 🔁.)*
+- **O5.** «↗ Abrir» en un enlace **a una nota** o **a un diagrama** lo abre **apilado encima**; el
+  **atrás** (o ✕ Salir) vuelve a la nota de antes, con la burbuja escondida.
+- **O6.** Desde esa nota, abrir **otra más** (que tenga un enlace). El atrás las deshace **una a
+  una** (Q1).
+- **O7.** ⚠️ **Recargar con la cadena abierta restaura toda la cadena**: las mismas capas, en el
+  mismo orden (como en `VERIFICACION-MANUAL-CAPAS.md`); el atrás sigue deshaciéndolas.
+- **O8.** Un enlace a algo **borrado** (la nota o el diagrama ya no están) se ve **apagado**, con el
+  color `--dim`, **sin** «(perdido)» ni texto añadido. Con el cursor dentro, la burbuja **sigue
+  saliendo**; **«Abrir»** muestra durante ~1,5 s **«El enlace ya no existe»** y **no apila nada**.
+- **O9.** Con la nota abierta, **borrar el destino** (por la consola, `useCases` con `?depurar`, o
+  desde otra ventana del navegador) **apaga el enlace al momento**, sin recargar.
+- **O10.** ⚠️ Un enlace a un **contexto** escrito a mano (`[x](#id-de-un-contexto)`) se ve **como
+  roto** (apagado, «El enlace ya no existe»): por ahora no se enlazan.
+- **O11.** **«Quitar»** deja el texto sin marcas (`[la web](https://…)` pasa a `la web`) y el
+  **cursor justo tras él**, en la línea activa y en crudo; una dirección suelta no lo lleva.
+
+## P. «Enlazar…» y «Cambiar»
+
+- **P1.** En la barra de la nota, **«Enlazar…»** va **tras «↳ Anidar»**. En una ventana de tipo nota
+  (I2) también.
+- **P2.** Al pulsarlo sale una **hoja** con un campo **«Pega una dirección»** y las listas
+  **«Notas»** y **«Diagramas»**, por nombre: **sin la nota actual** y **sin contextos**. Sin
+  diagramas, no sale la lista de diagramas.
+- **P3.** Elegir una **nota**, con el cursor en una línea **sin selección**: se escribe
+  `[nombre de la nota](#id)` **donde estaba el cursor**.
+- **P4.** Con una **selección** dentro de la línea: el enlace lleva **el texto seleccionado**
+  (`[lo seleccionado](#id)`), que sustituye a la selección.
+- **P5.** ⚠️ Si la selección lleva **`[` o `]`**, no sirve de texto: se usa **el nombre** de la
+  nota y el enlace va **tras** la selección, sin borrarla.
+- **P6.** Elegir un **diagrama**: igual que P3 y P4.
+- **P7.** Escribir una **dirección** (`https://example.com`) **con selección**: `[texto](dirección)`;
+  **sin selección**: la dirección **sola**, sin corchetes. Se acepta con Intro o con «Enlazar».
+- **P8.** Una dirección **inválida** (`example`, o vacía) **marca el campo** en rojo y **no inserta**
+  nada; seguir escribiendo quita la marca.
+- **P9.** **Cancelar** (o el **atrás**) cierra la hoja y **no toca la línea**.
+- **P10.** Al insertar, el **cursor queda tras lo insertado**, la línea queda **activa en crudo** y
+  tiene el foco.
+- **P11.** **«Cambiar»** en la burbuja de un enlace guardado: abre la hoja («Cambiar enlace»).
+  Elegir **otra nota** o **pegar una dirección** cambia **sólo el destino**: el **texto** del enlace
+  se queda; el cursor queda tras el enlace.
+- **P12.** ⚠️ «Cambiar» a una dirección que lleva **`)`** avisa **«Esa dirección no se puede
+  enlazar»** (~1,5 s) y **no cambia nada**.
+- **P13.** ⚠️ Un enlace de la línea cuyo texto lleva `*` o `[` queda bien escapado
+  (`[a\*b](#id)`) y se ve `a*b`.
+- **P14.** *(Móvil.)* La hoja **se desplaza** si la lista es larga, y el **teclado no sale solo**
+  al abrirla.
+
+## Q. Capas en cadena y el atrás
+
+- **Q1.** Nota A → su enlace a la nota B → desde B, el enlace a un diagrama: tres capas. El
+  **atrás** (o ✕ Salir) las cierra **de una en una**, **diagrama, B, A**, y la última vuelve a la
+  ventana. Ninguna burbuja queda colgada al volver.
+- **Q2.** En mitad de la cadena, recargar (O7) y luego el atrás: igual.
 
 ## Comportamientos conocidos
 
@@ -208,6 +321,13 @@ No son fallos; se anotan para que no se marquen como tales, y para decidir si se
   **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas del editor, en `TAREAS.md`.
 - **Una selección que empieza en la línea que se está escribiendo no sale de ella**: el navegador
   no deja que salga de un campo editable. Para seleccionar varias, se empieza en otra línea.
+- **La burbuja del enlace flota bajo la línea activa y puede tapar la siguiente.** Decisión del
+  usuario (2026-10-25): se queda así; en el móvil se mira con el dedo (se aparta tocando otra
+  parte).
+- **Una dirección insertada pegada a texto sin espacio lo absorbe**: junto a una palabra, la
+  dirección se lee como parte de ella y puede dejar de verse como enlace. Se escribe con un espacio.
+- **Una línea activa que pierde el foco sigue en crudo y editable** hasta que se toca otra línea
+  (por ejemplo, al abrir la hoja de «Enlazar…»).
 
 ---
 
@@ -300,3 +420,60 @@ línea y perdía la selección; arreglado antes del commit.
 
 Notas: la pasada 3 dio M5 por bueno tocando fuera de la selección. Escribir en una línea vacía,
 partirla con Intro y juntarla con Retroceso siguen igual. ⏭ en el móvil, el usuario.
+
+### Pasada 5 — escritorio, N–Q (Markdown en pantalla y enlaces, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-25 |
+| Navegador y versión | Chrome 152, el navegador del panel (Claude/3.1623.0) |
+| Quién | Claude, en el panel |
+| Commit | `225385d`, árbol limpio de código |
+| Origen | `localhost:8001`, con notas y un diagrama de prueba, borrados al acabar |
+
+| Paso | Resultado |
+|---|---|
+| N1–N7 | ✅ |
+| N8 | ✅ con un `copy` lanzado desde la consola (sin marcas de formato). ⏭ pegarlo fuera de la app, el usuario |
+| N9 | ✅ |
+| O1, O2 | ✅ |
+| O3 | ✅ con el ratón. ⏭ el teclado del móvil, el usuario |
+| O4 | 🔁 con `window.open` simulado: se comprobó que se llama con la dirección, sin abrir nada |
+| O5–O11 | ✅ |
+| P1–P6 | ✅ |
+| P7 | ✅ — sin selección, una dirección pegada a texto sin espacio sale como «textowww.example.net»: es el comportamiento conocido, no un fallo |
+| P8 | ✅ |
+| P9 | ✅ — Cancelar y el atrás cierran la hoja sin tocar la línea |
+| P10 | ✅ |
+| P11 | ✅ — a otra nota y a una dirección: el texto se queda y el cursor queda tras el enlace |
+| P12 | ✅ — avisa y desaparece a los ~1,5 s; la línea no cambia |
+| P13 | ✅ |
+| P14 | ⏭ móvil, el usuario |
+| Q1, Q2 | ✅ |
+
+Notas: «Enlazar…» (no «Cambiar») con una dirección que lleva `)` y sin selección la inserta tal
+cual, sin corchetes (P7); sólo «Cambiar» avisa. L7 (reordenar) y I y J del lienzo se anotan en
+sus listas.
+
+### Pasada 6 — móvil, M4 y N–Q
+
+| | |
+|---|---|
+| Fecha | |
+| Navegador y versión | |
+| Quién | |
+| Commit | |
+| Origen | |
+
+| Paso | Resultado |
+|---|---|
+| M4 | |
+| N1–N7 | |
+| N8 (pegar fuera de la app) | |
+| O1–O3, O5–O8 | |
+| O4 (abrir una dirección en el móvil) | |
+| P1–P13 | |
+| P14 | |
+| Q1, Q2 | |
+
+Notas:
