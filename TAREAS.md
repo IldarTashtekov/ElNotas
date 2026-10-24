@@ -147,7 +147,7 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       pasados en el ordenador y en el móvil.
       **Hecho en el ordenador** (secciones I y J de `VERIFICACION-MANUAL-LIENZO.md`, pasada 3).
       **Falta pasar I y J en el móvil**: dos dedos, el arrastre del grupo y el avance por los bordes.
-- [ ] **4. Seleccionar y copiar texto en una nota** *(pensar)*. Hoy cada línea es un elemento
+- [x] **4. Seleccionar y copiar texto en una nota** *(pensar)*. Hoy cada línea es un elemento
       editable aparte y el navegador no deja que una selección salga de él. **Sólo es editable la
       línea activa**; las demás son texto normal, que se selecciona de corrido (arrastrar, o
       pulsación larga y asas en el móvil). Un toque sin arrastrar hace editable esa línea con el
@@ -156,8 +156,8 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario 
       prueba del editor, era una decisión. **Se cierra cuando** `check` pasa, la lista del editor
       tiene sus pasos, y **el usuario lo ha probado en su móvil y da el visto bueno antes de
       empezar el 5**.
-      **Hecho en el ordenador** (sección M de `VERIFICACION-MANUAL-EDITOR.md`, pasadas 3 y 4). **Falta
-      la prueba del usuario en el móvil**: M4 (pulsación larga y asas) y escribir como siempre.
+      **Hecho** (`17ddeb6`, `67102cd`; sección M de `VERIFICACION-MANUAL-EDITOR.md`, pasadas 3 y
+      4), y el usuario lo dio por bueno en su móvil el 2026-10-24.
 - [ ] **5. Markdown en el core: los enlaces y su integridad** *(pensar)*. Encontrar los enlaces
       internos dentro de un texto (`[texto](nota:id)`, `diagrama:id`, `contexto:id`), puro y en el
       core: al dominio sólo le importan los enlaces, no la negrita. **Borrar** una nota, un
