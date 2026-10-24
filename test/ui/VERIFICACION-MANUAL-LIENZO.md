@@ -244,3 +244,32 @@ siempre.
 | F1–F6 (**F3**) | |
 | G2–G5 | |
 | H1–H2 (con el atrás del sistema) | |
+
+### Pasada 3 — escritorio, sólo I y J (seleccionar y avanzar, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-24 |
+| Navegador y versión | Chrome 152, el navegador del panel (Claude/3.1623.0) |
+| Quién | Claude, en el panel |
+| Commit | `a010f0f`; pasada sobre el mismo código, justo antes de comitearlo |
+| Origen | `localhost:8001`, con un diagrama de cuatro pósits y dos líneas |
+
+| Paso | Resultado |
+|---|---|
+| I1 | ✅ — en la barra y flotando; en vídeo inverso con el modo puesto |
+| I2 | ✅ |
+| I3 | ✅ |
+| I4 | ✅ |
+| I5 | ✅ — una sola acción por arrastre, en la vista y en la ventana |
+| I6 | ✅ con la rueda y con Ctrl + rueda; ⏭ los dos dedos, en el móvil |
+| I7 | ✅ — con el botón y con `history.back()` |
+| I8 | ✅ — ✕ Salir, de una vez; con ◀, el historial queda sin capas |
+| J1 | ✅ — hacia la derecha y hacia abajo; el pósit sigue bajo el puntero |
+| J2 | ✅ |
+| J3 | ✅ |
+
+Notas: el avance, I5 en la ventana y J se pasaron con eventos de puntero lanzados desde la
+consola, que mantienen el puntero quieto en la franja; en el panel en segundo plano el
+navegador da menos fotogramas y el corcho avanza más despacio. **Falta la pasada en el móvil
+de I y J.**
