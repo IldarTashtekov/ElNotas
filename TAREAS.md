@@ -247,7 +247,16 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
         **Cambia dos decisiones cerradas** (las cuatro vistas, y «ventana = referencia a un
         contexto»), por decisión del usuario; al construirlo se actualizan en `CLAUDE.md`.
       - **La semana empieza en lunes**, fija por ahora.
-      **A decidir:** qué se archiva (sólo los grupos, como en el esbozo, o también eventos y rutinas).
+      - **Un evento no tiene por qué estar en un grupo.** Se crea pulsando un día, y la hoja pide
+        lo necesario (día, hora opcional, motivo) y, si se quiere, un grupo existente o uno nuevo,
+        que se crea ahí mismo.
+      - **Los grupos:** una redonda para elegirlos; los días con eventos de los grupos elegidos
+        salen marcados en el mes. Los eventos de un grupo, **ordenados por tiempo**.
+      - **Una pulsación larga en un grupo lo mueve** por la lista, y se puede dejar dentro de
+        «archivados»: no se ve, pero no se borra. **Se archivan los grupos**, como en el esbozo.
+      **A decidir:** dónde se ven los eventos sin grupo (¿un grupo «General» que los reúne?); si un
+      evento puede estar en varios grupos; qué pasa con sus eventos al borrar un grupo; si las
+      rutinas se archivan, y cómo choca la pulsación larga que mueve con la que selecciona.
       **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
       tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
       *Ideas aparcadas*.
