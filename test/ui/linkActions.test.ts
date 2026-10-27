@@ -18,7 +18,6 @@ import type { LinkChoices } from "#ui/linkActions"
 import {
   buildLink,
   changeLink,
-  changeLinkTarget,
   defaultLinkText,
   isWebAddress,
   linkAtCursor,
@@ -245,58 +244,6 @@ test("buildLink: lo escrito se lee de vuelta con ese texto y ese destino", (): v
   assert.strictEqual(visto, "a]b[c\\d*e")
   const web: string = buildLink("w", "www.a.es") ?? assert.fail("tenía que construirse")
   assert.deepEqual(readMarkdownLine(web).links[0]?.target, { kind: "web", href: "https://www.a.es" })
-})
-
-/* ── changeLinkTarget ── */
-
-const cambiar = (
-  raw: string,
-  offset: number,
-  destino: string,
-): { readonly text: string; readonly cursor: number } => {
-  const linea: FormattedLine = readMarkdownLine(raw)
-  const l: LineLink | null = linkAtCursor(linea, offset)
-  if (l === null) assert.fail("tenía que haber enlace")
-  return changeLinkTarget(raw, linea, l, destino)
-}
-
-test("changeLinkTarget: cambia el destino, deja el texto y el cursor tras el enlace", (): void => {
-  assert.deepEqual(cambiar("[hola](#x)", 3, "#y"), { text: "[hola](#y)", cursor: 10 })
-  assert.deepEqual(cambiar("a [hola](https://b.es) c", 5, "#y"), { text: "a [hola](#y) c", cursor: 12 })
-  assert.deepEqual(cambiar("[a](#x) y [b](#y)", 12, "www.c.es"), { text: "[a](#x) y [b](www.c.es)", cursor: 23 })
-})
-
-test("changeLinkTarget: el texto con escapes y marcas queda tal cual", (): void => {
-  assert.deepEqual(cambiar("[**a** \\] b](#x)", 3, "#z"), { text: "[**a** \\] b](#z)", cursor: 16 })
-  assert.deepEqual(cambiar("# [t](#x)", 4, "#z"), { text: "# [t](#z)", cursor: 9 })
-})
-
-test("changeLinkTarget: un destino con paréntesis se sustituye entero", (): void => {
-  assert.deepEqual(cambiar("[w](https://a.es/x_(y))!", 2, "#z"), { text: "[w](#z)!", cursor: 7 })
-})
-
-test("changeLinkTarget: lo cambiado se lee como enlace al destino nuevo", (): void => {
-  const { text }: { readonly text: string } = cambiar("ve a [aquí](#x) ya", 8, "https://b.es")
-  const l: LineLink | undefined = readMarkdownLine(text).links[0]
-  assert.deepEqual(l?.target, { kind: "web", href: "https://b.es" })
-  assert.strictEqual(l?.saved, true)
-})
-
-test("changeLinkTarget: una dirección suelta, un enlace ajeno o un destino con `)` no cambian nada", (): void => {
-  const suelta: string = "mira https://a.es"
-  const ls: FormattedLine = readMarkdownLine(suelta)
-  const s: LineLink | null = linkAtCursor(ls, 10)
-  if (s === null) assert.fail("tenía que haber enlace")
-  assert.deepEqual(changeLinkTarget(suelta, ls, s, "#y"), { text: suelta, cursor: s.end })
-
-  const ajeno: LineLink = readMarkdownLine("[a](#x)").links[0] as LineLink
-  const otra: FormattedLine = readMarkdownLine("otra cosa distinta")
-  assert.deepEqual(changeLinkTarget("otra cosa distinta", otra, ajeno, "#y"), {
-    text: "otra cosa distinta",
-    cursor: ajeno.end,
-  })
-
-  assert.deepEqual(cambiar("[a](#x)", 2, "https://a.es/x_(y)"), { text: "[a](#x)", cursor: 7 })
 })
 
 /* ── defaultLinkText ── */

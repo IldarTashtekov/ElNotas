@@ -54,6 +54,11 @@
       text-decoration: underline;
       text-underline-offset: 0.2em;
     }
+    /* El enlace guardado en la línea activa: un bloque que no se edita por dentro. */
+    & .md-enlace[data-raw] {
+      cursor: pointer;
+      user-select: all;
+    }
     /* Un enlace interno cuyo destino ya no está: se apaga. */
     & .md-roto {
       color: var(--dim);
@@ -122,6 +127,12 @@
     font-size: 0.85rem;
     padding: 0.3rem 0.65rem;
   }
+}
+/* El texto del enlace, en la hoja de enlazar: una fila entera sobre la dirección. */
+.enlazar-texto {
+  display: block;
+  margin-bottom: 0.5rem;
+  width: 100%;
 }
 /* Pegar una dirección en la hoja de enlazar: el campo y su botón en una fila. */
 .enlazar-direccion {

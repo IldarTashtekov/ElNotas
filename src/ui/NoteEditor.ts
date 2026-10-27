@@ -5,13 +5,16 @@
  *
  * Qué hace cada tecla lo decide `editor.ts`; aquí sólo se leen los eventos y se
  * pone el cursor donde toca. La línea que se está escribiendo no se repinta
- * nunca: ahí manda lo que se teclea. Sólo ella es editable, y se ve en crudo;
- * las demás, formateadas, son texto que se selecciona de una a otra, y se copia
- * como texto plano.
+ * nunca: ahí manda lo que se teclea. Sólo ella es editable, y se ve en crudo,
+ * salvo sus enlaces guardados, que son bloques con su texto; las demás,
+ * formateadas, son texto que se selecciona de una a otra, y se copia como texto
+ * plano.
  */
 
 import type { AppState, Content, ContentId, DiagramId, Note, NoteId, UseCases } from "#core/index"
 import { contentId, isCheckBox } from "#core/index"
+import type { ActivePart, LinkPart } from "./activeLine.js"
+import { activeParts, domToRaw, rawToDom } from "./activeLine.js"
 import { copiedText } from "./copyText.js"
 import { briefNotice, elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
@@ -27,7 +30,8 @@ import { createLinkBubble } from "./linkBubble.js"
 import type { ResolvedLink } from "./linkActions.js"
 import {
   buildLink,
-  changeLinkTarget,
+  changeLink,
+  defaultLinkText,
   linkAtCursor,
   linkChoices,
   removeLink,
@@ -58,14 +62,23 @@ export interface NoteEditorDeps {
 /** Lo que dura «El enlace ya no existe». */
 const AVISO_ROTO_MS: number = 1500
 
-/** Donde está el cursor, dentro de un enlace de la línea activa. */
-interface EnlaceBajoCursor {
+/** Un enlace con la burbuja: el elegido (un bloque) o el que tiene el cursor dentro (texto crudo). */
+interface EnlaceVigente {
   readonly campo: HTMLElement
+  /** Bajo qué elemento se coloca la burbuja: el bloque, o el campo. */
+  readonly ancla: HTMLElement
   readonly id: ContentId
   readonly raw: string
   readonly linea: FormattedLine
   readonly link: LineLink
   readonly rawCursor: number
+}
+
+/** El bloque de enlace que se tocó, por su sitio en la cadena cruda de la línea activa. */
+interface EnlaceElegido {
+  readonly id: ContentId
+  readonly start: number
+  readonly end: number
 }
 
 /** Una selección dentro de una línea, en la cadena CRUDA de esa línea; sin texto elegido, `from === to`. */
@@ -88,15 +101,61 @@ export interface NoteEditor {
 
 /* ───────────────────────────── El cursor en el DOM ──────────────────────── */
 
-/** Dónde está el cursor dentro de ese campo, o `null` si no está en él. */
+/**
+ * Lo que un nodo del campo aporta a la cadena cruda: un texto, el suyo; un bloque
+ * de enlace, su `data-raw`; lo demás (`<br>`...), lo que lleve dentro.
+ */
+const crudoDeNodo = (nodo: Node): string => {
+  if (nodo instanceof Element) return nodo.getAttribute("data-raw") ?? nodo.textContent ?? ""
+  return nodo.nodeType === Node.TEXT_NODE ? (nodo.textContent ?? "") : ""
+}
+
+/**
+ * La cadena cruda de un campo (o de un trozo clonado de él): recorre sus hijos en
+ * lugar de fiarse de la estructura, que el navegador puede fundir o partir al
+ * teclear. En un campo formateado, sin bloques, es lo mismo que `textContent`.
+ */
+const crudoDelCampo = (raiz: Node): string => {
+  let crudo: string = ""
+  for (const nodo of raiz.childNodes) crudo += crudoDeNodo(nodo)
+  return crudo
+}
+
+/** Si la línea lleva algún bloque de enlace: sólo la activa los tiene. */
+const tieneBloques = (campo: HTMLElement): boolean => campo.querySelector("[data-raw]") !== null
+
+/** Los bloques de enlace del campo, en orden. */
+const bloquesDe = (campo: HTMLElement): ReadonlyArray<HTMLElement> => [
+  ...campo.querySelectorAll<HTMLElement>(":scope > [data-raw]"),
+]
+
+/** Dónde empieza, en la cadena cruda del campo, ese hijo suyo. */
+const inicioCrudo = (campo: HTMLElement, hijo: Node): number => {
+  let antes: number = 0
+  for (const nodo of campo.childNodes) {
+    if (nodo === hijo) return antes
+    antes += crudoDeNodo(nodo).length
+  }
+  return antes
+}
+
+/**
+ * Cuánto hay en el campo hasta ese punto: sin bloques, las letras que se ven; con
+ * ellos, las de la cadena cruda (un bloque cuenta entero o nada).
+ */
+const contarHasta = (campo: HTMLElement, nodo: Node, offset: number): number => {
+  const hasta: Range = document.createRange()
+  hasta.selectNodeContents(campo)
+  hasta.setEnd(nodo, offset)
+  return tieneBloques(campo) ? crudoDelCampo(hasta.cloneContents()).length : hasta.toString().length
+}
+
+/** Dónde está el cursor dentro de ese campo (en su cadena cruda si es la activa), o `null` si no está en él. */
 const leerCursor = (campo: HTMLElement): number | null => {
   const sel: Selection | null = window.getSelection()
   if (sel === null || sel.rangeCount === 0 || sel.focusNode === null) return null
   if (!campo.contains(sel.focusNode)) return null
-  const hasta: Range = document.createRange()
-  hasta.selectNodeContents(campo)
-  hasta.setEnd(sel.focusNode, sel.focusOffset)
-  return hasta.toString().length
+  return contarHasta(campo, sel.focusNode, sel.focusOffset)
 }
 
 /** Lo que `[` y `]` rompen: una selección que los lleve no sirve de texto de un enlace. */
@@ -113,13 +172,44 @@ const rellenarSiVacia = (campo: Element): void => {
   if (campo.firstChild === null) campo.append(document.createElement("br"))
 }
 
+/**
+ * Pone el rango en la posición cruda `offset` de un campo con bloques. Nunca
+ * dentro de uno: al borde más cercano. Si el cursor queda junto a un bloque sin
+ * texto al lado, se le crea un nodo de texto vacío donde vivir.
+ */
+const colocarEntreBloques = (rango: Range, campo: HTMLElement, offset: number): void => {
+  const partes: ReadonlyArray<ActivePart> = activeParts(crudoDelCampo(campo))
+  const destino: number = domToRaw(partes, rawToDom(partes, offset))
+  let antes: number = 0
+  for (const nodo of [...campo.childNodes]) {
+    const largo: number = crudoDeNodo(nodo).length
+    if (nodo.nodeType === Node.TEXT_NODE) {
+      if (destino <= antes + largo) {
+        rango.setStart(nodo, destino - antes)
+        return
+      }
+    } else if (nodo instanceof Element && nodo.hasAttribute("data-raw") && destino <= antes) {
+      const vacio: Text = document.createTextNode("")
+      nodo.before(vacio)
+      rango.setStart(vacio, 0)
+      return
+    }
+    antes += largo
+  }
+  const vacio: Text = document.createTextNode("")
+  campo.append(vacio)
+  rango.setStart(vacio, 0)
+}
+
 const ponerCursorEn = (campo: HTMLElement, offset: number): void => {
   campo.focus()
   const sel: Selection | null = window.getSelection()
   if (sel === null) return
   const rango: Range = document.createRange()
   const nodo: Node | null = campo.firstChild
-  if (nodo !== null && nodo.nodeType === Node.TEXT_NODE) {
+  if (tieneBloques(campo)) {
+    colocarEntreBloques(rango, campo, offset)
+  } else if (nodo !== null && nodo.nodeType === Node.TEXT_NODE) {
     rango.setStart(nodo, Math.min(offset, nodo.textContent?.length ?? 0))
   } else {
     rango.setStart(campo, 0)
@@ -188,12 +278,6 @@ const muestraEnCrudo = (campo: HTMLElement, raw: string): boolean =>
     : campo.childNodes.length === 1 &&
       campo.firstChild?.nodeType === Node.TEXT_NODE &&
       campo.textContent === raw
-
-const pintarEnCrudo = (campo: HTMLElement, raw: string): void => {
-  campo.classList.remove("md-titulo")
-  if (!muestraEnCrudo(campo, raw)) campo.textContent = raw
-  rellenarSiVacia(campo)
-}
 
 /** Si el cursor está en la primera (o la última) fila visual del campo. */
 const enBordeVisual = (campo: HTMLElement, hacia: "prev" | "next"): boolean => {
@@ -351,6 +435,8 @@ export const createNoteEditor = ({
      demás son texto normal, que se selecciona de corrido y se copia. */
   const editable: string = textoPlano ? "plaintext-only" : "true"
   let activa: HTMLElement | null = null
+  /** El bloque de enlace tocado, con la burbuja a la vista; se quita al mover la selección, teclear o apagar la línea. */
+  let enlaceElegido: EnlaceElegido | null = null
   /**
    * Lo último que se pintó formateado en cada campo: la cadena cruda y si cada
    * enlace interno resolvía. Si no cambió, no se rehace.
@@ -358,11 +444,52 @@ export const createNoteEditor = ({
   const formateadoCon: WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }> =
     new WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }>()
 
-  /** La activa, en crudo; las demás, formateadas. */
+  /** Si ese enlace es interno y su destino ya no está. */
+  const estaRoto = (link: LineLink): boolean =>
+    link.target.kind === "internal" && resolveLink(state(), link.target.id) === null
+
+  /** El bloque de un enlace guardado: no se edita por dentro, y lleva su cadena cruda. */
+  const bloqueDe = (parte: LinkPart): HTMLElement => {
+    const bloque: HTMLSpanElement = elemento("span", parte.label)
+    bloque.className = "md-enlace"
+    bloque.contentEditable = "false"
+    bloque.dataset["raw"] = parte.raw
+    bloque.classList.toggle("md-roto", estaRoto(parte.link))
+    return bloque
+  }
+
+  /**
+   * La línea activa: en crudo, salvo cada enlace guardado, que es un bloque con su
+   * texto. Sin enlaces, un solo nodo de texto; y si ya muestra eso, no se toca.
+   */
+  const pintarActiva = (campo: HTMLElement, raw: string): void => {
+    campo.classList.remove("md-titulo")
+    const partes: ReadonlyArray<ActivePart> = activeParts(raw)
+    const enlaces: ReadonlyArray<LinkPart> = partes.filter((p: ActivePart): p is LinkPart => p.kind === "link")
+    if (enlaces.length === 0) {
+      if (!muestraEnCrudo(campo, raw)) campo.textContent = raw
+      rellenarSiVacia(campo)
+      return
+    }
+    const bloques: ReadonlyArray<HTMLElement> = bloquesDe(campo)
+    if (crudoDelCampo(campo) === raw && bloques.length === enlaces.length) {
+      /* Ya está pintada: sólo se pone al día cuáles están rotos, sin mover el cursor. */
+      bloques.forEach((bloque: HTMLElement, i: number): void => {
+        const parte: LinkPart | undefined = enlaces[i]
+        bloque.classList.toggle("md-roto", parte !== undefined && estaRoto(parte.link))
+      })
+      return
+    }
+    campo.replaceChildren(
+      ...partes.map((p: ActivePart): Node => (p.kind === "link" ? bloqueDe(p) : document.createTextNode(p.raw))),
+    )
+  }
+
+  /** La activa, en crudo y con sus enlaces en bloques; las demás, formateadas. */
   const pintarCampo = (campo: HTMLElement, raw: string): void => {
     if (campo === activa) {
       formateadoCon.delete(campo)
-      pintarEnCrudo(campo, raw)
+      pintarActiva(campo, raw)
       return
     }
     /* Sólo una línea con `](#` puede llevar un enlace interno: las demás ni se leen aquí. */
@@ -390,7 +517,7 @@ export const createNoteEditor = ({
     const nota: Note | undefined = deps.note()
     const linea: Content | undefined =
       id === null || nota === undefined ? undefined : locate(nota.content, id)?.line
-    return linea?.text ?? campo.textContent ?? ""
+    return linea?.text ?? crudoDelCampo(campo)
   }
 
   /** De una letra de lo que se ve en el campo a su sitio en la cadena cruda. */
@@ -407,6 +534,7 @@ export const createNoteEditor = ({
     if (activa === campo) return
     const anterior: HTMLElement | null = activa
     activa = campo
+    enlaceElegido = null
     if (anterior !== null) apagar(anterior)
     /* Se pinta en crudo antes de hacerla editable y de poner el cursor: el
        offset que llega cuenta la cadena cruda. */
@@ -417,6 +545,7 @@ export const createNoteEditor = ({
   const desactivar = (): void => {
     const anterior: HTMLElement | null = activa
     activa = null
+    enlaceElegido = null
     if (anterior !== null) apagar(anterior)
     burbuja.hide()
   }
@@ -428,35 +557,64 @@ export const createNoteEditor = ({
     actualizarBurbuja()
   }
 
-  /* ── La burbuja del enlace: sale con el cursor de la línea activa dentro de uno ── */
+  /* ── La burbuja del enlace: sale al tocar un bloque, o con el cursor dentro de un enlace en crudo ── */
 
-  /** El enlace bajo el cursor, si la línea activa se ve, el cursor es un punto y está dentro de uno. */
-  const enlaceBajoCursor = (): EnlaceBajoCursor | null => {
+  /**
+   * El enlace que enseña la burbuja, si la línea activa se ve y el cursor es un
+   * punto: el bloque tocado mientras el cursor siga pegado a él; si no, el enlace
+   * en texto crudo (una dirección suelta, o uno recién escrito) con el cursor
+   * estrictamente dentro. Si el elegido ya no vale, se quita.
+   */
+  const enlaceVigente = (): EnlaceVigente | null => {
     const campo: HTMLElement | null = activa
     /* Sin cajas, la línea está escondida bajo otra capa: no se ofrece nada. */
     if (campo === null || !campo.isConnected || campo.getClientRects().length === 0) return null
-    if (!cursorColapsado()) return null
-    const rawCursor: number | null = leerCursor(campo)
+    const rawCursor: number | null = cursorColapsado() ? leerCursor(campo) : null
     const id: ContentId | null = idDe(campo)
-    if (rawCursor === null || id === null) return null
-    const raw: string = campo.textContent ?? ""
+    if (rawCursor === null || id === null) {
+      enlaceElegido = null
+      return null
+    }
+    const raw: string = crudoDelCampo(campo)
     const linea: FormattedLine = readMarkdownLine(raw)
+    const elegido: EnlaceElegido | null = enlaceElegido
+    if (elegido !== null) {
+      const link: LineLink | undefined =
+        elegido.id !== id
+          ? undefined
+          : linea.links.find(
+              (l: LineLink): boolean => l.saved && l.start === elegido.start && l.end === elegido.end,
+            )
+      /* Pegado a él por uno de sus dos lados: el navegador a veces deja el cursor antes. */
+      if (link !== undefined && (rawCursor === link.start || rawCursor === link.end)) {
+        const bloque: HTMLElement | undefined = bloquesDe(campo).find(
+          (b: HTMLElement): boolean => inicioCrudo(campo, b) === link.start,
+        )
+        return { campo, ancla: bloque ?? campo, id, raw, linea, link, rawCursor }
+      }
+      enlaceElegido = null
+    }
     const link: LineLink | null = linkAtCursor(linea, rawCursor)
-    return link === null ? null : { campo, id, raw, linea, link, rawCursor }
+    return link === null ? null : { campo, ancla: campo, id, raw, linea, link, rawCursor }
   }
 
   const actualizarBurbuja = (): void => {
-    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    const e: EnlaceVigente | null = enlaceVigente()
     if (e === null) {
       burbuja.hide()
       return
     }
     const rectangulo: DOMRect | undefined = window.getSelection()?.getRangeAt(0).getClientRects()[0]
-    burbuja.show(e.link.saved, e.campo, element, rectangulo?.left ?? e.campo.getBoundingClientRect().left)
+    /* Bajo el bloque, a su izquierda; en un enlace en crudo, bajo la línea, donde está el cursor. */
+    const x: number =
+      e.ancla !== e.campo
+        ? e.ancla.getBoundingClientRect().left
+        : (rectangulo?.left ?? e.campo.getBoundingClientRect().left)
+    burbuja.show(e.link.saved, e.ancla, element, x)
   }
 
   const abrirEnlace = (): void => {
-    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    const e: EnlaceVigente | null = enlaceVigente()
     if (e === null) return
     if (e.link.target.kind === "web") {
       window.open(e.link.target.href, "_blank", "noopener,noreferrer")
@@ -477,8 +635,9 @@ export const createNoteEditor = ({
   const escribirLinea = (id: ContentId, texto: string, cursor: number): void => {
     const campo: HTMLElement | null = campoDe(id)
     if (campo === null) return
+    enlaceElegido = null
     /* Como el Tabulador: la línea activa no se repinta sola, se le pone el texto. */
-    if (campo === activa) campo.textContent = texto
+    if (campo === activa) pintarActiva(campo, texto)
     useCases.setText(noteId, id, texto)
     ponerCursor(campo, cursor)
   }
@@ -491,7 +650,7 @@ export const createNoteEditor = ({
 
   /** Quita las marcas del enlace guardado y deja su texto, como el Tabulador cambia el de la línea. */
   const quitarEnlace = (): void => {
-    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    const e: EnlaceVigente | null = enlaceVigente()
     if (e === null) return
     const nuevo: { readonly text: string; readonly cursor: number } = removeLink(
       e.raw,
@@ -502,31 +661,42 @@ export const createNoteEditor = ({
     escribirLinea(e.id, nuevo.text, nuevo.cursor)
   }
 
-  /** Abre la hoja y, al elegir otro destino, lo pone en el enlace con el texto que tenía. */
+  /** El texto de un enlace: el escrito; si está en blanco, el que le toca por su destino. */
+  const textoDelEnlace = (escrito: string, destino: string, nombre?: string): string =>
+    escrito.trim() !== "" ? escrito : defaultLinkText(destino, nombre)
+
+  /** Abre la hoja y, al elegir, reescribe el enlace con el texto y el destino de ahí. */
   const cambiarEnlace = (): void => {
-    const e: EnlaceBajoCursor | null = enlaceBajoCursor()
+    const e: EnlaceVigente | null = enlaceVigente()
     if (e === null || !e.link.saved) return
-    const { id, raw, linea, link }: EnlaceBajoCursor = e
-    const poner = (destino: string): void => {
+    const { id, raw, linea, link }: EnlaceVigente = e
+    const poner = (destino: string, escrito: string, nombre?: string): void => {
       /* Si la línea cambió o ya no está, el enlace capturado no vale. */
       if (textoDe(id) !== raw) return
       if (destino.includes(")")) {
         briefNotice("Esa dirección no se puede enlazar", AVISO_ROTO_MS)
         return
       }
-      const nuevo: { readonly text: string; readonly cursor: number } = changeLinkTarget(
+      const nuevo: { readonly text: string; readonly cursor: number } = changeLink(
         raw,
         linea,
         link,
+        textoDelEnlace(escrito, destino, nombre),
         destino,
       )
       if (nuevo.text !== raw) escribirLinea(id, nuevo.text, nuevo.cursor)
     }
+    const actual: ActivePart | undefined = activeParts(raw).find(
+      (p: ActivePart): boolean => p.kind === "link" && p.start === link.start && p.end === link.end,
+    )
     openLinkSheet(sheet, {
       title: "Cambiar enlace",
       choices: linkChoices(state(), noteId),
-      onPickAddress: poner,
-      onPick: (_tipo: "note" | "diagram", destino: string): void => poner(`#${destino}`),
+      initialText: actual?.kind === "link" ? actual.label : "",
+      initialAddress: link.target.kind === "web" ? link.target.href : "",
+      onPickAddress: (direccion: string, texto: string): void => poner(direccion, texto),
+      onPick: (_tipo: "note" | "diagram", destino: string, nombre: string, texto: string): void =>
+        poner(`#${destino}`, texto, nombre),
     })
   }
 
@@ -550,12 +720,37 @@ export const createNoteEditor = ({
   /* Un toque sin arrastrar en otra línea la activa, con el cursor donde cayó. Tras
      arrastrar para seleccionar también llega un `click`: ése no edita nada. */
   lineas.addEventListener("click", (evento: MouseEvent): void => {
-    const campo: HTMLElement | null =
-      evento.target instanceof Element ? evento.target.closest<HTMLElement>(".texto") : null
-    if (campo === null || campo === activa || arrastro(evento)) return
+    const objetivo: Element | null = evento.target instanceof Element ? evento.target : null
+    const campo: HTMLElement | null = objetivo?.closest<HTMLElement>(".texto") ?? null
+    if (campo === null || arrastro(evento)) return
+    if (campo === activa) {
+      /* Tocar un bloque de la activa: el cursor tras él y la burbuja de ese enlace. */
+      const bloque: HTMLElement | null = objetivo?.closest<HTMLElement>("[data-raw]") ?? null
+      const id: ContentId | null = idDe(campo)
+      if (bloque === null || id === null || !campo.contains(bloque)) return
+      const start: number = inicioCrudo(campo, bloque)
+      const end: number = start + crudoDeNodo(bloque).length
+      enlaceElegido = { id, start, end }
+      ponerCursorEn(campo, end)
+      actualizarBurbuja()
+      return
+    }
     /* Se toca lo formateado: la letra de lo que se ve se lleva a la cadena cruda. */
     const visto: number | null = offsetEnPunto(campo, evento.clientX, evento.clientY)
-    ponerCursor(campo, visto === null ? crudoDe(campo).length : aCrudo(campo, visto))
+    const crudo: string = crudoDe(campo)
+    const donde: number = visto === null ? crudo.length : aCrudo(campo, visto)
+    /* Si cae en un enlace guardado, ése es el elegido: el cursor queda tras su bloque. */
+    const tocado: LineLink | null =
+      visto === null
+        ? null
+        : (readMarkdownLine(crudo).links.find(
+            (l: LineLink): boolean => l.saved && l.start <= donde && donde < l.end,
+          ) ?? null)
+    activar(campo)
+    const id: ContentId | null = idDe(campo)
+    enlaceElegido = tocado === null || id === null ? null : { id, start: tocado.start, end: tocado.end }
+    ponerCursorEn(campo, tocado === null ? donde : tocado.end)
+    actualizarBurbuja()
   })
 
   /* ── Copiar: texto plano, una línea por renglón, como se ve ── */
@@ -571,10 +766,7 @@ export const createNoteEditor = ({
     const dentro: HTMLElement | null = el?.closest<HTMLElement>(".texto") ?? null
     if (dentro !== null && lineas.contains(dentro)) {
       const id: ContentId | null = idDe(dentro)
-      const hasta: Range = document.createRange()
-      hasta.selectNodeContents(dentro)
-      hasta.setEnd(nodo, offset)
-      return id === null ? null : { line: id, offset: hasta.toString().length }
+      return id === null ? null : { line: id, offset: contarHasta(dentro, nodo, offset) }
     }
     const campos: ReadonlyArray<HTMLElement> = [...lineas.querySelectorAll<HTMLElement>(".texto")]
     const campo: HTMLElement | undefined =
@@ -583,7 +775,7 @@ export const createNoteEditor = ({
         : [...campos].reverse().find((c: HTMLElement): boolean => rango.comparePoint(c, c.childNodes.length) <= 0)
     const id: ContentId | null = campo === undefined ? null : idDe(campo)
     if (campo === undefined || id === null) return null
-    return { line: id, offset: cual === "inicio" ? 0 : (campo.textContent?.length ?? 0) }
+    return { line: id, offset: cual === "inicio" ? 0 : crudoDelCampo(campo).length }
   }
 
   const copiar = (evento: ClipboardEvent): void => {
@@ -595,6 +787,8 @@ export const createNoteEditor = ({
     const desde: Caret | null = extremo(rango, "inicio")
     const hasta: Caret | null = extremo(rango, "fin")
     if (nota === undefined || desde === null || hasta === null) return
+    /* Dentro de la activa con bloques, copia el navegador: sale la etiqueta de cada enlace. */
+    if (desde.line === hasta.line && activa !== null && idDe(activa) === desde.line && tieneBloques(activa)) return
     const enCrudo: ContentId | null = activa === null ? null : idDe(activa)
     evento.clipboardData.setData("text/plain", copiedText(nota.content, desde, hasta, enCrudo))
     evento.preventDefault()
@@ -634,8 +828,47 @@ export const createNoteEditor = ({
     ordenar((): EditResult => pressEnter(deps, caret, modo))
   }
 
-  /** Retroceso: sólo si el cursor es un punto al principio; si no, lo hace el navegador. */
+  /**
+   * Retroceso o Suprimir con el cursor, un punto, pegado a un bloque de enlace: lo
+   * quita entero y el cursor queda donde estaba. No se deja al navegador, que en
+   * `plaintext-only` no lo hace igual en todos. Dice si actuó.
+   */
+  const quitarBloquePegado = (evento: Event, hacia: "atras" | "adelante"): boolean => {
+    const caret: Caret | null = cursorActual(evento)
+    const campo: HTMLElement | null = caret === null ? null : campoDe(caret.line)
+    if (caret === null || campo === null || campo !== activa || !cursorColapsado()) return false
+    const raw: string = crudoDelCampo(campo)
+    const parte: ActivePart | undefined = activeParts(raw).find(
+      (p: ActivePart): boolean =>
+        p.kind === "link" && (hacia === "atras" ? p.end === caret.offset : p.start === caret.offset),
+    )
+    if (parte === undefined) return false
+    evento.preventDefault()
+    escribirLinea(caret.line, raw.slice(0, parte.start) + raw.slice(parte.end), parte.start)
+    return true
+  }
+
+  /**
+   * Teclear con el cursor fuera de un nodo de texto de la línea (junto a un bloque,
+   * sin texto al lado): se inserta aquí, para que no caiga dentro del bloque ni se
+   * pierda el cursor. Si el cursor está en un texto, escribe el navegador.
+   */
+  const escribirJuntoABloque = (evento: InputEvent, datos: string): void => {
+    const campo: HTMLElement | null = activa
+    const foco: Node | null = window.getSelection()?.focusNode ?? null
+    if (campo === null || foco === null || !tieneBloques(campo) || !cursorColapsado()) return
+    if (!campo.contains(foco) || (foco.nodeType === Node.TEXT_NODE && foco.parentNode === campo)) return
+    const id: ContentId | null = idDe(evento.target)
+    const cursor: number | null = leerCursor(campo)
+    if (id === null || id !== idDe(campo) || cursor === null) return
+    evento.preventDefault()
+    const raw: string = crudoDelCampo(campo)
+    escribirLinea(id, raw.slice(0, cursor) + datos + raw.slice(cursor), cursor + datos.length)
+  }
+
+  /** Retroceso: quita un bloque pegado; si no, sólo con el cursor, un punto, al principio; si no, lo hace el navegador. */
   const retroceso = (evento: Event): void => {
+    if (quitarBloquePegado(evento, "atras")) return
     const caret: Caret | null = cursorActual(evento)
     if (caret === null || caret.offset !== 0 || !cursorColapsado()) return
     evento.preventDefault()
@@ -660,7 +893,7 @@ export const createNoteEditor = ({
     const caret: Caret | null = cursorActual(evento)
     if (caret === null) return
     const campo: HTMLElement | null = campoDe(caret.line)
-    const largo: number = campo?.textContent?.length ?? 0
+    const largo: number = campo === null ? 0 : crudoDelCampo(campo).length
 
     if (evento.key === "Enter" && (evento.ctrlKey || evento.metaKey)) {
       evento.preventDefault()
@@ -669,12 +902,16 @@ export const createNoteEditor = ({
     }
     if (evento.key === "Enter") return intro(evento)
     if (evento.key === "Backspace") return retroceso(evento)
+    if (evento.key === "Delete") {
+      quitarBloquePegado(evento, "adelante")
+      return
+    }
     if (evento.key === "Tab" && !evento.shiftKey && campo !== null) {
       /* El Tabulador mete un carácter, como en cualquier editor: no anida nada. */
       evento.preventDefault()
-      const texto: string = campo.textContent ?? ""
+      const texto: string = crudoDelCampo(campo)
       const nuevo: string = `${texto.slice(0, caret.offset)}\t${texto.slice(caret.offset)}`
-      campo.textContent = nuevo
+      if (campo === activa) pintarActiva(campo, nuevo)
       useCases.setText(noteId, caret.line, nuevo)
       ponerCursor(campo, caret.offset + 1)
       return
@@ -692,6 +929,8 @@ export const createNoteEditor = ({
     if (evento.isComposing) return
     if (evento.inputType === "insertParagraph" || evento.inputType === "insertLineBreak") intro(evento)
     else if (evento.inputType === "deleteContentBackward") retroceso(evento)
+    else if (evento.inputType === "deleteContentForward") quitarBloquePegado(evento, "adelante")
+    else if (evento.inputType === "insertText" && evento.data !== null) escribirJuntoABloque(evento, evento.data)
   })
 
   lineas.addEventListener("input", (evento: Event): void => {
@@ -699,7 +938,9 @@ export const createNoteEditor = ({
     const campo: HTMLElement | null = id === null ? null : campoDe(id)
     if (id === null || campo === null) return
     /* Cada tecla va al estado: el guardado diferido ya agrupa lo que va al disco. */
-    useCases.setText(noteId, id, campo.textContent ?? "")
+    useCases.setText(noteId, id, crudoDelCampo(campo))
+    /* Teclear suelta el enlace elegido, y con él su burbuja. */
+    enlaceElegido = null
     actualizarBurbuja()
   })
 
@@ -798,18 +1039,23 @@ export const createNoteEditor = ({
     /* Una selección que no sirve de texto no se pierde: el enlace va tras ella. */
     const usable: boolean = sirveDeTexto(elegido)
     const desde: number = usable ? from : to
-    const poner = (enlace: string): void => {
+    const poner = (enlace: string | null): void => {
       /* Con la hoja abierta la línea pudo borrarse o cambiar: entonces no se escribe. */
       if (textoDe(sel.line) !== raw) return
+      if (enlace === null) {
+        briefNotice("Esa dirección no se puede enlazar", AVISO_ROTO_MS)
+        return
+      }
       escribirLinea(sel.line, raw.slice(0, desde) + enlace + raw.slice(to), desde + enlace.length)
     }
     openLinkSheet(sheet, {
       title: "Enlazar",
       choices: linkChoices(state(), noteId),
-      onPickAddress: (direccion: string): void =>
-        poner((usable ? buildLink(elegido, direccion) : null) ?? direccion),
-      onPick: (_tipo: "note" | "diagram", destino: string, nombre: string): void =>
-        poner(buildLink(usable ? elegido : nombre, `#${destino}`) ?? nombre),
+      initialText: usable ? elegido : "",
+      onPickAddress: (direccion: string, texto: string): void =>
+        poner(buildLink(textoDelEnlace(texto, direccion), direccion)),
+      onPick: (_tipo: "note" | "diagram", destino: string, nombre: string, texto: string): void =>
+        poner(buildLink(textoDelEnlace(texto, `#${destino}`, nombre), `#${destino}`)),
     })
   })
 

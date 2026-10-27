@@ -99,31 +99,6 @@ export const buildLink = (texto: string, destino: string): string | null => {
 }
 
 /**
- * Cambia el destino de un enlace guardado y deja su texto como estaba:
- * `[texto](viejo)` pasa a `[texto](destino)`, y el cursor queda tras el enlace.
- * Un enlace no guardado, que no está en la línea, o un destino con `)`, no
- * cambia nada.
- */
-export const changeLinkTarget = (
-  raw: string,
-  line: FormattedLine,
-  link: LineLink,
-  destino: string,
-): { readonly text: string; readonly cursor: number } => {
-  if (!link.saved || destino.includes(")")) return { text: raw, cursor: link.end }
-  /* La última marca del enlace es `](viejo)`, como en `removeLink`. */
-  const cierre: LineSpan | undefined = line.spans.find(
-    (s: LineSpan): boolean => s.kind === "mark" && s.start > link.start && s.end === link.end,
-  )
-  if (cierre === undefined) return { text: raw, cursor: link.end }
-  const nuevaMarca: string = `](${destino})`
-  return {
-    text: raw.slice(0, cierre.start) + nuevaMarca + raw.slice(link.end),
-    cursor: cierre.start + nuevaMarca.length,
-  }
-}
-
-/**
  * El texto que lleva un enlace nuevo si nadie escribe otro. Una web, su host sin
  * `www.` ni puerto ni ruta; un enlace interno, el nombre de lo enlazado. Lo que no
  * se puede sacar, «enlace».

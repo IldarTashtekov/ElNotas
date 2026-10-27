@@ -1,7 +1,8 @@
 /**
- * La hoja de elegir a qué enlazar: arriba un campo para pegar una dirección web
- * y, debajo, las notas y los diagramas que se pueden enlazar. La usan «Enlazar…»
- * y «Cambiar»; qué se hace con lo elegido lo decide quien la abre.
+ * La hoja de elegir a qué enlazar: arriba el texto que llevará el enlace, luego
+ * un campo para pegar una dirección web y, debajo, las notas y los diagramas que
+ * se pueden enlazar. La usan «Enlazar…» y «Cambiar»; qué se hace con lo elegido
+ * (y con el texto, que puede ir en blanco) lo decide quien la abre.
  */
 
 import { elemento } from "./dom.js"
@@ -12,22 +13,35 @@ import type { Sheet } from "./sheet.js"
 export interface LinkSheetOptions {
   readonly title: string
   readonly choices: LinkChoices
-  /** Se pegó una dirección web válida; la hoja ya se cerró. */
-  readonly onPickAddress: (direccion: string) => void
-  /** Se eligió una nota o un diagrama; la hoja ya se cerró. */
-  readonly onPick: (kind: "note" | "diagram", id: string, name: string) => void
+  /** Lo que lleva el campo del texto al abrirla; sin él, vacío. */
+  readonly initialText?: string
+  /** Lo que lleva el campo de la dirección al abrirla; sin él, vacío. */
+  readonly initialAddress?: string
+  /** Se pegó una dirección web válida, con el texto del campo tal cual; la hoja ya se cerró. */
+  readonly onPickAddress: (direccion: string, texto: string) => void
+  /** Se eligió una nota o un diagrama, con el texto del campo tal cual; la hoja ya se cerró. */
+  readonly onPick: (kind: "note" | "diagram", id: string, name: string, texto: string) => void
 }
 
 export const openLinkSheet = (
   sheet: Sheet,
-  { title, choices, onPickAddress, onPick }: LinkSheetOptions,
+  { title, choices, initialText, initialAddress, onPickAddress, onPick }: LinkSheetOptions,
 ): void => {
+  const texto: HTMLInputElement = elemento("input")
+  texto.type = "text"
+  texto.className = "enlazar-texto"
+  texto.placeholder = "Texto del enlace"
+  texto.setAttribute("aria-label", "Texto del enlace")
+  texto.autocapitalize = "off"
+  texto.spellcheck = false
+  texto.value = initialText ?? ""
   const campo: HTMLInputElement = elemento("input")
   campo.type = "text"
   campo.placeholder = "Pega una dirección"
   campo.setAttribute("aria-label", "Pega una dirección")
   campo.autocapitalize = "off"
   campo.spellcheck = false
+  campo.value = initialAddress ?? ""
   const enlazar: HTMLButtonElement = elemento("button", "Enlazar")
   enlazar.type = "button"
   const pegar: HTMLElement = elemento("div")
@@ -40,13 +54,19 @@ export const openLinkSheet = (
     campo.classList.toggle("invalido", !valida)
     if (!valida) return
     sheet.close()
-    onPickAddress(direccion)
+    onPickAddress(direccion, texto.value)
   }
   enlazar.addEventListener("click", intentar)
   campo.addEventListener("keydown", (evento: KeyboardEvent): void => {
     if (evento.key !== "Enter" || evento.isComposing) return
     evento.preventDefault()
     intentar()
+  })
+  /* Intro en el texto pasa a la dirección. */
+  texto.addEventListener("keydown", (evento: KeyboardEvent): void => {
+    if (evento.key !== "Enter" || evento.isComposing) return
+    evento.preventDefault()
+    campo.focus()
   })
   campo.addEventListener("input", (): void => campo.classList.remove("invalido"))
 
@@ -57,7 +77,7 @@ export const openLinkSheet = (
     b.type = "button"
     b.addEventListener("click", (): void => {
       sheet.close()
-      onPick(kind, id, name)
+      onPick(kind, id, name, texto.value)
     })
     return b
   }
@@ -74,5 +94,5 @@ export const openLinkSheet = (
     lista.append(rotulo("Diagramas"))
     lista.append(...choices.diagrams.map((d: { readonly id: string; readonly name: string }): HTMLElement => fila("diagram", d.id, d.name)))
   }
-  sheet.open(title, [pegar, lista])
+  sheet.open(title, [texto, pegar, lista])
 }

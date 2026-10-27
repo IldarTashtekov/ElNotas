@@ -276,12 +276,12 @@ export const ROTURAS = [
     prueba: "buildLink: escapa la barra, los corchetes y el asterisco del texto",
   },
   {
-    nombre: "enlaces: cambiar el destino de uno no deja el viejo",
+    nombre: "enlaces: cambiar uno no deja el viejo",
     fichero: "src/ui/linkActions.ts",
-    buscar: "text: raw.slice(0, cierre.start) + nuevaMarca + raw.slice(link.end),",
-    poner: "text: raw.slice(0, cierre.start) + raw.slice(cierre.start, link.end) + nuevaMarca + raw.slice(link.end),",
+    buscar: "text: raw.slice(0, link.start) + nuevo + raw.slice(link.end),",
+    poner: "text: raw.slice(0, link.start) + raw.slice(link.start, link.end) + nuevo + raw.slice(link.end),",
     caza: "pruebas",
-    prueba: "changeLinkTarget: cambia el destino, deja el texto y el cursor tras el enlace",
+    prueba: "changeLink: cambia texto y destino, y el cursor queda tras el enlace",
   },
 
   /* ── El encuadre de los diagramas ── */

@@ -311,6 +311,54 @@ diagrama.
   ventana. Ninguna burbuja queda colgada al volver.
 - **Q2.** En mitad de la cadena, recargar (O7) y luego el atrás: igual.
 
+## R. El enlace como bloque en la línea activa *(Fase 10, 6f)*
+
+En la línea **activa**, un enlace **guardado** (`[texto](destino)`) ya no se ve en Markdown: es un
+**bloque** con su texto. Lo guardado en la nota **sigue siendo la cadena Markdown**. Esta sección
+**sustituye** lo que decían N4, N5, O1, O2, O11, P3, P4, P7 y P11 de los enlaces en la línea activa
+(el resto de esos pasos sigue valiendo). Con una nota con, al menos, otra nota y un diagrama a los
+que enlazar, y una línea `ve a [la otra](#id-de-otra-nota) y mira www.example.com ya` (`id` real,
+con `?depurar`: `window.elnotas.store`).
+
+- **R1.** Tocar esa línea la activa: `[la otra](#…)` se ve **como un bloque subrayado con su texto
+  («la otra»), sin corchetes ni destino**; el resto, **en crudo** (`www.example.com` completa,
+  `**` con sus asteriscos). `document.querySelectorAll(".texto .md-enlace[contenteditable=false]")`
+  da **uno** y su `data-raw` es el Markdown entero. Un enlace a algo **borrado** lleva además
+  `md-roto` (apagado).
+- **R2.** ⚠️ **Tocar el bloque** deja el cursor **justo después** de él y sale **su burbuja**
+  («↗ Abrir», «Cambiar», «Quitar»), **bajo el bloque**. Tocar un enlace de una línea **formateada**
+  (que se activa) hace lo mismo con **ese** enlace, también si hay **varios** en la línea. El
+  cursor **nunca** queda dentro del bloque.
+- **R3.** La burbuja **se va** al teclear, al mover el cursor con ← → lejos del bloque, al tocar
+  otra línea o al apagarse la línea. Con el cursor **dentro** de la dirección suelta
+  (`www.example.com`), sale la burbuja con sólo «↗ Abrir», como antes.
+- **R4.** ⚠️ **Retroceso** con el cursor **justo tras** el bloque lo borra **entero** (de una
+  pulsación) y el cursor queda donde estaba; **Suprimir** con el cursor **justo antes** de un
+  bloque, igual. La nota deja de llevar el Markdown de ese enlace (`document.querySelector(…)` o
+  recargar). Con un enlace **pegado a otro**, cada tecla quita el suyo.
+- **R5.** ⚠️ **Escribir pegado al bloque** (antes, después, entre dos bloques, con el bloque al
+  principio o al final de la línea, sin texto al lado) mete el texto **fuera** del bloque, **no
+  pierde el cursor** y el bloque **no cambia**. Tabulador, Intro y las flechas funcionan con la
+  línea con bloques (Intro parte la línea sin romper el enlace; ← → saltan el bloque de un paso).
+- **R6.** **Seleccionar y copiar** dentro de la línea activa, abarcando un bloque, copia **su
+  texto** (sin Markdown). *(Con un `copy` lanzado desde la consola.)*
+- **R7.** **«Enlazar…»** abre la hoja con un campo **«Texto del enlace»** encima del de la
+  dirección. Con **texto seleccionado** que sirve, el campo **lo lleva**; sin selección, **vacío**.
+  Elegir una nota con el campo **vacío** da `[nombre de la nota](#id)`; con texto escrito,
+  `[ese texto](#id)`. Pegar una dirección con el campo vacío da `[host](dirección)` (el dominio sin
+  `www.` ni ruta, p. ej. `example.com`); con texto, `[ese texto](dirección)`. Intro en el campo del
+  texto pasa al de la dirección. El enlace nuevo **se ve como bloque**, con el cursor tras él.
+- **R8.** Una dirección con `)` pegada en «Enlazar…» avisa **«Esa dirección no se puede
+  enlazar»** (~1,5 s) y **no inserta nada**.
+- **R9.** **«Cambiar»** abre la hoja con el campo del texto **relleno con el texto actual** (y, si
+  era un enlace web, la dirección). Cambiar **sólo el texto**, eligiendo la misma nota, reescribe el
+  texto; cambiar **sólo el destino** (dejando el texto), también; los dos, igual. Texto en blanco:
+  el de por defecto (R7). Tras cambiar, el cursor queda **tras el bloque** nuevo. Un destino con `)`
+  avisa como R8 y no cambia nada.
+- **R10.** ⚠️ **Recargar** la nota: la línea sigue llevando el enlace, **formateado** (subrayado,
+  con su texto) y, al activarla, **de nuevo como bloque**; el Markdown de la nota es el escrito
+  (`store.getState()` con `?depurar`).
+
 ## Comportamientos conocidos
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:
@@ -477,3 +525,27 @@ sus listas.
 | Q1, Q2 | |
 
 Notas:
+
+### Pasada 7 — escritorio y móvil, R (el enlace como bloque, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-27 |
+| Navegador y versión | Chrome, el navegador del panel (escritorio) |
+| Quién | Claude, en el panel; el móvil, el usuario |
+| Commit | `9f86d3c` más los cambios de la 6f-2 sin comitear (el commit de la pieza los recoge) |
+| Origen | `localhost:8001`, con la nota de prueba «Nueva Nota» |
+
+| Paso | Resultado |
+|---|---|
+| R1, R2 | ✅ un clic real sobre el bloque lo deja tras él y saca «↗ Abrir», «Cambiar» y «Quitar»; `data-raw` lleva el Markdown. Varios enlaces en la línea: sin probar |
+| R3 | ⏭ sin pasar |
+| R4 | ✅ Retroceso tras el bloque y Suprimir antes de él lo quitan entero, de una pulsación. Dos enlaces pegados: sin probar |
+| R5 | ✅ escribir tras el bloque lo deja fuera de él. Antes, entre dos y bloque solo: sin probar |
+| R6 | ⏭ sin pasar |
+| R7, R8 | ✅ R7: con selección el campo «Texto» la lleva; una dirección con texto da `[Wikipedia](https://es.wikipedia.org)`; una nota elegida con texto seleccionado da `[mira](#id)`. ⏭ texto vacío (dominio o nombre) y R8, sin pasar |
+| R9 | ✅ «Cambiar» abre con el texto actual; cambiar texto y destino a la vez reescribe el enlace. «Quitar» deja el texto. ⏭ sólo texto, sólo destino, destino con `)` |
+| R10 | ⏭ sin pasar |
+
+Notas: al seleccionar una dirección y pulsar «Enlazar…», el campo «Texto» se rellena con la propia
+dirección en vez de con el dominio; a decidir con el usuario. Móvil: el usuario, otro día.
