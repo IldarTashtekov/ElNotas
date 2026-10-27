@@ -256,8 +256,13 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
         «archivados»: no se ve, pero no se borra. **Se archivan los grupos**, como en el esbozo.
       - **Los eventos sin grupo** se ven en un elemento fijo de la lista, «Sin grupo», que
         funciona como un grupo más (con su redonda y sus eventos por tiempo).
-      **A decidir:** si un evento puede estar en varios grupos; qué pasa con sus eventos al borrar un grupo; si las
-      rutinas se archivan, y cómo choca la pulsación larga que mueve con la que selecciona.
+      - **Un evento puede estar en varios grupos**; está en «Sin grupo» cuando no está en ninguno.
+        El mes pinta un día si cualquiera de los grupos de uno de sus eventos está elegido.
+      - **Al borrar un grupo**, sus eventos no se borran: los que se quedan sin grupo pasan a «Sin grupo».
+      - **Las rutinas también se archivan y se reordenan** con una pulsación larga, como los grupos.
+        En el calendario esa pulsación mueve, no selecciona (la selección es la redonda), así
+        que no choca con la de las notas.
+      **A decidir:** nada por ahora; falta partirlo en tareas con su etiqueta y su cierre.
       **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
       tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
       *Ideas aparcadas*.
