@@ -254,8 +254,9 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
         salen marcados en el mes. Los eventos de un grupo, **ordenados por tiempo**.
       - **Una pulsación larga en un grupo lo mueve** por la lista, y se puede dejar dentro de
         «archivados»: no se ve, pero no se borra. **Se archivan los grupos**, como en el esbozo.
-      **A decidir:** dónde se ven los eventos sin grupo (¿un grupo «General» que los reúne?); si un
-      evento puede estar en varios grupos; qué pasa con sus eventos al borrar un grupo; si las
+      - **Los eventos sin grupo** se ven en un elemento fijo de la lista, «Sin grupo», que
+        funciona como un grupo más (con su redonda y sus eventos por tiempo).
+      **A decidir:** si un evento puede estar en varios grupos; qué pasa con sus eventos al borrar un grupo; si las
       rutinas se archivan, y cómo choca la pulsación larga que mueve con la que selecciona.
       **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
       tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
