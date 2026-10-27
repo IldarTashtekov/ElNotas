@@ -211,6 +211,17 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario*
       en el móvil la pasada 7. **A decidir con el usuario:** si al elegir una dirección como texto
       el campo Texto debe llevar el dominio, y si un `[texto](destino)` escrito o pegado a mano en
       la línea activa se convierte en bloque al momento (hoy, al reactivar la línea).
+      **6g, las marcas de negrita y cursiva escondidas** (pedido por el usuario el 2026-10-27, que
+      eligió dejar la sintaxis como está: `**negrita**` y `*cursiva*`): en la línea activa, los
+      `*` y `**` **no se ven salvo con el cursor dentro de la palabra o pegado a ella**; al
+      entrar aparecen para poder editarlos, y la palabra se ve ya en negrita o cursiva mientras
+      se escribe. El `# ` del título se queda visible mientras la línea está activa (la palabra es
+      toda la línea). Las barras `\` también se ven. Las marcas son texto de verdad, sólo ocultas
+      por CSS, de modo que lo guardado y las posiciones crudas no cambian. Por piezas: **6g-1**,
+      lo puro (el lector dice qué marcas forman cada par; la línea activa se parte en tramos con
+      su estilo y sus marcas) con pruebas; **6g-2**, el DOM (pintar y repintar al teclear sin
+      perder el cursor ni romper la composición del móvil; revelar al mover el cursor) y los
+      pasos de la lista. Con subagente Sonnet *(mecánica)* sobre esta especificación, y Claude revisa.
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
