@@ -288,8 +288,11 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
         cumple si sus días llegan a la meta; es un cálculo, no un dato.
       - `AppState` gana `events`, `eventGroups` y `routines`. Los grupos elegidos con la redonda y
         el mes que se mira son estado de pantalla, no del core.
-      **A confirmar con el usuario:** que la pertenencia vaya en el grupo, y que «Sin grupo» sea
-      fijo arriba, sin mover ni archivar. **Sin decidir, con propuesta:** eventos pasados
+      - **Confirmado el 2026-10-27:** la pertenencia va en el grupo (borrar un grupo no toca los
+        eventos; cambiar los grupos de un evento reescribe los de los grupos que cambian).
+        **«Sin grupo» se mueve en la lista, pero no se archiva ni se borra:** entra en la lista de
+        orden con un id reservado y no lleva menú ⋮.
+      **Sin decidir, con propuesta:** eventos pasados
       colapsados en las listas; eventos «hechos» tachados en la lista y el día pintado igual;
       botón «hoy» y mes anterior y siguiente; las repeticiones y la duración, aparcadas; si se
       entrega en dos tandas (primero los eventos, luego las rutinas). Y partirlo en tareas con su
