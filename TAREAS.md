@@ -226,8 +226,9 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       **Hecho** (6g-1 `7d84b31`, 6g-2 `38d905d`; el usuario lo probó en el ordenador y lo dio por
       bueno el 2026-10-27). **Falta** la pasada 8 en el móvil (S9) y lo que no se pasó en el panel
       (S5, S6, S8). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
-- [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24:
-      qué es, qué pide al dominio y a la pantalla, y si cambia alguna decisión cerrada.
+**7. Calendario**, planteado con el usuario el 2026-10-27 y **en dos tandas**: primero el
+calendario con los eventos (7a-7g), después las rutinas (7h-7j). Lo decidido y el modelo, aquí;
+las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       **Qué es** (esbozos del usuario, 2026-10-27): un calendario simple del que salen dos
       funciones separadas. **Eventos:** un mes; al pulsar un día se crea uno (día, hora opcional,
       motivo, hecho); se agrupan en **grupos de eventos** que se despliegan y se eligen en modo
@@ -292,16 +293,66 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
         eventos; cambiar los grupos de un evento reescribe los de los grupos que cambian).
         **«Sin grupo» se mueve en la lista, pero no se archiva ni se borra:** entra en la lista de
         orden con un id reservado y no lleva menú ⋮.
-      **Sin decidir, con propuesta:** eventos pasados
-      colapsados en las listas; eventos «hechos» tachados en la lista y el día pintado igual;
-      botón «hoy» y mes anterior y siguiente; las repeticiones y la duración, aparcadas; si se
-      entrega en dos tandas (primero los eventos, luego las rutinas). Y partirlo en tareas con su
-      etiqueta y su cierre.
-      **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
-      tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
-      *Ideas aparcadas*.
+      **Con propuesta, que vale salvo que el usuario diga otra cosa:** los eventos pasados,
+      colapsados en las listas; los «hechos», tachados en la lista y con el día pintado igual;
+      botón «hoy» y mes anterior y siguiente; las repeticiones y la duración, aparcadas
+      (*Ideas aparcadas*, cuando se cierre la tarea 7).
+      Cada tarea de `src/` cierra con `check:roturas` de lo que añade, y las que tocan el dominio
+      o un puerto paran antes y se lo cuentan al usuario.
+
+**Primera tanda: el calendario y los eventos.**
+- [ ] **7a. Las fechas** *(pensar)*. `Day` y `Time` como textos marcados con su validación, y las
+      funciones puras de calendario: día de la semana, semana de lunes a domingo, días de un mes
+      y su rejilla, sumar días, comparar. **Se cierra cuando** tienen pruebas (febrero y años
+      bisiestos, cambio de mes y de año, la semana que cruza meses), `check` pasa y `check:purity`
+      no ve reloj ni zona.
+- [ ] **7b. Eventos y grupos en el dominio** *(pensar)*. `CalendarEvent` y `EventGroup`, sus ids,
+      acciones, reducer, casos de uso e hidratación. Crear un evento con su grupo, nuevo o
+      existente, en una sola acción; `setMembership`, no un `toggle`; borrar un evento lo quita de
+      sus grupos y borrar un grupo no toca los eventos; lo que no aplica es no-op, con la
+      identidad preservada. **Cambia el dominio:** se para y se enseña antes de tocarlo.
+      **Se cierra cuando** hay pruebas con `strictEqual` en los no-op y en la integridad, `check`
+      pasa y sus roturas, en `tools/roturas.mjs`, caen todas.
+- [ ] **7c. Guardar los eventos** *(mecánica)*. Ficheros por entidad, su forma en `schema.ts`
+      (un día mal escrito es un fichero ilegible), la copia de seguridad, importar y «Borrar
+      todo», y los contratos de `storage/`. **Se cierra cuando** `check` pasa, un fichero con un día
+      inválido cae en `onCorrupt` y una copia con eventos se exporta y se importa igual.
+- [ ] **7d. El calendario como vista y como ventana** *(pensar)*. El icono junto a ⚙, la ventana
+      de calendario en la lista de ventanas y sus capas, lo que recuerda al recargar, y la lista de
+      orden de los grupos en `localStorage` con su reconciliación y «Sin grupo» entrando con un id
+      reservado. **Cambia dos decisiones cerradas**, las cuatro vistas y «ventana = referencia a
+      un contexto»: se para y se le enseña al usuario. **Se cierra cuando** hay pruebas de lo puro
+      (la reconciliación, `guardWindows` con la ventana nueva), la copia de seguridad la lleva y
+      los pasos de su lista pasan en el panel.
+- [ ] **7e. El mes y los eventos de un día** *(pensar)*. La rejilla del mes, los días marcados
+      según los grupos elegidos, la lista de un día con su «+», la hoja de crear y editar (día,
+      hora opcional, motivo, grupos, y Borrar con confirmación), mes anterior y siguiente y «hoy».
+      **Se cierra cuando** los pasos de su lista pasan en el panel, a 375 y a escritorio, y lo
+      puro tiene pruebas.
+- [ ] **7f. Los grupos de eventos** *(pensar)*. La lista con redonda, «Sin grupo» fijo, el menú ⋮
+      (Renombrar, Archivar o Desarchivar, Borrar), mover con la pulsación larga, la vista de
+      archivados y los eventos de cada grupo por tiempo, los pasados colapsados. **Se cierra
+      cuando** los pasos de su lista pasan en el panel y lo puro tiene pruebas.
+- [ ] **7g. La lista de verificación de los eventos** *(mecánica)*. `test/ui/VERIFICACION-CALENDARIO.md`,
+      con los pasos de 7d-7f y los de la copia de seguridad, y pasada en el panel; el móvil, lo
+      pasa el usuario. **Se cierra cuando** está pasada y anotada en el panel, y `check` pasa.
+
+**Segunda tanda: las rutinas.**
+- [ ] **7h. Rutinas en el dominio y en el guardado** *(pensar)*. `Routine`, sus acciones
+      (`setDone(día, hecho)`, meta semanal, archivar, renombrar, borrar), el cálculo de la semana
+      cumplida, y su fichero, su forma y la copia de seguridad. **Cambia el dominio:** se para y
+      se enseña antes. **Se cierra cuando** hay pruebas (no se marca el futuro, una semana que
+      cruza meses), roturas que caen, `check` pasa y una copia con rutinas se exporta e importa igual.
+- [ ] **7i. Las rutinas en pantalla** *(pensar)*. La pestaña, las cadenas de la semana con las
+      anteriores, marcar días, el progreso en el mes de las elegidas con la redonda, el menú ⋮
+      (Renombrar, Cambiar meta, Archivar, Borrar con su aviso), mover y archivar. **Se cierra
+      cuando** los pasos de su lista pasan en el panel, a 375 y a escritorio.
+- [ ] **7j. La lista de verificación de las rutinas** *(mecánica)*. Los pasos en
+      `VERIFICACION-CALENDARIO.md`, pasados en el panel, y el móvil, el usuario. **Se cierra
+      cuando** está pasada y anotada, y `check` pasa.
+
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
-      las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
+      las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, la pertenencia en el grupo, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa, `check:roturas` pasa entera y la auditoría no deja nada falso.
