@@ -206,6 +206,11 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario*
       texto y destino) con pruebas; **6f-2**, el editor, la hoja y la burbuja, y los pasos de la
       lista, pasados en el panel. Ambas, con subagente Sonnet *(mecánica)* sobre esta
       especificación, y Claude revisa.
+      **Hecho** (6f-1 `9f86d3c`, 6f-2 `08aeeee`; el usuario lo dio por bueno en su navegador el
+      2026-10-27). **Falta** pasar en el panel R3, R6, R10 y lo que quedó sin probar de R1 a R9, y
+      en el móvil la pasada 7. **A decidir con el usuario:** si al elegir una dirección como texto
+      el campo Texto debe llevar el dominio, y si un `[texto](destino)` escrito o pegado a mano en
+      la línea activa se convierte en bloque al momento (hoy, al reactivar la línea).
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
