@@ -296,7 +296,7 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       **Con propuesta, que vale salvo que el usuario diga otra cosa:** los eventos pasados,
       colapsados en las listas; los «hechos», tachados en la lista y con el día pintado igual;
       botón «hoy» y mes anterior y siguiente; las repeticiones y la duración, aparcadas
-      (*Ideas aparcadas*, cuando se cierre la tarea 7).
+      (ya en *Ideas aparcadas*).
       Cada tarea de `src/` cierra con `check:roturas` de lo que añade, y las que tocan el dominio
       o un puerto paran antes y se lo cuentan al usuario.
 
@@ -566,6 +566,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
+| **Repeticiones y duración de los eventos del calendario** (un evento cada semana, uno que dura varios días o de una hora a otra) | Planteado el 2026-10-27 al diseñar el calendario (Fase 10, tarea 7): los esbozos del usuario sólo tienen un día y una hora opcional, y repetir o durar pide un modelo más grande (reglas de repetición, excepciones, qué se pinta en el mes). | Echar en falta crear a mano el mismo evento cada semana, o uno de varios días. Es añadido: un campo opcional en el evento, sin migrar lo guardado. |
 | **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10 una nota puede enlazar notas y diagramas con `[texto](#id)`; los contextos, no, por ahora (2026-10-25). | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
 | **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
 | **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
