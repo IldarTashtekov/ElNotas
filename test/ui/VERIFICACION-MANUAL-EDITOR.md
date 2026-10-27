@@ -359,6 +359,47 @@ con `?depurar`: `window.elnotas.store`).
   con su texto) y, al activarla, **de nuevo como bloque**; el Markdown de la nota es el escrito
   (`store.getState()` con `?depurar`).
 
+## S. Las marcas de negrita y cursiva, escondidas en la línea activa *(Fase 10, 6g)*
+
+En la línea **activa**, las marcas `*` y `**` **no se ven** salvo con el cursor **dentro de la
+palabra con formato o pegado a ella** (dentro del intervalo cerrado del par, marcas incluidas); la
+palabra, mientras, ya se ve en negrita o cursiva. Las marcas siguen siendo **texto real** (escondido
+por CSS): lo guardado es Markdown y las posiciones no cambian. Esto **sustituye** lo que R1 decía del
+`**` «con sus asteriscos». Con `?depurar`, `document.querySelectorAll(".texto .md-marca")` da las
+marcas y `md-viva` marca las que se ven.
+
+- **S1.** Escribir `hola **mundo** y *cursiva* fin` y llevar el cursor **fuera** de las dos
+  palabras: la línea activa muestra `hola mundo y cursiva fin`, «mundo» en **negrita** y «cursiva» en
+  *cursiva*, **sin ningún asterisco**.
+- **S2.** El cursor **dentro** de «mundo», o **pegado** a él por cualquier lado, **revela sus `**`**
+  (atenuados) y **sólo los suyos**; los de «cursiva» siguen escondidos. Moverlo fuera (con el dedo, el
+  ratón o las flechas) los esconde de nuevo. El cursor **nunca** se ve atascado en un hueco ni
+  necesita una pulsación de más para cruzar una marca escondida.
+- **S3.** ⚠️ Teclear el `*` que **cierra** un par (`hola *a` y luego `*`) lo convierte en cursiva **en
+  el momento**, y el cursor **no salta**: lo siguiente que se teclee sale pegado tras la marca de
+  cierre. Igual con `**` (dos pulsaciones) y con la marca de apertura escrita **después** de la de
+  cierre.
+- **S4.** ⚠️ Con el cursor pegado a una marca revelada, **Retroceso** la borra de a una y **deshace el
+  par**: la palabra vuelve a texto normal, con el asterisco que quedaba a la vista como texto. Suprimir,
+  igual por el otro lado. Escribir **dentro** de la palabra con formato **no cambia nada** más que el
+  texto.
+- **S5.** Anidados: `***a***` y `**a *b* c**`. Con el cursor dentro de «b» se ven las marcas de **los
+  dos** pares que lo contienen; dentro de «a» (en el segundo), sólo las del par de fuera. Fuera de
+  todos, ninguna.
+- **S6.** **Escribir seguido** (palabras, espacios, signos) a lo largo de una línea con formato, y con
+  **enlaces guardados** en la misma línea (bloques de R): el texto sale donde se espera, el bloque no
+  cambia, el cursor no salta y Intro parte la línea con el Markdown **crudo** correcto (con sus `*`
+  aunque estuvieran escondidos).
+- **S7.** ⚠️ **Recargar** la nota: lo guardado es el Markdown escrito (`window.elnotas.store`, con
+  `?depurar`), asteriscos incluidos; la línea formateada se ve como en N, y al activarla vuelve a
+  esconder las marcas.
+- **S8.** `# título con **negrita**`: el `# ` **se ve** (no es una marca de énfasis) y la negrita
+  esconde sus `**` como en S1. Una barra `\` también se ve.
+- **S9.** *(móvil, el usuario)* **Teclear y autocorrección** en una línea con formato: el teclado **no
+  se cierra**, el cursor **no salta** ni siquiera al cerrar un par con `*`, y aceptar una sugerencia
+  junto a una palabra con formato deja el texto bien. Copiar una selección **dentro** de la línea
+  activa (con marcas) copia **el Markdown**, asteriscos incluidos (a decidir si se aguanta).
+
 ## Comportamientos conocidos
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:
@@ -549,3 +590,27 @@ Notas:
 
 Notas: al seleccionar una dirección y pulsar «Enlazar…», el campo «Texto» se rellena con la propia
 dirección en vez de con el dominio; a decidir con el usuario. Móvil: el usuario, otro día.
+
+### Pasada 8 — escritorio y móvil, S (las marcas escondidas, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-27 |
+| Navegador y versión | Chrome, el navegador del panel (escritorio) |
+| Quién | Claude, en el panel; el móvil, el usuario |
+| Commit | `7d84b31` más los cambios de la 6g-2 sin comitear (el commit de la pieza los recoge) |
+| Origen | `localhost:8001`, con la nota de prueba «Nueva Nota» |
+
+| Paso | Resultado |
+|---|---|
+| S1, S2 | ✅ `hola **mundo** y *cursiva* fin`: sin asteriscos al activar; con el cursor en «mundo» salen sus `**` atenuados y sólo los suyos; con el cursor al final de `**mundo**` siguen; un paso más allá se esconden |
+| S3 | ✅ teclear `**nuevo*` deja la cursiva de `*nuevo*`; el `*` que cierra lo pasa a negrita al momento, el cursor queda al final y lo que se escribe después va a su sitio |
+| S4 | ✅ Retroceso sobre una marca revelada borra un asterisco y el par se deshace |
+| S5 | ⏭ `***a***` y `**a *b* c**`: el reparto de marcas sale bien en lo puro; en pantalla, sin pasar |
+| S6, S8 | ⏭ sin pasar |
+| S7 | ✅ lo guardado es el Markdown escrito (`hola **mundo** y *cursiva* fin **nuevo** z`); recargar, sin pasar |
+| S9 (móvil) | ⏭ el usuario |
+
+Notas: el CSS se carga desde `src/ui/styles/` y el navegador lo guarda en caché: recargar a fondo
+con las herramientas de desarrollo abiertas. Copiar dentro de la línea activa, con asteriscos
+escondidos, a decidir.

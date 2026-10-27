@@ -54,6 +54,16 @@
       text-decoration: underline;
       text-underline-offset: 0.2em;
     }
+    /* Las marcas de negrita y cursiva de la línea activa: texto real, escondido
+       salvo en los pares con el cursor dentro o pegado. */
+    & .md-marca {
+      display: none;
+
+      &.md-viva {
+        color: var(--dim);
+        display: inline;
+      }
+    }
     /* El enlace guardado en la línea activa: un bloque que no se edita por dentro. */
     & .md-enlace[data-raw] {
       cursor: pointer;

@@ -4,17 +4,18 @@
  * línea a otra y la barra lleva el interruptor de casilla y anidar.
  *
  * Qué hace cada tecla lo decide `editor.ts`; aquí sólo se leen los eventos y se
- * pone el cursor donde toca. La línea que se está escribiendo no se repinta
- * nunca: ahí manda lo que se teclea. Sólo ella es editable, y se ve en crudo,
- * salvo sus enlaces guardados, que son bloques con su texto; las demás,
- * formateadas, son texto que se selecciona de una a otra, y se copia como texto
- * plano.
+ * pone el cursor donde toca. Sólo la línea que se está escribiendo es editable:
+ * se ve en crudo, con sus marcas de negrita y cursiva escondidas salvo junto al
+ * cursor y sus enlaces guardados como bloques con su texto; ahí manda lo que se
+ * teclea, y sólo se repinta si su estructura cambia. Las demás, formateadas,
+ * son texto que se selecciona de una a otra, y se copia como texto plano.
  */
 
 import type { AppState, Content, ContentId, DiagramId, Note, NoteId, UseCases } from "#core/index"
 import { contentId, isCheckBox } from "#core/index"
 import type { ActivePart, LinkPart } from "./activeLine.js"
-import { activeParts, domToRaw, rawToDom } from "./activeLine.js"
+import { activeLine, activeParts, domToRaw, rawToDom, visibleRuns } from "./activeLine.js"
+import type { ActiveLine } from "./activeLine.js"
 import { copiedText } from "./copyText.js"
 import { briefNotice, elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
@@ -103,11 +104,18 @@ export interface NoteEditor {
 
 /**
  * Lo que un nodo del campo aporta a la cadena cruda: un texto, el suyo; un bloque
- * de enlace, su `data-raw`; lo demás (`<br>`...), lo que lleve dentro.
+ * de enlace, su `data-raw` (sin entrar); un `<br>`, nada; cualquier otro
+ * elemento (el `span` de una palabra con formato o de una marca), lo que lleve dentro.
  */
 const crudoDeNodo = (nodo: Node): string => {
-  if (nodo instanceof Element) return nodo.getAttribute("data-raw") ?? nodo.textContent ?? ""
-  return nodo.nodeType === Node.TEXT_NODE ? (nodo.textContent ?? "") : ""
+  if (nodo.nodeType === Node.TEXT_NODE) return nodo.textContent ?? ""
+  if (!(nodo instanceof Element)) return ""
+  const bruto: string | null = nodo.getAttribute("data-raw")
+  if (bruto !== null) return bruto
+  if (nodo.tagName === "BR") return ""
+  let crudo: string = ""
+  for (const hijo of nodo.childNodes) crudo += crudoDeNodo(hijo)
+  return crudo
 }
 
 /**
@@ -120,6 +128,9 @@ const crudoDelCampo = (raiz: Node): string => {
   for (const nodo of raiz.childNodes) crudo += crudoDeNodo(nodo)
   return crudo
 }
+
+/** Si el campo lleva algún `span` (palabras con formato, marcas o bloques): sólo la activa con énfasis o enlaces. */
+const esEstructurado = (campo: HTMLElement): boolean => campo.querySelector("span") !== null
 
 /** Si la línea lleva algún bloque de enlace: sólo la activa los tiene. */
 const tieneBloques = (campo: HTMLElement): boolean => campo.querySelector("[data-raw]") !== null
@@ -140,14 +151,14 @@ const inicioCrudo = (campo: HTMLElement, hijo: Node): number => {
 }
 
 /**
- * Cuánto hay en el campo hasta ese punto: sin bloques, las letras que se ven; con
- * ellos, las de la cadena cruda (un bloque cuenta entero o nada).
+ * Cuánto hay en el campo hasta ese punto, en la cadena cruda: el texto de dentro
+ * de cualquier `span` cuenta aunque esté escondido, y un bloque entero o nada.
  */
 const contarHasta = (campo: HTMLElement, nodo: Node, offset: number): number => {
   const hasta: Range = document.createRange()
   hasta.selectNodeContents(campo)
   hasta.setEnd(nodo, offset)
-  return tieneBloques(campo) ? crudoDelCampo(hasta.cloneContents()).length : hasta.toString().length
+  return crudoDelCampo(hasta.cloneContents()).length
 }
 
 /** Dónde está el cursor dentro de ese campo (en su cadena cruda si es la activa), o `null` si no está en él. */
@@ -173,24 +184,54 @@ const rellenarSiVacia = (campo: Element): void => {
 }
 
 /**
- * Pone el rango en la posición cruda `offset` de un campo con bloques. Nunca
- * dentro de uno: al borde más cercano. Si el cursor queda junto a un bloque sin
+ * Las hojas del campo, en orden: sus nodos de texto, también los de dentro de
+ * un `span` de formato o de marca, y sus bloques de enlace (sin entrar en ellos).
+ */
+const hojasDe = (nodo: Node): ReadonlyArray<Node> => {
+  const hojas: Node[] = []
+  for (const hijo of nodo.childNodes) {
+    if (hijo.nodeType === Node.TEXT_NODE) hojas.push(hijo)
+    else if (hijo instanceof Element) {
+      if (hijo.hasAttribute("data-raw")) hojas.push(hijo)
+      else hojas.push(...hojasDe(hijo))
+    }
+  }
+  return hojas
+}
+
+/**
+ * Muestra las marcas de los pares con el cursor (posición cruda) en su intervalo
+ * y esconde las demás. Sin cursor, no toca nada. Va SIEMPRE antes de colocar el
+ * cursor en el DOM: no puede caer en una marca que siga escondida.
+ */
+const marcarVivas = (campo: HTMLElement, cursor: number | null): void => {
+  if (cursor === null) return
+  const marcas: ReadonlyArray<HTMLElement> = [...campo.querySelectorAll<HTMLElement>(":scope > .md-marca")]
+  if (marcas.length === 0) return
+  const raw: string = crudoDelCampo(campo)
+  const linea: ActiveLine = activeLine(raw)
+  const vivos: ReadonlySet<number> = visibleRuns(linea.partes, linea.runs, Math.min(cursor, raw.length))
+  for (const marca of marcas) marca.classList.toggle("md-viva", vivos.has(Number(marca.dataset["run"])))
+}
+
+/**
+ * Pone el rango en la posición cruda `offset` de un campo con `span`s. Nunca
+ * dentro de un bloque: al borde más cercano. En el límite entre dos nodos de
+ * texto, al final del de la izquierda. Si el cursor queda junto a un bloque sin
  * texto al lado, se le crea un nodo de texto vacío donde vivir.
  */
-const colocarEntreBloques = (rango: Range, campo: HTMLElement, offset: number): void => {
-  const partes: ReadonlyArray<ActivePart> = activeParts(crudoDelCampo(campo))
-  const destino: number = domToRaw(partes, rawToDom(partes, offset))
+const colocarEnEstructura = (rango: Range, campo: HTMLElement, destino: number): void => {
   let antes: number = 0
-  for (const nodo of [...campo.childNodes]) {
+  for (const nodo of hojasDe(campo)) {
     const largo: number = crudoDeNodo(nodo).length
     if (nodo.nodeType === Node.TEXT_NODE) {
       if (destino <= antes + largo) {
         rango.setStart(nodo, destino - antes)
         return
       }
-    } else if (nodo instanceof Element && nodo.hasAttribute("data-raw") && destino <= antes) {
+    } else if (destino <= antes) {
       const vacio: Text = document.createTextNode("")
-      nodo.before(vacio)
+      nodo.parentNode?.insertBefore(vacio, nodo)
       rango.setStart(vacio, 0)
       return
     }
@@ -207,8 +248,11 @@ const ponerCursorEn = (campo: HTMLElement, offset: number): void => {
   if (sel === null) return
   const rango: Range = document.createRange()
   const nodo: Node | null = campo.firstChild
-  if (tieneBloques(campo)) {
-    colocarEntreBloques(rango, campo, offset)
+  if (esEstructurado(campo)) {
+    const partes: ReadonlyArray<ActivePart> = activeParts(crudoDelCampo(campo))
+    const destino: number = domToRaw(partes, rawToDom(partes, offset))
+    marcarVivas(campo, destino)
+    colocarEnEstructura(rango, campo, destino)
   } else if (nodo !== null && nodo.nodeType === Node.TEXT_NODE) {
     rango.setStart(nodo, Math.min(offset, nodo.textContent?.length ?? 0))
   } else {
@@ -330,6 +374,8 @@ export const createNoteEditor = ({
    * foco: su texto lo acaba de cambiar la orden, no quien teclea.
    */
   let enOrden: boolean = false
+  /** Entre `compositionstart` y `compositionend`: el teclado del móvil escribe por su cuenta. */
+  let componiendo: boolean = false
   const textoPlano: boolean = soportaTextoPlano()
 
   const lineas: HTMLElement = elemento("div")
@@ -458,31 +504,96 @@ export const createNoteEditor = ({
     return bloque
   }
 
+  /** El nodo de una parte de la línea activa; ver `pintarActiva`. */
+  const nodoDeParte = (parte: ActivePart): Node => {
+    if (parte.kind === "link") return bloqueDe(parte)
+    if (parte.kind === "mark") {
+      const marca: HTMLSpanElement = elemento("span", parte.raw)
+      marca.className = "md-marca"
+      marca.dataset["run"] = String(parte.run)
+      return marca
+    }
+    if (!parte.bold && !parte.italic && parte.run === null) return document.createTextNode(parte.raw)
+    const tramo: HTMLSpanElement = elemento("span", parte.raw)
+    tramo.classList.toggle("md-negrita", parte.bold)
+    tramo.classList.toggle("md-cursiva", parte.italic)
+    if (parte.run !== null) tramo.dataset["run"] = String(parte.run)
+    return tramo
+  }
+
+  /** Si ese nodo es lo que `nodoDeParte` pintaría para esa parte, sin mirar `md-viva`. */
+  const nodoCoincide = (nodo: Node, parte: ActivePart): boolean => {
+    if (parte.kind === "text" && !parte.bold && !parte.italic && parte.run === null) {
+      return nodo.nodeType === Node.TEXT_NODE && nodo.textContent === parte.raw
+    }
+    if (!(nodo instanceof HTMLElement) || nodo.tagName !== "SPAN") return false
+    if (parte.kind === "link") {
+      return nodo.getAttribute("data-raw") === parte.raw && nodo.textContent === parte.label
+    }
+    if (nodo.hasAttribute("data-raw")) return false
+    const esMarca: boolean = parte.kind === "mark"
+    const run: number | null = parte.run
+    return (
+      nodo.classList.contains("md-marca") === esMarca &&
+      nodo.classList.contains("md-negrita") === (parte.kind === "text" && parte.bold) &&
+      nodo.classList.contains("md-cursiva") === (parte.kind === "text" && parte.italic) &&
+      nodo.getAttribute("data-run") === (run === null ? null : String(run)) &&
+      nodo.textContent === parte.raw
+    )
+  }
+
+  /** Si el campo ya tiene, hijo a hijo, la estructura de esas partes. */
+  const estructuraCoincide = (campo: HTMLElement, partes: ReadonlyArray<ActivePart>): boolean => {
+    const hijos: ReadonlyArray<ChildNode> = [...campo.childNodes]
+    return (
+      hijos.length === partes.length &&
+      partes.every((p: ActivePart, i: number): boolean => nodoCoincide(hijos[i] as ChildNode, p))
+    )
+  }
+
   /**
-   * La línea activa: en crudo, salvo cada enlace guardado, que es un bloque con su
-   * texto. Sin enlaces, un solo nodo de texto; y si ya muestra eso, no se toca.
+   * La línea activa: en crudo, con las palabras en negrita o cursiva ya con su
+   * estilo y sus marcas (`*`, `**`) escondidas, y cada enlace guardado como un
+   * bloque con su texto. Sin enlaces ni énfasis, un solo nodo de texto; y si ya
+   * muestra eso, no se toca.
    */
   const pintarActiva = (campo: HTMLElement, raw: string): void => {
     campo.classList.remove("md-titulo")
-    const partes: ReadonlyArray<ActivePart> = activeParts(raw)
+    const { partes, runs }: ActiveLine = activeLine(raw)
     const enlaces: ReadonlyArray<LinkPart> = partes.filter((p: ActivePart): p is LinkPart => p.kind === "link")
-    if (enlaces.length === 0) {
+    if (enlaces.length === 0 && runs.length === 0) {
       if (!muestraEnCrudo(campo, raw)) campo.textContent = raw
       rellenarSiVacia(campo)
       return
     }
-    const bloques: ReadonlyArray<HTMLElement> = bloquesDe(campo)
-    if (crudoDelCampo(campo) === raw && bloques.length === enlaces.length) {
+    if (estructuraCoincide(campo, partes)) {
       /* Ya está pintada: sólo se pone al día cuáles están rotos, sin mover el cursor. */
-      bloques.forEach((bloque: HTMLElement, i: number): void => {
+      bloquesDe(campo).forEach((bloque: HTMLElement, i: number): void => {
         const parte: LinkPart | undefined = enlaces[i]
         bloque.classList.toggle("md-roto", parte !== undefined && estaRoto(parte.link))
       })
       return
     }
-    campo.replaceChildren(
-      ...partes.map((p: ActivePart): Node => (p.kind === "link" ? bloqueDe(p) : document.createTextNode(p.raw))),
-    )
+    campo.replaceChildren(...partes.map(nodoDeParte))
+  }
+
+  /**
+   * Tras teclear: si lo que el navegador dejó en la activa ya es lo que se
+   * pintaría (la regla, comparar y no repintar en cada tecla), sólo se ponen al
+   * día las marcas a la vista; si no —se cerró un par, una letra cayó en una
+   * marca, se rompió un par—, se repinta y el cursor vuelve a su sitio.
+   */
+  const sincronizarActiva = (campo: HTMLElement): void => {
+    const raw: string = crudoDelCampo(campo)
+    const { partes, runs }: ActiveLine = activeLine(raw)
+    const plano: boolean = runs.length === 0 && !partes.some((p: ActivePart): boolean => p.kind === "link")
+    const cursor: number | null = leerCursor(campo)
+    if (plano ? !esEstructurado(campo) : estructuraCoincide(campo, partes)) {
+      marcarVivas(campo, cursor)
+      return
+    }
+    pintarActiva(campo, raw)
+    if (cursor !== null) ponerCursorEn(campo, cursor)
   }
 
   /** La activa, en crudo y con sus enlaces en bloques; las demás, formateadas. */
@@ -857,7 +968,9 @@ export const createNoteEditor = ({
     const campo: HTMLElement | null = activa
     const foco: Node | null = window.getSelection()?.focusNode ?? null
     if (campo === null || foco === null || !tieneBloques(campo) || !cursorColapsado()) return
-    if (!campo.contains(foco) || (foco.nodeType === Node.TEXT_NODE && foco.parentNode === campo)) return
+    if (!campo.contains(foco)) return
+    /* En un texto fuera de los bloques (también dentro de un `span` de formato) escribe el navegador. */
+    if (foco.nodeType === Node.TEXT_NODE && foco.parentElement?.closest("[data-raw]") === null) return
     const id: ContentId | null = idDe(evento.target)
     const cursor: number | null = leerCursor(campo)
     if (id === null || id !== idDe(campo) || cursor === null) return
@@ -941,6 +1054,19 @@ export const createNoteEditor = ({
     useCases.setText(noteId, id, crudoDelCampo(campo))
     /* Teclear suelta el enlace elegido, y con él su burbuja. */
     enlaceElegido = null
+    /* En plena composición no se repinta nunca: el teclado del móvil se rompería. */
+    const componiendoAhora: boolean = componiendo || (evento instanceof InputEvent && evento.isComposing)
+    if (campo === activa && !componiendoAhora) sincronizarActiva(campo)
+    actualizarBurbuja()
+  })
+
+  /* Acabada la composición se hace lo que se aplazó: repintar si la estructura cambió. */
+  lineas.addEventListener("compositionstart", (): void => {
+    componiendo = true
+  })
+  lineas.addEventListener("compositionend", (): void => {
+    componiendo = false
+    if (activa !== null) sincronizarActiva(activa)
     actualizarBurbuja()
   })
 
@@ -966,6 +1092,7 @@ export const createNoteEditor = ({
   const recordarCursor = (): void => {
     const ahora: Caret | null = cursorEnVivo()
     if (ahora !== null) ultimo = ahora
+    if (activa !== null && !componiendo) marcarVivas(activa, leerCursor(activa))
     actualizarBurbuja()
   }
   document.addEventListener("selectionchange", recordarCursor)
