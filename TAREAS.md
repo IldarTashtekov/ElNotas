@@ -228,6 +228,26 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       (S5, S6, S8). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
 - [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24:
       qué es, qué pide al dominio y a la pantalla, y si cambia alguna decisión cerrada.
+      **Qué es** (esbozos del usuario, 2026-10-27): un calendario simple del que salen dos
+      funciones separadas. **Eventos:** un mes; al pulsar un día se crea uno (día, hora opcional,
+      motivo, hecho); se agrupan en **grupos de eventos** que se despliegan y se eligen en modo
+      selección para pintar sus días en el mes; hay vista de grupos y de archivados. **Rutinas:**
+      un tracker de hábitos en cadena (nombre y días cumplidos), con meta opcional por semana
+      (5 días cumplen la semana); los días se marcan en la cadena, y el mes sólo enseña el progreso.
+      **Decidido con el usuario el 2026-10-27:**
+      - **Eventos, grupos y rutinas, en el core**, como entidades guardadas, con copia de seguridad.
+        Los grupos de eventos, **un concepto aparte**: un contexto sigue guardando sólo notas y diagramas.
+      - **El día, un texto `2026-07-02`; la hora, otro texto `18:00` opcional.** Es un día del
+        calendario, no un instante: no se mueve con la zona horaria ni el horario de verano, se lee
+        en el fichero y se ordena como texto. Los días de una rutina, la misma clase de texto.
+        «Hoy» lo calcula la plataforma y lo pasa al core; el core sigue sin leer el reloj. **Si un
+        día hace falta un instante exacto** (avisos, reuniones entre zonas), un campo opcional
+        `zona` junto a la hora y entonces un puerto; lo guardado hoy sigue valiendo. **No timestamps.**
+      - **Acceso:** un icono de calendario al lado de ⚙, y también se puede añadir como ventana.
+        **Cambia dos decisiones cerradas** (las cuatro vistas, y «ventana = referencia a un
+        contexto»), por decisión del usuario; al construirlo se actualizan en `CLAUDE.md`.
+      - **La semana empieza en lunes**, fija por ahora.
+      **A decidir:** qué se archiva (sólo los grupos, como en el esbozo, o también eventos y rutinas).
       **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
       tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
       *Ideas aparcadas*.
