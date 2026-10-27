@@ -222,6 +222,9 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario*
       su estilo y sus marcas) con pruebas; **6g-2**, el DOM (pintar y repintar al teclear sin
       perder el cursor ni romper la composición del móvil; revelar al mover el cursor) y los
       pasos de la lista. Con subagente Sonnet *(mecánica)* sobre esta especificación, y Claude revisa.
+      **Hecho** (6g-1 `7d84b31`, 6g-2 `38d905d`; el usuario lo probó en el ordenador y lo dio por
+      bueno el 2026-10-27). **Falta** la pasada 8 en el móvil (S9) y lo que no se pasó en el panel
+      (S5, S6, S8). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
