@@ -194,6 +194,18 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario*
       **Hecho en el ordenador** (6a `36bce45`, 6b `971ada1`, 6c `d34dee4`, 6d `225385d`, y los pasos
       de la lista en `6359079`; secciones N a Q de `VERIFICACION-MANUAL-EDITOR.md`, pasada 5;
       `check:roturas` entera, 70 caen). **Falta pasar en el móvil** la pasada 6: M4, N, O, P y Q.
+      **6f, el enlace como bloque** (pedido por el usuario el 2026-10-27, al probarlo; sustituye
+      lo de «línea activa en crudo» **sólo para los enlaces guardados**): en la línea activa un
+      `[texto](destino)` **no se ve en Markdown**, es un bloque con su texto, que no se edita letra
+      a letra; Retroceso pegado a él lo borra entero. Tocarlo saca la burbuja. Lo guardado sigue
+      siendo Markdown. **«Enlazar…»** gana un campo **Texto** (vacío: el dominio, o el nombre de
+      la nota); con texto seleccionado, ése es el texto, web o interno. **«Cambiar»** abre la misma
+      hoja con texto y destino rellenos. Las direcciones sueltas (`https://…` sin corchetes) se
+      siguen viendo tal cual al escribirlas. Por piezas: **6f-1**, lo puro (partir la línea en
+      tramos y bloques, pasar posiciones de lo que se ve a lo crudo, el texto por omisión, cambiar
+      texto y destino) con pruebas; **6f-2**, el editor, la hoja y la burbuja, y los pasos de la
+      lista, pasados en el panel. Ambas, con subagente Sonnet *(mecánica)* sobre esta
+      especificación, y Claude revisa.
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
