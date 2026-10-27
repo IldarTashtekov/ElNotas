@@ -1,7 +1,8 @@
 /**
  * Lo que se hace con los enlaces de una línea de nota: saber a qué lleva uno
  * interno, cuál hay bajo el cursor, cómo se quita su marca dejando el texto,
- * qué se puede enlazar, cómo se escribe un enlace y cómo se cambia su destino.
+ * qué se puede enlazar, cómo se escribe un enlace, qué texto lleva por defecto y
+ * cómo se cambia.
  * Puro: ni DOM ni core más allá de leer el estado.
  */
 
@@ -119,5 +120,45 @@ export const changeLinkTarget = (
   return {
     text: raw.slice(0, cierre.start) + nuevaMarca + raw.slice(link.end),
     cursor: cierre.start + nuevaMarca.length,
+  }
+}
+
+/**
+ * El texto que lleva un enlace nuevo si nadie escribe otro. Una web, su host sin
+ * `www.` ni puerto ni ruta; un enlace interno, el nombre de lo enlazado. Lo que no
+ * se puede sacar, «enlace».
+ */
+export const defaultLinkText = (destino: string, nombre?: string): string => {
+  const limpio: string = destino.trim()
+  if (/^(https?:\/\/|www\.)/i.test(limpio)) {
+    const host: string =
+      /^(?:https?:\/\/)?(?:[^\s/?#@]*@)?([^\s/?#:]*)/i.exec(limpio)?.[1]?.replace(/^www\./i, "") ?? ""
+    return host === "" ? "enlace" : host
+  }
+  return nombre !== undefined && nombre.trim() !== "" ? nombre : "enlace"
+}
+
+/**
+ * Reescribe un enlace guardado con otro texto y otro destino (`buildLink`) y deja
+ * el cursor justo tras él. Un enlace no guardado, que no está en la línea, o que
+ * no se puede construir (un `)` en el destino), no cambia nada.
+ */
+export const changeLink = (
+  raw: string,
+  line: FormattedLine,
+  link: LineLink,
+  texto: string,
+  destino: string,
+): { readonly text: string; readonly cursor: number } => {
+  const sinCambios: { readonly text: string; readonly cursor: number } = { text: raw, cursor: link.end }
+  const enLinea: boolean = line.links.some(
+    (l: LineLink): boolean => l.saved && l.start === link.start && l.end === link.end,
+  )
+  if (!link.saved || !enLinea) return sinCambios
+  const nuevo: string | null = buildLink(texto, destino)
+  if (nuevo === null) return sinCambios
+  return {
+    text: raw.slice(0, link.start) + nuevo + raw.slice(link.end),
+    cursor: link.start + nuevo.length,
   }
 }

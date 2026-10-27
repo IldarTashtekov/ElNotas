@@ -17,7 +17,9 @@ import { readMarkdownLine } from "#ui/markdownLine"
 import type { LinkChoices } from "#ui/linkActions"
 import {
   buildLink,
+  changeLink,
   changeLinkTarget,
+  defaultLinkText,
   isWebAddress,
   linkAtCursor,
   linkChoices,
@@ -295,4 +297,81 @@ test("changeLinkTarget: una dirección suelta, un enlace ajeno o un destino con 
   })
 
   assert.deepEqual(cambiar("[a](#x)", 2, "https://a.es/x_(y)"), { text: "[a](#x)", cursor: 7 })
+})
+
+/* ── defaultLinkText ── */
+
+test("defaultLinkText: de una web, el host sin www, sin puerto ni ruta", (): void => {
+  assert.strictEqual(defaultLinkText("https://www.wikipedia.org/wiki/X"), "wikipedia.org")
+  assert.strictEqual(defaultLinkText("http://a.es:8080/x?y=1#z"), "a.es")
+  assert.strictEqual(defaultLinkText("www.a.es"), "a.es")
+  assert.strictEqual(defaultLinkText("HTTPS://WWW.A.ES"), "A.ES")
+  assert.strictEqual(defaultLinkText("https://usuario@a.es/x"), "a.es")
+  assert.strictEqual(defaultLinkText("  https://a.es  "), "a.es")
+  assert.strictEqual(defaultLinkText("https://a.es?q=1"), "a.es")
+})
+
+test("defaultLinkText: una web de la que no sale host, «enlace»", (): void => {
+  for (const raro of ["https://", "https:///x", "www.", "https://:80", "http://www./x"]) {
+    assert.strictEqual(defaultLinkText(raro), "enlace", raro)
+  }
+})
+
+test("defaultLinkText: un enlace interno, el nombre si lo hay; si no, «enlace»", (): void => {
+  assert.strictEqual(defaultLinkText("#id-1", "Mi nota"), "Mi nota")
+  assert.strictEqual(defaultLinkText("#id-1"), "enlace")
+  assert.strictEqual(defaultLinkText("#id-1", ""), "enlace")
+  assert.strictEqual(defaultLinkText("#id-1", "  \t"), "enlace")
+})
+
+/* ── changeLink ── */
+
+const reescribir = (
+  raw: string,
+  offset: number,
+  texto: string,
+  destino: string,
+): { readonly text: string; readonly cursor: number } => {
+  const linea: FormattedLine = readMarkdownLine(raw)
+  const l: LineLink | null = linkAtCursor(linea, offset)
+  if (l === null) assert.fail("tenía que haber enlace")
+  return changeLink(raw, linea, l, texto, destino)
+}
+
+test("changeLink: cambia texto y destino, y el cursor queda tras el enlace", (): void => {
+  assert.deepEqual(reescribir("[hola](#x)", 3, "adiós", "#y"), { text: "[adiós](#y)", cursor: 11 })
+  assert.deepEqual(reescribir("a [b](https://b.es) c", 4, "w", "www.c.es"), {
+    text: "a [w](www.c.es) c",
+    cursor: 15,
+  })
+  assert.deepEqual(reescribir("# [t](#x)", 4, "u", "#z"), { text: "# [u](#z)", cursor: 9 })
+})
+
+test("changeLink: el texto se escapa y uno en blanco pasa a «enlace»", (): void => {
+  assert.deepEqual(reescribir("[a](#x)", 2, "b*c", "#x"), { text: "[b\\*c](#x)", cursor: 10 })
+  assert.deepEqual(reescribir("[a](#x)", 2, " ", "#x"), { text: "[enlace](#x)", cursor: 12 })
+})
+
+test("changeLink: lo escrito se lee de vuelta como un enlace guardado", (): void => {
+  const { text }: { readonly text: string } = reescribir("ve a [aquí](#x) ya", 8, "allí", "https://b.es")
+  const l: LineLink | undefined = readMarkdownLine(text).links[0]
+  assert.deepEqual(l?.target, { kind: "web", href: "https://b.es" })
+  assert.strictEqual(l?.saved, true)
+})
+
+test("changeLink: suelta, ajeno o con `)` en el destino, no cambia nada", (): void => {
+  const suelta: string = "mira https://a.es"
+  const ls: FormattedLine = readMarkdownLine(suelta)
+  const s: LineLink | null = linkAtCursor(ls, 10)
+  if (s === null) assert.fail("tenía que haber enlace")
+  assert.deepEqual(changeLink(suelta, ls, s, "t", "#y"), { text: suelta, cursor: s.end })
+
+  const ajeno: LineLink = readMarkdownLine("[a](#x)").links[0] as LineLink
+  const otra: FormattedLine = readMarkdownLine("otra cosa distinta")
+  assert.deepEqual(changeLink("otra cosa distinta", otra, ajeno, "t", "#y"), {
+    text: "otra cosa distinta",
+    cursor: ajeno.end,
+  })
+
+  assert.deepEqual(reescribir("[a](#x)", 2, "t", "https://a.es/x_(y)"), { text: "[a](#x)", cursor: 7 })
 })
