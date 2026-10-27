@@ -44,6 +44,19 @@ export interface MarkSpan {
 
 export type LineSpan = TextSpan | MarkSpan
 
+/**
+ * Un par de marcas de énfasis que el lector acepta. `[start, openEnd)` es la
+ * marca que abre, `[closeStart, end)` la que cierra y entre medias el contenido.
+ */
+export interface EmphasisRun {
+  readonly start: number
+  readonly end: number
+  readonly openEnd: number
+  readonly closeStart: number
+  readonly bold: boolean
+  readonly italic: boolean
+}
+
 export interface FormattedLine {
   /** La línea empieza por `# `. */
   readonly heading: boolean
@@ -51,6 +64,8 @@ export interface FormattedLine {
   readonly spans: ReadonlyArray<LineSpan>
   /** Los enlaces, en el orden en que aparecen. */
   readonly links: ReadonlyArray<LineLink>
+  /** Los pares de énfasis, en orden de apertura (los anidados, como pares distintos). Sin los de dentro de un enlace. */
+  readonly runs: ReadonlyArray<EmphasisRun>
 }
 
 interface Estilo {
@@ -247,6 +262,7 @@ const leer = (
   conEnlaces: boolean,
   salida: LineSpan[],
   enlaces: LineLink[],
+  pares: EmphasisRun[],
 ): void => {
   const texto = (s: number, e: number, link: LineLink | null): void => {
     const previo: LineSpan | undefined = salida[salida.length - 1]
@@ -303,7 +319,7 @@ const leer = (
       if (g !== null) {
         enlaces.push(g.link)
         marca(i, i + 1)
-        leer(raw, i + 1, g.textEnd, { ...estilo, link: g.link }, false, salida, enlaces)
+        leer(raw, i + 1, g.textEnd, { ...estilo, link: g.link }, false, salida, enlaces, pares)
         marca(g.textEnd, g.end)
         i = g.end
         continue
@@ -323,8 +339,11 @@ const leer = (
         if (!estilo.bold && i + 2 < hasta && !esBlanco(raw[i + 2])) {
           const j: number = cierreNegrita(raw, i, hasta, conEnlaces)
           if (j !== -1) {
+            if (estilo.link === null) {
+              pares.push({ start: i, openEnd: i + 2, closeStart: j, end: j + 2, bold: true, italic: false })
+            }
             marca(i, i + 2)
-            leer(raw, i + 2, j, { ...estilo, bold: true }, conEnlaces, salida, enlaces)
+            leer(raw, i + 2, j, { ...estilo, bold: true }, conEnlaces, salida, enlaces, pares)
             marca(j, j + 2)
             i = j + 2
             continue
@@ -337,8 +356,11 @@ const leer = (
       if (!estilo.italic && i + 1 < hasta && !esBlanco(raw[i + 1])) {
         const j: number = cierreCursiva(raw, i, hasta, conEnlaces)
         if (j !== -1) {
+          if (estilo.link === null) {
+            pares.push({ start: i, openEnd: i + 1, closeStart: j, end: j + 1, bold: false, italic: true })
+          }
           marca(i, i + 1)
-          leer(raw, i + 1, j, { ...estilo, italic: true }, conEnlaces, salida, enlaces)
+          leer(raw, i + 1, j, { ...estilo, italic: true }, conEnlaces, salida, enlaces, pares)
           marca(j, j + 1)
           i = j + 1
           continue
@@ -356,10 +378,11 @@ const leer = (
 export const readMarkdownLine = (raw: string): FormattedLine => {
   const salida: LineSpan[] = []
   const enlaces: LineLink[] = []
+  const pares: EmphasisRun[] = []
   const heading: boolean = raw.startsWith("# ")
   if (heading) salida.push({ kind: "mark", start: 0, end: 2, text: "# " })
-  leer(raw, heading ? 2 : 0, raw.length, { bold: false, italic: false, link: null }, true, salida, enlaces)
-  return { heading, spans: salida, links: enlaces }
+  leer(raw, heading ? 2 : 0, raw.length, { bold: false, italic: false, link: null }, true, salida, enlaces, pares)
+  return { heading, spans: salida, links: enlaces, runs: pares }
 }
 
 /* ───────────────────── De lo que se ve a la cadena cruda ───────────────────── */

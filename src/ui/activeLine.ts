@@ -5,7 +5,7 @@
  * cruda. Puro: ni DOM ni core.
  */
 
-import type { FormattedLine, LineLink, LineSpan } from "./markdownLine.js"
+import type { EmphasisRun, FormattedLine, LineLink, LineSpan } from "./markdownLine.js"
 import { readMarkdownLine, visibleText } from "./markdownLine.js"
 
 /** Un trozo de texto crudo, tal como se escribió. */
@@ -15,6 +15,22 @@ export interface TextPart {
   readonly raw: string
   readonly start: number
   readonly end: number
+  /** Si está dentro de algún par de negrita / de cursiva. */
+  readonly bold: boolean
+  readonly italic: boolean
+  /** Índice en `runs` del par más interno que lo contiene, o `null`. */
+  readonly run: number | null
+}
+
+/** Una marca de énfasis (`**` o `*`), que se esconde salvo con el cursor en su par. */
+export interface MarkPart {
+  readonly kind: "mark"
+  /** Siempre `raw.slice(start, end)` de la línea. */
+  readonly raw: string
+  readonly start: number
+  readonly end: number
+  /** Índice en `runs` del par al que pertenece. */
+  readonly run: number
 }
 
 /** Un enlace guardado, que se ve como un bloque con su texto. */
@@ -29,7 +45,13 @@ export interface LinkPart {
   readonly end: number
 }
 
-export type ActivePart = TextPart | LinkPart
+export type ActivePart = TextPart | MarkPart | LinkPart
+
+/** La línea activa partida, con los pares de énfasis a los que apuntan sus partes. */
+export interface ActiveLine {
+  readonly partes: ReadonlyArray<ActivePart>
+  readonly runs: ReadonlyArray<EmphasisRun>
+}
 
 /** Un sitio dentro del DOM de la línea activa: parte y desplazamiento en ella. */
 export interface DomPosition {
@@ -45,43 +67,109 @@ const etiquetaDe = (line: FormattedLine, link: LineLink): string =>
   visibleText({
     heading: false,
     links: [],
+    runs: [],
     spans: line.spans.filter(
       (s: LineSpan): boolean => s.kind === "text" && s.link === link,
     ),
   })
 
+// Los pares que contienen [start, end) entre sus marcas, el más interno el último.
+const paresQueContienen = (runs: ReadonlyArray<EmphasisRun>, start: number, end: number): number[] => {
+  const dentro: number[] = []
+  runs.forEach((r: EmphasisRun, i: number): void => {
+    if (r.openEnd <= start && end <= r.closeStart) dentro.push(i)
+  })
+  return dentro
+}
+
 /**
  * Parte la línea en partes seguidas, sin huecos ni solapes y ninguna vacía: cada
- * enlace guardado es una parte `link`; lo demás, también las direcciones sueltas,
- * va en partes `text` con su cadena cruda. Una línea vacía no tiene partes.
+ * enlace guardado es una parte `link`; cada marca de énfasis, una parte `mark`;
+ * lo demás, también las direcciones sueltas, el `# ` y las barras, va en partes
+ * `text` con su cadena cruda y su estilo. Una línea vacía no tiene partes.
  */
-export const activeParts = (raw: string): ReadonlyArray<ActivePart> => {
+export const activeLine = (raw: string): ActiveLine => {
   const line: FormattedLine = readMarkdownLine(raw)
+  const runs: ReadonlyArray<EmphasisRun> = line.runs
   const partes: ActivePart[] = []
+  const marcaDe: Map<number, number> = new Map<number, number>()
+  runs.forEach((r: EmphasisRun, i: number): void => {
+    marcaDe.set(r.start, i)
+    marcaDe.set(r.closeStart, i)
+  })
+  const guardados: ReadonlyArray<LineLink> = line.links.filter((l: LineLink): boolean => l.saved)
   const texto = (start: number, end: number): void => {
-    if (end > start) partes.push({ kind: "text", raw: raw.slice(start, end), start, end })
+    const dentro: number[] = paresQueContienen(runs, start, end)
+    const bold: boolean = dentro.some((i: number): boolean => (runs[i] as EmphasisRun).bold)
+    const italic: boolean = dentro.some((i: number): boolean => (runs[i] as EmphasisRun).italic)
+    const run: number | null = dentro.length === 0 ? null : (dentro[dentro.length - 1] as number)
+    const previa: ActivePart | undefined = partes[partes.length - 1]
+    if (
+      previa !== undefined &&
+      previa.kind === "text" &&
+      previa.end === start &&
+      previa.bold === bold &&
+      previa.italic === italic &&
+      previa.run === run
+    ) {
+      partes[partes.length - 1] = { ...previa, end, raw: raw.slice(previa.start, end) }
+    } else {
+      partes.push({ kind: "text", raw: raw.slice(start, end), start, end, bold, italic, run })
+    }
   }
-  let desde: number = 0
-  for (const link of line.links) {
-    if (!link.saved || link.start < desde) continue
-    texto(desde, link.start)
-    partes.push({
-      kind: "link",
-      label: etiquetaDe(line, link),
-      raw: raw.slice(link.start, link.end),
-      link,
-      start: link.start,
-      end: link.end,
-    })
-    desde = link.end
+  let hasta: number = 0
+  for (const s of line.spans) {
+    if (s.end <= hasta) continue
+    const link: LineLink | undefined = guardados.find(
+      (l: LineLink): boolean => l.start <= s.start && s.start < l.end,
+    )
+    if (link !== undefined) {
+      partes.push({
+        kind: "link",
+        label: etiquetaDe(line, link),
+        raw: raw.slice(link.start, link.end),
+        link,
+        start: link.start,
+        end: link.end,
+      })
+      hasta = link.end
+      continue
+    }
+    const run: number | undefined = s.kind === "mark" ? marcaDe.get(s.start) : undefined
+    if (run !== undefined) {
+      partes.push({ kind: "mark", raw: s.text, start: s.start, end: s.end, run })
+    } else {
+      texto(s.start, s.end)
+    }
+    hasta = s.end
   }
-  texto(desde, raw.length)
-  return partes
+  return { partes, runs }
+}
+
+/** Sólo las partes de la línea activa; ver `activeLine`. */
+export const activeParts = (raw: string): ReadonlyArray<ActivePart> => activeLine(raw).partes
+
+/**
+ * Los pares que muestran sus marcas: aquellos con el cursor (posición cruda) en
+ * su intervalo cerrado `[start, end]`, marcas incluidas. Los que se anidan donde
+ * está el cursor entran todos. `partes` no se mira: el parámetro sólo acompaña a
+ * `runs`, que son los que salen de `activeLine`.
+ */
+export const visibleRuns = (
+  _partes: ReadonlyArray<ActivePart>,
+  runs: ReadonlyArray<EmphasisRun>,
+  cursor: number,
+): ReadonlySet<number> => {
+  const visibles: Set<number> = new Set<number>()
+  runs.forEach((r: EmphasisRun, i: number): void => {
+    if (r.start <= cursor && cursor <= r.end) visibles.add(i)
+  })
+  return visibles
 }
 
 /** Cuántas posiciones ocupa la parte en el DOM: el texto, sus caracteres; un enlace, los de su etiqueta. */
 export const visibleLength = (parte: ActivePart): number =>
-  parte.kind === "text" ? parte.raw.length : parte.label.length
+  parte.kind === "link" ? parte.label.length : parte.raw.length
 
 /**
  * De una posición en el DOM a la de la cadena cruda. Una parte que no existe cae
@@ -116,7 +204,7 @@ export const rawToDom = (partes: ReadonlyArray<ActivePart>, raw: number): DomPos
   for (let i: number = 0; i < partes.length; i++) {
     const p: ActivePart = partes[i] as ActivePart
     if (raw > p.end) continue
-    if (p.kind === "text") return { partIndex: i, offset: raw - p.start }
+    if (p.kind !== "link") return { partIndex: i, offset: raw - p.start }
     return alBorde(i, p.end - raw <= raw - p.start)
   }
   const ultima: ActivePart = partes[partes.length - 1] as ActivePart

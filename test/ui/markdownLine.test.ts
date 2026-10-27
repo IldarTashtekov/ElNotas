@@ -6,7 +6,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
+import type { EmphasisRun, FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
 import { rawOffset, readMarkdownLine, visibleText } from "#ui/markdownLine"
 
 // Resume una línea en una cadena: marcas `m:"…"`, texto con prefijo B / I / L(destino).
@@ -292,6 +292,85 @@ test("posición cruda: llevar cada posición visible y volver da la misma, en to
         .map((s: LineSpan): string => s.text.slice(0, crudo - s.start))
         .join("")
       assert.equal(izquierda, visible.slice(0, v), `${JSON.stringify(raw)} en ${v}`)
+    }
+  }
+})
+
+/* ── Los pares de énfasis ── */
+
+// Un par en una cadena: `B`/`I`/`BI`, el intervalo y el fin de la marca que abre y el principio de la que cierra.
+const resumenPares = (raw: string): ReadonlyArray<string> =>
+  readMarkdownLine(raw).runs.map(
+    (r: EmphasisRun): string =>
+      `${r.bold ? "B" : ""}${r.italic ? "I" : ""} ${r.start}-${r.end} abre<${r.openEnd} cierra>=${r.closeStart}`,
+  )
+
+const PARES: ReadonlyArray<readonly [string, string, ReadonlyArray<string>]> = [
+  ["negrita", "**a**", ["B 0-5 abre<2 cierra>=3"]],
+  ["cursiva", "*a*", ["I 0-3 abre<1 cierra>=2"]],
+  ["negrita y cursiva anidadas", "***a***", ["B 0-7 abre<2 cierra>=5", "I 2-5 abre<3 cierra>=4"]],
+  ["cursiva dentro de negrita", "**a *b* c**", ["B 0-11 abre<2 cierra>=9", "I 4-7 abre<5 cierra>=6"]],
+  ["dos pares seguidos", "*a* y **b**", ["I 0-3 abre<1 cierra>=2", "B 6-11 abre<8 cierra>=9"]],
+  ["escapados, sin par", "\\*no\\*", []],
+  ["espacio tras la apertura, sin par", "* no*", []],
+  ["asterisco suelto, sin par", "a * b", []],
+  ["dentro de un enlace, fuera", "[**x**](#id)", []],
+  ["un enlace dentro de un par", "**[x](#id)**", ["B 0-12 abre<2 cierra>=10"]],
+  ["título", "# **a**", ["B 2-7 abre<4 cierra>=5"]],
+  ["vacía", "", []],
+]
+
+for (const [que, raw, esperado] of PARES) {
+  test(`pares de énfasis: ${que}`, (): void => {
+    assert.deepEqual(resumenPares(raw), esperado)
+  })
+}
+
+test("pares de énfasis: coherentes con los tramos, en 20 000 cadenas generadas", (): void => {
+  const alfabeto: ReadonlyArray<string> = [
+    "*", "**", "*", "**", "[", "]", "(", ")", "(#x)", "](#x)", "#", "# ", "\\", " ", "a", "b", "www.", "e.com",
+  ]
+  let semilla: number = 4242
+  const siguiente = (): number => {
+    semilla = (semilla * 1103515245 + 12345) & 0x7fffffff
+    return semilla
+  }
+  for (let n: number = 0; n < 20000; n++) {
+    const piezas: number = siguiente() % 18
+    let raw: string = ""
+    for (let p: number = 0; p < piezas; p++) raw += alfabeto[siguiente() % alfabeto.length] ?? ""
+    const linea: FormattedLine = readMarkdownLine(raw)
+    const dado: string = JSON.stringify(raw)
+    const esMarca = (desde: number, hasta: number): boolean =>
+      linea.spans.some((s: LineSpan): boolean => s.kind === "mark" && s.start === desde && s.end === hasta)
+    let previo: EmphasisRun | undefined
+    for (const r of linea.runs) {
+      assert.ok(esMarca(r.start, r.openEnd), `apertura en ${dado}`)
+      assert.ok(esMarca(r.closeStart, r.end), `cierre en ${dado}`)
+      assert.strictEqual(r.openEnd - r.start, r.bold ? 2 : 1, dado)
+      assert.strictEqual(r.end - r.closeStart, r.bold ? 2 : 1, dado)
+      assert.ok(r.openEnd < r.closeStart, `sin contenido en ${dado}`)
+      assert.ok(previo === undefined || previo.start < r.start, `desorden en ${dado}`)
+      previo = r
+      // El contenido lleva el estilo del par y no es de ningún enlace.
+      for (const s of linea.spans) {
+        if (s.kind !== "text" || s.start < r.openEnd || s.end > r.closeStart) continue
+        if (r.bold) assert.ok(s.bold, `negrita en ${dado}`)
+        if (r.italic) assert.ok(s.italic, `cursiva en ${dado}`)
+      }
+      // Ningún tramo de enlace guardado queda dentro de su contenido por la izquierda: los pares no están dentro de enlaces.
+      for (const l of linea.links) {
+        if (l.saved) assert.ok(!(l.start < r.start && r.end <= l.end), `par dentro de enlace en ${dado}`)
+      }
+    }
+    // Anidados bien: dos pares o son disjuntos o uno contiene al otro entre sus marcas.
+    for (const a of linea.runs) {
+      for (const b of linea.runs) {
+        if (a === b || b.start < a.start) continue
+        const disjuntos: boolean = a.end <= b.start
+        const dentro: boolean = a.openEnd <= b.start && b.end <= a.closeStart
+        assert.ok(disjuntos || dentro, `mal anidados en ${dado}`)
+      }
     }
   }
 })

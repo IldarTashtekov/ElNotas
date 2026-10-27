@@ -7,21 +7,23 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { ActivePart, DomPosition } from "#ui/activeLine"
-import { activeParts, domToRaw, rawToDom, visibleLength } from "#ui/activeLine"
+import type { ActiveLine, ActivePart, DomPosition } from "#ui/activeLine"
+import { activeLine, activeParts, domToRaw, rawToDom, visibleLength, visibleRuns } from "#ui/activeLine"
+import type { EmphasisRun } from "#ui/markdownLine"
 
 // Resume las partes: `t:"…"` el crudo, `L:"etiqueta"` un bloque.
 const resumen = (raw: string): ReadonlyArray<string> =>
   activeParts(raw).map((p: ActivePart): string =>
-    p.kind === "text" ? `t:${JSON.stringify(p.raw)}` : `L:${JSON.stringify(p.label)}`,
+    p.kind === "link" ? `L:${JSON.stringify(p.label)}` : `t:${JSON.stringify(p.raw)}`,
   )
 
 test("activeParts: línea vacía, sin partes", (): void => {
   assert.deepEqual(activeParts(""), [])
 })
 
-test("activeParts: texto sin enlaces, una sola parte", (): void => {
-  assert.deepEqual(resumen("hola **mundo**"), ['t:"hola **mundo**"'])
+test("activeParts: texto sin enlaces ni énfasis, una sola parte", (): void => {
+  assert.deepEqual(resumen("hola # mundo"), ['t:"hola # mundo"'])
+  assert.deepEqual(resumen("hola **mundo**"), ['t:"hola "', 't:"**"', 't:"mundo"', 't:"**"'])
 })
 
 test("activeParts: enlaces pegados y con texto alrededor", (): void => {
@@ -169,6 +171,115 @@ test("propiedades sobre 20 000 cadenas generadas con semilla fija", (): void => 
       fin = p.end
     }
     assert.strictEqual(fin, partes.length === 0 ? 0 : raw.length, dado)
+    for (let x: number = 0; x <= raw.length; x++) {
+      const vuelta: number = domToRaw(partes, rawToDom(partes, x))
+      const dentro: ActivePart | undefined = partes.find(
+        (p: ActivePart): boolean => p.kind === "link" && p.start < x && x < p.end,
+      )
+      if (dentro === undefined) assert.strictEqual(vuelta, x, `${dado} en ${x}`)
+      else assert.ok(vuelta === dentro.start || vuelta === dentro.end, `${dado} en ${x}`)
+    }
+  }
+})
+
+/* ── Marcas de énfasis y pares visibles ── */
+
+// Resume las partes: `m<par>:"raw"` una marca, `t[BI][@par]:"raw"` un texto, `L:"etiqueta"` un bloque.
+const resumenPartes = (raw: string): ReadonlyArray<string> =>
+  activeParts(raw).map((p: ActivePart): string => {
+    if (p.kind === "link") return `L:${JSON.stringify(p.label)}`
+    if (p.kind === "mark") return `m${p.run}:${JSON.stringify(p.raw)}`
+    return `t${p.bold ? "B" : ""}${p.italic ? "I" : ""}${p.run === null ? "" : "@" + p.run}:${JSON.stringify(p.raw)}`
+  })
+
+const PARTES: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
+  ["**a**", ['m0:"**"', 'tB@0:"a"', 'm0:"**"']],
+  ["*a*", ['m0:"*"', 'tI@0:"a"', 'm0:"*"']],
+  ["***a***", ['m0:"**"', 'm1:"*"', 'tBI@1:"a"', 'm1:"*"', 'm0:"**"']],
+  ["**a *b* c**", ['m0:"**"', 'tB@0:"a "', 'm1:"*"', 'tBI@1:"b"', 'm1:"*"', 'tB@0:" c"', 'm0:"**"']],
+  ["*a* y **b**", ['m0:"*"', 'tI@0:"a"', 'm0:"*"', 't:" y "', 'm1:"**"', 'tB@1:"b"', 'm1:"**"']],
+  ["\\*no\\*", ['t:"\\\\*no\\\\*"']],
+  ["* no*", ['t:"* no*"']],
+  ["[**x**](#id)", ['L:"x"']],
+  ["# **a**", ['t:"# "', 'm0:"**"', 'tB@0:"a"', 'm0:"**"']],
+  ["**\\*a**", ['m0:"**"', 'tB@0:"\\\\*a"', 'm0:"**"']],
+  ["", []],
+]
+
+for (const [raw, esperado] of PARTES) {
+  test(`activeParts: marcas y estilo de ${JSON.stringify(raw)}`, (): void => {
+    assert.deepEqual(resumenPartes(raw), esperado)
+  })
+}
+
+test("visibleRuns: el cursor en el intervalo cerrado del par, marcas incluidas", (): void => {
+  const l: ActiveLine = activeLine("a **b** c")
+  const ver = (c: number): ReadonlyArray<number> => [...visibleRuns(l.partes, l.runs, c)]
+  assert.deepEqual(ver(0), [])
+  assert.deepEqual(ver(1), [])
+  assert.deepEqual(ver(2), [0])
+  assert.deepEqual(ver(4), [0])
+  assert.deepEqual(ver(7), [0])
+  assert.deepEqual(ver(8), [])
+})
+
+test("visibleRuns: los pares anidados donde está el cursor salen todos", (): void => {
+  const l: ActiveLine = activeLine("**a *b* c**")
+  const ver = (c: number): ReadonlyArray<number> => [...visibleRuns(l.partes, l.runs, c)]
+  assert.deepEqual(ver(5), [0, 1])
+  assert.deepEqual(ver(2), [0])
+  assert.deepEqual(ver(8), [0])
+  assert.deepEqual(ver(11), [0])
+})
+
+test("visibleRuns: sin pares, vacío", (): void => {
+  const l: ActiveLine = activeLine("hola")
+  assert.strictEqual(visibleRuns(l.partes, l.runs, 2).size, 0)
+})
+
+test("partes con énfasis: propiedades sobre 20 000 cadenas generadas con semilla fija", (): void => {
+  const alfabeto: ReadonlyArray<string> = [
+    "*", "**", "*", "**", "[", "]", "(", ")", "(#x)", "](#x)", "#", "# ", "\\", " ", "a", "b", "www.", "e.com",
+  ]
+  let semilla: number = 31337
+  const siguiente = (): number => {
+    semilla = (semilla * 1103515245 + 12345) & 0x7fffffff
+    return semilla
+  }
+  for (let n: number = 0; n < 20000; n++) {
+    const piezas: number = siguiente() % 18
+    let raw: string = ""
+    for (let p: number = 0; p < piezas; p++) raw += alfabeto[siguiente() % alfabeto.length] ?? ""
+    const dado: string = JSON.stringify(raw)
+    const { partes, runs }: ActiveLine = activeLine(raw)
+    assert.strictEqual(partes.map((p: ActivePart): string => p.raw).join(""), raw, dado)
+    let fin: number = 0
+    let anterior: ActivePart | undefined
+    for (const p of partes) {
+      assert.ok(p.end > p.start, `vacía en ${dado}`)
+      assert.strictEqual(p.start, fin, `hueco o solape en ${dado}`)
+      assert.strictEqual(p.raw, raw.slice(p.start, p.end), dado)
+      if (p.kind === "mark") {
+        const r: EmphasisRun = runs[p.run] as EmphasisRun
+        assert.ok(
+          (p.start === r.start && p.end === r.openEnd) || (p.start === r.closeStart && p.end === r.end),
+          `marca ajena en ${dado}`,
+        )
+      }
+      if (
+        anterior !== undefined &&
+        anterior.kind === "text" &&
+        p.kind === "text"
+      ) {
+        assert.ok(
+          anterior.bold !== p.bold || anterior.italic !== p.italic || anterior.run !== p.run,
+          `texto sin fusionar en ${dado}`,
+        )
+      }
+      anterior = p
+      fin = p.end
+    }
+    assert.strictEqual(fin, raw.length, dado)
     for (let x: number = 0; x <= raw.length; x++) {
       const vuelta: number = domToRaw(partes, rawToDom(partes, x))
       const dentro: ActivePart | undefined = partes.find(
