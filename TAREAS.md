@@ -89,7 +89,8 @@ siete ideas entran cinco; los subcontextos se aparcan (*Ideas aparcadas*) y «fi
 porque reordenar lo cubre. **Sin dependencias y sin migrar**: ningún cambio obliga a convertir lo
 guardado. **Orden:** lo previsible primero (1-3), el editor al final (4-6), con una parada para
 probar el 4 en el móvil antes de construir el Markdown encima. **El calendario**, propuesto el
-2026-10-24, **sale de esta fase** (2026-10-25) a la 10.2, con el formato y los enlaces en los pósits.
+2026-10-24, salió de esta fase el 2026-10-25 y **volvió el 2026-10-27**, por decisión del usuario:
+se plantea ahora, como tarea 7, antes de la documentación de cierre.
 
 **Decidido con el usuario el 2026-10-18:**
 - **Ocultos, por contexto** (al estilo de los archivados de WhatsApp): lo oculto **sigue siendo del
@@ -225,7 +226,12 @@ probar el 4 en el móvil antes de construir el Markdown encima. **El calendario*
       **Hecho** (6g-1 `7d84b31`, 6g-2 `38d905d`; el usuario lo probó en el ordenador y lo dio por
       bueno el 2026-10-27). **Falta** la pasada 8 en el móvil (S9) y lo que no se pasó en el panel
       (S5, S6, S8). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
-- [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
+- [ ] **7. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24:
+      qué es, qué pide al dominio y a la pantalla, y si cambia alguna decisión cerrada.
+      **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
+      tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
+      *Ideas aparcadas*.
+- [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿` y sólo es editable la línea activa. Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
@@ -276,17 +282,12 @@ los dos agentes y el recorrido.
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa y la auditoría no deja nada falso.
 
-### Fase 10.2 — Calendario, y formato y enlaces en los pósits del lienzo — PLANIFICADA, empieza al cerrar la 10.1
+### Fase 10.2 — Formato y enlaces en los pósits del lienzo — PLANIFICADA, empieza al cerrar la 10.1
 
-**Decidida con el usuario el 2026-10-25**: dos ideas que estaban sin hueco, juntas en una fase
-detrás de la 10.1. **Las dos, sin plantear**: se plantean con el usuario antes de construir nada.
+**Decidida con el usuario el 2026-10-25**, con el calendario, que el 2026-10-27 volvió a la
+Fase 10 (tarea 7). **Sin plantear**: se plantea con el usuario antes de construir nada.
 
-- [ ] **1. Calendario** *(a plantear)*. Un concepto nuevo, propuesto por el usuario el 2026-10-24:
-      qué es, qué pide al dominio y a la pantalla, y si cambia alguna decisión cerrada.
-      **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
-      tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
-      *Ideas aparcadas*.
-- [ ] **2. Formato y enlaces en los pósits de texto del lienzo** *(a plantear)*. Salió de
+- [ ] **1. Formato y enlaces en los pósits de texto del lienzo** *(a plantear)*. Salió de
       *Ideas aparcadas*, donde decía: Aparcado por el usuario el 2026-10-24: le gusta, pero no hace falta ahora. Al core no le pediría nada (los enlaces del texto no entran en la integridad); lo difícil son los gestos, porque un toque en el lienzo ya mueve, marca o abre el menú. **Y podría jubilar el nodo-nota**: un pósit con un enlace a la nota haría lo mismo. **Qué lo desbloquea:** Usar los enlaces de las notas (tarea 6) y echarlos en falta en el lienzo. Ese día se decide cómo se abre un enlace desde un pósit y si el nodo-nota sigue.
       **Se cierra cuando** está planteado con el usuario —cómo se abre un enlace desde un pósit y
       si el nodo-nota sigue— y esta entrada se sustituye por sus tareas, cada una con su etiqueta
