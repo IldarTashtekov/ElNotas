@@ -262,7 +262,38 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       - **Las rutinas también se archivan y se reordenan** con una pulsación larga, como los grupos.
         En el calendario esa pulsación mueve, no selecciona (la selección es la redonda), así
         que no choca con la de las notas.
-      **A decidir:** nada por ahora; falta partirlo en tareas con su etiqueta y su cierre.
+      - **El orden de la lista de grupos y de la de rutinas es de presentación**, no del core: una
+        lista en `localStorage` (`elnotas:` y un nombre nuevo), como la de las ventanas, que se
+        reconcilia al leerla (quita lo que ya no existe, añade al final lo nuevo) y entra en la
+        copia de seguridad. **Si un día hay nube**, pasa a una entidad aparte que viaja; hoy, una
+        sola función de lectura y otra de escritura, para que ese cambio sea en un solo sitio.
+        **`archived` sí es del core**, como `hidden`: es una propiedad del grupo o la rutina.
+      - **Menú ⋮ por elemento**, y la pulsación larga queda sólo para mover. Grupo: Renombrar,
+        Archivar o Desarchivar, Borrar. Rutina: Renombrar, Cambiar meta, Archivar o Desarchivar,
+        Borrar. Evento: Editar (abre la hoja de crear) y Borrar. **«Sin grupo» no lleva menú.**
+        Borrar pide confirmar con hoja; la de una rutina avisa de que pierde todos sus días y
+        ofrece archivar. **Los grupos de un evento se cambian al editarlo**, y Borrar lo elimina
+        de todos los grupos.
+      - **Un día con eventos:** al pulsarlo se abre la lista de ese día, con un «+» para añadir.
+      - **Rutinas:** se marcan días pasados y el de hoy; los futuros, no. Con varias rutinas, una
+        redonda elige cuáles pintan su progreso en el mes, como con los grupos.
+      **El modelo** (propuesto el 2026-10-27; `Versioned` en las tres, un fichero por entidad, sin
+      migrar porque lo ausente se lee como vacío):
+      - `Day` = `"2026-07-02"` y `Time` = `"18:00"`, textos marcados, validados al leer.
+      - `CalendarEvent { id, day, time?, title, done }`.
+      - `EventGroup { id, name, events: EventId[], archived? }`: **la pertenencia va en el
+        grupo**, como `Context.items`, y «Sin grupo» es una vista derivada (los eventos que no
+        están en ningún grupo), no una entidad. Borrar un evento lo quita de sus grupos.
+      - `Routine { id, name, days: Day[], weeklyGoal?, archived? }`: una semana (lunes a domingo)
+        cumple si sus días llegan a la meta; es un cálculo, no un dato.
+      - `AppState` gana `events`, `eventGroups` y `routines`. Los grupos elegidos con la redonda y
+        el mes que se mira son estado de pantalla, no del core.
+      **A confirmar con el usuario:** que la pertenencia vaya en el grupo, y que «Sin grupo» sea
+      fijo arriba, sin mover ni archivar. **Sin decidir, con propuesta:** eventos pasados
+      colapsados en las listas; eventos «hechos» tachados en la lista y el día pintado igual;
+      botón «hoy» y mes anterior y siguiente; las repeticiones y la duración, aparcadas; si se
+      entrega en dos tandas (primero los eventos, luego las rutinas). Y partirlo en tareas con su
+      etiqueta y su cierre.
       **Se cierra cuando** está planteado con el usuario y esta entrada se sustituye por sus
       tareas, cada una con su etiqueta y su cierre; si al plantearlo no cabe en la fase, sale a
       *Ideas aparcadas*.
