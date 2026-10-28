@@ -81,6 +81,35 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
 Fecha:        2026-10-28
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel
+Commit:       f0061ae, árbol limpio
+Origen:       localhost:8001
+
+B1  ✅ — a 375 px: «octubre de 2026», L M X J V S D, hoy en vídeo inverso, 8 días vecinos apagados
+B2  ✅ — › y ‹ (también a enero de 2027); «hoy» vuelve y queda apagado en el mes de hoy
+B3  ✅ — hoja «5 de octubre de 2026», «Sin eventos este día.» y «+ Evento»
+B4  ✅ — Día 2026-10-05, Hora vacía; guardar sin motivo crea «Evento»
+B5  ✅ — vuelve a la lista y el día lleva punto
+B6  ✅ — «Evento», «09:30 Dentista», «18:00 Cena», en ese orden
+B7  🔁 simulado — «Pon un día válido.» y «Pon una hora válida, como 18:00.»; la hora inválida se
+    escribió convirtiendo el campo en texto, porque un campo de hora no admite «25:99»
+B8  ✅ — ☑ tachado; con todo hecho el punto queda vacío y vuelve a lleno al desmarcar uno
+B9  ✅ — Dentista al día 7: la hoja pasa a «7 de octubre» y el punto cambia de casilla (la primera
+    pasada vio el título viejo; arreglado en `f0061ae` y repetido)
+B10 ✅ — la confirmación sale; Cancelar lo deja; Borrar lo quita y el punto desaparece
+B11 ✅ — «Grupo nuevo: Trabajo» lo crea y marca; al quitar la marca y guardar, sale sin marcar
+B12 ✅ — el atrás del navegador cierra la hoja
+B13 ✅ — tras recargar siguen los eventos y los días marcados
+B14 ✅ — 375 px y 1024 px, sin barra horizontal (scrollWidth = ancho); Guardar visible con la hoja
+    del formulario. El teclado en pantalla del móvil lo pasa el usuario (7g)
+
+Notas: los clics se hicieron por JavaScript; hay capturas a 375 px de la rejilla y de la hoja del día
+(el panel las entrega con un paso de retraso).
+```
+
+```
+Fecha:        2026-10-28
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
 Commit:       9210b40, árbol limpio
 Origen:       localhost:8001
 

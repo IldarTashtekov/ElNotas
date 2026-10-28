@@ -343,11 +343,16 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       `elnotas:calendario-orden`, que la copia lleva sin subir `BACKUP_VERSION`; 10 roturas, todas
       cazadas). El marco enseña un texto: el mes es la 7e y los grupos la 7f. Cambia las decisiones
       cerradas de CLAUDE.md (cuatro vistas, ventana = referencia): se reescriben en la 8.
-- [ ] **7e. El mes y los eventos de un día** *(pensar)*. La rejilla del mes, los días marcados
+- [x] **7e. El mes y los eventos de un día** *(pensar)*. La rejilla del mes, los días marcados
       según los grupos elegidos, la lista de un día con su «+», la hoja de crear y editar (día,
       hora opcional, motivo, grupos, y Borrar con confirmación), mes anterior y siguiente y «hoy».
       **Se cierra cuando** los pasos de su lista pasan en el panel, a 375 y a escritorio, y lo
       puro tiene pruebas.
+      **Hecho** (2026-10-28; `1c4e2d6`, `f0061ae`; `calendarMonth.ts`, `eventForm.ts` y `todayOf`, puros
+      y con pruebas; `CalendarPanel.ts` lo comparten la vista y la ventana; los grupos elegidos
+      aún son «todos» hasta la 7f, que los elige; 14 roturas, todas cazadas; sección B de
+      `VERIFICACION-CALENDARIO.md`). Al mover un evento a otro día la hoja lo sigue: el día va en
+      su contenido, no como título. El móvil, con la 7g.
 - [ ] **7f. Los grupos de eventos** *(pensar)*. La lista con redonda, «Sin grupo» fijo, el menú ⋮
       (Renombrar, Archivar o Desarchivar, Borrar), mover con la pulsación larga, la vista de
       archivados y los eventos de cada grupo por tiempo, los pasados colapsados. **Se cierra
