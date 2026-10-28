@@ -642,8 +642,8 @@ export const ROTURAS = [
   {
     nombre: "calendario: archived sólo existe cuando vale true",
     fichero: "src/core/app/reduce.ts",
-    buscar: 'action.archived ? { ...sinMarca, archived: true } : sinMarca',
-    poner: 'action.archived ? { ...sinMarca, archived: true } : g',
+    buscar: 'const { archived: _antes, ...sinMarca } = g\n        return action.archived ? { ...sinMarca, archived: true } : sinMarca',
+    poner: 'const { archived: _antes, ...sinMarca } = g\n        return action.archived ? { ...sinMarca, archived: true } : g',
     caza: "pruebas",
     prueba: "set-event-group-archived: la clave existe sólo cuando vale true",
   },
@@ -690,8 +690,8 @@ export const ROTURAS = [
   {
     nombre: "calendario: archived en false no es una forma válida",
     fichero: "src/storage/file/schema.ts",
-    buscar: 'o["archived"] === undefined || o["archived"] === true',
-    poner: 'true',
+    buscar: 'la clave sólo existe cuando vale `true`. */\n    (): Problem =>\n      o["archived"] === undefined || o["archived"] === true',
+    poner: 'la clave sólo existe cuando vale `true`. */\n    (): Problem =>\n      true',
     caza: "pruebas",
     prueba: "FileStorageAdapter: un grupo de eventos con archived en false es corrupt, y dice por qué",
   },
