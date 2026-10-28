@@ -353,10 +353,15 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       aún son «todos» hasta la 7f, que los elige; 14 roturas, todas cazadas; sección B de
       `VERIFICACION-CALENDARIO.md`). Al mover un evento a otro día la hoja lo sigue: el día va en
       su contenido, no como título. El móvil, con la 7g.
-- [ ] **7f. Los grupos de eventos** *(pensar)*. La lista con redonda, «Sin grupo» fijo, el menú ⋮
+- [x] **7f. Los grupos de eventos** *(pensar)*. La lista con redonda, «Sin grupo» fijo, el menú ⋮
       (Renombrar, Archivar o Desarchivar, Borrar), mover con la pulsación larga, la vista de
       archivados y los eventos de cada grupo por tiempo, los pasados colapsados. **Se cierra
       cuando** los pasos de su lista pasan en el panel y lo puro tiene pruebas.
+      **Hecho** (2026-10-28; `47a96ee`; `groupList.ts` puro y con pruebas, `GroupsPanel.ts` bajo el
+      mes; `dragReorder.ts` gana el eje vertical y se traga el clic al soltar; «+ Grupo» crea un
+      grupo sin evento; lo elegido con las redondas y lo desplegado es de pantalla y no se
+      recuerda; 11 roturas, todas cazadas; sección C de `VERIFICACION-CALENDARIO.md`). El móvil,
+      con la 7g: sobre todo la pulsación larga con el dedo, que el panel no puede probar.
 - [ ] **7g. La lista de verificación de los eventos** *(mecánica)*. `test/ui/VERIFICACION-CALENDARIO.md`,
       con los pasos de 7d-7f y los de la copia de seguridad, y pasada en el panel; el móvil, lo
       pasa el usuario. **Se cierra cuando** está pasada y anotada en el panel, y `check` pasa.

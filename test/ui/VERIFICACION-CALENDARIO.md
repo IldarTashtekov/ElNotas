@@ -104,6 +104,32 @@ Bajo el mes, la lista de grupos. Hacen falta eventos en un grupo y otros sin gru
 Fecha:        2026-10-28
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel
+Commit:       47a96ee, árbol limpio
+Origen:       localhost:8001
+
+C1  ✅ — «Sin grupo · n» sin ⋮, los grupos con ● y ⋮, y «+ Grupo» debajo
+C2  ✅ — con el nombre vacío la hoja sigue abierta y no crea nada; «Ocio» entra en la lista
+C3  ✅ — con la redonda apagada desaparecen sus puntos; un evento en Trabajo y Ocio marca el día
+    con cualquiera de los dos encendido
+C4  ✅ — despliega por día y hora; «▸ Pasados (2)» los abre y los cierra
+C5  ✅ — pulsar un evento de la lista abre «Editar evento» con su motivo
+C6  ✅ — ⋮: Renombrar, Archivar, Borrar; archivado, sale de la lista y de las marcas del mes
+C7  ✅ — «▸ Archivados (1)»: sin redonda, ⋮ con Renombrar, Desarchivar, Borrar; desarchivar lo devuelve
+C8  ✅ — «¿Borrar el grupo «Hogar»? Sus eventos no se borran.»; «Sin grupo» pasa de 2 a 3
+C9  🔁 simulado — la pulsación larga y el arrastre, con eventos de puntero escritos a mano (500 ms
+    quieto, mover, soltar); «Trabajo» sube sobre «Sin grupo» y no se despliega. El dedo, lo pasa
+    el usuario (7g)
+C10 ✅ — tras recargar, el orden se conserva (`elnotas:calendario-orden`) y todo vuelve encendido
+    y plegado
+
+Notas: C4 a C9 se pasaron sobre el mismo código antes de comitear; C2, C3 y C10 se repitieron sobre
+`47a96ee`. 375 px y 1024 px sin barra horizontal; captura de la lista a 375 px.
+```
+
+```
+Fecha:        2026-10-28
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
 Commit:       f0061ae, árbol limpio
 Origen:       localhost:8001
 
