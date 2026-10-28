@@ -21,6 +21,7 @@ export type {
   ItemRef,
   NoteId,
   Revision,
+  RoutineId,
 } from "./domain/Ids.js"
 export {
   contentId,
@@ -90,6 +91,7 @@ export type { Diagram, DiagramNode, DiagramRelation } from "./domain/Diagram.js"
 export type { Context } from "./domain/Context.js"
 export type { CalendarEvent } from "./domain/CalendarEvent.js"
 export type { EventGroup } from "./domain/EventGroup.js"
+export type { Routine } from "./domain/Routine.js"
 /* Las fechas del calendario: el guardado valida con ellas lo que lee, y la pantalla las pinta. */
 export type { Day, Time } from "./domain/calendar.js"
 export {
@@ -101,4 +103,6 @@ export {
   partsOf,
 } from "./domain/calendar.js"
 export { eventsWithoutGroup, groupsOfEvent } from "./domain/EventGroup.js"
+/* La meta de una rutina: el guardado valida con ella lo que lee. */
+export { isWeeklyGoal } from "./domain/Routine.js"
 export type { AppState } from "./domain/AppState.js"

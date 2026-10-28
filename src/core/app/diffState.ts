@@ -16,8 +16,9 @@ import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Context } from "../domain/Context.js"
 import type { Diagram } from "../domain/Diagram.js"
 import type { EventGroup } from "../domain/EventGroup.js"
-import type { ContextId, DiagramId, EventGroupId, EventId, NoteId } from "../domain/Ids.js"
+import type { ContextId, DiagramId, EventGroupId, EventId, NoteId, RoutineId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
+import type { Routine } from "../domain/Routine.js"
 
 /** Lo que hay que hacerle a una clase de entidad para poner el disco al día. */
 export interface EntityChanges<T, TId extends string> {
@@ -33,6 +34,7 @@ export interface StateDiff {
   readonly contexts: EntityChanges<Context, ContextId>
   readonly events: EntityChanges<CalendarEvent, EventId>
   readonly eventGroups: EntityChanges<EventGroup, EventGroupId>
+  readonly routines: EntityChanges<Routine, RoutineId>
 }
 
 const NADA = { upserted: [], deleted: [] } as const
@@ -40,7 +42,7 @@ const NADA = { upserted: [], deleted: [] } as const
 /**
  * El diff vacío, **compartido**. `diffState` devuelve esta misma constante
  * siempre que no haya nada que escribir, así que quien llama puede preguntarlo
- * con un `===` en vez de mirar diez arrays. Misma idea que "una operación que no
+ * con un `===` en vez de mirar doce arrays. Misma idea que "una operación que no
  * cambia nada devuelve su entrada".
  */
 export const NO_CHANGES: StateDiff = {
@@ -49,6 +51,7 @@ export const NO_CHANGES: StateDiff = {
   contexts: NADA,
   events: NADA,
   eventGroups: NADA,
+  routines: NADA,
 }
 
 /**
@@ -94,7 +97,12 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
     next.eventGroups,
   )
 
-  /* Los cinco a null significa que los mapas cambiaron de objeto pero no de
+  const routines: EntityChanges<Routine, RoutineId> | null = diffRecord(
+    prev.routines,
+    next.routines,
+  )
+
+  /* Los seis a null significa que los mapas cambiaron de objeto pero no de
      contenido —posible si alguien copia sin cambiar nada— y sigue sin haber nada
      que escribir. */
   if (
@@ -102,7 +110,8 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
     diagrams === null &&
     contexts === null &&
     events === null &&
-    eventGroups === null
+    eventGroups === null &&
+    routines === null
   ) {
     return NO_CHANGES
   }
@@ -113,5 +122,6 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
     contexts: contexts ?? NADA,
     events: events ?? NADA,
     eventGroups: eventGroups ?? NADA,
+    routines: routines ?? NADA,
   }
 }

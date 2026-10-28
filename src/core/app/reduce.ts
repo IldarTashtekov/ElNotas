@@ -14,6 +14,8 @@
  */
 
 import type { AppState } from "../domain/AppState.js"
+import type { Day } from "../domain/calendar.js"
+import { compareDays } from "../domain/calendar.js"
 import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Content } from "../domain/Content.js"
 import type { Context, DefaultView } from "../domain/Context.js"
@@ -33,8 +35,18 @@ import {
   shiftNodes,
 } from "../domain/diagramOperations.js"
 import type { EventGroup } from "../domain/EventGroup.js"
-import type { ContextId, DiagramId, EventGroupId, EventId, ItemRef, NoteId } from "../domain/Ids.js"
+import type {
+  ContextId,
+  DiagramId,
+  EventGroupId,
+  EventId,
+  ItemRef,
+  NoteId,
+  RoutineId,
+} from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
+import type { Routine } from "../domain/Routine.js"
+import { isWeeklyGoal, withDay } from "../domain/Routine.js"
 import type { Versioned } from "../domain/Versioned.js"
 import {
   convertToCheckBox,
@@ -170,6 +182,22 @@ const onEventGroup = (
     ...state,
     eventGroups: { ...state.eventGroups, [id]: { ...siguiente, ...stamp(meta) } },
   }
+}
+
+/** La versión para rutinas, igual que las anteriores. */
+const onRoutine = (
+  state: AppState,
+  id: RoutineId,
+  meta: ActionMeta,
+  transformar: (r: Routine) => Routine,
+): AppState => {
+  const r: Routine | undefined = state.routines[id]
+  if (r === undefined) return state
+
+  const siguiente: Routine = transformar(r)
+  if (siguiente === r) return state
+
+  return { ...state, routines: { ...state.routines, [id]: { ...siguiente, ...stamp(meta) } } }
 }
 
 /** Los ids que existen como grupo. Uno repetido no importa: sólo se pregunta si está. */
@@ -733,6 +761,57 @@ export const reduce = (state: AppState, action: Action): AppState => {
       // Sus eventos se quedan: `events` sale intacto, por referencia.
       const { [action.groupId]: _fuera, ...quedan } = state.eventGroups
       return { ...state, eventGroups: quedan }
+    }
+
+    /* ───────────────────────────── Rutinas ───────────────────────────── */
+
+    case "create-routine": {
+      if (state.routines[action.routineId] !== undefined) return state // id repetido
+      if (action.weeklyGoal !== null && !isWeeklyGoal(action.weeklyGoal)) return state
+
+      const nueva: Routine = {
+        id: action.routineId,
+        name: action.name,
+        days: [],
+        ...(action.weeklyGoal === null ? {} : { weeklyGoal: action.weeklyGoal }),
+        ...stamp(action.meta),
+      }
+      return { ...state, routines: { ...state.routines, [action.routineId]: nueva } }
+    }
+
+    case "rename-routine":
+      return onRoutine(state, action.routineId, action.meta, (r: Routine): Routine =>
+        r.name === action.name ? r : { ...r, name: action.name },
+      )
+
+    case "set-routine-day":
+      return onRoutine(state, action.routineId, action.meta, (r: Routine): Routine => {
+        /* El futuro no se marca; quitar una marca, sí, esté donde esté. */
+        if (action.done && compareDays(action.day, action.today) > 0) return r
+        const days: ReadonlyArray<Day> = withDay(r.days, action.day, action.done)
+        return days === r.days ? r : { ...r, days }
+      })
+
+    case "set-routine-goal":
+      return onRoutine(state, action.routineId, action.meta, (r: Routine): Routine => {
+        if (action.weeklyGoal !== null && !isWeeklyGoal(action.weeklyGoal)) return r
+        if ((r.weeklyGoal ?? null) === action.weeklyGoal) return r
+        const { weeklyGoal: _antes, ...sinMeta } = r
+        return action.weeklyGoal === null ? sinMeta : { ...sinMeta, weeklyGoal: action.weeklyGoal }
+      })
+
+    case "set-routine-archived":
+      return onRoutine(state, action.routineId, action.meta, (r: Routine): Routine => {
+        if ((r.archived === true) === action.archived) return r
+        const { archived: _antes, ...sinMarca } = r
+        return action.archived ? { ...sinMarca, archived: true } : sinMarca
+      })
+
+    case "delete-routine": {
+      if (state.routines[action.routineId] === undefined) return state
+
+      const { [action.routineId]: _fuera, ...quedan } = state.routines
+      return { ...state, routines: quedan }
     }
 
     default:

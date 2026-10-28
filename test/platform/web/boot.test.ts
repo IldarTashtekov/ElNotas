@@ -21,6 +21,7 @@ import type {
   IdGenerator,
   Note,
   Result,
+  Routine,
   StorageError,
 } from "#core/index"
 import { CURRENT_SCHEMA_VERSION, noteRef } from "#core/index"
@@ -78,7 +79,7 @@ test("un almacén vacío arranca con el estado vacío", async (): Promise<void> 
   const app: App = appDe(await arrancar(createFakeStorage()))
   const estado: AppState = app.store.getState()
 
-  assert.deepEqual(estado, { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} })
+  assert.deepEqual(estado, { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} })
 })
 
 test("un almacén vacío queda marcado con la versión actual del formato", async (): Promise<void> => {
@@ -312,5 +313,44 @@ test("sin skipCorrupt, un evento con un día inválido impide arrancar", async (
     btoa(JSON.stringify({ ...creado, day: "ayer" })),
   )
 
+  assert.equal(errorDe(await arrancar(almacen)).kind, "corrupt")
+})
+
+/* ─────────────────────────────────── Rutinas ─────────────────────────────────── */
+
+const AYER: Day = parseDay("2026-07-01") as Day
+
+test("una rutina, con sus días, su meta y archivada, sobrevive a recargar igual", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const primera: App = appDe(await arrancar(almacen))
+  const creada: Routine | null = primera.useCases.createRoutine("Correr", 3)
+  if (creada === null) assert.fail("tenía que crearse")
+  primera.useCases.setRoutineDay(creada.id, AYER, true, DIA)
+  primera.useCases.setRoutineDay(creada.id, DIA, true, DIA)
+  primera.useCases.setRoutineArchived(creada.id, true)
+  escrituraOk(await primera.flush())
+
+  const segunda: App = appDe(await arrancar(almacen))
+
+  assert.deepEqual(segunda.store.getState().routines, primera.store.getState().routines)
+  assert.deepEqual(segunda.store.getState().routines[creada.id]?.days, [AYER, DIA])
+})
+
+test("con skipCorrupt, una rutina ilegible se salta y se avisa; sin él, impide arrancar", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const primera: App = appDe(await arrancar(almacen))
+  const buena: Routine | null = primera.useCases.createRoutine("Buena", null)
+  const rota: Routine | null = primera.useCases.createRoutine("Rota", null)
+  if (buena === null || rota === null) assert.fail("tenían que crearse")
+  escrituraOk(await primera.flush())
+  almacen.escribirCrudo(
+    `elnotas:blob:routines/${rota.id}.json`,
+    btoa(JSON.stringify({ ...rota, days: ["ayer"] })),
+  )
+
+  const app: App = appDe(await arrancar(almacen, true))
+
+  assert.equal(app.corrupt.length, 1)
+  assert.deepEqual(Object.keys(app.store.getState().routines), [buena.id])
   assert.equal(errorDe(await arrancar(almacen)).kind, "corrupt")
 })

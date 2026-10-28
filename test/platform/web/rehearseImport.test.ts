@@ -7,7 +7,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Clock, Context, IdGenerator, Note, Result, StorageError } from "#core/index"
+import type { Clock, Context, IdGenerator, Note, Result, Routine, StorageError } from "#core/index"
 import { CURRENT_SCHEMA_VERSION, noteRef, ok } from "#core/index"
 import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
@@ -72,6 +72,9 @@ const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blob
   app.useCases.addItem(casa.id, noteRef(compra.id))
   app.useCases.createDiagram("Plano")
   app.useCases.createEvent(parseDay("2026-07-02") as Day, null, "Dentista", [], "Salud")
+  const correr: Routine | null = app.useCases.createRoutine("Correr", 3)
+  if (correr === null) assert.fail("tenía que crearse")
+  app.useCases.setRoutineDay(correr.id, parseDay("2026-07-02") as Day, true, parseDay("2026-07-02") as Day)
   const guardado: Result<void, StorageError> = await app.flush()
   if (!guardado.ok) assert.fail("tenía que guardarse")
 
@@ -158,4 +161,22 @@ test("una copia con eventos lleva sus ficheros, y un evento con un día inválid
     await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() }),
   )
   assert.equal(resumen.unreadable, 1)
+})
+
+test("una copia con rutinas lleva su fichero, pasa el ensayo, y una con un día inválido se cuenta como ilegible", async (): Promise<void> => {
+  const { backup } = await copiaDeVerdad()
+  const rutina: string | undefined = Object.keys(backup.files).find((c: string): boolean => c.startsWith("routines/"))
+  if (rutina === undefined) assert.fail("la copia lleva la rutina")
+  const texto: string = backup.files[rutina] ?? ""
+  assert.deepEqual((JSON.parse(texto) as Routine).days, ["2026-07-02"])
+  assert.equal(
+    resumenDe(await rehearseImport(backup, { logger: silentLogger, clock: reloj, ids: ids() })).unreadable,
+    0,
+  )
+
+  const roto: Backup = conFicheros(backup, { ...backup.files, [rutina]: texto.replace("2026-07-02", "2026-02-30") })
+  assert.equal(
+    resumenDe(await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() })).unreadable,
+    1,
+  )
 })

@@ -371,11 +371,19 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       el dedo. Una duda apuntada en *Sin decidir*.
 
 **Segunda tanda: las rutinas.**
-- [ ] **7h. Rutinas en el dominio y en el guardado** *(pensar)*. `Routine`, sus acciones
+- [x] **7h. Rutinas en el dominio y en el guardado** *(pensar)*. `Routine`, sus acciones
       (`setDone(día, hecho)`, meta semanal, archivar, renombrar, borrar), el cálculo de la semana
       cumplida, y su fichero, su forma y la copia de seguridad. **Cambia el dominio:** se para y
       se enseña antes. **Se cierra cuando** hay pruebas (no se marca el futuro, una semana que
       cruza meses), roturas que caen, `check` pasa y una copia con rutinas se exporta e importa igual.
+      **Hecho** (2026-10-28; diseño aprobado por el usuario antes de tocar el dominio). `Routine`
+      (`days` ordenados y sin repetir; `weeklyGoal` de 1 a 7; `archived` sólo cuando vale `true`),
+      seis acciones y sus casos de uso, `weekProgress` (semana de lunes a domingo, también cuando cruza
+      de mes; sin meta ninguna semana cumple), `routines/` en el guardado, su forma en `schema.ts` y
+      `routines` en `AppState`, `diffState`, `hydrate`, `boot` y el guardado diferido. El futuro no se
+      marca: `set-routine-day` lleva `today`, que pasa quien llama, y el core sigue sin leer el reloj.
+      Cambiar la meta recalcula también las semanas pasadas; marcar hacia atrás no tiene límite.
+      Una copia con rutinas se exporta, se ensaya y recarga igual. 26 roturas, todas cazadas.
 - [ ] **7i. Las rutinas en pantalla** *(pensar)*. La pestaña, las cadenas de la semana con las
       anteriores, marcar días, el progreso en el mes de las elegidas con la redonda, el menú ⋮
       (Renombrar, Cambiar meta, Archivar, Borrar con su aviso), mover y archivar. **Se cierra

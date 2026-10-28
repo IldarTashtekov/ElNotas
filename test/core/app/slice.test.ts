@@ -65,6 +65,7 @@ const estadoInicial = (): AppState => ({
   contexts: {},
   events: {},
   eventGroups: {},
+  routines: {},
 })
 
 /* Puertos de mentira. Una línea cada uno: eso es lo que compran los puertos. */

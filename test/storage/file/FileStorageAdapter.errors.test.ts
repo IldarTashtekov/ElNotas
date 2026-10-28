@@ -15,7 +15,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { CalendarEvent, Context, Diagram, EventGroup, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import type { CalendarEvent, Context, Diagram, EventGroup, Note, Result, Routine, StorageAdapter, StorageError } from "#core/index"
 import { checkBox, text } from "#core/domain/Content"
 import {
   contentId,
@@ -25,7 +25,7 @@ import {
   diagramRelationId,
   noteId,
 } from "#core/index"
-import { eventGroupId, eventId, revision } from "#core/domain/Ids"
+import { eventGroupId, eventId, revision, routineId } from "#core/domain/Ids"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
 import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"
@@ -802,4 +802,73 @@ test("FileStorageAdapter: con onCorrupt, un evento con un día inválido se salt
   const aviso: StorageError | undefined = avisos()[0]
   if (aviso?.kind !== "corrupt") assert.fail("se esperaba un aviso corrupt")
   assert.equal(aviso.path, "events/roto.json")
+})
+
+/* ═══════════════════════════ Rutinas: carpeta y forma ═══════════════════════════ */
+
+const RUTINA_BIEN: Record<string, unknown> = {
+  id: "correr",
+  name: "Correr",
+  days: ["2026-07-01", "2026-07-02"],
+  weeklyGoal: 3,
+  updatedAt: 0,
+  revision: "rev-correr",
+}
+
+test("FileStorageAdapter: una rutina va a routines/", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  await s.routines.put({ ...(RUTINA_BIEN as unknown as Routine), id: routineId("correr") }, null)
+
+  assert.deepEqual([...blobs.caminos()], ["routines/correr.json"])
+})
+
+test("FileStorageAdapter: una rutina bien formada se lee, con meta, archivada o sin nada de eso", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "routines/correr.json", { ...RUTINA_BIEN, archived: true })
+  escribirJson(blobs, "routines/leer.json", { ...RUTINA_BIEN, id: "leer", days: [], weeklyGoal: undefined })
+
+  const correr: Routine | null = valorDe(await s.routines.get(routineId("correr")))
+  const leer: Routine | null = valorDe(await s.routines.get(routineId("leer")))
+  assert.equal(correr?.weeklyGoal, 3)
+  assert.equal(correr?.archived, true)
+  assert.deepEqual(leer?.days, [])
+  assert.equal(leer?.weeklyGoal, undefined)
+})
+
+const RUTINAS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
+  ["sin nombre", { ...RUTINA_BIEN, name: undefined }, /name/],
+  ["con days que no es una lista", { ...RUTINA_BIEN, days: "todos" }, /days/],
+  ["con un día que no existe", { ...RUTINA_BIEN, days: ["2026-02-30"] }, /día/],
+  ["con un día que no es texto", { ...RUTINA_BIEN, days: [20260701] }, /día/],
+  ["con una meta de 0", { ...RUTINA_BIEN, weeklyGoal: 0 }, /weeklyGoal/],
+  ["con una meta de 8", { ...RUTINA_BIEN, weeklyGoal: 8 }, /weeklyGoal/],
+  ["con una meta que no es entera", { ...RUTINA_BIEN, weeklyGoal: 2.5 }, /weeklyGoal/],
+  ["con una meta que no es un número", { ...RUTINA_BIEN, weeklyGoal: "3" }, /weeklyGoal/],
+  ["con archived en false", { ...RUTINA_BIEN, archived: false }, /archived/],
+  ["sin revisión", { ...RUTINA_BIEN, revision: undefined }, /revision/],
+]
+
+for (const [caso, rota, motivo] of RUTINAS_SIN_FORMA) {
+  test(`FileStorageAdapter: una rutina ${caso} es corrupt, y dice por qué`, async (): Promise<void> => {
+    const { blobs, s } = montar()
+    escribirJson(blobs, "routines/correr.json", rota)
+
+    const fallo: StorageError = errorDe(await s.routines.get(routineId("correr")))
+    if (fallo.kind !== "corrupt") assert.fail(`se esperaba corrupt y vino ${fallo.kind}`)
+    assert.equal(fallo.path, "routines/correr.json")
+    assert.match(String(fallo.cause), motivo)
+  })
+}
+
+test("FileStorageAdapter: con onCorrupt, una rutina con un día inválido se salta y se avisa", async (): Promise<void> => {
+  const { blobs, s, avisos } = montarConAviso()
+  escribirJson(blobs, "routines/correr.json", RUTINA_BIEN)
+  escribirJson(blobs, "routines/rota.json", { ...RUTINA_BIEN, id: "rota", days: ["ayer"] })
+
+  const rutinas: ReadonlyArray<Routine> = valorDe(await s.routines.getAll())
+
+  assert.deepEqual(rutinas.map((r: Routine): string => r.id), ["correr"])
+  const aviso: StorageError | undefined = avisos()[0]
+  if (aviso?.kind !== "corrupt") assert.fail("se esperaba un aviso corrupt")
+  assert.equal(aviso.path, "routines/rota.json")
 })

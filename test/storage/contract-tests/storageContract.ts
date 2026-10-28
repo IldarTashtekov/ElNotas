@@ -25,13 +25,14 @@ import type {
   EventGroup,
   Note,
   Result,
+  Routine,
   StorageAdapter,
   StorageError,
 } from "#core/index"
 import { contextId, diagramId, err, noteId, noteRef, ok } from "#core/index"
 import type { Day, Time } from "#core/domain/calendar"
 import { parseDay, parseTime } from "#core/domain/calendar"
-import { eventGroupId, eventId } from "#core/domain/Ids"
+import { eventGroupId, eventId, routineId } from "#core/domain/Ids"
 import { revision } from "#core/domain/Ids"
 
 /* ──────────────────── Abrir el sobre, fallando si no toca ─────────────────── */
@@ -99,6 +100,15 @@ const grupoDeEventos = (id: string, events: ReadonlyArray<string>): EventGroup =
   events: events.map(eventId),
   updatedAt: 0,
   revision: revision(`rev-${id}`),
+})
+
+const rutina = (id: string, extra: Partial<Routine> = {}): Routine => ({
+  id: routineId(id),
+  name: `Rutina ${id}`,
+  days: [parseDay("2026-07-01") as Day, parseDay("2026-07-02") as Day],
+  updatedAt: 0,
+  revision: revision(`rev-${id}`),
+  ...extra,
 })
 
 const COMPRA = nota("compra", "Compra semanal")
@@ -262,6 +272,31 @@ export const runStorageContract = (
       kind: "stale",
       id: eventGroupId("g"),
     })
+  })
+
+  caso("una rutina se recupera igual, con sus claves opcionales y sus días en orden", async (s) => {
+    const completa: Routine = rutina("correr", { weeklyGoal: 3, archived: true })
+    const sola: Routine = rutina("leer", { days: [] })
+    await s.routines.put(completa, null)
+    await s.routines.put(sola, null)
+
+    assert.deepEqual(valorDe(await s.routines.get(completa.id)), completa)
+    assert.deepEqual(valorDe(await s.routines.get(sola.id)), sola)
+    assert.equal("weeklyGoal" in (valorDe(await s.routines.get(sola.id)) as Routine), false)
+  })
+
+  caso("las rutinas no se pisan con las demás clases, y son de escritura condicional", async (s) => {
+    const r: Routine = rutina("correr")
+    await s.notes.put(COMPRA, null)
+    await s.routines.put(r, null)
+
+    assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
+    assert.deepEqual(valorDe(await s.routines.getAll()), [r])
+    assert.deepEqual(errorDe(await s.routines.put({ ...r, name: "otra" }, null)), { kind: "stale", id: r.id })
+
+    assert.deepEqual(await s.routines.delete(r.id, r.revision), ok(undefined))
+    assert.deepEqual(valorDe(await s.routines.getAll()), [])
+    assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
   })
 
   caso("borrar en un repositorio no toca a los otros", async (s) => {

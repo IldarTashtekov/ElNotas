@@ -2,8 +2,9 @@ import type { CalendarEvent } from "./CalendarEvent.js"
 import type { Context } from "./Context.js"
 import type { Diagram } from "./Diagram.js"
 import type { EventGroup } from "./EventGroup.js"
-import type { ContextId, DiagramId, EventGroupId, EventId, NoteId } from "./Ids.js"
+import type { ContextId, DiagramId, EventGroupId, EventId, NoteId, RoutineId } from "./Ids.js"
 import type { Note } from "./Note.js"
+import type { Routine } from "./Routine.js"
 
 /**
  * Estado raíz de la aplicación: plano y normalizado, como una mini base de datos.
@@ -28,6 +29,7 @@ export interface AppState {
   readonly contexts: Readonly<Record<ContextId, Context>>
   readonly events: Readonly<Record<EventId, CalendarEvent>>
   readonly eventGroups: Readonly<Record<EventGroupId, EventGroup>>
+  readonly routines: Readonly<Record<RoutineId, Routine>>
 }
 
 export const emptyAppState = (): AppState => ({
@@ -36,4 +38,5 @@ export const emptyAppState = (): AppState => ({
   contexts: {},
   events: {},
   eventGroups: {},
+  routines: {},
 })

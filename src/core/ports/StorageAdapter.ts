@@ -1,6 +1,6 @@
 /**
  * Un backend de almacenamiento entero: las notas, los diagramas, los contextos, los
- * eventos del calendario con sus grupos, y la versión del formato de lo guardado.
+ * eventos del calendario con sus grupos, las rutinas, y la versión del formato de lo guardado.
  *
  * Es lo que se le enchufa a la app al arrancar, y lo único que el resto del
  * proyecto conoce. Cuál es en concreto —memoria, fichero, lo que venga— se decide
@@ -15,8 +15,16 @@ import type { Context } from "../domain/Context.js"
 import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Diagram } from "../domain/Diagram.js"
 import type { EventGroup } from "../domain/EventGroup.js"
-import type { ContextId, DiagramId, EventGroupId, EventId, NoteId } from "../domain/Ids.js"
+import type {
+  ContextId,
+  DiagramId,
+  EventGroupId,
+  EventId,
+  NoteId,
+  RoutineId,
+} from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
+import type { Routine } from "../domain/Routine.js"
 import type { Result } from "../domain/Result.js"
 import type { StorageError } from "../domain/errors/StorageError.js"
 import type { Repository } from "./Repository.js"
@@ -27,6 +35,7 @@ export interface StorageAdapter {
   readonly contexts: Repository<Context, ContextId>
   readonly events: Repository<CalendarEvent, EventId>
   readonly eventGroups: Repository<EventGroup, EventGroupId>
+  readonly routines: Repository<Routine, RoutineId>
 
   /**
    * Agrupa escrituras. **Best-effort según el adaptador** — ver arriba.

@@ -5,8 +5,8 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son cuarenta y tres. Aquí están las ocho de contenido; las de Nota, Contexto,
- * Diagrama y Calendario, abajo.
+ * Son cuarenta y nueve. Aquí están las ocho de contenido; las de Nota, Contexto,
+ * Diagrama, Calendario y Rutina, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
  */
@@ -25,6 +25,7 @@ import type {
   EventId,
   ItemRef,
   NoteId,
+  RoutineId,
   Revision,
 } from "../domain/Ids.js"
 import type { Position } from "../domain/Position.js"
@@ -492,10 +493,73 @@ export type CalendarAction =
   | SetEventGroupArchived
   | DeleteEventGroup
 
-/** El catálogo entero: 8 + 3 + 9 + 14 + 9 = **cuarenta y tres**. */
+/* ──────────────────────────── Las seis de Rutina ─────────────────────────── */
+
+/** «Se creó una rutina»; la meta, si va, es de 1 a 7 (si no, no se crea). */
+export interface CreateRoutine {
+  readonly type: "create-routine"
+  readonly routineId: RoutineId
+  readonly name: string
+  readonly weeklyGoal: number | null
+  readonly meta: ActionMeta
+}
+
+export interface RenameRoutine {
+  readonly type: "rename-routine"
+  readonly routineId: RoutineId
+  readonly name: string
+  readonly meta: ActionMeta
+}
+
+/**
+ * «Este día está cumplido (o ya no)». Lleva `today` porque el core no lee el
+ * reloj: lo pasa quien llama, y un día posterior a hoy no se marca. Es un `set`,
+ * no un `toggle`.
+ */
+export interface SetRoutineDay {
+  readonly type: "set-routine-day"
+  readonly routineId: RoutineId
+  readonly day: Day
+  readonly done: boolean
+  readonly today: Day
+  readonly meta: ActionMeta
+}
+
+/** La meta semanal de 1 a 7, o `null` para quitarla; otra cosa no aplica. */
+export interface SetRoutineGoal {
+  readonly type: "set-routine-goal"
+  readonly routineId: RoutineId
+  readonly weeklyGoal: number | null
+  readonly meta: ActionMeta
+}
+
+export interface SetRoutineArchived {
+  readonly type: "set-routine-archived"
+  readonly routineId: RoutineId
+  readonly archived: boolean
+  readonly meta: ActionMeta
+}
+
+/** «Se borró la rutina», con todos sus días. */
+export interface DeleteRoutine {
+  readonly type: "delete-routine"
+  readonly routineId: RoutineId
+  readonly meta: ActionMeta
+}
+
+export type RoutineAction =
+  | CreateRoutine
+  | RenameRoutine
+  | SetRoutineDay
+  | SetRoutineGoal
+  | SetRoutineArchived
+  | DeleteRoutine
+
+/** El catálogo entero: 8 + 3 + 9 + 14 + 9 + 6 = **cuarenta y nueve**. */
 export type Action =
   | ContentAction
   | NoteAction
   | ContextAction
   | DiagramAction
   | CalendarAction
+  | RoutineAction

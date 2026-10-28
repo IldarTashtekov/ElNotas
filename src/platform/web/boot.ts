@@ -24,6 +24,7 @@ import type {
   MigrationError,
   MigrationResult,
   Note,
+  Routine,
   Result,
   StorageAdapter,
   StorageError,
@@ -108,6 +109,8 @@ export const boot = async ({
   const eventGroups: Result<ReadonlyArray<EventGroup>, StorageError> =
     await adapter.eventGroups.getAll()
   if (!eventGroups.ok) return eventGroups
+  const routines: Result<ReadonlyArray<Routine>, StorageError> = await adapter.routines.getAll()
+  if (!routines.ok) return routines
 
   const guardado: StoredEntities = {
     notes: notes.value,
@@ -115,6 +118,7 @@ export const boot = async ({
     contexts: contexts.value,
     events: events.value,
     eventGroups: eventGroups.value,
+    routines: routines.value,
   }
   const migrado: Result<MigrationResult, MigrationError> = runMigrations(
     guardado,

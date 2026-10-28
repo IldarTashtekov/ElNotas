@@ -29,8 +29,10 @@ import {
   noteId,
   noteRef,
   revision,
+  routineId,
 } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
+import type { Routine } from "#core/domain/Routine"
 import type { Result } from "#core/domain/Result"
 import type { StoredEntities } from "#core/migrations/hydrate"
 import { hydrate } from "#core/migrations/hydrate"
@@ -103,7 +105,7 @@ test("hydrate pasa de listas a mapas por id", () => {
 
 test("hydrate de un almacén vacío da un estado vacío", () => {
   const state = hydrate({ notes: [], diagrams: [], contexts: [] })
-  assert.deepEqual(state, { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} })
+  assert.deepEqual(state, { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} })
 })
 
 test("hydrate pasa los eventos y los grupos a mapas, y quita de un grupo lo que no existe ni una vez repetido", () => {
@@ -135,6 +137,21 @@ test("hydrate pasa los eventos y los grupos a mapas, y quita de un grupo lo que 
   assert.strictEqual(state.events[cita.id], cita)
   assert.deepEqual(state.eventGroups[roto.id]?.events, [cita.id])
   assert.strictEqual(state.eventGroups[sano.id], sano, "el grupo sano sale intacto, por referencia")
+})
+
+test("hydrate pasa las rutinas a mapas, por referencia, y sin ellas son un mapa vacío", () => {
+  const correr: Routine = {
+    id: routineId("correr"),
+    name: "Correr",
+    days: [parseDay("2026-07-01") as Day],
+    updatedAt: 0,
+    revision: revision("r-correr"),
+  }
+
+  const con = hydrate({ notes: [], diagrams: [], contexts: [], routines: [correr] })
+
+  assert.strictEqual(con.routines[correr.id], correr)
+  assert.deepEqual(hydrate({ notes: [], diagrams: [], contexts: [] }).routines, {})
 })
 
 test("hydrate tira las ItemRef que apuntan a algo que ya no está", () => {

@@ -76,6 +76,7 @@ const estado = (): AppState => ({
   contexts: {},
   events: { [ID_CITA]: CITA, [ID_CINE]: CINE, [ID_SUELTO]: SUELTO },
   eventGroups: { [ID_SALUD]: SALUD, [ID_OCIO]: OCIO, [ID_VACIO]: VACIO },
+  routines: {},
 })
 
 /* ──────────────────────────────── Eventos ──────────────────────────────── */

@@ -26,11 +26,11 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, CalendarEvent, EventGroup, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import type { AppState, CalendarEvent, EventGroup, Note, Result, Routine, StorageAdapter, StorageError } from "#core/index"
 import { err, noteId } from "#core/index"
 import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
-import { eventGroupId, eventId, revision } from "#core/domain/Ids"
+import { eventGroupId, eventId, revision, routineId } from "#core/domain/Ids"
 
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import type { Schedule } from "#storage/writeBehind"
@@ -139,7 +139,7 @@ const nota = (name: string): Note => ({
   revision: revision(`rev-${name}`),
 })
 
-const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} }
 
 const conNota = (n: Note): AppState => ({ ...VACIO, notes: { [n.id]: n } })
 
@@ -644,7 +644,7 @@ test("write-behind: guarda los eventos y sus grupos, los cambios y los borrados"
   assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [sinEvento.eventGroups[GRUPO.id]])
 
   /* Y borrar el grupo, su fichero. */
-  wb.onState({ ...sinEvento, eventGroups: {} })
+  wb.onState({ ...sinEvento, eventGroups: {}, routines: {} })
   valorDe(await wb.flush())
   assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [])
 })
@@ -675,4 +675,37 @@ test("write-behind: un evento nuevo se escribe ANTES que el grupo que lo lista",
   valorDe(await wb.flush())
 
   assert.deepEqual(orden, ["evento", "grupo"])
+})
+
+/* ─────────────────────────────────── Rutinas ─────────────────────────────────── */
+
+const RUTINA: Routine = {
+  id: routineId("correr"),
+  name: "Correr",
+  days: [parseDay("2026-07-01") as Day],
+  weeklyGoal: 3,
+  updatedAt: 0,
+  revision: revision("rev-correr"),
+}
+
+test("write-behind: guarda las rutinas, sus cambios y su borrado", async () => {
+  const adapter: StorageAdapter = createMemoryStorageAdapter()
+  const wb = createWriteBehind({ adapter, initial: VACIO, logger: silentLogger })
+
+  wb.onState({ ...VACIO, routines: { [RUTINA.id]: RUTINA } })
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.routines.getAll()), [RUTINA])
+
+  const marcada: Routine = {
+    ...RUTINA,
+    days: [...RUTINA.days, parseDay("2026-07-02") as Day],
+    revision: revision("rev-correr-2"),
+  }
+  wb.onState({ ...VACIO, routines: { [RUTINA.id]: marcada } })
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.routines.getAll()), [marcada])
+
+  wb.onState(VACIO)
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.routines.getAll()), [])
 })

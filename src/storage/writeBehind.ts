@@ -193,6 +193,12 @@ export const createWriteBehind = ({
           escrito = { ...escrito, eventGroups: { ...escrito.eventGroups, [g.id]: g } }
         }
 
+        for (const r of cambios.routines.upserted) {
+          const w: Result<void, StorageError> = await adapter.routines.put(r, escrito.routines[r.id]?.revision ?? null)
+          if (!w.ok) return w
+          escrito = { ...escrito, routines: { ...escrito.routines, [r.id]: r } }
+        }
+
         for (const id of cambios.notes.deleted) {
           const r: Result<void, StorageError> = await adapter.notes.delete(id, escrito.notes[id]?.revision ?? null)
           if (!r.ok) return r
@@ -212,6 +218,11 @@ export const createWriteBehind = ({
           const r: Result<void, StorageError> = await adapter.eventGroups.delete(id, escrito.eventGroups[id]?.revision ?? null)
           if (!r.ok) return r
           escrito = { ...escrito, eventGroups: sin(escrito.eventGroups, id) }
+        }
+        for (const id of cambios.routines.deleted) {
+          const w: Result<void, StorageError> = await adapter.routines.delete(id, escrito.routines[id]?.revision ?? null)
+          if (!w.ok) return w
+          escrito = { ...escrito, routines: sin(escrito.routines, id) }
         }
         for (const id of cambios.events.deleted) {
           const r: Result<void, StorageError> = await adapter.events.delete(id, escrito.events[id]?.revision ?? null)

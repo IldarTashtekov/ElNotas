@@ -41,6 +41,7 @@ import type {
   EventId,
   ItemRef,
   NoteId,
+  RoutineId,
 } from "#core/domain/Ids"
 import {
   contentId,
@@ -53,9 +54,11 @@ import {
   noteId,
   noteRef,
   revision,
+  routineId,
 } from "#core/domain/Ids"
 import type { Note } from "#core/domain/Note"
 import { after, rootEnd } from "#core/domain/Position"
+import type { Routine } from "#core/domain/Routine"
 import type { Clock } from "#core/ports/Clock"
 import type { IdGenerator } from "#core/ports/IdGenerator"
 import type { Action } from "#core/app/Action"
@@ -85,10 +88,11 @@ const ID_OTRO_NODO: DiagramNodeId = diagramNodeId("llaves")
 const ID_RELACION: DiagramRelationId = diagramRelationId("r1")
 const ID_EVENTO: EventId = eventId("cita")
 const ID_GRUPO: EventGroupId = eventGroupId("salud")
+const ID_RUTINA: RoutineId = routineId("correr")
 const DIA: Day = parseDay("2026-07-02") as Day
 const HORA_DEL_DIA: Time = parseTime("18:00") as Time
 
-const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} }
 
 const HORA = 1000
 
@@ -173,7 +177,7 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
  * no lo mete aquí, la última prueba del bloque lo canta.
  */
 const CABLEADO: ReadonlyArray<
-  readonly [string, (u: UseCases) => Note | Context | Diagram | CalendarEvent | EventGroup | null]
+  readonly [string, (u: UseCases) => Note | Context | Diagram | CalendarEvent | EventGroup | Routine | null]
 > = [
   ["set-checked", (u) => u.setChecked(ID_NOTA, ID_LINEA, true)],
   ["set-text", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
@@ -254,6 +258,18 @@ const CABLEADO: ReadonlyArray<
     (u: UseCases): EventGroup | null => u.setEventGroupArchived(ID_GRUPO, true),
   ],
   ["delete-event-group", (u: UseCases): EventGroup | null => u.deleteEventGroup(ID_GRUPO)],
+  ["create-routine", (u: UseCases): Routine | null => u.createRoutine("Correr", 3)],
+  ["rename-routine", (u: UseCases): Routine | null => u.renameRoutine(ID_RUTINA, "Trotar")],
+  [
+    "set-routine-day",
+    (u: UseCases): Routine | null => u.setRoutineDay(ID_RUTINA, DIA, true, DIA),
+  ],
+  ["set-routine-goal", (u: UseCases): Routine | null => u.setRoutineGoal(ID_RUTINA, 5)],
+  [
+    "set-routine-archived",
+    (u: UseCases): Routine | null => u.setRoutineArchived(ID_RUTINA, true),
+  ],
+  ["delete-routine", (u: UseCases): Routine | null => u.deleteRoutine(ID_RUTINA)],
 ]
 
 test("cada caso de uso despacha la acción que le corresponde", () => {
@@ -280,18 +296,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cuarenta y cinco casos de uso para cuarenta y tres acciones**: `insert` tiene dos
+      Son **cincuenta y un casos de uso para cuarenta y nueve acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 51, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 51, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 43, "el catálogo son CUARENTA Y TRES acciones: 8 + 3 + 9 + 14 + 9")
+  assert.equal(tipos.size, 49, "el catálogo son CUARENTA Y NUEVE acciones: 8 + 3 + 9 + 14 + 9 + 6")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */

@@ -87,6 +87,7 @@ const estado = (): AppState => ({
   },
   events: {},
   eventGroups: {},
+  routines: {},
 })
 
 const ctx = (s: AppState, id: typeof ID_CASA): Context => {

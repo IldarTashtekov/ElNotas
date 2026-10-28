@@ -70,6 +70,7 @@ const ESTADO_INICIAL: AppState = {
   contexts: {},
   events: {},
   eventGroups: {},
+  routines: {},
 }
 
 /** Abre el sobre de un `Result` que tenía que haber ido bien. */

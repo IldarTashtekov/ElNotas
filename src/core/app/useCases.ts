@@ -34,6 +34,7 @@ import type {
   EventId,
   ItemRef,
   NoteId,
+  RoutineId,
 } from "../domain/Ids.js"
 import {
   contentId,
@@ -45,9 +46,11 @@ import {
   eventId,
   noteId,
   revision,
+  routineId,
 } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Position } from "../domain/Position.js"
+import type { Routine } from "../domain/Routine.js"
 import type { Action, ActionMeta } from "./Action.js"
 import type { Clock } from "../ports/Clock.js"
 import type { IdGenerator } from "../ports/IdGenerator.js"
@@ -233,6 +236,24 @@ export interface UseCases {
   readonly setEventGroupArchived: (groupId: EventGroupId, archived: boolean) => EventGroup | null
   /** Sus eventos se quedan. Devuelve el borrado. */
   readonly deleteEventGroup: (groupId: EventGroupId) => EventGroup | null
+
+  /** Crea una rutina. `null` si la meta no es de 1 a 7 (o el id ya existía). */
+  readonly createRoutine: (name: string, weeklyGoal: number | null) => Routine | null
+  readonly renameRoutine: (routineId: RoutineId, name: string) => Routine | null
+  /**
+   * Marca o desmarca un día. `today` es el de la plataforma: un día posterior no se
+   * marca, y entonces devuelve `null`.
+   */
+  readonly setRoutineDay: (
+    routineId: RoutineId,
+    day: Day,
+    done: boolean,
+    today: Day,
+  ) => Routine | null
+  readonly setRoutineGoal: (routineId: RoutineId, weeklyGoal: number | null) => Routine | null
+  readonly setRoutineArchived: (routineId: RoutineId, archived: boolean) => Routine | null
+  /** Con todos sus días. Devuelve la borrada. */
+  readonly deleteRoutine: (routineId: RoutineId) => Routine | null
 }
 
 export interface UseCaseDeps {
@@ -274,6 +295,12 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
     const antes: EventGroup | undefined = store.getState().eventGroups[id]
     store.dispatch(action)
     return cambio(antes, store.getState().eventGroups[id])
+  }
+
+  const trasRutina = (id: RoutineId, action: Action): Routine | null => {
+    const antes: Routine | undefined = store.getState().routines[id]
+    store.dispatch(action)
+    return cambio(antes, store.getState().routines[id])
   }
 
   return {
@@ -589,6 +616,28 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     deleteEventGroup: (groupId: EventGroupId): EventGroup | null =>
       trasGrupoDeEventos(groupId, { type: "delete-event-group", groupId, meta: meta() }),
+
+    /* ── Rutinas ── */
+
+    createRoutine: (name: string, weeklyGoal: number | null): Routine | null => {
+      const id: RoutineId = routineIdNuevo(ids)
+      return trasRutina(id, { type: "create-routine", routineId: id, name, weeklyGoal, meta: meta() })
+    },
+
+    renameRoutine: (routineId: RoutineId, name: string): Routine | null =>
+      trasRutina(routineId, { type: "rename-routine", routineId, name, meta: meta() }),
+
+    setRoutineDay: (routineId: RoutineId, day: Day, done: boolean, today: Day): Routine | null =>
+      trasRutina(routineId, { type: "set-routine-day", routineId, day, done, today, meta: meta() }),
+
+    setRoutineGoal: (routineId: RoutineId, weeklyGoal: number | null): Routine | null =>
+      trasRutina(routineId, { type: "set-routine-goal", routineId, weeklyGoal, meta: meta() }),
+
+    setRoutineArchived: (routineId: RoutineId, archived: boolean): Routine | null =>
+      trasRutina(routineId, { type: "set-routine-archived", routineId, archived, meta: meta() }),
+
+    deleteRoutine: (routineId: RoutineId): Routine | null =>
+      trasRutina(routineId, { type: "delete-routine", routineId, meta: meta() }),
   }
 }
 
@@ -621,6 +670,7 @@ const contextIdNuevo = (ids: IdGenerator): ContextId => contextId(ids.next())
 const diagramIdNuevo = (ids: IdGenerator): DiagramId => diagramId(ids.next())
 const eventIdNuevo = (ids: IdGenerator): EventId => eventId(ids.next())
 const eventGroupIdNuevo = (ids: IdGenerator): EventGroupId => eventGroupId(ids.next())
+const routineIdNuevo = (ids: IdGenerator): RoutineId => routineId(ids.next())
 const diagramNodeIdNuevo = (ids: IdGenerator): DiagramNodeId => diagramNodeId(ids.next())
 const diagramRelationIdNuevo = (ids: IdGenerator): DiagramRelationId =>
   diagramRelationId(ids.next())

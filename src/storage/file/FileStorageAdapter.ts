@@ -1,5 +1,5 @@
 /**
- * Guarda cada nota, diagrama, contexto, evento y grupo de eventos en su propio fichero JSON, más un
+ * Guarda cada nota, diagrama, contexto, evento, grupo de eventos y rutina en su propio fichero JSON, más un
  * `manifest.json` con la versión del formato.
  *
  * Es la pieza que sabe de formato: convierte una entidad en texto y decide cómo
@@ -25,6 +25,8 @@ import type {
   Note,
   NoteId,
   Repository,
+  Routine,
+  RoutineId,
   Result,
   Revision,
   StorageAdapter,
@@ -38,6 +40,7 @@ import {
   eventGroupProblem,
   eventProblem,
   noteProblem,
+  routineProblem,
 } from "./schema.js"
 
 /* ════════════════════════════ El esquema en disco ══════════════════════════ */
@@ -52,6 +55,7 @@ const CARPETA_DIAGRAMAS: string = "diagrams/"
 const CARPETA_CONTEXTOS: string = "contexts/"
 const CARPETA_EVENTOS: string = "events/"
 const CARPETA_GRUPOS_DE_EVENTOS: string = "event-groups/"
+const CARPETA_RUTINAS: string = "routines/"
 const CAMINO_MANIFEST: string = "manifest.json"
 const EXTENSION: string = ".json"
 
@@ -282,7 +286,7 @@ const avisar = (onCorrupt: OnCorrupt, fallo: StorageError): Result<void, Storage
 }
 
 /**
- * Los cinco repositorios son este mismo código con otra carpeta, igual que en el
+ * Los seis repositorios son este mismo código con otra carpeta, igual que en el
  * adaptador de memoria. Lo único que necesita saber de la entidad es que lleva
  * su `id` dentro.
  */
@@ -434,6 +438,12 @@ export const createFileStorageAdapter = (
     EventGroup,
     EventGroupId
   >(blobs, CARPETA_GRUPOS_DE_EVENTOS, eventGroupProblem, onCorrupt)
+  const routines: Repository<Routine, RoutineId> = createFileRepository<Routine, RoutineId>(
+    blobs,
+    CARPETA_RUTINAS,
+    routineProblem,
+    onCorrupt,
+  )
 
   return {
     notes,
@@ -441,6 +451,7 @@ export const createFileStorageAdapter = (
     contexts,
     events,
     eventGroups,
+    routines,
 
     /**
      * *Best-effort*, y aquí eso es literal: ejecuta la función y devuelve lo que

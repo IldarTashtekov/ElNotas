@@ -107,6 +107,7 @@ const estado = (): AppState => ({
   },
   events: {},
   eventGroups: {},
+  routines: {},
 })
 
 const mudanzaDe = (s: AppState): Diagram => {

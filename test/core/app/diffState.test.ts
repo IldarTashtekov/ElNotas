@@ -63,6 +63,7 @@ const estado = (): AppState => ({
   contexts: { [ID_CASA]: CASA },
   events: {},
   eventGroups: {},
+  routines: {},
 })
 
 /* ───────────────────── Lo importante: NO detectar de más ──────────────────── */
@@ -166,6 +167,7 @@ test("las tres clases de entidad se diferencian a la vez", () => {
     contexts: {},
     events: {},
     eventGroups: {},
+    routines: {},
   }
 
   const d = diffState(antes, despues)
@@ -195,12 +197,12 @@ test("crear y borrar entre dos escrituras se cancela: no hay nada que escribir",
 /* ─────────────────────────── Estados vacíos y bordes ──────────────────────── */
 
 test("de vacío a vacío no hay nada que escribir", () => {
-  const vacio = (): AppState => ({ notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} })
+  const vacio = (): AppState => ({ notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} })
   assert.strictEqual(diffState(vacio(), vacio()), NO_CHANGES)
 })
 
 test("la primera entidad de un almacén vacío sale como upserted", () => {
-  const vacio: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} }
+  const vacio: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} }
   const conUna: AppState = { ...vacio, notes: { [ID_COMPRA]: COMPRA } }
 
   assert.deepEqual(diffState(vacio, conUna).notes.upserted, [COMPRA])

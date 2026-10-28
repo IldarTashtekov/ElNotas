@@ -68,6 +68,7 @@ const estado = (): AppState => ({
   contexts: {},
   events: {},
   eventGroups: {},
+  routines: {},
 })
 
 const nota = (s: AppState): Note => {

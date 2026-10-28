@@ -30,10 +30,11 @@ import type { EventGroup } from "../domain/EventGroup.js"
 import type { DiagramRelationId, EventId, ItemRef, NoteId } from "../domain/Ids.js"
 import { noteRef } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
+import type { Routine } from "../domain/Routine.js"
 
 /**
  * Lo que devuelve el almacén: las listas. Los eventos y sus grupos, si faltan, son
- * vacíos: lo guardado antes de que existieran no se migra.
+ * vacíos, y las rutinas igual: lo guardado antes de que existieran no se migra.
  */
 export interface StoredEntities {
   readonly notes: ReadonlyArray<Note>
@@ -41,6 +42,7 @@ export interface StoredEntities {
   readonly contexts: ReadonlyArray<Context>
   readonly events?: ReadonlyArray<CalendarEvent>
   readonly eventGroups?: ReadonlyArray<EventGroup>
+  readonly routines?: ReadonlyArray<Routine>
 }
 
 const porId = <TId extends string, T extends { readonly id: TId }>(
@@ -135,5 +137,7 @@ export const hydrate = (
     }),
   )
 
-  return { notes, diagrams, contexts, events, eventGroups }
+  const routines: AppState["routines"] = porId(stored.routines ?? [])
+
+  return { notes, diagrams, contexts, events, eventGroups, routines }
 }

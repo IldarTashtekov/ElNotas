@@ -7,7 +7,7 @@
  * un fichero ilegible. Los campos de más no molestan: se ignoran.
  */
 
-import { parseDay, parseTime } from "#core/index"
+import { isWeeklyGoal, parseDay, parseTime } from "#core/index"
 
 /** `null` si tiene la forma; si no, qué le falta, para el aviso. */
 export type Problem = string | null
@@ -208,6 +208,28 @@ export const eventGroupProblem = (o: Registro): Problem =>
         esTexto(id) ? null : "un evento de un grupo no es un texto",
       ),
     /* Ausente es no archivado: la clave sólo existe cuando vale `true`. */
+    (): Problem =>
+      o["archived"] === undefined || o["archived"] === true
+        ? null
+        : "«archived» no es verdadero",
+  )
+
+/* ──────────────────────────────── Rutinas ──────────────────────────────── */
+
+export const routineProblem = (o: Registro): Problem =>
+  primero(
+    (): Problem => sellada(o),
+    (): Problem => texto(o, "name"),
+    (): Problem =>
+      cadaUno(o, "days", (d: unknown): Problem =>
+        esTexto(d) && parseDay(d) !== null ? null : "un día de la rutina no es un día válido",
+      ),
+    /* Sin meta, la clave no existe. */
+    (): Problem =>
+      o["weeklyGoal"] === undefined ||
+      (typeof o["weeklyGoal"] === "number" && isWeeklyGoal(o["weeklyGoal"]))
+        ? null
+        : "«weeklyGoal» no es un entero de 1 a 7",
     (): Problem =>
       o["archived"] === undefined || o["archived"] === true
         ? null
