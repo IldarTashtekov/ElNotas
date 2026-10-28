@@ -362,9 +362,13 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       grupo sin evento; lo elegido con las redondas y lo desplegado es de pantalla y no se
       recuerda; 11 roturas, todas cazadas; sección C de `VERIFICACION-CALENDARIO.md`). El móvil,
       con la 7g: sobre todo la pulsación larga con el dedo, que el panel no puede probar.
-- [ ] **7g. La lista de verificación de los eventos** *(mecánica)*. `test/ui/VERIFICACION-CALENDARIO.md`,
+- [x] **7g. La lista de verificación de los eventos** *(mecánica)*. `test/ui/VERIFICACION-CALENDARIO.md`,
       con los pasos de 7d-7f y los de la copia de seguridad, y pasada en el panel; el móvil, lo
       pasa el usuario. **Se cierra cuando** está pasada y anotada en el panel, y `check` pasa.
+      **Hecho** (2026-10-28; la lista ya llevaba A a C de las tareas anteriores; esta añade D, la
+      copia con eventos, grupos y orden, y M, los cinco pasos del móvil que pasa el usuario).
+      D1 a D3 pasadas en el panel; **M1 a M5, pendientes del usuario**, y con ellos C9 y B14 en
+      el dedo. Una duda apuntada en *Sin decidir*.
 
 **Segunda tanda: las rutinas.**
 - [ ] **7h. Rutinas en el dominio y en el guardado** *(pensar)*. `Routine`, sus acciones
@@ -563,6 +567,12 @@ una tarea con su cierre.
       reducer, las pruebas y el formato en disco.
       **Se cierra cuando** el usuario elige: excepción, escrita en *Decisiones cerradas* de
       `CLAUDE.md`, o una tarea con fase para quitarlo.
+
+- [ ] **La pregunta de importar no cuenta los eventos** *(salió en la 7g, 2026-10-28)*. «La copia
+      trae 8 notas, 2 diagramas y 2 contextos» no dice cuántos eventos ni grupos de eventos trae,
+      aunque los sustituye. No pierde nada, pero la cuenta enseña menos de lo que se va a
+      reemplazar. **Se cierra cuando** el usuario dice si la frase los nombra (toca
+      `importQuestion` y su prueba) o se queda como está.
 
 ### Si OPFS entra en juego: lo que queda del criterio de la Fase 3
 

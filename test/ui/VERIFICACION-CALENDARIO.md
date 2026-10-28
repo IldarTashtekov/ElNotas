@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Se pasa como dice
 `test/PASAR-LAS-LISTAS.md`. Crece con las tareas del calendario: lleva el marco (el
-icono, la vista y la ventana) el mes con los eventos de un día y los grupos de eventos.
+icono, la vista y la ventana) el mes con los eventos de un día, los grupos de eventos y la copia de seguridad.
 
 ## Por qué existe
 
@@ -96,9 +96,61 @@ Bajo el mes, la lista de grupos. Hacen falta eventos en un grupo y otros sin gru
 - **C10.** Tras **recargar**, las filas conservan el orden. Lo elegido con las redondas y lo
   desplegado **no** se recuerda: vuelve todo encendido y plegado.
 
+## D. La copia de seguridad lleva el calendario
+
+Con eventos en un grupo y otros sin grupo, y el orden de los grupos cambiado. Los pasos de la
+exportación y la importación en sí son los de `VERIFICACION-MANUAL-COPIA.md`; aquí, que el
+calendario entra y sale.
+
+- **D1.** ⚙ → **Exportar copia**: el fichero lleva sus `events/…` y `event-groups/…` en `files`, y
+  `calendarOrder` con la lista de grupos (con `@sin-grupo` donde se dejó).
+- **D2.** Cambiar cosas (un grupo nuevo, otro orden) e **Importar copia → Sustituir todo**: tras
+  recargar, el calendario es el de la copia: los grupos y los eventos de entonces, los días
+  marcados y las filas en el orden exportado. Lo creado después ya no está.
+- **D3.** Una copia hecha **antes del calendario** se importa sin quejarse: el calendario queda
+  vacío, con sólo «Sin grupo».
+
+## M. Sólo en el móvil
+
+Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
+
+- **M1.** **Mantener pulsada** una fila de la lista de grupos la levanta y se arrastra con el dedo;
+  al soltar queda donde cae y no se despliega. Con el dedo parado, la página **no** se desliza.
+- **M2.** Los campos **Día** y **Hora** del formulario abren los selectores nativos del móvil; lo
+  elegido aparece en el campo y se guarda.
+- **M3.** Con el **teclado en pantalla** abierto en «Motivo» o «Grupo nuevo», **Guardar** se sigue
+  alcanzando (la hoja se desplaza) y no queda tapado.
+- **M4.** La rejilla del mes cabe en la pantalla, sin barra horizontal, en vertical y en horizontal.
+- **M5.** **▦** abre el calendario; el atrás del móvil cierra primero la hoja y luego el calendario.
+
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-10-28
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       6e9fa8e, árbol limpio
+Origen:       localhost:8001
+
+D1  🔁 simulado — el «Guardar como», por uno que guarda en memoria: 5 `events/…`, 2 `event-groups/…`
+    y `calendarOrder` con `["c2ca…", "@sin-grupo"]`; «Copia guardada.»
+D2  🔁 simulado (el selector de ficheros) — con «Sobra» creado y el orden cambiado, «Sustituir
+    todo»: tras recargar, vuelven Trabajo, Sin grupo y Ocio con sus eventos, los cinco días
+    marcados y el orden exportado; «Sobra» ya no está
+D3  🔁 simulado (el selector) — una copia sin `calendarOrder` ni eventos entra sin queja: sólo
+    «Sin grupo · 0», ningún día marcado y `elnotas:calendario-orden` sin escribir
+M1  ⏭ no se puede aquí — el dedo; lo pasa el usuario en el móvil
+M2  ⏭ no se puede aquí — los selectores nativos; lo pasa el usuario
+M3  ⏭ no se puede aquí — el teclado en pantalla; lo pasa el usuario
+M4  ⏭ no se puede aquí — vertical y horizontal en el móvil; lo pasa el usuario
+M5  ⏭ no se puede aquí — el atrás del móvil; lo pasa el usuario
+
+Notas: en D2 la pregunta decía «La copia trae 8 notas, 2 diagramas y 2 contextos»: no nombra los
+eventos (duda en TAREAS.md → Sin decidir). Los pasos de la exportación y la importación en sí, en
+`VERIFICACION-MANUAL-COPIA.md`.
+```
 
 ```
 Fecha:        2026-10-28
