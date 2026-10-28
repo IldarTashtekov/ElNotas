@@ -237,3 +237,99 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+
+/* ── Las pestañas: Eventos o Rutinas ── */
+.pestanas {
+  display: flex;
+  gap: 0.4rem;
+}
+.pestana {
+  background: none;
+  border: 1px solid var(--rowline);
+  color: var(--muted);
+  cursor: pointer;
+  flex: 1;
+  padding: 0.4rem;
+}
+.pestana[aria-selected="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  text-shadow: none;
+}
+
+/* ── El progreso de las rutinas elegidas en un día: una barra bajo el número ── */
+.dia-progreso {
+  background: var(--accent-soft);
+  bottom: 0;
+  height: 0.25rem;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+.dia-progreso::before {
+  background: var(--accent);
+  content: "";
+  height: 100%;
+  left: 0;
+  position: absolute;
+  width: var(--p, 0%);
+}
+.dia.hoy .dia-progreso::before {
+  background: var(--accent-ink);
+}
+
+/* ── Las semanas de una rutina ── */
+.rutina-semana {
+  align-items: center;
+  display: grid;
+  gap: 0.3rem;
+  grid-template-columns: 5.5rem 1fr auto;
+  padding: 0.25rem 0;
+}
+.rutina-rotulo,
+.rutina-cuenta {
+  color: var(--muted);
+}
+.rutina-semana.cumplida .rutina-cuenta {
+  color: var(--accent);
+}
+.rutina-dias {
+  display: grid;
+  gap: 0.15rem;
+  grid-template-columns: repeat(7, 1fr);
+}
+.rutina-dia {
+  background: var(--row);
+  border: 1px solid var(--rowline);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.3rem 0;
+}
+.rutina-dia.marcado {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  text-shadow: none;
+}
+.rutina-dia:disabled {
+  color: var(--dim);
+  cursor: default;
+}
+.rutina-metas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.rutina-meta {
+  background: var(--row);
+  border: 1px solid var(--rowline);
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+}
+.rutina-meta[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  text-shadow: none;
+}

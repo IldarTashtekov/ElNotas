@@ -110,6 +110,34 @@ calendario entra y sale.
 - **D3.** Una copia hecha **antes del calendario** se importa sin quejarse: el calendario queda
   vacío, con sólo «Sin grupo».
 
+## E. Las rutinas
+
+Bajo la rejilla, la pestaña **Rutinas** (la otra es **Eventos**). Hace falta alguna rutina con meta
+y otra sin ella; hoy es miércoles 28 de octubre de 2026.
+
+- **E1.** Bajo el mes hay dos pestañas, **Eventos** y **Rutinas**; sólo se ve la lista de la
+  elegida. La de rutinas lleva **+ Rutina** y, con rutinas, una fila por cada una: **○** redonda,
+  «nombre · n/meta» (o «n» sin meta) y **⋮**.
+- **E2.** **+ Rutina** pide un nombre y una meta (**Sin meta** o de 1 a 7 días a la semana); con el
+  nombre vacío no hace nada, y **Crear** la añade con la meta elegida.
+- **E3.** Pulsar el **nombre** despliega sus semanas, la de hoy primero y **hacia atrás**, cada una
+  con L M X J V S D y «n/meta». **Ver más** enseña cuatro semanas más.
+- **E4.** Pulsar un día lo **marca** (●) o lo **desmarca** (○), también en semanas pasadas; los días
+  que aún no han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la semana
+  lleva **✓**.
+- **E5.** La **redonda** ○ / ● elige las rutinas que pintan el mes: cada día lleva una **barra** tan
+  llena como la parte de las rutinas elegidas que lo tienen marcado. Al empezar no hay ninguna
+  elegida y no hay barras.
+- **E6.** **⋮** ofrece **Renombrar**, **Cambiar meta**, **Archivar** y **Borrar**. Cambiar la meta
+  **recalcula** las semanas pasadas.
+- **E7.** **Borrar** pide confirmar y dice cuántos días se pierden y que se puede **archivar**
+  («¿Borrar la rutina «X»? Se pierden sus n días marcados…»); al aceptar, desaparece.
+- **E8.** **Archivar** la quita de la lista y del mes y aparece **«▸ Archivadas (n)»**, sin redonda,
+  con ⋮ → **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**. Desarchivar la devuelve.
+- **E9.** **Mantener pulsada** una fila la levanta y se arrastra; al soltar queda en su sitio y **no**
+  se despliega. Tras **recargar** conserva el orden; lo elegido con las redondas y lo desplegado, no.
+- **E10.** A **375 px** y a escritorio no hay barra horizontal y los siete días de cada semana caben.
+
 ## M. Sólo en el móvil
 
 Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
@@ -122,6 +150,8 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
   alcanzando (la hoja se desplaza) y no queda tapado.
 - **M4.** La rejilla del mes cabe en la pantalla, sin barra horizontal, en vertical y en horizontal.
 - **M5.** **▦** abre el calendario; el atrás del móvil cierra primero la hoja y luego el calendario.
+- **M6.** **Mantener pulsada** una fila de la lista de rutinas la levanta con el dedo, y los siete días
+  de una semana se marcan con el dedo sin pulsar el vecino.
 
 ---
 

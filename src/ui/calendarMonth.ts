@@ -6,7 +6,7 @@
  * llegan de fuera: el core no lee el reloj, y elegir grupos es estado de pantalla.
  */
 
-import type { AppState, CalendarEvent, Day, EventGroup } from "#core/index"
+import type { AppState, CalendarEvent, Day, EventGroup, Routine } from "#core/index"
 import { compareDays, dayFromParts, groupsOfEvent, monthGrid, partsOf } from "#core/index"
 import { SIN_GRUPO } from "./calendarOrder.js"
 
@@ -28,6 +28,9 @@ export interface DayCell {
   readonly marked: boolean
   /** Todos sus eventos están hechos: se marca igual, pero tachado. */
   readonly allDone: boolean
+  /** De las rutinas elegidas, cuántas tienen este día marcado, y cuántas hay elegidas. */
+  readonly routinesDone: number
+  readonly routinesTotal: number
 }
 
 export interface MonthView {
@@ -114,13 +117,15 @@ export const eventsOfDay = (
 
 /**
  * El mes como rejilla. `null` si el mes se sale del rango del calendario.
- * Se recorren los eventos una vez, no una por casilla.
+ * Se recorren los eventos una vez, no una por casilla. `rutinas` son las
+ * elegidas: cada casilla cuenta cuántas tienen ese día marcado.
  */
 export const monthView = (
   state: AppState,
   mes: MonthRef,
   hoy: Day | null,
   elegidos: ReadonlySet<string> | null,
+  rutinas: ReadonlySet<string> = new Set<string>(),
 ): MonthView | null => {
   const rejilla: ReadonlyArray<ReadonlyArray<Day>> | null = monthGrid(mes.year, mes.month)
   if (rejilla === null) return null
@@ -141,6 +146,15 @@ export const monthView = (
     cuentas.set(e.day, cuenta)
   }
 
+  /* Por día: cuántas de las rutinas elegidas lo tienen marcado. */
+  const elegidas: ReadonlyArray<Routine> = Object.values<Routine>(state.routines).filter(
+    (r: Routine): boolean => rutinas.has(r.id),
+  )
+  const marcadas: Map<Day, number> = new Map<Day, number>()
+  for (const r of elegidas) {
+    for (const d of r.days) marcadas.set(d, (marcadas.get(d) ?? 0) + 1)
+  }
+
   return {
     title: monthTitle(mes),
     weeks: rejilla.map(
@@ -154,6 +168,8 @@ export const monthView = (
             isToday: hoy !== null && compareDays(day, hoy) === 0,
             marked: cuenta !== undefined,
             allDone: cuenta !== undefined && cuenta.pendientes === 0,
+            routinesDone: marcadas.get(day) ?? 0,
+            routinesTotal: elegidas.length,
           }
         }),
     ),

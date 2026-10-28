@@ -95,6 +95,7 @@ export type { Routine } from "./domain/Routine.js"
 /* Las fechas del calendario: el guardado valida con ellas lo que lee, y la pantalla las pinta. */
 export type { Day, Time } from "./domain/calendar.js"
 export {
+  addDays,
   compareDays,
   dayFromParts,
   monthGrid,
@@ -103,6 +104,7 @@ export {
   partsOf,
 } from "./domain/calendar.js"
 export { eventsWithoutGroup, groupsOfEvent } from "./domain/EventGroup.js"
-/* La meta de una rutina: el guardado valida con ella lo que lee. */
-export { isWeeklyGoal } from "./domain/Routine.js"
+/* La meta de una rutina: el guardado valida con ella lo que lee; la pantalla cuenta sus semanas. */
+export type { WeekProgress } from "./domain/Routine.js"
+export { isWeeklyGoal, weekProgress } from "./domain/Routine.js"
 export type { AppState } from "./domain/AppState.js"

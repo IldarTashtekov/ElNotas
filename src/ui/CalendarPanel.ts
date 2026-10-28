@@ -30,6 +30,8 @@ import type { EventFormResult } from "./eventForm.js"
 import { parseEventForm } from "./eventForm.js"
 import type { GroupsPanel } from "./GroupsPanel.js"
 import { createGroupsPanel } from "./GroupsPanel.js"
+import type { RoutinesPanel } from "./RoutinesPanel.js"
+import { createRoutinesPanel } from "./RoutinesPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
@@ -125,12 +127,20 @@ export const createCalendarPanel = ({
     b.classList.toggle("hoy", c.isToday)
     b.classList.toggle("marcado", c.marked)
     b.classList.toggle("hecho", c.allDone)
-    b.setAttribute("aria-label", `${dayTitle(c.day)}${c.marked ? ", con eventos" : ""}`)
+    const rutinas: string =
+      c.routinesTotal === 0 ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
+    b.setAttribute("aria-label", `${dayTitle(c.day)}${c.marked ? ", con eventos" : ""}${rutinas}`)
+    if (c.routinesTotal > 0) {
+      const progreso: HTMLElement = elemento("i")
+      progreso.className = "dia-progreso"
+      progreso.style.setProperty("--p", `${Math.round((c.routinesDone / c.routinesTotal) * 100)}%`)
+      b.append(progreso)
+    }
     return b
   }
 
   const pintarMes = (): void => {
-    const vista: MonthView | null = monthView(store.getState(), mes, hoy, grupos.chosen())
+    const vista: MonthView | null = monthView(store.getState(), mes, hoy, grupos.chosen(), rutinas.chosen())
     if (vista === null) return
     titulo.textContent = vista.title
     anterior.disabled = shiftMonth(mes, -1) === null
@@ -311,18 +321,59 @@ export const createCalendarPanel = ({
     onOpenEvent: abrirEvento,
   })
 
-  raiz.append(barra, cabeza, rejilla, grupos.element, hoja.element)
+  const rutinas: RoutinesPanel = createRoutinesPanel({
+    store,
+    useCases,
+    back,
+    confirm,
+    today,
+    calendarOrder,
+    logger,
+    onChosen: (): void => pintarMes(),
+  })
+
+  /* Las dos listas comparten el sitio: una pestaña elige cuál se ve. */
+  let pestana: "eventos" | "rutinas" = "eventos"
+  const pestanas: HTMLElement = elemento("div")
+  pestanas.className = "pestanas"
+  pestanas.setAttribute("role", "tablist")
+  const elegirPestana = (cual: "eventos" | "rutinas"): void => {
+    pestana = cual
+    grupos.element.hidden = cual !== "eventos"
+    rutinas.element.hidden = cual !== "rutinas"
+    for (const b of Array.from(pestanas.children)) {
+      b.setAttribute("aria-selected", b.getAttribute("data-pestana") === pestana ? "true" : "false")
+    }
+  }
+  for (const [cual, texto] of [["eventos", "Eventos"], ["rutinas", "Rutinas"]] as const) {
+    const b: HTMLButtonElement = boton(texto, (): void => elegirPestana(cual), "pestana")
+    b.setAttribute("role", "tab")
+    b.setAttribute("data-pestana", cual)
+    pestanas.append(b)
+  }
+  elegirPestana(pestana)
+
+  raiz.append(barra, cabeza, rejilla, pestanas, grupos.element, rutinas.element, hoja.element)
   pintarMes()
 
   /* Los cambios del almacén repintan el mes y, con la hoja abierta, la lista del día. */
   let pintadoEventos: AppState["events"] | null = null
   let pintadoGrupos: AppState["eventGroups"] | null = null
+  let pintadoRutinas: AppState["routines"] | null = null
   const alCambiar: Unsubscribe = store.subscribe((estado: AppState): void => {
-    if (estado.events === pintadoEventos && estado.eventGroups === pintadoGrupos) return
+    if (
+      estado.events === pintadoEventos &&
+      estado.eventGroups === pintadoGrupos &&
+      estado.routines === pintadoRutinas
+    ) {
+      return
+    }
     pintadoEventos = estado.events
     pintadoGrupos = estado.eventGroups
+    pintadoRutinas = estado.routines
     pintarMes()
     grupos.update()
+    rutinas.update()
     if (!hoja.element.hidden && modo?.kind === "lista") pintarCaja()
   })
 
@@ -331,6 +382,7 @@ export const createCalendarPanel = ({
     destroy: (): void => {
       alCambiar()
       grupos.destroy()
+      rutinas.destroy()
     },
   }
 }
