@@ -563,4 +563,46 @@ export const ROTURAS = [
     poner: "(`#vista/noteActions`)",
     caza: "check:referencias",
   },
+
+  /* ── El calendario: fechas ── */
+  {
+    nombre: "calendario: los años de siglo no bisiestos",
+    fichero: "src/core/domain/calendar.ts",
+    buscar: "(year % 4 === 0 && year % 100 !== 0) || year % 400 === 0",
+    poner: "year % 4 === 0",
+    caza: "pruebas",
+    prueba: "los años bisiestos, también los de siglo",
+  },
+  {
+    nombre: "calendario: un día tiene que existir en su mes",
+    fichero: "src/core/domain/calendar.ts",
+    buscar: "day > daysInMonth(year, month)",
+    poner: "day > 31",
+    caza: "pruebas",
+    prueba: "parseDay rechaza lo mal escrito y lo que no existe",
+  },
+  {
+    nombre: "calendario: la hora llega hasta las 23",
+    fichero: "src/core/domain/calendar.ts",
+    buscar: "Number(m[1]) <= 23",
+    poner: "Number(m[1]) <= 24",
+    caza: "pruebas",
+    prueba: "parseTime acepta de 00:00 a 23:59 y nada más",
+  },
+  {
+    nombre: "calendario: la semana empieza en lunes",
+    fichero: "src/core/domain/calendar.ts",
+    buscar: "(ordinalOf(day) + 3) % 7",
+    poner: "(ordinalOf(day) + 4) % 7",
+    caza: "pruebas",
+    prueba: "dayOfWeek con la semana empezando en lunes",
+  },
+  {
+    nombre: "calendario: la rejilla del mes empieza en lunes",
+    fichero: "src/core/domain/calendar.ts",
+    buscar: "ordinalOf(first) - dayOfWeek(first)",
+    poner: "ordinalOf(first)",
+    caza: "pruebas",
+    prueba: "monthGrid de julio de 2026",
+  },
 ]

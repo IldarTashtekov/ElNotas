@@ -302,11 +302,14 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       o un puerto paran antes y se lo cuentan al usuario.
 
 **Primera tanda: el calendario y los eventos.**
-- [ ] **7a. Las fechas** *(pensar)*. `Day` y `Time` como textos marcados con su validación, y las
+- [x] **7a. Las fechas** *(pensar)*. `Day` y `Time` como textos marcados con su validación, y las
       funciones puras de calendario: día de la semana, semana de lunes a domingo, días de un mes
       y su rejilla, sumar días, comparar. **Se cierra cuando** tienen pruebas (febrero y años
       bisiestos, cambio de mes y de año, la semana que cruza meses), `check` pasa y `check:purity`
       no ve reloj ni zona.
+      **Hecho** (2026-10-28; `src/core/domain/calendar.ts`, sin `Date` ni zona, rango del año 1 al
+      9999 con `null` fuera de él; cinco roturas, todas cazadas). Aún no sale por `index.ts`: lo hará
+      con 7b, cuando otro módulo lo use.
 - [ ] **7b. Eventos y grupos en el dominio** *(pensar)*. `CalendarEvent` y `EventGroup`, sus ids,
       acciones, reducer, casos de uso e hidratación. Crear un evento con su grupo, nuevo o
       existente, en una sola acción; `setMembership`, no un `toggle`; borrar un evento lo quita de
