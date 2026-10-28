@@ -85,6 +85,8 @@ const estado = (): AppState => ({
     [ID_TRABAJO]: contexto(ID_TRABAJO, "Trabajo", [noteRef(ID_COMPRA)]),
     [ID_VACIO]: contexto(ID_VACIO, "Vacío", []),
   },
+  events: {},
+  eventGroups: {},
 })
 
 const ctx = (s: AppState, id: typeof ID_CASA): Context => {

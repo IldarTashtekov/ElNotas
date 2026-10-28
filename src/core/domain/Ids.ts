@@ -17,6 +17,8 @@ export type DiagramId = Branded<string, "DiagramId">
 export type ContextId = Branded<string, "ContextId">
 export type DiagramNodeId = Branded<string, "DiagramNodeId">
 export type DiagramRelationId = Branded<string, "DiagramRelationId">
+export type EventId = Branded<string, "EventId">
+export type EventGroupId = Branded<string, "EventGroupId">
 
 /** ID de un bloque de contenido de una nota (texto o checkbox). */
 export type ContentId = Branded<string, "ContentId">
@@ -35,6 +37,8 @@ export const contextId = (raw: string): ContextId => raw as ContextId
 export const diagramNodeId = (raw: string): DiagramNodeId => raw as DiagramNodeId
 export const diagramRelationId = (raw: string): DiagramRelationId =>
   raw as DiagramRelationId
+export const eventId = (raw: string): EventId => raw as EventId
+export const eventGroupId = (raw: string): EventGroupId => raw as EventGroupId
 export const contentId = (raw: string): ContentId => raw as ContentId
 export const revision = (raw: string): Revision => raw as Revision
 

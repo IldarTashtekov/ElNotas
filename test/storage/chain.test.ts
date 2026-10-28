@@ -68,6 +68,8 @@ const ESTADO_INICIAL: AppState = {
   notes: { [ID_NOTA]: NOTA },
   diagrams: {},
   contexts: {},
+  events: {},
+  eventGroups: {},
 }
 
 /** Abre el sobre de un `Result` que tenía que haber ido bien. */

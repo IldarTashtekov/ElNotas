@@ -5,7 +5,7 @@
  * tentación es no probarla. Pero es la **única** que lee el mundo, y hay tres
  * cosas que sólo pasan aquí y que ninguna prueba del reducer puede ver:
  *
- *   1. **el cableado**: treinta y seis bloques casi idénticos uno debajo de otro son
+ *   1. **el cableado**: cuarenta y cinco bloques casi idénticos uno debajo de otro son
  *      justo donde se cuela un copy-paste, y un `renameNote` que despachara
  *      `delete-note` borraría notas al renombrarlas sin que fallara nada en el
  *      reducer, que haría exactamente lo que le piden;
@@ -27,14 +27,29 @@ import type { AppState } from "#core/domain/AppState"
 import type { Content } from "#core/domain/Content"
 import { checkBox, isCheckBox, isText, text } from "#core/domain/Content"
 import type { Context } from "#core/domain/Context"
+import type { Day, Time } from "#core/domain/calendar"
+import { parseDay, parseTime } from "#core/domain/calendar"
+import type { CalendarEvent } from "#core/domain/CalendarEvent"
 import type { Diagram, DiagramNode, DiagramRelation } from "#core/domain/Diagram"
-import type { ContextId, DiagramId, DiagramNodeId, DiagramRelationId, ItemRef, NoteId } from "#core/domain/Ids"
+import type { EventGroup } from "#core/domain/EventGroup"
+import type {
+  ContextId,
+  DiagramId,
+  DiagramNodeId,
+  DiagramRelationId,
+  EventGroupId,
+  EventId,
+  ItemRef,
+  NoteId,
+} from "#core/domain/Ids"
 import {
   contentId,
   contextId,
   diagramId,
   diagramNodeId,
   diagramRelationId,
+  eventGroupId,
+  eventId,
   noteId,
   noteRef,
   revision,
@@ -68,8 +83,12 @@ const ID_DIAGRAMA: DiagramId = diagramId("mudanza")
 const ID_NODO: DiagramNodeId = diagramNodeId("cajas")
 const ID_OTRO_NODO: DiagramNodeId = diagramNodeId("llaves")
 const ID_RELACION: DiagramRelationId = diagramRelationId("r1")
+const ID_EVENTO: EventId = eventId("cita")
+const ID_GRUPO: EventGroupId = eventGroupId("salud")
+const DIA: Day = parseDay("2026-07-02") as Day
+const HORA_DEL_DIA: Time = parseTime("18:00") as Time
 
-const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} }
 
 const HORA = 1000
 
@@ -147,14 +166,14 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
   contexts: Object.fromEntries(ctxs.map((c: Context): [ContextId, Context] => [c.id, c])),
 })
 
-/* ──────────────────── (1) El cableado: los treinta y seis ──────────────────── */
+/* ──────────────────── (1) El cableado: los cuarenta y cinco ─────────────────── */
 
 /**
  * Cada caso de uso con el `type` que tiene que despachar. Si alguien añade uno y
  * no lo mete aquí, la última prueba del bloque lo canta.
  */
 const CABLEADO: ReadonlyArray<
-  readonly [string, (u: UseCases) => Note | Context | Diagram | null]
+  readonly [string, (u: UseCases) => Note | Context | Diagram | CalendarEvent | EventGroup | null]
 > = [
   ["set-checked", (u) => u.setChecked(ID_NOTA, ID_LINEA, true)],
   ["set-text", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
@@ -211,6 +230,30 @@ const CABLEADO: ReadonlyArray<
     "remove-relation",
     (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, ID_RELACION),
   ],
+  [
+    "create-event",
+    (u: UseCases): CalendarEvent | null => u.createEvent(DIA, HORA_DEL_DIA, "Cita", [ID_GRUPO], "Salud"),
+  ],
+  [
+    "update-event",
+    (u: UseCases): CalendarEvent | null => u.updateEvent(ID_EVENTO, DIA, null, "Otra"),
+  ],
+  ["set-event-done", (u: UseCases): CalendarEvent | null => u.setEventDone(ID_EVENTO, true)],
+  ["delete-event", (u: UseCases): CalendarEvent | null => u.deleteEvent(ID_EVENTO)],
+  [
+    "set-event-groups",
+    (u: UseCases): CalendarEvent | null => u.setEventGroups(ID_EVENTO, [ID_GRUPO]),
+  ],
+  ["create-event-group", (u: UseCases): EventGroup | null => u.createEventGroup("Salud")],
+  [
+    "rename-event-group",
+    (u: UseCases): EventGroup | null => u.renameEventGroup(ID_GRUPO, "Otro"),
+  ],
+  [
+    "set-event-group-archived",
+    (u: UseCases): EventGroup | null => u.setEventGroupArchived(ID_GRUPO, true),
+  ],
+  ["delete-event-group", (u: UseCases): EventGroup | null => u.deleteEventGroup(ID_GRUPO)],
 ]
 
 test("cada caso de uso despacha la acción que le corresponde", () => {
@@ -237,18 +280,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **treinta y seis casos de uso para treinta y cuatro acciones**: `insert` tiene dos
+      Son **cuarenta y cinco casos de uso para cuarenta y tres acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 36, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 36, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 34, "el catálogo son TREINTA Y CUATRO acciones: 8 + 3 + 9 + 14")
+  assert.equal(tipos.size, 43, "el catálogo son CUARENTA Y TRES acciones: 8 + 3 + 9 + 14 + 9")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */

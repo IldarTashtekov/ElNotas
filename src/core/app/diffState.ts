@@ -12,9 +12,11 @@
  */
 
 import type { AppState } from "../domain/AppState.js"
+import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Context } from "../domain/Context.js"
 import type { Diagram } from "../domain/Diagram.js"
-import type { ContextId, DiagramId, NoteId } from "../domain/Ids.js"
+import type { EventGroup } from "../domain/EventGroup.js"
+import type { ContextId, DiagramId, EventGroupId, EventId, NoteId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 
 /** Lo que hay que hacerle a una clase de entidad para poner el disco al día. */
@@ -29,6 +31,8 @@ export interface StateDiff {
   readonly notes: EntityChanges<Note, NoteId>
   readonly diagrams: EntityChanges<Diagram, DiagramId>
   readonly contexts: EntityChanges<Context, ContextId>
+  readonly events: EntityChanges<CalendarEvent, EventId>
+  readonly eventGroups: EntityChanges<EventGroup, EventGroupId>
 }
 
 const NADA = { upserted: [], deleted: [] } as const
@@ -36,13 +40,15 @@ const NADA = { upserted: [], deleted: [] } as const
 /**
  * El diff vacío, **compartido**. `diffState` devuelve esta misma constante
  * siempre que no haya nada que escribir, así que quien llama puede preguntarlo
- * con un `===` en vez de mirar seis arrays. Misma idea que "una operación que no
+ * con un `===` en vez de mirar diez arrays. Misma idea que "una operación que no
  * cambia nada devuelve su entrada".
  */
 export const NO_CHANGES: StateDiff = {
   notes: NADA,
   diagrams: NADA,
   contexts: NADA,
+  events: NADA,
+  eventGroups: NADA,
 }
 
 /**
@@ -82,14 +88,30 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
     next.contexts,
   )
 
-  /* Los tres a null significa que los mapas cambiaron de objeto pero no de
+  const events: EntityChanges<CalendarEvent, EventId> | null = diffRecord(prev.events, next.events)
+  const eventGroups: EntityChanges<EventGroup, EventGroupId> | null = diffRecord(
+    prev.eventGroups,
+    next.eventGroups,
+  )
+
+  /* Los cinco a null significa que los mapas cambiaron de objeto pero no de
      contenido —posible si alguien copia sin cambiar nada— y sigue sin haber nada
      que escribir. */
-  if (notes === null && diagrams === null && contexts === null) return NO_CHANGES
+  if (
+    notes === null &&
+    diagrams === null &&
+    contexts === null &&
+    events === null &&
+    eventGroups === null
+  ) {
+    return NO_CHANGES
+  }
 
   return {
     notes: notes ?? NADA,
     diagrams: diagrams ?? NADA,
     contexts: contexts ?? NADA,
+    events: events ?? NADA,
+    eventGroups: eventGroups ?? NADA,
   }
 }

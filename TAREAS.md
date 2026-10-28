@@ -310,13 +310,18 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       **Hecho** (2026-10-28; `src/core/domain/calendar.ts`, sin `Date` ni zona, rango del año 1 al
       9999 con `null` fuera de él; cinco roturas, todas cazadas). Aún no sale por `index.ts`: lo hará
       con 7b, cuando otro módulo lo use.
-- [ ] **7b. Eventos y grupos en el dominio** *(pensar)*. `CalendarEvent` y `EventGroup`, sus ids,
+- [x] **7b. Eventos y grupos en el dominio** *(pensar)*. `CalendarEvent` y `EventGroup`, sus ids,
       acciones, reducer, casos de uso e hidratación. Crear un evento con su grupo, nuevo o
       existente, en una sola acción; `setMembership`, no un `toggle`; borrar un evento lo quita de
       sus grupos y borrar un grupo no toca los eventos; lo que no aplica es no-op, con la
       identidad preservada. **Cambia el dominio:** se para y se enseña antes de tocarlo.
       **Se cierra cuando** hay pruebas con `strictEqual` en los no-op y en la integridad, `check`
       pasa y sus roturas, en `tools/roturas.mjs`, caen todas.
+      **Hecho** (2026-10-28; nueve acciones y sus casos de uso, `set-event-groups` con el conjunto
+      entero, el motivo vacío permitido en el core y `create-event` con el grupo nuevo en la misma
+      acción; `archived` sólo existe cuando vale `true`; ocho roturas, todas cazadas). Aún no
+      salen por `index.ts` ni se guardan: lo primero, cuando los use la pantalla (7d); lo segundo
+      es la 7c.
 - [ ] **7c. Guardar los eventos** *(mecánica)*. Ficheros por entidad, su forma en `schema.ts`
       (un día mal escrito es un fichero ilegible), la copia de seguridad, importar y «Borrar
       todo», y los contratos de `storage/`. **Se cierra cuando** `check` pasa, un fichero con un día

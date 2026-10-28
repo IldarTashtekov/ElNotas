@@ -63,6 +63,8 @@ const estadoInicial = (): AppState => ({
   notes: { [ID_NOTA]: nota(), [ID_OTRA_NOTA]: otraNota() },
   diagrams: {},
   contexts: {},
+  events: {},
+  eventGroups: {},
 })
 
 /* Puertos de mentira. Una línea cada uno: eso es lo que compran los puertos. */

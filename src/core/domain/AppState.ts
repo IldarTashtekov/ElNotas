@@ -1,14 +1,17 @@
+import type { CalendarEvent } from "./CalendarEvent.js"
 import type { Context } from "./Context.js"
 import type { Diagram } from "./Diagram.js"
-import type { ContextId, DiagramId, NoteId } from "./Ids.js"
+import type { EventGroup } from "./EventGroup.js"
+import type { ContextId, DiagramId, EventGroupId, EventId, NoteId } from "./Ids.js"
 import type { Note } from "./Note.js"
 
 /**
  * Estado raíz de la aplicación: plano y normalizado, como una mini base de datos.
  *
  * Las entidades no se anidan unas dentro de otras; los Contextos guardan
- * referencias. El "ContextoGeneral" no está aquí porque no es una entidad: es
- * una vista derivada de `notes` y `diagrams`.
+ * referencias, y los grupos de eventos, las suyas a los eventos. El
+ * "ContextoGeneral" no está aquí porque no es una entidad: es una vista
+ * derivada de `notes` y `diagrams`.
  *
  * El estado de navegación (las "Ventanas") tampoco vive aquí: es estado de
  * vista, no de dominio, y mezclarlos llenaría la persistencia de basura de UI.
@@ -23,10 +26,14 @@ export interface AppState {
   readonly notes: Readonly<Record<NoteId, Note>>
   readonly diagrams: Readonly<Record<DiagramId, Diagram>>
   readonly contexts: Readonly<Record<ContextId, Context>>
+  readonly events: Readonly<Record<EventId, CalendarEvent>>
+  readonly eventGroups: Readonly<Record<EventGroupId, EventGroup>>
 }
 
 export const emptyAppState = (): AppState => ({
   notes: {},
   diagrams: {},
   contexts: {},
+  events: {},
+  eventGroups: {},
 })

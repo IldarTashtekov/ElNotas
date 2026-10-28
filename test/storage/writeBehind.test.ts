@@ -137,7 +137,7 @@ const nota = (name: string): Note => ({
   revision: revision(`rev-${name}`),
 })
 
-const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {} }
 
 const conNota = (n: Note): AppState => ({ ...VACIO, notes: { [n.id]: n } })
 

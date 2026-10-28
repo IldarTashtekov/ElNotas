@@ -105,6 +105,8 @@ const estado = (): AppState => ({
     [ID_TRABAJO]: contexto(ID_TRABAJO, [diagramRef(ID_MUDANZA)]),
     [ID_VACIO]: contexto(ID_VACIO, []),
   },
+  events: {},
+  eventGroups: {},
 })
 
 const mudanzaDe = (s: AppState): Diagram => {

@@ -14,6 +14,7 @@
  */
 
 import type { AppState } from "../domain/AppState.js"
+import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Content } from "../domain/Content.js"
 import type { Context, DefaultView } from "../domain/Context.js"
 import type { Diagram } from "../domain/Diagram.js"
@@ -31,7 +32,8 @@ import {
   setRelationLabel,
   shiftNodes,
 } from "../domain/diagramOperations.js"
-import type { ContextId, DiagramId, ItemRef, NoteId } from "../domain/Ids.js"
+import type { EventGroup } from "../domain/EventGroup.js"
+import type { ContextId, DiagramId, EventGroupId, EventId, ItemRef, NoteId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Versioned } from "../domain/Versioned.js"
 import {
@@ -129,6 +131,79 @@ const onDiagram = (
   return {
     ...state,
     diagrams: { ...state.diagrams, [id]: { ...siguiente, ...stamp(meta) } },
+  }
+}
+
+/**
+ * La versión para eventos: misma disciplina que `onContext`. `transformar`
+ * devuelve **el evento de entrada** si no aplica.
+ */
+const onEvent = (
+  state: AppState,
+  id: EventId,
+  meta: ActionMeta,
+  transformar: (e: CalendarEvent) => CalendarEvent,
+): AppState => {
+  const e: CalendarEvent | undefined = state.events[id]
+  if (e === undefined) return state
+
+  const siguiente: CalendarEvent = transformar(e)
+  if (siguiente === e) return state
+
+  return { ...state, events: { ...state.events, [id]: { ...siguiente, ...stamp(meta) } } }
+}
+
+/** La versión para grupos de eventos, igual que las anteriores. */
+const onEventGroup = (
+  state: AppState,
+  id: EventGroupId,
+  meta: ActionMeta,
+  transformar: (g: EventGroup) => EventGroup,
+): AppState => {
+  const g: EventGroup | undefined = state.eventGroups[id]
+  if (g === undefined) return state
+
+  const siguiente: EventGroup = transformar(g)
+  if (siguiente === g) return state
+
+  return {
+    ...state,
+    eventGroups: { ...state.eventGroups, [id]: { ...siguiente, ...stamp(meta) } },
+  }
+}
+
+/** Los ids que existen como grupo. Uno repetido no importa: sólo se pregunta si está. */
+const gruposQueExisten = (
+  grupos: AppState["eventGroups"],
+  ids: ReadonlyArray<EventGroupId>,
+): ReadonlyArray<EventGroupId> =>
+  ids.filter((id: EventGroupId): boolean => grupos[id] !== undefined)
+
+/** Los grupos que cambian al decir a cuáles pertenece un evento, ya sellados; los demás, ni se tocan. */
+const grupoSegunPertenencia = (
+  grupos: AppState["eventGroups"],
+  evento: EventId,
+  quiere: ReadonlyArray<EventGroupId>,
+  meta: ActionMeta,
+): AppState["eventGroups"] => {
+  const cambian: ReadonlyArray<EventGroup> = Object.values<EventGroup>(grupos).flatMap(
+    (g: EventGroup): ReadonlyArray<EventGroup> => {
+      const esta: boolean = g.events.includes(evento)
+      const debe: boolean = quiere.includes(g.id)
+      if (esta === debe) return []
+      const events: ReadonlyArray<EventId> = debe
+        ? [...g.events, evento]
+        : g.events.filter((e: EventId): boolean => e !== evento)
+      return [{ ...g, events, ...stamp(meta) }]
+    },
+  )
+  if (cambian.length === 0) return grupos
+
+  return {
+    ...grupos,
+    ...Object.fromEntries(
+      cambian.map((g: EventGroup): readonly [EventGroupId, EventGroup] => [g.id, g]),
+    ),
   }
 }
 
@@ -543,6 +618,122 @@ export const reduce = (state: AppState, action: Action): AppState => {
       return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
         removeRelation(d, action.relationId),
       )
+
+    /* ─────────────────────── Calendario: eventos y grupos ─────────────────────── */
+
+    case "create-event": {
+      if (state.events[action.eventId] !== undefined) return state // id repetido
+
+      const nuevo: CalendarEvent = {
+        id: action.eventId,
+        day: action.day,
+        ...(action.time === null ? {} : { time: action.time }),
+        title: action.title,
+        done: false,
+        ...stamp(action.meta),
+      }
+      const existentes: ReadonlyArray<EventGroupId> = gruposQueExisten(
+        state.eventGroups,
+        action.groupIds,
+      )
+      const conEvento: AppState["eventGroups"] = grupoSegunPertenencia(
+        state.eventGroups,
+        action.eventId,
+        existentes,
+        action.meta,
+      )
+      /* El grupo nuevo, sólo si su id está libre. */
+      const nuevoGrupo: EventGroup | null =
+        action.newGroup === null || state.eventGroups[action.newGroup.id] !== undefined
+          ? null
+          : {
+              id: action.newGroup.id,
+              name: action.newGroup.name,
+              events: [action.eventId],
+              ...stamp(action.meta),
+            }
+      return {
+        ...state,
+        events: { ...state.events, [action.eventId]: nuevo },
+        eventGroups:
+          nuevoGrupo === null ? conEvento : { ...conEvento, [nuevoGrupo.id]: nuevoGrupo },
+      }
+    }
+
+    case "update-event":
+      return onEvent(state, action.eventId, action.meta, (e: CalendarEvent): CalendarEvent => {
+        if (e.day === action.day && (e.time ?? null) === action.time && e.title === action.title) {
+          return e
+        }
+        const { time: _antes, ...sinHora } = e
+        return {
+          ...sinHora,
+          day: action.day,
+          ...(action.time === null ? {} : { time: action.time }),
+          title: action.title,
+        }
+      })
+
+    case "set-event-done":
+      return onEvent(state, action.eventId, action.meta, (e: CalendarEvent): CalendarEvent =>
+        e.done === action.done ? e : { ...e, done: action.done },
+      )
+
+    case "delete-event": {
+      if (state.events[action.eventId] === undefined) return state
+
+      const { [action.eventId]: _fuera, ...quedan } = state.events
+      return {
+        ...state,
+        events: quedan,
+        // Integridad referencial: los grupos que lo listaban se limpian.
+        eventGroups: grupoSegunPertenencia(state.eventGroups, action.eventId, [], action.meta),
+      }
+    }
+
+    case "set-event-groups": {
+      if (state.events[action.eventId] === undefined) return state
+
+      const eventGroups: AppState["eventGroups"] = grupoSegunPertenencia(
+        state.eventGroups,
+        action.eventId,
+        gruposQueExisten(state.eventGroups, action.groupIds),
+        action.meta,
+      )
+      return eventGroups === state.eventGroups ? state : { ...state, eventGroups }
+    }
+
+    case "create-event-group": {
+      if (state.eventGroups[action.groupId] !== undefined) return state // id repetido
+
+      const nuevo: EventGroup = {
+        id: action.groupId,
+        name: action.name,
+        events: [],
+        ...stamp(action.meta),
+      }
+      return { ...state, eventGroups: { ...state.eventGroups, [action.groupId]: nuevo } }
+    }
+
+    case "rename-event-group":
+      return onEventGroup(state, action.groupId, action.meta, (g: EventGroup): EventGroup =>
+        g.name === action.name ? g : { ...g, name: action.name },
+      )
+
+    case "set-event-group-archived":
+      return onEventGroup(state, action.groupId, action.meta, (g: EventGroup): EventGroup => {
+        if ((g.archived === true) === action.archived) return g
+        const { archived: _antes, ...sinMarca } = g
+        return action.archived ? { ...sinMarca, archived: true } : sinMarca
+      })
+
+    case "delete-event-group": {
+      if (state.eventGroups[action.groupId] === undefined) return state
+
+      // Sus eventos se quedan: `events` sale intacto, por referencia.
+      const { [action.groupId]: _fuera, ...quedan } = state.eventGroups
+      return { ...state, eventGroups: quedan }
+    }
 
     default:
       /* ⚠️ Esto es, ante todo, la comprobación de exhaustividad. Si se añade una
