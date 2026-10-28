@@ -396,9 +396,13 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       enciende y cada día lleva una barra tan llena como la parte de las elegidas que lo tienen
       marcado (`routinesDone` / `routinesTotal` en `DayCell`). Los pasos, en la sección E de
       `VERIFICACION-CALENDARIO.md` (7j los repasa y anota el móvil). 8 roturas, todas cazadas.
-- [ ] **7j. La lista de verificación de las rutinas** *(mecánica)*. Los pasos en
+- [x] **7j. La lista de verificación de las rutinas** *(mecánica)*. Los pasos en
       `VERIFICACION-CALENDARIO.md`, pasados en el panel, y el móvil, el usuario. **Se cierra
       cuando** está pasada y anotada, y `check` pasa.
+      **Hecho** (2026-10-28). La sección E (las rutinas) se pasó con la 7i; se añadió **D4**, que la
+      copia con rutinas, archivadas y su orden se exporta e importa igual (simulados el «Guardar
+      como» y el selector), y la cabecera y los «cuándo volver a pasarla» recogen `RoutinesPanel` y
+      `calendarMonth`. Queda **M6** para el usuario, en el móvil, junto a M1 a M5.
 
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, la pertenencia en el grupo, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`

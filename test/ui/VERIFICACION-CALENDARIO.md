@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Se pasa como dice
 `test/PASAR-LAS-LISTAS.md`. Crece con las tareas del calendario: lleva el marco (el
-icono, la vista y la ventana) el mes con los eventos de un día, los grupos de eventos y la copia de seguridad.
+icono, la vista y la ventana) el mes con los eventos de un día, los grupos de eventos, las rutinas y la copia de seguridad.
 
 ## Por qué existe
 
@@ -11,7 +11,7 @@ orden, pero no ven el icono, la vista encima, el atrás ni qué vuelve al recarg
 
 ## Cuándo hay que volver a pasarla
 
-- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/GroupsPanel.ts`, `src/ui/dragReorder.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
+- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/GroupsPanel.ts`, `src/ui/RoutinesPanel.ts`, `src/ui/calendarMonth.ts`, `src/ui/dragReorder.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
 - al probar un navegador o un móvil nuevos.
 
 ## Preparación
@@ -109,6 +109,9 @@ calendario entra y sale.
   marcados y las filas en el orden exportado. Lo creado después ya no está.
 - **D3.** Una copia hecha **antes del calendario** se importa sin quejarse: el calendario queda
   vacío, con sólo «Sin grupo».
+- **D4.** Con una rutina con días marcados, otra archivada y el orden de las rutinas cambiado:
+  la copia lleva sus `routines/…` en `files` y `routines` en `calendarOrder`; al **Sustituir todo**
+  y recargar, las rutinas vuelven con sus días, su meta, el archivado y el orden de entonces.
 
 ## E. Las rutinas
 
@@ -156,6 +159,25 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-10-28
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       a1cb0a8 (sólo difiere en la lista, que ganó D4)
+Origen:       localhost:8001
+
+D4  🔁 simulado — el «Guardar como» y el selector de ficheros, dentro de la página. Con «Leer»
+    (meta 1, hoy marcado), «Correr 5k» (meta 2), «Vieja» archivada y el orden Leer, Correr, Vieja:
+    la copia lleva 3 `routines/…` y `routines` en `calendarOrder`. Con «Sobra» creada después,
+    «Sustituir todo» y recargar: «Sobra» ya no está y vuelven Leer · 1/1 ✓ con el miércoles
+    marcado, Correr 5k · 3/2 ✓ y «Vieja» en Archivadas, en ese orden
+E1 a E10 ✅ — pasados en 6074009 (más abajo); en esta pasada se repitieron E2 (nombre vacío), E3
+    («Ver más») y E7 (aceptar el borrado), que antes sólo estaban a medias
+
+Notas: la pregunta de la importación sigue diciendo «8 notas, 2 diagramas y 2 contextos», sin
+nombrar rutinas ni eventos (la duda de TAREAS.md → Sin decidir).
+```
 
 ```
 Fecha:        2026-10-28
