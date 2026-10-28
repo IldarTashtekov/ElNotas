@@ -18,6 +18,7 @@ import type {
   UseCases,
 } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import { createCalendarPanel } from "./CalendarView.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { createDiagramCanvas } from "./DiagramCanvas.js"
@@ -47,6 +48,7 @@ export interface WindowsViewDeps {
   /** Los ficheros que no se pudieron leer al arrancar. Vacío es lo normal. */
   readonly corrupt: ReadonlyArray<StorageError>
   readonly onOpenSettings: () => void
+  readonly onOpenCalendar: () => void
   readonly back: BackStack
   readonly confirm: Confirm
   readonly onOpenNote: (id: NoteId) => void
@@ -76,6 +78,7 @@ export const mountWindowsView = (
     framing,
     corrupt,
     onOpenSettings,
+    onOpenCalendar,
     back,
     confirm,
     onOpenNote,
@@ -102,11 +105,13 @@ export const mountWindowsView = (
     return boton
   }
   const ajustes: HTMLButtonElement = engranaje()
-  cabecera.append(anterior, titulo.element, siguiente, agregar, ajustes)
+  const calendario: HTMLButtonElement = flecha("▦", "Calendario")
+  calendario.addEventListener("click", onOpenCalendar)
+  cabecera.append(anterior, titulo.element, siguiente, agregar, calendario, ajustes)
 
   /* Mientras se selecciona se apagan ◀ ▶ + y ⚙: no se sale de la lista a medias. */
   const apagar = (seleccionando: boolean): void => {
-    for (const b of [anterior, siguiente, agregar, ajustes]) {
+    for (const b of [anterior, siguiente, agregar, calendario, ajustes]) {
       b.disabled = seleccionando
       b.classList.toggle("apagado", seleccionando)
     }
@@ -126,6 +131,10 @@ export const mountWindowsView = (
   sinVentanas.append(elemento("p", "No hay ninguna ventana."), engranaje())
 
   let vista: WindowView = { kind: "empty" }
+
+  /* La ventana del calendario: el mismo contenido que su vista, sin ✕. */
+  const zonaCalendario: HTMLElement = createCalendarPanel()
+  zonaCalendario.hidden = true
 
   /* ── La ventana de nota: el mismo editor que la vista nota, en otro marco ── */
 
@@ -270,6 +279,7 @@ export const mountWindowsView = (
       notas.update(null, [], [])
       soltarEditor()
       soltarLienzo()
+      zonaCalendario.hidden = true
       sinVentanas.hidden = false
       return
     }
@@ -288,7 +298,13 @@ export const mountWindowsView = (
 
     const nota: Note | undefined =
       vista.editsNote === null ? undefined : estado.notes[vista.editsNote]
-    if (vista.editsNote !== null && nota !== undefined) {
+    zonaCalendario.hidden = !vista.showsCalendar
+    if (vista.showsCalendar) {
+      notas.element.hidden = true
+      notas.update(null, [], [])
+      soltarEditor()
+      soltarLienzo()
+    } else if (vista.editsNote !== null && nota !== undefined) {
       notas.element.hidden = true
       notas.update(null, [], [])
       soltarLienzo()
@@ -312,6 +328,7 @@ export const mountWindowsView = (
     notas.element,
     zonaEditor,
     zonaLienzo,
+    zonaCalendario,
     sinVentanas,
     hoja.element,
   )

@@ -1,7 +1,7 @@
 /**
  * Qué enseña la vista configuración: las ventanas en su orden, todos los
  * contextos, y lo que se puede elegir como contenido de una ventana: el General,
- * los contextos, las notas y los diagramas. Y lo que dice al borrar, exportar e
+ * el calendario, los contextos, las notas y los diagramas. Y lo que dice al borrar, exportar e
  * importar.
  *
  * Puro, como `windowView`: la pantalla sólo lo pinta.
@@ -11,7 +11,7 @@ import type { AppState, Context, Diagram, Note } from "#core/index"
 import type { ExportResult, ImportPreparation, ImportSummary } from "./backup.js"
 import { describeBootError, describeStorageError } from "./messages.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
-import { GENERAL, sameWindow } from "./windows.js"
+import { CALENDAR, GENERAL, sameWindow } from "./windows.js"
 import { windowTitle } from "./windowView.js"
 
 export interface WindowRow {
@@ -44,6 +44,7 @@ export const settingsContent = (layout: WindowsLayout, state: AppState): Setting
   )
   const choices: ReadonlyArray<WindowRef> = [
     GENERAL,
+    CALENDAR,
     ...contexts.map((ctx: Context): WindowRef => ({ kind: "context", id: ctx.id })),
     ...notas.map((nota: Note): WindowRef => ({ kind: "note", id: nota.id })),
     ...diagramas.map((d: Diagram): WindowRef => ({ kind: "diagram", id: d.id })),

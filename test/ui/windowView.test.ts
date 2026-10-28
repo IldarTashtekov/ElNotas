@@ -245,3 +245,22 @@ test("una ventana de diagrama que ya no existe enseña la pantalla vacía", (): 
   const fantasma: WindowRef = { kind: "diagram", id: diagramId("fantasma") }
   assert.deepEqual(windowView({ windows: [fantasma], active: fantasma }, CON_DIAGRAMAS), { kind: "empty" })
 })
+
+test("la ventana del calendario: se titula «Calendario», no se renombra, no lleva lista y lo dice", (): void => {
+  const deCalendario: WindowRef = { kind: "calendar" }
+  const vista: WindowView = windowView({ windows: [GENERAL, deCalendario], active: deCalendario }, ESTADO)
+  if (vista.kind !== "window") assert.fail("tenía que enseñar una ventana")
+  assert.equal(vista.title, "Calendario")
+  assert.equal(vista.showsCalendar, true)
+  assert.equal(vista.renames, null)
+  assert.equal(vista.editsNote, null)
+  assert.equal(vista.editsDiagram, null)
+  assert.deepEqual(vista.items, [])
+  assert.equal(vista.prev, GENERAL)
+  assert.equal(vista.next, null)
+})
+
+test("en una ventana que no es la del calendario no se enseña el calendario", (): void => {
+  assert.equal(ventanaDe({ windows: TRES, active: GENERAL }).showsCalendar, false)
+  assert.equal(ventanaDe({ windows: TRES, active: COMPRA }).showsCalendar, false)
+})

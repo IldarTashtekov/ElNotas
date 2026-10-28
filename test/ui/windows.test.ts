@@ -16,6 +16,7 @@ import { revision } from "#core/domain/Ids"
 import type { WindowRef } from "#ui/windows"
 import type { WindowsLayout } from "#ui/index"
 import {
+  CALENDAR,
   DEFAULT_LAYOUT,
   GENERAL,
   guardWindows,
@@ -309,4 +310,50 @@ test("sameWindow no confunde un diagrama con ninguna otra clase", (): void => {
   assert.equal(sameWindow(ventanaDiagrama("x"), ventana("x")), false)
   assert.equal(sameWindow(ventanaDiagrama("x"), ventanaDiagrama("x")), true)
   assert.equal(sameWindow(ventanaDiagrama("x"), ventanaDiagrama("y")), false)
+})
+
+/* ─────────────────────────── La ventana del calendario ───────────────────── */
+
+test("el calendario no se cae nunca: no es una entidad, y la guarda devuelve el MISMO objeto", (): void => {
+  const layout: WindowsLayout = { windows: [GENERAL, CALENDAR], active: CALENDAR }
+  assert.strictEqual(guardWindows(layout, conContextos()), layout)
+})
+
+test("el calendario sólo es igual a sí mismo", (): void => {
+  assert.equal(sameWindow(CALENDAR, { kind: "calendar" }), true)
+  assert.equal(sameWindow(CALENDAR, GENERAL), false)
+  assert.equal(sameWindow(GENERAL, CALENDAR), false)
+  assert.equal(sameWindow(CALENDAR, ventana("calendar")), false)
+})
+
+test("insertWindowAfter no mete un segundo calendario: devuelve el MISMO objeto", (): void => {
+  const layout: WindowsLayout = { windows: [GENERAL, CALENDAR], active: GENERAL }
+  assert.strictEqual(insertWindowAfter(layout, 0, CALENDAR), layout)
+})
+
+test("insertWindowAfter mete el calendario si aún no está", (): void => {
+  const layout: WindowsLayout = { windows: [GENERAL], active: GENERAL }
+  assert.deepEqual(insertWindowAfter(layout, 0, CALENDAR).windows, [GENERAL, CALENDAR])
+})
+
+test("replaceWindowAt no pone un segundo calendario, pero sí cambia el calendario por otra cosa", (): void => {
+  const layout: WindowsLayout = { windows: [GENERAL, CALENDAR], active: GENERAL }
+  assert.strictEqual(replaceWindowAt(layout, 0, CALENDAR), layout)
+  assert.deepEqual(replaceWindowAt(layout, 1, ventana("casa")).windows, [GENERAL, ventana("casa")])
+})
+
+test("una ventana de calendario se lee de lo guardado, también como la activa", (): void => {
+  const leido: WindowsLayout = parseWindowsLayout({
+    windows: [{ kind: "general" }, { kind: "calendar" }],
+    active: { kind: "calendar" },
+  })
+  assert.deepEqual(leido, { windows: [GENERAL, CALENDAR], active: CALENDAR })
+})
+
+test("un calendario repetido en lo guardado se queda en el primero", (): void => {
+  const leido: WindowsLayout = parseWindowsLayout({
+    windows: [{ kind: "calendar" }, { kind: "general" }, { kind: "calendar" }],
+    active: null,
+  })
+  assert.deepEqual(leido.windows, [CALENDAR, GENERAL])
 })

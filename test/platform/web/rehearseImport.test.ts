@@ -12,7 +12,7 @@ import { CURRENT_SCHEMA_VERSION, noteRef, ok } from "#core/index"
 import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
 import type { Cancel } from "#storage/writeBehind"
-import type { FramingPersistence, PhosphorPersistence, WindowsPersistence } from "#ui/index"
+import type { CalendarOrderPersistence, FramingPersistence, PhosphorPersistence, WindowsPersistence } from "#ui/index"
 import type { App, BootError } from "#platform/web/boot"
 import { boot } from "#platform/web/boot"
 import type { Backup } from "#platform/web/backup"
@@ -47,6 +47,11 @@ const sinEncuadres: FramingPersistence = {
   save: (): Result<void, StorageError> => ok(undefined),
 }
 
+const sinOrden: CalendarOrderPersistence = {
+  load: (): Result<unknown, StorageError> => ok(null),
+  save: (): Result<void, StorageError> => ok(undefined),
+}
+
 /** Una copia hecha como la haría la app: dos notas en un contexto y un diagrama. */
 const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blobs: FakeBlobStore }> => {
   const blobs: FakeBlobStore = createFakeBlobStore()
@@ -75,6 +80,7 @@ const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blob
     windows: sinVentanas,
     phosphor: sinFosforo,
     framing: sinEncuadres,
+    calendarOrder: sinOrden,
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que exportarse")

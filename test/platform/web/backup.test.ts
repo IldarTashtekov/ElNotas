@@ -20,6 +20,7 @@ const copia = (): Backup =>
     windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
     phosphor: "green",
     framing: { d1: { x: 10, y: -20, scale: 2 } },
+    calendarOrder: { groups: ["g1", "@sin-grupo"], routines: [] },
   })
 
 const problemaDe = (r: Result<Backup, BackupProblem>): BackupProblem => {
@@ -41,6 +42,14 @@ test("una copia de antes de los encuadres se lee igual, con los encuadres a null
   if (!leida.ok) assert.fail("tenía que leerse")
   assert.equal(leida.value.framing, null)
   assert.equal(leida.value.phosphor, "green")
+})
+
+test("una copia de antes del calendario se lee igual, con su orden a null", (): void => {
+  const { calendarOrder: _, ...vieja }: Backup = copia()
+  const leida: Result<Backup, BackupProblem> = readBackup(JSON.parse(JSON.stringify(vieja)))
+  if (!leida.ok) assert.fail("tenía que leerse")
+  assert.equal(leida.value.calendarOrder, null)
+  assert.deepEqual(leida.value.framing, { d1: { x: 10, y: -20, scale: 2 } })
 })
 
 test("lleva la marca de la app y la versión actual del formato", (): void => {

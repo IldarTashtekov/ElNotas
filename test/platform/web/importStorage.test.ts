@@ -12,6 +12,7 @@ import type { Cancel } from "#storage/writeBehind"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type { App, BootError } from "#platform/web/boot"
 import { FRAMING_KEY, createLocalStorageFraming } from "#platform/web/LocalStorageFraming"
+import { CALENDAR_ORDER_KEY, createLocalStorageCalendarOrder } from "#platform/web/LocalStorageCalendarOrder"
 import { PHOSPHOR_KEY, createLocalStoragePhosphor } from "#platform/web/LocalStoragePhosphor"
 import { WINDOWS_KEY, createLocalStorageWindows } from "#platform/web/LocalStorageWindows"
 import { boot } from "#platform/web/boot"
@@ -64,6 +65,7 @@ const nombresDe = (app: App): ReadonlyArray<string> =>
 
 const VENTANAS: unknown = { windows: [{ kind: "general" }], active: { kind: "general" } }
 const ENCUADRES: unknown = { d1: { x: 10, y: -20, scale: 2 } }
+const ORDEN: unknown = { groups: ["g1", "@sin-grupo"], routines: ["r1"] }
 
 /** La copia de un dispositivo con «Compra» y «Viaje», fósforo verde, sus ventanas y sus encuadres. */
 const copiaDeOtro = async (): Promise<Backup> => {
@@ -72,11 +74,13 @@ const copiaDeOtro = async (): Promise<Backup> => {
   origen.setItem(WINDOWS_KEY, JSON.stringify(VENTANAS))
   origen.setItem(PHOSPHOR_KEY, "green")
   origen.setItem(FRAMING_KEY, JSON.stringify(ENCUADRES))
+  origen.setItem(CALENDAR_ORDER_KEY, JSON.stringify(ORDEN))
   const copia: Result<Backup, StorageError> = await collectBackup({
     blobs: createLocalStorageBlobStore(origen),
     windows: createLocalStorageWindows(origen),
     phosphor: createLocalStoragePhosphor(origen),
     framing: createLocalStorageFraming(origen),
+    calendarOrder: createLocalStorageCalendarOrder(origen),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que exportarse")
@@ -90,6 +94,7 @@ const esteDispositivo = async (): Promise<FakeStorage> => {
   almacen.setItem(WINDOWS_KEY, '{"windows":[],"active":null}')
   almacen.setItem(PHOSPHOR_KEY, "amber")
   almacen.setItem(FRAMING_KEY, '{"vieja":{"x":0,"y":0,"scale":1}}')
+  almacen.setItem(CALENDAR_ORDER_KEY, '{"groups":["vieja"],"routines":[]}')
   almacen.setItem("otra-app:cosa", "x")
   return almacen
 }
@@ -115,6 +120,7 @@ test("entran también las ventanas, el fósforo y los encuadres de la copia", as
   assert.deepEqual(JSON.parse(almacen.getItem(WINDOWS_KEY) ?? "null"), VENTANAS)
   assert.equal(almacen.getItem(PHOSPHOR_KEY), "green")
   assert.deepEqual(JSON.parse(almacen.getItem(FRAMING_KEY) ?? "null"), ENCUADRES)
+  assert.deepEqual(JSON.parse(almacen.getItem(CALENDAR_ORDER_KEY) ?? "null"), ORDEN)
 })
 
 test("si la copia no trae ventanas, fósforo ni encuadres, los de antes también se van", async (): Promise<void> => {
@@ -124,12 +130,14 @@ test("si la copia no trae ventanas, fósforo ni encuadres, los de antes también
     windows: null,
     phosphor: null,
     framing: null,
+    calendarOrder: null,
   })
   requestImport(almacen, sinNada)
   await importIfRequested(almacen)
   assert.equal(almacen.getItem(WINDOWS_KEY), null)
   assert.equal(almacen.getItem(PHOSPHOR_KEY), null)
   assert.equal(almacen.getItem(FRAMING_KEY), null)
+  assert.equal(almacen.getItem(CALENDAR_ORDER_KEY), null)
 })
 
 test("los encuadres de la copia pasan por el lector: lo que no tiene forma no entra", async (): Promise<void> => {
@@ -141,6 +149,20 @@ test("los encuadres de la copia pasan por el lector: lo que no tiene forma no en
   requestImport(almacen, rara)
   await importIfRequested(almacen)
   assert.deepEqual(JSON.parse(almacen.getItem(FRAMING_KEY) ?? "null"), { d1: { x: 1, y: 2, scale: 2 } })
+})
+
+test("el orden del calendario de la copia pasa por el lector: lo que no tiene forma no entra", async (): Promise<void> => {
+  const almacen: FakeStorage = await esteDispositivo()
+  const rara: Backup = makeBackup({
+    ...(await copiaDeOtro()),
+    calendarOrder: { groups: ["g1", 3, "g1", "g2"], routines: "no" },
+  })
+  requestImport(almacen, rara)
+  await importIfRequested(almacen)
+  assert.deepEqual(JSON.parse(almacen.getItem(CALENDAR_ORDER_KEY) ?? "null"), {
+    groups: ["g1", "g2"],
+    routines: [],
+  })
 })
 
 test("la marca se quita, y lo que no es de la app no se toca", async (): Promise<void> => {

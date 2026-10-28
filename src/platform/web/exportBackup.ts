@@ -1,6 +1,6 @@
 /**
- * Exportar: junta lo guardado —los ficheros, las ventanas, el fósforo y los
- * encuadres de los diagramas— en una copia y la escribe donde diga el usuario.
+ * Exportar: junta lo guardado —los ficheros, las ventanas, el fósforo, los
+ * encuadres de los diagramas y el orden del calendario— en una copia y la escribe donde diga el usuario.
  *
  * Primero se elige dónde, luego se guarda lo pendiente y se lee lo guardado. Si
  * el guardado está detenido, se exporta igualmente lo que hay y se dice. Dónde
@@ -10,6 +10,7 @@
 import type { BlobStore, Clock, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 import type {
+  CalendarOrderPersistence,
   ExportResult,
   FramingPersistence,
   PhosphorPersistence,
@@ -32,6 +33,7 @@ export interface ExportDeps {
   readonly windows: WindowsPersistence
   readonly phosphor: PhosphorPersistence
   readonly framing: FramingPersistence
+  readonly calendarOrder: CalendarOrderPersistence
   readonly clock: Clock
   readonly chooseDestination: ChooseDestination
 }
@@ -50,7 +52,7 @@ const aTexto = (bytes: Uint8Array): string | null => {
 
 /**
  * Lo guardado ahora mismo, como copia. Los ficheros salen tal cual, también los
- * ilegibles. Si las ventanas, el fósforo o los encuadres no se pueden leer, van
+ * ilegibles. Si las ventanas, el fósforo, los encuadres o el orden del calendario no se pueden leer, van
  * a `null`: sólo se pierde cómo estaba montada la pantalla.
  */
 export const collectBackup = async (
@@ -59,8 +61,9 @@ export const collectBackup = async (
     windows,
     phosphor,
     framing,
+    calendarOrder,
     clock,
-  }: Pick<ExportDeps, "blobs" | "windows" | "phosphor" | "framing" | "clock">,
+  }: Pick<ExportDeps, "blobs" | "windows" | "phosphor" | "framing" | "calendarOrder" | "clock">,
 ): Promise<Result<Backup, StorageError>> => {
   const caminos: Result<ReadonlyArray<string>, StorageError> = await blobs.list("")
   if (!caminos.ok) return caminos
@@ -83,6 +86,7 @@ export const collectBackup = async (
   const ventanas: Result<unknown, StorageError> = windows.load()
   const fosforo: Result<unknown, StorageError> = phosphor.load()
   const encuadres: Result<unknown, StorageError> = framing.load()
+  const orden: Result<unknown, StorageError> = calendarOrder.load()
   return ok(
     makeBackup({
       exportedAt: clock.now(),
@@ -90,6 +94,7 @@ export const collectBackup = async (
       windows: ventanas.ok ? ventanas.value : null,
       phosphor: fosforo.ok && typeof fosforo.value === "string" ? fosforo.value : null,
       framing: encuadres.ok ? encuadres.value : null,
+      calendarOrder: orden.ok ? orden.value : null,
     }),
   )
 }

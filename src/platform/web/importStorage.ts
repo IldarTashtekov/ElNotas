@@ -10,9 +10,10 @@
 import type { BlobStore, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
-import { parseFramings, parsePhosphor, parseWindowsLayout } from "#ui/index"
+import { parseCalendarOrder, parseFramings, parsePhosphor, parseWindowsLayout } from "#ui/index"
 import type { Backup, BackupProblem } from "./backup.js"
 import { backupBytes, readBackup } from "./backup.js"
+import { createLocalStorageCalendarOrder } from "./LocalStorageCalendarOrder.js"
 import { createLocalStorageFraming } from "./LocalStorageFraming.js"
 import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
 import { createLocalStorageWindows } from "./LocalStorageWindows.js"
@@ -130,6 +131,12 @@ export const importIfRequested = async (almacen: Storage): Promise<ImportAtBoot>
       parseFramings(copia.framing),
     )
     if (!encuadres.ok) return { kind: "failed", error: encuadres.error }
+  }
+  if (copia.calendarOrder !== null) {
+    const orden: Result<void, StorageError> = createLocalStorageCalendarOrder(almacen).save(
+      parseCalendarOrder(copia.calendarOrder),
+    )
+    if (!orden.ok) return { kind: "failed", error: orden.error }
   }
 
   return cancelImport(almacen) ? { kind: "imported" } : fallo("no se pudo quitar la marca")

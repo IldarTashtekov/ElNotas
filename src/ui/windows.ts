@@ -11,9 +11,10 @@
 import type { AppState, ContextId, DiagramId, NoteId } from "#core/index"
 import { contextId, diagramId, noteId } from "#core/index"
 
-/** Lo que enseña una ventana: el General, un contexto, una nota o un diagrama. */
+/** Lo que enseña una ventana: el General, el calendario, un contexto, una nota o un diagrama. */
 export type WindowRef =
   | { readonly kind: "general" }
+  | { readonly kind: "calendar" }
   | { readonly kind: "context"; readonly id: ContextId }
   | { readonly kind: "note"; readonly id: NoteId }
   | { readonly kind: "diagram"; readonly id: DiagramId }
@@ -26,6 +27,9 @@ export interface WindowsLayout {
 
 export const GENERAL: WindowRef = { kind: "general" }
 
+/** Sin id: el calendario es uno solo, y en la lista no puede haber dos. */
+export const CALENDAR: WindowRef = { kind: "calendar" }
+
 /** Lo que se ve la primera vez, sin nada guardado: la ventana del General. */
 export const DEFAULT_LAYOUT: WindowsLayout = { windows: [GENERAL], active: GENERAL }
 
@@ -33,6 +37,8 @@ export const sameWindow = (a: WindowRef, b: WindowRef): boolean => {
   switch (a.kind) {
     case "general":
       return b.kind === "general"
+    case "calendar":
+      return b.kind === "calendar"
     case "context":
       return b.kind === "context" && a.id === b.id
     case "note":
@@ -42,10 +48,11 @@ export const sameWindow = (a: WindowRef, b: WindowRef): boolean => {
   }
 }
 
-/** Si lo que enseña esa ventana existe. El General, siempre: no es un contexto. */
+/** Si lo que enseña esa ventana existe. El General y el calendario, siempre: no son entidades. */
 export const windowExists = (ref: WindowRef, state: AppState): boolean => {
   switch (ref.kind) {
     case "general":
+    case "calendar":
       return true
     case "context":
       return state.contexts[ref.id] !== undefined
@@ -88,10 +95,14 @@ export const guardWindows = (layout: WindowsLayout, state: AppState): WindowsLay
     cambian nada.
 */
 
+/** El calendario es único: no se mete otro si ya está. */
+const repetida = (layout: WindowsLayout, ref: WindowRef): boolean =>
+  ref.kind === "calendar" && layout.windows.some((w: WindowRef): boolean => w.kind === "calendar")
+
 /** Cambia lo que enseña la ventana `i`. Si era la activa, la activa la sigue. */
 export const replaceWindowAt = (layout: WindowsLayout, i: number, ref: WindowRef): WindowsLayout => {
   const actual: WindowRef | undefined = layout.windows[i]
-  if (actual === undefined || sameWindow(actual, ref)) return layout
+  if (actual === undefined || sameWindow(actual, ref) || repetida(layout, ref)) return layout
 
   const windows: ReadonlyArray<WindowRef> = layout.windows.map(
     (w: WindowRef, j: number): WindowRef => (j === i ? ref : w),
@@ -106,7 +117,7 @@ export const insertWindowAfter = (
   i: number,
   ref: WindowRef,
 ): WindowsLayout => {
-  if (i < -1 || i >= layout.windows.length) return layout
+  if (i < -1 || i >= layout.windows.length || repetida(layout, ref)) return layout
   const windows: ReadonlyArray<WindowRef> = [
     ...layout.windows.slice(0, i + 1),
     ref,
@@ -145,6 +156,7 @@ const esObjeto = (x: unknown): x is Record<string, unknown> =>
 const refDe = (x: unknown): WindowRef | null => {
   if (!esObjeto(x)) return null
   if (x["kind"] === "general") return GENERAL
+  if (x["kind"] === "calendar") return CALENDAR
   if (x["kind"] === "context" && typeof x["id"] === "string") {
     return { kind: "context", id: contextId(x["id"]) }
   }
@@ -168,5 +180,9 @@ export const parseWindowsLayout = (guardado: unknown): WindowsLayout => {
   const windows: ReadonlyArray<WindowRef> = guardado["windows"]
     .map(refDe)
     .filter((ref: WindowRef | null): ref is WindowRef => ref !== null)
+    /* Un calendario repetido, a mano o en una copia, se queda en el primero. */
+    .filter((ref: WindowRef, i: number, todas: ReadonlyArray<WindowRef>): boolean =>
+      ref.kind !== "calendar" || todas.findIndex((w: WindowRef): boolean => w.kind === "calendar") === i,
+    )
   return { windows, active: refDe(guardado["active"]) }
 }

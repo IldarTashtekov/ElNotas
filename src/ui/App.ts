@@ -1,6 +1,6 @@
 /**
  * La app entera: la vista ventanas siempre montada y, encima, la configuración,
- * una nota o un diagrama cuando se abren. Lo de encima se apila: de un diagrama
+ * el calendario, una nota o un diagrama cuando se abren. Lo de encima se apila: de un diagrama
  * se entra a una nota, y al salir de ella se vuelve al diagrama.
  *
  * Lo de encima y el modo selección se cierran también con el atrás del
@@ -16,6 +16,7 @@ import type { DiagramId, Logger, NoteId, Result, StorageError, Store, UseCases }
 import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
+import { mountCalendarView } from "./CalendarView.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { mountDiagramView } from "./DiagramView.js"
 import { elemento } from "./dom.js"
@@ -105,6 +106,11 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     abrirEncima(null, (raiz: HTMLElement): (() => void) =>
       mountSettingsView(raiz, { ...deps, confirm, back, onExit: back.close }),
     )
+  /* Como la configuración: no lleva `abierta`, al recargar no se vuelve a ella. */
+  const abrirCalendario = (): void =>
+    abrirEncima(null, (raiz: HTMLElement): (() => void) =>
+      mountCalendarView(raiz, { onExit: back.close }),
+    )
   const abrirNota = (noteId: NoteId): void =>
     abrirEncima({ kind: "note", id: noteId }, (raiz: HTMLElement): (() => void) =>
       mountNoteView(raiz, {
@@ -135,6 +141,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     back,
     confirm,
     onOpenSettings: abrirConfiguracion,
+    onOpenCalendar: abrirCalendario,
     onOpenNote: abrirNota,
     onOpenDiagram: abrirDiagrama,
   })

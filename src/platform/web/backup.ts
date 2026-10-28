@@ -3,8 +3,8 @@
  * cómo se comprueba que lo que se importa es una.
  *
  * Lleva los ficheros guardados tal cual, cada uno con su camino y como texto,
- * más las ventanas, el fósforo y los encuadres de los diagramas de este
- * dispositivo. Aquí sólo hay datos: leer y
+ * más las ventanas, el fósforo, los encuadres de los diagramas y el orden del
+ * calendario de este dispositivo. Aquí sólo hay datos: leer y
  * escribir el fichero, y el almacén, son de quien llama.
  */
 
@@ -30,6 +30,8 @@ export interface Backup {
   readonly phosphor: string | null
   /** Dónde se miraba cada diagrama, tal cual, o `null`. Lo valida quien lo carga. */
   readonly framing: unknown
+  /** El orden de los grupos de eventos y las rutinas, tal cual, o `null`. Lo valida quien lo carga. */
+  readonly calendarOrder: unknown
 }
 
 /** Por qué no se puede importar. */
@@ -45,6 +47,7 @@ export interface BackupParts {
   readonly windows: unknown
   readonly phosphor: string | null
   readonly framing: unknown
+  readonly calendarOrder: unknown
 }
 
 export const makeBackup = ({
@@ -53,6 +56,7 @@ export const makeBackup = ({
   windows,
   phosphor,
   framing,
+  calendarOrder,
 }: BackupParts): Backup => ({
   app: MARCA,
   backupVersion: BACKUP_VERSION,
@@ -61,6 +65,7 @@ export const makeBackup = ({
   windows,
   phosphor,
   framing,
+  calendarOrder,
 })
 
 type Registro = Record<string, unknown>
@@ -78,8 +83,9 @@ const noEs = (detail: string): Result<never, BackupProblem> => {
  *
  * Mira la forma del sobre, no la de las notas: eso lo hacen después la
  * validación y las migraciones del arranque, igual que con lo guardado.
- * Las ventanas, el fósforo y los encuadres no hacen fallar nada: si faltan,
- * `null`. Una copia de antes de los encuadres no los trae, y vale igual.
+ * Las ventanas, el fósforo, los encuadres y el orden del calendario no hacen
+ * fallar nada: si faltan, `null`. Una copia de antes de los encuadres o del
+ * calendario no los trae, y vale igual.
  */
 export const readBackup = (datos: unknown): Result<Backup, BackupProblem> => {
   if (!esRegistro(datos) || datos["app"] !== MARCA) return noEs("no es una copia de ElNotas")
@@ -114,6 +120,7 @@ export const readBackup = (datos: unknown): Result<Backup, BackupProblem> => {
     windows: datos["windows"] ?? null,
     phosphor: typeof phosphor === "string" ? phosphor : null,
     framing: datos["framing"] ?? null,
+    calendarOrder: datos["calendarOrder"] ?? null,
   }
   return ok(backup)
 }

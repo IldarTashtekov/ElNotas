@@ -36,6 +36,7 @@ import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import { exportBackup } from "./exportBackup.js"
 import type { ImportAtBoot } from "./importStorage.js"
 import { cancelImport, importIfRequested } from "./importStorage.js"
+import { createLocalStorageCalendarOrder } from "./LocalStorageCalendarOrder.js"
 import { createLocalStorageFraming } from "./LocalStorageFraming.js"
 import { createLocalStorageOpenLayers } from "./LocalStorageOpenLayers.js"
 import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
@@ -185,6 +186,7 @@ const iniciar = async (): Promise<void> => {
         windows: createLocalStorageWindows(almacen),
         phosphor: createLocalStoragePhosphor(almacen),
         framing: createLocalStorageFraming(almacen),
+        calendarOrder: createLocalStorageCalendarOrder(almacen),
         clock: systemClock,
         chooseDestination: chooseFileDestination,
       })

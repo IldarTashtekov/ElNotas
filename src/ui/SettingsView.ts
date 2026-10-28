@@ -196,7 +196,7 @@ export const mountSettingsView = (
   }
 
   const claveDe = (ref: WindowRef): string =>
-    ref.kind === "general" ? "general" : `${ref.kind}:${ref.id}`
+    ref.kind === "general" || ref.kind === "calendar" ? ref.kind : `${ref.kind}:${ref.id}`
 
   const pintar = (forzar: boolean = false): void => {
     const estado: AppState = store.getState()

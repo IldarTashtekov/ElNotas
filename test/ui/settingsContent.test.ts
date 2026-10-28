@@ -11,7 +11,7 @@ import { emptyAppState } from "#core/domain/AppState"
 import { revision } from "#core/domain/Ids"
 import type { SettingsContent, WindowRow } from "#ui/settingsContent"
 import type { WindowRef } from "#ui/windows"
-import { GENERAL } from "#ui/windows"
+import { CALENDAR, GENERAL } from "#ui/windows"
 import { GENERAL_TITLE } from "#ui/windowView"
 import {
   addWindowChoices,
@@ -72,6 +72,7 @@ test("los contextos salen TODOS, estén o no en una ventana, por nombre", (): vo
 test("se puede elegir el General, cada contexto y cada nota: en ese orden, y por nombre", (): void => {
   assert.deepEqual(titulos(CONTENIDO.choices), [
     GENERAL_TITLE,
+    "Calendario",
     "Compra",
     "Sin ventana",
     "Trabajo",
@@ -90,13 +91,13 @@ test("una ventana de nota sale en la lista con el nombre de la nota", (): void =
 
 test("el «+» ofrece lo que NO tiene ventana: sin el General ni Trabajo, que ya la tienen", (): void => {
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [TRABAJO, GENERAL], active: GENERAL }, ESTADO)
-  assert.deepEqual(titulos(filas), ["Compra", "Sin ventana", "Diario", "Recetas"])
+  assert.deepEqual(titulos(filas), ["Calendario", "Compra", "Sin ventana", "Diario", "Recetas"])
 })
 
 test("el «+» esconde también una nota que ya es ventana, y ofrece el General si no lo es", (): void => {
   const deNota: WindowRef = { kind: "note", id: noteId("n1") }
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [deNota], active: deNota }, ESTADO)
-  assert.deepEqual(titulos(filas), [GENERAL_TITLE, "Compra", "Sin ventana", "Trabajo", "Recetas"])
+  assert.deepEqual(titulos(filas), [GENERAL_TITLE, "Calendario", "Compra", "Sin ventana", "Trabajo", "Recetas"])
 })
 
 test("con todo en ventanas, el «+» no ofrece nada", (): void => {
@@ -184,4 +185,18 @@ test("la versión publicada se enseña tal cual la escribe el script", (): void 
 
 test("sin versión es que se está en desarrollo, y lo dice", (): void => {
   assert.equal(versionLine(null), "Versión de desarrollo")
+})
+
+test("el «+» ofrece el calendario una sola vez: con uno en la lista, ya no", (): void => {
+  const sin: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [GENERAL], active: GENERAL }, ESTADO)
+  assert.equal(titulos(sin).includes("Calendario"), true)
+  const con: ReadonlyArray<WindowRow> = addWindowChoices(
+    { windows: [GENERAL, CALENDAR], active: GENERAL },
+    ESTADO,
+  )
+  assert.equal(titulos(con).includes("Calendario"), false)
+})
+
+test("el calendario no lleva rótulo en el selector", (): void => {
+  assert.equal(choiceGroupLabel(CONTENIDO.choices, 1), null)
 })

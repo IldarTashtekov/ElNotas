@@ -8,6 +8,8 @@
 
 export type { MountedApp } from "./App.js"
 export { mountApp } from "./App.js"
+export type { CalendarOrder, CalendarOrderPersistence } from "./calendarOrder.js"
+export { parseCalendarOrder } from "./calendarOrder.js"
 export type { DiagramFraming, FramingPersistence, Framings } from "./diagramFraming.js"
 export { createDiagramFraming, parseFramings } from "./diagramFraming.js"
 export type { OpenLayers, OpenLayersPersistence } from "./openLayers.js"

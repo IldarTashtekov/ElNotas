@@ -38,7 +38,7 @@ Android— lo pasa el usuario.
 
 ⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y viendo caer lo que la
 vigila. **Una guarda nueva, una rotura nueva en `tools/roturas.mjs`**; `npm run check:roturas` las
-pasa todas (unos 4 minutos): al cerrar cada tarea que toque `src/` y al cerrar una fase.
+pasa todas (~10 min) al cerrar la tanda y la fase; al cerrar una tarea, `-- <filtro>`, sólo las suyas.
 
 **Node, el de `.nvmrc`.** Si la sesión no lo tiene en el `PATH`, antepón
 `~/.nvm/versions/node/<versión>/bin`; los hooks ya lo cogen solos.
@@ -279,7 +279,7 @@ npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o
                              # pasa de 300 líneas o lleva fechas o recuentos de pruebas, o hay § rotas
 npm run check:referencias    # falla si un documento nombra un fichero, una orden o un alias que no existe
 npm test                     # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
-npm run check:roturas        # FUERA de check (~4 min): rompe a propósito y exige que algo caiga
+npm run check:roturas        # FUERA de check (~10 min), y nunca a la vez que él: comparten tmp-test/
 npm run build:web            # compila src/ a dist/web/ en ESM, para el navegador
 python3 -m http.server 8000                # y se abre http://localhost:8000
 python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000

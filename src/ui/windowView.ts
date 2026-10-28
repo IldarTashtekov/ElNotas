@@ -22,6 +22,7 @@ import type { WindowRef, WindowsLayout } from "./windows.js"
 import { sameWindow } from "./windows.js"
 
 export const GENERAL_TITLE: string = "General"
+export const CALENDAR_TITLE: string = "Calendario"
 
 /** Una fila de la lista de una ventana: una nota o un diagrama, con su nombre. */
 export interface ListItem {
@@ -41,6 +42,8 @@ export type WindowView =
       readonly editsNote: NoteId | null
       /** El diagrama que enseña la ventana, si es de tipo diagrama. Su título lo renombra. */
       readonly editsDiagram: DiagramId | null
+      /** Si la ventana enseña el calendario, que no es de nota ni de diagrama ni lleva lista. */
+      readonly showsCalendar: boolean
       /** La lista de la ventana, sin lo oculto. Vacía en una de nota o de diagrama: ahí va lo suyo. */
       readonly items: ReadonlyArray<ListItem>
       /** Lo oculto del contexto, en su orden. Vacío fuera de una ventana de contexto. */
@@ -57,6 +60,8 @@ export const windowTitle = (ref: WindowRef, state: AppState): string => {
   switch (ref.kind) {
     case "general":
       return GENERAL_TITLE
+    case "calendar":
+      return CALENDAR_TITLE
     case "context":
       return state.contexts[ref.id]?.name ?? ""
     case "note":
@@ -119,6 +124,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       renames: null,
       editsNote: null,
       editsDiagram: null,
+      showsCalendar: false,
       items: todo(state),
       hidden: [],
       ...vecinas,
@@ -135,6 +141,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       renames: null,
       editsNote: nota.id,
       editsDiagram: null,
+      showsCalendar: false,
       items: [],
       hidden: [],
       ...vecinas,
@@ -151,6 +158,22 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       renames: null,
       editsNote: null,
       editsDiagram: diagrama.id,
+      showsCalendar: false,
+      items: [],
+      hidden: [],
+      ...vecinas,
+    }
+  }
+
+  if (activa.kind === "calendar") {
+    return {
+      kind: "window",
+      ref: activa,
+      title: CALENDAR_TITLE,
+      renames: null,
+      editsNote: null,
+      editsDiagram: null,
+      showsCalendar: true,
       items: [],
       hidden: [],
       ...vecinas,
@@ -168,6 +191,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     renames: ctx.id,
     editsNote: null,
     editsDiagram: null,
+    showsCalendar: false,
     items: deContexto(ctx, state, false),
     hidden: deContexto(ctx, state, true),
     ...vecinas,
