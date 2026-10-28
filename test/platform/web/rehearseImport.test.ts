@@ -9,6 +9,8 @@ import assert from "node:assert/strict"
 
 import type { Clock, Context, IdGenerator, Note, Result, StorageError } from "#core/index"
 import { CURRENT_SCHEMA_VERSION, noteRef, ok } from "#core/index"
+import type { Day } from "#core/domain/calendar"
+import { parseDay } from "#core/domain/calendar"
 import type { Cancel } from "#storage/writeBehind"
 import type { FramingPersistence, PhosphorPersistence, WindowsPersistence } from "#ui/index"
 import type { App, BootError } from "#platform/web/boot"
@@ -64,6 +66,7 @@ const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blob
   if (casa === null) assert.fail("tenía que crearse")
   app.useCases.addItem(casa.id, noteRef(compra.id))
   app.useCases.createDiagram("Plano")
+  app.useCases.createEvent(parseDay("2026-07-02") as Day, null, "Dentista", [], "Salud")
   const guardado: Result<void, StorageError> = await app.flush()
   if (!guardado.ok) assert.fail("tenía que guardarse")
 
@@ -135,4 +138,18 @@ test("el ensayo no toca el almacén del que salió la copia", async (): Promise<
   const antes: ReadonlyArray<string> = blobs.caminos()
   await rehearseImport(conFicheros(backup, {}), { logger: silentLogger, clock: reloj, ids: ids() })
   assert.deepEqual(blobs.caminos(), antes)
+})
+
+test("una copia con eventos lleva sus ficheros, y un evento con un día inválido se cuenta como ilegible", async (): Promise<void> => {
+  const { backup } = await copiaDeVerdad()
+  const caminos: ReadonlyArray<string> = Object.keys(backup.files)
+  const evento: string | undefined = caminos.find((c: string): boolean => c.startsWith("events/"))
+  assert.ok(evento !== undefined, "la copia lleva el evento")
+  assert.ok(caminos.some((c: string): boolean => c.startsWith("event-groups/")), "y su grupo")
+
+  const roto: Backup = conFicheros(backup, { ...backup.files, [evento]: "{\"id\":\"x\",\"day\":\"2026-02-30\"}" })
+  const resumen: ImportSummary = resumenDe(
+    await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() }),
+  )
+  assert.equal(resumen.unreadable, 1)
 })

@@ -1,11 +1,13 @@
 /**
- * La forma que tiene que tener lo que se lee del disco: una nota, un diagrama o un
- * contexto, campo a campo.
+ * La forma que tiene que tener lo que se lee del disco: una nota, un diagrama, un
+ * contexto, un evento o un grupo de eventos, campo a campo.
  *
  * Un fichero puede ser JSON válido y no ser una nota —lo ha tocado alguien, o lo
  * escribió una versión rota—. Aquí se dice qué le falta; quien lee lo trata como
  * un fichero ilegible. Los campos de más no molestan: se ignoran.
  */
+
+import { parseDay, parseTime } from "#core/index"
 
 /** `null` si tiene la forma; si no, qué le falta, para el aviso. */
 export type Problem = string | null
@@ -43,7 +45,15 @@ const cadaUno = (o: Registro, campo: string, cada: (x: unknown) => Problem): Pro
   return null
 }
 
-/** Lo que llevan las tres entidades: id, nombre, cuándo y qué versión. */
+/** Lo que llevan todas: id, cuándo y qué versión. */
+const sellada = (o: Registro): Problem =>
+  primero(
+    (): Problem => texto(o, "id"),
+    (): Problem => numero(o, "updatedAt"),
+    (): Problem => texto(o, "revision"),
+  )
+
+/** Lo que llevan las tres primeras: id, nombre, cuándo y qué versión. */
 const versionada = (o: Registro): Problem =>
   primero(
     (): Problem => texto(o, "id"),
@@ -162,4 +172,44 @@ export const diagramProblem = (o: Registro): Problem =>
     (): Problem => versionada(o),
     (): Problem => cadaEntrada(o, "nodes", nodo),
     (): Problem => cadaEntrada(o, "relations", relacion),
+  )
+
+/* ──────────────────────────── Eventos y sus grupos ─────────────────────────── */
+
+/** El campo es texto y `valida` lo acepta: un día mal escrito es un fichero ilegible. */
+const textoValido = (
+  o: Registro,
+  campo: string,
+  valida: (raw: string) => unknown,
+  esperado: string,
+): Problem => {
+  const valor: unknown = o[campo]
+  if (!esTexto(valor)) return `«${campo}» no es un texto`
+  return valida(valor) === null ? `«${campo}» no es ${esperado}` : null
+}
+
+export const eventProblem = (o: Registro): Problem =>
+  primero(
+    (): Problem => sellada(o),
+    (): Problem => texto(o, "title"),
+    (): Problem => textoValido(o, "day", parseDay, "un día válido"),
+    /* Sin hora es de todo el día: la clave no existe. */
+    (): Problem =>
+      o["time"] === undefined ? null : textoValido(o, "time", parseTime, "una hora válida"),
+    (): Problem => booleano(o, "done"),
+  )
+
+export const eventGroupProblem = (o: Registro): Problem =>
+  primero(
+    (): Problem => sellada(o),
+    (): Problem => texto(o, "name"),
+    (): Problem =>
+      cadaUno(o, "events", (id: unknown): Problem =>
+        esTexto(id) ? null : "un evento de un grupo no es un texto",
+      ),
+    /* Ausente es no archivado: la clave sólo existe cuando vale `true`. */
+    (): Problem =>
+      o["archived"] === undefined || o["archived"] === true
+        ? null
+        : "«archived» no es verdadero",
   )

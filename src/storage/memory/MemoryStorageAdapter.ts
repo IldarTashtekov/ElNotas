@@ -1,5 +1,5 @@
 /**
- * Almacenamiento en memoria: tres `Map` y un número. Se borra al recargar.
+ * Almacenamiento en memoria: cinco `Map` y un número. Se borra al recargar.
  *
  * Es el que usan las pruebas de todo lo que hay por encima, sin navegador ni
  * ficheros temporales de por medio.
@@ -13,10 +13,14 @@
  */
 
 import type {
+  CalendarEvent,
   Context,
   ContextId,
   Diagram,
   DiagramId,
+  EventGroup,
+  EventGroupId,
+  EventId,
   Note,
   NoteId,
   Repository,
@@ -76,6 +80,11 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
     Context,
     ContextId
   >()
+  const events: Repository<CalendarEvent, EventId> = createMemoryRepository<CalendarEvent, EventId>()
+  const eventGroups: Repository<EventGroup, EventGroupId> = createMemoryRepository<
+    EventGroup,
+    EventGroupId
+  >()
 
   /* Empieza en 0: un almacén vacío es "sin esquema todavía", que es lo que el
      runner de migraciones de la Fase 2 tiene que saber distinguir de "esquema
@@ -86,6 +95,8 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
     notes,
     diagrams,
     contexts,
+    events,
+    eventGroups,
 
     /*
         En memoria no hay nada que agrupar: las tres escrituras son asignaciones

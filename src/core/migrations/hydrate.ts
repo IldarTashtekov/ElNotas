@@ -15,7 +15,7 @@
  * y los repetidos.
  *
  * Lo que existe pero no se pudo leer es otra cosa: su referencia se conserva,
- * para que arreglar el fichero lo devuelva a su contexto.
+ * para que arreglar el fichero lo devuelva a su contexto, o a su grupo si es un evento.
  *
  * En los diagramas, igual: una relación con un extremo que no está se tira, y un
  * nodo cuya nota ya no existe pasa a «Nota perdida».
@@ -87,7 +87,11 @@ const diagramaLimpio = (d: Diagram, notaPerdida: (id: NoteId) => boolean): Diagr
   )
 }
 
-export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegible): AppState => {
+export const hydrate = (
+  stored: StoredEntities,
+  ilegible: Unreadable = nadaIlegible,
+  eventoIlegible: (id: EventId) => boolean = (): boolean => false,
+): AppState => {
   const notes: AppState["notes"] = porId(stored.notes)
 
   /* Perdida es la que no está y tampoco está ilegible: ésa vuelve si se arregla. */
@@ -123,7 +127,8 @@ export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegi
   const eventGroups: AppState["eventGroups"] = porId(
     (stored.eventGroups ?? []).map((g: EventGroup): EventGroup => {
       const vivos: ReadonlyArray<EventId> = g.events.filter(
-        (id: EventId, n: number): boolean => events[id] !== undefined && g.events.indexOf(id) === n,
+        (id: EventId, n: number): boolean =>
+          (events[id] !== undefined || eventoIlegible(id)) && g.events.indexOf(id) === n,
       )
       /* Como los contextos: si no sobraba nada, el grupo TAL CUAL. */
       return vivos.length === g.events.length ? g : { ...g, events: vivos }

@@ -180,6 +180,18 @@ export const createWriteBehind = ({
           if (!r.ok) return r
           escrito = { ...escrito, contexts: { ...escrito.contexts, [c.id]: c } }
         }
+        /* Los eventos antes que sus grupos: un grupo nunca llega a disco
+           listando un evento que todavía no está. */
+        for (const e of cambios.events.upserted) {
+          const r: Result<void, StorageError> = await adapter.events.put(e, escrito.events[e.id]?.revision ?? null)
+          if (!r.ok) return r
+          escrito = { ...escrito, events: { ...escrito.events, [e.id]: e } }
+        }
+        for (const g of cambios.eventGroups.upserted) {
+          const r: Result<void, StorageError> = await adapter.eventGroups.put(g, escrito.eventGroups[g.id]?.revision ?? null)
+          if (!r.ok) return r
+          escrito = { ...escrito, eventGroups: { ...escrito.eventGroups, [g.id]: g } }
+        }
 
         for (const id of cambios.notes.deleted) {
           const r: Result<void, StorageError> = await adapter.notes.delete(id, escrito.notes[id]?.revision ?? null)
@@ -195,6 +207,16 @@ export const createWriteBehind = ({
           const r: Result<void, StorageError> = await adapter.contexts.delete(id, escrito.contexts[id]?.revision ?? null)
           if (!r.ok) return r
           escrito = { ...escrito, contexts: sin(escrito.contexts, id) }
+        }
+        for (const id of cambios.eventGroups.deleted) {
+          const r: Result<void, StorageError> = await adapter.eventGroups.delete(id, escrito.eventGroups[id]?.revision ?? null)
+          if (!r.ok) return r
+          escrito = { ...escrito, eventGroups: sin(escrito.eventGroups, id) }
+        }
+        for (const id of cambios.events.deleted) {
+          const r: Result<void, StorageError> = await adapter.events.delete(id, escrito.events[id]?.revision ?? null)
+          if (!r.ok) return r
+          escrito = { ...escrito, events: sin(escrito.events, id) }
         }
 
         return ok(undefined)

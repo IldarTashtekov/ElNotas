@@ -15,7 +15,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context, Diagram, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import type { CalendarEvent, Context, Diagram, EventGroup, Note, Result, StorageAdapter, StorageError } from "#core/index"
 import { checkBox, text } from "#core/domain/Content"
 import {
   contentId,
@@ -25,7 +25,7 @@ import {
   diagramRelationId,
   noteId,
 } from "#core/index"
-import { revision } from "#core/domain/Ids"
+import { eventGroupId, eventId, revision } from "#core/domain/Ids"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
 import { createFakeBlobStore, errorDe, valorDe } from "./FakeBlobStore"
@@ -703,4 +703,103 @@ test("FileStorageAdapter: un diagrama escrito por put vuelve a leerse: el valida
   }
   valorDe(await s.diagrams.put(conTodo, null))
   assert.deepEqual(valorDe(await s.diagrams.get(MUDANZA.id)), conTodo)
+})
+
+/* ═════════════════ Eventos y grupos de eventos: carpeta y forma ═════════════════ */
+
+const EVENTO_BIEN: Record<string, unknown> = {
+  id: "dentista",
+  day: "2026-07-02",
+  title: "Dentista",
+  done: false,
+  updatedAt: 0,
+  revision: "rev-dentista",
+}
+
+const GRUPO_BIEN: Record<string, unknown> = {
+  id: "salud",
+  name: "Salud",
+  events: ["dentista"],
+  updatedAt: 0,
+  revision: "rev-salud",
+}
+
+test("FileStorageAdapter: un evento va a events/ y un grupo de eventos a event-groups/", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  const e: CalendarEvent = { ...(EVENTO_BIEN as unknown as CalendarEvent), id: eventId("dentista") }
+  const g: EventGroup = { ...(GRUPO_BIEN as unknown as EventGroup), id: eventGroupId("salud") }
+  await s.events.put(e, null)
+  await s.eventGroups.put(g, null)
+
+  assert.deepEqual([...blobs.caminos()].sort(), ["event-groups/salud.json", "events/dentista.json"])
+})
+
+test("FileStorageAdapter: un evento bien formado se lee, con hora o sin ella", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "events/dentista.json", EVENTO_BIEN)
+  escribirJson(blobs, "events/cine.json", { ...EVENTO_BIEN, id: "cine", time: "21:30", title: "" })
+  assert.equal(valorDe(await s.events.get(eventId("dentista")))?.title, "Dentista")
+  assert.equal(valorDe(await s.events.get(eventId("cine")))?.time, "21:30")
+})
+
+const EVENTOS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
+  ["con un día que no existe", { ...EVENTO_BIEN, day: "2026-02-30" }, /day/],
+  ["con el día mal escrito", { ...EVENTO_BIEN, day: "2/7/2026" }, /day/],
+  ["sin día", { ...EVENTO_BIEN, day: undefined }, /day/],
+  ["con una hora que no existe", { ...EVENTO_BIEN, time: "24:00" }, /time/],
+  ["con una hora que no es texto", { ...EVENTO_BIEN, time: 1830 }, /time/],
+  ["sin motivo", { ...EVENTO_BIEN, title: undefined }, /title/],
+  ["con done que no es booleano", { ...EVENTO_BIEN, done: "sí" }, /done/],
+  ["sin revisión", { ...EVENTO_BIEN, revision: undefined }, /revision/],
+]
+
+for (const [caso, rota, motivo] of EVENTOS_SIN_FORMA) {
+  test(`FileStorageAdapter: un evento ${caso} es corrupt, y dice por qué`, async (): Promise<void> => {
+    const { blobs, s } = montar()
+    escribirJson(blobs, "events/dentista.json", rota)
+
+    const fallo: StorageError = errorDe(await s.events.get(eventId("dentista")))
+    if (fallo.kind !== "corrupt") assert.fail(`se esperaba corrupt y vino ${fallo.kind}`)
+    assert.equal(fallo.path, "events/dentista.json")
+    assert.match(String(fallo.cause), motivo)
+  })
+}
+
+const GRUPOS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
+  ["sin nombre", { ...GRUPO_BIEN, name: undefined }, /name/],
+  ["con events que no es una lista", { ...GRUPO_BIEN, events: "todos" }, /events/],
+  ["con un evento que no es texto", { ...GRUPO_BIEN, events: [7] }, /texto/],
+  ["con archived en false", { ...GRUPO_BIEN, archived: false }, /archived/],
+]
+
+for (const [caso, roto, motivo] of GRUPOS_SIN_FORMA) {
+  test(`FileStorageAdapter: un grupo de eventos ${caso} es corrupt, y dice por qué`, async (): Promise<void> => {
+    const { blobs, s } = montar()
+    escribirJson(blobs, "event-groups/salud.json", roto)
+
+    const fallo: StorageError = errorDe(await s.eventGroups.get(eventGroupId("salud")))
+    if (fallo.kind !== "corrupt") assert.fail(`se esperaba corrupt y vino ${fallo.kind}`)
+    assert.match(String(fallo.cause), motivo)
+  })
+}
+
+test("FileStorageAdapter: un grupo de eventos archivado, o sin la clave, se lee", async (): Promise<void> => {
+  const { blobs, s } = montar()
+  escribirJson(blobs, "event-groups/salud.json", { ...GRUPO_BIEN, archived: true })
+  escribirJson(blobs, "event-groups/ocio.json", { ...GRUPO_BIEN, id: "ocio" })
+  assert.equal(valorDe(await s.eventGroups.get(eventGroupId("salud")))?.archived, true)
+  assert.equal(valorDe(await s.eventGroups.get(eventGroupId("ocio")))?.archived, undefined)
+})
+
+test("FileStorageAdapter: con onCorrupt, un evento con un día inválido se salta y se avisa", async (): Promise<void> => {
+  const { blobs, s, avisos } = montarConAviso()
+  escribirJson(blobs, "events/dentista.json", EVENTO_BIEN)
+  escribirJson(blobs, "events/roto.json", { ...EVENTO_BIEN, id: "roto", day: "2026-13-01" })
+
+  const eventos: ReadonlyArray<CalendarEvent> = valorDe(await s.events.getAll())
+
+  assert.deepEqual(eventos.map((e: CalendarEvent): string => e.id), ["dentista"])
+  const aviso: StorageError | undefined = avisos()[0]
+  if (aviso?.kind !== "corrupt") assert.fail("se esperaba un aviso corrupt")
+  assert.equal(aviso.path, "events/roto.json")
 })

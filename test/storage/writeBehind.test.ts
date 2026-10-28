@@ -26,9 +26,11 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import type { AppState, CalendarEvent, EventGroup, Note, Result, StorageAdapter, StorageError } from "#core/index"
 import { err, noteId } from "#core/index"
-import { revision } from "#core/domain/Ids"
+import type { Day } from "#core/domain/calendar"
+import { parseDay } from "#core/domain/calendar"
+import { eventGroupId, eventId, revision } from "#core/domain/Ids"
 
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import type { Schedule } from "#storage/writeBehind"
@@ -599,4 +601,78 @@ test("una tanda cortada por io a mitad: al reintentar, lo ya escrito NO da un st
 
   assert.equal(valorDe(await base.notes.get(ID_COMPRA))?.name, "Compra")
   assert.equal(valorDe(await base.notes.get(OTRA))?.name, "Otra")
+})
+
+/* ─────────────────────── Eventos y grupos de eventos ─────────────────────── */
+
+const EVENTO: CalendarEvent = {
+  id: eventId("cita"),
+  day: parseDay("2026-07-02") as Day,
+  title: "Cita",
+  done: false,
+  updatedAt: 0,
+  revision: revision("rev-cita"),
+}
+
+const GRUPO: EventGroup = {
+  id: eventGroupId("salud"),
+  name: "Salud",
+  events: [EVENTO.id],
+  updatedAt: 0,
+  revision: revision("rev-salud"),
+}
+
+test("write-behind: guarda los eventos y sus grupos, los cambios y los borrados", async () => {
+  const adapter: StorageAdapter = createMemoryStorageAdapter()
+  const wb = createWriteBehind({ adapter, initial: VACIO, logger: silentLogger })
+
+  const con: AppState = { ...VACIO, events: { [EVENTO.id]: EVENTO }, eventGroups: { [GRUPO.id]: GRUPO } }
+  wb.onState(con)
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.events.getAll()), [EVENTO])
+  assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [GRUPO])
+
+  /* Borrar el evento reescribe el grupo sin él y borra el fichero del evento. */
+  const sinEvento: AppState = {
+    ...con,
+    events: {},
+    eventGroups: { [GRUPO.id]: { ...GRUPO, events: [], revision: revision("rev-salud-2") } },
+  }
+  wb.onState(sinEvento)
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.events.getAll()), [])
+  assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [sinEvento.eventGroups[GRUPO.id]])
+
+  /* Y borrar el grupo, su fichero. */
+  wb.onState({ ...sinEvento, eventGroups: {} })
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [])
+})
+
+test("write-behind: un evento nuevo se escribe ANTES que el grupo que lo lista", async () => {
+  const base: StorageAdapter = createMemoryStorageAdapter()
+  let orden: ReadonlyArray<string> = []
+  const adapter: StorageAdapter = {
+    ...base,
+    events: {
+      ...base.events,
+      put: async (e: CalendarEvent, esperada) => {
+        orden = [...orden, "evento"]
+        return base.events.put(e, esperada)
+      },
+    },
+    eventGroups: {
+      ...base.eventGroups,
+      put: async (g: EventGroup, esperada) => {
+        orden = [...orden, "grupo"]
+        return base.eventGroups.put(g, esperada)
+      },
+    },
+  }
+  const wb = createWriteBehind({ adapter, initial: VACIO, logger: silentLogger })
+
+  wb.onState({ ...VACIO, events: { [EVENTO.id]: EVENTO }, eventGroups: { [GRUPO.id]: GRUPO } })
+  valorDe(await wb.flush())
+
+  assert.deepEqual(orden, ["evento", "grupo"])
 })

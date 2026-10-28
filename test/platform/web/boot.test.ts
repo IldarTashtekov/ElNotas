@@ -14,14 +14,18 @@ import assert from "node:assert/strict"
 import type {
   AppState,
   BlobStore,
+  CalendarEvent,
   Clock,
   Context,
+  EventGroup,
   IdGenerator,
   Note,
   Result,
   StorageError,
 } from "#core/index"
 import { CURRENT_SCHEMA_VERSION, noteRef } from "#core/index"
+import type { Day } from "#core/domain/calendar"
+import { parseDay } from "#core/domain/calendar"
 import type { Cancel } from "#storage/writeBehind"
 import { createFileStorageAdapter, createLocalStorageBlobStore } from "#storage/index"
 import type { App, BootError } from "#platform/web/boot"
@@ -250,4 +254,63 @@ test("LA REFERENCIA NO SE PIERDE: tocar el contexto de una nota ilegible no la s
   assert.equal(ctx?.name, "Compra semanal")
   assert.deepEqual(ctx?.items, [noteRef(lista.id)])
   assert.equal(tercera.store.getState().notes[lista.id]?.name, "Lista")
+})
+
+/* ─────────────────────── Eventos y grupos de eventos ─────────────────────── */
+
+const DIA: Day = parseDay("2026-07-02") as Day
+
+test("un evento con su grupo, creados a la vez, sobreviven a recargar", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const primera: App = appDe(await arrancar(almacen))
+  const creado: CalendarEvent | null = primera.useCases.createEvent(DIA, null, "Dentista", [], "Salud")
+  assert.notEqual(creado, null)
+  escrituraOk(await primera.flush())
+
+  const segunda: App = appDe(await arrancar(almacen))
+  const estado: AppState = segunda.store.getState()
+  const grupos: ReadonlyArray<EventGroup> = Object.values<EventGroup>(estado.eventGroups)
+
+  assert.deepEqual(Object.values<CalendarEvent>(estado.events), [creado])
+  assert.equal(grupos.length, 1)
+  assert.deepEqual(grupos[0]?.events, [creado?.id])
+})
+
+test("con skipCorrupt, un evento ilegible se salta pero su grupo sigue listándolo", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const primera: App = appDe(await arrancar(almacen))
+  const bueno: CalendarEvent | null = primera.useCases.createEvent(DIA, null, "Bueno", [], "Salud")
+  const roto: CalendarEvent | null = primera.useCases.createEvent(DIA, null, "Roto", [], null)
+  if (bueno === null || roto === null) assert.fail("tenían que crearse")
+  const grupo: EventGroup | undefined = Object.values<EventGroup>(primera.store.getState().eventGroups)[0]
+  if (grupo === undefined) assert.fail("tenía que haber un grupo")
+  primera.useCases.setEventGroups(roto.id, [grupo.id])
+  escrituraOk(await primera.flush())
+
+  /* El fichero del evento «Roto» se estropea: día que no existe. */
+  almacen.escribirCrudo(
+    `elnotas:blob:events/${roto.id}.json`,
+    btoa(JSON.stringify({ ...roto, day: "2026-02-30" })),
+  )
+
+  const app: App = appDe(await arrancar(almacen, true))
+  const estado: AppState = app.store.getState()
+
+  assert.equal(app.corrupt.length, 1)
+  assert.deepEqual(Object.keys(estado.events), [bueno.id])
+  assert.deepEqual(estado.eventGroups[grupo.id]?.events, [bueno.id, roto.id])
+})
+
+test("sin skipCorrupt, un evento con un día inválido impide arrancar", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const primera: App = appDe(await arrancar(almacen))
+  const creado: CalendarEvent | null = primera.useCases.createEvent(DIA, null, "Roto", [], null)
+  if (creado === null) assert.fail("tenía que crearse")
+  escrituraOk(await primera.flush())
+  almacen.escribirCrudo(
+    `elnotas:blob:events/${creado.id}.json`,
+    btoa(JSON.stringify({ ...creado, day: "ayer" })),
+  )
+
+  assert.equal(errorDe(await arrancar(almacen)).kind, "corrupt")
 })

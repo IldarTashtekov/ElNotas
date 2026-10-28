@@ -12,9 +12,12 @@
 import type {
   AppState,
   BlobStore,
+  CalendarEvent,
   Clock,
   Context,
   Diagram,
+  EventGroup,
+  EventId,
   IdGenerator,
   ItemRef,
   Logger,
@@ -38,7 +41,7 @@ import {
   runMigrations,
 } from "#core/index"
 import type { OnCorrupt, OnError, Schedule, WriteBehind } from "#storage/index"
-import { createFileStorageAdapter, createWriteBehind, pathOf } from "#storage/index"
+import { createFileStorageAdapter, createWriteBehind, pathOf, pathOfEvent } from "#storage/index"
 
 export interface BootDeps {
   readonly blobs: BlobStore
@@ -100,11 +103,18 @@ export const boot = async ({
   const contexts: Result<ReadonlyArray<Context>, StorageError> =
     await adapter.contexts.getAll()
   if (!contexts.ok) return contexts
+  const events: Result<ReadonlyArray<CalendarEvent>, StorageError> = await adapter.events.getAll()
+  if (!events.ok) return events
+  const eventGroups: Result<ReadonlyArray<EventGroup>, StorageError> =
+    await adapter.eventGroups.getAll()
+  if (!eventGroups.ok) return eventGroups
 
   const guardado: StoredEntities = {
     notes: notes.value,
     diagrams: diagrams.value,
     contexts: contexts.value,
+    events: events.value,
+    eventGroups: eventGroups.value,
   }
   const migrado: Result<MigrationResult, MigrationError> = runMigrations(
     guardado,
@@ -132,6 +142,10 @@ export const boot = async ({
     migrado.value.data as StoredEntities,
     (item: ItemRef): boolean => {
       const camino: string | null = pathOf(item)
+      return camino !== null && ilegibles.has(camino)
+    },
+    (id: EventId): boolean => {
+      const camino: string | null = pathOfEvent(id)
       return camino !== null && ilegibles.has(camino)
     },
   )

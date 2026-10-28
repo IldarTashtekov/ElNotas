@@ -18,8 +18,20 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Context, Diagram, Note, Result, StorageAdapter, StorageError } from "#core/index"
+import type {
+  CalendarEvent,
+  Context,
+  Diagram,
+  EventGroup,
+  Note,
+  Result,
+  StorageAdapter,
+  StorageError,
+} from "#core/index"
 import { contextId, diagramId, err, noteId, noteRef, ok } from "#core/index"
+import type { Day, Time } from "#core/domain/calendar"
+import { parseDay, parseTime } from "#core/domain/calendar"
+import { eventGroupId, eventId } from "#core/domain/Ids"
 import { revision } from "#core/domain/Ids"
 
 /* ──────────────────── Abrir el sobre, fallando si no toca ─────────────────── */
@@ -67,6 +79,24 @@ const contexto = (id: string, name: string): Context => ({
   name,
   defaultView: { type: "context" },
   items: [],
+  updatedAt: 0,
+  revision: revision(`rev-${id}`),
+})
+
+const cita = (id: string, extra: Partial<CalendarEvent> = {}): CalendarEvent => ({
+  id: eventId(id),
+  day: parseDay("2026-07-02") as Day,
+  title: `Evento ${id}`,
+  done: false,
+  updatedAt: 0,
+  revision: revision(`rev-${id}`),
+  ...extra,
+})
+
+const grupoDeEventos = (id: string, events: ReadonlyArray<string>): EventGroup => ({
+  id: eventGroupId(id),
+  name: `Grupo ${id}`,
+  events: events.map(eventId),
   updatedAt: 0,
   revision: revision(`rev-${id}`),
 })
@@ -193,6 +223,45 @@ export const runStorageContract = (
     assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
     assert.deepEqual(valorDe(await s.diagrams.getAll()), [MUDANZA])
     assert.deepEqual(valorDe(await s.contexts.getAll()), [CASA])
+  })
+
+  /* ── Los eventos y sus grupos: dos repositorios más, aislados de los otros ── */
+
+  caso("un evento y un grupo de eventos se recuperan iguales, con sus claves opcionales", async (s) => {
+    const conHora: CalendarEvent = cita("dentista", { time: parseTime("18:00") as Time, done: true })
+    const archivado: EventGroup = { ...grupoDeEventos("salud", ["dentista"]), archived: true }
+    await s.events.put(conHora, null)
+    await s.eventGroups.put(archivado, null)
+
+    assert.deepEqual(valorDe(await s.events.get(conHora.id)), conHora)
+    assert.deepEqual(valorDe(await s.eventGroups.get(archivado.id)), archivado)
+    assert.equal("time" in valorDe(await s.events.getAll())[0]!, true)
+  })
+
+  caso("los eventos y sus grupos no se pisan con las demás clases, ni entre sí", async (s) => {
+    const e: CalendarEvent = cita("compra")
+    const g: EventGroup = grupoDeEventos("compra", ["compra"])
+    await s.notes.put(COMPRA, null)
+    await s.events.put(e, null)
+    await s.eventGroups.put(g, null)
+
+    assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
+    assert.deepEqual(valorDe(await s.events.getAll()), [e])
+    assert.deepEqual(valorDe(await s.eventGroups.getAll()), [g])
+
+    assert.deepEqual(await s.events.delete(e.id, e.revision), ok(undefined))
+    assert.deepEqual(valorDe(await s.events.getAll()), [])
+    assert.deepEqual(valorDe(await s.eventGroups.getAll()), [g])
+  })
+
+  caso("un evento también es de escritura condicional: stale si la revisión no es la guardada", async (s) => {
+    const e: CalendarEvent = cita("cita")
+    await s.events.put(e, null)
+    assert.deepEqual(errorDe(await s.events.put({ ...e, title: "otro" }, null)), { kind: "stale", id: e.id })
+    assert.deepEqual(errorDe(await s.eventGroups.put(grupoDeEventos("g", []), revision("x"))), {
+      kind: "stale",
+      id: eventGroupId("g"),
+    })
   })
 
   caso("borrar en un repositorio no toca a los otros", async (s) => {

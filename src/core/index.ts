@@ -16,6 +16,8 @@ export type {
   DiagramId,
   DiagramNodeId,
   DiagramRelationId,
+  EventGroupId,
+  EventId,
   ItemRef,
   NoteId,
   Revision,
@@ -86,4 +88,8 @@ export type { BlobStore } from "./ports/BlobStore.js"
 export type { Note } from "./domain/Note.js"
 export type { Diagram, DiagramNode, DiagramRelation } from "./domain/Diagram.js"
 export type { Context } from "./domain/Context.js"
+export type { CalendarEvent } from "./domain/CalendarEvent.js"
+export type { EventGroup } from "./domain/EventGroup.js"
+/* Las fechas del calendario: el guardado valida con ellas lo que lee. */
+export { parseDay, parseTime } from "./domain/calendar.js"
 export type { AppState } from "./domain/AppState.js"

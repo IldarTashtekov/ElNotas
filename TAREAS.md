@@ -322,10 +322,14 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       acción; `archived` sólo existe cuando vale `true`; ocho roturas, todas cazadas). Aún no
       salen por `index.ts` ni se guardan: lo primero, cuando los use la pantalla (7d); lo segundo
       es la 7c.
-- [ ] **7c. Guardar los eventos** *(mecánica)*. Ficheros por entidad, su forma en `schema.ts`
+- [x] **7c. Guardar los eventos** *(mecánica)*. Ficheros por entidad, su forma en `schema.ts`
       (un día mal escrito es un fichero ilegible), la copia de seguridad, importar y «Borrar
       todo», y los contratos de `storage/`. **Se cierra cuando** `check` pasa, un fichero con un día
       inválido cae en `onCorrupt` y una copia con eventos se exporta y se importa igual.
+      **Hecho** (2026-10-28; `events/` y `event-groups/`, dos repositorios más en `StorageAdapter`,
+      el guardado diferido escribe los eventos antes que sus grupos, y un evento ilegible se salta
+      conservando su sitio en el grupo; la copia, importar y «Borrar todo» ya iban por rutas, sin
+      tocarlos; ocho roturas, todas cazadas). `ImportSummary` aún no cuenta eventos: es de la pantalla.
 - [ ] **7d. El calendario como vista y como ventana** *(pensar)*. El icono junto a ⚙, la ventana
       de calendario en la lista de ventanas y sus capas, lo que recuerda al recargar, y la lista de
       orden de los grupos en `localStorage` con su reconciliación y «Sin grupo» entrando con un id

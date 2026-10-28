@@ -15,7 +15,7 @@
    OPFS— lo decide `platform/`; el falso de las pruebas no sale por
    esta puerta. */
 export type { OnCorrupt } from "./file/FileStorageAdapter.js"
-export { createFileStorageAdapter, pathOf } from "./file/FileStorageAdapter.js"
+export { createFileStorageAdapter, pathOf, pathOfEvent } from "./file/FileStorageAdapter.js"
 
 /* Las implementaciones de `BlobStore`, en `blobs/`: son lo de abajo del reparto
    en dos niveles y las dos se enchufan al adaptador de arriba.

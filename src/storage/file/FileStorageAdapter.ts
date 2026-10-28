@@ -1,5 +1,5 @@
 /**
- * Guarda cada nota, diagrama y contexto en su propio fichero JSON, más un
+ * Guarda cada nota, diagrama, contexto, evento y grupo de eventos en su propio fichero JSON, más un
  * `manifest.json` con la versión del formato.
  *
  * Es la pieza que sabe de formato: convierte una entidad en texto y decide cómo
@@ -13,10 +13,14 @@
 
 import type {
   BlobStore,
+  CalendarEvent,
   Context,
   ContextId,
   Diagram,
   DiagramId,
+  EventGroup,
+  EventGroupId,
+  EventId,
   ItemRef,
   Note,
   NoteId,
@@ -28,18 +32,26 @@ import type {
 } from "#core/index"
 import { err, ok } from "#core/index"
 import type { Problem } from "./schema.js"
-import { contextProblem, diagramProblem, noteProblem } from "./schema.js"
+import {
+  contextProblem,
+  diagramProblem,
+  eventGroupProblem,
+  eventProblem,
+  noteProblem,
+} from "./schema.js"
 
 /* ════════════════════════════ El esquema en disco ══════════════════════════ */
 
 /*
-    Las cuatro constantes que son **el formato**. Todo lo demás de este fichero
+    Las constantes que son **el formato**. Todo lo demás de este fichero
     es maquinaria alrededor de ellas, y fuera de aquí no se escribe ni una.
 */
 
 const CARPETA_NOTAS: string = "notes/"
 const CARPETA_DIAGRAMAS: string = "diagrams/"
 const CARPETA_CONTEXTOS: string = "contexts/"
+const CARPETA_EVENTOS: string = "events/"
+const CARPETA_GRUPOS_DE_EVENTOS: string = "event-groups/"
 const CAMINO_MANIFEST: string = "manifest.json"
 const EXTENSION: string = ".json"
 
@@ -89,6 +101,15 @@ export const pathOf = (item: ItemRef): string | null => {
     item.kind === "note" ? CARPETA_NOTAS : CARPETA_DIAGRAMAS,
     item.id,
   )
+  return camino.ok ? camino.value : null
+}
+
+/**
+ * Lo mismo para un evento: el camino que dice `onCorrupt` si su fichero es ilegible.
+ * Sirve para conservar su pertenencia a los grupos al arrancar.
+ */
+export const pathOfEvent = (id: EventId): string | null => {
+  const camino: Result<string, StorageError> = caminoDe(CARPETA_EVENTOS, id)
   return camino.ok ? camino.value : null
 }
 
@@ -261,7 +282,7 @@ const avisar = (onCorrupt: OnCorrupt, fallo: StorageError): Result<void, Storage
 }
 
 /**
- * Los tres repositorios son este mismo código con otra carpeta, igual que en el
+ * Los cinco repositorios son este mismo código con otra carpeta, igual que en el
  * adaptador de memoria. Lo único que necesita saber de la entidad es que lleva
  * su `id` dentro.
  */
@@ -403,11 +424,23 @@ export const createFileStorageAdapter = (
     contextProblem,
     onCorrupt,
   )
+  const events: Repository<CalendarEvent, EventId> = createFileRepository<CalendarEvent, EventId>(
+    blobs,
+    CARPETA_EVENTOS,
+    eventProblem,
+    onCorrupt,
+  )
+  const eventGroups: Repository<EventGroup, EventGroupId> = createFileRepository<
+    EventGroup,
+    EventGroupId
+  >(blobs, CARPETA_GRUPOS_DE_EVENTOS, eventGroupProblem, onCorrupt)
 
   return {
     notes,
     diagrams,
     contexts,
+    events,
+    eventGroups,
 
     /**
      * *Best-effort*, y aquí eso es literal: ejecuta la función y devuelve lo que
