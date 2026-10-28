@@ -330,13 +330,19 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       el guardado diferido escribe los eventos antes que sus grupos, y un evento ilegible se salta
       conservando su sitio en el grupo; la copia, importar y «Borrar todo» ya iban por rutas, sin
       tocarlos; ocho roturas, todas cazadas). `ImportSummary` aún no cuenta eventos: es de la pantalla.
-- [ ] **7d. El calendario como vista y como ventana** *(pensar)*. El icono junto a ⚙, la ventana
+- [x] **7d. El calendario como vista y como ventana** *(pensar)*. El icono junto a ⚙, la ventana
       de calendario en la lista de ventanas y sus capas, lo que recuerda al recargar, y la lista de
       orden de los grupos en `localStorage` con su reconciliación y «Sin grupo» entrando con un id
       reservado. **Cambia dos decisiones cerradas**, las cuatro vistas y «ventana = referencia a
       un contexto»: se para y se le enseña al usuario. **Se cierra cuando** hay pruebas de lo puro
       (la reconciliación, `guardWindows` con la ventana nueva), la copia de seguridad la lleva y
       los pasos de su lista pasan en el panel.
+      **Hecho** (2026-10-28; `{ kind: "calendar" }` en `WindowRef`, único en la lista; el icono ▦
+      junto a ⚙ lo abre encima y no vuelve al recargar, como ⚙, pero la ficha de la lista sí;
+      `calendarOrder.ts` con `reconcileOrder` y `@sin-grupo`, guardado en
+      `elnotas:calendario-orden`, que la copia lleva sin subir `BACKUP_VERSION`; 10 roturas, todas
+      cazadas). El marco enseña un texto: el mes es la 7e y los grupos la 7f. Cambia las decisiones
+      cerradas de CLAUDE.md (cuatro vistas, ventana = referencia): se reescriben en la 8.
 - [ ] **7e. El mes y los eventos de un día** *(pensar)*. La rejilla del mes, los días marcados
       según los grupos elegidos, la lista de un día con su «+», la hoja de crear y editar (día,
       hora opcional, motivo, grupos, y Borrar con confirmación), mes anterior y siguiente y «hoy».

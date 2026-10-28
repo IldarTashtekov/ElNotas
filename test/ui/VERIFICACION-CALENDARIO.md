@@ -31,7 +31,8 @@ lista con **dos ventanas** como mínimo (el General y otra).
   calendario (como con ⚙).
 - **A4.** En ⚙, «Añadir ventana» (la ficha «+» o el ⋮ de una ficha) ofrece **«Calendario»**, justo
   detrás de «General». Al elegirlo aparece una ficha «Calendario» en la lista.
-- **A5.** Con la ficha puesta, **«Calendario» ya no se ofrece** al añadir otra ventana: sólo hay uno.
+- **A5.** Con la ficha puesta, el «+» de la última ventana **ya no ofrece «Calendario»**; en ⚙ se
+  sigue ofreciendo, pero elegirlo otra vez **no añade otra ficha**: sólo hay uno.
 - **A6.** Pasar con ◀ ▶ hasta la ventana del calendario: se ve su contenido, con la cabecera de
   las ventanas (sin ✕), y el título «Calendario» **no se renombra**.
 - **A7.** Con la ventana del calendario activa, **recargar**: se vuelve **a esa ventana**.
@@ -42,4 +43,24 @@ lista con **dos ventanas** como mínimo (el General y otra).
 
 ## Pasadas
 
-(Sin pasar.)
+```
+Fecha:        2026-10-28
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       9210b40, árbol limpio
+Origen:       localhost:8001
+
+A1  ✅
+A2  ✅ — ✕ y el atrás del navegador (history.back) cierran el calendario
+A3  ✅ — tras recargar, «General»; `elnotas:capas` queda en `[]`
+A4  ✅ — «Calendario» sale detrás de «General» en el selector de ⚙
+A5  ✅ — el «+» de la última ventana no lo ofrece; elegirlo otra vez en ⚙ deja una sola ficha
+A6  ✅ — cabecera de las ventanas sin ✕; pulsar el título no abre el editor
+A7  ✅ — tras recargar en la ventana del calendario, sigue en ella
+A8  ✅ — ▦ abre el calendario encima y ✕ vuelve a la ventana
+A9  ✅ — sin la ficha, `elnotas:windows` no lleva «calendar» y ▦ sigue abriéndolo
+
+Notas: los clics se hicieron por JavaScript y el estado se leyó del DOM y de `localStorage`; hay
+capturas del A1 y del A6 (el panel las entrega con un paso de retraso). Falta pasarla a 375 px y
+en el móvil cuando haya contenido (7g).
+```
