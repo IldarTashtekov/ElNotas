@@ -130,7 +130,7 @@ export const createCalendarPanel = ({ store, useCases, back, confirm, today }: C
   const abrirDia = (day: Day): void => {
     modo = { kind: "lista", day }
     pintarCaja()
-    hoja.open(dayTitle(day), [caja])
+    hoja.open("", [caja])
   }
 
   const fila = (e: CalendarEvent): HTMLElement => {
@@ -162,7 +162,9 @@ export const createCalendarPanel = ({ store, useCases, back, confirm, today }: C
       modo = { kind: "formulario", day, editando: null }
       pintarCaja()
     }, "hoja-nuevo")
-    caja.replaceChildren(lista, nuevo)
+    /* El día va dentro del contenido, no como título de la hoja: al mover un evento a otro día cambia. */
+    const cabecera: HTMLHeadingElement = elemento("h2", dayTitle(day))
+    caja.replaceChildren(cabecera, lista, nuevo)
   }
 
   /* ── La hoja: crear o editar un evento ── */
