@@ -10,6 +10,7 @@
 
 import type {
   AppState,
+  Day,
   DiagramId,
   Note,
   NoteId,
@@ -18,7 +19,8 @@ import type {
   UseCases,
 } from "#core/index"
 import type { BackStack } from "./backStack.js"
-import { createCalendarPanel } from "./CalendarView.js"
+import type { CalendarPanel } from "./CalendarPanel.js"
+import { createCalendarPanel } from "./CalendarPanel.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { createDiagramCanvas } from "./DiagramCanvas.js"
@@ -49,6 +51,7 @@ export interface WindowsViewDeps {
   readonly corrupt: ReadonlyArray<StorageError>
   readonly onOpenSettings: () => void
   readonly onOpenCalendar: () => void
+  readonly today: () => Day | null
   readonly back: BackStack
   readonly confirm: Confirm
   readonly onOpenNote: (id: NoteId) => void
@@ -79,6 +82,7 @@ export const mountWindowsView = (
     corrupt,
     onOpenSettings,
     onOpenCalendar,
+    today,
     back,
     confirm,
     onOpenNote,
@@ -133,7 +137,8 @@ export const mountWindowsView = (
   let vista: WindowView = { kind: "empty" }
 
   /* La ventana del calendario: el mismo contenido que su vista, sin ✕. */
-  const zonaCalendario: HTMLElement = createCalendarPanel()
+  const panelCalendario: CalendarPanel = createCalendarPanel({ store, useCases, back, confirm, today })
+  const zonaCalendario: HTMLElement = panelCalendario.element
   zonaCalendario.hidden = true
 
   /* ── La ventana de nota: el mismo editor que la vista nota, en otro marco ── */

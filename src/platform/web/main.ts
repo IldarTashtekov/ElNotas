@@ -9,7 +9,7 @@
  * quedarse en blanco.
  */
 
-import type { BlobStore, IdGenerator, Result, StorageError } from "#core/index"
+import type { BlobStore, Day, IdGenerator, Result, StorageError } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
@@ -45,6 +45,7 @@ import { prepareImport } from "./prepareImport.js"
 import { requestReset, resetIfRequested } from "./resetStorage.js"
 import { chooseFileDestination } from "./saveFile.js"
 import { systemClock } from "./SystemClock.js"
+import { todayOf } from "./today.js"
 
 /** `window.localStorage` LANZA si el navegador tiene bloqueados los datos del sitio. */
 const localStorageDisponible = (): Storage | null => {
@@ -205,6 +206,7 @@ const iniciar = async (): Promise<void> => {
     useCases: app.useCases,
     windows,
     framing,
+    today: (): Day | null => todayOf(systemClock.now()),
     phosphor,
     openLayers: createLocalStorageOpenLayers(almacen),
     corrupt: app.corrupt,

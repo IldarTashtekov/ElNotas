@@ -12,7 +12,7 @@
  * encima de todo, la hoja que pregunta antes de borrar.
  */
 
-import type { DiagramId, Logger, NoteId, Result, StorageError, Store, UseCases } from "#core/index"
+import type { Day, DiagramId, Logger, NoteId, Result, StorageError, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
@@ -49,6 +49,8 @@ export interface AppDeps {
   /** La versión publicada, para el pie de la configuración; `null` en desarrollo. */
   readonly version: string | null
   readonly logger: Logger
+  /** El día de hoy en este dispositivo, para el calendario; `null` si se sale del rango. */
+  readonly today: () => Day | null
 }
 
 /** Lo que la app ofrece a quien la monta. */
@@ -109,7 +111,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   /* Como la configuración: no lleva `abierta`, al recargar no se vuelve a ella. */
   const abrirCalendario = (): void =>
     abrirEncima(null, (raiz: HTMLElement): (() => void) =>
-      mountCalendarView(raiz, { onExit: back.close }),
+      mountCalendarView(raiz, { ...deps, confirm, back, onExit: back.close }),
     )
   const abrirNota = (noteId: NoteId): void =>
     abrirEncima({ kind: "note", id: noteId }, (raiz: HTMLElement): (() => void) =>

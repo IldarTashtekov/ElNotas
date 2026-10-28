@@ -90,6 +90,15 @@ export type { Diagram, DiagramNode, DiagramRelation } from "./domain/Diagram.js"
 export type { Context } from "./domain/Context.js"
 export type { CalendarEvent } from "./domain/CalendarEvent.js"
 export type { EventGroup } from "./domain/EventGroup.js"
-/* Las fechas del calendario: el guardado valida con ellas lo que lee. */
-export { parseDay, parseTime } from "./domain/calendar.js"
+/* Las fechas del calendario: el guardado valida con ellas lo que lee, y la pantalla las pinta. */
+export type { Day, Time } from "./domain/calendar.js"
+export {
+  compareDays,
+  dayFromParts,
+  monthGrid,
+  parseDay,
+  parseTime,
+  partsOf,
+} from "./domain/calendar.js"
+export { groupsOfEvent } from "./domain/EventGroup.js"
 export type { AppState } from "./domain/AppState.js"

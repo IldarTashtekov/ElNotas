@@ -1,0 +1,148 @@
+/*
+ * El calendario: el mes como rejilla de lunes a domingo, la barra con ‹ mes ›
+ * y «hoy», y la hoja de un día con sus eventos y el formulario de uno.
+ */
+
+.calendario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── La barra del mes: ‹ octubre de 2026 › hoy ── */
+.mes-barra {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+}
+.mes-titulo {
+  flex: 1;
+  text-align: center;
+  text-shadow: var(--brillo-fuerte);
+}
+.mes-hoy {
+  padding: 0.3rem 0.6rem;
+}
+.mes-hoy:disabled {
+  opacity: 0.4;
+}
+
+/* ── La rejilla: siete columnas iguales ── */
+.mes-semana,
+.mes-rejilla {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(7, 1fr);
+}
+.mes-dias span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+.dia {
+  aspect-ratio: 1;
+  background: var(--row);
+  border: 1px solid var(--rowline);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+/* Los días de los meses vecinos completan la fila, apagados. */
+.dia.fuera {
+  color: var(--dim);
+}
+/* Un día con eventos lleva un punto debajo del número; con todo hecho, vacío. */
+.dia.marcado::after {
+  background: var(--accent);
+  border-radius: 0;
+  bottom: 0.3rem;
+  content: "";
+  height: 0.35rem;
+  left: calc(50% - 0.175rem);
+  position: absolute;
+  width: 0.35rem;
+}
+.dia.marcado.hecho::after {
+  background: none;
+  border: 1px solid var(--accent);
+}
+/* Hoy, en vídeo inverso. */
+.dia.hoy {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  text-shadow: none;
+}
+.dia.hoy.marcado::after {
+  background: var(--accent-ink);
+}
+.dia.hoy.marcado.hecho::after {
+  background: none;
+  border-color: var(--accent-ink);
+}
+
+/* ── La hoja de un día ── */
+.evento-hoja {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.eventos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.evento {
+  align-items: center;
+  background: var(--row);
+  border: 1px solid var(--rowline);
+  display: flex;
+}
+.evento-hecho {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.7rem;
+}
+.evento-texto {
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex: 1;
+  padding: 0.5rem 0.4rem;
+  text-align: left;
+}
+.evento.hecho .evento-texto {
+  color: var(--dim);
+  text-decoration: line-through;
+}
+
+/* ── El formulario de un evento ── */
+.evento-hoja .campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.evento-hoja .campo span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.grupos-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.grupo-opcion {
+  background: var(--row);
+  border: 1px solid var(--rowline);
+  cursor: pointer;
+  padding: 0.45rem 0.7rem;
+  text-align: left;
+}
+.grupo-opcion[aria-pressed="true"] {
+  border-color: var(--accent);
+}
+.evento-hoja .problema {
+  color: var(--danger);
+  margin: 0;
+}

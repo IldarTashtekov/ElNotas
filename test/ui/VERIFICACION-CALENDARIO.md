@@ -1,8 +1,8 @@
 # Verificación manual del calendario
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Se pasa como dice
-`test/PASAR-LAS-LISTAS.md`. Crece con las tareas del calendario: ahora lleva sólo el marco (el
-icono, la vista y la ventana); el mes, los eventos y los grupos se añaden con su tarea.
+`test/PASAR-LAS-LISTAS.md`. Crece con las tareas del calendario: lleva el marco (el
+icono, la vista y la ventana) y el mes con los eventos de un día; los grupos se añaden con su tarea.
 
 ## Por qué existe
 
@@ -11,7 +11,7 @@ orden, pero no ven el icono, la vista encima, el atrás ni qué vuelve al recarg
 
 ## Cuándo hay que volver a pasarla
 
-- al tocar `src/ui/CalendarView.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
+- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
 - al probar un navegador o un móvil nuevos.
 
 ## Preparación
@@ -38,6 +38,40 @@ lista con **dos ventanas** como mínimo (el General y otra).
 - **A7.** Con la ventana del calendario activa, **recargar**: se vuelve **a esa ventana**.
 - **A8.** Con la ventana del calendario, pulsar **▦**: se abre el calendario encima, y ✕ vuelve a la ventana.
 - **A9.** Quitar la ficha del calendario en ⚙ (⋮ → Quitar): desaparece de la lista, y **▦** sigue abriéndolo.
+
+---
+
+## B. El mes y los eventos de un día
+
+Con la ventana o la vista del calendario abierta, en el mes de hoy.
+
+- **B1.** Arriba, **‹ mes de año ›** y un botón **hoy**; debajo, las iniciales **L M X J V S D** y la
+  rejilla de lunes a domingo. **Hoy** sale en vídeo inverso. Los días de los meses vecinos que
+  completan la primera y la última fila salen **apagados**.
+- **B2.** **›** y **‹** cambian de mes (también a través del fin de año). **hoy** vuelve al mes de
+  hoy y, estando ya en él, **no hace nada** (sale apagado).
+- **B3.** Pulsar un día abre una **hoja** con el día como título («2 de julio de 2026»). Sin eventos
+  dice «Sin eventos este día.» y ofrece **+ Evento**.
+- **B4.** **+ Evento** abre el formulario con **Día** (el pulsado), **Hora** (vacía), **Motivo**,
+  **Grupo nuevo** y **Guardar**. Guardar con el motivo vacío crea un evento «Evento».
+- **B5.** Tras guardar, la hoja vuelve a la lista del día con el evento; en la rejilla el día lleva un
+  **punto** debajo del número.
+- **B6.** Un evento **con hora** sale como «18:00 Cena»; los de **todo el día** primero y luego por
+  hora.
+- **B7.** Un **día** o una **hora** mal escritos no guardan: sale en rojo «Pon un día válido.» o «Pon
+  una hora válida, como 18:00.» y la hoja sigue abierta.
+- **B8.** **☐** de un evento lo marca hecho (☑, tachado); si **todos** los del día están hechos, el
+  punto de la rejilla queda **vacío**.
+- **B9.** Pulsar el texto de un evento lo abre para **editar**; cambiar el **Día** lo mueve (la
+  hoja pasa a ese día y el punto cambia de casilla).
+- **B10.** **Borrar** pide confirmar («¿Borrar este evento? No se puede deshacer.»); **Cancelar** lo
+  deja; **Borrar** lo quita y el punto de la rejilla desaparece.
+- **B11.** En el formulario, **Grupo nuevo** con un nombre crea el grupo y mete el evento en él;
+  al reabrirlo, el grupo sale marcado entre los **Grupos**. Quitar la marca y guardar lo saca.
+- **B12.** El **atrás del navegador** cierra la hoja (y el formulario con ella).
+- **B13.** Con eventos creados, **recargar**: siguen ahí y marcados.
+- **B14.** A **375 px** y en escritorio, la rejilla cabe entera, sin barra horizontal, y la hoja se
+  puede usar con el teclado en pantalla sin tapar **Guardar**.
 
 ---
 
