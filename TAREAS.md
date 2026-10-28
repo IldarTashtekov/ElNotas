@@ -384,10 +384,18 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       marca: `set-routine-day` lleva `today`, que pasa quien llama, y el core sigue sin leer el reloj.
       Cambiar la meta recalcula también las semanas pasadas; marcar hacia atrás no tiene límite.
       Una copia con rutinas se exporta, se ensaya y recarga igual. 26 roturas, todas cazadas.
-- [ ] **7i. Las rutinas en pantalla** *(pensar)*. La pestaña, las cadenas de la semana con las
+- [x] **7i. Las rutinas en pantalla** *(pensar)*. La pestaña, las cadenas de la semana con las
       anteriores, marcar días, el progreso en el mes de las elegidas con la redonda, el menú ⋮
       (Renombrar, Cambiar meta, Archivar, Borrar con su aviso), mover y archivar. **Se cierra
       cuando** los pasos de su lista pasan en el panel, a 375 y a escritorio.
+      **Hecho** (2026-10-28). Pestañas «Eventos | Rutinas» bajo el mes; `RoutinesPanel` (como la de
+      grupos: redonda, nombre · n/meta, ⋮ con Renombrar, Cambiar meta, Archivar y Borrar —que dice
+      cuántos días se pierden y ofrece archivar—, archivadas aparte, mover con pulsación larga) y la
+      lógica pura en `routineList`. Una rutina abierta enseña cuatro semanas, la de hoy primero, y
+      «Ver más»; el futuro sale apagado. Al empezar **ninguna rutina pinta el mes**: la redonda la
+      enciende y cada día lleva una barra tan llena como la parte de las elegidas que lo tienen
+      marcado (`routinesDone` / `routinesTotal` en `DayCell`). Los pasos, en la sección E de
+      `VERIFICACION-CALENDARIO.md` (7j los repasa y anota el móvil). 8 roturas, todas cazadas.
 - [ ] **7j. La lista de verificación de las rutinas** *(mecánica)*. Los pasos en
       `VERIFICACION-CALENDARIO.md`, pasados en el panel, y el móvil, el usuario. **Se cierra
       cuando** está pasada y anotada, y `check` pasa.

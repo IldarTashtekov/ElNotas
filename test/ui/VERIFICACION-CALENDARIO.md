@@ -161,6 +161,33 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 Fecha:        2026-10-28
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel
+Commit:       6074009, árbol limpio
+Origen:       localhost:8001
+
+E1  ✅ — pestañas Eventos y Rutinas; la de rutinas con «○ Correr · 0/3 ⋮» y «+ Rutina»
+E2  ✅ — con el nombre vacío la hoja sigue abierta y no crea nada; «Correr» con meta 3 y «Leer» sin meta
+E3  ✅ — «Esta semana» y las anteriores por su lunes (19/10, 12/10, 5/10); «Ver más» pasa de 4 a 8
+E4  ✅ — L M X marcados y J a D apagados, sin poder marcarse; «3/3 ✓»; una semana pasada se marca y se desmarca
+E5  ✅ — sin elegir, ninguna barra; con la redonda, barra llena en los 5 días marcados (19, 21, 26, 27, 28)
+E6  ✅ — Renombrar, Cambiar meta, Archivar, Borrar; con meta 2 la semana pasada pasa de 2/3 a 2/2 ✓
+E7  ✅ — «¿Borrar la rutina «Correr 5k»? Se pierden sus 5 días marcados y no se puede deshacer. Para
+    apartarla sin perderlos, archívala.»; cancelar no borra y aceptar sí
+E8  ✅ — «▸ Archivadas (1)», sin redonda, ⋮ con Renombrar, Cambiar meta, Desarchivar y Borrar;
+    archivada no pinta el mes; desarchivar la devuelve
+E9  🔁 simulado — la pulsación larga y el arrastre, con eventos de puntero escritos a mano (650 ms
+    quieto, mover, soltar): «Leer» sube sobre «Correr» y no se despliega; `routines` guardado en
+    `elnotas:calendario-orden`; tras recargar conserva el orden y lo elegido y lo desplegado, no
+E10 ✅ — a 375 px y a escritorio, sin barra horizontal (scrollWidth 375) y los siete días caben
+M6  ⏭ no se puede aquí — el dedo; lo pasa el usuario en el móvil
+
+Notas: tras un `navigate` el panel enseñó la página sin `calendario.css` (la caché); con recargar
+se arregla. Las capturas se dieron a 375 px y a escritorio.
+```
+
+```
+Fecha:        2026-10-28
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
 Commit:       6e9fa8e, árbol limpio
 Origen:       localhost:8001
 
