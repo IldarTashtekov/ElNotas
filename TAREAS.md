@@ -208,8 +208,9 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       lista, pasados en el panel. Ambas, con subagente Sonnet *(mecánica)* sobre esta
       especificación, y Claude revisa.
       **Hecho** (6f-1 `9f86d3c`, 6f-2 `08aeeee`; el usuario lo dio por bueno en su navegador el
-      2026-10-27). **Falta** pasar en el panel R3, R6, R10 y lo que quedó sin probar de R1 a R9, y
-      en el móvil la pasada 7. **A decidir con el usuario:** si al elegir una dirección como texto
+      2026-10-27). R3, R6 y R10 pasadas en el panel el 2026-10-28 (pasada 9). **Falta** lo que
+      quedó sin probar de R1 a R9 (varios enlaces pegados, R5 entre bloques, R7 con texto vacío,
+      R8, R9 por separado), y en el móvil la pasada 7. **A decidir con el usuario:** si al elegir una dirección como texto
       el campo Texto debe llevar el dominio, y si un `[texto](destino)` escrito o pegado a mano en
       la línea activa se convierte en bloque al momento (hoy, al reactivar la línea).
       **6g, las marcas de negrita y cursiva escondidas** (pedido por el usuario el 2026-10-27, que
@@ -224,8 +225,8 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       perder el cursor ni romper la composición del móvil; revelar al mover el cursor) y los
       pasos de la lista. Con subagente Sonnet *(mecánica)* sobre esta especificación, y Claude revisa.
       **Hecho** (6g-1 `7d84b31`, 6g-2 `38d905d`; el usuario lo probó en el ordenador y lo dio por
-      bueno el 2026-10-27). **Falta** la pasada 8 en el móvil (S9) y lo que no se pasó en el panel
-      (S5, S6, S8). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
+      bueno el 2026-10-27). S5, S6 y S8 pasadas en el panel el 2026-10-28 (pasada 9). **Falta** la
+      pasada 8 en el móvil (S9). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
 **7. Calendario**, planteado con el usuario el 2026-10-27 y **en dos tandas**: primero el
 calendario con los eventos (7a-7g), después las rutinas (7h-7j). Lo decidido y el modelo, aquí;
 las tareas, debajo. Propuesto por el usuario el 2026-10-24.

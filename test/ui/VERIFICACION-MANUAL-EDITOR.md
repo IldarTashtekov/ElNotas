@@ -614,3 +614,29 @@ dirección en vez de con el dominio; a decidir con el usuario. Móvil: el usuari
 Notas: el CSS se carga desde `src/ui/styles/` y el navegador lo guarda en caché: recargar a fondo
 con las herramientas de desarrollo abiertas. Copiar dentro de la línea activa, con asteriscos
 escondidos, a decidir.
+
+### Pasada 9 — escritorio, lo que faltaba de R y S (Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-28 |
+| Navegador y versión | Chrome 152, el navegador del panel (`Claude/3.1623.0`, Linux) |
+| Quién | Claude, en el panel; el móvil, el usuario |
+| Commit | `6af8356`, árbol sin cambios en `src/` |
+| Origen | `localhost:8001`, con `?depurar` y la nota «Pruebas R» |
+
+| Paso | Resultado |
+|---|---|
+| R1 | ✅ un solo bloque con `data-raw` el Markdown entero; un enlace a algo borrado lleva `md-roto` (apagado) |
+| R3 | ✅ la burbuja se oculta al llevar el cursor lejos del bloque; con el cursor dentro de `www.example.com` sale sólo «↗ Abrir» (Cambiar y Quitar, ocultos) |
+| R6 | ✅ seleccionando toda la línea activa con un bloque, la selección da su texto visible, sin Markdown del enlace. 🔁 simulado: el portapapeles no se lee desde la página; se mira `getSelection().toString()`, que es lo que copia el navegador |
+| R10 | ✅ tras recargar la línea sale formateada (subrayada, con su texto) y, al activarla, de nuevo con el bloque; el Markdown de la nota no cambia |
+| S5 | ✅ `***a***`: dentro de «a», las cuatro marcas; fuera, ninguna. `**a *b* c**`: dentro de «b», las de los dos pares; dentro de «a», sólo las de fuera |
+| S6 | ✅ teclear seguido tras un bloque y una negrita deja el texto en su sitio y el bloque intacto; Intro parte la línea y el Markdown crudo queda con sus `*` (`*` y `*a *b* c** fin`) |
+| S8 | ✅ `# título con **negrita** y \\ barra`: el `# ` y las barras se ven; los `**` se esconden |
+
+Notas: R3 «se va al teclear» sólo se probó con el cursor dentro de una dirección suelta, donde la
+burbuja se queda (correcto, el cursor sigue dentro). Sin probar todavía: varios enlaces pegados con
+Retroceso, R5 entre dos bloques, R7 con texto vacío, R8 y R9 por separado. Copiar dentro de la
+línea activa **sí** saca los `**` escondidos (`getSelection().toString()` los incluye): es la duda
+ya apuntada en *A decidir*. Móvil: el usuario.
