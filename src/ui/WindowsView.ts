@@ -11,6 +11,7 @@
 import type {
   AppState,
   Day,
+  Logger,
   DiagramId,
   Note,
   NoteId,
@@ -19,6 +20,7 @@ import type {
   UseCases,
 } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import type { CalendarPanel } from "./CalendarPanel.js"
 import { createCalendarPanel } from "./CalendarPanel.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
@@ -52,6 +54,8 @@ export interface WindowsViewDeps {
   readonly onOpenSettings: () => void
   readonly onOpenCalendar: () => void
   readonly today: () => Day | null
+  readonly calendarOrder: CalendarOrderPersistence
+  readonly logger: Logger
   readonly back: BackStack
   readonly confirm: Confirm
   readonly onOpenNote: (id: NoteId) => void
@@ -83,6 +87,8 @@ export const mountWindowsView = (
     onOpenSettings,
     onOpenCalendar,
     today,
+    calendarOrder,
+    logger,
     back,
     confirm,
     onOpenNote,
@@ -137,7 +143,15 @@ export const mountWindowsView = (
   let vista: WindowView = { kind: "empty" }
 
   /* La ventana del calendario: el mismo contenido que su vista, sin ✕. */
-  const panelCalendario: CalendarPanel = createCalendarPanel({ store, useCases, back, confirm, today })
+  const panelCalendario: CalendarPanel = createCalendarPanel({
+    store,
+    useCases,
+    back,
+    confirm,
+    today,
+    calendarOrder,
+    logger,
+  })
   const zonaCalendario: HTMLElement = panelCalendario.element
   zonaCalendario.hidden = true
 

@@ -16,6 +16,7 @@ import type { Day, DiagramId, Logger, NoteId, Result, StorageError, Store, UseCa
 import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
+import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import { mountCalendarView } from "./CalendarView.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { mountDiagramView } from "./DiagramView.js"
@@ -51,6 +52,8 @@ export interface AppDeps {
   readonly logger: Logger
   /** El día de hoy en este dispositivo, para el calendario; `null` si se sale del rango. */
   readonly today: () => Day | null
+  /** Dónde se guarda el orden de los grupos de eventos del calendario. */
+  readonly calendarOrder: CalendarOrderPersistence
 }
 
 /** Lo que la app ofrece a quien la monta. */

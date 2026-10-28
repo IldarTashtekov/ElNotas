@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Se pasa como dice
 `test/PASAR-LAS-LISTAS.md`. Crece con las tareas del calendario: lleva el marco (el
-icono, la vista y la ventana) y el mes con los eventos de un día; los grupos se añaden con su tarea.
+icono, la vista y la ventana) el mes con los eventos de un día y los grupos de eventos.
 
 ## Por qué existe
 
@@ -11,7 +11,7 @@ orden, pero no ven el icono, la vista encima, el atrás ni qué vuelve al recarg
 
 ## Cuándo hay que volver a pasarla
 
-- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
+- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/GroupsPanel.ts`, `src/ui/dragReorder.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
 - al probar un navegador o un móvil nuevos.
 
 ## Preparación
@@ -72,6 +72,29 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
 - **B13.** Con eventos creados, **recargar**: siguen ahí y marcados.
 - **B14.** A **375 px** y en escritorio, la rejilla cabe entera, sin barra horizontal, y la hoja se
   puede usar con el teclado en pantalla sin tapar **Guardar**.
+
+## C. Los grupos de eventos
+
+Bajo el mes, la lista de grupos. Hacen falta eventos en un grupo y otros sin grupo, unos pasados (antes de hoy) y otros no.
+
+- **C1.** Bajo la rejilla hay una fila por grupo —**●** redonda, «nombre · n» y **⋮**— y siempre una
+  **«Sin grupo»** (sin ⋮) con los eventos que no están en ningún grupo. Debajo, **+ Grupo**.
+- **C2.** **+ Grupo** pide un nombre y **Crear** lo añade a la lista; con el nombre vacío no hace nada.
+- **C3.** La **redonda** (● / ○) apaga y enciende un grupo: sólo los días con eventos de los grupos
+  encendidos llevan punto. Un evento en varios grupos marca el día si **cualquiera** está encendido.
+- **C4.** Pulsar el **nombre** despliega los eventos del grupo **por día y hora**; los **pasados**
+  quedan plegados en «▸ Pasados (n)», que los abre y los cierra.
+- **C5.** Pulsar un evento de la lista lo abre en la hoja para **editarlo**.
+- **C6.** **⋮** ofrece **Renombrar**, **Archivar** y **Borrar**. Renombrar cambia el nombre en la
+  lista. **Archivar** lo quita de la lista y de las marcas del mes y aparece **«▸ Archivados (n)»**.
+- **C7.** **Archivados** muestra los archivados, sin redonda, con ⋮ → **Renombrar**, **Desarchivar**
+  y **Borrar**. Desarchivar lo devuelve a la lista.
+- **C8.** **Borrar** pide confirmar («¿Borrar el grupo «X»? Sus eventos no se borran.»); al aceptar,
+  el grupo desaparece y sus eventos pasan a **«Sin grupo»** (su cuenta sube).
+- **C9.** **Mantener pulsada** una fila (medio segundo) la levanta y se arrastra arriba o abajo;
+  al soltar queda en su sitio y **no** se despliega ni se abre nada. «Sin grupo» también se mueve.
+- **C10.** Tras **recargar**, las filas conservan el orden. Lo elegido con las redondas y lo
+  desplegado **no** se recuerda: vuelve todo encendido y plegado.
 
 ---
 

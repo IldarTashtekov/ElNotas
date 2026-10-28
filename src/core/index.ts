@@ -100,5 +100,5 @@ export {
   parseTime,
   partsOf,
 } from "./domain/calendar.js"
-export { groupsOfEvent } from "./domain/EventGroup.js"
+export { eventsWithoutGroup, groupsOfEvent } from "./domain/EventGroup.js"
 export type { AppState } from "./domain/AppState.js"

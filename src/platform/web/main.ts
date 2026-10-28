@@ -207,6 +207,7 @@ const iniciar = async (): Promise<void> => {
     windows,
     framing,
     today: (): Day | null => todayOf(systemClock.now()),
+    calendarOrder: createLocalStorageCalendarOrder(almacen),
     phosphor,
     openLayers: createLocalStorageOpenLayers(almacen),
     corrupt: app.corrupt,

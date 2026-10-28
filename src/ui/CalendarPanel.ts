@@ -14,6 +14,7 @@ import type {
   EventGroup,
   EventGroupId,
   EventId,
+  Logger,
   Store,
   Time,
   Unsubscribe,
@@ -21,11 +22,14 @@ import type {
 } from "#core/index"
 import { groupsOfEvent } from "#core/index"
 import type { BackStack } from "./backStack.js"
+import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import type { DayCell, MonthRef, MonthView } from "./calendarMonth.js"
 import { dayTitle, eventsOfDay, monthOf, monthView, sameMonth, shiftMonth, WEEKDAYS } from "./calendarMonth.js"
 import { elemento } from "./dom.js"
 import type { EventFormResult } from "./eventForm.js"
 import { parseEventForm } from "./eventForm.js"
+import type { GroupsPanel } from "./GroupsPanel.js"
+import { createGroupsPanel } from "./GroupsPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
@@ -36,6 +40,9 @@ export interface CalendarPanelDeps {
   readonly confirm: Confirm
   /** El día de hoy en este dispositivo; `null` si se sale del rango. */
   readonly today: () => Day | null
+  /** El orden de los grupos de la lista: es de este dispositivo. */
+  readonly calendarOrder: CalendarOrderPersistence
+  readonly logger: Logger
 }
 
 export interface CalendarPanel {
@@ -63,7 +70,15 @@ const campo = (rotulo: string, entrada: HTMLInputElement): HTMLLabelElement => {
   return l
 }
 
-export const createCalendarPanel = ({ store, useCases, back, confirm, today }: CalendarPanelDeps): CalendarPanel => {
+export const createCalendarPanel = ({
+  store,
+  useCases,
+  back,
+  confirm,
+  today,
+  calendarOrder,
+  logger,
+}: CalendarPanelDeps): CalendarPanel => {
   const hoy: Day | null = today()
   let mes: MonthRef = monthOf(hoy ?? ("2026-01-01" as Day))
   let modo: Modo | null = null
@@ -115,8 +130,7 @@ export const createCalendarPanel = ({ store, useCases, back, confirm, today }: C
   }
 
   const pintarMes = (): void => {
-    /* Sin grupos que elegir todavía: se pintan los días de todos los eventos. */
-    const vista: MonthView | null = monthView(store.getState(), mes, hoy, null)
+    const vista: MonthView | null = monthView(store.getState(), mes, hoy, grupos.chosen())
     if (vista === null) return
     titulo.textContent = vista.title
     anterior.disabled = shiftMonth(mes, -1) === null
@@ -279,7 +293,25 @@ export const createCalendarPanel = ({ store, useCases, back, confirm, today }: C
     else pintarFormulario(modo.day, modo.editando)
   }
 
-  raiz.append(barra, cabeza, rejilla, hoja.element)
+  /* Un evento de la lista de un grupo se abre para editarlo, en la hoja. */
+  const abrirEvento = (e: CalendarEvent): void => {
+    modo = { kind: "formulario", day: e.day, editando: e.id }
+    pintarCaja()
+    hoja.open("", [caja])
+  }
+  const grupos: GroupsPanel = createGroupsPanel({
+    store,
+    useCases,
+    back,
+    confirm,
+    today,
+    calendarOrder,
+    logger,
+    onChosen: (): void => pintarMes(),
+    onOpenEvent: abrirEvento,
+  })
+
+  raiz.append(barra, cabeza, rejilla, grupos.element, hoja.element)
   pintarMes()
 
   /* Los cambios del almacén repintan el mes y, con la hoja abierta, la lista del día. */
@@ -290,8 +322,15 @@ export const createCalendarPanel = ({ store, useCases, back, confirm, today }: C
     pintadoEventos = estado.events
     pintadoGrupos = estado.eventGroups
     pintarMes()
+    grupos.update()
     if (!hoja.element.hidden && modo?.kind === "lista") pintarCaja()
   })
 
-  return { element: raiz, destroy: alCambiar }
+  return {
+    element: raiz,
+    destroy: (): void => {
+      alCambiar()
+      grupos.destroy()
+    },
+  }
 }
