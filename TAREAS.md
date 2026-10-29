@@ -599,6 +599,17 @@ una tarea con su cierre.
 
 ### Sin fase asignada
 
+- [ ] **Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, tras la revisión
+      de estilo de la 7n: hoy nada fija el ancho de línea ni la forma del código, y hay unas 15
+      líneas de más de 120 caracteres en `src/ui`. **Toca una dependencia** (una de desarrollo, que
+      no entra en el bundle): la regla de «dependencias sólo cuando se usan» pide mirar antes si
+      Node o TypeScript ya lo hacen, y la decisión cerrada de no usar herramientas para analizar el
+      código (ni ESLint ni Biome) dejó fuera los analizadores, no los formateadores, pero hay que
+      confirmarlo con el usuario. Por decidir: cuál (Prettier, `dprint`, el de Biome sólo para
+      formatear), el ancho de línea, si `check` lo comprueba o sólo se lanza a mano, y si el primer
+      pase reformatea todo el repo en un commit aparte. **Se cierra cuando** el usuario elige y,
+      con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
+      `CLAUDE.md` recoge el comando.
 - [ ] **Exportar a Markdown**, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
       modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
       Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
