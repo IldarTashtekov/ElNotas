@@ -1,5 +1,5 @@
 /**
- * Guarda cada nota, diagrama, contexto, evento, grupo de eventos y rutina en su propio fichero JSON, más un
+ * Guarda cada nota, diagrama, contexto, evento y rutina en su propio fichero JSON, más un
  * `manifest.json` con la versión del formato.
  *
  * Es la pieza que sabe de formato: convierte una entidad en texto y decide cómo
@@ -18,8 +18,6 @@ import type {
   ContextId,
   Diagram,
   DiagramId,
-  EventGroup,
-  EventGroupId,
   EventId,
   ItemRef,
   Note,
@@ -37,7 +35,6 @@ import type { Problem } from "./schema.js"
 import {
   contextProblem,
   diagramProblem,
-  eventGroupProblem,
   eventProblem,
   noteProblem,
   routineProblem,
@@ -54,7 +51,6 @@ const CARPETA_NOTAS: string = "notes/"
 const CARPETA_DIAGRAMAS: string = "diagrams/"
 const CARPETA_CONTEXTOS: string = "contexts/"
 const CARPETA_EVENTOS: string = "events/"
-const CARPETA_GRUPOS_DE_EVENTOS: string = "event-groups/"
 const CARPETA_RUTINAS: string = "routines/"
 const CAMINO_MANIFEST: string = "manifest.json"
 const EXTENSION: string = ".json"
@@ -105,15 +101,6 @@ export const pathOf = (item: ItemRef): string | null => {
     item.kind === "note" ? CARPETA_NOTAS : CARPETA_DIAGRAMAS,
     item.id,
   )
-  return camino.ok ? camino.value : null
-}
-
-/**
- * Lo mismo para un evento: el camino que dice `onCorrupt` si su fichero es ilegible.
- * Sirve para conservar su pertenencia a los grupos al arrancar.
- */
-export const pathOfEvent = (id: EventId): string | null => {
-  const camino: Result<string, StorageError> = caminoDe(CARPETA_EVENTOS, id)
   return camino.ok ? camino.value : null
 }
 
@@ -434,10 +421,6 @@ export const createFileStorageAdapter = (
     eventProblem,
     onCorrupt,
   )
-  const eventGroups: Repository<EventGroup, EventGroupId> = createFileRepository<
-    EventGroup,
-    EventGroupId
-  >(blobs, CARPETA_GRUPOS_DE_EVENTOS, eventGroupProblem, onCorrupt)
   const routines: Repository<Routine, RoutineId> = createFileRepository<Routine, RoutineId>(
     blobs,
     CARPETA_RUTINAS,
@@ -450,7 +433,6 @@ export const createFileStorageAdapter = (
     diagrams,
     contexts,
     events,
-    eventGroups,
     routines,
 
     /**

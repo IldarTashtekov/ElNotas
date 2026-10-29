@@ -69,7 +69,6 @@ const ESTADO_INICIAL: AppState = {
   diagrams: {},
   contexts: {},
   events: {},
-  eventGroups: {},
   routines: {},
 }
 

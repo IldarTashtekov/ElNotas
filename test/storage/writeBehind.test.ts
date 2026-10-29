@@ -26,11 +26,11 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, CalendarEvent, EventGroup, Note, Result, Routine, StorageAdapter, StorageError } from "#core/index"
+import type { AppState, CalendarEvent, Note, Result, Routine, StorageAdapter, StorageError } from "#core/index"
 import { err, noteId } from "#core/index"
 import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
-import { eventGroupId, eventId, revision, routineId } from "#core/domain/Ids"
+import { eventId, revision, routineId } from "#core/domain/Ids"
 
 import { createMemoryStorageAdapter } from "#storage/memory/MemoryStorageAdapter"
 import type { Schedule } from "#storage/writeBehind"
@@ -139,7 +139,7 @@ const nota = (name: string): Note => ({
   revision: revision(`rev-${name}`),
 })
 
-const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, routines: {} }
 
 const conNota = (n: Note): AppState => ({ ...VACIO, notes: { [n.id]: n } })
 
@@ -603,7 +603,7 @@ test("una tanda cortada por io a mitad: al reintentar, lo ya escrito NO da un st
   assert.equal(valorDe(await base.notes.get(OTRA))?.name, "Otra")
 })
 
-/* ─────────────────────── Eventos y grupos de eventos ─────────────────────── */
+/* ─────────────────────── Eventos ─────────────────────────────────── */
 
 const EVENTO: CalendarEvent = {
   id: eventId("cita"),
@@ -614,67 +614,23 @@ const EVENTO: CalendarEvent = {
   revision: revision("rev-cita"),
 }
 
-const GRUPO: EventGroup = {
-  id: eventGroupId("salud"),
-  name: "Salud",
-  events: [EVENTO.id],
-  updatedAt: 0,
-  revision: revision("rev-salud"),
-}
-
-test("write-behind: guarda los eventos y sus grupos, los cambios y los borrados", async () => {
+test("write-behind: guarda los eventos, los cambios y los borrados", async () => {
   const adapter: StorageAdapter = createMemoryStorageAdapter()
   const wb = createWriteBehind({ adapter, initial: VACIO, logger: silentLogger })
 
-  const con: AppState = { ...VACIO, events: { [EVENTO.id]: EVENTO }, eventGroups: { [GRUPO.id]: GRUPO } }
+  const con: AppState = { ...VACIO, events: { [EVENTO.id]: EVENTO } }
   wb.onState(con)
   valorDe(await wb.flush())
   assert.deepEqual(valorDe(await adapter.events.getAll()), [EVENTO])
-  assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [GRUPO])
 
-  /* Borrar el evento reescribe el grupo sin él y borra el fichero del evento. */
-  const sinEvento: AppState = {
-    ...con,
-    events: {},
-    eventGroups: { [GRUPO.id]: { ...GRUPO, events: [], revision: revision("rev-salud-2") } },
-  }
-  wb.onState(sinEvento)
+  const cambiado: CalendarEvent = { ...EVENTO, done: true, revision: revision("rev-cita-2") }
+  wb.onState({ ...con, events: { [EVENTO.id]: cambiado } })
+  valorDe(await wb.flush())
+  assert.deepEqual(valorDe(await adapter.events.getAll()), [cambiado])
+
+  wb.onState({ ...con, events: {} })
   valorDe(await wb.flush())
   assert.deepEqual(valorDe(await adapter.events.getAll()), [])
-  assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [sinEvento.eventGroups[GRUPO.id]])
-
-  /* Y borrar el grupo, su fichero. */
-  wb.onState({ ...sinEvento, eventGroups: {}, routines: {} })
-  valorDe(await wb.flush())
-  assert.deepEqual(valorDe(await adapter.eventGroups.getAll()), [])
-})
-
-test("write-behind: un evento nuevo se escribe ANTES que el grupo que lo lista", async () => {
-  const base: StorageAdapter = createMemoryStorageAdapter()
-  let orden: ReadonlyArray<string> = []
-  const adapter: StorageAdapter = {
-    ...base,
-    events: {
-      ...base.events,
-      put: async (e: CalendarEvent, esperada) => {
-        orden = [...orden, "evento"]
-        return base.events.put(e, esperada)
-      },
-    },
-    eventGroups: {
-      ...base.eventGroups,
-      put: async (g: EventGroup, esperada) => {
-        orden = [...orden, "grupo"]
-        return base.eventGroups.put(g, esperada)
-      },
-    },
-  }
-  const wb = createWriteBehind({ adapter, initial: VACIO, logger: silentLogger })
-
-  wb.onState({ ...VACIO, events: { [EVENTO.id]: EVENTO }, eventGroups: { [GRUPO.id]: GRUPO } })
-  valorDe(await wb.flush())
-
-  assert.deepEqual(orden, ["evento", "grupo"])
 })
 
 /* ─────────────────────────────────── Rutinas ─────────────────────────────────── */

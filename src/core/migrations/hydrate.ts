@@ -11,11 +11,8 @@
  * referencia sería mucho peor que la basura que se tira. Lo oculto de un contexto
  * que ya no esté en él, igual.
  *
- * Los grupos de eventos, igual: se tiran de ellos los eventos que ya no existen
- * y los repetidos.
- *
  * Lo que existe pero no se pudo leer es otra cosa: su referencia se conserva,
- * para que arreglar el fichero lo devuelva a su contexto, o a su grupo si es un evento.
+ * para que arreglar el fichero lo devuelva a su contexto.
  *
  * En los diagramas, igual: una relación con un extremo que no está se tira, y un
  * nodo cuya nota ya no existe pasa a «Nota perdida».
@@ -26,14 +23,13 @@ import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Context } from "../domain/Context.js"
 import type { Diagram, DiagramNode, DiagramRelation } from "../domain/Diagram.js"
 import { loseNote } from "../domain/diagramOperations.js"
-import type { EventGroup } from "../domain/EventGroup.js"
-import type { DiagramRelationId, EventId, ItemRef, NoteId } from "../domain/Ids.js"
+import type { DiagramRelationId, ItemRef, NoteId } from "../domain/Ids.js"
 import { noteRef } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Routine } from "../domain/Routine.js"
 
 /**
- * Lo que devuelve el almacén: las listas. Los eventos y sus grupos, si faltan, son
+ * Lo que devuelve el almacén: las listas. Los eventos, si faltan, son
  * vacíos, y las rutinas igual: lo guardado antes de que existieran no se migra.
  */
 export interface StoredEntities {
@@ -41,7 +37,6 @@ export interface StoredEntities {
   readonly diagrams: ReadonlyArray<Diagram>
   readonly contexts: ReadonlyArray<Context>
   readonly events?: ReadonlyArray<CalendarEvent>
-  readonly eventGroups?: ReadonlyArray<EventGroup>
   readonly routines?: ReadonlyArray<Routine>
 }
 
@@ -92,7 +87,6 @@ const diagramaLimpio = (d: Diagram, notaPerdida: (id: NoteId) => boolean): Diagr
 export const hydrate = (
   stored: StoredEntities,
   ilegible: Unreadable = nadaIlegible,
-  eventoIlegible: (id: EventId) => boolean = (): boolean => false,
 ): AppState => {
   const notes: AppState["notes"] = porId(stored.notes)
 
@@ -126,18 +120,7 @@ export const hydrate = (
   )
 
   const events: AppState["events"] = porId(stored.events ?? [])
-  const eventGroups: AppState["eventGroups"] = porId(
-    (stored.eventGroups ?? []).map((g: EventGroup): EventGroup => {
-      const vivos: ReadonlyArray<EventId> = g.events.filter(
-        (id: EventId, n: number): boolean =>
-          (events[id] !== undefined || eventoIlegible(id)) && g.events.indexOf(id) === n,
-      )
-      /* Como los contextos: si no sobraba nada, el grupo TAL CUAL. */
-      return vivos.length === g.events.length ? g : { ...g, events: vivos }
-    }),
-  )
-
   const routines: AppState["routines"] = porId(stored.routines ?? [])
 
-  return { notes, diagrams, contexts, events, eventGroups, routines }
+  return { notes, diagrams, contexts, events, routines }
 }

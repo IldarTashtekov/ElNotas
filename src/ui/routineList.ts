@@ -98,3 +98,27 @@ export const currentWeek = (routine: Routine, hoy: Day): WeekRow | null => {
 /** «3/4» con meta, «3» sin ella, y «✓» detrás cuando la semana la cumple. */
 export const weekSummary = (done: number, goal: number | null, met: boolean): string =>
   `${goal === null ? done : `${done}/${goal}`}${met ? " ✓" : ""}`
+
+/** Enciende o apaga uno: un conjunto nuevo. */
+export const toggleId = (ids: ReadonlySet<string>, id: string): ReadonlySet<string> => {
+  const otro: Set<string> = new Set<string>(ids)
+  if (otro.has(id)) otro.delete(id)
+  else otro.add(id)
+  return otro
+}
+
+/**
+ * El orden que se guarda al mover una fila visible de `de` a `a`: las visibles
+ * como quedan, y detrás las archivadas como estaban.
+ */
+export const movedOrder = (
+  visibles: ReadonlyArray<string>,
+  archivados: ReadonlyArray<string>,
+  de: number,
+  a: number,
+): ReadonlyArray<string> => {
+  const movido: string | undefined = visibles[de]
+  if (movido === undefined) return [...visibles, ...archivados]
+  const resto: ReadonlyArray<string> = visibles.filter((_: string, i: number): boolean => i !== de)
+  return [...resto.slice(0, a), movido, ...resto.slice(a), ...archivados]
+}

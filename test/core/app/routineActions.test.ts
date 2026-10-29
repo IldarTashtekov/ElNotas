@@ -51,7 +51,6 @@ const estado = (): AppState => ({
   diagrams: {},
   contexts: {},
   events: {},
-  eventGroups: {},
   routines: { [ID_CORRER]: CORRER, [ID_LEER]: LEER },
 })
 
@@ -203,7 +202,6 @@ test("delete-routine borra la rutina con sus días y no toca la otra ni lo demá
   assert.equal(despues.routines[ID_CORRER], undefined)
   assert.strictEqual(despues.routines[ID_LEER], LEER)
   assert.strictEqual(despues.events, antes.events)
-  assert.strictEqual(despues.eventGroups, antes.eventGroups)
   assert.strictEqual(
     reduce(antes, { type: "delete-routine", routineId: routineId("fantasma"), meta: META }),
     antes,

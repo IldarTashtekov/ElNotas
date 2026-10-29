@@ -20,7 +20,7 @@ const copia = (): Backup =>
     windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
     phosphor: "green",
     framing: { d1: { x: 10, y: -20, scale: 2 } },
-    calendarOrder: { groups: ["g1", "@sin-grupo"], routines: [] },
+    calendarOrder: { routines: ["r1"] },
   })
 
 const problemaDe = (r: Result<Backup, BackupProblem>): BackupProblem => {

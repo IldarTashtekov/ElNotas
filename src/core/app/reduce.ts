@@ -34,11 +34,9 @@ import {
   setRelationLabel,
   shiftNodes,
 } from "../domain/diagramOperations.js"
-import type { EventGroup } from "../domain/EventGroup.js"
 import type {
   ContextId,
   DiagramId,
-  EventGroupId,
   EventId,
   ItemRef,
   NoteId,
@@ -165,25 +163,6 @@ const onEvent = (
   return { ...state, events: { ...state.events, [id]: { ...siguiente, ...stamp(meta) } } }
 }
 
-/** La versión para grupos de eventos, igual que las anteriores. */
-const onEventGroup = (
-  state: AppState,
-  id: EventGroupId,
-  meta: ActionMeta,
-  transformar: (g: EventGroup) => EventGroup,
-): AppState => {
-  const g: EventGroup | undefined = state.eventGroups[id]
-  if (g === undefined) return state
-
-  const siguiente: EventGroup = transformar(g)
-  if (siguiente === g) return state
-
-  return {
-    ...state,
-    eventGroups: { ...state.eventGroups, [id]: { ...siguiente, ...stamp(meta) } },
-  }
-}
-
 /** La versión para rutinas, igual que las anteriores. */
 const onRoutine = (
   state: AppState,
@@ -198,41 +177,6 @@ const onRoutine = (
   if (siguiente === r) return state
 
   return { ...state, routines: { ...state.routines, [id]: { ...siguiente, ...stamp(meta) } } }
-}
-
-/** Los ids que existen como grupo. Uno repetido no importa: sólo se pregunta si está. */
-const gruposQueExisten = (
-  grupos: AppState["eventGroups"],
-  ids: ReadonlyArray<EventGroupId>,
-): ReadonlyArray<EventGroupId> =>
-  ids.filter((id: EventGroupId): boolean => grupos[id] !== undefined)
-
-/** Los grupos que cambian al decir a cuáles pertenece un evento, ya sellados; los demás, ni se tocan. */
-const grupoSegunPertenencia = (
-  grupos: AppState["eventGroups"],
-  evento: EventId,
-  quiere: ReadonlyArray<EventGroupId>,
-  meta: ActionMeta,
-): AppState["eventGroups"] => {
-  const cambian: ReadonlyArray<EventGroup> = Object.values<EventGroup>(grupos).flatMap(
-    (g: EventGroup): ReadonlyArray<EventGroup> => {
-      const esta: boolean = g.events.includes(evento)
-      const debe: boolean = quiere.includes(g.id)
-      if (esta === debe) return []
-      const events: ReadonlyArray<EventId> = debe
-        ? [...g.events, evento]
-        : g.events.filter((e: EventId): boolean => e !== evento)
-      return [{ ...g, events, ...stamp(meta) }]
-    },
-  )
-  if (cambian.length === 0) return grupos
-
-  return {
-    ...grupos,
-    ...Object.fromEntries(
-      cambian.map((g: EventGroup): readonly [EventGroupId, EventGroup] => [g.id, g]),
-    ),
-  }
 }
 
 /** Dos referencias son la misma si coinciden clase e id. */
@@ -647,7 +591,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
         removeRelation(d, action.relationId),
       )
 
-    /* ─────────────────────── Calendario: eventos y grupos ─────────────────────── */
+    /* ─────────────────────── Calendario: eventos ─────────────────────── */
 
     case "create-event": {
       if (state.events[action.eventId] !== undefined) return state // id repetido
@@ -660,32 +604,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
         done: false,
         ...stamp(action.meta),
       }
-      const existentes: ReadonlyArray<EventGroupId> = gruposQueExisten(
-        state.eventGroups,
-        action.groupIds,
-      )
-      const conEvento: AppState["eventGroups"] = grupoSegunPertenencia(
-        state.eventGroups,
-        action.eventId,
-        existentes,
-        action.meta,
-      )
-      /* El grupo nuevo, sólo si su id está libre. */
-      const nuevoGrupo: EventGroup | null =
-        action.newGroup === null || state.eventGroups[action.newGroup.id] !== undefined
-          ? null
-          : {
-              id: action.newGroup.id,
-              name: action.newGroup.name,
-              events: [action.eventId],
-              ...stamp(action.meta),
-            }
-      return {
-        ...state,
-        events: { ...state.events, [action.eventId]: nuevo },
-        eventGroups:
-          nuevoGrupo === null ? conEvento : { ...conEvento, [nuevoGrupo.id]: nuevoGrupo },
-      }
+      return { ...state, events: { ...state.events, [action.eventId]: nuevo } }
     }
 
     case "update-event":
@@ -711,56 +630,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
       if (state.events[action.eventId] === undefined) return state
 
       const { [action.eventId]: _fuera, ...quedan } = state.events
-      return {
-        ...state,
-        events: quedan,
-        // Integridad referencial: los grupos que lo listaban se limpian.
-        eventGroups: grupoSegunPertenencia(state.eventGroups, action.eventId, [], action.meta),
-      }
-    }
-
-    case "set-event-groups": {
-      if (state.events[action.eventId] === undefined) return state
-
-      const eventGroups: AppState["eventGroups"] = grupoSegunPertenencia(
-        state.eventGroups,
-        action.eventId,
-        gruposQueExisten(state.eventGroups, action.groupIds),
-        action.meta,
-      )
-      return eventGroups === state.eventGroups ? state : { ...state, eventGroups }
-    }
-
-    case "create-event-group": {
-      if (state.eventGroups[action.groupId] !== undefined) return state // id repetido
-
-      const nuevo: EventGroup = {
-        id: action.groupId,
-        name: action.name,
-        events: [],
-        ...stamp(action.meta),
-      }
-      return { ...state, eventGroups: { ...state.eventGroups, [action.groupId]: nuevo } }
-    }
-
-    case "rename-event-group":
-      return onEventGroup(state, action.groupId, action.meta, (g: EventGroup): EventGroup =>
-        g.name === action.name ? g : { ...g, name: action.name },
-      )
-
-    case "set-event-group-archived":
-      return onEventGroup(state, action.groupId, action.meta, (g: EventGroup): EventGroup => {
-        if ((g.archived === true) === action.archived) return g
-        const { archived: _antes, ...sinMarca } = g
-        return action.archived ? { ...sinMarca, archived: true } : sinMarca
-      })
-
-    case "delete-event-group": {
-      if (state.eventGroups[action.groupId] === undefined) return state
-
-      // Sus eventos se quedan: `events` sale intacto, por referencia.
-      const { [action.groupId]: _fuera, ...quedan } = state.eventGroups
-      return { ...state, eventGroups: quedan }
+      return { ...state, events: quedan }
     }
 
     /* ───────────────────────────── Rutinas ───────────────────────────── */

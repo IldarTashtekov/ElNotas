@@ -86,7 +86,6 @@ const estado = (): AppState => ({
     [ID_VACIO]: contexto(ID_VACIO, "Vacío", []),
   },
   events: {},
-  eventGroups: {},
   routines: {},
 })
 

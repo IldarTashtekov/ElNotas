@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son cuarenta y nueve. Aquí están las ocho de contenido; las de Nota, Contexto,
+ * Son cuarenta y cuatro. Aquí están las ocho de contenido; las de Nota, Contexto,
  * Diagrama, Calendario y Rutina, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -21,7 +21,6 @@ import type {
   DiagramId,
   DiagramNodeId,
   DiagramRelationId,
-  EventGroupId,
   EventId,
   ItemRef,
   NoteId,
@@ -400,22 +399,15 @@ export type DiagramAction =
   | SetRelationLabel
   | RemoveRelation
 
-/* ───────────────────── Las nueve de Calendario: eventos y grupos ──────────────────── */
+/* ───────────────────────── Las cuatro de Calendario: eventos ──────────────────────── */
 
-/**
- * «Se creó un evento». Puede entrar ya en grupos que existen (`groupIds`; los que
- * no existen no cuentan) y en uno nuevo que se crea ahí mismo (`newGroup`; si su
- * id ya existe, no se crea). Todo de una vez: un solo guardado, y no queda un grupo
- * vacío si algo falla. El motivo puede ir vacío.
- */
+/** «Se creó un evento». El motivo puede ir vacío. */
 export interface CreateEvent {
   readonly type: "create-event"
   readonly eventId: EventId
   readonly day: Day
   readonly time: Time | null
   readonly title: string
-  readonly groupIds: ReadonlyArray<EventGroupId>
-  readonly newGroup: { readonly id: EventGroupId; readonly name: string } | null
   readonly meta: ActionMeta
 }
 
@@ -436,62 +428,13 @@ export interface SetEventDone {
   readonly meta: ActionMeta
 }
 
-/** «Se borró el evento», y con él sale de todos los grupos que lo listaban. */
 export interface DeleteEvent {
   readonly type: "delete-event"
   readonly eventId: EventId
   readonly meta: ActionMeta
 }
 
-/**
- * «Este evento está en exactamente estos grupos». Se reescriben sólo los grupos
- * que cambian; los que no existen no cuentan. Es un `set`, no un `toggle`.
- */
-export interface SetEventGroups {
-  readonly type: "set-event-groups"
-  readonly eventId: EventId
-  readonly groupIds: ReadonlyArray<EventGroupId>
-  readonly meta: ActionMeta
-}
-
-export interface CreateEventGroup {
-  readonly type: "create-event-group"
-  readonly groupId: EventGroupId
-  readonly name: string
-  readonly meta: ActionMeta
-}
-
-export interface RenameEventGroup {
-  readonly type: "rename-event-group"
-  readonly groupId: EventGroupId
-  readonly name: string
-  readonly meta: ActionMeta
-}
-
-export interface SetEventGroupArchived {
-  readonly type: "set-event-group-archived"
-  readonly groupId: EventGroupId
-  readonly archived: boolean
-  readonly meta: ActionMeta
-}
-
-/** Borrar un grupo **no borra sus eventos**: sólo guardaba referencias. */
-export interface DeleteEventGroup {
-  readonly type: "delete-event-group"
-  readonly groupId: EventGroupId
-  readonly meta: ActionMeta
-}
-
-export type CalendarAction =
-  | CreateEvent
-  | UpdateEvent
-  | SetEventDone
-  | DeleteEvent
-  | SetEventGroups
-  | CreateEventGroup
-  | RenameEventGroup
-  | SetEventGroupArchived
-  | DeleteEventGroup
+export type CalendarAction = CreateEvent | UpdateEvent | SetEventDone | DeleteEvent
 
 /* ──────────────────────────── Las seis de Rutina ─────────────────────────── */
 

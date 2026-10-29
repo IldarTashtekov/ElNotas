@@ -8,8 +8,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import { diagramId, diagramRef, noteId, noteRef } from "#core/index"
-import { eventId } from "#core/domain/Ids"
-import { pathOf, pathOfEvent } from "#storage/index"
+import { pathOf } from "#storage/index"
 
 test("una nota va en notes/ y un diagrama en diagrams/", (): void => {
   assert.equal(pathOf(noteRef(noteId("rota"))), "notes/rota.json")
@@ -22,10 +21,4 @@ test("un id con / no sale de su carpeta: se codifica como al guardar", (): void 
 
 test("un id que no se puede nombrar no tiene camino", (): void => {
   assert.equal(pathOf(noteRef(noteId("\uD800"))), null)
-})
-
-test("un evento va en events/, con el id codificado como al guardar", (): void => {
-  assert.equal(pathOfEvent(eventId("cita")), "events/cita.json")
-  assert.equal(pathOfEvent(eventId("a/b")), "events/a%2Fb.json")
-  assert.equal(pathOfEvent(eventId("\uD800")), null)
 })

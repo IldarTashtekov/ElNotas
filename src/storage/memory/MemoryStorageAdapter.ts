@@ -18,8 +18,6 @@ import type {
   ContextId,
   Diagram,
   DiagramId,
-  EventGroup,
-  EventGroupId,
   EventId,
   Note,
   NoteId,
@@ -83,10 +81,6 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
     ContextId
   >()
   const events: Repository<CalendarEvent, EventId> = createMemoryRepository<CalendarEvent, EventId>()
-  const eventGroups: Repository<EventGroup, EventGroupId> = createMemoryRepository<
-    EventGroup,
-    EventGroupId
-  >()
   const routines: Repository<Routine, RoutineId> = createMemoryRepository<Routine, RoutineId>()
 
   /* Empieza en 0: un almacén vacío es "sin esquema todavía", que es lo que el
@@ -99,7 +93,6 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
     diagrams,
     contexts,
     events,
-    eventGroups,
     routines,
 
     /*

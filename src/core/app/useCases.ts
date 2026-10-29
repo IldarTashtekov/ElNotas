@@ -20,17 +20,14 @@
 import type { Day, Time } from "../domain/calendar.js"
 import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import { checkBox, text } from "../domain/Content.js"
-import type { AppState } from "../domain/AppState.js"
 import type { Context, DefaultView } from "../domain/Context.js"
 import type { Diagram } from "../domain/Diagram.js"
-import type { EventGroup } from "../domain/EventGroup.js"
 import type {
   ContentId,
   ContextId,
   DiagramId,
   DiagramNodeId,
   DiagramRelationId,
-  EventGroupId,
   EventId,
   ItemRef,
   NoteId,
@@ -42,7 +39,6 @@ import {
   diagramId,
   diagramNodeId,
   diagramRelationId,
-  eventGroupId,
   eventId,
   noteId,
   revision,
@@ -202,17 +198,10 @@ export interface UseCases {
   ) => Diagram | null
 
   /**
-   * Crea un evento y lo devuelve. Los ids, el suyo y el del grupo nuevo si se pide
-   * uno con `newGroupName`, se generan aquí: todo en una sola acción. El motivo
-   * puede ir vacío. `null` sólo si el id ya existía.
+   * Crea un evento y lo devuelve. El id se genera aquí. El motivo puede ir
+   * vacío. `null` sólo si el id ya existía.
    */
-  readonly createEvent: (
-    day: Day,
-    time: Time | null,
-    title: string,
-    groupIds: ReadonlyArray<EventGroupId>,
-    newGroupName: string | null,
-  ) => CalendarEvent | null
+  readonly createEvent: (day: Day, time: Time | null, title: string) => CalendarEvent | null
   readonly updateEvent: (
     eventId: EventId,
     day: Day,
@@ -220,23 +209,8 @@ export interface UseCases {
     title: string,
   ) => CalendarEvent | null
   readonly setEventDone: (eventId: EventId, done: boolean) => CalendarEvent | null
-  /** Como `deleteNote`: devuelve el borrado, y tampoco sirve de undo (sale de sus grupos). */
+  /** Como `deleteNote`: devuelve el borrado, y tampoco sirve de undo. */
   readonly deleteEvent: (eventId: EventId) => CalendarEvent | null
-  /**
-   * Fija **todos** los grupos del evento, no uno: es lo que manda la hoja al
-   * guardar. Devuelve el evento, aunque lo que cambia son sus grupos, y `null` si
-   * ya estaba en exactamente esos.
-   */
-  readonly setEventGroups: (
-    eventId: EventId,
-    groupIds: ReadonlyArray<EventGroupId>,
-  ) => CalendarEvent | null
-  readonly createEventGroup: (name: string) => EventGroup | null
-  readonly renameEventGroup: (groupId: EventGroupId, name: string) => EventGroup | null
-  readonly setEventGroupArchived: (groupId: EventGroupId, archived: boolean) => EventGroup | null
-  /** Sus eventos se quedan. Devuelve el borrado. */
-  readonly deleteEventGroup: (groupId: EventGroupId) => EventGroup | null
-
   /** Crea una rutina. `null` si la meta no es de 1 a 7 (o el id ya existía). */
   readonly createRoutine: (name: string, weeklyGoal: number | null) => Routine | null
   readonly renameRoutine: (routineId: RoutineId, name: string) => Routine | null
@@ -289,12 +263,6 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
     const antes: CalendarEvent | undefined = store.getState().events[id]
     store.dispatch(action)
     return cambio(antes, store.getState().events[id])
-  }
-
-  const trasGrupoDeEventos = (id: EventGroupId, action: Action): EventGroup | null => {
-    const antes: EventGroup | undefined = store.getState().eventGroups[id]
-    store.dispatch(action)
-    return cambio(antes, store.getState().eventGroups[id])
   }
 
   const trasRutina = (id: RoutineId, action: Action): Routine | null => {
@@ -561,13 +529,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     /* ── Calendario ── */
 
-    createEvent: (
-      day: Day,
-      time: Time | null,
-      title: string,
-      groupIds: ReadonlyArray<EventGroupId>,
-      newGroupName: string | null,
-    ): CalendarEvent | null => {
+    createEvent: (day: Day, time: Time | null, title: string): CalendarEvent | null => {
       const id: EventId = eventIdNuevo(ids)
       return trasEvento(id, {
         type: "create-event",
@@ -575,8 +537,6 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         day,
         time,
         title,
-        groupIds,
-        newGroup: newGroupName === null ? null : { id: eventGroupIdNuevo(ids), name: newGroupName },
         meta: meta(),
       })
     },
@@ -589,33 +549,6 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     deleteEvent: (eventId: EventId): CalendarEvent | null =>
       trasEvento(eventId, { type: "delete-event", eventId, meta: meta() }),
-
-    setEventGroups: (eventId: EventId, groupIds: ReadonlyArray<EventGroupId>): CalendarEvent | null => {
-      /* El evento no cambia, cambian sus grupos: «hecho» es que los grupos son otros. */
-      const antes: AppState["eventGroups"] = store.getState().eventGroups
-      store.dispatch({ type: "set-event-groups", eventId, groupIds, meta: meta() })
-      const despues: AppState = store.getState()
-      return despues.eventGroups === antes ? null : (despues.events[eventId] ?? null)
-    },
-
-    createEventGroup: (name: string): EventGroup | null => {
-      const id: EventGroupId = eventGroupIdNuevo(ids)
-      return trasGrupoDeEventos(id, { type: "create-event-group", groupId: id, name, meta: meta() })
-    },
-
-    renameEventGroup: (groupId: EventGroupId, name: string): EventGroup | null =>
-      trasGrupoDeEventos(groupId, { type: "rename-event-group", groupId, name, meta: meta() }),
-
-    setEventGroupArchived: (groupId: EventGroupId, archived: boolean): EventGroup | null =>
-      trasGrupoDeEventos(groupId, {
-        type: "set-event-group-archived",
-        groupId,
-        archived,
-        meta: meta(),
-      }),
-
-    deleteEventGroup: (groupId: EventGroupId): EventGroup | null =>
-      trasGrupoDeEventos(groupId, { type: "delete-event-group", groupId, meta: meta() }),
 
     /* ── Rutinas ── */
 
@@ -669,7 +602,6 @@ const noteIdNuevo = (ids: IdGenerator): NoteId => noteId(ids.next())
 const contextIdNuevo = (ids: IdGenerator): ContextId => contextId(ids.next())
 const diagramIdNuevo = (ids: IdGenerator): DiagramId => diagramId(ids.next())
 const eventIdNuevo = (ids: IdGenerator): EventId => eventId(ids.next())
-const eventGroupIdNuevo = (ids: IdGenerator): EventGroupId => eventGroupId(ids.next())
 const routineIdNuevo = (ids: IdGenerator): RoutineId => routineId(ids.next())
 const diagramNodeIdNuevo = (ids: IdGenerator): DiagramNodeId => diagramNodeId(ids.next())
 const diagramRelationIdNuevo = (ids: IdGenerator): DiagramRelationId =>

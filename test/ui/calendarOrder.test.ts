@@ -1,5 +1,5 @@
 /**
- * El orden de los grupos y las rutinas: lo guardado se lee sin fallar y se pone
+ * El orden de las rutinas: lo guardado se lee sin fallar y se pone
  * al día con lo que existe, devolviendo la MISMA lista si no hay nada que tocar.
  */
 
@@ -7,7 +7,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { CalendarOrder } from "#ui/calendarOrder"
-import { NO_ORDER, SIN_GRUPO, parseCalendarOrder, reconcileOrder } from "#ui/calendarOrder"
+import { NO_ORDER, parseCalendarOrder, reconcileOrder } from "#ui/calendarOrder"
 
 test("lo que no tiene forma de orden se lee como el orden vacío", (): void => {
   for (const caso of [null, 3, "x", [], undefined]) {
@@ -16,15 +16,17 @@ test("lo que no tiene forma de orden se lee como el orden vacío", (): void => {
 })
 
 test("lo guardado pasa por JSON y vuelve igual", (): void => {
-  const orden: CalendarOrder = { groups: ["g2", SIN_GRUPO, "g1"], routines: ["r1"] }
+  const orden: CalendarOrder = { routines: ["r1", "r2"] }
   assert.deepEqual(parseCalendarOrder(JSON.parse(JSON.stringify(orden))), orden)
 })
 
 test("de las listas se descarta lo que no es texto y lo repetido, sin fallar", (): void => {
-  assert.deepEqual(parseCalendarOrder({ groups: ["a", 3, "a", null, "b"], routines: "no" }), {
-    groups: ["a", "b"],
-    routines: [],
-  })
+  assert.deepEqual(parseCalendarOrder({ routines: ["a", 3, "a", null, "b"] }), { routines: ["a", "b"] })
+  assert.deepEqual(parseCalendarOrder({ routines: "no" }), { routines: [] })
+})
+
+test("un groups de una copia vieja se ignora", (): void => {
+  assert.deepEqual(parseCalendarOrder({ groups: ["g1"], routines: ["r1"] }), { routines: ["r1"] })
 })
 
 test("reconcileOrder: si no sobra ni falta nada, la MISMA lista", (): void => {
@@ -42,8 +44,4 @@ test("reconcileOrder añade al final lo nuevo, en el orden en que llega", (): vo
 
 test("reconcileOrder sin nada guardado es el orden de lo que existe", (): void => {
   assert.deepEqual(reconcileOrder([], ["a", "b"]), ["a", "b"])
-})
-
-test("«Sin grupo» se mueve como cualquier otro elemento", (): void => {
-  assert.deepEqual(reconcileOrder([SIN_GRUPO, "g1"], [SIN_GRUPO, "g1", "g2"]), [SIN_GRUPO, "g1", "g2"])
 })

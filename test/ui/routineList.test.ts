@@ -3,7 +3,7 @@ import { describe, it } from "node:test"
 import type { AppState, Day, Routine, RoutineId } from "#core/index"
 import { revision } from "#core/domain/Ids"
 import { NO_ORDER } from "#ui/calendarOrder"
-import { chosenRoutineIds, currentWeek, routineList, weekSummary } from "#ui/routineList"
+import { chosenRoutineIds, currentWeek, movedOrder, routineList, toggleId, weekSummary } from "#ui/routineList"
 import type { RoutineList, RoutineRow, WeekCell, WeekRow } from "#ui/routineList"
 import { monthView } from "#ui/calendarMonth"
 import type { DayCell, MonthView } from "#ui/calendarMonth"
@@ -23,7 +23,6 @@ const estado = (...rs: ReadonlyArray<Routine>): AppState =>
     diagrams: {},
     contexts: {},
     events: {},
-    eventGroups: {},
     routines: Object.fromEntries(rs.map((r: Routine): [string, Routine] => [r.id, r])),
   }) as unknown as AppState
 
@@ -39,7 +38,7 @@ describe("routineList", (): void => {
 
   it("separa las archivadas y respeta el orden guardado", (): void => {
     const e: AppState = estado(rutina("a", []), rutina("b", []), rutina("c", [], { archived: true }))
-    const l: RoutineList = routineList(e, { groups: [], routines: ["b", "a"] }, HOY)
+    const l: RoutineList = routineList(e, { routines: ["b", "a"] }, HOY)
     assert.deepEqual(l.visible.map((f: RoutineRow): string => f.id), ["b", "a"])
     assert.deepEqual(l.archived.map((f: RoutineRow): string => f.id), ["c"])
   })
@@ -84,7 +83,7 @@ describe("rótulos", (): void => {
 describe("monthView con rutinas", (): void => {
   it("cuenta por día las elegidas que lo tienen marcado", (): void => {
     const e: AppState = estado(rutina("a", ["2026-07-01"]), rutina("b", ["2026-07-01", "2026-07-02"]))
-    const v: MonthView | null = monthView(e, { year: 2026, month: 7 }, HOY, null, new Set(["a", "b"]))
+    const v: MonthView | null = monthView(e, { year: 2026, month: 7 }, HOY, new Set(["a", "b"]))
     const dias: ReadonlyArray<DayCell> = v?.weeks.flat() ?? []
     assert.deepEqual(
       dias
@@ -96,7 +95,23 @@ describe("monthView con rutinas", (): void => {
 
   it("sin elegidas no hay progreso", (): void => {
     const e: AppState = estado(rutina("a", ["2026-07-01"]))
-    const v: MonthView | null = monthView(e, { year: 2026, month: 7 }, HOY, null)
+    const v: MonthView | null = monthView(e, { year: 2026, month: 7 }, HOY)
     assert.ok((v?.weeks.flat() ?? []).every((c: DayCell): boolean => c.routinesTotal === 0 && c.routinesDone === 0))
+  })
+})
+
+describe("orden y elección", (): void => {
+  it("toggleId devuelve un conjunto nuevo y no toca el de entrada", (): void => {
+    const antes: ReadonlySet<string> = new Set<string>(["x"])
+    assert.deepEqual([...toggleId(antes, "y")], ["x", "y"])
+    assert.deepEqual([...toggleId(antes, "x")], [])
+    assert.deepEqual([...antes], ["x"])
+  })
+
+  it("movedOrder mueve una fila visible y deja las archivadas detrás", (): void => {
+    assert.deepEqual(movedOrder(["a", "b", "c"], ["z"], 0, 2), ["b", "c", "a", "z"])
+    assert.deepEqual(movedOrder(["a", "b", "c"], ["z"], 2, 0), ["c", "a", "b", "z"])
+    assert.deepEqual(movedOrder(["a", "b", "c"], [], 1, 1), ["a", "b", "c"])
+    assert.deepEqual(movedOrder(["a"], [], 5, 0), ["a"])
   })
 })

@@ -121,27 +121,12 @@
   color: var(--muted);
   font-size: 0.85rem;
 }
-.grupos-opciones {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-.grupo-opcion {
-  background: var(--row);
-  border: 1px solid var(--rowline);
-  cursor: pointer;
-  padding: 0.45rem 0.7rem;
-  text-align: left;
-}
-.grupo-opcion[aria-pressed="true"] {
-  border-color: var(--accent);
-}
 .evento-hoja .problema {
   color: var(--danger);
   margin: 0;
 }
 
-/* ── La lista de grupos: redonda, nombre y ⋮ ── */
+/* ── La lista de rutinas: redonda, nombre y ⋮ ── */
 .grupos {
   display: flex;
   flex-direction: column;
@@ -197,7 +182,7 @@
   transition: transform 0.1s;
 }
 
-/* ── Los eventos de un grupo, por tiempo, con los pasados plegados ── */
+/* ── Los eventos, por tiempo, con los pasados plegados ── */
 .grupo-eventos {
   border-top: 1px solid var(--rowline);
   display: flex;

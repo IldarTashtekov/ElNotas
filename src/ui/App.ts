@@ -52,7 +52,7 @@ export interface AppDeps {
   readonly logger: Logger
   /** El día de hoy en este dispositivo, para el calendario; `null` si se sale del rango. */
   readonly today: () => Day | null
-  /** Dónde se guarda el orden de los grupos de eventos del calendario. */
+  /** Dónde se guarda el orden de las rutinas del calendario. */
   readonly calendarOrder: CalendarOrderPersistence
 }
 

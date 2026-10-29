@@ -1,8 +1,7 @@
 import type { CalendarEvent } from "./CalendarEvent.js"
 import type { Context } from "./Context.js"
 import type { Diagram } from "./Diagram.js"
-import type { EventGroup } from "./EventGroup.js"
-import type { ContextId, DiagramId, EventGroupId, EventId, NoteId, RoutineId } from "./Ids.js"
+import type { ContextId, DiagramId, EventId, NoteId, RoutineId } from "./Ids.js"
 import type { Note } from "./Note.js"
 import type { Routine } from "./Routine.js"
 
@@ -10,7 +9,7 @@ import type { Routine } from "./Routine.js"
  * Estado raíz de la aplicación: plano y normalizado, como una mini base de datos.
  *
  * Las entidades no se anidan unas dentro de otras; los Contextos guardan
- * referencias, y los grupos de eventos, las suyas a los eventos. El
+ * referencias. El
  * "ContextoGeneral" no está aquí porque no es una entidad: es una vista
  * derivada de `notes` y `diagrams`.
  *
@@ -28,7 +27,6 @@ export interface AppState {
   readonly diagrams: Readonly<Record<DiagramId, Diagram>>
   readonly contexts: Readonly<Record<ContextId, Context>>
   readonly events: Readonly<Record<EventId, CalendarEvent>>
-  readonly eventGroups: Readonly<Record<EventGroupId, EventGroup>>
   readonly routines: Readonly<Record<RoutineId, Routine>>
 }
 
@@ -37,6 +35,5 @@ export const emptyAppState = (): AppState => ({
   diagrams: {},
   contexts: {},
   events: {},
-  eventGroups: {},
   routines: {},
 })

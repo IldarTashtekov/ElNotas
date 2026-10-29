@@ -2,13 +2,12 @@
  * Qué enseña el calendario: el mes como rejilla de lunes a domingo con sus días
  * marcados, y los eventos de un día en su orden.
  *
- * Puro, como `windowView`: el DOM sólo lo pinta. «Hoy» y los grupos elegidos
- * llegan de fuera: el core no lee el reloj, y elegir grupos es estado de pantalla.
+ * Puro, como `windowView`: el DOM sólo lo pinta. «Hoy» y las rutinas elegidas
+ * llegan de fuera: el core no lee el reloj, y elegir rutinas es estado de pantalla.
  */
 
-import type { AppState, CalendarEvent, Day, EventGroup, Routine } from "#core/index"
-import { compareDays, dayFromParts, groupsOfEvent, monthGrid, partsOf } from "#core/index"
-import { SIN_GRUPO } from "./calendarOrder.js"
+import type { AppState, CalendarEvent, Day, Routine } from "#core/index"
+import { compareDays, dayFromParts, monthGrid, partsOf } from "#core/index"
 
 /** El mes que se mira: el año y el mes de 1 a 12. */
 export interface MonthRef {
@@ -24,7 +23,7 @@ export interface DayCell {
   /** Los días de los meses vecinos completan la primera y la última fila, y salen apagados. */
   readonly inMonth: boolean
   readonly isToday: boolean
-  /** Tiene algún evento de los grupos elegidos. */
+  /** Tiene algún evento. */
   readonly marked: boolean
   /** Todos sus eventos están hechos: se marca igual, pero tachado. */
   readonly allDone: boolean
@@ -84,32 +83,12 @@ export const dayTitle = (day: Day): string => {
 }
 
 /**
- * Si un evento cuenta para el mes con esos grupos elegidos. `null` es «todos»,
- * lo que hay hasta que se puedan elegir. Un evento en varios grupos cuenta si
- * cualquiera está elegido, y uno sin grupo cuenta si lo está «Sin grupo».
- */
-export const isChosen = (
-  state: AppState,
-  evento: CalendarEvent,
-  elegidos: ReadonlySet<string> | null,
-): boolean => {
-  if (elegidos === null) return true
-  const grupos: ReadonlyArray<EventGroup> = groupsOfEvent(state, evento.id)
-  if (grupos.length === 0) return elegidos.has(SIN_GRUPO)
-  return grupos.some((g: EventGroup): boolean => elegidos.has(g.id))
-}
-
-/**
  * Los eventos de un día: primero los de todo el día, luego por hora, y a igual
- * hora por motivo. Con `elegidos` sólo los de esos grupos; sin él, todos.
+ * hora por motivo.
  */
-export const eventsOfDay = (
-  state: AppState,
-  day: Day,
-  elegidos: ReadonlySet<string> | null = null,
-): ReadonlyArray<CalendarEvent> =>
+export const eventsOfDay = (state: AppState, day: Day): ReadonlyArray<CalendarEvent> =>
   Object.values<CalendarEvent>(state.events)
-    .filter((e: CalendarEvent): boolean => e.day === day && isChosen(state, e, elegidos))
+    .filter((e: CalendarEvent): boolean => e.day === day)
     .sort((a: CalendarEvent, b: CalendarEvent): number => {
       const horas: number = (a.time ?? "").localeCompare(b.time ?? "")
       return horas !== 0 ? horas : a.title.localeCompare(b.title)
@@ -124,7 +103,6 @@ export const monthView = (
   state: AppState,
   mes: MonthRef,
   hoy: Day | null,
-  elegidos: ReadonlySet<string> | null,
   rutinas: ReadonlySet<string> = new Set<string>(),
 ): MonthView | null => {
   const rejilla: ReadonlyArray<ReadonlyArray<Day>> | null = monthGrid(mes.year, mes.month)
@@ -136,7 +114,6 @@ export const monthView = (
     { total: number; pendientes: number }
   >()
   for (const e of Object.values<CalendarEvent>(state.events)) {
-    if (!isChosen(state, e, elegidos)) continue
     const cuenta: { total: number; pendientes: number } = cuentas.get(e.day) ?? {
       total: 0,
       pendientes: 0,

@@ -1,5 +1,5 @@
 /**
- * Guarda en `localStorage` el orden de los grupos de eventos y de las rutinas, en una
+ * Guarda en `localStorage` el orden de las rutinas, en una
  * clave propia, aparte de las notas y de las ventanas.
  *
  * Es de este navegador: ni viaja con las notas ni se comparte entre dispositivos.

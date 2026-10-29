@@ -7,8 +7,7 @@ import type { Versioned } from "./Versioned.js"
  *
  * El día y la hora son textos del calendario, no instantes (`calendar.ts`). El
  * motivo puede ser cualquier texto, también vacío: lo que se exige al escribirlo
- * lo decide la pantalla. A qué grupos pertenece no se guarda aquí sino en cada
- * `EventGroup`, como un contexto guarda sus elementos.
+ * lo decide la pantalla.
  */
 export interface CalendarEvent extends Versioned {
   readonly id: EventId

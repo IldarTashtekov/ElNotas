@@ -6,17 +6,15 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, CalendarEvent, Day, EventGroup, Time } from "#core/index"
+import type { AppState, CalendarEvent, Day, Time } from "#core/index"
 import { parseDay, parseTime } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
-import { eventGroupId, eventId } from "#core/domain/Ids"
+import { eventId } from "#core/domain/Ids"
 import { revision } from "#core/domain/Ids"
 import type { DayCell, MonthRef, MonthView } from "#ui/calendarMonth"
-import { SIN_GRUPO } from "#ui/calendarOrder"
 import {
   dayTitle,
   eventsOfDay,
-  isChosen,
   monthOf,
   monthTitle,
   monthView,
@@ -46,18 +44,9 @@ const evento = (id: string, day: string, title: string, time?: string, done: boo
   revision: revision(`rev-${id}`),
 })
 
-const grupo = (id: string, name: string, events: ReadonlyArray<string>): EventGroup => ({
-  id: eventGroupId(id),
-  name,
-  events: events.map(eventId),
-  updatedAt: 0,
-  revision: revision(`rev-${id}`),
-})
-
-const estado = (eventos: ReadonlyArray<CalendarEvent>, grupos: ReadonlyArray<EventGroup> = []): AppState => ({
+const estado = (eventos: ReadonlyArray<CalendarEvent>): AppState => ({
   ...emptyAppState(),
   events: Object.fromEntries(eventos.map((e: CalendarEvent): [string, CalendarEvent] => [e.id, e])),
-  eventGroups: Object.fromEntries(grupos.map((g: EventGroup): [string, EventGroup] => [g.id, g])),
 })
 
 const celdas = (vista: MonthView): ReadonlyArray<DayCell> => vista.weeks.flat()
@@ -65,7 +54,7 @@ const celdas = (vista: MonthView): ReadonlyArray<DayCell> => vista.weeks.flat()
 const OCTUBRE: MonthRef = { year: 2026, month: 10 }
 
 test("monthView: título, semanas de siete y los días vecinos apagados", (): void => {
-  const vista: MonthView | null = monthView(estado([]), OCTUBRE, null, null)
+  const vista: MonthView | null = monthView(estado([]), OCTUBRE, null)
   assert.ok(vista !== null)
   assert.equal(vista.title, "octubre de 2026")
   assert.ok(vista.weeks.every((s: ReadonlyArray<DayCell>): boolean => s.length === 7))
@@ -78,7 +67,7 @@ test("monthView: título, semanas de siete y los días vecinos apagados", (): vo
 
 test("monthView: marca los días con eventos y señala hoy", (): void => {
   const s: AppState = estado([evento("a", "2026-10-05", "Dentista"), evento("b", "2026-10-05", "Cena")])
-  const vista: MonthView | null = monthView(s, OCTUBRE, dia("2026-10-28"), null)
+  const vista: MonthView | null = monthView(s, OCTUBRE, dia("2026-10-28"))
   assert.ok(vista !== null)
   const por: ReadonlyMap<string, DayCell> = new Map(celdas(vista).map((c: DayCell): [string, DayCell] => [c.day, c]))
   assert.equal(por.get("2026-10-05")?.marked, true)
@@ -93,7 +82,7 @@ test("monthView: allDone sólo si todos los eventos del día están hechos", ():
     evento("b", "2026-10-05", "B", undefined, false),
     evento("c", "2026-10-06", "C", undefined, true),
   ])
-  const vista: MonthView | null = monthView(s, OCTUBRE, null, null)
+  const vista: MonthView | null = monthView(s, OCTUBRE, null)
   assert.ok(vista !== null)
   const por: ReadonlyMap<string, DayCell> = new Map(celdas(vista).map((c: DayCell): [string, DayCell] => [c.day, c]))
   assert.equal(por.get("2026-10-05")?.allDone, false)
@@ -103,40 +92,11 @@ test("monthView: allDone sólo si todos los eventos del día están hechos", ():
 
 test("monthView: marca los días de los meses vecinos que se ven", (): void => {
   const s: AppState = estado([evento("a", "2026-09-30", "Ayer")])
-  const vista: MonthView | null = monthView(s, OCTUBRE, null, null)
+  const vista: MonthView | null = monthView(s, OCTUBRE, null)
   assert.ok(vista !== null)
   const c: DayCell | undefined = celdas(vista).find((x: DayCell): boolean => x.day === dia("2026-09-30"))
   assert.equal(c?.marked, true)
   assert.equal(c?.inMonth, false)
-})
-
-test("monthView: sólo marca los eventos de los grupos elegidos", (): void => {
-  const s: AppState = estado(
-    [evento("a", "2026-10-05", "A"), evento("b", "2026-10-06", "B"), evento("c", "2026-10-07", "C")],
-    [grupo("g1", "Trabajo", ["a"]), grupo("g2", "Casa", ["b"])],
-  )
-  const vista: MonthView | null = monthView(s, OCTUBRE, null, new Set<string>(["g1"]))
-  assert.ok(vista !== null)
-  const marcados: ReadonlyArray<string> = celdas(vista)
-    .filter((c: DayCell): boolean => c.marked)
-    .map((c: DayCell): string => c.day)
-  assert.deepEqual(marcados, ["2026-10-05"])
-})
-
-test("isChosen: null es todos; sin grupo hace falta «Sin grupo»; en varios, basta uno", (): void => {
-  const s: AppState = estado(
-    [evento("a", "2026-10-05", "A"), evento("b", "2026-10-05", "B")],
-    [grupo("g1", "Uno", ["a"]), grupo("g2", "Dos", ["a"])],
-  )
-  const a: CalendarEvent | undefined = s.events[eventId("a")]
-  const b: CalendarEvent | undefined = s.events[eventId("b")]
-  assert.ok(a !== undefined && b !== undefined)
-  assert.equal(isChosen(s, a, null), true)
-  assert.equal(isChosen(s, b, null), true)
-  assert.equal(isChosen(s, b, new Set<string>(["g1"])), false)
-  assert.equal(isChosen(s, b, new Set<string>([SIN_GRUPO])), true)
-  assert.equal(isChosen(s, a, new Set<string>(["g2"])), true)
-  assert.equal(isChosen(s, a, new Set<string>([SIN_GRUPO])), false)
 })
 
 test("eventsOfDay: primero los de todo el día, luego por hora y por motivo", (): void => {

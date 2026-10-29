@@ -30,7 +30,7 @@ export interface Backup {
   readonly phosphor: string | null
   /** Dónde se miraba cada diagrama, tal cual, o `null`. Lo valida quien lo carga. */
   readonly framing: unknown
-  /** El orden de los grupos de eventos y las rutinas, tal cual, o `null`. Lo valida quien lo carga. */
+  /** El orden de las rutinas, tal cual, o `null`. Lo valida quien lo carga. */
   readonly calendarOrder: unknown
 }
 

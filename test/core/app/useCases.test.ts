@@ -31,13 +31,11 @@ import type { Day, Time } from "#core/domain/calendar"
 import { parseDay, parseTime } from "#core/domain/calendar"
 import type { CalendarEvent } from "#core/domain/CalendarEvent"
 import type { Diagram, DiagramNode, DiagramRelation } from "#core/domain/Diagram"
-import type { EventGroup } from "#core/domain/EventGroup"
 import type {
   ContextId,
   DiagramId,
   DiagramNodeId,
   DiagramRelationId,
-  EventGroupId,
   EventId,
   ItemRef,
   NoteId,
@@ -49,7 +47,6 @@ import {
   diagramId,
   diagramNodeId,
   diagramRelationId,
-  eventGroupId,
   eventId,
   noteId,
   noteRef,
@@ -87,12 +84,11 @@ const ID_NODO: DiagramNodeId = diagramNodeId("cajas")
 const ID_OTRO_NODO: DiagramNodeId = diagramNodeId("llaves")
 const ID_RELACION: DiagramRelationId = diagramRelationId("r1")
 const ID_EVENTO: EventId = eventId("cita")
-const ID_GRUPO: EventGroupId = eventGroupId("salud")
 const ID_RUTINA: RoutineId = routineId("correr")
 const DIA: Day = parseDay("2026-07-02") as Day
 const HORA_DEL_DIA: Time = parseTime("18:00") as Time
 
-const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} }
+const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, routines: {} }
 
 const HORA = 1000
 
@@ -177,7 +173,7 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
  * no lo mete aquí, la última prueba del bloque lo canta.
  */
 const CABLEADO: ReadonlyArray<
-  readonly [string, (u: UseCases) => Note | Context | Diagram | CalendarEvent | EventGroup | Routine | null]
+  readonly [string, (u: UseCases) => Note | Context | Diagram | CalendarEvent | Routine | null]
 > = [
   ["set-checked", (u) => u.setChecked(ID_NOTA, ID_LINEA, true)],
   ["set-text", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
@@ -236,7 +232,7 @@ const CABLEADO: ReadonlyArray<
   ],
   [
     "create-event",
-    (u: UseCases): CalendarEvent | null => u.createEvent(DIA, HORA_DEL_DIA, "Cita", [ID_GRUPO], "Salud"),
+    (u: UseCases): CalendarEvent | null => u.createEvent(DIA, HORA_DEL_DIA, "Cita"),
   ],
   [
     "update-event",
@@ -244,20 +240,6 @@ const CABLEADO: ReadonlyArray<
   ],
   ["set-event-done", (u: UseCases): CalendarEvent | null => u.setEventDone(ID_EVENTO, true)],
   ["delete-event", (u: UseCases): CalendarEvent | null => u.deleteEvent(ID_EVENTO)],
-  [
-    "set-event-groups",
-    (u: UseCases): CalendarEvent | null => u.setEventGroups(ID_EVENTO, [ID_GRUPO]),
-  ],
-  ["create-event-group", (u: UseCases): EventGroup | null => u.createEventGroup("Salud")],
-  [
-    "rename-event-group",
-    (u: UseCases): EventGroup | null => u.renameEventGroup(ID_GRUPO, "Otro"),
-  ],
-  [
-    "set-event-group-archived",
-    (u: UseCases): EventGroup | null => u.setEventGroupArchived(ID_GRUPO, true),
-  ],
-  ["delete-event-group", (u: UseCases): EventGroup | null => u.deleteEventGroup(ID_GRUPO)],
   ["create-routine", (u: UseCases): Routine | null => u.createRoutine("Correr", 3)],
   ["rename-routine", (u: UseCases): Routine | null => u.renameRoutine(ID_RUTINA, "Trotar")],
   [
@@ -296,18 +278,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cincuenta y un casos de uso para cuarenta y nueve acciones**: `insert` tiene dos
+      Son **cuarenta y seis casos de uso para cuarenta y cuatro acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 51, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 51, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 46, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 46, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 49, "el catálogo son CUARENTA Y NUEVE acciones: 8 + 3 + 9 + 14 + 9 + 6")
+  assert.equal(tipos.size, 44, "el catálogo son CUARENTA Y CUATRO acciones: 8 + 3 + 9 + 14 + 4 + 6")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */

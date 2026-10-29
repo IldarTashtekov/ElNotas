@@ -71,7 +71,7 @@ const copiaDeVerdad = async (): Promise<{ readonly backup: Backup; readonly blob
   if (casa === null) assert.fail("tenía que crearse")
   app.useCases.addItem(casa.id, noteRef(compra.id))
   app.useCases.createDiagram("Plano")
-  app.useCases.createEvent(parseDay("2026-07-02") as Day, null, "Dentista", [], "Salud")
+  app.useCases.createEvent(parseDay("2026-07-02") as Day, null, "Dentista")
   const correr: Routine | null = app.useCases.createRoutine("Correr", 3)
   if (correr === null) assert.fail("tenía que crearse")
   app.useCases.setRoutineDay(correr.id, parseDay("2026-07-02") as Day, true, parseDay("2026-07-02") as Day)
@@ -154,7 +154,6 @@ test("una copia con eventos lleva sus ficheros, y un evento con un día inválid
   const caminos: ReadonlyArray<string> = Object.keys(backup.files)
   const evento: string | undefined = caminos.find((c: string): boolean => c.startsWith("events/"))
   assert.ok(evento !== undefined, "la copia lleva el evento")
-  assert.ok(caminos.some((c: string): boolean => c.startsWith("event-groups/")), "y su grupo")
 
   const roto: Backup = conFicheros(backup, { ...backup.files, [evento]: "{\"id\":\"x\",\"day\":\"2026-02-30\"}" })
   const resumen: ImportSummary = resumenDe(
@@ -179,4 +178,16 @@ test("una copia con rutinas lleva su fichero, pasa el ensayo, y una con un día 
     resumenDe(await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() })).unreadable,
     1,
   )
+})
+
+test("una copia de antes de quitar los grupos de eventos, con event-groups/, se ensaya sin quejas", async (): Promise<void> => {
+  const { backup } = await copiaDeVerdad()
+  const vieja: Backup = conFicheros(backup, {
+    ...backup.files,
+    "event-groups/salud.json": "{\"id\":\"salud\",\"name\":\"Salud\",\"events\":[]}",
+  })
+  const resumen: ImportSummary = resumenDe(
+    await rehearseImport(vieja, { logger: silentLogger, clock: reloj, ids: ids() }),
+  )
+  assert.equal(resumen.unreadable, 0)
 })

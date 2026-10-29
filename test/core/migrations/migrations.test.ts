@@ -14,7 +14,6 @@ import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
 import type { CalendarEvent } from "#core/domain/CalendarEvent"
 import type { Context } from "#core/domain/Context"
-import type { EventGroup } from "#core/domain/EventGroup"
 import type { Diagram, DiagramNode, DiagramRelation, NoteNode, SimpleNode } from "#core/domain/Diagram"
 import type { MigrationError } from "#core/domain/errors/MigrationError"
 import type { DiagramNodeId, DiagramRelationId, ItemRef, NoteId } from "#core/domain/Ids"
@@ -24,7 +23,6 @@ import {
   diagramNodeId,
   diagramRef,
   diagramRelationId,
-  eventGroupId,
   eventId,
   noteId,
   noteRef,
@@ -105,10 +103,10 @@ test("hydrate pasa de listas a mapas por id", () => {
 
 test("hydrate de un almacén vacío da un estado vacío", () => {
   const state = hydrate({ notes: [], diagrams: [], contexts: [] })
-  assert.deepEqual(state, { notes: {}, diagrams: {}, contexts: {}, events: {}, eventGroups: {}, routines: {} })
+  assert.deepEqual(state, { notes: {}, diagrams: {}, contexts: {}, events: {}, routines: {} })
 })
 
-test("hydrate pasa los eventos y los grupos a mapas, y quita de un grupo lo que no existe ni una vez repetido", () => {
+test("hydrate pasa los eventos a un mapa, por referencia", () => {
   const cita: CalendarEvent = {
     id: eventId("cita"),
     day: parseDay("2026-07-02") as Day,
@@ -117,26 +115,10 @@ test("hydrate pasa los eventos y los grupos a mapas, y quita de un grupo lo que 
     updatedAt: 0,
     revision: revision("r-cita"),
   }
-  const sano: EventGroup = {
-    id: eventGroupId("sano"),
-    name: "Sano",
-    events: [cita.id],
-    updatedAt: 0,
-    revision: revision("r-sano"),
-  }
-  const roto: EventGroup = {
-    id: eventGroupId("roto"),
-    name: "Roto",
-    events: [cita.id, eventId("fantasma"), cita.id],
-    updatedAt: 0,
-    revision: revision("r-roto"),
-  }
 
-  const state = hydrate({ notes: [], diagrams: [], contexts: [], events: [cita], eventGroups: [sano, roto] })
+  const state = hydrate({ notes: [], diagrams: [], contexts: [], events: [cita] })
 
   assert.strictEqual(state.events[cita.id], cita)
-  assert.deepEqual(state.eventGroups[roto.id]?.events, [cita.id])
-  assert.strictEqual(state.eventGroups[sano.id], sano, "el grupo sano sale intacto, por referencia")
 })
 
 test("hydrate pasa las rutinas a mapas, por referencia, y sin ellas son un mapa vacío", () => {

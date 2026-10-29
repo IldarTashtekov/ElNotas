@@ -40,7 +40,7 @@ const encuadres = (leido: Result<unknown, StorageError>): FramingPersistence => 
   save: (): Result<void, StorageError> => ok(undefined),
 })
 
-const ORDEN: unknown = { groups: ["g1", "@sin-grupo"], routines: ["r1"] }
+const ORDEN: unknown = { routines: ["r1", "r2"] }
 
 const orden = (leido: Result<unknown, StorageError>): CalendarOrderPersistence => ({
   load: (): Result<unknown, StorageError> => leido,

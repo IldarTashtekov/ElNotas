@@ -2,7 +2,7 @@
 
 **Esto no es documentación de diseño: es un procedimiento**, como sus vecinas. Se pasa como dice
 `test/PASAR-LAS-LISTAS.md`. Crece con las tareas del calendario: lleva el marco (el
-icono, la vista y la ventana) el mes con los eventos de un día, los grupos de eventos, las rutinas y la copia de seguridad.
+icono, la vista y la ventana) el mes con los eventos de un día, la lista de eventos, las rutinas y la copia de seguridad.
 
 ## Por qué existe
 
@@ -11,7 +11,7 @@ orden, pero no ven el icono, la vista encima, el atrás ni qué vuelve al recarg
 
 ## Cuándo hay que volver a pasarla
 
-- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/GroupsPanel.ts`, `src/ui/RoutinesPanel.ts`, `src/ui/calendarMonth.ts`, `src/ui/dragReorder.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
+- al tocar `src/ui/CalendarView.ts`, `src/ui/CalendarPanel.ts`, `src/ui/EventsPanel.ts`, `src/ui/RoutinesPanel.ts`, `src/ui/calendarMonth.ts`, `src/ui/dragReorder.ts`, `src/ui/WindowsView.ts`, `src/ui/App.ts` o `src/ui/windows.ts`;
 - al probar un navegador o un móvil nuevos.
 
 ## Preparación
@@ -52,8 +52,8 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
   hoy y, estando ya en él, **no hace nada** (sale apagado).
 - **B3.** Pulsar un día abre una **hoja** con el día como título («2 de julio de 2026»). Sin eventos
   dice «Sin eventos este día.» y ofrece **+ Evento**.
-- **B4.** **+ Evento** abre el formulario con **Día** (el pulsado), **Hora** (vacía), **Motivo**,
-  **Grupo nuevo** y **Guardar**. Guardar con el motivo vacío crea un evento «Evento».
+- **B4.** **+ Evento** abre el formulario con **Día** (el pulsado), **Hora** (vacía), **Motivo**
+  y **Guardar**. Guardar con el motivo vacío crea un evento «Evento».
 - **B5.** Tras guardar, la hoja vuelve a la lista del día con el evento; en la rejilla el día lleva un
   **punto** debajo del número.
 - **B6.** Un evento **con hora** sale como «18:00 Cena»; los de **todo el día** primero y luego por
@@ -66,49 +66,39 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
   hoja pasa a ese día y el punto cambia de casilla).
 - **B10.** **Borrar** pide confirmar («¿Borrar este evento? No se puede deshacer.»); **Cancelar** lo
   deja; **Borrar** lo quita y el punto de la rejilla desaparece.
-- **B11.** En el formulario, **Grupo nuevo** con un nombre crea el grupo y mete el evento en él;
-  al reabrirlo, el grupo sale marcado entre los **Grupos**. Quitar la marca y guardar lo saca.
-- **B12.** El **atrás del navegador** cierra la hoja (y el formulario con ella).
-- **B13.** Con eventos creados, **recargar**: siguen ahí y marcados.
-- **B14.** A **375 px** y en escritorio, la rejilla cabe entera, sin barra horizontal, y la hoja se
+- **B11.** El **atrás del navegador** cierra la hoja (y el formulario con ella).
+- **B12.** Con eventos creados, **recargar**: siguen ahí y marcados.
+- **B13.** A **375 px** y en escritorio, la rejilla cabe entera, sin barra horizontal, y la hoja se
   puede usar con el teclado en pantalla sin tapar **Guardar**.
 
-## C. Los grupos de eventos
+## C. La lista de eventos
 
-Bajo el mes, la lista de grupos. Hacen falta eventos en un grupo y otros sin grupo, unos pasados (antes de hoy) y otros no.
+Bajo el mes, en la pestaña **Eventos**. Hacen falta eventos pasados (antes de hoy) y otros no.
 
-- **C1.** Bajo la rejilla hay una fila por grupo —**●** redonda, «nombre · n» y **⋮**— y siempre una
-  **«Sin grupo»** (sin ⋮) con los eventos que no están en ningún grupo. Debajo, **+ Grupo**.
-- **C2.** **+ Grupo** pide un nombre y **Crear** lo añade a la lista; con el nombre vacío no hace nada.
-- **C3.** La **redonda** (● / ○) apaga y enciende un grupo: sólo los días con eventos de los grupos
-  encendidos llevan punto. Un evento en varios grupos marca el día si **cualquiera** está encendido.
-- **C4.** Pulsar el **nombre** despliega los eventos del grupo **por día y hora**; los **pasados**
-  quedan plegados en «▸ Pasados (n)», que los abre y los cierra.
-- **C5.** Pulsar un evento de la lista lo abre en la hoja para **editarlo**.
-- **C6.** **⋮** ofrece **Renombrar**, **Archivar** y **Borrar**. Renombrar cambia el nombre en la
-  lista. **Archivar** lo quita de la lista y de las marcas del mes y aparece **«▸ Archivados (n)»**.
-- **C7.** **Archivados** muestra los archivados, sin redonda, con ⋮ → **Renombrar**, **Desarchivar**
-  y **Borrar**. Desarchivar lo devuelve a la lista.
-- **C8.** **Borrar** pide confirmar («¿Borrar el grupo «X»? Sus eventos no se borran.»); al aceptar,
-  el grupo desaparece y sus eventos pasan a **«Sin grupo»** (su cuenta sube).
-- **C9.** **Mantener pulsada** una fila (medio segundo) la levanta y se arrastra arriba o abajo;
-  al soltar queda en su sitio y **no** se despliega ni se abre nada. «Sin grupo» también se mueve.
-- **C10.** Tras **recargar**, las filas conservan el orden. Lo elegido con las redondas y lo
-  desplegado **no** se recuerda: vuelve todo encendido y plegado.
+- **C1.** Bajo la rejilla hay una lista con **todos** los eventos de hoy en adelante, «día hora
+  motivo», **por día y hora**, y debajo **+ Evento**. Sin eventos dice «Sin eventos.»
+- **C2.** Los **pasados** quedan plegados en «▸ Pasados (n)», que los abre y los cierra.
+- **C3.** Pulsar un evento lo abre en la hoja para **editarlo**; al guardar o borrar, la lista se
+  repinta. Un evento hecho lleva **☑** delante.
+- **C4.** **+ Evento** abre la hoja con el formulario de un evento nuevo, con el día de hoy.
+- **C5.** No hay grupos en ninguna parte: ni en el formulario, ni en la lista, ni redondas ni ⋮.
 
 ## D. La copia de seguridad lleva el calendario
 
-Con eventos en un grupo y otros sin grupo, y el orden de los grupos cambiado. Los pasos de la
+Con eventos y rutinas, y el orden de las rutinas cambiado. Los pasos de la
 exportación y la importación en sí son los de `VERIFICACION-MANUAL-COPIA.md`; aquí, que el
 calendario entra y sale.
 
-- **D1.** ⚙ → **Exportar copia**: el fichero lleva sus `events/…` y `event-groups/…` en `files`, y
-  `calendarOrder` con la lista de grupos (con `@sin-grupo` donde se dejó).
-- **D2.** Cambiar cosas (un grupo nuevo, otro orden) e **Importar copia → Sustituir todo**: tras
-  recargar, el calendario es el de la copia: los grupos y los eventos de entonces, los días
-  marcados y las filas en el orden exportado. Lo creado después ya no está.
+- **D1.** ⚙ → **Exportar copia**: el fichero lleva sus `events/…` en `files`, y `calendarOrder` con la
+  lista de rutinas.
+- **D2.** Cambiar cosas (un evento nuevo, otro orden) e **Importar copia → Sustituir todo**: tras
+  recargar, el calendario es el de la copia: los eventos de entonces y los días marcados. Lo
+  creado después ya no está.
 - **D3.** Una copia hecha **antes del calendario** se importa sin quejarse: el calendario queda
-  vacío, con sólo «Sin grupo».
+  vacío.
+- **D3b.** Una copia **antigua con `event-groups/…` y `groups` en `calendarOrder`** (de antes de
+  quitar los grupos) también se importa sin quejarse: los eventos entran y lo de los grupos se
+  ignora.
 - **D4.** Con una rutina con días marcados, otra archivada y el orden de las rutinas cambiado:
   la copia lleva sus `routines/…` en `files` y `routines` en `calendarOrder`; al **Sustituir todo**
   y recargar, las rutinas vuelven con sus días, su meta, el archivado y el orden de entonces.
@@ -144,11 +134,11 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 
 Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 
-- **M1.** **Mantener pulsada** una fila de la lista de grupos la levanta y se arrastra con el dedo;
+- **M1.** **Mantener pulsada** una fila de la lista de rutinas la levanta y se arrastra con el dedo;
   al soltar queda donde cae y no se despliega. Con el dedo parado, la página **no** se desliza.
 - **M2.** Los campos **Día** y **Hora** del formulario abren los selectores nativos del móvil; lo
   elegido aparece en el campo y se guarda.
-- **M3.** Con el **teclado en pantalla** abierto en «Motivo» o «Grupo nuevo», **Guardar** se sigue
+- **M3.** Con el **teclado en pantalla** abierto en «Motivo», **Guardar** se sigue
   alcanzando (la hoja se desplaza) y no queda tapado.
 - **M4.** La rejilla del mes cabe en la pantalla, sin barra horizontal, en vertical y en horizontal.
 - **M5.** **▦** abre el calendario; el atrás del móvil cierra primero la hoja y luego el calendario.
@@ -158,6 +148,35 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-10-29
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       e3429ff más los cambios de la 7m, sin comitear
+Origen:       localhost:8001
+
+C1  ✅ — la lista trae «2026-10-29 Hoy», «2026-10-31 18:00 Cena», «▸ Pasados (3)» y «+ Evento»
+C2  ✅ — «▸ Pasados» pasa a «▾» y enseña los tres por día; otra pulsación los pliega
+C3  ✅ — pulsar un evento abre «Editar evento» con Día, Hora y Motivo
+C4  ✅ — «+ Evento» abre «Evento nuevo» con el día de hoy
+C5  ✅ — sin grupos en el formulario ni en la lista
+D3b 🔁 simulado — con una copia a la que se añadió `event-groups/salud.json`, el ensayo de la
+    importación la acepta sin ilegibles (prueba de Node en `rehearseImport`); y un `groups` en
+    `calendarOrder` se descarta al importar (prueba en `importStorage`)
+E3  ✅ — «Esta semana» L M X J V S D; los días que no han llegado, apagados; sin semanas anteriores
+E4  ✅ — marcar y desmarcar un día de esta semana; V S D no se pueden marcar
+E5  ✅ — pestaña Rutinas: sin elegir, ninguna ✗; con la redonda de «Leer», ✗ en el 28; pestaña
+    Eventos: 🔔 en los cinco días con eventos y ninguna ✗
+E10 ✅ — a 375 px no hay barra horizontal (scrollWidth 375); el mes acaba en 395 px de 812 (menos de la mitad)
+B4  ✅ — el formulario trae Día, Hora y Motivo, sin «Grupo nuevo»
+M1  ⏭ no se puede aquí — el dedo; lo pasa el usuario en el móvil
+M6  ⏭ no se puede aquí — el dedo; lo pasa el usuario en el móvil
+
+Notas: el panel quedó a 375 px de ancho también en «escritorio» (el ancho del panel); el mes a media
+pantalla se comprobó a 812 px de alto. En el panel hay dos paneles de calendario (la ventana y la
+vista encima): las consultas se hicieron sobre el último.
+```
 
 ```
 Fecha:        2026-10-28

@@ -1,6 +1,6 @@
 /**
  * La forma que tiene que tener lo que se lee del disco: una nota, un diagrama, un
- * contexto, un evento o un grupo de eventos, campo a campo.
+ * contexto, un evento o una rutina, campo a campo.
  *
  * Un fichero puede ser JSON válido y no ser una nota —lo ha tocado alguien, o lo
  * escribió una versión rota—. Aquí se dice qué le falta; quien lee lo trata como
@@ -174,7 +174,7 @@ export const diagramProblem = (o: Registro): Problem =>
     (): Problem => cadaEntrada(o, "relations", relacion),
   )
 
-/* ──────────────────────────── Eventos y sus grupos ─────────────────────────── */
+/* ──────────────────────────── Eventos ─────────────────────────────────────── */
 
 /** El campo es texto y `valida` lo acepta: un día mal escrito es un fichero ilegible. */
 const textoValido = (
@@ -198,23 +198,6 @@ export const eventProblem = (o: Registro): Problem =>
       o["time"] === undefined ? null : textoValido(o, "time", parseTime, "una hora válida"),
     (): Problem => booleano(o, "done"),
   )
-
-export const eventGroupProblem = (o: Registro): Problem =>
-  primero(
-    (): Problem => sellada(o),
-    (): Problem => texto(o, "name"),
-    (): Problem =>
-      cadaUno(o, "events", (id: unknown): Problem =>
-        esTexto(id) ? null : "un evento de un grupo no es un texto",
-      ),
-    /* Ausente es no archivado: la clave sólo existe cuando vale `true`. */
-    (): Problem =>
-      o["archived"] === undefined || o["archived"] === true
-        ? null
-        : "«archived» no es verdadero",
-  )
-
-/* ──────────────────────────────── Rutinas ──────────────────────────────── */
 
 export const routineProblem = (o: Registro): Problem =>
   primero(

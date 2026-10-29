@@ -64,7 +64,6 @@ const estadoInicial = (): AppState => ({
   diagrams: {},
   contexts: {},
   events: {},
-  eventGroups: {},
   routines: {},
 })
 

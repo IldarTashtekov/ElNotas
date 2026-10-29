@@ -419,13 +419,19 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       **Hecho** (2026-10-29). `currentWeek` sustituye a `weekRows`; la casilla del mes lleva
       `🔔` o `✗` según la pestaña (`dia-marca`), y `DayCell` sigue llevando las dos cuentas. Ya no se
       pueden marcar semanas pasadas (apuntado en *Sin decidir*).
-- [ ] **7m. Fuera los grupos de eventos** *(pensar)*. Decidido por el usuario el 2026-10-29: no
+- [x] **7m. Fuera los grupos de eventos** *(pensar)*. Decidido por el usuario el 2026-10-29: no
       los usará. Se quitan `EventGroup`, sus acciones y casos de uso, `event-groups/` en el
       guardado, el orden de grupos de la copia, «Sin grupo», archivados y la hoja de grupos; los
       eventos quedan en una lista por fecha, con los pasados plegados. Una copia que aún traiga
       `event-groups/` se importa sin quejarse. **Cambia el dominio y una decisión cerrada.**
       **Se cierra cuando** no queda rastro en `src/`, las pruebas y las roturas se ponen al día,
       `check` y `check:roturas` pasan y la lista del calendario recoge el cambio.
+      **Hecho** (2026-10-29). Fuera `EventGroup`, sus cinco acciones y casos de uso (44 acciones,
+      46 casos de uso), `event-groups/` y `pathOfEvent`; `create-event` ya no lleva grupos. La
+      lista de eventos es `eventList` + `EventsPanel` (todos por tiempo, pasados plegados, «+ Evento»);
+      `calendarOrder` sólo guarda `routines` y ignora un `groups` de una copia vieja; `event-groups/`
+      en una copia vieja ni se lee ni estorba (prueba en `rehearseImport`). Roturas puestas al día;
+      las del calendario, pasadas con filtro. Falta la pasada entera al cerrar la tanda.
 
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, sin grupos de eventos tras la 7m, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`
