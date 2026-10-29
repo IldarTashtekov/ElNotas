@@ -17,7 +17,7 @@ export const createLocalStorageCalendarOrder = (almacen: Storage): CalendarOrder
       const texto: string | null = almacen.getItem(CALENDAR_ORDER_KEY)
       return ok(texto === null ? null : (JSON.parse(texto) as unknown))
     } catch (fallo: unknown) {
-      /* Un JSON roto aquí no es una nota perdida: los grupos y las rutinas salen por defecto. */
+      /* Un JSON roto aquí no es una nota perdida: las rutinas salen por defecto. */
       const ilegible: StorageError =
         fallo instanceof SyntaxError
           ? { kind: "corrupt", path: CALENDAR_ORDER_KEY, cause: fallo }

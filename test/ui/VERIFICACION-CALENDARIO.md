@@ -55,17 +55,17 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
 - **B4.** **+ Evento** abre el formulario con **Día** (el pulsado), **Hora** (vacía), **Motivo**
   y **Guardar**. Guardar con el motivo vacío crea un evento «Evento».
 - **B5.** Tras guardar, la hoja vuelve a la lista del día con el evento; en la rejilla el día lleva un
-  **punto** debajo del número.
+  **asterisco** (`*`) junto al número.
 - **B6.** Un evento **con hora** sale como «18:00 Cena»; los de **todo el día** primero y luego por
   hora.
 - **B7.** Un **día** o una **hora** mal escritos no guardan: sale en rojo «Pon un día válido.» o «Pon
   una hora válida, como 18:00.» y la hoja sigue abierta.
 - **B8.** **☐** de un evento lo marca hecho (☑, tachado); si **todos** los del día están hechos, el
-  punto de la rejilla queda **vacío**.
+  asterisco de la rejilla queda **atenuado**.
 - **B9.** Pulsar el texto de un evento lo abre para **editar**; cambiar el **Día** lo mueve (la
-  hoja pasa a ese día y el punto cambia de casilla).
+  hoja pasa a ese día y el asterisco cambia de casilla).
 - **B10.** **Borrar** pide confirmar («¿Borrar este evento? No se puede deshacer.»); **Cancelar** lo
-  deja; **Borrar** lo quita y el punto de la rejilla desaparece.
+  deja; **Borrar** lo quita y el asterisco de la rejilla desaparece.
 - **B11.** El **atrás del navegador** cierra la hoja (y el formulario con ella).
 - **B12.** Con eventos creados, **recargar**: siguen ahí y marcados.
 - **B13.** A **375 px** y en escritorio, la rejilla cabe entera, sin barra horizontal, y la hoja se

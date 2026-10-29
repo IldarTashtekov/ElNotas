@@ -45,9 +45,9 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 
 - **A1.** Tocar una nota de la lista la abre; **Intro** con el foco en la fila, también.
 - **A2.** La cabecera lleva **sólo el título**: ni ◀ ▶ ni ⚙. Tocar el título lo renombra.
-- **A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado) y **✕ Salir**.
+- **A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado), **Enlazar…** y **✕ Salir**.
 - **A4.** **✕ Salir** y el **atrás** (en Android, el del sistema) vuelven a **la misma ventana**.
-- **A5.** Recargar con la nota abierta deja en la ventana, no en la nota.
+- **A5.** Recargar con la nota abierta vuelve a la nota (las capas).
 
 ## B. Escribir sin perder nada
 

@@ -196,9 +196,9 @@ Para cada apartado, una nota nueva con el botón **+** grande vale: nace vacía 
 
 - **ED-A1.** Tocar una nota de la lista la abre; 💻 **Intro** con el foco en la fila, también.
 - **ED-A2.** La cabecera lleva **sólo el título**: ni ◀ ▶ ni ⚙. Tocar el título lo renombra.
-- **ED-A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado) y **✕ Salir**.
+- **ED-A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado), **Enlazar…** y **✕ Salir**.
 - **ED-A4.** **✕ Salir** y **el atrás** vuelven a **la misma ventana**.
-- **ED-A5.** Recargar con la nota abierta deja en la ventana, no en la nota.
+- **ED-A5.** Recargar con la nota abierta vuelve a la nota (las capas).
 
 ### Escribir sin perder nada
 

@@ -169,7 +169,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 **Dominio**
 - Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca. En un contexto, `hidden` ⊆ `items`.
 - Calendario: `Day`/`Time` son texto; eventos y rutinas en el core, **sin grupos**; semanas de lunes a domingo;
-  «hoy» lo da la plataforma; su orden, fuera del core. Evento: `*` en el día; rutina tocada: borde brillante.
+  «hoy» lo da la plataforma; su orden, fuera del core. Evento: `*` en el día; rutina tocada: sus días, con borde brillante.
 - `Position`: `root-end`, `after`, `last-child-of`, sólo para `insert`. ⚠️ No la justifiques por la barra.
 - Ocho operaciones; **ni `move` ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente.
 - Marcar una casilla NO arrastra a sus hijas; la cascada, si llega, en una sola acción.
@@ -238,7 +238,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Barras del móvil con el color del sistema: sin `theme-color` ni `theme_color`.
 
 **Copia de seguridad**
-- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el fósforo y los encuadres.
+- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el orden de las rutinas, el fósforo y los encuadres.
 - Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
 - «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
 - Antes de borrar, un ensayo con el mismo `boot`, en memoria; luego en dos tiempos, como «Borrar todo». A medias,
