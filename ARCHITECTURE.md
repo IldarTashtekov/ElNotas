@@ -326,6 +326,11 @@ devuelve intacto —por referencia— todo lo que no lo mencionaba. Referenciar 
 no-op. Y **ilegible no es inexistente** (§6.5): lo que está guardado pero no se puede leer conserva
 sus referencias.
 
+**La excepción: los enlaces dentro del texto no entran.** Un `[texto](#id)` es texto de una línea; el
+core no lo lee, así que borrar lo enlazado no lo limpia. El enlace roto **se ve roto** (apagado) y
+no falla al pulsarlo. Se prefiere a que el core entienda el Markdown: leerlo ataría el dominio a un
+formato de pantalla, y una nota importada con un enlace huérfano seguiría siendo válida.
+
 **Una operación que no aplica no hace nada.** No falla, no lanza: devuelve su entrada. Eso elimina el
 caso de error en vez de tiparlo, y es lo que hace que **el dominio no pueda fallar por diseño**.
 
@@ -351,6 +356,12 @@ contador: lo único que se pregunta es si sigue siendo el mismo. Sirve para escr
 y **detectar** que algo cambió por debajo; qué hacer entonces es una política aparte, y «gana el
 último» no es la elegida, porque pierde datos sin avisar. Se prefiere a comparar fechas porque los
 relojes de dos dispositivos no coinciden.
+
+**El día y la hora son texto, y «hoy» entra por puerto.** `Day` y `Time` son cadenas con su
+forma validada, no `Date`: se comparan, se ordenan y se guardan sin zonas horarias ni reloj, y las
+cuentas del calendario (semanas de lunes a domingo, la semana cumplida de una rutina) son funciones
+puras que reciben el día de hoy. Eventos y rutinas viven en el core porque son contenido; **su
+orden en pantalla, no** (§7.1).
 
 **No se construye lo que no tiene quien lo use.** Una operación, un caso de un tipo, un parámetro
 configurable o un puerto entran el día que existe su consumidor, no antes. Cada caso de más es una
@@ -585,6 +596,9 @@ existe—, siempre y no sólo al arrancar. Lo leído se valida antes de usarlo, 
 no avisa: sólo se pierde cómo se miraba, no un dato. Lo que es del dispositivo es legítimo que
 difiera entre dispositivos.
 
+**El orden de una lista de presentación también es del dispositivo.** Cómo se ordenan las ventanas
+o las rutinas no es contenido: vive fuera del core, y la copia de seguridad lo lleva aparte.
+
 **Una referencia, no un índice.** Lo que señala algo de una lista lo señala por su identidad: un
 índice se desplaza en cuanto se quita algo de delante y acaba señalando otra cosa.
 
@@ -603,6 +617,10 @@ sitios es una pieza y dos marcos.
 2. **Lo que tiene el foco no se repinta**: mientras se escribe, el DOM es la fuente de verdad, porque
    repintarlo borra el cursor. La excepción es una orden del propio editor, que sí cambia lo
    enfocado.
+
+**Sólo la línea activa se edita en crudo.** Las demás se ven formateadas, y las marcas de negrita o
+cursiva de la activa se esconden salvo junto al cursor. Es la misma regla del foco: lo que se edita es
+texto real, y lo que se lee es una vista de él.
 
 **La UI despacha en cada tecla; quien agrupa es el guardado.** El editor no decide cuándo escribir al
 disco.

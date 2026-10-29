@@ -24,7 +24,7 @@ Qué fase hay en curso y qué queda, en `TAREAS.md`.
 - **`src/core/`** — dominio puro y la referencia de estilo: modelo, operaciones, puertos, acciones.
 - **`src/storage/`** — los adaptadores de memoria y fichero, las dos de `BlobStore` y el `writeBehind`.
 - **`src/platform/web/`** — la composición: los adaptadores de la web, el arranque y `main.ts`.
-- **`src/ui/`** — vanilla: las cuatro vistas, el editor y el lienzo de diagramas.
+- **`src/ui/`** — vanilla: las cinco vistas, el editor, el lienzo y el calendario.
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
 aparte (§6.3). En la UI, lo que decide es pura y con pruebas en Node; el DOM, **a mano** con las
@@ -167,7 +167,9 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
   `test/` o `tools/`.
 
 **Dominio**
-- Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca.
+- Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca. En un contexto, `hidden` ⊆ `items`.
+- Calendario: `Day`/`Time` son texto; eventos y rutinas en el core, **sin grupos**; semanas de lunes a domingo;
+  «hoy» lo da la plataforma; su orden, fuera del core. Evento: `*` en el día; rutina tocada: borde brillante.
 - `Position`: `root-end`, `after`, `last-child-of`, sólo para `insert`. ⚠️ No la justifiques por la barra.
 - Ocho operaciones; **ni `move` ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente.
 - Marcar una casilla NO arrastra a sus hijas; la cascada, si llega, en una sola acción.
@@ -182,13 +184,12 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 **Persistencia y errores**
 - **Manda el modelo, no el fichero:** un fichero o una fila es la copia guardada de una entidad.
 - Espejo con local como primario. File System Access API, con OPFS de fallback.
-- Un fichero por entidad (el grano: un documento por entidad) + `manifest.json` con SÓLO
-  `{ schemaVersion }` (ausente = versión 0).
-- `schemaVersion` vive en `StorageAdapter`; en un almacén vacío `boot` apunta la actual.
+- Un fichero por entidad + `manifest.json` con SÓLO `{ schemaVersion }` (ausente = versión 0). Éste vive en
+  `StorageAdapter`; en un almacén vacío `boot` apunta la actual.
 - Write-behind en dos piezas: qué está sucio, en el core; cuándo, en `storage/`. Sin `Scheduler`.
 - `StorageError`, seis casos por «¿reintentar sirve?»; `corrupt` y `stale` no van dentro de `io`.
 - Escritura condicional: ante `stale`, se detiene y avisa con **Recargar**.
-- Fallo no reintentable: se detiene, avisa una vez, sólo informa. Un `io` se reintenta en silencio.
+- Fallo no reintentable: se detiene, avisa una vez. Un `io` se reintenta en silencio.
 - `transaction` lleva `Result` dentro y fuera, y sobre ficheros NO es atómica.
 - `BlobStore` devuelve `Result`; el sobre es suyo, el contenido de `FileStorageAdapter`.
 - Ilegible (`corrupt`): se salta y se avisa con `onCorrupt`, conservando sus referencias.
@@ -196,17 +197,19 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - «Borrar todo»: marca y recarga; `main.ts` borra al arrancar, sólo claves `elnotas:`.
 
 **Navegación y UI**
-- Cuatro vistas: ventanas, nota, diagrama, configuración. Lo de encima **se apila**; exit, paso a paso.
-- Ventana = referencia; la lista, en `localStorage`, fuera del core (no viaja), filtrada por `guardWindows`.
-- Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar la lista no avisa.
+- Cinco vistas: ventanas, nota, diagrama, calendario, configuración. Lo de encima **se apila**; exit, paso a paso.
+- Ventana = referencia (General, calendario o contexto); la lista, en `localStorage`, fuera del core (no viaja), filtrada por
+  `guardWindows`. Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar no avisa.
 - Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
-  `sessionStorage`); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
+  `sessionStorage`), también en cadena (nota → nota por un enlace); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
 - Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí y en
   ⚙ se crea contexto, nota o diagrama; los dos últimos, sin contexto.
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
-- Selección por pulsación larga. «Mover a…» mueve y no confirma.
-- Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí.
-- Título sólo en la cabecera, renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
+- Selección por pulsación larga. «Mover a…» mueve y no confirma. Reordenar, con el `⠿` de la selección, no en el General.
+- Texto: subconjunto de Markdown; **sólo la línea activa se edita en crudo**. El enlace `[texto](#id)` **no lo lee el
+  core** (excepción a la integridad referencial): roto, se ve apagado y no falla.
+- Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí. Título sólo en la cabecera,
+  renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
 - El atrás del navegador cierra lo de encima; abrir una capa que no consigue su entrada en el
   historial no se cae, y se cierra sin ir atrás.
 
@@ -222,29 +225,26 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - El encuadre (punto del centro y escala, no píxeles) se recuerda **por dispositivo** en `elnotas:framing`,
   fuera del core; se escribe al soltar el lienzo, sin temporizador. La mira vuelve al origen a ×1.
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
-- Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`.
+- Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira.
 - Nodo-nota con el título en directo; sin nota, «Nota perdida» (en `delete-note` y `hydrate`).
-- Gestos «doble = menú o crear»; seleccionar, en un modo junto a la mira; mover guarda al soltar. Móvil = escritorio.
+- Gestos «doble = menú o crear»; mover guarda al soltar. Móvil = escritorio.
 - Nota creada desde el lienzo: a todos los contextos del diagrama. Un diagrama se borra como una nota.
 
 **PWA**
 - GitHub Pages, rutas relativas. Publica Actions al subir a `main`, sólo si `check` pasa.
 - Actualización en silencio (`skipWaiting`); un `import()` dinámico la reabriría.
-- `persist()` en `main.ts`, fuera de `try` y de `check:fronteras`.
-- *Service worker* en JS plano, `pwa/sw.js`, sólo en la copia publicada.
-- Icono `purpose: "any"`, orientación libre, versión a la vista en ⚙, pantalla de carga negra.
-- Icono: el dibujo del «nerd» con lluvia de letras verdes sobre negro.
+- `persist()` en `main.ts`, fuera de `try` y de `check:fronteras`. *Service worker* en JS plano, `pwa/sw.js`, sólo en la copia publicada.
+- Icono `purpose: "any"`: el «nerd» con lluvia de letras verdes sobre negro. Orientación libre, versión en ⚙, carga negra.
 - Barras del móvil con el color del sistema: sin `theme-color` ni `theme_color`.
 
 **Copia de seguridad**
 - Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el fósforo y los encuadres.
 - Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
 - «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
-- Antes de borrar, un ensayo con el mismo `boot`, en memoria. Luego en dos tiempos, como «Borrar todo».
-- A medias, la app no arranca: «Reintentar» o «Abandonar la importación».
+- Antes de borrar, un ensayo con el mismo `boot`, en memoria; luego en dos tiempos, como «Borrar todo». A medias,
+  la app no arranca: «Reintentar» o «Abandonar la importación».
 
-Los principios de los que salen, en `ARCHITECTURE.md`. Si crees que una está mal, **plantéalo como
-duda**; no la cambies por tu cuenta.
+Los principios, en `ARCHITECTURE.md`. Si una está mal, **plantéalo como duda**; no la cambies por tu cuenta.
 
 ## Fuera de alcance por ahora
 
