@@ -1,13 +1,13 @@
 /**
  * La lista de rutinas, sin DOM: sus filas en el orden guardado con cómo va la
- * semana de hoy, cuáles pintan el mes, y las semanas de una rutina de la actual
- * hacia atrás, con sus siete días.
+ * semana de hoy, cuáles pintan el mes, y la semana de hoy de una rutina con sus
+ * siete días.
  *
  * El orden es de presentación (`calendarOrder`); aquí sólo se lee y se calcula.
  */
 
 import type { AppState, Day, Routine, WeekProgress } from "#core/index"
-import { addDays, compareDays, partsOf, weekProgress } from "#core/index"
+import { compareDays, weekProgress } from "#core/index"
 import type { CalendarOrder } from "./calendarOrder.js"
 import { reconcileOrder } from "./calendarOrder.js"
 
@@ -35,13 +35,10 @@ export interface WeekCell {
 }
 
 export interface WeekRow {
-  /** El lunes. */
-  readonly first: Day
   readonly cells: ReadonlyArray<WeekCell>
   readonly done: number
   readonly goal: number | null
   readonly met: boolean
-  readonly current: boolean
 }
 
 export const routineList = (state: AppState, order: CalendarOrder, hoy: Day | null): RoutineList => {
@@ -80,42 +77,22 @@ export const chosenRoutineIds = (
     lista.visible.map((f: RoutineRow): string => f.id).filter((id: string): boolean => encendidas.has(id)),
   )
 
-/**
- * Las `cuantas` últimas semanas de una rutina, la de hoy primero y hacia atrás.
- * Se corta si la semana se sale del rango del calendario.
- */
-export const weekRows = (routine: Routine, hoy: Day, cuantas: number): ReadonlyArray<WeekRow> => {
-  const filas: WeekRow[] = []
-  let dia: Day = hoy
-  for (let i: number = 0; i < cuantas; i += 1) {
-    const semana: WeekProgress | null = weekProgress(routine, dia)
-    const lunes: Day | undefined = semana?.week[0]
-    if (semana === null || lunes === undefined) break
-    filas.push({
-      first: lunes,
-      cells: semana.week.map(
-        (d: Day): WeekCell => ({
-          day: d,
-          marked: routine.days.includes(d),
-          future: compareDays(d, hoy) > 0,
-        }),
-      ),
-      done: semana.done,
-      goal: semana.goal,
-      met: semana.met,
-      current: i === 0,
-    })
-    const anterior: Day | null = addDays(lunes, -7)
-    if (anterior === null) break
-    dia = anterior
+/** La semana de `hoy` de una rutina, con sus siete días; `null` si se sale del rango del calendario. */
+export const currentWeek = (routine: Routine, hoy: Day): WeekRow | null => {
+  const semana: WeekProgress | null = weekProgress(routine, hoy)
+  if (semana === null) return null
+  return {
+    cells: semana.week.map(
+      (d: Day): WeekCell => ({
+        day: d,
+        marked: routine.days.includes(d),
+        future: compareDays(d, hoy) > 0,
+      }),
+    ),
+    done: semana.done,
+    goal: semana.goal,
+    met: semana.met,
   }
-  return filas
-}
-
-/** «22/6»: el día y el mes, para rotular una semana por su lunes. */
-export const shortDay = (day: Day): string => {
-  const { month, day: dia } = partsOf(day)
-  return `${dia}/${month}`
 }
 
 /** «3/4» con meta, «3» sin ella, y «✓» detrás cuando la semana la cumple. */

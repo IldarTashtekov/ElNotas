@@ -125,16 +125,18 @@ export const createCalendarPanel = ({
     const b: HTMLButtonElement = boton(String(c.number), (): void => abrirDia(c.day), "dia")
     b.classList.toggle("fuera", !c.inMonth)
     b.classList.toggle("hoy", c.isToday)
-    b.classList.toggle("marcado", c.marked)
-    b.classList.toggle("hecho", c.allDone)
-    const rutinas: string =
-      c.routinesTotal === 0 ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
-    b.setAttribute("aria-label", `${dayTitle(c.day)}${c.marked ? ", con eventos" : ""}${rutinas}`)
-    if (c.routinesTotal > 0) {
-      const progreso: HTMLElement = elemento("i")
-      progreso.className = "dia-progreso"
-      progreso.style.setProperty("--p", `${Math.round((c.routinesDone / c.routinesTotal) * 100)}%`)
-      b.append(progreso)
+    /* Cada pestaña pinta lo suyo en el mes: 🔔 los eventos, ✗ las rutinas marcadas. */
+    const conEventos: boolean = pestana === "eventos" && c.marked
+    const conRutinas: boolean = pestana === "rutinas" && c.routinesDone > 0
+    b.classList.toggle("marcado", conEventos || conRutinas)
+    b.classList.toggle("hecho", conEventos && c.allDone)
+    const rutinas: string = !conRutinas ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
+    b.setAttribute("aria-label", `${dayTitle(c.day)}${conEventos ? ", con eventos" : ""}${rutinas}`)
+    if (conEventos || conRutinas) {
+      const marca: HTMLElement = elemento("i")
+      marca.className = "dia-marca"
+      marca.textContent = conEventos ? "🔔" : "✗"
+      b.append(marca)
     }
     return b
   }
@@ -339,6 +341,7 @@ export const createCalendarPanel = ({
   pestanas.setAttribute("role", "tablist")
   const elegirPestana = (cual: "eventos" | "rutinas"): void => {
     pestana = cual
+    pintarMes()
     grupos.element.hidden = cual !== "eventos"
     rutinas.element.hidden = cual !== "rutinas"
     for (const b of Array.from(pestanas.children)) {

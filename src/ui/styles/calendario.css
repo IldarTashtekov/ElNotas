@@ -53,20 +53,19 @@
 .dia.fuera {
   color: var(--dim);
 }
-/* Un día con eventos lleva un punto debajo del número; con todo hecho, vacío. */
-.dia.marcado::after {
-  background: var(--accent);
-  border-radius: 0;
-  bottom: 0.3rem;
-  content: "";
-  height: 0.35rem;
-  left: calc(50% - 0.175rem);
+/* Un día marcado lleva debajo del número 🔔 (eventos) o ✗ (rutinas); con todo hecho, apagado. */
+.dia-marca {
+  bottom: 0.15rem;
+  font-size: 0.7rem;
+  font-style: normal;
+  left: 0;
+  line-height: 1;
   position: absolute;
-  width: 0.35rem;
+  text-align: center;
+  width: 100%;
 }
-.dia.marcado.hecho::after {
-  background: none;
-  border: 1px solid var(--accent);
+.dia.marcado.hecho .dia-marca {
+  opacity: 0.45;
 }
 /* Hoy, en vídeo inverso. */
 .dia.hoy {
@@ -74,13 +73,6 @@
   border-color: var(--accent);
   color: var(--accent-ink);
   text-shadow: none;
-}
-.dia.hoy.marcado::after {
-  background: var(--accent-ink);
-}
-.dia.hoy.marcado.hecho::after {
-  background: none;
-  border-color: var(--accent-ink);
 }
 
 /* ── La hoja de un día ── */
@@ -258,27 +250,6 @@
   border-color: var(--accent);
   color: var(--accent-ink);
   text-shadow: none;
-}
-
-/* ── El progreso de las rutinas elegidas en un día: una barra bajo el número ── */
-.dia-progreso {
-  background: var(--accent-soft);
-  bottom: 0;
-  height: 0.25rem;
-  left: 0;
-  position: absolute;
-  width: 100%;
-}
-.dia-progreso::before {
-  background: var(--accent);
-  content: "";
-  height: 100%;
-  left: 0;
-  position: absolute;
-  width: var(--p, 0%);
-}
-.dia.hoy .dia-progreso::before {
-  background: var(--accent-ink);
 }
 
 /* ── Las semanas de una rutina ── */

@@ -3,7 +3,7 @@ import { describe, it } from "node:test"
 import type { AppState, Day, Routine, RoutineId } from "#core/index"
 import { revision } from "#core/domain/Ids"
 import { NO_ORDER } from "#ui/calendarOrder"
-import { chosenRoutineIds, routineList, shortDay, weekRows, weekSummary } from "#ui/routineList"
+import { chosenRoutineIds, currentWeek, routineList, weekSummary } from "#ui/routineList"
 import type { RoutineList, RoutineRow, WeekCell, WeekRow } from "#ui/routineList"
 import { monthView } from "#ui/calendarMonth"
 import type { DayCell, MonthView } from "#ui/calendarMonth"
@@ -58,26 +58,22 @@ describe("chosenRoutineIds", (): void => {
   })
 })
 
-describe("weekRows", (): void => {
-  it("la de hoy primero y hacia atrás, con los días futuros", (): void => {
+describe("currentWeek", (): void => {
+  it("la semana de hoy con sus siete días y los futuros", (): void => {
     const r: Routine = rutina("a", ["2026-06-30", "2026-06-23"], { weeklyGoal: 1 })
-    const s: ReadonlyArray<WeekRow> = weekRows(r, HOY, 2)
-    assert.deepEqual(s.map((w: WeekRow): unknown[] => [w.first, w.current, w.done, w.met]), [
-      ["2026-06-29", true, 1, true],
-      ["2026-06-22", false, 1, true],
-    ])
-    assert.deepEqual(s[0]?.cells.map((c: WeekCell): boolean => c.future), [false, false, false, false, true, true, true])
-    assert.deepEqual(s[0]?.cells.map((c: WeekCell): boolean => c.marked), [false, true, false, false, false, false, false])
+    const w: WeekRow | null = currentWeek(r, HOY)
+    assert.deepEqual([w?.done, w?.met, w?.goal], [1, true, 1])
+    assert.deepEqual(w?.cells.map((c: WeekCell): string => c.day).slice(0, 2), ["2026-06-29", "2026-06-30"])
+    assert.deepEqual(w?.cells.map((c: WeekCell): boolean => c.future), [false, false, false, false, true, true, true])
+    assert.deepEqual(w?.cells.map((c: WeekCell): boolean => c.marked), [false, true, false, false, false, false, false])
   })
 
-  it("se corta donde el calendario se acaba", (): void => {
-    const s: ReadonlyArray<WeekRow> = weekRows(rutina("a", []), d("0001-01-03"), 5)
-    assert.ok(s.length < 5)
+  it("null donde el calendario se acaba", (): void => {
+    assert.equal(currentWeek(rutina("a", []), d("9999-12-31")), null)
   })
 })
 
 describe("rótulos", (): void => {
-  it("shortDay", (): void => assert.equal(shortDay(d("2026-06-22")), "22/6"))
   it("weekSummary", (): void => {
     assert.equal(weekSummary(3, null, false), "3")
     assert.equal(weekSummary(3, 4, false), "3/4")

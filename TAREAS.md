@@ -410,12 +410,15 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       sin mover el mes.
       **Hecho** (2026-10-29). Cada casilla mide `(50vh - 6.5rem) / 6`: con barra y cabecera, el mes
       no pasa de la mitad de la pantalla y la lista de debajo se desplaza con la vista.
-- [ ] **7l. Las rutinas, sólo la semana de hoy; las marcas, en el mes** *(pensar)*. Cada rutina
+- [x] **7l. Las rutinas, sólo la semana de hoy; las marcas, en el mes** *(pensar)*. Cada rutina
       enseña **sólo** los siete días de la semana actual (se quitan las semanas anteriores y «Ver
       más»). El mes pinta una **✗** en los días marcados de las rutinas elegidas **sólo en la
       pestaña Rutinas**, y una **🔔** en los días con eventos **sólo en la pestaña Eventos**; se
       va la barra de progreso. **Se cierra cuando** los pasos de la sección E lo reflejan, pasados
       en el panel a 375 y a escritorio.
+      **Hecho** (2026-10-29). `currentWeek` sustituye a `weekRows`; la casilla del mes lleva
+      `🔔` o `✗` según la pestaña (`dia-marca`), y `DayCell` sigue llevando las dos cuentas. Ya no se
+      pueden marcar semanas pasadas (apuntado en *Sin decidir*).
 - [ ] **7m. Fuera los grupos de eventos** *(pensar)*. Decidido por el usuario el 2026-10-29: no
       los usará. Se quitan `EventGroup`, sus acciones y casos de uso, `event-groups/` en el
       guardado, el orden de grupos de la copia, «Sin grupo», archivados y la hoja de grupos; los
@@ -600,6 +603,11 @@ una tarea con su cierre.
 
 **No las resuelva por su cuenta quien implemente.** Si te topas con una, pregunta.
 
+- [ ] **Marcar un día de una semana pasada** *(salió en la 7l, 2026-10-29)*. Con sólo la semana
+      de hoy en cada rutina ya no hay dónde corregir un día olvidado de la semana pasada, aunque el
+      core lo permite. Opciones: pulsar el día en el mes con la pestaña Rutinas, o nada. Sin
+      decidir hasta que el usuario lo eche en falta. **Se cierra cuando** el usuario elige y la
+      decisión queda escrita aquí.
 - [ ] **`Context.defaultView`, sin uso** *(salió en E2 de la Fase 9, 2026-10-17)*. Sigue en el
       modelo con su acción `set-default-view`, y nadie lo usa desde que una ventana puede ser una
       nota o un diagrama. Choca con el principio de no construir lo que no tiene quien lo use

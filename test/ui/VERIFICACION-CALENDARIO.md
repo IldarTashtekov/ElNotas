@@ -123,14 +123,13 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
   «nombre · n/meta» (o «n» sin meta) y **⋮**.
 - **E2.** **+ Rutina** pide un nombre y una meta (**Sin meta** o de 1 a 7 días a la semana); con el
   nombre vacío no hace nada, y **Crear** la añade con la meta elegida.
-- **E3.** Pulsar el **nombre** despliega sus semanas, la de hoy primero y **hacia atrás**, cada una
-  con L M X J V S D y «n/meta». **Ver más** enseña cuatro semanas más.
-- **E4.** Pulsar un día lo **marca** (●) o lo **desmarca** (○), también en semanas pasadas; los días
-  que aún no han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la semana
-  lleva **✓**.
-- **E5.** La **redonda** ○ / ● elige las rutinas que pintan el mes: cada día lleva una **barra** tan
-  llena como la parte de las rutinas elegidas que lo tienen marcado. Al empezar no hay ninguna
-  elegida y no hay barras.
+- **E3.** Pulsar el **nombre** despliega **sólo** la semana de hoy: «Esta semana» con L M X J V S D
+  y «n/meta». No hay semanas anteriores ni «Ver más».
+- **E4.** Pulsar un día de esa semana lo **marca** (●) o lo **desmarca** (○); los días que aún no
+  han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la semana lleva **✓**.
+- **E5.** La **redonda** ○ / ● elige las rutinas que pintan el mes: en la pestaña **Rutinas** cada día
+  marcado por alguna de las elegidas lleva una **✗**; al empezar no hay ninguna elegida y no hay
+  ninguna ✗. En la pestaña **Eventos** el mes pinta sólo los eventos, con **🔔**, y ninguna ✗.
 - **E6.** **⋮** ofrece **Renombrar**, **Cambiar meta**, **Archivar** y **Borrar**. Cambiar la meta
   **recalcula** las semanas pasadas.
 - **E7.** **Borrar** pide confirmar y dice cuántos días se pierden y que se puede **archivar**
@@ -139,7 +138,7 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
   con ⋮ → **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**. Desarchivar la devuelve.
 - **E9.** **Mantener pulsada** una fila la levanta y se arrastra; al soltar queda en su sitio y **no**
   se despliega. Tras **recargar** conserva el orden; lo elegido con las redondas y lo desplegado, no.
-- **E10.** A **375 px** y a escritorio no hay barra horizontal y los siete días de cada semana caben.
+- **E10.** A **375 px** y a escritorio no hay barra horizontal y los siete días de la semana caben; el mes no pasa de la mitad de la pantalla.
 
 ## M. Sólo en el móvil
 

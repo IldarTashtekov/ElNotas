@@ -1,11 +1,11 @@
 /**
- * La lista de rutinas bajo el mes: una redonda para elegir cuáles pintan su
- * progreso en el mes, la semana de hoy de cada una, y al abrirla sus semanas
- * con los siete días, que se marcan pulsándolos. El menú ⋮ renombra, cambia la
- * meta, archiva y borra; los archivados van en una vista aparte. Mantener
- * pulsada una fila la mueve.
+ * La lista de rutinas bajo el mes: una redonda para elegir cuáles pintan sus
+ * días marcados en el mes, y al abrir una, los siete días de la semana de hoy,
+ * que se marcan pulsándolos. El menú ⋮ renombra, cambia la meta, archiva y
+ * borra; las archivadas van en una vista aparte. Mantener pulsada una fila la
+ * mueve.
  *
- * Qué filas hay y qué semanas se ven lo calcula `routineList`; aquí sólo se
+ * Qué filas hay y cómo va la semana lo calcula `routineList`; aquí sólo se
  * pinta, se escucha y se guarda el orden.
  */
 
@@ -18,7 +18,7 @@ import { attachDragReorder } from "./dragReorder.js"
 import { elemento } from "./dom.js"
 import { movedOrder, toggleId } from "./groupList.js"
 import type { RoutineList, RoutineRow, WeekCell, WeekRow } from "./routineList.js"
-import { chosenRoutineIds, routineList, shortDay, weekRows, weekSummary } from "./routineList.js"
+import { chosenRoutineIds, currentWeek, routineList, weekSummary } from "./routineList.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
@@ -43,9 +43,6 @@ export interface RoutinesPanel {
   readonly destroy: () => void
 }
 
-/** Cuántas semanas se enseñan al abrir una rutina, y cuántas más da «Ver más». */
-const SEMANAS: number = 4
-
 const boton = (texto: string, alPulsar: () => void, clase: string): HTMLButtonElement => {
   const b: HTMLButtonElement = elemento("button", texto)
   b.type = "button"
@@ -67,7 +64,6 @@ export const createRoutinesPanel = ({
   /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna pinta el mes. */
   let encendidas: ReadonlySet<string> = new Set<string>()
   const abiertas: Set<string> = new Set<string>()
-  const semanas: Map<string, number> = new Map<string, number>()
   let verArchivadas: boolean = false
 
   const raiz: HTMLElement = elemento("section")
@@ -95,7 +91,7 @@ export const createRoutinesPanel = ({
     const fila: HTMLElement = elemento("div")
     fila.className = "rutina-semana"
     fila.classList.toggle("cumplida", s.met)
-    fila.append(elemento("span", s.current ? "Esta semana" : shortDay(s.first)))
+    fila.append(elemento("span", "Esta semana"))
     fila.lastElementChild?.classList.add("rutina-rotulo")
     const dias: HTMLElement = elemento("div")
     dias.className = "rutina-dias"
@@ -118,26 +114,13 @@ export const createRoutinesPanel = ({
     return fila
   }
 
-  const semanasDe = (r: Routine): HTMLElement => {
+  /* Cada rutina enseña sólo los siete días de la semana de hoy; el resto, en el mes. */
+  const semanaDe = (r: Routine): HTMLElement => {
     const hoy: Day | null = today()
     const contenido: HTMLElement = elemento("div")
     contenido.className = "grupo-eventos rutina-semanas"
-    if (hoy === null) return contenido
-    const cuantas: number = semanas.get(r.id) ?? SEMANAS
-    const todas: ReadonlyArray<WeekRow> = weekRows(r, hoy, cuantas)
-    contenido.append(...todas.map((s: WeekRow): HTMLElement => semana(r, s, hoy)))
-    if (todas.length === cuantas) {
-      contenido.append(
-        boton(
-          "Ver más",
-          (): void => {
-            semanas.set(r.id, cuantas + SEMANAS)
-            pintar()
-          },
-          "grupo-pasados",
-        ),
-      )
-    }
+    const actual: WeekRow | null = hoy === null ? null : currentWeek(r, hoy)
+    if (hoy !== null && actual !== null) contenido.append(semana(r, actual, hoy))
     return contenido
   }
 
@@ -181,7 +164,7 @@ export const createRoutinesPanel = ({
     cabeza.append(nombre, menu)
     li.append(cabeza)
     const rutina: Routine | undefined = store.getState().routines[f.id as RoutineId]
-    if (abierta && rutina !== undefined) li.append(semanasDe(rutina))
+    if (abierta && rutina !== undefined) li.append(semanaDe(rutina))
     return li
   }
 
