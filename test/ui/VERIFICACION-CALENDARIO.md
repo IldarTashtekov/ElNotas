@@ -118,10 +118,10 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 - **E4.** Pulsar un día de esa semana lo **marca** (✗) o lo **desmarca** (·); los días que aún no
   han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la cuenta lleva **✓**.
 - **E5.** **Tocar** una fila (en cualquier parte que no sea un botón, o marcando un día) la resalta:
-  en la pestaña **Rutinas** el mes pinta una **✗** grande en los días marcados **sólo de la rutina
+  en la pestaña **Rutinas** el mes enseña con el **borde brillante** los días marcados **sólo de la rutina
   tocada**; tocar otra cambia el mes; tocar la tocada, fuera de las casillas, la suelta. Al empezar
-  no hay ninguna tocada y no hay ninguna ✗. En la pestaña **Eventos** el mes pinta sólo los eventos,
-  con un asterisco a un lado del número, y ninguna ✗.
+  no hay ninguna tocada y ningún día con borde. En la pestaña **Eventos** el mes pinta sólo los
+  eventos, con un asterisco a un lado del número, y ningún borde brillante.
 - **E6.** Pulsar el **nombre** abre una hoja con **Renombrar**, **Cambiar meta**, **Archivar** y
   **Borrar**. Cambiar la meta **recalcula** las semanas pasadas.
 - **E7.** **Borrar** pide confirmar y dice cuántos días se pierden y que se puede **archivar**
