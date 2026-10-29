@@ -39,8 +39,10 @@
   font-size: 0.8rem;
   text-align: center;
 }
+/* El mes, con barra y cabecera, no pasa de la mitad de la pantalla: seis filas se reparten el resto. */
 .dia {
-  aspect-ratio: 1;
+  height: calc((50vh - 6.5rem) / 6);
+  min-height: 2rem;
   background: var(--row);
   border: 1px solid var(--rowline);
   cursor: pointer;

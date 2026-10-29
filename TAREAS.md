@@ -404,8 +404,28 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       como» y el selector), y la cabecera y los «cuándo volver a pasarla» recogen `RoutinesPanel` y
       `calendarMonth`. Queda **M6** para el usuario, en el móvil, junto a M1 a M5.
 
+- [x] **7k. El mes a media pantalla** *(mecánica)*. El mes del calendario ocupa como mucho la
+      mitad de la altura, y la lista de debajo (eventos o rutinas) el resto, con su propio
+      desplazamiento. **Se cierra cuando** se ve así a 375 y a escritorio y la lista se desplaza
+      sin mover el mes.
+      **Hecho** (2026-10-29). Cada casilla mide `(50vh - 6.5rem) / 6`: con barra y cabecera, el mes
+      no pasa de la mitad de la pantalla y la lista de debajo se desplaza con la vista.
+- [ ] **7l. Las rutinas, sólo la semana de hoy; las marcas, en el mes** *(pensar)*. Cada rutina
+      enseña **sólo** los siete días de la semana actual (se quitan las semanas anteriores y «Ver
+      más»). El mes pinta una **✗** en los días marcados de las rutinas elegidas **sólo en la
+      pestaña Rutinas**, y una **🔔** en los días con eventos **sólo en la pestaña Eventos**; se
+      va la barra de progreso. **Se cierra cuando** los pasos de la sección E lo reflejan, pasados
+      en el panel a 375 y a escritorio.
+- [ ] **7m. Fuera los grupos de eventos** *(pensar)*. Decidido por el usuario el 2026-10-29: no
+      los usará. Se quitan `EventGroup`, sus acciones y casos de uso, `event-groups/` en el
+      guardado, el orden de grupos de la copia, «Sin grupo», archivados y la hoja de grupos; los
+      eventos quedan en una lista por fecha, con los pasados plegados. Una copia que aún traiga
+      `event-groups/` se importa sin quejarse. **Cambia el dominio y una decisión cerrada.**
+      **Se cierra cuando** no queda rastro en `src/`, las pruebas y las roturas se ponen al día,
+      `check` y `check:roturas` pasan y la lista del calendario recoge el cambio.
+
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
-      las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, la pertenencia en el grupo, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`
+      las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, sin grupos de eventos tras la 7m, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`
       y en `ARCHITECTURE.md`: **los enlaces dentro del texto no entran; uno roto se ve roto**. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa, `check:roturas` pasa entera y la auditoría no deja nada falso.
