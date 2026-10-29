@@ -189,6 +189,17 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 
 ## Tareas sueltas terminadas
 
+- **Fase 10, tarea 1: ocultos por contexto** ✅ 2026-10-24, rama `fase-10` (`6b5329d`): `Context.hidden`
+  ⊆ `items`, ocultar y mostrar, la fila «Ocultos (n)»; `hydrate` y `schema.ts` tiran lo que no esté en `items`.
+- **Fase 10, tarea 4: seleccionar y copiar texto** ✅ 2026-10-24 (`17ddeb6`, `67102cd`): sólo la línea activa se
+  edita, el resto se selecciona de corrido y se copia como texto plano; el usuario lo probó en su móvil.
+- **Fase 10, tarea 7: el calendario** ✅ 2026-10-29 (7a `b98c6f3` a 7n `76513b1`; los retoques, hasta `032c014`):
+  `Day` y `Time` como texto con sus cuentas puras; eventos y rutinas en el core y en el guardado
+  (`events/`, `routines/`), el calendario como quinta vista y como ventana, el mes con `*` en los días con
+  eventos, y las rutinas como tabla donde la fila tocada pinta sus días con borde brillante. **Los grupos de
+  eventos**, hechos en la 7f, se quitaron en la 7m por decisión del usuario. Los pasos del móvil, en `TAREAS.md`.
+- **Fase 10, tarea 8: la documentación** ✅ 2026-10-29 (`ea46ee8`, `e9ce575`): `CLAUDE.md` y `ARCHITECTURE.md` recogen
+  el texto, las capas, los ocultos, reordenar, el calendario y la excepción de los enlaces; la auditoría halló 22 puntos.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.
