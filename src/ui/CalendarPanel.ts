@@ -132,7 +132,7 @@ export const createCalendarPanel = ({
     if (conEventos || conRutinas) {
       const marca: HTMLElement = elemento("i")
       marca.className = conRutinas ? "dia-marca tachado" : "dia-marca asterisco"
-      marca.textContent = conEventos ? "*" : "✗"
+      marca.textContent = conEventos ? "*" : "X"
       b.append(marca)
     }
     return b

@@ -79,6 +79,7 @@
   bottom: 0;
   display: flex;
   font-size: 2.4rem;
+  font-weight: bold;
   height: 100%;
   justify-content: center;
   opacity: 0.6;
