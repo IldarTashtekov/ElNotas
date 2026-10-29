@@ -156,6 +156,32 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 Fecha:        2026-10-29
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel
+Commit:       76513b1, árbol limpio
+Origen:       localhost:8001
+
+E1  ✅ — cabecera «L 26 M 27 X 28 J 29 V 30 S 31 D 1» con hoy resaltado; filas con nombre, siete
+    casillas y «n/meta»; sin redondas, ⋮ ni desplegables
+E3  ✅ — sólo la semana de hoy
+E4  ✅ — marcar y desmarcar el jueves (1/3 y 0/3); V S D deshabilitados; «3/1 ✓» al pasar la meta
+E5  ✅ — al empezar ninguna tocada ni ✗; tocar la cuenta de «Correr 5k» la resalta y el mes pinta
+    sus ✗ (+2); tocarla otra vez la suelta; marcar un día de «Correr» la toca y suma su ✗; pestaña
+    Eventos: 10 🔔 (las dos copias del calendario del DOM) y ninguna ✗
+E6  ✅ — pulsar el nombre abre la hoja con Renombrar, Cambiar meta, Archivar y Borrar; Borrar pide
+    confirmar (se cerró sin aceptar)
+E9  🔁 simulado — la pulsación larga y el arrastre, con eventos de puntero escritos a mano (700 ms
+    quieto, mover, soltar): «Leer» baja sobre «Correr 5k» y no abre la hoja
+E10 ✅ — a 375 px y a escritorio, sin barra horizontal (scrollWidth 375 y 798)
+E2, E7, E8, M1, M6  ⏭ — sin cambios en el código que tocan salvo el nombre; M1 y M6 los pasa el
+    usuario en el móvil
+
+Notas: tras un `navigate` el panel sirvió el JS antiguo (caché de módulos); se resolvió con
+  `fetch(url, {cache: "reload"})` de cada módulo y recargar.
+```
+
+```
+Fecha:        2026-10-29
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
 Commit:       e3429ff más los cambios de la 7m, sin comitear
 Origen:       localhost:8001
 
