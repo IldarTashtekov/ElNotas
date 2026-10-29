@@ -122,7 +122,7 @@ export const createCalendarPanel = ({
     const b: HTMLButtonElement = boton(String(c.number), (): void => abrirDia(c.day), "dia")
     b.classList.toggle("fuera", !c.inMonth)
     b.classList.toggle("hoy", c.isToday)
-    /* Cada pestaña pinta lo suyo en el mes: 🔔 los eventos, ✗ las rutinas marcadas. */
+    /* Cada pestaña pinta lo suyo en el mes: * los eventos, ✗ las rutinas marcadas. */
     const conEventos: boolean = pestana === "eventos" && c.marked
     const conRutinas: boolean = pestana === "rutinas" && c.routinesDone > 0
     b.classList.toggle("marcado", conEventos || conRutinas)
@@ -131,8 +131,8 @@ export const createCalendarPanel = ({
     b.setAttribute("aria-label", `${dayTitle(c.day)}${conEventos ? ", con eventos" : ""}${rutinas}`)
     if (conEventos || conRutinas) {
       const marca: HTMLElement = elemento("i")
-      marca.className = "dia-marca"
-      marca.textContent = conEventos ? "🔔" : "✗"
+      marca.className = conRutinas ? "dia-marca tachado" : "dia-marca asterisco"
+      marca.textContent = conEventos ? "*" : "✗"
       b.append(marca)
     }
     return b
