@@ -840,18 +840,10 @@ export const ROTURAS = [
     prueba: "todayOf da el día local del instante",
   },
   {
-    nombre: "calendario: una rutina archivada puede estar tocada",
-    fichero: "src/ui/routineList.ts",
-    buscar: "lista.visible.map((f: RoutineRow): string => f.id).filter((id: string): boolean => id === tocada)",
-    poner: "[...lista.visible, ...lista.archived].map((f: RoutineRow): string => f.id).filter((id: string): boolean => id === tocada)",
-    caza: "pruebas",
-    prueba: "sólo la tocada, y si es visible",
-  },
-  {
     nombre: "calendario: la cabecera de la tabla no señala hoy",
     fichero: "src/ui/routineList.ts",
     buscar: "today: c.day === hoy,",
-    poner: "today: false,",
+    poner: "today: c.day !== hoy,",
     caza: "pruebas",
     prueba: "inicial y número de cada día, con hoy señalado",
   },
@@ -1111,7 +1103,7 @@ export const ROTURAS = [
     buscar: "lista.visible.map((f: RoutineRow): string => f.id).filter(",
     poner: "[...lista.visible, ...lista.archived].map((f: RoutineRow): string => f.id).filter(",
     caza: "pruebas",
-    prueba: "sólo las visibles encendidas",
+    prueba: "sólo la tocada, y si es visible",
   },
   {
     nombre: "rutinas en pantalla: el mañana se puede marcar",
