@@ -1,7 +1,7 @@
 /**
  * La lista de rutinas, sin DOM: sus filas en el orden guardado con cómo va la
- * semana de hoy, cuáles pintan el mes, y la semana de hoy de una rutina con sus
- * siete días.
+ * semana de hoy, cuál pinta el mes, la semana de hoy de una rutina con sus
+ * siete días y la cabecera de la tabla.
  *
  * El orden es de presentación (`calendarOrder`); aquí sólo se lee y se calcula.
  */
@@ -10,6 +10,7 @@ import type { AppState, Day, Routine, WeekProgress } from "#core/index"
 import { compareDays, weekProgress } from "#core/index"
 import type { CalendarOrder } from "./calendarOrder.js"
 import { reconcileOrder } from "./calendarOrder.js"
+import { WEEKDAYS } from "./calendarMonth.js"
 
 export interface RoutineRow {
   readonly id: string
@@ -68,13 +69,25 @@ export const routineList = (state: AppState, order: CalendarOrder, hoy: Day | nu
   }
 }
 
-/** Las rutinas que pintan el mes: las visibles que se han encendido. Las archivadas nunca. */
-export const chosenRoutineIds = (
-  lista: RoutineList,
-  encendidas: ReadonlySet<string>,
-): ReadonlySet<string> =>
-  new Set<string>(
-    lista.visible.map((f: RoutineRow): string => f.id).filter((id: string): boolean => encendidas.has(id)),
+/** La rutina tocada pinta el mes si sigue entre las visibles; las archivadas nunca. */
+export const touchedRoutineIds = (lista: RoutineList, tocada: string | null): ReadonlySet<string> =>
+  new Set<string>(lista.visible.map((f: RoutineRow): string => f.id).filter((id: string): boolean => id === tocada))
+
+/** Lo que dice la cabecera de una columna de la tabla. */
+export interface WeekHeading {
+  readonly initial: string
+  readonly number: number
+  readonly today: boolean
+}
+
+/** La cabecera de la tabla: inicial y número de cada día de la semana, con hoy señalado. */
+export const weekHeadings = (semana: WeekRow, hoy: Day): ReadonlyArray<WeekHeading> =>
+  semana.cells.map(
+    (c: WeekCell, i: number): WeekHeading => ({
+      initial: WEEKDAYS[i] ?? "",
+      number: Number(c.day.slice(8)),
+      today: c.day === hoy,
+    }),
   )
 
 /** La semana de `hoy` de una rutina, con sus siete días; `null` si se sale del rango del calendario. */
@@ -98,14 +111,6 @@ export const currentWeek = (routine: Routine, hoy: Day): WeekRow | null => {
 /** «3/4» con meta, «3» sin ella, y «✓» detrás cuando la semana la cumple. */
 export const weekSummary = (done: number, goal: number | null, met: boolean): string =>
   `${goal === null ? done : `${done}/${goal}`}${met ? " ✓" : ""}`
-
-/** Enciende o apaga uno: un conjunto nuevo. */
-export const toggleId = (ids: ReadonlySet<string>, id: string): ReadonlySet<string> => {
-  const otro: Set<string> = new Set<string>(ids)
-  if (otro.has(id)) otro.delete(id)
-  else otro.add(id)
-  return otro
-}
 
 /**
  * El orden que se guarda al mover una fila visible de `de` a `a`: las visibles

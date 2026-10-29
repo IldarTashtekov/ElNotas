@@ -432,6 +432,19 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       `calendarOrder` sólo guarda `routines` y ignora un `groups` de una copia vieja; `event-groups/`
       en una copia vieja ni se lee ni estorba (prueba en `rehearseImport`). Roturas puestas al día;
       las del calendario, pasadas con filtro. Falta la pasada entera al cerrar la tanda.
+- [ ] **7n. Las rutinas como una tabla** *(pensar)*. Pedido por el usuario el 2026-10-29, con
+      una captura de un rastreador de hábitos como modelo. Cada rutina es **una fila** de una
+      tabla: el nombre a la izquierda, los siete días de esta semana como columnas (inicial y
+      número, hoy resaltado), una marca por celda que se toca para marcar el día, y la cuenta
+      «3/4 ✓» a la derecha. Fuera las redondas, el ⋮ de cada fila y los desplegables.
+      **Tocar** una rutina es tocar **cualquier parte de su fila** (marcar un día incluido): queda
+      «tocada», resaltada, y **sólo ella** pinta su ✗ en el mes de la pestaña Rutinas, sin
+      círculos ni barra. Pulsar **el nombre** abre la hoja con renombrar, meta, archivar y borrar;
+      mantener pulsada la fila la mueve. Arriba, sólo «+ Rutina» y «Archivadas (n)». *Por
+      confirmar con el usuario:* que el nombre abra la hoja y no toque la fila.
+      **Cambia la 7l** (ya no se «eligen» varias). **Se cierra cuando** se ve así a 375 y a
+      escritorio, el mes sigue a la fila tocada, la lista del calendario recoge el cambio y
+      `check` y las roturas de las rutinas pasan.
 
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, sin grupos de eventos tras la 7m, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`

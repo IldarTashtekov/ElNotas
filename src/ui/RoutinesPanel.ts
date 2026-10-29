@@ -1,9 +1,9 @@
 /**
- * La lista de rutinas bajo el mes: una redonda para elegir cuáles pintan sus
- * días marcados en el mes, y al abrir una, los siete días de la semana de hoy,
- * que se marcan pulsándolos. El menú ⋮ renombra, cambia la meta, archiva y
- * borra; las archivadas van en una vista aparte. Mantener pulsada una fila la
- * mueve.
+ * La lista de rutinas bajo el mes, como una tabla: una fila por rutina con los
+ * siete días de la semana de hoy, que se marcan pulsándolos. Tocar una fila la
+ * deja «tocada» y sólo ella pinta sus días en el mes. Pulsar el nombre abre la
+ * hoja con renombrar, meta, archivar y borrar; las archivadas van en una vista
+ * aparte. Mantener pulsada una fila la mueve.
  *
  * Qué filas hay y cómo va la semana lo calcula `routineList`; aquí sólo se
  * pinta, se escucha y se guarda el orden.
@@ -13,11 +13,10 @@ import type { Day, Logger, Routine, RoutineId, Store, UseCases } from "#core/ind
 import type { BackStack } from "./backStack.js"
 import type { CalendarOrder, CalendarOrderPersistence } from "./calendarOrder.js"
 import { NO_ORDER, parseCalendarOrder } from "./calendarOrder.js"
-import { WEEKDAYS } from "./calendarMonth.js"
 import { attachDragReorder } from "./dragReorder.js"
 import { elemento } from "./dom.js"
-import type { RoutineList, RoutineRow, WeekCell, WeekRow } from "./routineList.js"
-import { chosenRoutineIds, currentWeek, movedOrder, routineList, toggleId, weekSummary } from "./routineList.js"
+import type { RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "./routineList.js"
+import { currentWeek, movedOrder, routineList, touchedRoutineIds, weekHeadings, weekSummary } from "./routineList.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
@@ -29,7 +28,7 @@ export interface RoutinesPanelDeps {
   readonly today: () => Day | null
   readonly calendarOrder: CalendarOrderPersistence
   readonly logger: Logger
-  /** Cambió qué rutinas están elegidas: el mes se vuelve a pintar. */
+  /** Cambió la rutina tocada: el mes se vuelve a pintar. */
   readonly onChosen: () => void
 }
 
@@ -60,13 +59,13 @@ export const createRoutinesPanel = ({
   logger,
   onChosen,
 }: RoutinesPanelDeps): RoutinesPanel => {
-  /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna pinta el mes. */
-  let encendidas: ReadonlySet<string> = new Set<string>()
-  const abiertas: Set<string> = new Set<string>()
+  /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna está tocada y el mes no pinta rutinas. */
+  let tocada: string | null = null
   let verArchivadas: boolean = false
 
   const raiz: HTMLElement = elemento("section")
   raiz.className = "grupos rutinas"
+  const cabeza: HTMLElement = elemento("div")
   const lista: HTMLUListElement = elemento("ul")
   lista.className = "grupos-lista"
   const archivadas: HTMLUListElement = elemento("ul")
@@ -76,7 +75,7 @@ export const createRoutinesPanel = ({
   const hoja: Sheet = createSheet(back)
   const caja: HTMLElement = elemento("div")
   caja.className = "grupo-hoja"
-  raiz.append(lista, archivadas, pie, hoja.element)
+  raiz.append(cabeza, lista, archivadas, pie, hoja.element)
 
   const leerOrden = (): CalendarOrder => {
     const leido: ReturnType<CalendarOrderPersistence["load"]> = calendarOrder.load()
@@ -84,93 +83,82 @@ export const createRoutinesPanel = ({
   }
   const filas = (): RoutineList => routineList(store.getState(), leerOrden(), today())
 
-  /* ── Las semanas de una rutina ── */
+  /* ── La tabla: una fila por rutina, con los siete días de esta semana ── */
 
-  const semana = (r: Routine, s: WeekRow, hoy: Day): HTMLElement => {
+  const cabecera = (semanaDeEjemplo: WeekRow, hoy: Day): HTMLElement => {
     const fila: HTMLElement = elemento("div")
-    fila.className = "rutina-semana"
-    fila.classList.toggle("cumplida", s.met)
-    fila.append(elemento("span", "Esta semana"))
-    fila.lastElementChild?.classList.add("rutina-rotulo")
-    const dias: HTMLElement = elemento("div")
-    dias.className = "rutina-dias"
-    dias.append(
-      ...s.cells.map((c: WeekCell, i: number): HTMLButtonElement => {
-        const b: HTMLButtonElement = boton(
-          `${WEEKDAYS[i] ?? ""}${c.marked ? "●" : "○"}`,
-          (): void => void useCases.setRoutineDay(r.id, c.day, !c.marked, hoy),
-          "rutina-dia",
-        )
-        b.disabled = c.future && !c.marked
-        b.classList.toggle("marcado", c.marked)
-        b.setAttribute("aria-pressed", c.marked ? "true" : "false")
-        b.setAttribute("aria-label", `${r.name}, ${c.day}`)
-        return b
+    fila.className = "rutinas-cabecera"
+    fila.append(elemento("span"))
+    fila.append(
+      ...weekHeadings(semanaDeEjemplo, hoy).map((h: WeekHeading): HTMLElement => {
+        const col: HTMLElement = elemento("span", `${h.initial}\n${h.number}`)
+        col.classList.toggle("hoy", h.today)
+        return col
       }),
     )
-    fila.append(dias, elemento("span", weekSummary(s.done, s.goal, s.met)))
-    fila.lastElementChild?.classList.add("rutina-cuenta")
+    fila.append(elemento("span"))
     return fila
   }
 
-  /* Cada rutina enseña sólo los siete días de la semana de hoy; el resto, en el mes. */
-  const semanaDe = (r: Routine): HTMLElement => {
-    const hoy: Day | null = today()
-    const contenido: HTMLElement = elemento("div")
-    contenido.className = "grupo-eventos rutina-semanas"
-    const actual: WeekRow | null = hoy === null ? null : currentWeek(r, hoy)
-    if (hoy !== null && actual !== null) contenido.append(semana(r, actual, hoy))
-    return contenido
-  }
-
-  /* ── Las filas ── */
-
-  const fila = (f: RoutineRow, elegible: boolean): HTMLLIElement => {
-    const li: HTMLLIElement = elemento("li")
-    li.className = "grupo"
-    li.classList.toggle("archivado", f.archived)
-    li.dataset["id"] = f.id
-    const cabeza: HTMLElement = elemento("div")
-    cabeza.className = "grupo-cabeza"
-    if (elegible) {
-      const elegida: boolean = encendidas.has(f.id)
-      const redonda: HTMLButtonElement = boton(
-        elegida ? "●" : "○",
+  const celdas = (r: Routine, s: WeekRow, hoy: Day): ReadonlyArray<HTMLButtonElement> =>
+    s.cells.map((c: WeekCell): HTMLButtonElement => {
+      const b: HTMLButtonElement = boton(
+        c.marked ? "✗" : "·",
         (): void => {
-          encendidas = toggleId(encendidas, f.id)
+          /* Marcar un día también toca la rutina: el mes pasa a enseñar la suya. */
+          tocada = r.id
+          void useCases.setRoutineDay(r.id, c.day, !c.marked, hoy)
           pintar()
           onChosen()
         },
-        "grupo-redonda",
+        "rutina-dia",
       )
-      redonda.setAttribute("aria-pressed", elegida ? "true" : "false")
-      redonda.setAttribute("aria-label", `Mostrar ${f.name} en el mes`)
-      cabeza.append(redonda)
-    }
-    const abierta: boolean = abiertas.has(f.id)
-    const nombre: HTMLButtonElement = boton(
-      `${f.name} · ${weekSummary(f.done, f.goal, f.met)}`,
-      (): void => {
-        if (abierta) abiertas.delete(f.id)
-        else abiertas.add(f.id)
-        pintar()
-      },
-      "grupo-nombre",
-    )
-    nombre.setAttribute("aria-expanded", abierta ? "true" : "false")
-    const menu: HTMLButtonElement = boton("⋮", (): void => abrirMenu(f), "grupo-menu")
-    menu.setAttribute("aria-label", `Opciones de ${f.name}`)
-    cabeza.append(nombre, menu)
-    li.append(cabeza)
+      b.disabled = c.future && !c.marked
+      b.classList.toggle("marcado", c.marked)
+      b.setAttribute("aria-pressed", c.marked ? "true" : "false")
+      b.setAttribute("aria-label", `${r.name}, ${c.day}`)
+      return b
+    })
+
+  const fila = (f: RoutineRow, hoy: Day | null): HTMLLIElement => {
+    const li: HTMLLIElement = elemento("li")
+    li.className = "grupo rutina-fila"
+    li.classList.toggle("archivado", f.archived)
+    li.dataset["id"] = f.id
+    const nombre: HTMLButtonElement = boton(f.name, (): void => abrirMenu(f), "rutina-nombre")
+    nombre.setAttribute("aria-label", `Opciones de ${f.name}`)
+    li.append(nombre)
     const rutina: Routine | undefined = store.getState().routines[f.id as RoutineId]
-    if (abierta && rutina !== undefined) li.append(semanaDe(rutina))
+    const semana: WeekRow | null = hoy === null || rutina === undefined || f.archived ? null : currentWeek(rutina, hoy)
+    if (rutina !== undefined && hoy !== null && semana !== null) {
+      li.append(...celdas(rutina, semana, hoy))
+      const cuenta: HTMLElement = elemento("span", weekSummary(f.done, f.goal, f.met))
+      cuenta.className = "rutina-cuenta"
+      cuenta.classList.toggle("cumplida", f.met)
+      li.append(cuenta)
+      const tocadaAhora: boolean = tocada === f.id
+      li.classList.toggle("tocada", tocadaAhora)
+      li.setAttribute("aria-current", tocadaAhora ? "true" : "false")
+      /* Tocar la fila, donde no haya un botón, la toca o la suelta. */
+      li.addEventListener("click", (e: MouseEvent): void => {
+        if ((e.target as HTMLElement).closest("button") !== null) return
+        tocada = tocada === f.id ? null : f.id
+        pintar()
+        onChosen()
+      })
+    }
     return li
   }
 
   const pintar = (): void => {
     const todas: RoutineList = filas()
-    lista.replaceChildren(...todas.visible.map((f: RoutineRow): HTMLLIElement => fila(f, true)))
-    archivadas.replaceChildren(...todas.archived.map((f: RoutineRow): HTMLLIElement => fila(f, false)))
+    const hoy: Day | null = today()
+    const primera: RoutineRow | undefined = todas.visible[0]
+    const rutina: Routine | undefined = primera === undefined ? undefined : store.getState().routines[primera.id as RoutineId]
+    const semana: WeekRow | null = hoy === null || rutina === undefined ? null : currentWeek(rutina, hoy)
+    lista.replaceChildren(...todas.visible.map((f: RoutineRow): HTMLLIElement => fila(f, hoy)))
+    cabeza.replaceChildren(...(hoy === null || semana === null ? [] : [cabecera(semana, hoy)]))
+    archivadas.replaceChildren(...todas.archived.map((f: RoutineRow): HTMLLIElement => fila(f, null)))
     archivadas.hidden = !verArchivadas || todas.archived.length === 0
     const botones: HTMLButtonElement[] = [boton("+ Rutina", abrirNueva, "secundario grupo-nuevo")]
     if (todas.archived.length > 0) {
@@ -192,7 +180,7 @@ export const createRoutinesPanel = ({
 
   const soltarArrastre: () => void = attachDragReorder(lista, {
     fichas: "li.grupo",
-    ignorar: "button:not(.grupo-nombre)",
+    ignorar: "button:not(.rutina-nombre)",
     eje: "y",
     onMove: (de: number, a: number): void => {
       const todas: RoutineList = filas()
@@ -330,7 +318,7 @@ export const createRoutinesPanel = ({
 
   return {
     element: raiz,
-    chosen: (): ReadonlySet<string> => chosenRoutineIds(filas(), encendidas),
+    chosen: (): ReadonlySet<string> => touchedRoutineIds(filas(), tocada),
     update: pintar,
     destroy: soltarArrastre,
   }

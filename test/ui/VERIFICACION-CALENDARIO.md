@@ -109,25 +109,28 @@ Bajo la rejilla, la pestaña **Rutinas** (la otra es **Eventos**). Hace falta al
 y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 
 - **E1.** Bajo el mes hay dos pestañas, **Eventos** y **Rutinas**; sólo se ve la lista de la
-  elegida. La de rutinas lleva **+ Rutina** y, con rutinas, una fila por cada una: **○** redonda,
-  «nombre · n/meta» (o «n» sin meta) y **⋮**.
+  elegida. La de rutinas lleva **+ Rutina** y, con rutinas, una **tabla**: una cabecera con L M X J V
+  S D y el número de cada día (hoy resaltado) y una fila por rutina con su nombre, siete casillas y
+  «n/meta» (o «n» sin meta). Sin redondas, sin ⋮ y sin desplegables.
 - **E2.** **+ Rutina** pide un nombre y una meta (**Sin meta** o de 1 a 7 días a la semana); con el
   nombre vacío no hace nada, y **Crear** la añade con la meta elegida.
-- **E3.** Pulsar el **nombre** despliega **sólo** la semana de hoy: «Esta semana» con L M X J V S D
-  y «n/meta». No hay semanas anteriores ni «Ver más».
-- **E4.** Pulsar un día de esa semana lo **marca** (●) o lo **desmarca** (○); los días que aún no
-  han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la semana lleva **✓**.
-- **E5.** La **redonda** ○ / ● elige las rutinas que pintan el mes: en la pestaña **Rutinas** cada día
-  marcado por alguna de las elegidas lleva una **✗**; al empezar no hay ninguna elegida y no hay
-  ninguna ✗. En la pestaña **Eventos** el mes pinta sólo los eventos, con **🔔**, y ninguna ✗.
-- **E6.** **⋮** ofrece **Renombrar**, **Cambiar meta**, **Archivar** y **Borrar**. Cambiar la meta
-  **recalcula** las semanas pasadas.
+- **E3.** La fila enseña **sólo** la semana de hoy; no hay semanas anteriores ni «Ver más».
+- **E4.** Pulsar un día de esa semana lo **marca** (✗) o lo **desmarca** (·); los días que aún no
+  han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la cuenta lleva **✓**.
+- **E5.** **Tocar** una fila (en cualquier parte que no sea un botón, o marcando un día) la resalta:
+  en la pestaña **Rutinas** el mes pinta una **✗** en los días marcados **sólo de la rutina
+  tocada**; tocar otra cambia el mes; tocar la tocada, fuera de las casillas, la suelta. Al empezar
+  no hay ninguna tocada y no hay ninguna ✗. En la pestaña **Eventos** el mes pinta sólo los eventos,
+  con **🔔**, y ninguna ✗.
+- **E6.** Pulsar el **nombre** abre una hoja con **Renombrar**, **Cambiar meta**, **Archivar** y
+  **Borrar**. Cambiar la meta **recalcula** las semanas pasadas.
 - **E7.** **Borrar** pide confirmar y dice cuántos días se pierden y que se puede **archivar**
   («¿Borrar la rutina «X»? Se pierden sus n días marcados…»); al aceptar, desaparece.
-- **E8.** **Archivar** la quita de la lista y del mes y aparece **«▸ Archivadas (n)»**, sin redonda,
-  con ⋮ → **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**. Desarchivar la devuelve.
+- **E8.** **Archivar** la quita de la tabla y del mes y aparece **«▸ Archivadas (n)»**, con sólo el
+  nombre; pulsarlo ofrece **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**.
+  Desarchivar la devuelve.
 - **E9.** **Mantener pulsada** una fila la levanta y se arrastra; al soltar queda en su sitio y **no**
-  se despliega. Tras **recargar** conserva el orden; lo elegido con las redondas y lo desplegado, no.
+  abre la hoja. Tras **recargar** conserva el orden; la rutina tocada, no.
 - **E10.** A **375 px** y a escritorio no hay barra horizontal y los siete días de la semana caben; el mes no pasa de la mitad de la pantalla.
 
 ## M. Sólo en el móvil
@@ -135,7 +138,7 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 
 - **M1.** **Mantener pulsada** una fila de la lista de rutinas la levanta y se arrastra con el dedo;
-  al soltar queda donde cae y no se despliega. Con el dedo parado, la página **no** se desliza.
+  al soltar queda donde cae y no abre la hoja. Con el dedo parado, la página **no** se desliza.
 - **M2.** Los campos **Día** y **Hora** del formulario abren los selectores nativos del móvil; lo
   elegido aparece en el campo y se guarda.
 - **M3.** Con el **teclado en pantalla** abierto en «Motivo», **Guardar** se sigue

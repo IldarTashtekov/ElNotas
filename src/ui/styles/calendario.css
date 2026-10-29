@@ -126,7 +126,7 @@
   margin: 0;
 }
 
-/* ── La lista de rutinas: redonda, nombre y ⋮ ── */
+/* ── La lista de rutinas ── */
 .grupos {
   display: flex;
   flex-direction: column;
@@ -148,28 +148,6 @@
   -webkit-user-select: none;
   /* Mantener pulsado mueve la fila: el dedo no debe deslizar la página antes. */
   touch-action: pan-y;
-}
-.grupo-cabeza {
-  align-items: center;
-  display: flex;
-}
-.grupo-redonda,
-.grupo-menu {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.55rem 0.8rem;
-}
-.grupo-nombre {
-  background: none;
-  border: none;
-  cursor: pointer;
-  flex: 1;
-  padding: 0.55rem 0.3rem;
-  text-align: left;
-}
-.grupo.archivado .grupo-nombre {
-  color: var(--dim);
 }
 /* La fila levantada pasa por encima de las demás. */
 .grupo.levantada {
@@ -237,42 +215,64 @@
   text-shadow: none;
 }
 
-/* ── Las semanas de una rutina ── */
-.rutina-semana {
+/* ── La tabla de rutinas: nombre, siete días y la cuenta ── */
+.rutinas-cabecera,
+.rutina-fila {
   align-items: center;
+  column-gap: 0.15rem;
   display: grid;
-  gap: 0.3rem;
-  grid-template-columns: 5.5rem 1fr auto;
-  padding: 0.25rem 0;
+  grid-template-columns: minmax(0, 1fr) repeat(7, 1.8rem) 2.8rem;
+  padding: 0 0.3rem;
 }
-.rutina-rotulo,
-.rutina-cuenta {
+.rutinas-cabecera span {
   color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.1;
+  text-align: center;
+  white-space: pre;
 }
-.rutina-semana.cumplida .rutina-cuenta {
+.rutinas-cabecera .hoy {
   color: var(--accent);
 }
-.rutina-dias {
-  display: grid;
-  gap: 0.15rem;
-  grid-template-columns: repeat(7, 1fr);
+.rutina-nombre {
+  background: none;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0.7rem 0.2rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.grupo.archivado .rutina-nombre {
+  color: var(--dim);
+}
+.rutina-cuenta {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: right;
+}
+.rutina-cuenta.cumplida {
+  color: var(--accent);
+}
+/* La rutina tocada: la que pinta el mes. */
+.rutina-fila.tocada {
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 .rutina-dia {
-  background: var(--row);
-  border: 1px solid var(--rowline);
+  background: none;
+  border: none;
+  color: var(--dim);
   cursor: pointer;
-  font-size: 0.75rem;
-  padding: 0.3rem 0;
+  padding: 0.7rem 0;
 }
 .rutina-dia.marcado {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-  text-shadow: none;
+  color: var(--accent);
 }
 .rutina-dia:disabled {
-  color: var(--dim);
   cursor: default;
+  opacity: 0.4;
 }
 .rutina-metas {
   display: flex;
