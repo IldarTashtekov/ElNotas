@@ -448,7 +448,7 @@ las tareas, debajo. Propuesto por el usuario el 2026-10-24.
       **Hecho** (2026-10-29). `RoutinesPanel` es la tabla; `routineList` trae `touchedRoutineIds` y
       `weekHeadings` (fuera `chosenRoutineIds` y `toggleId`). Tocar la fila fuera de un botón la toca
       o la suelta; marcar un día también la toca. Lista del calendario pasada en el panel (E1 a E10,
-      menos M1 y M6, del usuario). Falta la pasada entera de roturas al cerrar la tanda.
+      menos M1 y M6, del usuario). La pasada entera de roturas de la tanda, pasada tras la 7n.
 
 - [ ] **8. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`: el texto como Markdown,
       las capas en cadena, los ocultos (`hidden` ⊆ `items`), reordenar con el `⠿`, sólo es editable la línea activa, y el calendario (el día y la hora como texto, sin grupos de eventos tras la 7m, el orden de las listas como presentación, las cinco vistas y la ventana de calendario). Y la excepción a la integridad referencial, en `CLAUDE.md`
