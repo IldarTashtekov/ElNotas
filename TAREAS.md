@@ -615,6 +615,15 @@ una tarea con su cierre.
       pase reformatea todo el repo en un commit aparte. **Se cierra cuando** el usuario elige y,
       con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
       `CLAUDE.md` recoge el comando.
+- [ ] **Ajustes a la correa larga, de la prueba de la Fase 10** *(pensar)*. *Propuestos el
+      2026-10-29* al cerrar la 10; `CLAUDE.md` → *Cómo se trabaja* cambia sólo si el usuario lo
+      acepta. Tres: (1) **una parada tras plantear una *(pensar)* de UI**, enseñando el
+      planteamiento o una maqueta antes de implementar (la 7k a la 7n fueron rehacer lo ya hecho);
+      (2) **un guardián para `tmp-test/`**: que `check:roturas` y `check` se nieguen a correr a la
+      vez, en vez de depender de la memoria de Claude; (3) **marcar lo sustituido** en la crónica de
+      `TAREAS.md` al quitar un concepto («sustituido por la 7m»), porque la auditoría de la 10
+      volvió a encontrar grupos, 🔔 y ✗ descritos como vigentes. **Se cierra cuando** el usuario
+      acepta o descarta cada uno y lo aceptado queda en `CLAUDE.md` o en un guardián con su rotura.
 - [ ] **Exportar a Markdown**, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
       modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
       Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
