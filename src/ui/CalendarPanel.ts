@@ -140,7 +140,7 @@ export const createCalendarPanel = ({
   }
 
   const pintarMes = (): void => {
-    const vista: MonthView | null = monthView(store.getState(), mes, hoy, rutinas.chosen())
+    const vista: MonthView | null = monthView(store.getState(), mes, hoy, rutinas.touched())
     if (vista === null) return
     titulo.textContent = vista.title
     anterior.disabled = shiftMonth(mes, -1) === null
@@ -293,7 +293,7 @@ export const createCalendarPanel = ({
     today,
     calendarOrder,
     logger,
-    onChosen: (): void => pintarMes(),
+    onTouched: (): void => pintarMes(),
   })
 
   /* Las dos listas comparten el sitio: una pestaña elige cuál se ve. */

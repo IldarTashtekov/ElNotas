@@ -116,7 +116,7 @@ describe("monthView con rutinas", (): void => {
   })
 })
 
-describe("orden y elección", (): void => {
+describe("orden", (): void => {
   it("movedOrder mueve una fila visible y deja las archivadas detrás", (): void => {
     assert.deepEqual(movedOrder(["a", "b", "c"], ["z"], 0, 2), ["b", "c", "a", "z"])
     assert.deepEqual(movedOrder(["a", "b", "c"], ["z"], 2, 0), ["c", "a", "b", "z"])

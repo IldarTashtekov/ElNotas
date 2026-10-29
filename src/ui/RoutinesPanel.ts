@@ -29,13 +29,13 @@ export interface RoutinesPanelDeps {
   readonly calendarOrder: CalendarOrderPersistence
   readonly logger: Logger
   /** Cambió la rutina tocada: el mes se vuelve a pintar. */
-  readonly onChosen: () => void
+  readonly onTouched: () => void
 }
 
 export interface RoutinesPanel {
   readonly element: HTMLElement
-  /** Las rutinas que pintan el mes ahora. */
-  readonly chosen: () => ReadonlySet<string>
+  /** La rutina que pinta el mes ahora (vacío si ninguna está tocada). */
+  readonly touched: () => ReadonlySet<string>
   /** Repinta con lo que haya en el almacén. */
   readonly update: () => void
   readonly destroy: () => void
@@ -57,7 +57,7 @@ export const createRoutinesPanel = ({
   today,
   calendarOrder,
   logger,
-  onChosen,
+  onTouched,
 }: RoutinesPanelDeps): RoutinesPanel => {
   /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna está tocada y el mes no pinta rutinas. */
   let tocada: string | null = null
@@ -109,7 +109,7 @@ export const createRoutinesPanel = ({
           tocada = r.id
           void useCases.setRoutineDay(r.id, c.day, !c.marked, hoy)
           pintar()
-          onChosen()
+          onTouched()
         },
         "rutina-dia",
       )
@@ -129,7 +129,8 @@ export const createRoutinesPanel = ({
     nombre.setAttribute("aria-label", `Opciones de ${f.name}`)
     li.append(nombre)
     const rutina: Routine | undefined = store.getState().routines[f.id as RoutineId]
-    const semana: WeekRow | null = hoy === null || rutina === undefined || f.archived ? null : currentWeek(rutina, hoy)
+    /* Las archivadas llegan sin «hoy»: sólo el nombre. */
+    const semana: WeekRow | null = hoy === null || rutina === undefined ? null : currentWeek(rutina, hoy)
     if (rutina !== undefined && hoy !== null && semana !== null) {
       li.append(...celdas(rutina, semana, hoy))
       const cuenta: HTMLElement = elemento("span", weekSummary(f.done, f.goal, f.met))
@@ -141,10 +142,10 @@ export const createRoutinesPanel = ({
       li.setAttribute("aria-current", tocadaAhora ? "true" : "false")
       /* Tocar la fila, donde no haya un botón, la toca o la suelta. */
       li.addEventListener("click", (e: MouseEvent): void => {
-        if ((e.target as HTMLElement).closest("button") !== null) return
+        if (e.target instanceof Element && e.target.closest("button") !== null) return
         tocada = tocada === f.id ? null : f.id
         pintar()
-        onChosen()
+        onTouched()
       })
     }
     return li
@@ -154,7 +155,8 @@ export const createRoutinesPanel = ({
     const todas: RoutineList = filas()
     const hoy: Day | null = today()
     const primera: RoutineRow | undefined = todas.visible[0]
-    const rutina: Routine | undefined = primera === undefined ? undefined : store.getState().routines[primera.id as RoutineId]
+    const rutina: Routine | undefined =
+      primera === undefined ? undefined : store.getState().routines[primera.id as RoutineId]
     const semana: WeekRow | null = hoy === null || rutina === undefined ? null : currentWeek(rutina, hoy)
     lista.replaceChildren(...todas.visible.map((f: RoutineRow): HTMLLIElement => fila(f, hoy)))
     cabeza.replaceChildren(...(hoy === null || semana === null ? [] : [cabecera(semana, hoy)]))
@@ -318,7 +320,7 @@ export const createRoutinesPanel = ({
 
   return {
     element: raiz,
-    chosen: (): ReadonlySet<string> => touchedRoutineIds(filas(), tocada),
+    touched: (): ReadonlySet<string> => touchedRoutineIds(filas(), tocada),
     update: pintar,
     destroy: soltarArrastre,
   }
