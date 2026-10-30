@@ -346,14 +346,11 @@ test("resolveLink: un evento y una rutina; borrados, rotos", (): void => {
   assert.strictEqual(resolveLink(store.getState(), rutina.id), null)
 })
 
-test("linkChoices: eventos con su día al lado (próximos, con los de todo el día primero, y luego pasados) y rutinas sin archivar", (): void => {
+test("linkChoices: eventos con su día al lado (próximos, con los de todo el día primero, y luego pasados) y rutinas", (): void => {
   const { store, useCases, nota }: ReturnType<typeof conCalendario> = conCalendario()
   useCases.createEvent("2026-10-01" as Day, "09:00" as Time, "Pasado")
   useCases.createEvent("2026-11-05" as Day, null, "Lejano")
   useCases.createEvent(DIA, "08:30" as Time, "Temprano")
-  const archivada: Routine | null = useCases.createRoutine("Vieja", null)
-  if (archivada === null) assert.fail("tenía que crearse")
-  useCases.setRoutineArchived(archivada.id, true)
   const r: LinkChoices = linkChoices(store.getState(), nota.id, DIA)
   assert.deepEqual(
     r.events.map((e: { readonly name: string; readonly detail?: string }): string => `${e.detail} ${e.name}`),

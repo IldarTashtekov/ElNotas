@@ -213,8 +213,4 @@ export const routineProblem = (o: Registro): Problem =>
       (typeof o["weeklyGoal"] === "number" && isWeeklyGoal(o["weeklyGoal"]))
         ? null
         : "«weeklyGoal» no es un entero de 1 a 7",
-    (): Problem =>
-      o["archived"] === undefined || o["archived"] === true
-        ? null
-        : "«archived» no es verdadero",
   )

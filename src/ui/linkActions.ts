@@ -141,8 +141,8 @@ const eventosParaEnlazar = (
 
 /**
  * A qué se puede enlazar desde la nota `excluding`: las demás notas, los
- * diagramas, los eventos (con su día y su hora al lado) y las rutinas no
- * archivadas. Los contextos, por ahora, no.
+ * diagramas, los eventos (con su día y su hora al lado) y las rutinas. Los
+ * contextos, por ahora, no.
  */
 export const linkChoices = (state: AppState, excluding: NoteId, today: Day | null): LinkChoices => ({
   notes: Object.values(state.notes)
@@ -160,7 +160,6 @@ export const linkChoices = (state: AppState, excluding: NoteId, today: Day | nul
     }),
   ),
   routines: Object.values<Routine>(state.routines)
-    .filter((r: Routine): boolean => r.archived !== true)
     .map((r: Routine): LinkChoice<RoutineId> => ({ id: r.id, name: r.name }))
     .sort(porNombre),
 })

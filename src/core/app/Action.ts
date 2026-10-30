@@ -476,13 +476,6 @@ export interface SetRoutineGoal {
   readonly meta: ActionMeta
 }
 
-export interface SetRoutineArchived {
-  readonly type: "set-routine-archived"
-  readonly routineId: RoutineId
-  readonly archived: boolean
-  readonly meta: ActionMeta
-}
-
 /** «Se borró la rutina», con todos sus días. */
 export interface DeleteRoutine {
   readonly type: "delete-routine"
@@ -495,10 +488,9 @@ export type RoutineAction =
   | RenameRoutine
   | SetRoutineDay
   | SetRoutineGoal
-  | SetRoutineArchived
   | DeleteRoutine
 
-/** El catálogo entero: 8 + 3 + 9 + 14 + 9 + 6 = **cuarenta y nueve**. */
+/** El catálogo entero: 8 + 3 + 9 + 14 + 9 + 5 = **cuarenta y ocho**. */
 export type Action =
   | ContentAction
   | NoteAction

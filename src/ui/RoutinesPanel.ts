@@ -291,8 +291,15 @@ export const createRoutinesPanel = ({
     const archivar: HTMLButtonElement = boton(
       f.archived ? "Desarchivar" : "Archivar",
       (): void => {
-        useCases.setRoutineArchived(id, !f.archived)
+        const orden: CalendarOrder = leerOrden()
+        /* Las que ya no existen se podan al guardar. */
+        const archivadas: ReadonlyArray<string> = (f.archived ? orden.archived.filter((x: string): boolean => x !== id) : [...orden.archived, id])
+          .filter((x: string): boolean => store.getState().routines[x as RoutineId] !== undefined)
+        const guardado: ReturnType<CalendarOrderPersistence["save"]> = calendarOrder.save({ ...orden, archived: archivadas })
+        if (!guardado.ok) logger.failure("no se guardó lo archivado", guardado.error)
         hoja.close()
+        pintar()
+        onTouched()
       },
       "hoja-nuevo",
     )

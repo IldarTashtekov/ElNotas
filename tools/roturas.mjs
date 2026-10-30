@@ -267,14 +267,6 @@ export const ROTURAS = [
     prueba: "resolveLink: un evento y una rutina; borrados, rotos",
   },
   {
-    nombre: "enlaces: no se ofrecen las rutinas archivadas",
-    fichero: "src/ui/linkActions.ts",
-    buscar: "r.archived !== true",
-    poner: "r.archived !== true || r.archived === true",
-    caza: "pruebas",
-    prueba: "linkChoices: eventos con su día al lado (próximos, con los de todo el día primero, y luego pasados) y rutinas sin archivar",
-  },
-  {
     nombre: "atajo: marcada sale de los días de la rutina, no de la casilla",
     fichero: "src/ui/linkActions.ts",
     buscar: "today !== null && rutina.days.includes(today)",
@@ -1034,14 +1026,6 @@ export const ROTURAS = [
     prueba: "set-routine-goal: la misma meta, una inválida o una rutina que no existe, nada",
   },
   {
-    nombre: "rutina: desarchivar deja la clave",
-    fichero: "src/core/app/reduce.ts",
-    buscar: "return action.archived ? { ...sinMarca, archived: true } : sinMarca\n      })\n\n    case \"delete-routine\"",
-    poner: "return { ...sinMarca, archived: true }\n      })\n\n    case \"delete-routine\"",
-    caza: "pruebas",
-    prueba: "set-routine-archived: la clave sólo existe cuando vale true",
-  },
-  {
     nombre: "rutina: borrar no borra",
     fichero: "src/core/app/reduce.ts",
     buscar: "return { ...state, routines: quedan }",
@@ -1087,7 +1071,7 @@ export const ROTURAS = [
     buscar: "routines: routines.value,",
     poner: "routines: [],",
     caza: "pruebas",
-    prueba: "una rutina, con sus días, su meta y archivada, sobrevive a recargar igual",
+    prueba: "una rutina, con sus días y su meta, sobrevive a recargar igual",
   },
   {
     nombre: "rutina: el guardado no escribe las rutinas",
@@ -1130,14 +1114,6 @@ export const ROTURAS = [
     prueba: "FileStorageAdapter: una rutina con una meta de 8 es corrupt, y dice por qué",
   },
   {
-    nombre: "rutina: archived en false vale",
-    fichero: "src/storage/file/schema.ts",
-    buscar: "        : \"«weeklyGoal» no es un entero de 1 a 7\",\n    (): Problem =>\n      o[\"archived\"] === undefined || o[\"archived\"] === true\n        ? null\n        : \"«archived» no es verdadero\",\n",
-    poner: "        : \"«weeklyGoal» no es un entero de 1 a 7\",\n    (): Problem => null,\n",
-    caza: "pruebas",
-    prueba: "FileStorageAdapter: una rutina con archived en false es corrupt, y dice por qué",
-  },
-  {
     nombre: "rutinas en pantalla: una archivada pinta el mes",
     fichero: "src/ui/routineList.ts",
     buscar: "lista.visible.map((f: RoutineRow): string => f.id).filter(",
@@ -1152,6 +1128,22 @@ export const ROTURAS = [
     poner: "future: compareDays(d, hoy) > 1,",
     caza: "pruebas",
     prueba: "la semana de hoy con sus siete días y los futuros",
+  },
+  {
+    nombre: "rutinas en pantalla: lo archivado se lee de la lista del dispositivo",
+    fichero: "src/ui/routineList.ts",
+    buscar: "archived: order.archived.includes(id),",
+    poner: "archived: false,",
+    caza: "pruebas",
+    prueba: "separa las archivadas y respeta el orden guardado",
+  },
+  {
+    nombre: "calendarOrder: las archivadas guardadas se leen",
+    fichero: "src/ui/calendarOrder.ts",
+    buscar: 'archived: leerIds(registro["archived"]) }',
+    poner: "archived: [] }",
+    caza: "pruebas",
+    prueba: "de las listas se descarta lo que no es texto y lo repetido, sin fallar",
   },
   {
     nombre: "rutinas en pantalla: las archivadas se quedan en la lista",

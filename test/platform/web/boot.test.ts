@@ -310,14 +310,13 @@ test("sin skipCorrupt, un evento con un día inválido impide arrancar", async (
 
 const AYER: Day = parseDay("2026-07-01") as Day
 
-test("una rutina, con sus días, su meta y archivada, sobrevive a recargar igual", async (): Promise<void> => {
+test("una rutina, con sus días y su meta, sobrevive a recargar igual", async (): Promise<void> => {
   const almacen: FakeStorage = createFakeStorage()
   const primera: App = appDe(await arrancar(almacen))
   const creada: Routine | null = primera.useCases.createRoutine("Correr", 3)
   if (creada === null) assert.fail("tenía que crearse")
   primera.useCases.setRoutineDay(creada.id, AYER, true, DIA)
   primera.useCases.setRoutineDay(creada.id, DIA, true, DIA)
-  primera.useCases.setRoutineArchived(creada.id, true)
   escrituraOk(await primera.flush())
 
   const segunda: App = appDe(await arrancar(almacen))

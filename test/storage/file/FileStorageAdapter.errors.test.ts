@@ -786,15 +786,14 @@ test("FileStorageAdapter: una rutina va a routines/", async (): Promise<void> =>
   assert.deepEqual([...blobs.caminos()], ["routines/correr.json"])
 })
 
-test("FileStorageAdapter: una rutina bien formada se lee, con meta, archivada o sin nada de eso", async (): Promise<void> => {
+test("FileStorageAdapter: una rutina bien formada se lee, con meta o sin ella", async (): Promise<void> => {
   const { blobs, s } = montar()
-  escribirJson(blobs, "routines/correr.json", { ...RUTINA_BIEN, archived: true })
+  escribirJson(blobs, "routines/correr.json", { ...RUTINA_BIEN })
   escribirJson(blobs, "routines/leer.json", { ...RUTINA_BIEN, id: "leer", days: [], weeklyGoal: undefined })
 
   const correr: Routine | null = valorDe(await s.routines.get(routineId("correr")))
   const leer: Routine | null = valorDe(await s.routines.get(routineId("leer")))
   assert.equal(correr?.weeklyGoal, 3)
-  assert.equal(correr?.archived, true)
   assert.deepEqual(leer?.days, [])
   assert.equal(leer?.weeklyGoal, undefined)
 })
@@ -808,7 +807,6 @@ const RUTINAS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
   ["con una meta de 8", { ...RUTINA_BIEN, weeklyGoal: 8 }, /weeklyGoal/],
   ["con una meta que no es entera", { ...RUTINA_BIEN, weeklyGoal: 2.5 }, /weeklyGoal/],
   ["con una meta que no es un número", { ...RUTINA_BIEN, weeklyGoal: "3" }, /weeklyGoal/],
-  ["con archived en false", { ...RUTINA_BIEN, archived: false }, /archived/],
   ["sin revisión", { ...RUTINA_BIEN, revision: undefined }, /revision/],
 ]
 

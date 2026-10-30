@@ -15,11 +15,6 @@ export interface Routine extends Versioned {
   readonly name: string
   readonly days: ReadonlyArray<Day>
   readonly weeklyGoal?: number
-  /**
-   * Apartada de la lista, sin dejar de existir. Ausente es «no archivada», y el
-   * campo sólo existe cuando vale `true`: así lo guardado antes no se migra.
-   */
-  readonly archived?: true
 }
 
 /** Una meta semanal válida: un entero de 1 a 7. */

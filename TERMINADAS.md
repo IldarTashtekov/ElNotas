@@ -235,6 +235,7 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **`.js` en los imports relativos y `check:extensiones`** ✅ (`1037ea1`). §8.2.
 - **`npm run build:web` e `index.html`** ✅ (`473f566`): `src/` a `dist/web/` en ESM, sin bundler.
 - **Una declaración sin tipo en `test/ui/editor.test.ts`** ✅ (`5e49a5a`, 2026-09-29).
+- **Archivar rutinas, de la presentación** (2026-10-30): `Routine` ya no lleva `archived` ni existe `set-routine-archived`; lo archivado es una lista de ids en `elnotas:calendario-orden` (`CalendarOrder.archived`), por dispositivo y dentro de la copia. Los enlaces de una nota ofrecen también las archivadas.
 
 ## Descartadas
 

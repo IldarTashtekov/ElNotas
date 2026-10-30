@@ -3,7 +3,7 @@
  * semana de hoy, cuál pinta el mes, la semana de hoy de una rutina con sus
  * siete días y la cabecera de la tabla.
  *
- * El orden es de presentación (`calendarOrder`); aquí sólo se lee y se calcula.
+ * El orden y qué rutinas están archivadas son de presentación (`calendarOrder`); aquí sólo se lee y se calcula.
  */
 
 import type { AppState, Day, Routine, WeekProgress } from "#core/index"
@@ -56,7 +56,7 @@ export const routineList = (state: AppState, order: CalendarOrder, hoy: Day | nu
       {
         id,
         name: r.name,
-        archived: r.archived === true,
+        archived: order.archived.includes(id),
         goal: r.weeklyGoal ?? null,
         done: semana?.done ?? 0,
         met: semana?.met ?? false,

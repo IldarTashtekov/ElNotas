@@ -255,7 +255,7 @@ export const runStorageContract = (
   })
 
   caso("una rutina se recupera igual, con sus claves opcionales y sus días en orden", async (s) => {
-    const completa: Routine = rutina("correr", { weeklyGoal: 3, archived: true })
+    const completa: Routine = rutina("correr", { weeklyGoal: 3 })
     const sola: Routine = rutina("leer", { days: [] })
     await s.routines.put(completa, null)
     await s.routines.put(sola, null)

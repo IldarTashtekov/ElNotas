@@ -225,7 +225,6 @@ export interface UseCases {
     today: Day,
   ) => Routine | null
   readonly setRoutineGoal: (routineId: RoutineId, weeklyGoal: number | null) => Routine | null
-  readonly setRoutineArchived: (routineId: RoutineId, archived: boolean) => Routine | null
   /** Con todos sus días. Devuelve la borrada. */
   readonly deleteRoutine: (routineId: RoutineId) => Routine | null
 }
@@ -565,9 +564,6 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     setRoutineGoal: (routineId: RoutineId, weeklyGoal: number | null): Routine | null =>
       trasRutina(routineId, { type: "set-routine-goal", routineId, weeklyGoal, meta: meta() }),
-
-    setRoutineArchived: (routineId: RoutineId, archived: boolean): Routine | null =>
-      trasRutina(routineId, { type: "set-routine-archived", routineId, archived, meta: meta() }),
 
     deleteRoutine: (routineId: RoutineId): Routine | null =>
       trasRutina(routineId, { type: "delete-routine", routineId, meta: meta() }),

@@ -247,10 +247,6 @@ const CABLEADO: ReadonlyArray<
     (u: UseCases): Routine | null => u.setRoutineDay(ID_RUTINA, DIA, true, DIA),
   ],
   ["set-routine-goal", (u: UseCases): Routine | null => u.setRoutineGoal(ID_RUTINA, 5)],
-  [
-    "set-routine-archived",
-    (u: UseCases): Routine | null => u.setRoutineArchived(ID_RUTINA, true),
-  ],
   ["delete-routine", (u: UseCases): Routine | null => u.deleteRoutine(ID_RUTINA)],
 ]
 
@@ -278,18 +274,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cuarenta y seis casos de uso para cuarenta y cuatro acciones**: `insert` tiene dos
+      Son **cuarenta y cinco casos de uso para cuarenta y tres acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 46, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 46, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 44, "el catálogo son CUARENTA Y CUATRO acciones: 8 + 3 + 9 + 14 + 4 + 6")
+  assert.equal(tipos.size, 43, "el catálogo son CUARENTA Y TRES acciones")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */

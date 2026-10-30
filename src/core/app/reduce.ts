@@ -670,13 +670,6 @@ export const reduce = (state: AppState, action: Action): AppState => {
         return action.weeklyGoal === null ? sinMeta : { ...sinMeta, weeklyGoal: action.weeklyGoal }
       })
 
-    case "set-routine-archived":
-      return onRoutine(state, action.routineId, action.meta, (r: Routine): Routine => {
-        if ((r.archived === true) === action.archived) return r
-        const { archived: _antes, ...sinMarca } = r
-        return action.archived ? { ...sinMarca, archived: true } : sinMarca
-      })
-
     case "delete-routine": {
       if (state.routines[action.routineId] === undefined) return state
 

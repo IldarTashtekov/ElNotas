@@ -65,7 +65,7 @@ const nombresDe = (app: App): ReadonlyArray<string> =>
 
 const VENTANAS: unknown = { windows: [{ kind: "general" }], active: { kind: "general" } }
 const ENCUADRES: unknown = { d1: { x: 10, y: -20, scale: 2 } }
-const ORDEN: unknown = { routines: ["r1", "r2"] }
+const ORDEN: unknown = { routines: ["r1", "r2"], archived: [] }
 
 /** La copia de un dispositivo con «Compra» y «Viaje», fósforo verde, sus ventanas y sus encuadres. */
 const copiaDeOtro = async (): Promise<Backup> => {
@@ -155,12 +155,13 @@ test("el orden del calendario de la copia pasa por el lector: lo que no tiene fo
   const almacen: FakeStorage = await esteDispositivo()
   const rara: Backup = makeBackup({
     ...(await copiaDeOtro()),
-    calendarOrder: { groups: ["g1"], routines: ["r1", 3, "r1", "r2"] },
+    calendarOrder: { groups: ["g1"], routines: ["r1", 3, "r1", "r2"], archived: ["r2", 5] },
   })
   requestImport(almacen, rara)
   await importIfRequested(almacen)
   assert.deepEqual(JSON.parse(almacen.getItem(CALENDAR_ORDER_KEY) ?? "null"), {
     routines: ["r1", "r2"],
+    archived: ["r2"],
   })
 })
 

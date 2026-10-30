@@ -1,8 +1,8 @@
 /**
- * El orden en que se enseñan las rutinas: una presentación de este
- * dispositivo, no parte del modelo.
+ * El orden en que se enseñan las rutinas y cuáles están archivadas: una
+ * presentación de este dispositivo, no parte del modelo.
  *
- * Es una lista de ids. Lo guardado puede nombrar lo que ya no existe o no
+ * Son listas de ids. Lo guardado puede nombrar lo que ya no existe o no
  * nombrar lo recién creado: `reconcileOrder` lo pone al día.
  */
 
@@ -10,9 +10,11 @@ import type { Result, StorageError } from "#core/index"
 
 export interface CalendarOrder {
   readonly routines: ReadonlyArray<string>
+  /** Las apartadas de la lista, sin dejar de existir; siguen también en `routines`. */
+  readonly archived: ReadonlyArray<string>
 }
 
-export const NO_ORDER: CalendarOrder = { routines: [] }
+export const NO_ORDER: CalendarOrder = { routines: [], archived: [] }
 
 /** Dónde se guarda. Lo pone `platform/`. Ninguno de los dos lanza. */
 export interface CalendarOrderPersistence {
@@ -34,7 +36,7 @@ const leerIds = (x: unknown): ReadonlyArray<string> =>
 export const parseCalendarOrder = (guardado: unknown): CalendarOrder => {
   if (typeof guardado !== "object" || guardado === null || Array.isArray(guardado)) return NO_ORDER
   const registro: Record<string, unknown> = guardado as Record<string, unknown>
-  return { routines: leerIds(registro["routines"]) }
+  return { routines: leerIds(registro["routines"]), archived: leerIds(registro["archived"]) }
 }
 
 /**

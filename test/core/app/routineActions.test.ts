@@ -152,7 +152,7 @@ test("set-routine-day: marcar lo marcado, desmarcar lo no marcado o una rutina q
   )
 })
 
-/* ───────────────────────────── goal / archived / delete ────────────────────────── */
+/* ───────────────────────────── goal / delete ────────────────────────── */
 
 test("set-routine-goal cambia la meta sin tocar los días, y null la quita", () => {
   const cinco: AppState = aplicar({ type: "set-routine-goal", routineId: ID_CORRER, weeklyGoal: 5, meta: META })
@@ -176,23 +176,6 @@ test("set-routine-goal: la misma meta, una inválida o una rutina que no existe,
   assert.strictEqual(reduce(antes, meta(ID_LEER, null)), antes, "quitar lo que no hay")
   for (const mala of [0, 8, 1.5]) assert.strictEqual(reduce(antes, meta(ID_CORRER, mala)), antes, `${mala}`)
   assert.strictEqual(reduce(antes, meta(routineId("fantasma"), 3)), antes)
-})
-
-test("set-routine-archived: la clave sólo existe cuando vale true", () => {
-  const archivada: AppState = aplicar({ type: "set-routine-archived", routineId: ID_CORRER, archived: true, meta: META })
-  const vuelta: AppState = reduce(archivada, { type: "set-routine-archived", routineId: ID_CORRER, archived: false, meta: META })
-
-  assert.equal(rutinaDe(archivada, ID_CORRER).archived, true)
-  assert.equal("archived" in rutinaDe(vuelta, ID_CORRER), false)
-  assert.strictEqual(
-    reduce(estado(), { type: "set-routine-archived", routineId: ID_CORRER, archived: false, meta: META }).routines[ID_CORRER],
-    CORRER,
-    "desarchivar lo no archivado no hace nada",
-  )
-  assert.strictEqual(
-    reduce(archivada, { type: "set-routine-archived", routineId: ID_CORRER, archived: true, meta: META }),
-    archivada,
-  )
 })
 
 test("delete-routine borra la rutina con sus días y no toca la otra ni lo demás", () => {

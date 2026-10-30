@@ -9,7 +9,7 @@ import { monthView } from "#ui/calendarMonth"
 import type { DayCell, MonthView } from "#ui/calendarMonth"
 
 const d = (s: string): Day => s as Day
-const rutina = (id: string, days: ReadonlyArray<string>, extra: { weeklyGoal?: number; archived?: true } = {}): Routine => ({
+const rutina = (id: string, days: ReadonlyArray<string>, extra: { weeklyGoal?: number } = {}): Routine => ({
   id: id as RoutineId,
   name: id,
   days: days.map(d),
@@ -37,8 +37,8 @@ describe("routineList", (): void => {
   })
 
   it("separa las archivadas y respeta el orden guardado", (): void => {
-    const e: AppState = estado(rutina("a", []), rutina("b", []), rutina("c", [], { archived: true }))
-    const l: RoutineList = routineList(e, { routines: ["b", "a"] }, HOY)
+    const e: AppState = estado(rutina("a", []), rutina("b", []), rutina("c", []))
+    const l: RoutineList = routineList(e, { routines: ["b", "a"], archived: ["c"] }, HOY)
     assert.deepEqual(l.visible.map((f: RoutineRow): string => f.id), ["b", "a"])
     assert.deepEqual(l.archived.map((f: RoutineRow): string => f.id), ["c"])
   })
@@ -51,8 +51,8 @@ describe("routineList", (): void => {
 
 describe("touchedRoutineIds", (): void => {
   it("sólo la tocada, y si es visible", (): void => {
-    const e: AppState = estado(rutina("a", []), rutina("b", [], { archived: true }))
-    const l: RoutineList = routineList(e, NO_ORDER, HOY)
+    const e: AppState = estado(rutina("a", []), rutina("b", []))
+    const l: RoutineList = routineList(e, { ...NO_ORDER, archived: ["b"] }, HOY)
     assert.deepEqual([...touchedRoutineIds(l, "a")], ["a"])
     assert.deepEqual([...touchedRoutineIds(l, "b")], [])
     assert.deepEqual([...touchedRoutineIds(l, "z")], [])
