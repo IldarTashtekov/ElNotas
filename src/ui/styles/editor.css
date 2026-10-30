@@ -81,9 +81,9 @@
     }
   }
 }
-/* La casilla: una caja que se rellena con el ✓. */
+/* La casilla: una caja que se rellena con el ✓, pegada a la primera línea del texto aunque éste crezca. */
 .marca {
-  align-self: center;
+  align-self: flex-start;
   background: none;
   border: 1.5px solid var(--muted);
   color: var(--accent-ink);
@@ -95,6 +95,8 @@
   height: 1.05rem;
   line-height: 1;
   margin-right: 0.55rem;
+  /* El centro de la primera línea: medio renglón más el relleno del texto, menos media caja. */
+  margin-top: 0.27rem;
   padding: 0;
   place-items: center;
   width: 1.05rem;
