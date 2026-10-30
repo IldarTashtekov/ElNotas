@@ -212,6 +212,25 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
       tabla sin pulsar el vecino), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
+- [ ] **9. Enlazar eventos desde una nota** *(pensar)*. *Pedido por el usuario el 2026-10-30.*
+      «Enlazar…» ofrece también los eventos (por fecha, con su motivo, que es el texto por
+      omisión); el enlace es `[texto](#id)` como los demás. **Pulsarlo abre el calendario encima,
+      en el día del evento y con su hoja de edición abierta** (confirmado por el usuario); el
+      atrás vuelve a la nota. Si el evento ya no está, el enlace se ve apagado, como hoy. Esa capa
+      del calendario no se recuerda al recargar, como cuando se abre con ▦. **Se cierra cuando**
+      lo puro que decide a qué apunta un id (nota, diagrama o evento) tiene sus pruebas y su
+      rotura, `check` pasa y la lista del editor tiene sus pasos, pasados en el panel.
+- [ ] **10. Enlazar rutinas, y la casilla-atajo** *(pensar)*. *Idea del usuario, 2026-10-30; el
+      planteamiento, por confirmar.* «Enlazar…» ofrece también las rutinas. En una **línea
+      normal**, el enlace a una rutina sólo lleva a ella: abre el calendario en la pestaña
+      Rutinas con esa fila tocada. En una **línea con casilla cuyo texto es sólo ese enlace**, la
+      casilla es un **atajo**: se ve marcada si la rutina tiene **hoy** marcado, y pulsarla marca
+      o desmarca hoy con `set-routine-day`. **Nada se guarda en la nota**: mañana sale sin marcar
+      porque se calcula con los días de la rutina, y el `checked` guardado de esa línea se ignora.
+      Si la rutina se borra, el enlace se ve apagado y la casilla vuelve a ser una normal. «Hoy»
+      lo da la plataforma, como en el calendario. **Sin cambios en el core.** **Se cierra
+      cuando** lo puro (cuándo una línea es una casilla-atajo y qué estado enseña) tiene pruebas y
+      su rotura, `check` pasa y la lista del editor tiene sus pasos, pasados en el panel.
 
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
