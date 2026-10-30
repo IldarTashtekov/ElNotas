@@ -115,7 +115,7 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 - **E2.** **+ Rutina** pide un nombre y una meta (**Sin meta** o de 1 a 7 días a la semana); con el
   nombre vacío no hace nada, y **Crear** la añade con la meta elegida.
 - **E3.** La fila enseña **sólo** la semana de hoy; no hay semanas anteriores ni «Ver más».
-- **E4.** Pulsar un día de esa semana lo **marca** (✗) o lo **desmarca** (·); los días que aún no
+- **E4.** Pulsar un día de esa semana lo **marca** (X) o lo **desmarca** (·); los días que aún no
   han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la cuenta lleva **✓**.
 - **E5.** **Tocar** una fila (en cualquier parte que no sea un botón, o marcando un día) la resalta:
   en la pestaña **Rutinas** el mes enseña con el **borde brillante** los días marcados **sólo de la rutina

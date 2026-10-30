@@ -103,7 +103,7 @@ export const createRoutinesPanel = ({
   const celdas = (r: Routine, s: WeekRow, hoy: Day): ReadonlyArray<HTMLButtonElement> =>
     s.cells.map((c: WeekCell): HTMLButtonElement => {
       const b: HTMLButtonElement = boton(
-        c.marked ? "✗" : "·",
+        c.marked ? "X" : "·",
         (): void => {
           /* Marcar un día también toca la rutina: el mes pasa a enseñar la suya. */
           tocada = r.id
