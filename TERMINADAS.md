@@ -200,6 +200,10 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   eventos**, hechos en la 7f, se quitaron en la 7m por decisión del usuario. Los pasos del móvil, en `TAREAS.md`.
 - **Fase 10, tarea 8: la documentación** ✅ 2026-10-29 (`ea46ee8`, `e9ce575`): `CLAUDE.md` y `ARCHITECTURE.md` recogen
   el texto, las capas, los ocultos, reordenar, el calendario y la excepción de los enlaces; la auditoría halló 22 puntos.
+- **Fase 10, tareas 9 y 10: enlazar eventos y rutinas** ✅ 2026-10-30 (`46e04c0`): «Enlazar…» ofrece también
+  eventos y rutinas; un evento abre el calendario en su hoja de edición, una rutina la pestaña Rutinas con su fila
+  tocada. Una casilla cuyo texto es sólo un enlace a rutina es un atajo: marca o desmarca **hoy** con
+  `set-routine-day` y se ve según los días de la rutina (nada se guarda en la nota). Sin cambios en el core.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

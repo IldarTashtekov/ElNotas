@@ -664,3 +664,26 @@ burbuja se queda (correcto, el cursor sigue dentro). Sin probar todavía: varios
 Retroceso, R5 entre dos bloques, R7 con texto vacío, R8 y R9 por separado. Copiar dentro de la
 línea activa **sí** saca los `**` escondidos (`getSelection().toString()` los incluye): es la duda
 ya apuntada en *A decidir*. Móvil: el usuario.
+
+### Pasada 10 — escritorio, T (enlaces a eventos y rutinas, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-10-30 |
+| Navegador y versión | el navegador del panel (Linux) |
+| Quién | Claude, en el panel; el móvil, el usuario |
+| Commit | `46e04c0`, árbol con sólo cambios de documentación |
+| Origen | `localhost:8001`, con `?depurar`, la nota «Pruebas», el evento «Dentista» y la rutina «Leer» |
+
+| Paso | Resultado |
+|---|---|
+| T1 | ✅ la hoja lista «Eventos» (`2026-10-30 10:30 · Dentista`) y «Rutinas» (`Leer`) |
+| T2 | ✅ «Abrir» abre el calendario en octubre con la hoja «Editar evento» (día, hora y motivo del evento); tres atrás, uno a uno, deshacen hoja, calendario y nota |
+| T3 | ✅ «Abrir» abre el calendario en Rutinas con la fila «Leer» tocada |
+| T4 | ✅ pulsar la casilla-atajo pone el día de hoy en la rutina y la casilla pasa a «✓ Desmarcar hoy»; otra vez lo quita; el `checked` guardado sigue en `false` |
+| T5 | ✅ la casilla con texto al lado sigue en «Marcar», sin marcar |
+| T6 | ✅ marcar o desmarcar la rutina desde fuera cambia la casilla al momento; con sólo el día anterior marcado, sale sin marcar |
+| T7 | ✅ al borrar la rutina, los tres enlaces salen apagados (`md-roto`) y las dos casillas dicen «Marcar» |
+
+Notas: «El enlace ya no existe» al pulsar «Abrir» de uno roto no se repitió (es el mismo camino de O8).
+Sin probar: la lista de ⚙ de «Cambiar» con estos tipos, y el móvil (el usuario).
