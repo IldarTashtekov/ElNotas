@@ -5,17 +5,19 @@
  * El contenido es `CalendarPanel`; aquí sólo va la cabecera de la vista.
  */
 
-import type { CalendarPanel, CalendarPanelDeps } from "./CalendarPanel.js"
+import type { CalendarPanel, CalendarPanelDeps, CalendarTarget } from "./CalendarPanel.js"
 import { createCalendarPanel } from "./CalendarPanel.js"
 import { elemento } from "./dom.js"
 import { CALENDAR_TITLE } from "./windowView.js"
 
 export interface CalendarViewDeps extends CalendarPanelDeps {
   readonly onExit: () => void
+  /** Si una nota lo enlazó: lo que se enseña al abrirlo. */
+  readonly target?: CalendarTarget
 }
 
 /** Devuelve la función que la desmonta. */
-export const mountCalendarView = (raiz: HTMLElement, { onExit, ...deps }: CalendarViewDeps): (() => void) => {
+export const mountCalendarView = (raiz: HTMLElement, { onExit, target, ...deps }: CalendarViewDeps): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", CALENDAR_TITLE)
   titulo.className = "titulo"
   const salir: HTMLButtonElement = elemento("button", "✕")
@@ -28,7 +30,15 @@ export const mountCalendarView = (raiz: HTMLElement, { onExit, ...deps }: Calend
   cabecera.append(titulo, salir)
   const panel: CalendarPanel = createCalendarPanel(deps)
   raiz.replaceChildren(cabecera, panel.element)
+  /* Después de montar: la hoja que abre pone su entrada del atrás sobre la de la vista, no debajo. */
+  let montada: boolean = true
+  if (target !== undefined) {
+    queueMicrotask((): void => {
+      if (montada) panel.show(target)
+    })
+  }
   return (): void => {
+    montada = false
     panel.destroy()
     raiz.replaceChildren()
   }

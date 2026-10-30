@@ -29,8 +29,10 @@ export {
   diagramNodeId,
   diagramRef,
   diagramRelationId,
+  eventId,
   noteId,
   noteRef,
+  routineId,
 } from "./domain/Ids.js"
 
 /* Contenido de una nota */

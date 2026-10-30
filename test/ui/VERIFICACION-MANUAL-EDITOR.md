@@ -400,6 +400,30 @@ marcas y `md-viva` marca las que se ven.
   junto a una palabra con formato deja el texto bien. Copiar una selección **dentro** de la línea
   activa (con marcas) copia **el Markdown**, asteriscos incluidos (a decidir si se aguanta).
 
+## T. Enlaces a eventos y rutinas, y la casilla-atajo *(Fase 10, tareas 9 y 10)*
+
+Con la hora de hoy en el calendario: un evento (`Dentista`, 10:30), una rutina (`Leer`) y una nota con
+tres líneas: texto con `[Dentista](#id-del-evento)`; una **casilla** con sólo `[Leer](#id-de-la-rutina)`;
+otra casilla con `hoy [Leer](#id-de-la-rutina)`; y una línea de texto con `[Leer](#id-de-la-rutina)`.
+
+- **T1.** «Enlazar…» (y «Cambiar») ofrece, además de notas y diagramas, **«Eventos»** (con su día y
+  hora delante, los de hoy en adelante primero y luego los pasados) y **«Rutinas»** (las no
+  archivadas). Un grupo vacío no sale.
+- **T2.** «↗ Abrir» en el enlace al **evento** abre el **calendario encima**, en el mes del evento y con
+  **su hoja de edición** abierta. El atrás cierra la hoja, otro atrás el calendario y otro vuelve a la
+  nota.
+- **T3.** «↗ Abrir» en el enlace a la **rutina** de una línea normal abre el calendario en la pestaña
+  **Rutinas** con **esa fila tocada**.
+- **T4.** La casilla cuyo texto es **sólo** el enlace a la rutina se ve **desmarcada**; pulsarla marca
+  **hoy** en la rutina (la fila del calendario lo muestra) y la casilla se ve **marcada**; pulsarla
+  otra vez lo quita. El `checked` de la línea **no cambia**.
+- **T5.** Con la rutina marcada hoy, otra casilla de la misma nota (`hoy [Leer](…)`, con texto al
+  lado) **no se ve marcada** y se marca sola, como una normal.
+- **T6.** Marcar o desmarcar **desde el calendario** actualiza la casilla-atajo al momento. Al día
+  siguiente (cambiando «hoy» o los días de la rutina) sale sin marcar.
+- **T7.** Borrar la rutina o el evento: sus enlaces se ven **apagados**, «Abrir» dice «El enlace ya no
+  existe» y la casilla-atajo es una **casilla normal**.
+
 ## Comportamientos conocidos
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:

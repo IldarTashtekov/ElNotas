@@ -6,7 +6,7 @@
  * nace al abrirla y muere al salir.
  */
 
-import type { DiagramId, Note, NoteId, Store, Unsubscribe, UseCases } from "#core/index"
+import type { Day, DiagramId, EventId, Note, NoteId, RoutineId, Store, Unsubscribe, UseCases } from "#core/index"
 import { elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
@@ -22,6 +22,10 @@ export interface NoteViewDeps {
   /** Abrir lo que enlaza un enlace de la nota, apilado encima de ella. */
   readonly onOpenNote: (id: NoteId) => void
   readonly onOpenDiagram: (id: DiagramId) => void
+  readonly onOpenEvent: (id: EventId) => void
+  readonly onOpenRoutine: (id: RoutineId) => void
+  /** El día de hoy en este dispositivo, para el atajo de rutina de una casilla. */
+  readonly today: () => Day | null
   /** La hoja de la app, donde se elige a qué enlazar. */
   readonly sheet: Sheet
 }
@@ -29,7 +33,7 @@ export interface NoteViewDeps {
 /** Devuelve la función que la desmonta. */
 export const mountNoteView = (
   raiz: HTMLElement,
-  { store, useCases, noteId, onExit, onOpenNote, onOpenDiagram, sheet }: NoteViewDeps,
+  { store, useCases, noteId, onExit, onOpenNote, onOpenDiagram, onOpenEvent, onOpenRoutine, today, sheet }: NoteViewDeps,
 ): (() => void) => {
   const nota = (): Note | undefined => store.getState().notes[noteId]
 
@@ -47,6 +51,9 @@ export const mountNoteView = (
     state: store.getState,
     onOpenNote,
     onOpenDiagram,
+    onOpenEvent,
+    onOpenRoutine,
+    today,
     sheet,
   })
 

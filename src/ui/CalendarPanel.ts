@@ -13,6 +13,7 @@ import type {
   Day,
   EventId,
   Logger,
+  RoutineId,
   Store,
   Time,
   Unsubscribe,
@@ -44,8 +45,15 @@ export interface CalendarPanelDeps {
   readonly logger: Logger
 }
 
+/** Lo que una nota enlaza del calendario: un evento, o una rutina. */
+export type CalendarTarget =
+  | { readonly kind: "event"; readonly id: EventId }
+  | { readonly kind: "routine"; readonly id: RoutineId }
+
 export interface CalendarPanel {
   readonly element: HTMLElement
+  /** Lleva el calendario a eso: el evento, con su hoja de edición, o la rutina, tocada. */
+  readonly show: (target: CalendarTarget) => void
   readonly destroy: () => void
 }
 
@@ -341,6 +349,19 @@ export const createCalendarPanel = ({
 
   return {
     element: raiz,
+    show: (target: CalendarTarget): void => {
+      if (target.kind === "routine") {
+        elegirPestana("rutinas")
+        rutinas.touch(target.id)
+        return
+      }
+      const evento: CalendarEvent | undefined = store.getState().events[target.id]
+      if (evento === undefined) return
+      elegirPestana("eventos")
+      mes = monthOf(evento.day)
+      pintarMes()
+      abrirEvento(evento)
+    },
     destroy: (): void => {
       alCambiar()
       rutinas.destroy()

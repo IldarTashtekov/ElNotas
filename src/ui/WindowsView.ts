@@ -13,8 +13,10 @@ import type {
   Day,
   Logger,
   DiagramId,
+  EventId,
   Note,
   NoteId,
+  RoutineId,
   StorageError,
   Store,
   UseCases,
@@ -60,6 +62,8 @@ export interface WindowsViewDeps {
   readonly confirm: Confirm
   readonly onOpenNote: (id: NoteId) => void
   readonly onOpenDiagram: (id: DiagramId, editName: boolean) => void
+  readonly onOpenEvent: (id: EventId) => void
+  readonly onOpenRoutine: (id: RoutineId) => void
 }
 
 const flecha = (texto: string, etiqueta: string): HTMLButtonElement => {
@@ -93,6 +97,8 @@ export const mountWindowsView = (
     confirm,
     onOpenNote,
     onOpenDiagram,
+    onOpenEvent,
+    onOpenRoutine,
   }: WindowsViewDeps,
 ): void => {
   const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
@@ -179,6 +185,9 @@ export const mountWindowsView = (
         state: store.getState,
         onOpenNote,
         onOpenDiagram: (otro: DiagramId): void => onOpenDiagram(otro, false),
+        onOpenEvent,
+        onOpenRoutine,
+        today,
         sheet: hoja,
       })
       const barra: HTMLElement = elemento("div")

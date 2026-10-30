@@ -12,11 +12,23 @@
  * encima de todo, la hoja que pregunta antes de borrar.
  */
 
-import type { Day, DiagramId, Logger, NoteId, Result, StorageError, Store, UseCases } from "#core/index"
+import type {
+  Day,
+  DiagramId,
+  EventId,
+  Logger,
+  NoteId,
+  Result,
+  RoutineId,
+  StorageError,
+  Store,
+  UseCases,
+} from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
+import type { CalendarTarget } from "./CalendarPanel.js"
 import { mountCalendarView } from "./CalendarView.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { mountDiagramView } from "./DiagramView.js"
@@ -112,9 +124,15 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
       mountSettingsView(raiz, { ...deps, confirm, back, onExit: back.close }),
     )
   /* Como la configuración: no lleva `abierta`, al recargar no se vuelve a ella. */
-  const abrirCalendario = (): void =>
+  const abrirCalendario = (target?: CalendarTarget): void =>
     abrirEncima(null, (raiz: HTMLElement): (() => void) =>
-      mountCalendarView(raiz, { ...deps, confirm, back, onExit: back.close }),
+      mountCalendarView(raiz, {
+        ...deps,
+        confirm,
+        back,
+        onExit: back.close,
+        ...(target === undefined ? {} : { target }),
+      }),
     )
   const abrirNota = (noteId: NoteId): void =>
     abrirEncima({ kind: "note", id: noteId }, (raiz: HTMLElement): (() => void) =>
@@ -124,6 +142,8 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
         onExit: back.close,
         onOpenNote: abrirNota,
         onOpenDiagram: (id: DiagramId): void => abrirDiagrama(id, false),
+        onOpenEvent: (id: EventId): void => abrirCalendario({ kind: "event", id }),
+        onOpenRoutine: (id: RoutineId): void => abrirCalendario({ kind: "routine", id }),
         sheet: pregunta,
       }),
     )
@@ -146,7 +166,9 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     back,
     confirm,
     onOpenSettings: abrirConfiguracion,
-    onOpenCalendar: abrirCalendario,
+    onOpenCalendar: (): void => abrirCalendario(),
+    onOpenEvent: (id: EventId): void => abrirCalendario({ kind: "event", id }),
+    onOpenRoutine: (id: RoutineId): void => abrirCalendario({ kind: "routine", id }),
     onOpenNote: abrirNota,
     onOpenDiagram: abrirDiagrama,
   })

@@ -38,6 +38,8 @@ export interface RoutinesPanel {
   readonly touched: () => ReadonlySet<string>
   /** Repinta con lo que haya en el almacén. */
   readonly update: () => void
+  /** Deja esa rutina «tocada», como si se pulsara su fila, y la trae a la vista. */
+  readonly touch: (id: RoutineId) => void
   readonly destroy: () => void
 }
 
@@ -322,6 +324,12 @@ export const createRoutinesPanel = ({
     element: raiz,
     touched: (): ReadonlySet<string> => touchedRoutineIds(filas(), tocada),
     update: pintar,
+    touch: (id: RoutineId): void => {
+      tocada = id
+      pintar()
+      onTouched()
+      raiz.querySelector(`[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest" })
+    },
     destroy: soltarArrastre,
   }
 }

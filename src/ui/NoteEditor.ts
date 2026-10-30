@@ -11,7 +11,18 @@
  * son texto que se selecciona de una a otra, y se copia como texto plano.
  */
 
-import type { AppState, Content, ContentId, DiagramId, Note, NoteId, UseCases } from "#core/index"
+import type {
+  AppState,
+  Content,
+  ContentId,
+  Day,
+  DiagramId,
+  EventId,
+  Note,
+  NoteId,
+  RoutineId,
+  UseCases,
+} from "#core/index"
 import { contentId, isCheckBox } from "#core/index"
 import type { ActivePart, LinkPart } from "./activeLine.js"
 import { activeLine, activeParts, domToRaw, rawToDom, visibleRuns } from "./activeLine.js"
@@ -28,7 +39,7 @@ import {
 } from "./editor.js"
 import type { LinkBubble } from "./linkBubble.js"
 import { createLinkBubble } from "./linkBubble.js"
-import type { ResolvedLink } from "./linkActions.js"
+import type { LinkKind, ResolvedLink } from "./linkActions.js"
 import {
   buildLink,
   changeLink,
@@ -37,6 +48,7 @@ import {
   linkChoices,
   removeLink,
   resolveLink,
+  routineShortcut,
 } from "./linkActions.js"
 import { openLinkSheet } from "./linkSheet.js"
 import type { FormattedLine, LineLink, LineSpan, TextSpan } from "./markdownLine.js"
@@ -56,6 +68,12 @@ export interface NoteEditorDeps {
   /** Abrir lo que enlaza un enlace interno, apilado encima de esta nota. */
   readonly onOpenNote: (id: NoteId) => void
   readonly onOpenDiagram: (id: DiagramId) => void
+  /** El calendario, abierto en ese evento, con su hoja de edición. */
+  readonly onOpenEvent: (id: EventId) => void
+  /** El calendario, en la pestaña de rutinas y con esa fila tocada. */
+  readonly onOpenRoutine: (id: RoutineId) => void
+  /** El día de hoy en este dispositivo; `null` si se sale del rango. */
+  readonly today: () => Day | null
   /** La hoja donde se elige a qué enlazar. */
   readonly sheet: Sheet
 }
@@ -362,6 +380,9 @@ export const createNoteEditor = ({
   state,
   onOpenNote,
   onOpenDiagram,
+  onOpenEvent,
+  onOpenRoutine,
+  today,
   sheet,
 }: NoteEditorDeps): NoteEditor => {
   const deps: EditorDeps = { useCases, noteId, note }
@@ -405,6 +426,10 @@ export const createNoteEditor = ({
     return bruto === null ? null : contentId(bruto)
   }
 
+  /** Si ese texto de casilla es un atajo a una rutina, cuál y si hoy está marcada. */
+  const atajoDe = (texto: string): ReturnType<typeof routineShortcut> =>
+    texto.includes("](#") ? routineShortcut(state(), readMarkdownLine(texto), texto, today()) : null
+
   const crearLinea = (content: Content): Element => {
     const fila: HTMLElement = elemento("div")
     fila.dataset["id"] = content.id
@@ -417,7 +442,14 @@ export const createNoteEditor = ({
       const marca: HTMLButtonElement = elemento("button")
       marca.type = "button"
       marca.className = "marca"
-      marca.addEventListener("click", (): void => toggleChecked(deps, content.id))
+      marca.addEventListener("click", (): void => {
+        /* Una casilla cuyo texto es el enlace a una rutina marca la rutina de hoy, no la casilla. */
+        const hoy: Day | null = today()
+        const texto: string | undefined = textoDe(content.id)
+        const atajo: ReturnType<typeof atajoDe> = texto === undefined ? null : atajoDe(texto)
+        if (atajo !== null && hoy !== null) void useCases.setRoutineDay(atajo.id, hoy, !atajo.marked, hoy)
+        else toggleChecked(deps, content.id)
+      })
       const hijas: HTMLElement = elemento("div")
       hijas.className = "hijas"
       fila.append(marca, campo, hijas)
@@ -445,13 +477,16 @@ export const createNoteEditor = ({
         if (campo !== null && (enOrden || campo !== document.activeElement)) pintarCampo(campo, l.text)
         if (!isCheckBox(l)) return
         const marca: Element | null = fila.querySelector(":scope > .marca")
+        /* Un atajo a una rutina se ve marcado según los días de la rutina, no según `checked`. */
+        const atajo: ReturnType<typeof atajoDe> = atajoDe(l.text)
+        const marcada: boolean = atajo === null ? l.checked : atajo.marked
         if (marca !== null) {
           /* La caja la dibuja el CSS: aquí sólo va el ✓ de dentro. */
-          setTextIfChanged(marca, l.checked ? "✓" : "")
-          setAttrIfChanged(marca, "aria-pressed", l.checked ? "true" : "false")
-          setAttrIfChanged(marca, "aria-label", l.checked ? "Desmarcar" : "Marcar")
+          setTextIfChanged(marca, marcada ? "✓" : "")
+          setAttrIfChanged(marca, "aria-pressed", marcada ? "true" : "false")
+          setAttrIfChanged(marca, "aria-label", `${marcada ? "Desmarcar" : "Marcar"}${atajo === null ? "" : " hoy"}`)
         }
-        if (fila.classList.contains("marcada") !== l.checked) fila.classList.toggle("marcada", l.checked)
+        if (fila.classList.contains("marcada") !== marcada) fila.classList.toggle("marcada", marcada)
         const hijas: Element | null = fila.querySelector(":scope > .hijas")
         if (hijas !== null) pintarLista(hijas, l.children)
       },
@@ -459,17 +494,29 @@ export const createNoteEditor = ({
   }
 
   let pintada: Note | null = null
-  /* Los enlaces internos dependen de qué notas y diagramas hay: si cambian, se repinta. */
+  /* Los enlaces internos dependen de qué notas, diagramas, eventos y rutinas hay: si cambian, se repinta. */
   let pintadasNotas: AppState["notes"] | null = null
   let pintadosDiagramas: AppState["diagrams"] | null = null
+  let pintadosEventos: AppState["events"] | null = null
+  let pintadasRutinas: AppState["routines"] | null = null
   const refresh = (nota: Note): void => {
     const estado: AppState = state()
     /* La MISMA nota si nada cambió —un `set-checked` redundante incluido—, y las mismas
        notas y diagramas contra los que se comprueban sus enlaces: ni se mira el DOM. */
-    if (nota === pintada && estado.notes === pintadasNotas && estado.diagrams === pintadosDiagramas) return
+    if (
+      nota === pintada &&
+      estado.notes === pintadasNotas &&
+      estado.diagrams === pintadosDiagramas &&
+      estado.events === pintadosEventos &&
+      estado.routines === pintadasRutinas
+    ) {
+      return
+    }
     pintada = nota
     pintadasNotas = estado.notes
     pintadosDiagramas = estado.diagrams
+    pintadosEventos = estado.events
+    pintadasRutinas = estado.routines
     pintarLista(lineas, nota.content)
     empezar.hidden = nota.content.length > 0
     actualizarBurbuja()
@@ -739,7 +786,9 @@ export const createNoteEditor = ({
     /* Lo que se abre encima esconde esta nota: su burbuja no se queda colgada. */
     burbuja.hide()
     if (destino.kind === "note") onOpenNote(destino.id)
-    else onOpenDiagram(destino.id)
+    else if (destino.kind === "diagram") onOpenDiagram(destino.id)
+    else if (destino.kind === "event") onOpenEvent(destino.id)
+    else onOpenRoutine(destino.id)
   }
 
   /** La línea deja de ser lo que era: nuevo texto, línea activa en crudo y cursor en su sitio, con el foco. */
@@ -802,11 +851,11 @@ export const createNoteEditor = ({
     )
     openLinkSheet(sheet, {
       title: "Cambiar enlace",
-      choices: linkChoices(state(), noteId),
+      choices: linkChoices(state(), noteId, today()),
       initialText: actual?.kind === "link" ? actual.label : "",
       initialAddress: link.target.kind === "web" ? link.target.href : "",
       onPickAddress: (direccion: string, texto: string): void => poner(direccion, texto),
-      onPick: (_tipo: "note" | "diagram", destino: string, nombre: string, texto: string): void =>
+      onPick: (_tipo: LinkKind, destino: string, nombre: string, texto: string): void =>
         poner(`#${destino}`, texto, nombre),
     })
   }
@@ -1177,11 +1226,11 @@ export const createNoteEditor = ({
     }
     openLinkSheet(sheet, {
       title: "Enlazar",
-      choices: linkChoices(state(), noteId),
+      choices: linkChoices(state(), noteId, today()),
       initialText: usable ? elegido : "",
       onPickAddress: (direccion: string, texto: string): void =>
         poner(buildLink(textoDelEnlace(texto, direccion), direccion)),
-      onPick: (_tipo: "note" | "diagram", destino: string, nombre: string, texto: string): void =>
+      onPick: (_tipo: LinkKind, destino: string, nombre: string, texto: string): void =>
         poner(buildLink(textoDelEnlace(texto, `#${destino}`, nombre), `#${destino}`)),
     })
   })

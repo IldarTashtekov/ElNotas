@@ -11,7 +11,7 @@ import assert from "node:assert/strict"
 import type { Clock, Context, Diagram, IdGenerator, Note, Store, UseCases } from "#core/index"
 import { createStore, createUseCases } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
-import type { AppState } from "#core/index"
+import type { AppState, Day, EventId, Routine, Time } from "#core/index"
 import type { FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
 import { readMarkdownLine } from "#ui/markdownLine"
 import type { LinkChoices } from "#ui/linkActions"
@@ -24,6 +24,7 @@ import {
   linkChoices,
   removeLink,
   resolveLink,
+  routineShortcut,
 } from "#ui/linkActions"
 
 interface Escenario {
@@ -193,7 +194,7 @@ test("linkChoices: las demás notas y todos los diagramas, por nombre, sin conte
   const alfa: Note | null = useCases.createNote("Álamo")
   const otro: Diagram | null = useCases.createDiagram("Árbol")
   if (zeta === null || alfa === null || otro === null) assert.fail("tenían que crearse")
-  const r: LinkChoices = linkChoices(store.getState(), nota.id)
+  const r: LinkChoices = linkChoices(store.getState(), nota.id, null)
   assert.deepEqual(r.notes.map((n: { readonly name: string }): string => n.name), ["Álamo", "zeta"])
   assert.deepEqual(r.diagrams.map((d: { readonly name: string }): string => d.name), ["Árbol", "Plano"])
   assert.ok(r.diagrams.some((d: { readonly id: string }): boolean => d.id === diagrama.id))
@@ -205,9 +206,9 @@ test("linkChoices: el orden ignora tildes y mayúsculas; sin nada que enlazar, l
   useCases.createNote("b")
   useCases.createNote("Á")
   useCases.createNote("a")
-  const nombres: ReadonlyArray<string> = linkChoices(store.getState(), nota.id).notes.map((n: { readonly name: string }): string => n.name)
+  const nombres: ReadonlyArray<string> = linkChoices(store.getState(), nota.id, null).notes.map((n: { readonly name: string }): string => n.name)
   assert.strictEqual(nombres[2], "b")
-  assert.deepEqual(linkChoices(emptyAppState(), nota.id), { notes: [], diagrams: [] })
+  assert.deepEqual(linkChoices(emptyAppState(), nota.id, null), { notes: [], diagrams: [], events: [], routines: [] })
 })
 
 /* ── buildLink ── */
@@ -321,4 +322,76 @@ test("changeLink: suelta, ajeno o con `)` en el destino, no cambia nada", (): vo
   })
 
   assert.deepEqual(reescribir("[a](#x)", 2, "t", "https://a.es/x_(y)"), { text: "[a](#x)", cursor: 7 })
+})
+
+/* ── eventos y rutinas ── */
+
+const DIA: Day = "2026-10-30" as Day
+
+const conCalendario = (): Escenario & { readonly rutina: Routine; readonly evento: EventId } => {
+  const base: Escenario = escenario()
+  const rutina: Routine | null = base.useCases.createRoutine("Leer", null)
+  const evento: ReturnType<UseCases["createEvent"]> = base.useCases.createEvent(DIA, null, "Dentista")
+  if (rutina === null || evento === null) assert.fail("tenían que crearse")
+  return { ...base, rutina, evento: evento.id }
+}
+
+test("resolveLink: un evento y una rutina; borrados, rotos", (): void => {
+  const { store, useCases, rutina, evento }: ReturnType<typeof conCalendario> = conCalendario()
+  assert.deepEqual(resolveLink(store.getState(), evento), { kind: "event", id: evento })
+  assert.deepEqual(resolveLink(store.getState(), rutina.id), { kind: "routine", id: rutina.id })
+  useCases.deleteEvent(evento)
+  useCases.deleteRoutine(rutina.id)
+  assert.strictEqual(resolveLink(store.getState(), evento), null)
+  assert.strictEqual(resolveLink(store.getState(), rutina.id), null)
+})
+
+test("linkChoices: eventos con su día al lado (próximos, con los de todo el día primero, y luego pasados) y rutinas sin archivar", (): void => {
+  const { store, useCases, nota }: ReturnType<typeof conCalendario> = conCalendario()
+  useCases.createEvent("2026-10-01" as Day, "09:00" as Time, "Pasado")
+  useCases.createEvent("2026-11-05" as Day, null, "Lejano")
+  useCases.createEvent(DIA, "08:30" as Time, "Temprano")
+  const archivada: Routine | null = useCases.createRoutine("Vieja", null)
+  if (archivada === null) assert.fail("tenía que crearse")
+  useCases.setRoutineArchived(archivada.id, true)
+  const r: LinkChoices = linkChoices(store.getState(), nota.id, DIA)
+  assert.deepEqual(
+    r.events.map((e: { readonly name: string; readonly detail?: string }): string => `${e.detail} ${e.name}`),
+    ["2026-10-30 Dentista", "2026-10-30 08:30 Temprano", "2026-11-05 Lejano", "2026-10-01 09:00 Pasado"],
+  )
+  assert.deepEqual(r.routines.map((x: { readonly name: string }): string => x.name), ["Leer"])
+})
+
+/* ── routineShortcut ── */
+
+const atajo = (state: AppState, raw: string, hoy: Day | null): ReturnType<typeof routineShortcut> =>
+  routineShortcut(state, readMarkdownLine(raw), raw, hoy)
+
+test("routineShortcut: la línea es sólo el enlace a una rutina; marcada si hoy está en sus días", (): void => {
+  const { store, useCases, rutina }: ReturnType<typeof conCalendario> = conCalendario()
+  const raw: string = `[Leer](#${rutina.id})`
+  assert.deepEqual(atajo(store.getState(), raw, DIA), { id: rutina.id, marked: false })
+  useCases.setRoutineDay(rutina.id, DIA, true, DIA)
+  assert.deepEqual(atajo(store.getState(), raw, DIA), { id: rutina.id, marked: true })
+  // Mañana, sin marcar; sin «hoy», sin marcar.
+  assert.deepEqual(atajo(store.getState(), raw, "2026-10-31" as Day), { id: rutina.id, marked: false })
+  assert.deepEqual(atajo(store.getState(), raw, null), { id: rutina.id, marked: false })
+  // Los espacios de los bordes no lo impiden.
+  assert.deepEqual(atajo(store.getState(), `  ${raw} `, DIA), { id: rutina.id, marked: true })
+})
+
+test("routineShortcut: texto al lado, dos enlaces, otro destino, web, sin guardar o roto: no es atajo", (): void => {
+  const { store, useCases, rutina, nota, evento }: ReturnType<typeof conCalendario> = conCalendario()
+  const s: AppState = store.getState()
+  assert.strictEqual(atajo(s, `hoy [Leer](#${rutina.id})`, DIA), null)
+  assert.strictEqual(atajo(s, `[Leer](#${rutina.id}) hoy`, DIA), null)
+  assert.strictEqual(atajo(s, `[a](#${rutina.id})[b](#${rutina.id})`, DIA), null)
+  assert.strictEqual(atajo(s, `[n](#${nota.id})`, DIA), null)
+  assert.strictEqual(atajo(s, `[e](#${evento})`, DIA), null)
+  assert.strictEqual(atajo(s, "[w](https://a.es)", DIA), null)
+  assert.strictEqual(atajo(s, "https://a.es", DIA), null)
+  assert.strictEqual(atajo(s, "Leer", DIA), null)
+  assert.strictEqual(atajo(s, "", DIA), null)
+  useCases.deleteRoutine(rutina.id)
+  assert.strictEqual(atajo(store.getState(), `[Leer](#${rutina.id})`, DIA), null)
 })

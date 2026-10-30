@@ -1,12 +1,12 @@
 /**
  * La hoja de elegir a qué enlazar: arriba el texto que llevará el enlace, luego
- * un campo para pegar una dirección web y, debajo, las notas y los diagramas que
- * se pueden enlazar. La usan «Enlazar…» y «Cambiar»; qué se hace con lo elegido
+ * un campo para pegar una dirección web y, debajo, las notas, los diagramas, los
+ * eventos y las rutinas que se pueden enlazar. La usan «Enlazar…» y «Cambiar»; qué se hace con lo elegido
  * (y con el texto, que puede ir en blanco) lo decide quien la abre.
  */
 
 import { elemento } from "./dom.js"
-import type { LinkChoices } from "./linkActions.js"
+import type { LinkChoice, LinkChoices, LinkKind } from "./linkActions.js"
 import { isWebAddress } from "./linkActions.js"
 import type { Sheet } from "./sheet.js"
 
@@ -19,8 +19,8 @@ export interface LinkSheetOptions {
   readonly initialAddress?: string
   /** Se pegó una dirección web válida, con el texto del campo tal cual; la hoja ya se cerró. */
   readonly onPickAddress: (direccion: string, texto: string) => void
-  /** Se eligió una nota o un diagrama, con el texto del campo tal cual; la hoja ya se cerró. */
-  readonly onPick: (kind: "note" | "diagram", id: string, name: string, texto: string) => void
+  /** Se eligió algo de la lista, con el texto del campo tal cual; la hoja ya se cerró. */
+  readonly onPick: (kind: LinkKind, id: string, name: string, texto: string) => void
 }
 
 export const openLinkSheet = (
@@ -72,8 +72,9 @@ export const openLinkSheet = (
 
   const lista: HTMLElement = elemento("div")
   lista.className = "selector"
-  const fila = (kind: "note" | "diagram", id: string, name: string): HTMLButtonElement => {
-    const b: HTMLButtonElement = elemento("button", name === "" ? "Sin nombre" : name)
+  const fila = (kind: LinkKind, { id, name, detail }: LinkChoice<string>): HTMLButtonElement => {
+    const sinNombre: string = name === "" ? "Sin nombre" : name
+    const b: HTMLButtonElement = elemento("button", detail === undefined ? sinNombre : `${detail} · ${sinNombre}`)
     b.type = "button"
     b.addEventListener("click", (): void => {
       sheet.close()
@@ -86,13 +87,14 @@ export const openLinkSheet = (
     grupo.className = "grupo"
     return grupo
   }
-  if (choices.notes.length > 0) {
-    lista.append(rotulo("Notas"))
-    lista.append(...choices.notes.map((n: { readonly id: string; readonly name: string }): HTMLElement => fila("note", n.id, n.name)))
+  const grupo = (titulo: string, tipo: LinkKind, elegibles: ReadonlyArray<LinkChoice<string>>): void => {
+    if (elegibles.length === 0) return
+    lista.append(rotulo(titulo))
+    lista.append(...elegibles.map((c: LinkChoice<string>): HTMLElement => fila(tipo, c)))
   }
-  if (choices.diagrams.length > 0) {
-    lista.append(rotulo("Diagramas"))
-    lista.append(...choices.diagrams.map((d: { readonly id: string; readonly name: string }): HTMLElement => fila("diagram", d.id, d.name)))
-  }
+  grupo("Notas", "note", choices.notes)
+  grupo("Diagramas", "diagram", choices.diagrams)
+  grupo("Eventos", "event", choices.events)
+  grupo("Rutinas", "routine", choices.routines)
   sheet.open(title, [texto, pegar, lista])
 }
