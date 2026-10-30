@@ -122,6 +122,7 @@ export const mountWindowsView = (
   }
   const ajustes: HTMLButtonElement = engranaje()
   const calendario: HTMLButtonElement = flecha("▦", "Calendario")
+  calendario.classList.add("icono-calendario")
   calendario.addEventListener("click", onOpenCalendar)
   cabecera.append(anterior, titulo.element, siguiente, agregar, calendario, ajustes)
 

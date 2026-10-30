@@ -27,6 +27,10 @@
   }
 }
 .apagado,
+/* El ▦ del calendario, un 20 % mayor que las demás flechas (1.15rem). */
+.flecha.icono-calendario {
+  font-size: 1.38rem;
+}
 .flecha:disabled {
   color: var(--dim) !important;
 }
