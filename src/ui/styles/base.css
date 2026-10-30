@@ -51,14 +51,14 @@
     --dim: #6b4d12;
   }
   :root[data-phosphor="magenta"] {
-    --ink: #ff4fd8;
-    --muted: #c23fa6;
-    --line: #5c1a4e;
-    --row: #11040f;
-    --rowline: #330d2c;
-    --accent: #ff4fd8;
-    --accent-soft: #3a0b33;
-    --dim: #6b1f5d;
+    --ink: #ff00e6;
+    --muted: #d100bd;
+    --line: #66005a;
+    --row: #14031a;
+    --rowline: #3d0a46;
+    --accent: #ff00e6;
+    --accent-soft: #45004d;
+    --dim: #7a0070;
   }
   * {
     box-sizing: border-box;
