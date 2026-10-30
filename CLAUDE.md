@@ -214,7 +214,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
   historial no se cae, y se cierra sin ir atrás.
 
 **Aspecto**
-- Terminal de fósforo: **ámbar o verde, a elegir en ⚙**, ámbar por defecto; **siempre en oscuro**.
+- Terminal de fósforo: **verde, ámbar o magenta, a elegir en ⚙**, verde por defecto; **siempre en oscuro**.
 - El fósforo es de cada dispositivo: `localStorage` (`elnotas:phosphor`), fuera del core, no viaja.
 - Letra monoespaciada **del sistema**, sin fuente propia. Sin esquinas redondeadas ni sombras.
 - Crear o confirmar, en **vídeo inverso**; el rojo, sólo para borrar y los errores. Sin verde «de crear».

@@ -37,24 +37,24 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
 
 ## T. El aspecto
 
-- **T1.** Todo es **ámbar sobre negro**, con letra **monoespaciada**, **sin esquinas
+- **T1.** Todo es **verde sobre negro** (el fósforo por defecto), con letra **monoespaciada**, **sin esquinas
   redondeadas ni sombras**. Con el sistema en **modo claro**, igual: no hay versión clara.
 - **T2.** Se ven **líneas horizontales finas** encima de todo (las de barrido), también sobre
   las hojas, y **nada se mueve ni parpadea**.
-- **T3.** Lo que crea o confirma va en **vídeo inverso** (fondo ámbar, letra negra): el «+»
+- **T3.** Lo que crea o confirma va en **vídeo inverso** (fondo del color del fósforo, letra negra): el «+»
   grande, el «+» de la última ventana, el de ⚙, «+ Contexto nuevo», «+ Nota nueva», «+ Diagrama
-  nuevo» y las barras de abajo. El «+» de diagrama nuevo va **en hueco** (borde ámbar, fondo
+  nuevo» y las barras de abajo. El «+» de diagrama nuevo va **en hueco** (borde del fósforo, fondo
   negro), para no confundirse con el de nota.
 - **T4.** **Sólo lo de borrar y los errores son rojos**: «Borrar» en ⚙, «Borrar todo», el botón de
   la pregunta antes de borrar y el borde del aviso de guardado detenido.
 - **T5.** Las fichas de ⚙ enseñan **palabras de ocho letras enteras** («contexto», «diagrama»),
   sin partirlas.
-- **T6.** El **foco del teclado** (tabulador) es un recuadro ámbar recto, no el anillo blanco y
+- **T6.** El **foco del teclado** (tabulador) es un recuadro del color del fósforo, recto, no el anillo blanco y
   redondo del navegador.
-- **T8.** En ⚙, la sección **Pantalla** tiene **Ámbar** y **Verde**, el elegido en vídeo inverso.
-  Pulsar **Verde** lo cambia **todo al instante**: la tinta, el brillo, las líneas, los pósits y
-  la rejilla. El rojo de borrar sigue rojo. **Recargar**: sigue en verde. Volver a **Ámbar**.
-- **T9.** Con el verde elegido, **«Borrar todo»**: tras recargar, vuelve el **ámbar**.
+- **T8.** En ⚙, la sección **Pantalla** tiene **Verde**, **Ámbar** y **Magenta**, el elegido en vídeo
+  inverso. Pulsar **Ámbar** o **Magenta** lo cambia **todo al instante**: la tinta, el brillo, las
+  líneas, los pósits y la rejilla. El rojo de borrar sigue rojo. **Recargar**: sigue igual. Volver a **Verde**.
+- **T9.** Con el ámbar elegido, **«Borrar todo»**: tras recargar, vuelve el **verde**.
 
 ## G. Que los toques sigan llegando
 

@@ -1,5 +1,5 @@
 /*
- * Lo de debajo de todo: los colores de la terminal de fósforo, ámbar o verde,
+ * Lo de debajo de todo: los colores de la terminal de fósforo, verde, ámbar o magenta,
  * la letra monoespaciada del sistema, las líneas de barrido y el aspecto por
  * defecto de los elementos.
  *
@@ -12,17 +12,17 @@
   :root {
     color-scheme: dark;
     --ground: #050301;
-    --ink: #ffb000;
-    --muted: #c08a1e;
-    --line: #5a4210;
+    --ink: #33ff66;
+    --muted: #2bbf55;
+    --line: #155c28;
     --screen: #0c0802;
-    --row: #150e03;
-    --rowline: #33250a;
-    --accent: #ffb000;
+    --row: #04110a;
+    --rowline: #0d3318;
+    --accent: #33ff66;
     --accent-ink: #0c0802;
-    --accent-soft: #3a2805;
+    --accent-soft: #0b3a18;
     --danger: #ff5533;
-    --dim: #6b4d12;
+    --dim: #1f6b35;
     /* La letra sobre los botones de color: crear y borrar. */
     --sobre-color: #0c0802;
     --aviso: var(--accent);
@@ -38,17 +38,27 @@
     --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
     --ui: var(--mono);
   }
-  /* El fósforo verde, si se elige en la configuración: los negros y el rojo, los
+  /* Los otros fósforos, si se eligen en la configuración: los negros y el rojo, los
      mismos; cambia sólo lo que brilla. */
-  :root[data-phosphor="green"] {
-    --ink: #33ff66;
-    --muted: #2bbf55;
-    --line: #155c28;
-    --row: #04110a;
-    --rowline: #0d3318;
-    --accent: #33ff66;
-    --accent-soft: #0b3a18;
-    --dim: #1f6b35;
+  :root[data-phosphor="amber"] {
+    --ink: #ffb000;
+    --muted: #c08a1e;
+    --line: #5a4210;
+    --row: #150e03;
+    --rowline: #33250a;
+    --accent: #ffb000;
+    --accent-soft: #3a2805;
+    --dim: #6b4d12;
+  }
+  :root[data-phosphor="magenta"] {
+    --ink: #ff4fd8;
+    --muted: #c23fa6;
+    --line: #5c1a4e;
+    --row: #11040f;
+    --rowline: #330d2c;
+    --accent: #ff4fd8;
+    --accent-soft: #3a0b33;
+    --dim: #6b1f5d;
   }
   * {
     box-sizing: border-box;

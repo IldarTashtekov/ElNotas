@@ -54,14 +54,14 @@ const ajuste = (almacen: FakeStorage): PhosphorSetting =>
 
 test("AL RECARGAR vuelve el color elegido", (): void => {
   const almacen: FakeStorage = createFakeStorage()
-  ajuste(almacen).set("green")
-  assert.equal(ajuste(almacen).get(), "green")
+  ajuste(almacen).set("amber")
+  assert.equal(ajuste(almacen).get(), "amber")
 })
 
 test("«Borrar todo» se lleva también el color", (): void => {
   const almacen: FakeStorage = createFakeStorage()
-  ajuste(almacen).set("green")
+  ajuste(almacen).set("amber")
   assert.equal(requestReset(almacen), true)
   resetIfRequested(almacen)
-  assert.equal(ajuste(almacen).get(), "amber")
+  assert.equal(ajuste(almacen).get(), "green")
 })

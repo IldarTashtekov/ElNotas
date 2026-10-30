@@ -1,5 +1,5 @@
 /**
- * El color del fósforo de la pantalla, ámbar o verde: cuál hay, cómo se lee lo
+ * El color del fósforo de la pantalla, verde, ámbar o magenta: cuál hay, cómo se lee lo
  * guardado y el ajuste vivo que lo aplica y lo guarda al cambiarlo.
  *
  * Es de cada dispositivo: se guarda aparte de las notas y no viaja con ellas.
@@ -7,7 +7,7 @@
 
 import type { Logger, Result, StorageError } from "#core/index"
 
-export type Phosphor = "amber" | "green"
+export type Phosphor = "green" | "amber" | "magenta"
 
 export interface PhosphorChoice {
   readonly value: Phosphor
@@ -16,11 +16,12 @@ export interface PhosphorChoice {
 
 /** En el orden en que salen en la configuración. */
 export const PHOSPHORS: ReadonlyArray<PhosphorChoice> = [
-  { value: "amber", label: "Ámbar" },
   { value: "green", label: "Verde" },
+  { value: "amber", label: "Ámbar" },
+  { value: "magenta", label: "Magenta" },
 ]
 
-export const DEFAULT_PHOSPHOR: Phosphor = "amber"
+export const DEFAULT_PHOSPHOR: Phosphor = "green"
 
 /** Cualquier cosa que no sea un fósforo conocido es el de siempre. */
 export const parsePhosphor = (guardado: unknown): Phosphor =>

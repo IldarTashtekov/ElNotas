@@ -14,16 +14,17 @@ import { createPhosphorSetting, parsePhosphor } from "#ui/index"
 import type { RecordingLogger } from "../core/ports/FakeLogger"
 import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 
-test("parsePhosphor reconoce los dos fósforos", (): void => {
-  assert.equal(parsePhosphor("amber"), "amber")
+test("parsePhosphor reconoce los tres fósforos", (): void => {
   assert.equal(parsePhosphor("green"), "green")
+  assert.equal(parsePhosphor("magenta"), "magenta")
+  assert.equal(parsePhosphor("amber"), "amber")
 })
 
 test("parsePhosphor convierte cualquier otra cosa en el de siempre", (): void => {
   for (const raro of [null, undefined, "", "verde", "GREEN", 1, {}]) {
     assert.equal(parsePhosphor(raro), DEFAULT_PHOSPHOR)
   }
-  assert.equal(DEFAULT_PHOSPHOR, "amber")
+  assert.equal(DEFAULT_PHOSPHOR, "green")
 })
 
 interface Escenario {
@@ -57,9 +58,9 @@ const escenario = (leido: Result<unknown, StorageError>): Escenario => {
 }
 
 test("al crearlo aplica lo guardado, sin volver a guardarlo", (): void => {
-  const e: Escenario = escenario(ok("green"))
-  assert.equal(e.setting.get(), "green")
-  assert.deepEqual(e.aplicados(), ["green"])
+  const e: Escenario = escenario(ok("amber"))
+  assert.equal(e.setting.get(), "amber")
+  assert.deepEqual(e.aplicados(), ["amber"])
   assert.deepEqual(e.guardados(), [])
 })
 
@@ -67,23 +68,23 @@ test("sin nada guardado, o si no se puede leer, aplica el de siempre", (): void 
   const fallo: StorageError = { kind: "io", cause: new Error("bloqueado") }
   for (const leido of [ok(null), err(fallo)]) {
     const e: Escenario = escenario(leido)
-    assert.equal(e.setting.get(), "amber")
-    assert.deepEqual(e.aplicados(), ["amber"])
+    assert.equal(e.setting.get(), "green")
+    assert.deepEqual(e.aplicados(), ["green"])
   }
 })
 
 test("cambiarlo lo aplica y lo guarda", (): void => {
   const e: Escenario = escenario(ok(null))
-  e.setting.set("green")
-  assert.equal(e.setting.get(), "green")
-  assert.deepEqual(e.aplicados(), ["amber", "green"])
-  assert.deepEqual(e.guardados(), ["green"])
+  e.setting.set("amber")
+  assert.equal(e.setting.get(), "amber")
+  assert.deepEqual(e.aplicados(), ["green", "amber"])
+  assert.deepEqual(e.guardados(), ["amber"])
 })
 
 test("elegir el que ya está no hace nada: ni aplica ni guarda", (): void => {
-  const e: Escenario = escenario(ok("green"))
-  e.setting.set("green")
-  assert.deepEqual(e.aplicados(), ["green"])
+  const e: Escenario = escenario(ok("amber"))
+  e.setting.set("amber")
+  assert.deepEqual(e.aplicados(), ["amber"])
   assert.deepEqual(e.guardados(), [])
 })
 
@@ -100,9 +101,9 @@ test("un fallo al guardar no impide el cambio", (): void => {
       aplicado = phosphor
     },
   })
-  setting.set("green")
-  assert.equal(setting.get(), "green")
-  assert.equal(aplicado, "green")
+  setting.set("amber")
+  assert.equal(setting.get(), "amber")
+  assert.equal(aplicado, "amber")
 })
 
 test("un fallo al guardar queda en el registro, y un guardado bueno no", (): void => {
@@ -116,8 +117,8 @@ test("un fallo al guardar queda en el registro, y un guardado bueno no", (): voi
     },
     apply: (): void => undefined,
   })
-  setting.set("green")
-  falla = false
   setting.set("amber")
+  falla = false
+  setting.set("green")
   assert.deepEqual(registro.logged(), ["no se guardó el fósforo"])
 })
