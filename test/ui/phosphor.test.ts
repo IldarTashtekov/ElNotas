@@ -8,9 +8,11 @@ import assert from "node:assert/strict"
 
 import type { Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
-import type { Phosphor, PhosphorPersistence, PhosphorSetting } from "#ui/index"
+import type { Phosphor, PhosphorSetting } from "#ui/index"
+import type { PhosphorPersistence } from "#ui/phosphor"
 import { DEFAULT_PHOSPHOR } from "#ui/phosphor"
-import { createPhosphorSetting, parsePhosphor } from "#ui/index"
+import { createPhosphorSetting } from "#ui/index"
+import { parsePhosphor } from "#ui/phosphor"
 import type { RecordingLogger } from "../core/ports/FakeLogger"
 import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 

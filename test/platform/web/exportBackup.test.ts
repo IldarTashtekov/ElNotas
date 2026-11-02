@@ -8,7 +8,7 @@ import assert from "node:assert/strict"
 
 import type { Clock, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
-import type { CalendarOrderPersistence, FramingPersistence, PhosphorPersistence, WindowsPersistence } from "#ui/index"
+import type { UiStatePersistence } from "#ui/index"
 import type { Backup, BackupProblem } from "#platform/web/backup"
 import { readBackup } from "#platform/web/backup"
 import type { ExportResult } from "#ui/index"
@@ -21,28 +21,15 @@ import { createFakeBlobStore } from "../../storage/file/FakeBlobStore"
 const AHORA: number = new Date(2026, 9, 12, 10).getTime()
 const reloj: Clock = { now: (): number => AHORA }
 
-const VENTANAS: unknown = { windows: [{ kind: "general" }], active: { kind: "general" } }
+const PANTALLA: unknown = {
+  phosphor: "green",
+  windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
+  framings: { d1: { x: 10, y: -20, scale: 2 } },
+  calendarOrder: { routines: ["r1", "r2"], archived: [] },
+  calendarTab: "routines",
+}
 
-const ventanas = (leido: Result<unknown, StorageError>): WindowsPersistence => ({
-  load: (): Result<unknown, StorageError> => leido,
-  save: (): Result<void, StorageError> => ok(undefined),
-})
-
-const fosforo = (leido: Result<unknown, StorageError>): PhosphorPersistence => ({
-  load: (): Result<unknown, StorageError> => leido,
-  save: (): Result<void, StorageError> => ok(undefined),
-})
-
-const ENCUADRES: unknown = { d1: { x: 10, y: -20, scale: 2 } }
-
-const encuadres = (leido: Result<unknown, StorageError>): FramingPersistence => ({
-  load: (): Result<unknown, StorageError> => leido,
-  save: (): Result<void, StorageError> => ok(undefined),
-})
-
-const ORDEN: unknown = { routines: ["r1", "r2"] }
-
-const orden = (leido: Result<unknown, StorageError>): CalendarOrderPersistence => ({
+const pantalla = (leido: Result<unknown, StorageError>): UiStatePersistence => ({
   load: (): Result<unknown, StorageError> => leido,
   save: (): Result<void, StorageError> => ok(undefined),
 })
@@ -80,10 +67,7 @@ const escena = (cambios: Partial<ExportDeps> = {}, escribe: boolean = true): Esc
       return ok(undefined)
     },
     blobs: conFicheros(),
-    windows: ventanas(ok(VENTANAS)),
-    phosphor: fosforo(ok("green")),
-    framing: encuadres(ok(ENCUADRES)),
-    calendarOrder: orden(ok(ORDEN)),
+    uiState: pantalla(ok(PANTALLA)),
     clock: reloj,
     chooseDestination: async (n: string): Promise<Destination | null> => {
       pasos = [...pasos, "elegir"]
@@ -118,14 +102,11 @@ test("la copia lleva todos los ficheros tal cual, los ilegibles incluidos", asyn
   })
 })
 
-test("lleva las ventanas, el fósforo, los encuadres, el orden del calendario y la hora del reloj", async (): Promise<void> => {
+test("lleva el estado de la pantalla tal cual y la hora del reloj", async (): Promise<void> => {
   const e: Escena = escena()
   await exportBackup(e.deps)
   const copia: Backup = copiaEscrita(e)
-  assert.deepEqual(copia.windows, VENTANAS)
-  assert.equal(copia.phosphor, "green")
-  assert.deepEqual(copia.framing, ENCUADRES)
-  assert.deepEqual(copia.calendarOrder, ORDEN)
+  assert.deepEqual(copia.uiState, PANTALLA)
   assert.equal(copia.exportedAt, AHORA)
 })
 
@@ -185,42 +166,20 @@ test("un fichero listado que ya no está no va, y no es un fallo", async (): Pro
   blobs.fantasma("notes/borrada.json")
   const copia: Result<Backup, StorageError> = await collectBackup({
     blobs,
-    windows: ventanas(ok(null)),
-    phosphor: fosforo(ok(null)),
-    framing: encuadres(ok(null)),
-    calendarOrder: orden(ok(null)),
+    uiState: pantalla(ok(null)),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que salir")
   assert.equal("notes/borrada.json" in copia.value.files, false)
 })
 
-test("ventanas, fósforo, encuadres u orden del calendario que no se pueden leer van a null, sin fallar", async (): Promise<void> => {
-  const ilegible: StorageError = { kind: "io", cause: "bloqueado" }
+test("un estado de la pantalla que no se puede leer va a null, sin fallar", async (): Promise<void> => {
+  const ilegible: StorageError = { kind: "corrupt", path: "elnotas:ui", cause: null }
   const copia: Result<Backup, StorageError> = await collectBackup({
     blobs: conFicheros(),
-    windows: ventanas(err(ilegible)),
-    phosphor: fosforo(err(ilegible)),
-    framing: encuadres(err(ilegible)),
-    calendarOrder: orden(err(ilegible)),
+    uiState: pantalla(err(ilegible)),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que salir")
-  assert.equal(copia.value.windows, null)
-  assert.equal(copia.value.phosphor, null)
-  assert.equal(copia.value.framing, null)
-  assert.equal(copia.value.calendarOrder, null)
-})
-
-test("un fósforo guardado que no es texto va a null", async (): Promise<void> => {
-  const copia: Result<Backup, StorageError> = await collectBackup({
-    blobs: conFicheros(),
-    windows: ventanas(ok(null)),
-    phosphor: fosforo(ok(42)),
-    framing: encuadres(ok(null)),
-    calendarOrder: orden(ok(null)),
-    clock: reloj,
-  })
-  if (!copia.ok) assert.fail("tenía que salir")
-  assert.equal(copia.value.phosphor, null)
+  assert.equal(copia.value.uiState, null)
 })

@@ -14,7 +14,7 @@ import { contextId, diagramId, noteId } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import { revision } from "#core/domain/Ids"
 import type { WindowRef } from "#ui/windows"
-import type { WindowsLayout } from "#ui/index"
+import type { WindowsLayout } from "#ui/windows"
 import {
   CALENDAR,
   DEFAULT_LAYOUT,
@@ -26,7 +26,7 @@ import {
   replaceWindowAt,
   sameWindow,
 } from "#ui/windows"
-import { parseWindowsLayout } from "#ui/index"
+import { parseWindowsLayout } from "#ui/windows"
 
 const contexto = (id: string): Context => ({
   id: contextId(id),

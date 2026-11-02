@@ -12,7 +12,7 @@ import { emptyAppState } from "#core/domain/AppState"
 import { revision } from "#core/domain/Ids"
 import type { ListItem, WindowView } from "#ui/windowView"
 import type { WindowRef } from "#ui/windows"
-import type { WindowsLayout } from "#ui/index"
+import type { WindowsLayout } from "#ui/windows"
 import { GENERAL } from "#ui/windows"
 import { GENERAL_TITLE, windowView } from "#ui/windowView"
 

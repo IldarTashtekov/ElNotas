@@ -212,26 +212,6 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
       tabla sin pulsar el vecino), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
-- [ ] **9. El estado de la UI en un objeto, `UiState`** *(pensar)*. *Diseñada con el usuario el
-      2026-11-02.* Lo de presentación de este dispositivo, que hoy son cuatro claves con un
-      adaptador cada una, pasa a un objeto en una clave, `elnotas:ui`, sin que viaje entre
-      dispositivos. **Decidido:** cinco secciones planas —`phosphor`, `windows`, `framings`,
-      `calendarOrder` y `calendarTab` (`"events" | "routines"`, hoy `"eventos" | "rutinas"` y
-      sólo en memoria)—, sin número de versión. **Las capas abiertas se quedan fuera**, con su clave
-      y su adaptador: son dónde se está, no cómo se ve, y se guardan para volver tras un cierre de
-      Android. **Se empieza limpio:** las claves viejas no se leen y se borran al arrancar. **Un solo
-      adaptador**, `src/platform/web/LocalStorageUiState.ts`, que lee y escribe el objeto entero sin
-      entenderlo; lo listo, puro, en `src/ui/uiState.ts`: cada sección da a la UI la misma
-      `…Persistence` que recibe hoy, su guardado relee el objeto y cambia sólo su parte, y su
-      lectura pasa por el lector tolerante de siempre, de modo que una sección rota vuelve a su
-      valor por defecto sin tirar las otras. No pasa por el core. Por piezas, un commit cada una:
-      **9a**, el objeto, las secciones, el adaptador y `main.ts`, fuera los cuatro adaptadores
-      viejos, con pruebas y rotura; **9b**, la copia de seguridad lleva `uiState` en vez de cuatro
-      campos sueltos, y una copia vieja importa sólo sus notas; **9c**, la pestaña del calendario
-      se guarda; **9d**, en `CLAUDE.md` las decisiones de las claves del fósforo y del encuadre y la
-      de la copia. **Se cierra cuando** las secciones tienen sus pruebas (una rota no tira las otras,
-      guardar una no pisa las demás) y su rotura, `check` pasa y las listas del fósforo, las
-      ventanas, el encuadre, el calendario y la copia tienen sus pasos, pasados en el panel.
 
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
@@ -473,7 +453,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
-| **Una entidad `Preferences` en el core para lo de presentación que viaja** (orden de las rutinas, archivadas y, más adelante, orden dentro de un contexto y ocultos) | Planteado el 2026-10-30 tras sacar `archived` de `Routine`. Hoy el orden y lo archivado viven en `elnotas:calendario-orden`, por dispositivo y fuera del core. Diseño esbozado: un objeto `{ schemaVersion, routineOrder, archivedRoutines, … }` guardado como un fichero más con el escritor diferido; sólo la parte que viaja, fósforo, ventanas y encuadres siguen sueltos en `localStorage`. Pide una entidad nueva, su acción y su reconciliación en el core. Dudas abiertas: una global o una por contexto; si los ocultos (`hidden` en `Context`, decisión cerrada) se mueven ahí, y si entra el orden de contexto de la tarea 2. | Querer que el orden y lo archivado viajen entre dispositivos, o la nube. Decidir antes las tres dudas. |
+| **Una entidad `Preferences` en el core para lo de presentación que viaja** (orden de las rutinas, archivadas y, más adelante, orden dentro de un contexto y ocultos) | Planteado el 2026-10-30 tras sacar `archived` de `Routine`. Hoy el orden y lo archivado viven en el `UiState` (`elnotas:ui`), por dispositivo y fuera del core. Diseño esbozado: un objeto `{ schemaVersion, routineOrder, archivedRoutines, … }` guardado como un fichero más con el escritor diferido; sólo la parte que viaja; el resto del `UiState` se queda en el dispositivo. Pide una entidad nueva, su acción y su reconciliación en el core. Dudas abiertas: una global o una por contexto; si los ocultos (`hidden` en `Context`, decisión cerrada) se mueven ahí, y si entra el orden de contexto de la tarea 2. | Querer que el orden y lo archivado viajen entre dispositivos, o la nube. Decidir antes las tres dudas. |
 | **Automatizar y acelerar `check:roturas`** (generar mutaciones solas, o lanzar sólo la prueba de cada rotura y varias a la vez) | Planteado por el usuario el 2026-10-28 tras la pasada entera de la tanda 7e–7g (126 roturas, unos 10 minutos). Es un test que sólo se pasa al cerrar tanda y fase, así que el tiempo molesta poco. Generarlas solas (Stryker o un script casero con `===`→`!==`, `<`→`<=`, quitar un `return`, sólo en el core) da mucho ruido de mutaciones equivalentes que revisar, y Stryker es una dependencia grande, descartada. La lista a mano, con la prueba exacta que debe caer, es lo que da la garantía. | Que la pasada entera pase de molestar a estorbar al cerrar. Entonces, sin tocar la lista: correr sólo la prueba nombrada en `prueba` en vez de la suite, y varias roturas en paralelo, cada una en su copia de `tmp-test/`. |
 | **Repeticiones y duración de los eventos del calendario** (un evento cada semana, uno que dura varios días o de una hora a otra) | Planteado el 2026-10-27 al diseñar el calendario (Fase 10, tarea 7): los esbozos del usuario sólo tienen un día y una hora opcional, y repetir o durar pide un modelo más grande (reglas de repetición, excepciones, qué se pinta en el mes). | Echar en falta crear a mano el mismo evento cada semana, o uno de varios días. Es añadido: un campo opcional en el evento, sin migrar lo guardado. |
 | **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10 una nota puede enlazar notas y diagramas con `[texto](#id)`; los contextos, no, por ahora (2026-10-25). | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |

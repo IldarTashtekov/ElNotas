@@ -8,10 +8,8 @@
 
 export type { MountedApp } from "./App.js"
 export { mountApp } from "./App.js"
-export type { CalendarOrder, CalendarOrderPersistence } from "./calendarOrder.js"
-export { parseCalendarOrder } from "./calendarOrder.js"
-export type { DiagramFraming, FramingPersistence, Framings } from "./diagramFraming.js"
-export { createDiagramFraming, parseFramings } from "./diagramFraming.js"
+export type { DiagramFraming } from "./diagramFraming.js"
+export { createDiagramFraming } from "./diagramFraming.js"
 export type { OpenLayers, OpenLayersPersistence } from "./openLayers.js"
 export { describeBootError, describeImportFailure } from "./messages.js"
 export type {
@@ -20,9 +18,11 @@ export type {
   ImportPreparation,
   ImportSummary,
 } from "./backup.js"
-export type { WindowsLayout } from "./windows.js"
-export { parseWindowsLayout } from "./windows.js"
-export type { WindowsModel, WindowsPersistence } from "./windowsModel.js"
+export type { WindowsModel } from "./windowsModel.js"
 export { createWindowsModel } from "./windowsModel.js"
-export type { Phosphor, PhosphorPersistence, PhosphorSetting } from "./phosphor.js"
-export { createPhosphorSetting, parsePhosphor } from "./phosphor.js"
+export type { Phosphor, PhosphorSetting } from "./phosphor.js"
+export { createPhosphorSetting } from "./phosphor.js"
+export type { CalendarTabSetting } from "./calendarTab.js"
+export { createCalendarTabSetting } from "./calendarTab.js"
+export type { StoredUiState, UiStatePersistence } from "./uiState.js"
+export { parseUiState, uiStateSection } from "./uiState.js"

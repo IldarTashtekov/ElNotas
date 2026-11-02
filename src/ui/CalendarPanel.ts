@@ -21,6 +21,8 @@ import type {
 } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
+import type { CalendarTab, CalendarTabSetting } from "./calendarTab.js"
+import { DEFAULT_CALENDAR_TAB } from "./calendarTab.js"
 import type { DayCell, MonthRef, MonthView } from "./calendarMonth.js"
 import { dayTitle, eventsOfDay, monthOf, monthView, sameMonth, shiftMonth, WEEKDAYS } from "./calendarMonth.js"
 import { elemento } from "./dom.js"
@@ -33,9 +35,15 @@ import { createRoutinesPanel } from "./RoutinesPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
-/** La pestaña elegida, compartida por la vista del icono y la ventana: se abren de nuevo donde se dejaron. */
-export interface CalendarTabMemory {
-  current: "eventos" | "rutinas"
+/** Una pestaña que no se guarda: la del calendario que no la comparte con nadie. */
+const enMemoria = (): CalendarTabSetting => {
+  let actual: CalendarTab = DEFAULT_CALENDAR_TAB
+  return {
+    get: (): CalendarTab => actual,
+    set: (tab: CalendarTab): void => {
+      actual = tab
+    },
+  }
 }
 
 export interface CalendarPanelDeps {
@@ -49,7 +57,7 @@ export interface CalendarPanelDeps {
   readonly calendarOrder: CalendarOrderPersistence
   readonly logger: Logger
   /** Sin ella, cada calendario empieza en «Eventos». */
-  readonly tabs?: CalendarTabMemory
+  readonly tabs?: CalendarTabSetting
 }
 
 /** Lo que una nota enlaza del calendario: un evento, o una rutina. */
@@ -92,7 +100,7 @@ export const createCalendarPanel = ({
   today,
   calendarOrder,
   logger,
-  tabs = { current: "eventos" },
+  tabs = enMemoria(),
 }: CalendarPanelDeps): CalendarPanel => {
   const hoy: Day | null = today()
   let mes: MonthRef = monthOf(hoy ?? ("2026-01-01" as Day))
@@ -139,8 +147,8 @@ export const createCalendarPanel = ({
     b.classList.toggle("fuera", !c.inMonth)
     b.classList.toggle("hoy", c.isToday)
     /* Cada pestaña pinta lo suyo en el mes: * los eventos, el borde brillante las rutinas marcadas. */
-    const conEventos: boolean = tabs.current === "eventos" && c.marked
-    const conRutinas: boolean = tabs.current === "rutinas" && c.routinesDone > 0
+    const conEventos: boolean = tabs.get() === "events" && c.marked
+    const conRutinas: boolean = tabs.get() === "routines" && c.routinesDone > 0
     b.classList.toggle("marcado", conEventos)
     b.classList.toggle("cumplido", conRutinas)
     const rutinas: string = !conRutinas ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
@@ -312,22 +320,22 @@ export const createCalendarPanel = ({
   const pestanas: HTMLElement = elemento("div")
   pestanas.className = "pestanas"
   pestanas.setAttribute("role", "tablist")
-  const elegirPestana = (cual: "eventos" | "rutinas"): void => {
-    tabs.current = cual
+  const elegirPestana = (cual: CalendarTab): void => {
+    tabs.set(cual)
     pintarMes()
-    eventos.element.hidden = cual !== "eventos"
-    rutinas.element.hidden = cual !== "rutinas"
+    eventos.element.hidden = cual !== "events"
+    rutinas.element.hidden = cual !== "routines"
     for (const b of Array.from(pestanas.children)) {
-      b.setAttribute("aria-selected", b.getAttribute("data-pestana") === tabs.current ? "true" : "false")
+      b.setAttribute("aria-selected", b.getAttribute("data-pestana") === tabs.get() ? "true" : "false")
     }
   }
-  for (const [cual, texto] of [["eventos", "Eventos"], ["rutinas", "Rutinas"]] as const) {
+  for (const [cual, texto] of [["events", "Eventos"], ["routines", "Rutinas"]] as const) {
     const b: HTMLButtonElement = boton(texto, (): void => elegirPestana(cual), "pestana")
     b.setAttribute("role", "tab")
     b.setAttribute("data-pestana", cual)
     pestanas.append(b)
   }
-  elegirPestana(tabs.current)
+  elegirPestana(tabs.get())
 
   raiz.append(barra, cabeza, rejilla, pestanas, eventos.element, rutinas.element, hoja.element)
   pintarMes()
@@ -354,13 +362,13 @@ export const createCalendarPanel = ({
     element: raiz,
     show: (target: CalendarTarget): void => {
       if (target.kind === "routine") {
-        elegirPestana("rutinas")
+        elegirPestana("routines")
         rutinas.touch(target.id)
         return
       }
       const evento: CalendarEvent | undefined = store.getState().events[target.id]
       if (evento === undefined) return
-      elegirPestana("eventos")
+      elegirPestana("events")
       mes = monthOf(evento.day)
       pintarMes()
       abrirEvento(evento)

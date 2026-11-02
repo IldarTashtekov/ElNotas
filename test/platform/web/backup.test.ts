@@ -17,10 +17,7 @@ const copia = (): Backup =>
       "manifest.json": '{"schemaVersion":1}',
       "notes/n1.json": '{"id":"n1"}',
     },
-    windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
-    phosphor: "green",
-    framing: { d1: { x: 10, y: -20, scale: 2 } },
-    calendarOrder: { routines: ["r1"] },
+    uiState: { phosphor: "amber", calendarTab: "routines" },
   })
 
 const problemaDe = (r: Result<Backup, BackupProblem>): BackupProblem => {
@@ -36,20 +33,26 @@ test("lo que se arma, pasado por JSON, se lee igual", (): void => {
   assert.deepEqual(leida, { ok: true, value: copia() })
 })
 
-test("una copia de antes de los encuadres se lee igual, con los encuadres a null", (): void => {
-  const { framing: _, ...vieja }: Backup = copia()
-  const leida: Result<Backup, BackupProblem> = readBackup(JSON.parse(JSON.stringify(vieja)))
+test("una copia de la versión 1 se lee con sus ficheros, y sus piezas sueltas de la pantalla se ignoran", (): void => {
+  const { uiState: _, ...resto }: Backup = copia()
+  const vieja: unknown = {
+    ...resto,
+    backupVersion: 1,
+    windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
+    phosphor: "green",
+    framing: { d1: { x: 10, y: -20, scale: 2 } },
+    calendarOrder: { routines: ["r1"] },
+  }
+  const leida: Result<Backup, BackupProblem> = readBackup(vieja)
   if (!leida.ok) assert.fail("tenía que leerse")
-  assert.equal(leida.value.framing, null)
-  assert.equal(leida.value.phosphor, "green")
+  assert.deepEqual(leida.value.files, copia().files)
+  assert.equal(leida.value.uiState, null)
 })
 
-test("una copia de antes del calendario se lee igual, con su orden a null", (): void => {
-  const { calendarOrder: _, ...vieja }: Backup = copia()
-  const leida: Result<Backup, BackupProblem> = readBackup(JSON.parse(JSON.stringify(vieja)))
+test("una copia de la versión 1 que traiga un uiState tampoco lo usa", (): void => {
+  const leida: Result<Backup, BackupProblem> = readBackup(con("backupVersion", 1))
   if (!leida.ok) assert.fail("tenía que leerse")
-  assert.equal(leida.value.calendarOrder, null)
-  assert.deepEqual(leida.value.framing, { d1: { x: 10, y: -20, scale: 2 } })
+  assert.equal(leida.value.uiState, null)
 })
 
 test("lleva la marca de la app y la versión actual del formato", (): void => {
@@ -92,18 +95,17 @@ test("sin ficheros, pero con el objeto vacío, sí lo es: la de una app vacía",
   assert.equal(readBackup(con("files", {})).ok, true)
 })
 
-test("sin ventanas ni fósforo sigue siendo una copia, con los dos a null", (): void => {
-  const { windows: _w, phosphor: _p, ...sinNada }: Backup = copia()
-  const leida: Result<Backup, BackupProblem> = readBackup(sinNada)
+test("sin estado de la pantalla sigue siendo una copia, con él a null", (): void => {
+  const { uiState: _, ...sinPantalla }: Backup = copia()
+  const leida: Result<Backup, BackupProblem> = readBackup(sinPantalla)
   if (!leida.ok) assert.fail("tenía que leerla")
-  assert.equal(leida.value.windows, null)
-  assert.equal(leida.value.phosphor, null)
+  assert.equal(leida.value.uiState, null)
 })
 
-test("un fósforo que no es texto se lee como null, sin rechazar la copia", (): void => {
-  const leida: Result<Backup, BackupProblem> = readBackup(con("phosphor", 7))
+test("un estado de la pantalla raro no rechaza la copia: lo valida quien lo carga", (): void => {
+  const leida: Result<Backup, BackupProblem> = readBackup(con("uiState", 7))
   if (!leida.ok) assert.fail("tenía que leerla")
-  assert.equal(leida.value.phosphor, null)
+  assert.equal(leida.value.uiState, 7)
 })
 
 test("el nombre del fichero lleva la fecha local, con ceros delante", (): void => {

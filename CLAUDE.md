@@ -198,8 +198,8 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 
 **Navegación y UI**
 - Cinco vistas: ventanas, nota, diagrama, calendario, configuración. Lo de encima **se apila**; exit, paso a paso.
-- Ventana = referencia (General, calendario o contexto); la lista, en `localStorage`, fuera del core (no viaja), filtrada por
-  `guardWindows`. Sin nada guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar no avisa.
+- Ventana = referencia (General, calendario o contexto); la lista, en el `UiState`, filtrada por `guardWindows`. Sin nada
+  guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar no avisa.
 - Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
   `sessionStorage`), también en cadena (nota → nota por un enlace); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
 - Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí y en
@@ -212,18 +212,18 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí. Título sólo en la cabecera,
   renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
 - El atrás del navegador cierra lo de encima; una capa sin entrada en el historial se cierra sin ir atrás.
+- `UiState` (fósforo, ventanas, encuadres, orden de rutinas, pestaña del calendario): un objeto en `elnotas:ui`, un
+  adaptador, sin core ni versión; guardar una sección no pisa las otras. Las capas, fuera: dónde se está, no cómo se ve.
 
 **Aspecto**
 - Terminal de fósforo: **verde, ámbar o magenta, a elegir en ⚙**, verde por defecto; **siempre en oscuro**.
-- El fósforo es de cada dispositivo: `localStorage` (`elnotas:phosphor`), fuera del core, no viaja.
 - Letra monoespaciada **del sistema**, sin fuente propia. Sin esquinas redondeadas ni sombras.
 - Crear o confirmar, en **vídeo inverso**; el rojo, sólo para borrar y los errores. Sin verde «de crear».
 - CRT suave y **fijo**: brillo leve y líneas de barrido con `pointer-events: none`. Nada se mueve.
 
 **Diagramas**
 - Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería.
-- El encuadre (punto del centro y escala, no píxeles) se recuerda **por dispositivo** en `elnotas:framing`,
-  fuera del core; se escribe al soltar el lienzo, sin temporizador. La mira vuelve al origen a ×1.
+- El encuadre (centro y escala, no píxeles), en el `UiState`; se escribe al soltar, sin temporizador. La mira: origen, ×1.
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
 - Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira.
 - Nodo-nota con el título en directo; sin nota, «Nota perdida» (en `delete-note` y `hydrate`).
@@ -238,7 +238,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Barras del móvil con el color del sistema: sin `theme-color` ni `theme_color`.
 
 **Copia de seguridad**
-- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también), las ventanas, el orden de las rutinas, el fósforo y los encuadres.
+- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también) y el `uiState`. Una v1 importa sólo ficheros.
 - Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
 - «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
 - Antes de borrar, un ensayo con el mismo `boot`, en memoria; luego en dos tiempos, como «Borrar todo». A medias,

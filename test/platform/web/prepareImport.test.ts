@@ -13,10 +13,7 @@ import { createLocalStorageBlobStore } from "#storage/index"
 import type { ImportPreparation } from "#ui/index"
 import type { App, BootError } from "#platform/web/boot"
 import { boot } from "#platform/web/boot"
-import { createLocalStorageCalendarOrder } from "#platform/web/LocalStorageCalendarOrder"
-import { createLocalStorageFraming } from "#platform/web/LocalStorageFraming"
-import { createLocalStoragePhosphor } from "#platform/web/LocalStoragePhosphor"
-import { createLocalStorageWindows } from "#platform/web/LocalStorageWindows"
+import { createLocalStorageUiState } from "#platform/web/LocalStorageUiState"
 import type { Backup } from "#platform/web/backup"
 import { BACKUP_VERSION, makeBackup } from "#platform/web/backup"
 import { collectBackup } from "#platform/web/exportBackup"
@@ -51,10 +48,7 @@ const copiaDeVerdad = async (): Promise<Backup> => {
   await arrancada.value.flush()
   const copia: Result<Backup, StorageError> = await collectBackup({
     blobs: createLocalStorageBlobStore(origen),
-    windows: createLocalStorageWindows(origen),
-    phosphor: createLocalStoragePhosphor(origen),
-    framing: createLocalStorageFraming(origen),
-    calendarOrder: createLocalStorageCalendarOrder(origen),
+    uiState: createLocalStorageUiState(origen),
     clock: reloj,
   })
   if (!copia.ok) assert.fail("tenía que exportarse")

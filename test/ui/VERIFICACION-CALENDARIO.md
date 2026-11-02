@@ -40,7 +40,8 @@ lista con **dos ventanas** como mínimo (el General y otra).
 - **A9.** Quitar la ficha del calendario en ⚙ (⋮ → Quitar): desaparece de la lista, y **▦** sigue abriéndolo.
 - **A10.** Elegir la pestaña **Rutinas** en la vista del icono ▦, salir con ✕ y volver a abrirla con
   ▦: sigue en **Rutinas**. Lo mismo entre la vista y la ventana del calendario (se comparte); al
-  **recargar** vuelve a **Eventos**.
+  **recargar** sigue en **Rutinas** (`calendarTab` en `elnotas:ui`). Volver a **Eventos** y
+  recargar: **Eventos**.
 
 ---
 
@@ -95,18 +96,17 @@ Con eventos y rutinas, y el orden de las rutinas cambiado. Los pasos de la
 exportación y la importación en sí son los de `VERIFICACION-MANUAL-COPIA.md`; aquí, que el
 calendario entra y sale.
 
-- **D1.** ⚙ → **Exportar copia**: el fichero lleva sus `events/…` en `files`, y `calendarOrder` con la
-  lista de rutinas.
+- **D1.** ⚙ → **Exportar copia**: el fichero lleva sus `events/…` en `files`, y en `uiState` el
+  `calendarOrder` con la lista de rutinas y la `calendarTab`.
 - **D2.** Cambiar cosas (un evento nuevo, otro orden) e **Importar copia → Sustituir todo**: tras
   recargar, el calendario es el de la copia: los eventos de entonces y los días marcados. Lo
   creado después ya no está.
 - **D3.** Una copia hecha **antes del calendario** se importa sin quejarse: el calendario queda
   vacío.
-- **D3b.** Una copia **antigua con `event-groups/…` y `groups` en `calendarOrder`** (de antes de
-  quitar los grupos) también se importa sin quejarse: los eventos entran y lo de los grupos se
-  ignora.
+- **D3b.** Una copia **antigua con `event-groups/…`** (de antes de quitar los grupos) también se
+  importa sin quejarse: los eventos entran y lo de los grupos se ignora.
 - **D4.** Con una rutina con días marcados, otra archivada y el orden de las rutinas cambiado:
-  la copia lleva sus `routines/…` en `files` y `routines` en `calendarOrder`; al **Sustituir todo**
+  la copia lleva sus `routines/…` en `files` y `routines` en `uiState.calendarOrder`; al **Sustituir todo**
   y recargar, las rutinas vuelven con sus días, su meta, el archivado y el orden de entonces.
 
 ## E. Las rutinas

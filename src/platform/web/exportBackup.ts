@@ -1,6 +1,6 @@
 /**
- * Exportar: junta lo guardado —los ficheros, las ventanas, el fósforo, los
- * encuadres de los diagramas y el orden del calendario— en una copia y la escribe donde diga el usuario.
+ * Exportar: junta lo guardado —los ficheros y el estado de la pantalla— en una
+ * copia y la escribe donde diga el usuario.
  *
  * Primero se elige dónde, luego se guarda lo pendiente y se lee lo guardado. Si
  * el guardado está detenido, se exporta igualmente lo que hay y se dice. Dónde
@@ -9,13 +9,7 @@
 
 import type { BlobStore, Clock, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
-import type {
-  CalendarOrderPersistence,
-  ExportResult,
-  FramingPersistence,
-  PhosphorPersistence,
-  WindowsPersistence,
-} from "#ui/index"
+import type { ExportResult, UiStatePersistence } from "#ui/index"
 import type { Backup } from "./backup.js"
 import { backupFileName, makeBackup } from "./backup.js"
 
@@ -30,10 +24,7 @@ export type ChooseDestination = (nombre: string) => Promise<Destination | null>
 export interface ExportDeps {
   readonly flush: () => Promise<Result<void, StorageError>>
   readonly blobs: BlobStore
-  readonly windows: WindowsPersistence
-  readonly phosphor: PhosphorPersistence
-  readonly framing: FramingPersistence
-  readonly calendarOrder: CalendarOrderPersistence
+  readonly uiState: UiStatePersistence
   readonly clock: Clock
   readonly chooseDestination: ChooseDestination
 }
@@ -52,18 +43,11 @@ const aTexto = (bytes: Uint8Array): string | null => {
 
 /**
  * Lo guardado ahora mismo, como copia. Los ficheros salen tal cual, también los
- * ilegibles. Si las ventanas, el fósforo, los encuadres o el orden del calendario no se pueden leer, van
- * a `null`: sólo se pierde cómo estaba montada la pantalla.
+ * ilegibles. Si el estado de la pantalla no se puede leer, va a `null`: sólo se
+ * pierde cómo estaba montada la pantalla.
  */
 export const collectBackup = async (
-  {
-    blobs,
-    windows,
-    phosphor,
-    framing,
-    calendarOrder,
-    clock,
-  }: Pick<ExportDeps, "blobs" | "windows" | "phosphor" | "framing" | "calendarOrder" | "clock">,
+  { blobs, uiState, clock }: Pick<ExportDeps, "blobs" | "uiState" | "clock">,
 ): Promise<Result<Backup, StorageError>> => {
   const caminos: Result<ReadonlyArray<string>, StorageError> = await blobs.list("")
   if (!caminos.ok) return caminos
@@ -83,18 +67,12 @@ export const collectBackup = async (
     files[camino] = texto
   }
 
-  const ventanas: Result<unknown, StorageError> = windows.load()
-  const fosforo: Result<unknown, StorageError> = phosphor.load()
-  const encuadres: Result<unknown, StorageError> = framing.load()
-  const orden: Result<unknown, StorageError> = calendarOrder.load()
+  const pantalla: Result<unknown, StorageError> = uiState.load()
   return ok(
     makeBackup({
       exportedAt: clock.now(),
       files,
-      windows: ventanas.ok ? ventanas.value : null,
-      phosphor: fosforo.ok && typeof fosforo.value === "string" ? fosforo.value : null,
-      framing: encuadres.ok ? encuadres.value : null,
-      calendarOrder: orden.ok ? orden.value : null,
+      uiState: pantalla.ok ? pantalla.value : null,
     }),
   )
 }

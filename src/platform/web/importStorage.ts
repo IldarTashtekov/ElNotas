@@ -3,20 +3,17 @@
  *
  * Se hace en dos tiempos, como «Borrar todo»: el botón apunta la copia y recarga,
  * y es al arrancar, antes de leer nada, cuando se borra lo que había y se
- * escriben los ficheros, las ventanas, el fósforo y los encuadres de la copia. La marca se
+ * escriben los ficheros y el estado de la pantalla de la copia. La marca se
  * quita la última: si algo falla a medias, el próximo arranque lo reintenta.
  */
 
 import type { BlobStore, Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
-import { parseCalendarOrder, parseFramings, parsePhosphor, parseWindowsLayout } from "#ui/index"
+import { parseUiState } from "#ui/index"
 import type { Backup, BackupProblem } from "./backup.js"
 import { backupBytes, readBackup } from "./backup.js"
-import { createLocalStorageCalendarOrder } from "./LocalStorageCalendarOrder.js"
-import { createLocalStorageFraming } from "./LocalStorageFraming.js"
-import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
-import { createLocalStorageWindows } from "./LocalStorageWindows.js"
+import { createLocalStorageUiState } from "./LocalStorageUiState.js"
 
 /** La marca que lleva dentro la copia que hay que importar en el próximo arranque. */
 export const IMPORT_KEY: string = "elnotas:importar"
@@ -111,32 +108,14 @@ export const importIfRequested = async (almacen: Storage): Promise<ImportAtBoot>
     if (!escrito.ok) return { kind: "failed", error: escrito.error }
   }
 
-  /* Pasan por los mismos lectores que al arrancar: lo que no tenga forma se
-     queda en lo de siempre en vez de llegar raro a la pantalla. */
-  if (copia.windows !== null) {
-    const ventanas: Result<void, StorageError> = createLocalStorageWindows(almacen).save(
-      parseWindowsLayout(copia.windows),
+  /* Pasa por el mismo lector que al arrancar: lo que no tenga forma se queda en
+     lo de siempre en vez de llegar raro a la pantalla. Los encuadres de
+     diagramas que no vengan en la copia los quita el arranque. */
+  if (copia.uiState !== null) {
+    const pantalla: Result<void, StorageError> = createLocalStorageUiState(almacen).save(
+      parseUiState(copia.uiState),
     )
-    if (!ventanas.ok) return { kind: "failed", error: ventanas.error }
-  }
-  if (copia.phosphor !== null) {
-    const fosforo: Result<void, StorageError> = createLocalStoragePhosphor(almacen).save(
-      parsePhosphor(copia.phosphor),
-    )
-    if (!fosforo.ok) return { kind: "failed", error: fosforo.error }
-  }
-  /* Los de diagramas que no vengan en la copia los quita el arranque. */
-  if (copia.framing !== null) {
-    const encuadres: Result<void, StorageError> = createLocalStorageFraming(almacen).save(
-      parseFramings(copia.framing),
-    )
-    if (!encuadres.ok) return { kind: "failed", error: encuadres.error }
-  }
-  if (copia.calendarOrder !== null) {
-    const orden: Result<void, StorageError> = createLocalStorageCalendarOrder(almacen).save(
-      parseCalendarOrder(copia.calendarOrder),
-    )
-    if (!orden.ok) return { kind: "failed", error: orden.error }
+    if (!pantalla.ok) return { kind: "failed", error: pantalla.error }
   }
 
   return cancelImport(almacen) ? { kind: "imported" } : fallo("no se pudo quitar la marca")

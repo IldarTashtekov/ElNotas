@@ -52,8 +52,8 @@ fósforo en verde.**
   sistema, con el nombre `elnotas-backup-AAAA-MM-DD.json` y la fecha de hoy. Se elige una
   carpeta y se guarda: abajo sale **«Copia guardada.»**
 - **E2.** Abrir ese fichero con un editor de texto: se lee, y lleva `"app": "elnotas"`, los
-  ficheros de las notas en `files`, las ventanas en `windows`, `"phosphor": "green"` y en
-  `framing` el encuadre del diagrama.
+  ficheros de las notas en `files`, `"backupVersion": 2` y en `uiState` las ventanas en
+  `windows`, `"phosphor": "green"` y en `framings` el encuadre del diagrama.
 - **E3.** **Exportar copia** y **cerrar el diálogo sin guardar**: no sale ningún mensaje y no
   aparece ningún fichero.
 - **E4.** *(Firefox o Safari, que no tienen «Guardar como».)* **Exportar copia** la deja en
@@ -83,6 +83,9 @@ fósforo en verde.**
   revés). Entra todo: es lo que se necesita para pasar las notas a la app instalada.
 - **I8.** *(Móvil.)* Con la hoja de «Sustituir todo» abierta, el **atrás** del móvil la cierra
   **sin importar**.
+- **I9.** Una copia de **antes de juntar el estado de la UI** (`"backupVersion": 1`, con
+  `windows`, `phosphor` y `framing` sueltos): se importa sin quejarse y **entran las notas**, pero
+  la pantalla vuelve a lo de siempre (fósforo verde, sólo el General, sin encuadres).
 
 ## F. Una importación que se queda a medias
 
@@ -100,8 +103,8 @@ while (alto - bajo > 10_000) {
 }
 localStorage.setItem("prueba:relleno", "x".repeat(bajo - 1_000_000))
 localStorage.setItem("elnotas:importar", JSON.stringify({
-  app: "elnotas", backupVersion: 1, exportedAt: Date.now(),
-  files: { "notes/relleno.json": "x".repeat(900_000) }, windows: null, phosphor: null,
+  app: "elnotas", backupVersion: 2, exportedAt: Date.now(),
+  files: { "notes/relleno.json": "x".repeat(900_000) }, uiState: null,
 }))
 location.reload()
 ```

@@ -204,6 +204,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   eventos y rutinas; un evento abre el calendario en su hoja de edición, una rutina la pestaña Rutinas con su fila
   tocada. Una casilla cuyo texto es sólo un enlace a rutina es un atajo: marca o desmarca **hoy** con
   `set-routine-day` y se ve según los días de la rutina (nada se guarda en la nota). Sin cambios en el core.
+- **Fase 10, tarea 9: el estado de la UI en un objeto** ✅ 2026-11-02: fósforo, ventanas, encuadres, orden de las
+  rutinas y pestaña del calendario (que ahora se guarda), en `elnotas:ui` con un solo adaptador; fuera los cuatro
+  viejos y sus claves, que se borran al arrancar. La copia pasa a la versión 2 con `uiState`; una v1 importa sólo notas.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

@@ -2,8 +2,8 @@
  * La entrada de la app en el navegador: la carga `index.html`.
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
- * navegador, las notas, las ventanas, el color de la pantalla, dónde se miraba
- * cada diagrama y lo abierto encima de la ventana en `localStorage`—,
+ * navegador, las notas, el estado de la pantalla y lo abierto encima de la
+ * ventana en `localStorage`—,
  * termina una importación pedida, arranca y monta la app, con la copia de
  * seguridad en la configuración. Si no arranca, lo dice en pantalla en vez de
  * quedarse en blanco.
@@ -13,21 +13,25 @@ import type { BlobStore, Day, IdGenerator, Result, StorageError } from "#core/in
 import { createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
+  CalendarTabSetting,
   DiagramFraming,
   ExportResult,
   ImportPreparation,
   MountedApp,
   Phosphor,
   PhosphorSetting,
+  UiStatePersistence,
   WindowsModel,
 } from "#ui/index"
 import {
+  createCalendarTabSetting,
   createDiagramFraming,
   createPhosphorSetting,
   createWindowsModel,
   describeBootError,
   describeImportFailure,
   mountApp,
+  uiStateSection,
 } from "#ui/index"
 import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
@@ -36,11 +40,8 @@ import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import { exportBackup } from "./exportBackup.js"
 import type { ImportAtBoot } from "./importStorage.js"
 import { cancelImport, importIfRequested } from "./importStorage.js"
-import { createLocalStorageCalendarOrder } from "./LocalStorageCalendarOrder.js"
-import { createLocalStorageFraming } from "./LocalStorageFraming.js"
 import { createLocalStorageOpenLayers } from "./LocalStorageOpenLayers.js"
-import { createLocalStoragePhosphor } from "./LocalStoragePhosphor.js"
-import { createLocalStorageWindows } from "./LocalStorageWindows.js"
+import { createLocalStorageUiState, forgetOldUiKeys } from "./LocalStorageUiState.js"
 import { prepareImport } from "./prepareImport.js"
 import { requestReset, resetIfRequested } from "./resetStorage.js"
 import { chooseFileDestination } from "./saveFile.js"
@@ -128,15 +129,25 @@ const iniciar = async (): Promise<void> => {
   /* Si se pidió «Borrar todo», es aquí, antes de leer nada: así también se va lo
      que el guardado escribió al salir de la página. */
   resetIfRequested(almacen)
+  if (!forgetOldUiKeys(almacen)) {
+    consoleLogger.failure("no se quitaron las claves de antes del estado de la pantalla", null)
+  }
   pedirPersistencia()
+
+  /* Lo de la pantalla de este dispositivo, en un objeto: cada pieza recibe su sección. */
+  const estadoUi: UiStatePersistence = createLocalStorageUiState(almacen)
 
   /* El color, antes de arrancar: así lo que se pinte mientras tanto ya sale con él. */
   const phosphor: PhosphorSetting = createPhosphorSetting({
-    persistence: createLocalStoragePhosphor(almacen),
+    persistence: uiStateSection(estadoUi, "phosphor"),
     logger: consoleLogger,
     apply: (elegido: Phosphor): void => {
       document.documentElement.dataset["phosphor"] = elegido
     },
+  })
+  const calendarTab: CalendarTabSetting = createCalendarTabSetting({
+    persistence: uiStateSection(estadoUi, "calendarTab"),
+    logger: consoleLogger,
   })
 
   /* El guardado puede detenerse antes de que haya UI a la que avisar: se guarda
@@ -168,12 +179,12 @@ const iniciar = async (): Promise<void> => {
   }
   const windows: WindowsModel = createWindowsModel({
     store: app.store,
-    persistence: createLocalStorageWindows(almacen),
+    persistence: uiStateSection(estadoUi, "windows"),
     logger: consoleLogger,
   })
   const framing: DiagramFraming = createDiagramFraming({
     store: app.store,
-    persistence: createLocalStorageFraming(almacen),
+    persistence: uiStateSection(estadoUi, "framings"),
     logger: consoleLogger,
   })
   /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
@@ -184,10 +195,7 @@ const iniciar = async (): Promise<void> => {
       return exportBackup({
         flush: app.flush,
         blobs,
-        windows: createLocalStorageWindows(almacen),
-        phosphor: createLocalStoragePhosphor(almacen),
-        framing: createLocalStorageFraming(almacen),
-        calendarOrder: createLocalStorageCalendarOrder(almacen),
+        uiState: estadoUi,
         clock: systemClock,
         chooseDestination: chooseFileDestination,
       })
@@ -207,7 +215,8 @@ const iniciar = async (): Promise<void> => {
     windows,
     framing,
     today: (): Day | null => todayOf(systemClock.now()),
-    calendarOrder: createLocalStorageCalendarOrder(almacen),
+    calendarOrder: uiStateSection(estadoUi, "calendarOrder"),
+    calendarTab,
     phosphor,
     openLayers: createLocalStorageOpenLayers(almacen),
     corrupt: app.corrupt,

@@ -3,16 +3,19 @@
  * cómo se comprueba que lo que se importa es una.
  *
  * Lleva los ficheros guardados tal cual, cada uno con su camino y como texto,
- * más las ventanas, el fósforo, los encuadres de los diagramas y el orden del
- * calendario de este dispositivo. Aquí sólo hay datos: leer y
- * escribir el fichero, y el almacén, son de quien llama.
+ * más el estado de la pantalla de este dispositivo. Aquí sólo hay datos: leer
+ * y escribir el fichero, y el almacén, son de quien llama.
  */
 
 import type { Result } from "#core/index"
 import { err, ok } from "#core/index"
 
-/** La versión del formato de la copia. Sube si cambia su forma, no la de las notas. */
-export const BACKUP_VERSION: number = 1
+/**
+ * La versión del formato de la copia. Sube si cambia su forma, no la de las notas.
+ * La 1 llevaba las ventanas, el fósforo, los encuadres y el orden del calendario
+ * sueltos; la 2, el estado de la pantalla en un objeto.
+ */
+export const BACKUP_VERSION: number = 2
 
 /** Lo que dice en `app`: distingue una copia de cualquier otro `.json`. */
 const MARCA: string = "elnotas"
@@ -24,14 +27,8 @@ export interface Backup {
   readonly exportedAt: number
   /** camino → contenido, los mismos caminos que ve un `BlobStore`. */
   readonly files: Readonly<Record<string, string>>
-  /** La lista de ventanas tal cual estaba guardada, o `null`. La valida quien la carga. */
-  readonly windows: unknown
-  /** El fósforo tal cual estaba guardado, o `null`. Lo valida quien lo carga. */
-  readonly phosphor: string | null
-  /** Dónde se miraba cada diagrama, tal cual, o `null`. Lo valida quien lo carga. */
-  readonly framing: unknown
-  /** El orden de las rutinas, tal cual, o `null`. Lo valida quien lo carga. */
-  readonly calendarOrder: unknown
+  /** El estado de la pantalla tal cual estaba guardado, o `null`. Lo valida quien lo carga. */
+  readonly uiState: unknown
 }
 
 /** Por qué no se puede importar. */
@@ -44,28 +41,15 @@ export type BackupProblem =
 export interface BackupParts {
   readonly exportedAt: number
   readonly files: Readonly<Record<string, string>>
-  readonly windows: unknown
-  readonly phosphor: string | null
-  readonly framing: unknown
-  readonly calendarOrder: unknown
+  readonly uiState: unknown
 }
 
-export const makeBackup = ({
-  exportedAt,
-  files,
-  windows,
-  phosphor,
-  framing,
-  calendarOrder,
-}: BackupParts): Backup => ({
+export const makeBackup = ({ exportedAt, files, uiState }: BackupParts): Backup => ({
   app: MARCA,
   backupVersion: BACKUP_VERSION,
   exportedAt,
   files,
-  windows,
-  phosphor,
-  framing,
-  calendarOrder,
+  uiState,
 })
 
 type Registro = Record<string, unknown>
@@ -83,9 +67,9 @@ const noEs = (detail: string): Result<never, BackupProblem> => {
  *
  * Mira la forma del sobre, no la de las notas: eso lo hacen después la
  * validación y las migraciones del arranque, igual que con lo guardado.
- * Las ventanas, el fósforo, los encuadres y el orden del calendario no hacen
- * fallar nada: si faltan, `null`. Una copia de antes de los encuadres o del
- * calendario no los trae, y vale igual.
+ * El estado de la pantalla no hace fallar nada: si falta, `null`. Una copia de
+ * la versión 1 lo traía en piezas sueltas, que se ignoran: entran sus notas, y
+ * la pantalla empieza de cero.
  */
 export const readBackup = (datos: unknown): Result<Backup, BackupProblem> => {
   if (!esRegistro(datos) || datos["app"] !== MARCA) return noEs("no es una copia de ElNotas")
@@ -111,16 +95,12 @@ export const readBackup = (datos: unknown): Result<Backup, BackupProblem> => {
   )
   if (ajeno !== undefined) return noEs(`el fichero «${ajeno}» no es un texto`)
 
-  const phosphor: unknown = datos["phosphor"]
   const backup: Backup = {
     app: MARCA,
     backupVersion: version,
     exportedAt,
     files: files as Readonly<Record<string, string>>,
-    windows: datos["windows"] ?? null,
-    phosphor: typeof phosphor === "string" ? phosphor : null,
-    framing: datos["framing"] ?? null,
-    calendarOrder: datos["calendarOrder"] ?? null,
+    uiState: version >= 2 ? (datos["uiState"] ?? null) : null,
   }
   return ok(backup)
 }
