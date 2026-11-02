@@ -711,7 +711,6 @@ const EVENTO_BIEN: Record<string, unknown> = {
   id: "dentista",
   day: "2026-07-02",
   title: "Dentista",
-  done: false,
   updatedAt: 0,
   revision: "rev-dentista",
 }
@@ -739,7 +738,6 @@ const EVENTOS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
   ["con una hora que no existe", { ...EVENTO_BIEN, time: "24:00" }, /time/],
   ["con una hora que no es texto", { ...EVENTO_BIEN, time: 1830 }, /time/],
   ["sin motivo", { ...EVENTO_BIEN, title: undefined }, /title/],
-  ["con done que no es booleano", { ...EVENTO_BIEN, done: "sí" }, /done/],
   ["sin revisión", { ...EVENTO_BIEN, revision: undefined }, /revision/],
 ]
 

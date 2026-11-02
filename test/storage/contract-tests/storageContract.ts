@@ -87,7 +87,6 @@ const cita = (id: string, extra: Partial<CalendarEvent> = {}): CalendarEvent => 
   id: eventId(id),
   day: parseDay("2026-07-02") as Day,
   title: `Evento ${id}`,
-  done: false,
   updatedAt: 0,
   revision: revision(`rev-${id}`),
   ...extra,
@@ -229,7 +228,7 @@ export const runStorageContract = (
   /* ── Los eventos: un repositorio más, aislados de los otros ── */
 
   caso("un evento se recupera igual, con sus claves opcionales", async (s) => {
-    const conHora: CalendarEvent = cita("dentista", { time: parseTime("18:00") as Time, done: true })
+    const conHora: CalendarEvent = cita("dentista", { time: parseTime("18:00") as Time })
     await s.events.put(conHora, null)
 
     assert.deepEqual(valorDe(await s.events.get(conHora.id)), conHora)

@@ -111,7 +111,6 @@ test("hydrate pasa los eventos a un mapa, por referencia", () => {
     id: eventId("cita"),
     day: parseDay("2026-07-02") as Day,
     title: "Cita",
-    done: false,
     updatedAt: 0,
     revision: revision("r-cita"),
   }

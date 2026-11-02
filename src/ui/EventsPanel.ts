@@ -50,7 +50,7 @@ export const createEventsPanel = ({ store, today, onOpenEvent, onNewEvent }: Eve
     const { upcoming, past } = splitPast(eventsByTime(store.getState()), today())
     const linea = (e: CalendarEvent): HTMLButtonElement =>
       boton(
-        `${e.done ? "☑ " : ""}${e.day}${e.time === undefined ? "" : ` ${e.time}`} ${e.title}`,
+        `${e.day}${e.time === undefined ? "" : ` ${e.time}`} ${e.title}`,
         (): void => onOpenEvent(e),
         "grupo-evento",
       )

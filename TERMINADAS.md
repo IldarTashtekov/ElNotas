@@ -236,6 +236,7 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **`npm run build:web` e `index.html`** ✅ (`473f566`): `src/` a `dist/web/` en ESM, sin bundler.
 - **Una declaración sin tipo en `test/ui/editor.test.ts`** ✅ (`5e49a5a`, 2026-09-29).
 - **Archivar rutinas, de la presentación** (2026-10-30): `Routine` ya no lleva `archived` ni existe `set-routine-archived`; lo archivado es una lista de ids en `elnotas:calendario-orden` (`CalendarOrder.archived`), por dispositivo y dentro de la copia. Los enlaces de una nota ofrecen también las archivadas.
+- **Eventos sin «hecho»** (2026-11-02): `CalendarEvent` pierde `done` y el core `set-event-done`; fuera la casilla, el tachado, el asterisco atenuado y el atajo de casilla a un evento (el de rutina sigue). Los eventos son citas, no tareas; lo guardado con `done` quedaría ilegible (no había ninguno).
 
 ## Descartadas
 

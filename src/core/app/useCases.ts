@@ -208,7 +208,6 @@ export interface UseCases {
     time: Time | null,
     title: string,
   ) => CalendarEvent | null
-  readonly setEventDone: (eventId: EventId, done: boolean) => CalendarEvent | null
   /** Como `deleteNote`: devuelve el borrado, y tampoco sirve de undo. */
   readonly deleteEvent: (eventId: EventId) => CalendarEvent | null
   /** Crea una rutina. `null` si la meta no es de 1 a 7 (o el id ya existía). */
@@ -542,9 +541,6 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     updateEvent: (eventId: EventId, day: Day, time: Time | null, title: string): CalendarEvent | null =>
       trasEvento(eventId, { type: "update-event", eventId, day, time, title, meta: meta() }),
-
-    setEventDone: (eventId: EventId, done: boolean): CalendarEvent | null =>
-      trasEvento(eventId, { type: "set-event-done", eventId, done, meta: meta() }),
 
     deleteEvent: (eventId: EventId): CalendarEvent | null =>
       trasEvento(eventId, { type: "delete-event", eventId, meta: meta() }),

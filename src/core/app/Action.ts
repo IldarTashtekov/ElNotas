@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son cuarenta y cuatro. Aquí están las ocho de contenido; las de Nota, Contexto,
+ * Son cuarenta y dos. Aquí están las ocho de contenido; las de Nota, Contexto,
  * Diagrama, Calendario y Rutina, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -421,20 +421,13 @@ export interface UpdateEvent {
   readonly meta: ActionMeta
 }
 
-export interface SetEventDone {
-  readonly type: "set-event-done"
-  readonly eventId: EventId
-  readonly done: boolean
-  readonly meta: ActionMeta
-}
-
 export interface DeleteEvent {
   readonly type: "delete-event"
   readonly eventId: EventId
   readonly meta: ActionMeta
 }
 
-export type CalendarAction = CreateEvent | UpdateEvent | SetEventDone | DeleteEvent
+export type CalendarAction = CreateEvent | UpdateEvent | DeleteEvent
 
 /* ──────────────────────────── Las seis de Rutina ─────────────────────────── */
 
@@ -490,7 +483,7 @@ export type RoutineAction =
   | SetRoutineGoal
   | DeleteRoutine
 
-/** El catálogo entero: 8 + 3 + 9 + 14 + 9 + 5 = **cuarenta y ocho**. */
+/** El catálogo entero: 8 + 3 + 9 + 14 + 3 + 5 = **cuarenta y dos**. */
 export type Action =
   | ContentAction
   | NoteAction

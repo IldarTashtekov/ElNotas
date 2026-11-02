@@ -19,7 +19,6 @@ import {
   buildLink,
   changeLink,
   defaultLinkText,
-  eventShortcut,
   isWebAddress,
   linkAtCursor,
   linkChoices,
@@ -392,33 +391,4 @@ test("routineShortcut: texto al lado, dos enlaces, otro destino, web, sin guarda
   assert.strictEqual(atajo(s, "", DIA), null)
   useCases.deleteRoutine(rutina.id)
   assert.strictEqual(atajo(store.getState(), `[Leer](#${rutina.id})`, DIA), null)
-})
-
-/* ── eventShortcut ── */
-
-const atajoEvento = (state: AppState, raw: string): ReturnType<typeof eventShortcut> =>
-  eventShortcut(state, readMarkdownLine(raw), raw)
-
-test("eventShortcut: la línea es sólo el enlace a un evento; marcada si el evento está hecho", (): void => {
-  const { store, useCases, evento }: ReturnType<typeof conCalendario> = conCalendario()
-  const raw: string = `[Dentista](#${evento})`
-  assert.deepEqual(atajoEvento(store.getState(), raw), { id: evento, marked: false })
-  useCases.setEventDone(evento, true)
-  assert.deepEqual(atajoEvento(store.getState(), raw), { id: evento, marked: true })
-  // Los espacios de los bordes no lo impiden.
-  assert.deepEqual(atajoEvento(store.getState(), `  ${raw} `), { id: evento, marked: true })
-})
-
-test("eventShortcut: texto al lado, dos enlaces, otro destino, web o roto: no es atajo", (): void => {
-  const { store, useCases, rutina, nota, evento }: ReturnType<typeof conCalendario> = conCalendario()
-  const s: AppState = store.getState()
-  assert.strictEqual(atajoEvento(s, `hoy [e](#${evento})`), null)
-  assert.strictEqual(atajoEvento(s, `[e](#${evento}) hoy`), null)
-  assert.strictEqual(atajoEvento(s, `[a](#${evento})[b](#${evento})`), null)
-  assert.strictEqual(atajoEvento(s, `[n](#${nota.id})`), null)
-  assert.strictEqual(atajoEvento(s, `[r](#${rutina.id})`), null)
-  assert.strictEqual(atajoEvento(s, "[w](https://a.es)"), null)
-  assert.strictEqual(atajoEvento(s, ""), null)
-  useCases.deleteEvent(evento)
-  assert.strictEqual(atajoEvento(store.getState(), `[e](#${evento})`), null)
 })

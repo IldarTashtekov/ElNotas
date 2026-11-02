@@ -82,22 +82,6 @@ export const routineShortcut = (
   return { id: destino.id, marked: today !== null && rutina.days.includes(today) }
 }
 
-/**
- * El evento que una línea de casilla hace de atajo, y si está hecho, o `null` si
- * la línea no lo es. Las mismas condiciones que `routineShortcut`; «hecho» sale
- * del evento, no de la casilla.
- */
-export const eventShortcut = (
-  state: AppState,
-  line: FormattedLine,
-  raw: string,
-): { readonly id: EventId; readonly marked: boolean } | null => {
-  const destino: ResolvedLink = destinoUnico(state, line, raw)
-  if (destino === null || destino.kind !== "event") return null
-  const evento: CalendarEvent | undefined = state.events[destino.id]
-  return evento === undefined ? null : { id: destino.id, marked: evento.done }
-}
-
 /** El enlace con el cursor ESTRICTAMENTE dentro (en la cadena cruda), o `null`. */
 export const linkAtCursor = (line: FormattedLine, offset: number): LineLink | null =>
   line.links.find((l: LineLink): boolean => l.start < offset && offset < l.end) ?? null

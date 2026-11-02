@@ -15,5 +15,4 @@ export interface CalendarEvent extends Versioned {
   /** Sin hora, el evento es de todo el día. */
   readonly time?: Time
   readonly title: string
-  readonly done: boolean
 }

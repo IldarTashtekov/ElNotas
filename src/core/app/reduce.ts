@@ -601,7 +601,6 @@ export const reduce = (state: AppState, action: Action): AppState => {
         day: action.day,
         ...(action.time === null ? {} : { time: action.time }),
         title: action.title,
-        done: false,
         ...stamp(action.meta),
       }
       return { ...state, events: { ...state.events, [action.eventId]: nuevo } }
@@ -620,11 +619,6 @@ export const reduce = (state: AppState, action: Action): AppState => {
           title: action.title,
         }
       })
-
-    case "set-event-done":
-      return onEvent(state, action.eventId, action.meta, (e: CalendarEvent): CalendarEvent =>
-        e.done === action.done ? e : { ...e, done: action.done },
-      )
 
     case "delete-event": {
       if (state.events[action.eventId] === undefined) return state

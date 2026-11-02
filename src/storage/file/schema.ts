@@ -196,7 +196,6 @@ export const eventProblem = (o: Registro): Problem =>
     /* Sin hora es de todo el día: la clave no existe. */
     (): Problem =>
       o["time"] === undefined ? null : textoValido(o, "time", parseTime, "una hora válida"),
-    (): Problem => booleano(o, "done"),
   )
 
 export const routineProblem = (o: Registro): Problem =>

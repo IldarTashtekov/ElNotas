@@ -28,7 +28,6 @@ const evento = (id: string, day: string, title: string, time?: string): Calendar
   day: dia(day),
   ...(time === undefined ? {} : { time: hora(time) }),
   title,
-  done: false,
   updatedAt: 0,
   revision: revision(`rev-${id}`),
 })

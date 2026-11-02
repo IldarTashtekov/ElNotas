@@ -423,10 +423,6 @@ otra casilla con `hoy [Leer](#id-de-la-rutina)`; y una línea de texto con `[Lee
   siguiente (cambiando «hoy» o los días de la rutina) sale sin marcar.
 - **T7.** Borrar la rutina o el evento: sus enlaces se ven **apagados**, «Abrir» dice «El enlace ya no
   existe» y la casilla-atajo es una **casilla normal**.
-- **T8.** Una casilla con **sólo** `[Dentista](#id-del-evento)` se ve desmarcada; pulsarla marca el
-  evento como **hecho** (en el calendario sale tachado) y la casilla se ve marcada; pulsarla otra vez
-  lo desmarca. Tachar o destachar el evento **desde el calendario** la actualiza al momento. El
-  `checked` de la línea **no cambia**, y con texto al lado es una casilla normal.
 
 ## Comportamientos conocidos
 

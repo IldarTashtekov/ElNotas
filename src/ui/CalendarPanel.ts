@@ -135,7 +135,6 @@ export const createCalendarPanel = ({
     const conRutinas: boolean = pestana === "rutinas" && c.routinesDone > 0
     b.classList.toggle("marcado", conEventos)
     b.classList.toggle("cumplido", conRutinas)
-    b.classList.toggle("hecho", conEventos && c.allDone)
     const rutinas: string = !conRutinas ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
     b.setAttribute("aria-label", `${dayTitle(c.day)}${conEventos ? ", con eventos" : ""}${rutinas}`)
     if (conEventos) {
@@ -168,11 +167,6 @@ export const createCalendarPanel = ({
   const fila = (e: CalendarEvent): HTMLElement => {
     const li: HTMLElement = elemento("div")
     li.className = "evento"
-    li.classList.toggle("hecho", e.done)
-    const marca: HTMLButtonElement = boton(e.done ? "☑" : "☐", (): void => {
-      useCases.setEventDone(e.id, !e.done)
-    }, "evento-hecho")
-    marca.setAttribute("aria-label", e.done ? "Marcar sin hacer" : "Marcar hecho")
     const texto: HTMLButtonElement = boton(
       `${e.time === undefined ? "" : `${e.time} `}${e.title}`,
       (): void => {
@@ -181,7 +175,7 @@ export const createCalendarPanel = ({
       },
       "evento-texto",
     )
-    li.append(marca, texto)
+    li.append(texto)
     return li
   }
 
@@ -257,13 +251,6 @@ export const createCalendarPanel = ({
       )
     }
 
-    const hecho: HTMLButtonElement | null =
-      evento === undefined
-        ? null
-        : boton(evento.done ? "☑ Hecho" : "☐ Hecho", (): void => {
-            useCases.setEventDone(evento.id, !evento.done)
-            pintarCaja()
-          }, "secundario evento-marcar")
     const volver: HTMLButtonElement = boton("‹ Volver al día", (): void => {
       modo = { kind: "lista", day }
       pintarCaja()
@@ -274,7 +261,6 @@ export const createCalendarPanel = ({
       campo("Día", dia),
       campo("Hora", hora),
       campo("Motivo", motivo),
-      ...(hecho === null ? [] : [hecho]),
       problema,
       acciones,
     )

@@ -1,5 +1,5 @@
 /**
- * Las cuatro acciones de los eventos del calendario, `diffState` con su clase y
+ * Las tres acciones de los eventos del calendario, `diffState` con su clase y
  * los casos de uso.
  *
  * Lo que se vigila, como en las demás acciones: que un no-op devuelva **el mismo
@@ -40,7 +40,6 @@ const evento = (id: EventId, extra: Partial<CalendarEvent> = {}): CalendarEvent 
   id,
   day: DIA,
   title: `Evento ${id}`,
-  done: false,
   updatedAt: 0,
   revision: revision(`rev-${id}`),
   ...extra,
@@ -74,7 +73,6 @@ test("create-event crea el evento, sin hora si es null", () => {
   assert.ok(e !== undefined)
   assert.equal(e.day, OTRO_DIA)
   assert.equal("time" in e, false, "sin hora, la clave no existe")
-  assert.equal(e.done, false)
   assert.equal(e.updatedAt, 1000)
 })
 
@@ -166,31 +164,6 @@ test("update-event que no cambia nada, o de un evento que no está, es no-op", (
   )
 })
 
-test("set-event-done marca y desmarca; repetir lo mismo es no-op", () => {
-  const antes: AppState = estado()
-  const hecho: AppState = reduce(antes, {
-    type: "set-event-done",
-    eventId: ID_CITA,
-    done: true,
-    meta: META,
-  })
-  assert.equal(hecho.events[ID_CITA]?.done, true)
-  assert.strictEqual(hecho.events[ID_CINE], CINE)
-
-  assert.strictEqual(
-    reduce(hecho, { type: "set-event-done", eventId: ID_CITA, done: true, meta: META }),
-    hecho,
-  )
-  assert.strictEqual(
-    reduce(antes, { type: "set-event-done", eventId: ID_CITA, done: false, meta: META }),
-    antes,
-  )
-  assert.strictEqual(
-    reduce(antes, { type: "set-event-done", eventId: eventId("no-esta"), done: true, meta: META }),
-    antes,
-  )
-})
-
 test("delete-event lo quita y deja los demás intactos, por referencia", () => {
   const antes: AppState = estado()
   const despues: AppState = reduce(antes, { type: "delete-event", eventId: ID_CITA, meta: META })
@@ -249,15 +222,13 @@ test("createEvent devuelve el evento, con su id generado", () => {
 
 test("los casos de uso devuelven null cuando no aplican y la entidad cuando sí", () => {
   const { useCases } = montar()
-  assert.equal(useCases.setEventDone(ID_CITA, false), null)
-  assert.equal(useCases.setEventDone(ID_CITA, true)?.done, true)
   assert.equal(useCases.updateEvent(ID_CITA, DIA, HORA, CITA.title), null)
   assert.equal(useCases.deleteEvent(eventId("no-esta")), null)
   assert.equal(useCases.deleteEvent(ID_SUELTO)?.id, ID_SUELTO)
 })
 
-/* El tipo `Action` se usa sólo para anclar que el catálogo trae las cuatro. */
-const _CUATRO: ReadonlyArray<Action["type"]> = ["create-event", "update-event", "set-event-done", "delete-event"]
-test("el catálogo trae las cuatro acciones de evento", () => {
-  assert.equal(new Set(_CUATRO).size, 4)
+/* El tipo `Action` se usa sólo para anclar que el catálogo trae las tres. */
+const _TRES: ReadonlyArray<Action["type"]> = ["create-event", "update-event", "delete-event"]
+test("el catálogo trae las tres acciones de evento", () => {
+  assert.equal(new Set(_TRES).size, 3)
 })

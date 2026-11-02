@@ -275,14 +275,6 @@ export const ROTURAS = [
     prueba: "routineShortcut: la línea es sólo el enlace a una rutina; marcada si hoy está en sus días",
   },
   {
-    nombre: "atajo: hecho sale del evento, no de la casilla",
-    fichero: "src/ui/linkActions.ts",
-    buscar: "{ id: destino.id, marked: evento.done }",
-    poner: "{ id: destino.id, marked: !evento.done }",
-    caza: "pruebas",
-    prueba: "eventShortcut: la línea es sólo el enlace a un evento; marcada si el evento está hecho",
-  },
-  {
     nombre: "atajo: con texto al lado la casilla es normal",
     fichero: "src/ui/linkActions.ts",
     buscar: "unico.start !== ini || unico.end !== fin",
@@ -794,8 +786,8 @@ export const ROTURAS = [
   {
     nombre: "calendario: el mes no marca los días con eventos",
     fichero: "src/ui/calendarMonth.ts",
-    buscar: "marked: cuenta !== undefined,",
-    poner: "marked: cuenta === undefined,",
+    buscar: "marked: conEventos.has(day),",
+    poner: "marked: !conEventos.has(day),",
     caza: "pruebas",
     prueba: "monthView: marca los días con eventos y señala hoy",
   },
@@ -806,14 +798,6 @@ export const ROTURAS = [
     poner: "isToday: hoy !== null && compareDays(day, hoy) !== 0,",
     caza: "pruebas",
     prueba: "monthView: marca los días con eventos y señala hoy",
-  },
-  {
-    nombre: "calendario: el mes da por hecho un día con eventos sin hacer",
-    fichero: "src/ui/calendarMonth.ts",
-    buscar: "allDone: cuenta !== undefined && cuenta.pendientes === 0,",
-    poner: "allDone: cuenta !== undefined,",
-    caza: "pruebas",
-    prueba: "monthView: allDone sólo si todos los eventos del día están hechos",
   },
   {
     nombre: "calendario: el mes no apaga los días vecinos",

@@ -609,7 +609,6 @@ const EVENTO: CalendarEvent = {
   id: eventId("cita"),
   day: parseDay("2026-07-02") as Day,
   title: "Cita",
-  done: false,
   updatedAt: 0,
   revision: revision("rev-cita"),
 }
@@ -623,7 +622,7 @@ test("write-behind: guarda los eventos, los cambios y los borrados", async () =>
   valorDe(await wb.flush())
   assert.deepEqual(valorDe(await adapter.events.getAll()), [EVENTO])
 
-  const cambiado: CalendarEvent = { ...EVENTO, done: true, revision: revision("rev-cita-2") }
+  const cambiado: CalendarEvent = { ...EVENTO, title: "Otra cita", revision: revision("rev-cita-2") }
   wb.onState({ ...con, events: { [EVENTO.id]: cambiado } })
   valorDe(await wb.flush())
   assert.deepEqual(valorDe(await adapter.events.getAll()), [cambiado])

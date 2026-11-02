@@ -34,12 +34,11 @@ const horaDe = (texto: string): Time => {
   return t
 }
 
-const evento = (id: string, day: string, title: string, time?: string, done: boolean = false): CalendarEvent => ({
+const evento = (id: string, day: string, title: string, time?: string): CalendarEvent => ({
   id: eventId(id),
   day: dia(day),
   ...(time === undefined ? {} : { time: horaDe(time) }),
   title,
-  done,
   updatedAt: 0,
   revision: revision(`rev-${id}`),
 })
@@ -74,20 +73,6 @@ test("monthView: marca los días con eventos y señala hoy", (): void => {
   assert.equal(por.get("2026-10-06")?.marked, false)
   assert.equal(por.get("2026-10-28")?.isToday, true)
   assert.equal(por.get("2026-10-27")?.isToday, false)
-})
-
-test("monthView: allDone sólo si todos los eventos del día están hechos", (): void => {
-  const s: AppState = estado([
-    evento("a", "2026-10-05", "A", undefined, true),
-    evento("b", "2026-10-05", "B", undefined, false),
-    evento("c", "2026-10-06", "C", undefined, true),
-  ])
-  const vista: MonthView | null = monthView(s, OCTUBRE, null)
-  assert.ok(vista !== null)
-  const por: ReadonlyMap<string, DayCell> = new Map(celdas(vista).map((c: DayCell): [string, DayCell] => [c.day, c]))
-  assert.equal(por.get("2026-10-05")?.allDone, false)
-  assert.equal(por.get("2026-10-06")?.allDone, true)
-  assert.equal(por.get("2026-10-07")?.allDone, false)
 })
 
 test("monthView: marca los días de los meses vecinos que se ven", (): void => {

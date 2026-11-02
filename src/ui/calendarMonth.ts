@@ -25,8 +25,6 @@ export interface DayCell {
   readonly isToday: boolean
   /** Tiene algún evento. */
   readonly marked: boolean
-  /** Todos sus eventos están hechos: se marca igual, pero tachado. */
-  readonly allDone: boolean
   /** De las rutinas elegidas, cuántas tienen este día marcado, y cuántas hay elegidas. */
   readonly routinesDone: number
   readonly routinesTotal: number
@@ -108,20 +106,8 @@ export const monthView = (
   const rejilla: ReadonlyArray<ReadonlyArray<Day>> | null = monthGrid(mes.year, mes.month)
   if (rejilla === null) return null
 
-  /* Por día: cuántos eventos hay y cuántos sin hacer. */
-  const cuentas: Map<Day, { total: number; pendientes: number }> = new Map<
-    Day,
-    { total: number; pendientes: number }
-  >()
-  for (const e of Object.values<CalendarEvent>(state.events)) {
-    const cuenta: { total: number; pendientes: number } = cuentas.get(e.day) ?? {
-      total: 0,
-      pendientes: 0,
-    }
-    cuenta.total += 1
-    if (!e.done) cuenta.pendientes += 1
-    cuentas.set(e.day, cuenta)
-  }
+  /* Los días que tienen algún evento. */
+  const conEventos: Set<Day> = new Set<Day>(Object.values<CalendarEvent>(state.events).map((e: CalendarEvent): Day => e.day))
 
   /* Por día: cuántas de las rutinas elegidas lo tienen marcado. */
   const elegidas: ReadonlyArray<Routine> = Object.values<Routine>(state.routines).filter(
@@ -137,14 +123,12 @@ export const monthView = (
     weeks: rejilla.map(
       (fila: ReadonlyArray<Day>): ReadonlyArray<DayCell> =>
         fila.map((day: Day): DayCell => {
-          const cuenta: { total: number; pendientes: number } | undefined = cuentas.get(day)
           return {
             day,
             number: partsOf(day).day,
             inMonth: monthOf(day).year === mes.year && monthOf(day).month === mes.month,
             isToday: hoy !== null && compareDays(day, hoy) === 0,
-            marked: cuenta !== undefined,
-            allDone: cuenta !== undefined && cuenta.pendientes === 0,
+            marked: conEventos.has(day),
             routinesDone: marcadas.get(day) ?? 0,
             routinesTotal: elegidas.length,
           }

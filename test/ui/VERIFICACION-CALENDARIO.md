@@ -60,8 +60,8 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
   hora.
 - **B7.** Un **día** o una **hora** mal escritos no guardan: sale en rojo «Pon un día válido.» o «Pon
   una hora válida, como 18:00.» y la hoja sigue abierta.
-- **B8.** **☐** de un evento lo marca hecho (☑, tachado); si **todos** los del día están hechos, el
-  asterisco de la rejilla queda **atenuado**.
+- **B8.** Un evento no se marca como hecho: la fila no lleva casilla y el asterisco de la rejilla no
+  cambia nunca de aspecto.
 - **B9.** Pulsar el texto de un evento lo abre para **editar**; cambiar el **Día** lo mueve (la
   hoja pasa a ese día y el asterisco cambia de casilla).
 - **B10.** **Borrar** pide confirmar («¿Borrar este evento? No se puede deshacer.»); **Cancelar** lo
@@ -73,8 +73,6 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
 - **B14.** Un evento con un **motivo muy largo** (varias palabras, y una sin espacios): en la hoja
   del día, en la del evento (el **Motivo** es un área de texto) y en la lista de la pestaña
   **Eventos**, el texto **salta de línea** y nada se sale por la derecha, a 375 px y en escritorio.
-- **B15.** Al **editar** un evento, **☐ Hecho** lo marca (☑ Hecho, tachado en la lista del día) y
-  volver a pulsarlo lo desmarca, sin cerrar la hoja ni tocar lo escrito en los campos sin guardar.
 
 ## C. La lista de eventos
 
@@ -84,7 +82,7 @@ Bajo el mes, en la pestaña **Eventos**. Hacen falta eventos pasados (antes de h
   motivo», **por día y hora**, y debajo **+ Evento**. Sin eventos dice «Sin eventos.»
 - **C2.** Los **pasados** quedan plegados en «▸ Pasados (n)», que los abre y los cierra.
 - **C3.** Pulsar un evento lo abre en la hoja para **editarlo**; al guardar o borrar, la lista se
-  repinta. Un evento hecho lleva **☑** delante.
+  repinta.
 - **C4.** **+ Evento** abre la hoja con el formulario de un evento nuevo, con el día de hoy.
 - **C5.** No hay grupos en ninguna parte: ni en el formulario, ni en la lista, ni redondas ni ⋮.
 
