@@ -28,7 +28,7 @@ import type { BackStack } from "./backStack.js"
 import type { BackupActions } from "./backup.js"
 import { createBackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
-import type { CalendarTarget } from "./CalendarPanel.js"
+import type { CalendarTabMemory, CalendarTarget } from "./CalendarPanel.js"
 import { mountCalendarView } from "./CalendarView.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { mountDiagramView } from "./DiagramView.js"
@@ -76,6 +76,8 @@ export interface MountedApp {
 
 export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   const back: BackStack = createBackStack(deps.logger)
+  /* La pestaña del calendario se recuerda entre su vista y su ventana, mientras la app siga abierta. */
+  const calendarTabs: CalendarTabMemory = { current: "eventos" }
   /* Propia y no `window.confirm`: hay navegadores que la contestan «no» sin enseñarla. */
   const pregunta: Sheet = createSheet(back)
   const confirm: Confirm = createConfirm(pregunta)
@@ -130,6 +132,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
         ...deps,
         confirm,
         back,
+        tabs: calendarTabs,
         onExit: back.close,
         ...(target === undefined ? {} : { target }),
       }),
@@ -165,6 +168,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
     ...deps,
     back,
     confirm,
+    calendarTabs,
     onOpenSettings: abrirConfiguracion,
     onOpenCalendar: (): void => abrirCalendario(),
     onOpenEvent: (id: EventId): void => abrirCalendario({ kind: "event", id }),

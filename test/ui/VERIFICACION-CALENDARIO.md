@@ -38,6 +38,9 @@ lista con **dos ventanas** como mínimo (el General y otra).
 - **A7.** Con la ventana del calendario activa, **recargar**: se vuelve **a esa ventana**.
 - **A8.** Con la ventana del calendario, pulsar **▦**: se abre el calendario encima, y ✕ vuelve a la ventana.
 - **A9.** Quitar la ficha del calendario en ⚙ (⋮ → Quitar): desaparece de la lista, y **▦** sigue abriéndolo.
+- **A10.** Elegir la pestaña **Rutinas** en la vista del icono ▦, salir con ✕ y volver a abrirla con
+  ▦: sigue en **Rutinas**. Lo mismo entre la vista y la ventana del calendario (se comparte); al
+  **recargar** vuelve a **Eventos**.
 
 ---
 

@@ -33,6 +33,11 @@ import { createRoutinesPanel } from "./RoutinesPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
+/** La pestaña elegida, compartida por la vista del icono y la ventana: se abren de nuevo donde se dejaron. */
+export interface CalendarTabMemory {
+  current: "eventos" | "rutinas"
+}
+
 export interface CalendarPanelDeps {
   readonly store: Store
   readonly useCases: UseCases
@@ -43,6 +48,8 @@ export interface CalendarPanelDeps {
   /** El orden de las rutinas de la lista: es de este dispositivo. */
   readonly calendarOrder: CalendarOrderPersistence
   readonly logger: Logger
+  /** Sin ella, cada calendario empieza en «Eventos». */
+  readonly tabs?: CalendarTabMemory
 }
 
 /** Lo que una nota enlaza del calendario: un evento, o una rutina. */
@@ -85,6 +92,7 @@ export const createCalendarPanel = ({
   today,
   calendarOrder,
   logger,
+  tabs = { current: "eventos" },
 }: CalendarPanelDeps): CalendarPanel => {
   const hoy: Day | null = today()
   let mes: MonthRef = monthOf(hoy ?? ("2026-01-01" as Day))
@@ -131,8 +139,8 @@ export const createCalendarPanel = ({
     b.classList.toggle("fuera", !c.inMonth)
     b.classList.toggle("hoy", c.isToday)
     /* Cada pestaña pinta lo suyo en el mes: * los eventos, el borde brillante las rutinas marcadas. */
-    const conEventos: boolean = pestana === "eventos" && c.marked
-    const conRutinas: boolean = pestana === "rutinas" && c.routinesDone > 0
+    const conEventos: boolean = tabs.current === "eventos" && c.marked
+    const conRutinas: boolean = tabs.current === "rutinas" && c.routinesDone > 0
     b.classList.toggle("marcado", conEventos)
     b.classList.toggle("cumplido", conRutinas)
     const rutinas: string = !conRutinas ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
@@ -301,17 +309,16 @@ export const createCalendarPanel = ({
   })
 
   /* Las dos listas comparten el sitio: una pestaña elige cuál se ve. */
-  let pestana: "eventos" | "rutinas" = "eventos"
   const pestanas: HTMLElement = elemento("div")
   pestanas.className = "pestanas"
   pestanas.setAttribute("role", "tablist")
   const elegirPestana = (cual: "eventos" | "rutinas"): void => {
-    pestana = cual
+    tabs.current = cual
     pintarMes()
     eventos.element.hidden = cual !== "eventos"
     rutinas.element.hidden = cual !== "rutinas"
     for (const b of Array.from(pestanas.children)) {
-      b.setAttribute("aria-selected", b.getAttribute("data-pestana") === pestana ? "true" : "false")
+      b.setAttribute("aria-selected", b.getAttribute("data-pestana") === tabs.current ? "true" : "false")
     }
   }
   for (const [cual, texto] of [["eventos", "Eventos"], ["rutinas", "Rutinas"]] as const) {
@@ -320,7 +327,7 @@ export const createCalendarPanel = ({
     b.setAttribute("data-pestana", cual)
     pestanas.append(b)
   }
-  elegirPestana(pestana)
+  elegirPestana(tabs.current)
 
   raiz.append(barra, cabeza, rejilla, pestanas, eventos.element, rutinas.element, hoja.element)
   pintarMes()
