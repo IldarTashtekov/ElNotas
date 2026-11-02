@@ -275,6 +275,14 @@ export const ROTURAS = [
     prueba: "routineShortcut: la línea es sólo el enlace a una rutina; marcada si hoy está en sus días",
   },
   {
+    nombre: "atajo: hecho sale del evento, no de la casilla",
+    fichero: "src/ui/linkActions.ts",
+    buscar: "{ id: destino.id, marked: evento.done }",
+    poner: "{ id: destino.id, marked: !evento.done }",
+    caza: "pruebas",
+    prueba: "eventShortcut: la línea es sólo el enlace a un evento; marcada si el evento está hecho",
+  },
+  {
     nombre: "atajo: con texto al lado la casilla es normal",
     fichero: "src/ui/linkActions.ts",
     buscar: "unico.start !== ini || unico.end !== fin",

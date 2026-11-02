@@ -407,8 +407,8 @@ tres líneas: texto con `[Dentista](#id-del-evento)`; una **casilla** con sólo 
 otra casilla con `hoy [Leer](#id-de-la-rutina)`; y una línea de texto con `[Leer](#id-de-la-rutina)`.
 
 - **T1.** «Enlazar…» (y «Cambiar») ofrece, además de notas y diagramas, **«Eventos»** (con su día y
-  hora delante, los de hoy en adelante primero y luego los pasados) y **«Rutinas»** (las no
-  archivadas). Un grupo vacío no sale.
+  hora delante, los de hoy en adelante primero y luego los pasados) y **«Rutinas»** (todas, las
+  archivadas también). Un grupo vacío no sale.
 - **T2.** «↗ Abrir» en el enlace al **evento** abre el **calendario encima**, en el mes del evento y con
   **su hoja de edición** abierta. El atrás cierra la hoja, otro atrás el calendario y otro vuelve a la
   nota.
@@ -423,6 +423,10 @@ otra casilla con `hoy [Leer](#id-de-la-rutina)`; y una línea de texto con `[Lee
   siguiente (cambiando «hoy» o los días de la rutina) sale sin marcar.
 - **T7.** Borrar la rutina o el evento: sus enlaces se ven **apagados**, «Abrir» dice «El enlace ya no
   existe» y la casilla-atajo es una **casilla normal**.
+- **T8.** Una casilla con **sólo** `[Dentista](#id-del-evento)` se ve desmarcada; pulsarla marca el
+  evento como **hecho** (en el calendario sale tachado) y la casilla se ve marcada; pulsarla otra vez
+  lo desmarca. Tachar o destachar el evento **desde el calendario** la actualiza al momento. El
+  `checked` de la línea **no cambia**, y con texto al lado es una casilla normal.
 
 ## Comportamientos conocidos
 

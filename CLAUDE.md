@@ -208,7 +208,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Selección por pulsación larga. «Mover a…» mueve y no confirma. Reordenar, con el `⠿` de la selección, no en el General.
 - Texto: subconjunto de Markdown; **sólo la línea activa se edita en crudo**. El enlace `[texto](#id)` (nota, diagrama,
   evento o rutina) **no lo lee el core** (excepción a la integridad referencial): roto, se ve apagado y no falla. Una
-  casilla cuyo texto es sólo un enlace a rutina es un atajo: marca **hoy**, sin guardar nada en la nota.
+  casilla cuyo texto es sólo un enlace es un atajo: a rutina marca **hoy**; a evento, lo marca **hecho**; la nota no guarda nada.
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí. Título sólo en la cabecera,
   renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
 - El atrás del navegador cierra lo de encima; una capa sin entrada en el historial se cierra sin ir atrás.

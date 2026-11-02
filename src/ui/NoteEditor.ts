@@ -48,6 +48,7 @@ import {
   linkChoices,
   removeLink,
   resolveLink,
+  eventShortcut,
   routineShortcut,
 } from "./linkActions.js"
 import { openLinkSheet } from "./linkSheet.js"
@@ -430,6 +431,10 @@ export const createNoteEditor = ({
   const atajoDe = (texto: string): ReturnType<typeof routineShortcut> =>
     texto.includes("](#") ? routineShortcut(state(), readMarkdownLine(texto), texto, today()) : null
 
+  /** Si ese texto de casilla es un atajo a un evento, cuál y si está hecho. */
+  const atajoEventoDe = (texto: string): ReturnType<typeof eventShortcut> =>
+    texto.includes("](#") ? eventShortcut(state(), readMarkdownLine(texto), texto) : null
+
   const crearLinea = (content: Content): Element => {
     const fila: HTMLElement = elemento("div")
     fila.dataset["id"] = content.id
@@ -443,11 +448,13 @@ export const createNoteEditor = ({
       marca.type = "button"
       marca.className = "marca"
       marca.addEventListener("click", (): void => {
-        /* Una casilla cuyo texto es el enlace a una rutina marca la rutina de hoy, no la casilla. */
+        /* Una casilla cuyo texto es el enlace a una rutina marca la rutina de hoy, y a un evento, el evento: no la casilla. */
         const hoy: Day | null = today()
         const texto: string | undefined = textoDe(content.id)
         const atajo: ReturnType<typeof atajoDe> = texto === undefined ? null : atajoDe(texto)
+        const evento: ReturnType<typeof atajoEventoDe> = texto === undefined ? null : atajoEventoDe(texto)
         if (atajo !== null && hoy !== null) void useCases.setRoutineDay(atajo.id, hoy, !atajo.marked, hoy)
+        else if (evento !== null) useCases.setEventDone(evento.id, !evento.marked)
         else toggleChecked(deps, content.id)
       })
       const hijas: HTMLElement = elemento("div")
@@ -477,9 +484,10 @@ export const createNoteEditor = ({
         if (campo !== null && (enOrden || campo !== document.activeElement)) pintarCampo(campo, l.text)
         if (!isCheckBox(l)) return
         const marca: Element | null = fila.querySelector(":scope > .marca")
-        /* Un atajo a una rutina se ve marcado según los días de la rutina, no según `checked`. */
+        /* Un atajo se ve marcado según la rutina (sus días) o el evento (si está hecho), no según `checked`. */
         const atajo: ReturnType<typeof atajoDe> = atajoDe(l.text)
-        const marcada: boolean = atajo === null ? l.checked : atajo.marked
+        const evento: ReturnType<typeof atajoEventoDe> = atajoEventoDe(l.text)
+        const marcada: boolean = atajo !== null ? atajo.marked : evento !== null ? evento.marked : l.checked
         if (marca !== null) {
           /* La caja la dibuja el CSS: aquí sólo va el ✓ de dentro. */
           setTextIfChanged(marca, marcada ? "✓" : "")

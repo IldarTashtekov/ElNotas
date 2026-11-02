@@ -50,6 +50,20 @@ export const resolveLink = (state: AppState, id: string): ResolvedLink => {
 }
 
 /**
+ * A qué lleva una línea cuyo texto es TODO un enlace guardado y interno, o `null`
+ * si tiene otra cosa al lado, más de un enlace, es web, no está guardado o está roto.
+ */
+const destinoUnico = (state: AppState, line: FormattedLine, raw: string): ResolvedLink => {
+  const unico: LineLink | undefined = line.links[0]
+  if (line.links.length !== 1 || unico === undefined) return null
+  if (!unico.saved || unico.target.kind !== "internal") return null
+  const ini: number = raw.length - raw.trimStart().length
+  const fin: number = raw.trimEnd().length
+  if (unico.start !== ini || unico.end !== fin) return null
+  return resolveLink(state, unico.target.id)
+}
+
+/**
  * La rutina que una línea de casilla hace de atajo, y si hoy está marcada, o
  * `null` si la línea no lo es. Lo es sólo si TODO su texto es un enlace guardado
  * a una rutina que existe; con cualquier otra cosa al lado, es una casilla normal.
@@ -61,17 +75,27 @@ export const routineShortcut = (
   raw: string,
   today: Day | null,
 ): { readonly id: RoutineId; readonly marked: boolean } | null => {
-  const unico: LineLink | undefined = line.links[0]
-  if (line.links.length !== 1 || unico === undefined) return null
-  if (!unico.saved || unico.target.kind !== "internal") return null
-  const ini: number = raw.length - raw.trimStart().length
-  const fin: number = raw.trimEnd().length
-  if (unico.start !== ini || unico.end !== fin) return null
-  const destino: ResolvedLink = resolveLink(state, unico.target.id)
+  const destino: ResolvedLink = destinoUnico(state, line, raw)
   if (destino === null || destino.kind !== "routine") return null
   const rutina: Routine | undefined = state.routines[destino.id]
   if (rutina === undefined) return null
   return { id: destino.id, marked: today !== null && rutina.days.includes(today) }
+}
+
+/**
+ * El evento que una línea de casilla hace de atajo, y si está hecho, o `null` si
+ * la línea no lo es. Las mismas condiciones que `routineShortcut`; «hecho» sale
+ * del evento, no de la casilla.
+ */
+export const eventShortcut = (
+  state: AppState,
+  line: FormattedLine,
+  raw: string,
+): { readonly id: EventId; readonly marked: boolean } | null => {
+  const destino: ResolvedLink = destinoUnico(state, line, raw)
+  if (destino === null || destino.kind !== "event") return null
+  const evento: CalendarEvent | undefined = state.events[destino.id]
+  return evento === undefined ? null : { id: destino.id, marked: evento.done }
 }
 
 /** El enlace con el cursor ESTRICTAMENTE dentro (en la cadena cruda), o `null`. */
