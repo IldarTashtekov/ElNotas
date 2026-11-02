@@ -78,7 +78,8 @@ const PASO_PX: number = 10
 
 /** Lo que dura un arrastre del ⠿: medido al empezar, como en `dragReorder`. */
 interface Arrastre {
-  readonly el: HTMLElement
+  /** Las filas seleccionadas: todas siguen al dedo, como un bloque. */
+  readonly movidas: ReadonlyArray<HTMLElement>
   readonly inicio: number
   /** Las filas que no se mueven, y sus centros en la página (con su scroll). */
   readonly quedan: ReadonlyArray<HTMLElement>
@@ -306,7 +307,7 @@ export const createItemList = ({
 
   let arrastre: Arrastre | null = null
   /* El ⠿ pulsado que aún no se ha movido: un toque sin moverse no hace nada. */
-  let asaPulsada: { readonly clave: string; readonly fila: HTMLElement; readonly y: number } | null =
+  let asaPulsada: { readonly clave: string; readonly y: number } | null =
     null
 
   const puedeReordenar = (): boolean =>
@@ -322,8 +323,11 @@ export const createItemList = ({
     lista.classList.toggle("cae-al-final", a.hueco === a.quedan.length)
   }
 
-  const levantar = (el: HTMLElement, y: number): void => {
+  const levantar = (y: number): void => {
     const filas: ReadonlyArray<HTMLElement> = [...lista.querySelectorAll<HTMLElement>("li[data-key]")]
+    const movidas: ReadonlyArray<HTMLElement> = filas.filter((f: HTMLElement): boolean =>
+      seleccion.has(f.dataset["key"] ?? ""),
+    )
     const quedan: ReadonlyArray<HTMLElement> = filas.filter(
       (f: HTMLElement): boolean => !seleccion.has(f.dataset["key"] ?? ""),
     )
@@ -331,10 +335,10 @@ export const createItemList = ({
       const r: DOMRect = f.getBoundingClientRect()
       return r.top + window.scrollY + r.height / 2
     })
-    const a: Arrastre = { el, inicio: y + window.scrollY, quedan, centros, hueco: 0 }
+    const a: Arrastre = { movidas, inicio: y + window.scrollY, quedan, centros, hueco: 0 }
     a.hueco = dropIndex(centros, -1, a.inicio)
     arrastre = a
-    el.classList.add("levantada")
+    for (const f of movidas) f.classList.add("levantada")
     lista.classList.add("arrastrando")
     marcarHueco(a)
   }
@@ -344,8 +348,10 @@ export const createItemList = ({
     const a: Arrastre | null = arrastre
     arrastre = null
     if (a === null) return
-    a.el.style.transform = ""
-    a.el.classList.remove("levantada")
+    for (const f of a.movidas) {
+      f.style.transform = ""
+      f.classList.remove("levantada")
+    }
     lista.classList.remove("arrastrando", "cae-al-final")
     for (const f of a.quedan) f.classList.remove("cae-antes")
     if (!aplicar || ventana?.kind !== "context") return
@@ -364,14 +370,14 @@ export const createItemList = ({
         seleccion = toggleSelected(seleccion, pulsada.clave)
         pintar()
       }
-      levantar(pulsada.fila, pulsada.y)
+      levantar(pulsada.y)
     }
     const a: Arrastre | null = arrastre
     if (a === null) return
     if (evento.clientY < BORDE_PX) window.scrollBy(0, -PASO_PX)
     else if (evento.clientY > window.innerHeight - BORDE_PX) window.scrollBy(0, PASO_PX)
     const y: number = evento.clientY + window.scrollY
-    a.el.style.transform = `translateY(${y - a.inicio}px)`
+    for (const f of a.movidas) f.style.transform = `translateY(${y - a.inicio}px)`
     a.hueco = dropIndex(a.centros, -1, y)
     marcarHueco(a)
   })
@@ -399,7 +405,7 @@ export const createItemList = ({
       evento.preventDefault()
       cancelarEspera()
       const fila: HTMLElement | null = objetivo.closest<HTMLElement>("li[data-key]")
-      if (fila !== null) asaPulsada = { clave, fila, y: evento.clientY }
+      if (fila !== null) asaPulsada = { clave, y: evento.clientY }
       return
     }
     origen = { x: evento.clientX, y: evento.clientY }

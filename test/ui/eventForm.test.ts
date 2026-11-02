@@ -39,3 +39,8 @@ test("una hora mal escrita no vale, aunque el día sí", (): void => {
     assert.deepEqual(r, { ok: false, problem: "Pon una hora válida, como 18:00." })
   }
 })
+
+test("los saltos de línea del motivo se vuelven espacios", (): void => {
+  const r: EventFormResult = parseEventForm("2026-07-02", "", "Cena\n  con  \nel equipo")
+  assert.equal(r.ok && r.input.title, "Cena con el equipo")
+})

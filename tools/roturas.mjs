@@ -864,6 +864,14 @@ export const ROTURAS = [
     prueba: "sin motivo se llama «Evento»",
   },
   {
+    nombre: "calendario: el motivo conserva los saltos de línea",
+    fichero: "src/ui/eventForm.ts",
+    buscar: 'title.replace(/\\s+/g, " ").trim()',
+    poner: "title.trim()",
+    caza: "pruebas",
+    prueba: "los saltos de línea del motivo se vuelven espacios",
+  },
+  {
     nombre: "calendario: hoy usa el mes en base cero",
     fichero: "src/platform/web/today.ts",
     buscar: "fecha.getMonth() + 1",

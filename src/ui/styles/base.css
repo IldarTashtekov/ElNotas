@@ -105,7 +105,8 @@
     font: inherit;
     white-space: nowrap;
   }
-  input {
+  input,
+  textarea {
     background: var(--screen);
     border: 1px solid var(--line);
     color: var(--ink);

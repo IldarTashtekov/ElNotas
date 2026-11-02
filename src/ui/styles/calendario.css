@@ -122,6 +122,10 @@
   border: none;
   cursor: pointer;
   flex: 1;
+  /* Sin esto un motivo largo ensancha la hoja: salta de línea donde haga falta. */
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
   padding: 0.5rem 0.4rem;
   text-align: left;
 }
@@ -135,6 +139,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+.evento-hoja .campo textarea {
+  resize: vertical;
 }
 .evento-hoja .campo span {
   color: var(--muted);
@@ -195,6 +202,8 @@
   background: none;
   border: none;
   cursor: pointer;
+  overflow-wrap: anywhere;
+  white-space: normal;
   padding: 0.35rem 0;
   text-align: left;
 }

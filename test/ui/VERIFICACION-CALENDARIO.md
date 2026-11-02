@@ -70,6 +70,11 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
 - **B12.** Con eventos creados, **recargar**: siguen ahí y marcados.
 - **B13.** A **375 px** y en escritorio, la rejilla cabe entera, sin barra horizontal, y la hoja se
   puede usar con el teclado en pantalla sin tapar **Guardar**.
+- **B14.** Un evento con un **motivo muy largo** (varias palabras, y una sin espacios): en la hoja
+  del día, en la del evento (el **Motivo** es un área de texto) y en la lista de la pestaña
+  **Eventos**, el texto **salta de línea** y nada se sale por la derecha, a 375 px y en escritorio.
+- **B15.** Al **editar** un evento, **☐ Hecho** lo marca (☑ Hecho, tachado en la lista del día) y
+  volver a pulsarlo lo desmarca, sin cerrar la hoja ni tocar lo escrito en los campos sin guardar.
 
 ## C. La lista de eventos
 

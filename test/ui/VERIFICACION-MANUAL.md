@@ -242,8 +242,9 @@ Con Compra con cinco elementos, alguno oculto:
   selección, no. En la selección del **General** y en la lista de los **ocultos**, tampoco.
 - **L2.** Con la selección, la fila «Ocultos (n)» **se queda en su sitio**, apagada: la lista
   **no sube** al entrar en la selección.
-- **L3.** Con dos filas seleccionadas que no están juntas, **arrastrar el ⠿** de una: esa fila
-  sigue al dedo y una **raya del fósforo** dice dónde caerán. Al soltar, las dos quedan
+- **L3.** Con dos filas seleccionadas que no están juntas, **arrastrar el ⠿** de una: **las
+  dos filas siguen al dedo a la vez**, como un bloque, y una **raya del fósforo** dice dónde caerán.
+  Al soltar, las dos quedan
   **juntas, ahí, en el orden que tenían**, y **se sigue en la selección**, con las dos marcadas.
   Sobrevive a recargar.
 - **L4.** Arrastrar el ⠿ de una fila **no seleccionada**: se suma a la selección y se mueve con

@@ -70,7 +70,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
   return b
 }
 
-const campo = (rotulo: string, entrada: HTMLInputElement): HTMLLabelElement => {
+const campo = (rotulo: string, entrada: HTMLInputElement | HTMLTextAreaElement): HTMLLabelElement => {
   const l: HTMLLabelElement = elemento("label")
   l.className = "campo"
   l.append(elemento("span", rotulo), entrada)
@@ -217,7 +217,9 @@ export const createCalendarPanel = ({
     const hora: HTMLInputElement = elemento("input")
     hora.type = "time"
     hora.value = evento?.time ?? ""
-    const motivo: HTMLInputElement = elemento("input")
+    /* Un área de texto, no una línea: un motivo largo salta de línea en vez de esconderse. */
+    const motivo: HTMLTextAreaElement = elemento("textarea")
+    motivo.rows = 2
     motivo.placeholder = "Motivo"
     motivo.value = evento?.title ?? ""
 
@@ -255,6 +257,13 @@ export const createCalendarPanel = ({
       )
     }
 
+    const hecho: HTMLButtonElement | null =
+      evento === undefined
+        ? null
+        : boton(evento.done ? "☑ Hecho" : "☐ Hecho", (): void => {
+            useCases.setEventDone(evento.id, !evento.done)
+            pintarCaja()
+          }, "secundario evento-marcar")
     const volver: HTMLButtonElement = boton("‹ Volver al día", (): void => {
       modo = { kind: "lista", day }
       pintarCaja()
@@ -265,6 +274,7 @@ export const createCalendarPanel = ({
       campo("Día", dia),
       campo("Hora", hora),
       campo("Motivo", motivo),
+      ...(hecho === null ? [] : [hecho]),
       problema,
       acciones,
     )

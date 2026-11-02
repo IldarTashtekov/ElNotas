@@ -28,6 +28,7 @@ export const parseEventForm = (day: string, time: string, title: string): EventF
   const hora: string = time.trim()
   const parsed: Time | null = hora === "" ? null : parseTime(hora)
   if (hora !== "" && parsed === null) return { ok: false, problem: "Pon una hora válida, como 18:00." }
-  const motivo: string = title.trim()
+  /* El motivo es un texto de una línea: los saltos que se cuelen al escribirlo se vuelven espacios. */
+  const motivo: string = title.replace(/\s+/g, " ").trim()
   return { ok: true, input: { day: dia, time: parsed, title: motivo === "" ? NEW_EVENT_TITLE : motivo } }
 }
