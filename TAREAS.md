@@ -212,6 +212,26 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
       tabla sin pulsar el vecino), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
+- [ ] **9. El estado de la UI en un objeto, `UiState`** *(pensar)*. *Diseñada con el usuario el
+      2026-11-02.* Lo de presentación de este dispositivo, que hoy son cuatro claves con un
+      adaptador cada una, pasa a un objeto en una clave, `elnotas:ui`, sin que viaje entre
+      dispositivos. **Decidido:** cinco secciones planas —`phosphor`, `windows`, `framings`,
+      `calendarOrder` y `calendarTab` (`"events" | "routines"`, hoy `"eventos" | "rutinas"` y
+      sólo en memoria)—, sin número de versión. **Las capas abiertas se quedan fuera**, con su clave
+      y su adaptador: son dónde se está, no cómo se ve, y se guardan para volver tras un cierre de
+      Android. **Se empieza limpio:** las claves viejas no se leen y se borran al arrancar. **Un solo
+      adaptador**, `src/platform/web/LocalStorageUiState.ts`, que lee y escribe el objeto entero sin
+      entenderlo; lo listo, puro, en `src/ui/uiState.ts`: cada sección da a la UI la misma
+      `…Persistence` que recibe hoy, su guardado relee el objeto y cambia sólo su parte, y su
+      lectura pasa por el lector tolerante de siempre, de modo que una sección rota vuelve a su
+      valor por defecto sin tirar las otras. No pasa por el core. Por piezas, un commit cada una:
+      **9a**, el objeto, las secciones, el adaptador y `main.ts`, fuera los cuatro adaptadores
+      viejos, con pruebas y rotura; **9b**, la copia de seguridad lleva `uiState` en vez de cuatro
+      campos sueltos, y una copia vieja importa sólo sus notas; **9c**, la pestaña del calendario
+      se guarda; **9d**, en `CLAUDE.md` las decisiones de las claves del fósforo y del encuadre y la
+      de la copia. **Se cierra cuando** las secciones tienen sus pruebas (una rota no tira las otras,
+      guardar una no pisa las demás) y su rotura, `check` pasa y las listas del fósforo, las
+      ventanas, el encuadre, el calendario y la copia tienen sus pasos, pasados en el panel.
 
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
