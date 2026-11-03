@@ -225,19 +225,23 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
       lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
       que la pulsación larga no saque el menú del sistema) y los anota.
-- [ ] **16. El lienzo pinta Markdown y abre enlaces** *(pensar)*. Tras la 15b. El nodo se pinta como una
-      línea de nota: negrita, cursiva y enlaces —a webs también, y las direcciones sueltas—, los rotos
-      apagados. **Un nodo cuyo texto es sólo un enlace a algo de la app enseña el nombre actual de lo
-      enlazado** (como la casilla-atajo); a una web, o con más texto, lo escrito. Un toque sobre un
-      enlace lo abre, tras esperar por si es doble; una web, como en las notas. El resto del nodo, nada.
-      «Editar», en crudo, como hoy. Los títulos de los menús, con el texto que se ve, sin marcas; un
-      enlace al mismo diagrama no hace nada. **Se cierra cuando** las pruebas de qué se pinta pasan y el panel
-      enseña un nodo-enlace que sigue el nombre, uno roto apagado y un toque que abre nota, diagrama,
-      evento, rutina y web.
-- [ ] **17. Crear en el lienzo: Texto, Enlazar…, Nota nueva** *(mecánica)*. Tras la 16. «Enlazar…»
-      abre la hoja de enlazar de las notas (con su campo para pegar una web) y pone un nodo con ese enlace; «Nota nueva» crea la nota, la
-      mete en los contextos del diagrama y pone su nodo enlazado, como hoy. **Se cierra cuando** el
-      panel crea los tres, también un enlace a una web, y la lista del lienzo los recoge.
+- [ ] **16. El nodo-enlace: se ve y se abre sin Markdown** *(pensar)*. Tras la 15b. Decidido con el
+      usuario el 2026-11-04: **en el lienzo no se ve ni se escribe Markdown nunca**, y un nodo es una de
+      dos cosas: **texto**, o **un enlace entero** (su texto guardado es sólo `[visible](destino)`); no
+      hay texto con un enlace en medio. El nodo-enlace se pinta con la raya gruesa: a algo de la app,
+      con el nombre actual de lo enlazado; a una web, con su texto; roto, apagado. Un toque lo abre,
+      tras esperar por si es doble; una web, como en las notas. El de texto se ve tal cual lo escrito:
+      sus símbolos se escapan al guardar. «Editar» enseña sólo el texto que se ve. **Se cierra cuando**
+      las pruebas de qué se pinta y de qué se guarda al editar pasan, y el panel enseña un nodo-enlace
+      que sigue el nombre, uno roto apagado, un `*` escrito que se ve como `*`, y un toque que abre
+      nota, diagrama, evento, rutina y web.
+- [ ] **17. Poner, cambiar y quitar el enlace de un nodo** *(mecánica)*. Tras la 16. Como en las
+      notas, con la hoja de enlazar, nunca escribiendo el enlace. Al crear, el menú ofrece **Texto**,
+      **Enlazar…** (la hoja de las notas, con su campo para pegar una web: pone un nodo-enlace) y
+      **Nota nueva** (crea la nota, la mete en los contextos del diagrama y pone su nodo-enlace). En el
+      menú de un nodo, **Cambiar enlace** (la misma hoja; a un nodo de texto se lo pone) y **Quitar
+      enlace** (se queda el texto que se veía). **Se cierra cuando** el panel crea los tres, cambia y
+      quita un enlace, también a una web, y la lista del lienzo los recoge.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
