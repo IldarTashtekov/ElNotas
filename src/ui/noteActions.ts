@@ -1,6 +1,6 @@
 /**
  * Lo que se hace sobre lo que lista una ventana: crear una nota o un diagrama, la
- * papelera, «Mover a…» y ocultar; crear una nota desde un diagrama; y crear un
+ * papelera, «Mover a…» y ocultar; y crear un
  * contexto, una nota o un diagrama como ventana nueva.
  *
  * Cada una compone casos de uso que ya existen —crear y añadir, quitar y
@@ -14,7 +14,6 @@ import type {
   Context,
   ContextId,
   Diagram,
-  DiagramId,
   ItemRef,
   Note,
   UseCases,
@@ -147,22 +146,3 @@ export const contextsWith = (state: AppState, ref: ItemRef): ReadonlyArray<Conte
       ctx.items.some((i: ItemRef): boolean => i.kind === ref.kind && i.id === ref.id),
     )
     .sort((a: Context, b: Context): number => a.name.localeCompare(b.name))
-
-/**
- * Una «Nueva Nota» creada desde un diagrama: va a TODOS los contextos donde está
- * el diagrama, oculta, porque ya se ve en el lienzo; si no está en ninguno, a
- * ninguno, y se ve en el General.
- */
-export const createNoteForDiagram = (
-  useCases: UseCases,
-  state: AppState,
-  diagramId: DiagramId,
-): Note | null => {
-  const nota: Note | null = useCases.createNote(NEW_NOTE_NAME)
-  if (nota === null) return null
-  for (const ctx of contextsWith(state, diagramRef(diagramId))) {
-    useCases.addItem(ctx.id, noteRef(nota.id))
-    useCases.hideItems(ctx.id, [noteRef(nota.id)])
-  }
-  return nota
-}

@@ -35,7 +35,7 @@ atrás roto.
 ## Preparación
 
 La misma que `VERIFICACION-MANUAL-LIENZO.md`. Hace falta **un diagrama con tres pósits**
-separados —A, B y C—, y uno de ellos **enlazando a una nota** (creado con *Nota nueva*).
+separados —A, B y C—, y uno de ellos **enlazando a una nota** (creado con *Enlazar…*).
 
 En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mismos menús.
 

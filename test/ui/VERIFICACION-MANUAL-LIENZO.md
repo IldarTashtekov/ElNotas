@@ -86,8 +86,8 @@ directamente.
 
 ## C. Los pósits y sus menús
 
-- **C1.** **Doble toque en el fondo** abre una hoja «Añadir al diagrama»: *Texto*, *Nota
-  existente* (sólo si hay notas) y *Nota nueva*. *(Escritorio: el **clic derecho** abre la
+- **C1.** **Doble toque en el fondo** abre una hoja «Añadir al diagrama»: *Texto* y
+  *Enlazar…*. *(Escritorio: el **clic derecho** abre la
   misma.)*
 - **C2.** **Texto** crea un pósit **donde se tocó**, vacío y con el cursor dentro.
 - **C3.** Escribir; **Intro guarda**. **Mayúsculas+Intro** hace otra línea. **Escape** descarta
@@ -127,17 +127,14 @@ Un nodo es **texto** o **un enlace entero**; en el lienzo no se ve Markdown. Hac
 otro diagrama, un evento y una rutina, y nodos que los enlacen, uno a una web y uno roto (con
 `?depurar`, `useCases.addTextNode(id, "[x](#<id>)", x, y)`).
 
-- **F1.** **Nota nueva** crea «Nueva Nota», pone un nodo que la enlaza (con la **raya gruesa**) donde se
-  tocó y **entra en la nota**. Renombrarla, **✕ Salir**: se vuelve **al diagrama**, y el nodo
-  enseña **el nombre nuevo**.
-- **F2.** Con el diagrama en **dos contextos** (Mover a… desde el General lo añade al otro),
-  *Nota nueva*: la nota sale en **los dos**. Un diagrama que sólo está en el General la crea sin
-  contexto.
+- **F1.** Un nodo que enlaza a una nota lleva la **raya gruesa**. Entrar en la nota, renombrarla,
+  **✕ Salir**: se vuelve **al diagrama**, y el nodo enseña **el nombre nuevo**.
+- **F2.** El menú de crear **no** ofrece *Nota nueva*: una nota se crea fuera y se enlaza.
 - **F3.** **Un toque** en un nodo que enlaza a una nota **entra en la nota**, tras un instante muy corto. El atrás
   vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la página**.
 - **F4.** **Doble toque** en un nodo que enlaza a algo de la app abre su menú **sin «Editar»**, y
   **no entra**.
-- **F5.** El menú de crear ofrece **Texto**, **Enlazar…** y **Nota nueva**. *Enlazar…* abre la hoja
+- **F5.** El menú de crear ofrece **Texto** y **Enlazar…**. *Enlazar…* abre la hoja
   de enlazar de las notas (texto, dirección y, debajo, notas, diagramas, eventos y rutinas); elegir
   algo con el texto en blanco pone un nodo con **su nombre**, donde se tocó, **sin entrar**. La
   misma nota puede estar en dos nodos.
@@ -173,7 +170,7 @@ otro diagrama, un evento y una rutina, y nodos que los enlacen, uno a una web y 
 ## H. El atrás y las hojas
 
 - **H1.** Con un menú abierto, el **atrás** (en Android, el del sistema) lo cierra **y nada más**.
-- **H2.** Tras F1, contar los atrás: nota → diagrama → ventana. **Ninguno de más** sale de la
+- **H2.** Tras F3, contar los atrás: nota → diagrama → ventana. **Ninguno de más** sale de la
   página.
 
 ## I. Seleccionar nodos

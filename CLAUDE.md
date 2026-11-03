@@ -229,7 +229,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira.
 - Un solo tipo de nodo: posición, «hecho» y texto. Sin Markdown en el lienzo: texto, o un enlace entero con el nombre de lo enlazado.
 - Gestos «doble = menú o crear»; mover guarda al soltar. Móvil = escritorio.
-- Nota creada desde el lienzo: a todos los contextos del diagrama. Un diagrama se borra como una nota.
+- En el lienzo se crea un texto o un enlace; una nota, no. Un diagrama se borra como una nota.
 
 **PWA**
 - GitHub Pages, rutas relativas. Publica Actions al subir a `main`, sólo si `check` pasa.

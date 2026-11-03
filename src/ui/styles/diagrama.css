@@ -14,14 +14,25 @@
     margin-bottom: 0;
   }
 
-  /* En una ventana, bajo la cabecera de la vista ventanas: se descuenta su alto. */
+  /* En una ventana, bajo las pestañas y la cabecera: ocupa lo que dejan. */
   &.en-ventana {
-    height: calc(100dvh - 4rem);
+    flex: 1;
+    height: auto;
+    margin-bottom: 0;
+    min-height: 0;
 
     &:empty {
       display: none;
     }
   }
+}
+/* La vista ventanas con un diagrama: una columna del alto de la pantalla. */
+:has(> .vista-diagrama.en-ventana:not(:empty)) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  /* El relleno de abajo del body haría que la página entera se desplazara. */
+  margin-bottom: -1rem;
 }
 .lienzo {
   background-image: radial-gradient(circle, var(--rejilla) 1.25px, transparent 1.75px);

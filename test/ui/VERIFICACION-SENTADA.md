@@ -338,8 +338,8 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ### Los pósits y sus menús
 
-- **LZ-C1.** **Doble toque en el fondo** abre una hoja «Añadir al diagrama»: *Texto*, *Nota
-  existente* (sólo si hay notas) y *Nota nueva*.
+- **LZ-C1.** **Doble toque en el fondo** abre una hoja «Añadir al diagrama»: *Texto* y
+  *Enlazar…*.
 - **LZ-C2.** **Texto** crea un pósit **donde se tocó**, vacío y con el cursor dentro.
 - **LZ-C3.** Escribir; **Intro guarda**. 💻 **Mayúsculas+Intro** hace otra línea. 💻 **Escape**
   descarta lo escrito. Tocar fuera también guarda.
@@ -367,12 +367,9 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ### Los nodos-nota
 
-- **LZ-F1.** **Nota nueva** crea «Nueva Nota», pone un nodo-nota (con la **raya gruesa**) donde se
-  tocó y **entra en la nota**. Renombrarla, **✕ Salir**: se vuelve **al diagrama**, y el nodo
-  enseña **el nombre nuevo**.
-- **LZ-F2.** Con el diagrama en **dos contextos** (*Mover a…* desde el General lo añade al otro),
-  *Nota nueva*: la nota sale en **los dos**. Un diagrama que sólo está en el General la crea sin
-  contexto.
+- **LZ-F1.** Un nodo-nota lleva la **raya gruesa**. Entrar en la nota, renombrarla, **✕ Salir**:
+  se vuelve **al diagrama**, y el nodo enseña **el nombre nuevo**.
+- **LZ-F2.** El menú de crear **no** ofrece *Nota nueva*.
 - **LZ-F3.** ⚠️ **Un toque** en un nodo-nota **entra en la nota**, tras un instante muy corto. El
   atrás vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la app**.
 - **LZ-F4.** **Doble toque** en un nodo-nota abre su menú **sin «Editar»**, y **no entra** en la

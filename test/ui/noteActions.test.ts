@@ -32,7 +32,6 @@ import {
   contextsWith,
   createAsWindow,
   createDiagramIn,
-  createNoteForDiagram,
   createNoteIn,
   deleteQuestion,
   moveItems,
@@ -262,27 +261,6 @@ test("contextsWith no confunde un diagrama con una nota del mismo id", (): void 
   assert.deepEqual(contextsWith(store.getState(), diagramRef(leche as unknown as DiagramId)), [])
 })
 
-test("la nota nueva de un diagrama va a TODOS los contextos donde está el diagrama", (): void => {
-  const { store, useCases, compra, casa, mudanza } = conDiagrama()
-  useCases.addItem(casa, diagramRef(mudanza))
-  const nota: Note | null = createNoteForDiagram(useCases, store.getState(), mudanza)
-  if (nota === null) assert.fail("la nota tenía que crearse")
-
-  assert.equal(nota.name, NEW_NOTE_NAME)
-  assert.ok(refsDe(store.getState(), compra).some((r: ItemRef): boolean => r.id === nota.id))
-  assert.ok(refsDe(store.getState(), casa).some((r: ItemRef): boolean => r.id === nota.id))
-})
-
-test("la nota nueva de un diagrama nace OCULTA en cada contexto del diagrama", (): void => {
-  const { store, useCases, compra, casa, mudanza } = conDiagrama()
-  useCases.addItem(casa, diagramRef(mudanza))
-  const nota: Note | null = createNoteForDiagram(useCases, store.getState(), mudanza)
-  if (nota === null) assert.fail("la nota tenía que crearse")
-
-  assert.deepEqual(store.getState().contexts[compra]?.hidden, [noteRef(nota.id)])
-  assert.deepEqual(store.getState().contexts[casa]?.hidden, [noteRef(nota.id)])
-})
-
 test("Mover a… deja a la vista en el destino lo que allí estaba oculto", (): void => {
   const { store, useCases, compra, casa, leche, pan } = escenario()
   useCases.addItem(casa, noteRef(leche))
@@ -299,17 +277,6 @@ test("Mover a… sale de lo oculto del origen, al salir del origen", (): void =>
   moveItems(useCases, { kind: "context", id: compra }, casa, [noteRef(leche)])
 
   assert.deepEqual(store.getState().contexts[compra]?.hidden, [])
-})
-
-test("la nota nueva de un diagrama que no está en ningún contexto no va a ninguno", (): void => {
-  const { store, useCases, compra, casa } = escenario()
-  const suelto: Diagram | null = createDiagramIn(useCases, GENERAL)
-  if (suelto === null) assert.fail("el diagrama tenía que crearse")
-  const nota: Note | null = createNoteForDiagram(useCases, store.getState(), suelto.id)
-
-  assert.notEqual(nota, null)
-  assert.equal(refsDe(store.getState(), compra).length, 2)
-  assert.equal(refsDe(store.getState(), casa).length, 0)
 })
 
 /* ─────────────────────────── Reordenar arrastrando ──────────────────────────── */

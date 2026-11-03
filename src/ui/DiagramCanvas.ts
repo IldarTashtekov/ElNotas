@@ -6,8 +6,8 @@
  * centro si nunca se movió. La mira lo devuelve al origen: abajo a la derecha del
  * lienzo, o en la barra de quien lo monta.
  *
- * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, un
- * enlace (con la hoja de enlazar de las notas) o una nota nueva; en un pósit, el
+ * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto o un
+ * enlace (con la hoja de enlazar de las notas); en un pósit, el
  * suyo: conectar, editar, enlazar o cambiar y quitar el enlace, hecho, borrar. *Conectar* espera a que se toque el nodo de
  * destino, y el fondo lo cancela. Doble toque —o clic derecho— en una línea abre
  * el suyo: invertir, con o sin dirección, texto, borrar. El texto de una línea
@@ -35,7 +35,6 @@ import type {
   DiagramRelation,
   DiagramRelationId,
   EventId,
-  Note,
   NoteId,
   RoutineId,
   Store,
@@ -62,10 +61,8 @@ import {
   linkSheetAddress,
   linkSheetText,
   readNode,
-  textNodeText,
   unlinkedNodeText,
 } from "./nodeContent.js"
-import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
 import type { Box, RelationCurve } from "./relationGeometry.js"
@@ -288,8 +285,6 @@ export const createDiagramCanvas = ({
   /** Lo que enseña un nodo: su texto, o el nombre de lo que enlaza. */
   const textoDe = (nodo: DiagramNode, estado: AppState): string => readNode(estado, nodo.text).text
 
-  /** El texto de un nodo que lleva a una nota. */
-  const enlaceA = (nota: Note): string => linkNodeText(nota.name, `#${nota.id}`, nota.name) ?? textNodeText(nota.name)
 
   const positDe = (id: DiagramNodeId): HTMLElement | null =>
     capa.querySelector<HTMLElement>(`.posit[data-id="${CSS.escape(id)}"]`)
@@ -634,12 +629,6 @@ export const createDiagramCanvas = ({
         elegirEnlace("Enlazar", "", (texto: string): void => {
           ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, texto, p.x, p.y))
         })
-      }),
-      opcion("Nota nueva", (): void => {
-        const nota: Note | null = createNoteForDiagram(useCases, store.getState(), diagramId)
-        if (nota === null) return
-        ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, enlaceA(nota), p.x, p.y))
-        onOpenNote(nota.id)
       }),
     )
     menu.open("Añadir al diagrama", [caja])
