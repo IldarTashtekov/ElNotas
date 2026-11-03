@@ -1329,6 +1329,31 @@ export const ROTURAS = [
     caza: "pruebas",
     prueba: "arrastrar una elegida lleva todas las elegidas, en orden de lectura",
   },
+  /* ── Borrar en «⠿ Ordenar» ── */
+  {
+    nombre: "borrar: una casilla con hijas se queda",
+    fichero: "src/core/domain/operations.ts",
+    buscar: "    .filter((item: T): boolean => !fuera.has(item.id))\n",
+    poner: "    .filter((item: T): boolean => !fuera.has(item.id) || (isCheckBox(item) && item.children.length > 0))\n",
+    caza: "pruebas",
+    prueba: "remove: una casilla con hijas se va con todas ellas",
+  },
+  {
+    nombre: "borrar: sin nada que borrar, una nota nueva",
+    fichero: "src/core/domain/operations.ts",
+    buscar: "  return iguales ? items : quedan\n",
+    poner: "  return iguales && quedan.length < 0 ? items : quedan\n",
+    caza: "pruebas",
+    prueba: "remove: sin ninguna que exista, devuelve la MISMA nota",
+  },
+  {
+    nombre: "borrar: la papelera no cuenta las hijas de una casilla",
+    fichero: "src/ui/lineOrder.ts",
+    buscar: "    .filter((id: ContentId): boolean => !quedan.has(id))\n",
+    poner: "    .filter((id: ContentId): boolean => selected.has(id) || (!quedan.has(id) && false))\n",
+    caza: "pruebas",
+    prueba: "una casilla, con todo su árbol",
+  },
   /* ── Las ventanas como pestañas ── */
   {
     nombre: "pestañas: cerrar la activa salta a la primera",

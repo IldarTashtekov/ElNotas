@@ -228,6 +228,11 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **La barra de la nota, sólo con símbolos** 2026-11-04, a petición del usuario: ☐ ↳ ⠿ ✕ y, para enlazar, una
   cadena en SVG (ningún carácter monocromo la tiene), con su nombre en `aria-label` y `title`, en un renglón
   que se desliza en vez de saltar de línea.
+- **Tarea 14 de la Fase 10, borrar en «⠿ Ordenar»** 2026-11-03, rama `borrar-en-ordenar`: una papelera
+  dibujada en la barra, sólo con el modo y apagada sin nada que borrar; la hoja «¿Borrar N líneas?» y una
+  sola acción. `remove` acepta varias, y una casilla se va con todo su árbol, por decisión del usuario
+  (antes, con hijas era no-op); `linesToDelete` cuenta lo mismo. Recortar al portapapeles, descartado: pegar junta las líneas en una. Lista W del
+  editor, pasada en el panel a 375 px.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

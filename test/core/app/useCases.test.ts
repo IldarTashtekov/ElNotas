@@ -179,7 +179,7 @@ const CABLEADO: ReadonlyArray<
   ["set-text", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
   ["insert", (u) => u.insertText(ID_NOTA, "hola", rootEnd)],
   ["insert", (u) => u.insertCheckBox(ID_NOTA, "hola", rootEnd)],
-  ["remove", (u) => u.remove(ID_NOTA, ID_LINEA)],
+  ["remove", (u) => u.remove(ID_NOTA, [ID_LINEA])],
   ["split", (u) => u.split(ID_NOTA, ID_LINEA, 3)],
   ["merge", (u) => u.merge(ID_NOTA, ID_LINEA)],
   ["convert-to-checkbox", (u) => u.convertToCheckBox(ID_NOTA, ID_LINEA)],
@@ -358,7 +358,7 @@ test("y los TRES que crean devuelven la entidad recién creada", () => {
 const NO_OP_CON_NOTA: ReadonlyArray<readonly [string, (u: UseCases) => Note | null]> = [
   ["setChecked", (u) => u.setChecked(ID_NOTA, ID_LINEA, true)],
   ["setText", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
-  ["remove", (u) => u.remove(ID_NOTA, ID_LINEA)],
+  ["remove", (u) => u.remove(ID_NOTA, [ID_LINEA])],
   ["split", (u) => u.split(ID_NOTA, ID_LINEA, 3)],
   ["merge", (u) => u.merge(ID_NOTA, ID_LINEA)],
   ["convertToCheckBox", (u) => u.convertToCheckBox(ID_NOTA, ID_LINEA)],
@@ -590,16 +590,16 @@ test("⚠️ un NO-OP devuelve null, que es lo que este retorno existe para pode
   /*
       Es la razón entera del cambio. Sin esto, «hecho» y «no aplicaba» se ven
       igual desde quien llama, porque una operación que no aplica no falla: no
-      hace nada. El caso elegido es el de la decisión cerrada —`remove` sobre una
+      hace nada. El caso elegido es el de la decisión cerrada —`merge` de una
       casilla con hijas es no-op— y no uno inventado.
   */
   const madre: Content = checkBox(ID_LINEA, "Fruta", {
     children: [checkBox(contentId("manzana"), "Manzanas")],
   })
-  const nota: Note = notaCon(ID_NOTA, [madre])
+  const nota: Note = notaCon(ID_NOTA, [text(contentId("titulo"), "Compra"), madre])
   const { store, useCases } = montarDeVerdad(conNotas(nota))
 
-  assert.equal(useCases.remove(ID_NOTA, ID_LINEA), null)
+  assert.equal(useCases.merge(ID_NOTA, ID_LINEA), null)
   // Y no ha tocado nada: la nota guardada sigue siendo EL MISMO objeto, así que
   // ni `updatedAt` ni `revision` se han estampado.
   assert.strictEqual(store.getState().notes[ID_NOTA], nota)
@@ -666,7 +666,7 @@ test("las acciones que NO crean nada piden un solo id: el de la revisión", () =
   const sinIdNuevo: ReadonlyArray<(u: UseCases) => void> = [
     (u) => u.setChecked(ID_NOTA, ID_LINEA, true),
     (u) => u.setText(ID_NOTA, ID_LINEA, "x"),
-    (u) => u.remove(ID_NOTA, ID_LINEA),
+    (u) => u.remove(ID_NOTA, [ID_LINEA]),
     (u) => u.merge(ID_NOTA, ID_LINEA),
     (u) => u.convertToCheckBox(ID_NOTA, ID_LINEA),
     (u) => u.convertToText(ID_NOTA, ID_LINEA),

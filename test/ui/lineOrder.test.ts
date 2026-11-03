@@ -9,7 +9,7 @@ import type { Content, ContentId } from "#core/index"
 import { after, before, contentId, lastChildOf, rootEnd } from "#core/index"
 import { checkBox, text } from "#core/domain/Content"
 import type { FlatLine } from "#ui/lineOrder"
-import { dropTarget, flatLines, linesToMove, movesText, remainingLines } from "#ui/lineOrder"
+import { dropTarget, flatLines, linesToDelete, linesToMove, movesText, remainingLines } from "#ui/lineOrder"
 
 /*
     Texto    "Compra"
@@ -86,5 +86,21 @@ describe("dónde caen", (): void => {
 
   it("sin nada que se quede, al final de la nota", (): void => {
     assert.deepEqual(dropTarget([], 0, 0, false), { depth: 0, position: rootEnd })
+  })
+})
+
+describe("lo que borra la papelera", (): void => {
+  it("las elegidas sin hijas, en orden de lectura", (): void => {
+    assert.deepEqual(linesToDelete(nota, new Set<ContentId>([LIMPIEZA, PERAS, COMPRA])), [COMPRA, PERAS, LIMPIEZA])
+  })
+
+  it("una casilla, con todo su árbol", (): void => {
+    assert.deepEqual(linesToDelete(nota, new Set<ContentId>([FRUTA])), [FRUTA, MANZANAS, PERAS])
+    assert.deepEqual(linesToDelete(nota, new Set<ContentId>([PERAS, FRUTA])), [FRUTA, MANZANAS, PERAS])
+  })
+
+  it("sin elegidas, o con lo que ya no está, ninguna", (): void => {
+    assert.deepEqual(linesToDelete(nota, new Set<ContentId>()), [])
+    assert.deepEqual(linesToDelete(nota, new Set<ContentId>([contentId("fantasma")])), [])
   })
 })

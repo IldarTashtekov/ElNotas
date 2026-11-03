@@ -158,37 +158,33 @@ export const insert = (
   }
 }
 
-/** Quita esa línea de la lista, salvo que sea una casilla con hijas. */
+/** La lista sin las elegidas, cada una con todas sus hijas. Sin cambios, la MISMA. */
 const removeFrom = <T extends Content>(
   items: ReadonlyArray<T>,
-  id: ContentId,
+  fuera: ReadonlySet<ContentId>,
 ): ReadonlyArray<T> => {
-  const target: T | undefined = items.find((item: T): boolean => item.id === id)
-  if (target === undefined) return items
-  if (isCheckBox(target) && target.children.length > 0) return items
-  return items.filter((item: T): boolean => item.id !== id)
+  const quedan: ReadonlyArray<T> = items
+    .filter((item: T): boolean => !fuera.has(item.id))
+    .map((item: T): T => {
+      if (!isCheckBox(item) || item.children.length === 0) return item
+      const children: ReadonlyArray<CheckBox> = removeFrom(item.children, fuera)
+      return children === item.children ? item : { ...item, children }
+    })
+  const iguales: boolean =
+    quedan.length === items.length && quedan.every((item: T, i: number): boolean => item === items[i])
+  return iguales ? items : quedan
 }
 
 /**
- * Saca una línea de la nota.
+ * Saca esas líneas de la nota, todas en un paso. **Una casilla se va con todo
+ * su árbol**: sus hijas, y las hijas de sus hijas, vayan elegidas o no.
  *
- * **No hace nada si:** el id no existe · **es una casilla con hijas**. Lo
- * segundo es decisión cerrada: se borra de abajo arriba o no se borra.
- * Ninguna operación del dominio hace desaparecer contenido que el usuario no
- * esté mirando, y borrar una rama de cuarenta casillas por accidente no es un
- * *deshacer* más.
+ * **No hace nada si:** ninguno de los ids existe.
  */
 export const remove = (
   content: ReadonlyArray<Content>,
-  id: ContentId,
-): ReadonlyArray<Content> =>
-  updateContainerOf(content, id, {
-    onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> => removeFrom(items, id),
-    onParent: (parent: CheckBox): CheckBox => {
-      const children: ReadonlyArray<CheckBox> = removeFrom(parent.children, id)
-      return children === parent.children ? parent : { ...parent, children }
-    },
-  })
+  ids: ReadonlyArray<ContentId>,
+): ReadonlyArray<Content> => removeFrom(content, new Set<ContentId>(ids))
 
 /* ───────────────────────────── Moviendo ─────────────────────────────
     La del modo Ordenar: varias líneas, cada una con sus hijas, a otro sitio. */
@@ -231,8 +227,8 @@ const mismaForma = (a: ReadonlyArray<Content>, b: ReadonlyArray<Content>): boole
  * de las que se mueven o va dentro de una · se pide meter un texto suelto entre
  * hijas o un texto como destino de `last-child-of` · **quedan donde estaban**.
  *
- * No se escribe como `remove` + `insert`: `remove` se niega con las casillas con
- * hijas, y aquí las hijas viajan con ella.
+ * No se escribe como `remove` + `insert`: `remove` tira las hijas, y aquí viajan
+ * con ella.
  */
 export const move = (
   content: ReadonlyArray<Content>,
@@ -309,8 +305,7 @@ export const convertToCheckBox = (
  *
  * Los dos últimos son la misma idea vista desde dos sitios: un texto **no puede
  * tener nada colgando** y **sólo cabe en la raíz**. Con hijas, convertir las
- * dejaría colgando de nada —misma regla que `remove`, se convierte de abajo
- * arriba—; anidada, el resultado no cabría donde está, y sin `outdent` no hay
+ * dejaría colgando de nada —se convierte de abajo arriba—; anidada, el resultado no cabría donde está, y sin `outdent` no hay
  * forma de hacerle sitio.
  *
  * El caso de la anidada no está escrito como condición en ninguna parte: sale de
@@ -416,8 +411,7 @@ const enOrdenDeLectura = (content: ReadonlyArray<Content>): ReadonlyArray<Conten
  * partir y volver a unir devuelva exactamente lo que había.
  *
  * **No hace nada si:** el id no existe · es la primera línea de la nota · **la
- * línea que se absorbe tiene hijas** — se quedarían colgando de nada, así que
- * misma regla que `remove`.
+ * línea que se absorbe tiene hijas** — se quedarían colgando de nada.
  */
 export const merge = (
   content: ReadonlyArray<Content>,
@@ -431,6 +425,6 @@ export const merge = (
   if (target === undefined || receiver === undefined) return content
   if (isCheckBox(target) && target.children.length > 0) return content
 
-  /* Las dos operaciones conservan lo que no tocan, y `remove` ya se niega con hijas. */
-  return setText(remove(content, id), receiver.id, receiver.text + target.text)
+  /* Las dos operaciones conservan lo que no tocan; las hijas ya se descartaron arriba. */
+  return setText(remove(content, [id]), receiver.id, receiver.text + target.text)
 }

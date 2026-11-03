@@ -74,8 +74,8 @@ export interface UseCases {
     value: string,
     at: Position,
   ) => Note | null
-  /** `null` también cuando la línea tiene hijas: ahí `remove` es no-op. */
-  readonly remove: (noteId: NoteId, contentId: ContentId) => Note | null
+  /** Una casilla, con todo su árbol. `null` si no existe ninguna. */
+  readonly remove: (noteId: NoteId, contentIds: ReadonlyArray<ContentId>) => Note | null
   /** Parte una línea por `offset`. El id de la mitad nueva se genera aquí. */
   readonly split: (
     noteId: NoteId,
@@ -304,8 +304,8 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    remove: (noteId: NoteId, contentId: ContentId): Note | null =>
-      trasNota(noteId, { type: "remove", noteId, contentId, meta: meta() }),
+    remove: (noteId: NoteId, contentIds: ReadonlyArray<ContentId>): Note | null =>
+      trasNota(noteId, { type: "remove", noteId, contentIds, meta: meta() }),
 
     split: (noteId: NoteId, contentId: ContentId, offset: number): Note | null =>
       trasNota(noteId, {

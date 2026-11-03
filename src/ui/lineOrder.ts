@@ -62,6 +62,22 @@ export const remainingLines = (
   moving: ReadonlyArray<ContentId>,
 ): ReadonlyArray<FlatLine> => aplanar(content, 0, new Set<ContentId>(moving))
 
+/**
+ * Las que borra la papelera, en orden de lectura: las elegidas y, de cada casilla,
+ * todo su árbol. Lo mismo que hace `remove`.
+ */
+export const linesToDelete = (
+  content: ReadonlyArray<Content>,
+  selected: ReadonlySet<ContentId>,
+): ReadonlyArray<ContentId> => {
+  const quedan: ReadonlySet<ContentId> = new Set<ContentId>(
+    aplanar(content, 0, selected).map((l: FlatLine): ContentId => l.id),
+  )
+  return flatLines(content)
+    .map((l: FlatLine): ContentId => l.id)
+    .filter((id: ContentId): boolean => !quedan.has(id))
+}
+
 /** ¿Va algún texto suelto entre las que se mueven? Entonces sólo caben en la raíz. */
 export const movesText = (content: ReadonlyArray<Content>, moving: ReadonlyArray<ContentId>): boolean => {
   const ids: ReadonlySet<ContentId> = new Set<ContentId>(moving)

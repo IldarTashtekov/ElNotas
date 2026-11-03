@@ -174,7 +174,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Nueve operaciones; **ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente. `move`: varias, juntas,
   con sus hijas; con un texto, a la raíz. «⠿ Ordenar»: tocar elige, se arrastra por el `⠿`, el dedo da la profundidad.
 - Marcar una casilla NO arrastra a sus hijas; la cascada, si llega, en una sola acción.
-- `remove`, `merge` y `convertToText` de una línea con hijas: no-op. No existe «borrar una rama».
+- `merge`/`convertToText` con hijas: no-op. `remove`, varias; una casilla, con todo su árbol (papelera de «⠿ Ordenar»).
 - `WritingMode` = «☐ Casilla» + anidar (sólo con casilla, actúa una vez). No se persiste. El resto
   del teclado lo fijan las pruebas del editor: si una cae, era una decisión.
 - Una acción, una operación. Los casos de uso devuelven la entidad protagonista o `null`: ⚠️ no es undo.

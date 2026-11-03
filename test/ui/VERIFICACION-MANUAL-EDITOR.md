@@ -462,6 +462,19 @@ Una nota con: texto `Compra semanal`; casilla `Fruta` con hijas `Manzanas` y `Pe
 - **V3.** Cada uno hace lo de antes: ☐ la casilla, ↳ anidar, la cadena abre la hoja «Enlazar», ⠿ el
   modo Ordenar, ✕ sale.
 
+## W. Borrar en «⠿ Ordenar» *(Fase 10, tarea 14)*
+
+Con una nota de prueba: un texto, una casilla «Fruta» con dos hijas «Manzanas» y «Peras», y otra
+casilla suelta.
+
+- **W1.** Sin el modo, en la barra **no hay papelera**. Con **⠿** puesto aparece justo a su derecha,
+  dibujada en el color del fósforo y **apagada** mientras no haya nada elegido. Al salir del modo, se va.
+- **W2.** Se eligen el texto y «Peras», y se pulsa la papelera: la hoja pregunta
+  **«¿Borrar 2 líneas?»** con «Borrar» en rojo. **Cancelar** no borra nada; «Borrar» se lleva las dos.
+- **W3.** Se elige sólo «Fruta»: la hoja cuenta **también sus hijas** («¿Borrar 2 líneas?», con la
+  «Manzanas» que queda), y «Borrar» se lleva la casilla con todo su árbol.
+- **W4.** Tras borrar no queda nada elegido y la papelera vuelve a estar apagada.
+
 ## Comportamientos conocidos
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:

@@ -85,11 +85,11 @@ export interface Insert {
   readonly meta: ActionMeta
 }
 
-/** «Se borró esta línea». No-op si es una casilla con hijas: se borra de abajo arriba. */
+/** «Se borraron estas líneas», todas de una vez; una casilla, con todo su árbol. */
 export interface Remove {
   readonly type: "remove"
   readonly noteId: NoteId
-  readonly contentId: ContentId
+  readonly contentIds: ReadonlyArray<ContentId>
   readonly meta: ActionMeta
 }
 

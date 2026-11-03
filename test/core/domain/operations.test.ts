@@ -342,7 +342,7 @@ test("insert: detecta el id repetido esté a la profundidad que esté", () => {
 test("remove: saca una línea de la raíz", () => {
   const antes = listaDeLaCompra()
 
-  const despues = remove(antes, ID_COMPRA)
+  const despues = remove(antes, [ID_COMPRA])
 
   assert.equal(despues.length, 2)
   assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 1), "'Fruta' es el mismo objeto")
@@ -351,7 +351,7 @@ test("remove: saca una línea de la raíz", () => {
 test("remove: saca una hija sin hijas propias", () => {
   const antes = listaDeLaCompra()
 
-  const despues = remove(antes, ID_PERAS)
+  const despues = remove(antes, [ID_PERAS])
 
   const hijas = casillaEn(despues, 1).children
   assert.equal(hijas.length, 1)
@@ -362,35 +362,72 @@ test("remove: saca una hija sin hijas propias", () => {
 test("remove: no hace nada si el id no existe", () => {
   const antes = listaDeLaCompra()
 
-  assert.strictEqual(remove(antes, ID_INEXISTENTE), antes)
+  assert.strictEqual(remove(antes, [ID_INEXISTENTE]), antes)
 })
 
-/* La decisión (b), y la que más cambia cómo se siente la app. */
-test("remove: NO borra una casilla con hijas", () => {
-  const antes = listaDeLaCompra()
+/* Una casilla se va con todo su árbol: la papelera de «⠿ Ordenar». */
+test("remove: una casilla con hijas se va con todas ellas", () => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
 
-  assert.strictEqual(remove(antes, ID_FRUTA), antes, "'Fruta' tiene dos hijas")
-  assert.strictEqual(remove(antes, ID_LIMPIEZA), antes, "'Limpieza' tiene una")
+  const despues: ReadonlyArray<Content> = remove(antes, [ID_FRUTA])
+
+  assert.equal(despues.length, 2)
+  assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0), "'Compra semanal', la misma")
+  assert.strictEqual(bloqueEn(despues, 1), bloqueEn(antes, 2), "'Limpieza', la misma")
 })
 
-test("remove: sí borra la casilla una vez vaciada de hijas, de abajo arriba", () => {
-  let arbol = listaDeLaCompra()
+test("remove: también a más de un nivel", () => {
+  const ID_NIETA: ReturnType<typeof contentId> = contentId("nieta")
+  const antes: ReadonlyArray<Content> = [
+    checkBox(ID_FRUTA, "Fruta", {
+      children: [checkBox(ID_MANZANAS, "Manzanas", { children: [checkBox(ID_NIETA, "Reinetas")] })],
+    }),
+    checkBox(ID_LIMPIEZA, "Limpieza"),
+  ]
 
-  arbol = remove(arbol, ID_MANZANAS)
-  arbol = remove(arbol, ID_PERAS)
-  arbol = remove(arbol, ID_FRUTA)
-
-  assert.equal(arbol.length, 2)
-  assert.equal(bloqueEn(arbol, 0).text, "Compra semanal")
-  assert.equal(bloqueEn(arbol, 1).text, "Limpieza")
+  const sinManzanas: ReadonlyArray<Content> = remove(antes, [ID_MANZANAS])
+  assert.equal(casillaEn(sinManzanas, 0).children.length, 0, "Manzanas se va con su nieta")
+  assert.strictEqual(bloqueEn(sinManzanas, 1), bloqueEn(antes, 1))
+  assert.deepEqual(remove(antes, [ID_FRUTA]).map((c: Content): string => c.text), ["Limpieza"])
 })
 
 test("remove: no muta el árbol original", () => {
   const antes = listaDeLaCompra()
 
-  remove(antes, ID_PERAS)
+  remove(antes, [ID_PERAS])
+  remove(antes, [ID_FRUTA])
 
+  assert.equal(antes.length, 3)
   assert.equal(casillaEn(antes, 1).children.length, 2)
+})
+
+test("remove: varias líneas de sitios distintos, en un paso", () => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+
+  const despues: ReadonlyArray<Content> = remove(antes, [ID_COMPRA, ID_PERAS, ID_FREGONA])
+
+  assert.deepEqual(
+    despues.map((c: Content): string => c.text),
+    ["Fruta", "Limpieza"],
+  )
+  assert.deepEqual(
+    casillaEn(despues, 0).children.map((c: CheckBox): string => c.text),
+    ["Manzanas"],
+  )
+  assert.equal(casillaEn(despues, 1).children.length, 0, "'Limpieza' se queda, sin hijas")
+})
+
+test("remove: una casilla elegida junto con alguna de sus hijas, igual que sola", () => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+
+  assert.deepEqual(remove(antes, [ID_PERAS, ID_FRUTA]), remove(antes, [ID_FRUTA]))
+})
+
+test("remove: sin ninguna que exista, devuelve la MISMA nota", () => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+
+  assert.strictEqual(remove(antes, []), antes)
+  assert.strictEqual(remove(antes, [ID_INEXISTENTE]), antes)
 })
 
 /* ═══════════════════════ convertToCheckBox ═══════════════════════ */
@@ -485,7 +522,7 @@ test("convertToText: NO convierte una casilla anidada, ni aunque no tenga hijas"
 test("convertToText: sí convierte una casilla una vez vaciada de hijas", () => {
   let arbol = listaDeLaCompra()
 
-  arbol = remove(arbol, ID_FREGONA)
+  arbol = remove(arbol, [ID_FREGONA])
   arbol = convertToText(arbol, ID_LIMPIEZA)
 
   assert.equal(isCheckBox(bloqueEn(arbol, 2)), false)
@@ -696,7 +733,7 @@ test("merge: NO absorbe una línea que tiene hijas", () => {
 })
 
 test("merge: sí absorbe la línea una vez vaciada de hijas", (): void => {
-  const sinFregona: ReadonlyArray<Content> = remove(listaDeLaCompra(), ID_FREGONA)
+  const sinFregona: ReadonlyArray<Content> = remove(listaDeLaCompra(), [ID_FREGONA])
 
   const despues: ReadonlyArray<Content> = merge(sinFregona, ID_LIMPIEZA)
 

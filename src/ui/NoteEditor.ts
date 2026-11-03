@@ -59,7 +59,8 @@ import { lastLine, lineBeside, locate } from "./noteTree.js"
 import type { OrderMode } from "./orderMode.js"
 import { createOrderMode } from "./orderMode.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
-import type { Sheet } from "./sheet.js"
+import type { Confirm, Sheet } from "./sheet.js"
+import { createConfirm } from "./sheet.js"
 import type { WritingMode } from "./writingMode.js"
 import { INITIAL_MODE, toggleNest } from "./writingMode.js"
 
@@ -418,6 +419,8 @@ export const createNoteEditor = ({
   sheet,
 }: NoteEditorDeps): NoteEditor => {
   const deps: EditorDeps = { useCases, noteId, note }
+  /* La de la papelera de Ordenar: la misma hoja que la de los enlaces. */
+  const confirmar: Confirm = createConfirm(sheet)
   /* Nace apagado al abrir la nota y muere con ella: no se guarda en ningún sitio. */
   let modo: WritingMode = INITIAL_MODE
   /** Lo último que se supo del cursor: los botones de la barra lo necesitan. */
@@ -566,6 +569,12 @@ export const createNoteEditor = ({
     content: (): ReadonlyArray<Content> | null => deps.note()?.content ?? null,
     onMove: (ids: ReadonlyArray<ContentId>, at: Position): void => {
       useCases.move(noteId, ids, at)
+    },
+    onDelete: (ids: ReadonlyArray<ContentId>): void => {
+      const pregunta: string = ids.length === 1 ? "¿Borrar 1 línea?" : `¿Borrar ${ids.length} líneas?`
+      confirmar(pregunta, "Borrar", (): void => {
+        useCases.remove(noteId, ids)
+      })
     },
     onToggle: (on: boolean): void => {
       if (on) {
@@ -1322,7 +1331,7 @@ export const createNoteEditor = ({
 
   return {
     element,
-    modeButtons: [casilla, anidar, enlazar, orden.button],
+    modeButtons: [casilla, anidar, enlazar, orden.button, orden.trash],
     refresh,
     destroy: (): void => {
       document.removeEventListener("selectionchange", recordarCursor)

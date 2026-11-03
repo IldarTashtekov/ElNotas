@@ -313,7 +313,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
         state,
         action.noteId,
         action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> => remove(c, action.contentId),
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> => remove(c, action.contentIds),
       )
 
     case "split":

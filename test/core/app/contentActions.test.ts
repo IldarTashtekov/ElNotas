@@ -180,7 +180,7 @@ test("remove quita una línea sin hijas", () => {
   const s = reduce(estado(), {
     type: "remove",
     noteId: ID_NOTA,
-    contentId: ID_PAN,
+    contentIds: [ID_PAN],
     meta: META,
   })
 
@@ -188,13 +188,11 @@ test("remove quita una línea sin hijas", () => {
   assert.equal(buscar(s, ID_PAN), undefined)
 })
 
-test("remove sobre una casilla CON hijas es no-op", () => {
-  const antes = estado()
-  esNoOp(
-    antes,
-    reduce(antes, { type: "remove", noteId: ID_NOTA, contentId: ID_FRUTA, meta: META }),
-    "remove con hijas",
-  )
+test("remove de una casilla CON hijas se la lleva con ellas", () => {
+  const s: AppState = reduce(estado(), { type: "remove", noteId: ID_NOTA, contentIds: [ID_FRUTA], meta: META })
+
+  assert.equal(buscar(s, ID_FRUTA), undefined)
+  assert.equal(lineas(s).length, 2)
 })
 
 /* ────────────────────────────────── split ─────────────────────────────────── */
@@ -330,7 +328,7 @@ test("todas las acciones de contenido sobre una nota inexistente son no-op", () 
       position: rootEnd,
       meta: META,
     },
-    { type: "remove", noteId: fantasma, contentId: ID_PAN, meta: META },
+    { type: "remove", noteId: fantasma, contentIds: [ID_PAN], meta: META },
     { type: "split", noteId: fantasma, contentId: ID_TITULO, offset: 1, newId: ID_NUEVO, meta: META },
     { type: "merge", noteId: fantasma, contentId: ID_PAN, meta: META },
     { type: "convert-to-checkbox", noteId: fantasma, contentId: ID_TITULO, meta: META },
@@ -356,7 +354,7 @@ test("todas las acciones de contenido sobre una línea inexistente son no-op", (
   const todas = [
     { type: "set-checked", noteId: ID_NOTA, contentId: ID_FANTASMA, checked: true, meta: META },
     { type: "set-text", noteId: ID_NOTA, contentId: ID_FANTASMA, value: "x", meta: META },
-    { type: "remove", noteId: ID_NOTA, contentId: ID_FANTASMA, meta: META },
+    { type: "remove", noteId: ID_NOTA, contentIds: [ID_FANTASMA], meta: META },
     { type: "split", noteId: ID_NOTA, contentId: ID_FANTASMA, offset: 1, newId: ID_NUEVO, meta: META },
     { type: "merge", noteId: ID_NOTA, contentId: ID_FANTASMA, meta: META },
     { type: "convert-to-checkbox", noteId: ID_NOTA, contentId: ID_FANTASMA, meta: META },

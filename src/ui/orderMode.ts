@@ -3,15 +3,17 @@
  * línea la elige o la suelta, y el ⠿ de cada una la arrastra —con las elegidas,
  * si lo está— hasta donde enseña la raya. La profundidad la da lo a la derecha
  * que vaya el dedo, y junto al borde de la pantalla la nota se desplaza sola.
+ * Con el modo puesto aparece la papelera, que borra las elegidas.
  *
- * Qué se lleva y dónde cae lo decide `lineOrder`; aquí se mide y se pinta.
+ * Qué se lleva, dónde cae y qué se borra lo decide `lineOrder`; aquí se mide y
+ * se pinta.
  */
 
 import type { Content, ContentId, Position } from "#core/index"
 import { contentId } from "#core/index"
 import { elemento } from "./dom.js"
 import type { DropTarget, FlatLine } from "./lineOrder.js"
-import { dropTarget, flatLines, linesToMove, movesText, remainingLines } from "./lineOrder.js"
+import { dropTarget, flatLines, linesToDelete, linesToMove, movesText, remainingLines } from "./lineOrder.js"
 
 /** Lo que se mueve el dedo antes de que un toque en el ⠿ sea un arrastre. */
 const ARRASTRE_PX: number = 5
@@ -28,6 +30,8 @@ export interface OrderModeDeps {
   readonly lines: HTMLElement
   readonly content: () => ReadonlyArray<Content> | null
   readonly onMove: (ids: ReadonlyArray<ContentId>, at: Position) => void
+  /** La papelera: las que se borrarían, nunca ninguna. Confirmar, de quien la recibe. */
+  readonly onDelete: (ids: ReadonlyArray<ContentId>) => void
   /** Al entrar o salir del modo: el editor deja de escribir y apaga su barra. */
   readonly onToggle: (on: boolean) => void
 }
@@ -35,6 +39,8 @@ export interface OrderModeDeps {
 export interface OrderMode {
   /** «⠿», Ordenar, para la barra de la nota. */
   readonly button: HTMLButtonElement
+  /** La papelera, para la barra: sólo con el modo puesto, y apagada sin nada que borrar. */
+  readonly trash: HTMLButtonElement
   readonly active: () => boolean
   /** Tras repintar las líneas: olvida las elegidas que ya no están y las marca. */
   readonly refresh: () => void
@@ -58,7 +64,23 @@ interface Arrastre {
   marco: number | null
 }
 
-export const createOrderMode = ({ element, lines, content, onMove, onToggle }: OrderModeDeps): OrderMode => {
+const SVG = "http://www.w3.org/2000/svg" as const
+/** Una papelera de trazo, en el color del texto: un emoji saldría a color. */
+const iconoPapelera = (): SVGSVGElement => {
+  const icono: SVGSVGElement = document.createElementNS(SVG, "svg")
+  icono.setAttribute("viewBox", "0 0 24 24")
+  icono.setAttribute("aria-hidden", "true")
+  icono.classList.add("icono")
+  /* La tapa, el asa, el cubo y sus dos rayas. */
+  for (const d of ["M4 6.5h16", "M9.5 6.5V4h5v2.5", "M6 6.5 7.2 20h9.6L18 6.5", "M10 10.5v6", "M14 10.5v6"]) {
+    const trazo: SVGPathElement = document.createElementNS(SVG, "path")
+    trazo.setAttribute("d", d)
+    icono.append(trazo)
+  }
+  return icono
+}
+
+export const createOrderMode = ({ element, lines, content, onMove, onDelete, onToggle }: OrderModeDeps): OrderMode => {
   let activo: boolean = false
   let elegidas: ReadonlySet<ContentId> = new Set<ContentId>()
   let arrastre: Arrastre | null = null
@@ -71,6 +93,16 @@ export const createOrderMode = ({ element, lines, content, onMove, onToggle }: O
   button.title = "Ordenar"
   button.className = "ordenar"
   button.addEventListener("pointerdown", (evento: PointerEvent): void => evento.preventDefault())
+
+  const trash: HTMLButtonElement = elemento("button")
+  trash.type = "button"
+  trash.setAttribute("aria-label", "Borrar")
+  trash.title = "Borrar"
+  trash.className = "papelera"
+  trash.hidden = true
+  trash.disabled = true
+  trash.append(iconoPapelera())
+  trash.addEventListener("pointerdown", (evento: PointerEvent): void => evento.preventDefault())
 
   const idDe = (objetivo: EventTarget | null): ContentId | null => {
     const fila: Element | null = objetivo instanceof Element ? objetivo.closest(".linea[data-id]") : null
@@ -98,6 +130,8 @@ export const createOrderMode = ({ element, lines, content, onMove, onToggle }: O
       const elegida: boolean = activo && id !== null && elegidas.has(contentId(id))
       if (fila.classList.contains("elegida") !== elegida) fila.classList.toggle("elegida", elegida)
     }
+    trash.hidden = !activo
+    trash.disabled = nota === null || linesToDelete(nota, elegidas).length === 0
   }
 
   const poner = (on: boolean): void => {
@@ -112,6 +146,11 @@ export const createOrderMode = ({ element, lines, content, onMove, onToggle }: O
   }
   button.setAttribute("aria-pressed", "false")
   button.addEventListener("click", (): void => poner(!activo))
+  trash.addEventListener("click", (): void => {
+    const nota: ReadonlyArray<Content> | null = content()
+    const borrar: ReadonlyArray<ContentId> = nota === null ? [] : linesToDelete(nota, elegidas)
+    if (activo && borrar.length > 0) onDelete(borrar)
+  })
 
   /* ── Elegir: en el modo, cualquier toque en la nota es para esto, y no llega al editor ── */
 
@@ -263,6 +302,7 @@ export const createOrderMode = ({ element, lines, content, onMove, onToggle }: O
 
   return {
     button,
+    trash,
     active: (): boolean => activo,
     refresh,
     destroy: (): void => {
