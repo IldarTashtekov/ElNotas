@@ -121,22 +121,26 @@ directamente.
 - **E1.** *(Móvil.)* ⚠️ Crear o editar un pósit **en la mitad de abajo** de la pantalla: al salir
   el teclado, **el corcho sube** y el pósit que se escribe **queda a la vista**.
 
-## F. Los nodos-nota
+## F. Los nodos que enlazan a una nota
 
-- **F1.** **Nota nueva** crea «Nueva Nota», pone un nodo-nota (con la **raya gruesa**) donde se
+Un nodo cuyo texto es sólo el enlace a una nota, `[nombre](#id)`: así quedan los nodos-nota de antes.
+
+- **F1.** **Nota nueva** crea «Nueva Nota», pone un nodo que la enlaza (con la **raya gruesa**) donde se
   tocó y **entra en la nota**. Renombrarla, **✕ Salir**: se vuelve **al diagrama**, y el nodo
   enseña **el nombre nuevo**.
 - **F2.** Con el diagrama en **dos contextos** (Mover a… desde el General lo añade al otro),
   *Nota nueva*: la nota sale en **los dos**. Un diagrama que sólo está en el General la crea sin
   contexto.
-- **F3.** **Un toque** en un nodo-nota **entra en la nota**, tras un instante muy corto. El atrás
+- **F3.** **Un toque** en un nodo que enlaza a una nota **entra en la nota**, tras un instante muy corto. El atrás
   vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la página**.
-- **F4.** **Doble toque** en un nodo-nota abre su menú **sin «Editar»**, y **no entra** en la
-  nota.
+- **F4.** **Doble toque** en un nodo que enlaza a una nota abre su menú, **con «Editar»**, y **no
+  entra** en la nota. «Editar» enseña el enlace en crudo.
 - **F5.** **Nota existente** cambia la hoja a la lista de notas, por nombre; elegir una pone su
   nodo **sin entrar** en ella. La misma nota puede estar en dos nodos.
-- **F6.** Borrar la nota (papelera del General): sus nodos pasan a **«Nota perdida»**, como
-  pósits de texto normales, en su sitio. Se pueden editar.
+- **F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio con el enlace,
+  roto, escrito tal cual; un toque ya no entra. Se pueden editar.
+- **F7.** Unos datos guardados antes del nodo único (esquema 1) arrancan con sus nodos-nota
+  convertidos en enlaces: con el nombre de su nota, o «Nota perdida» o «Nota ilegible».
 
 ## G. El diagrama como ventana
 
@@ -146,7 +150,7 @@ directamente.
   **+**; las pestañas, ▦ y ⚙ siguen. Tocar el título lo renombra.
 - **G3.** Todo lo de B, C y D funciona igual dentro de la ventana.
 - **G4.** **Recargar** con la ventana de diagrama activa: sigue ahí.
-- **G5.** Un nodo-nota de una ventana de diagrama abre su nota **encima**; salir vuelve a la
+- **G5.** Un nodo que enlaza a una nota, en una ventana de diagrama abre su nota **encima**; salir vuelve a la
   ventana.
 - **G6.** Borrar el diagrama desde el General: **su ventana desaparece**.
 
@@ -169,7 +173,7 @@ Con un diagrama de cuatro pósits o más y alguna línea entre ellos.
 - **I3.** Otro rectángulo **sustituye** la selección. Empezarlo sobre un pósit **sin marcar**
   también dibuja el rectángulo, no mueve el pósit.
 - **I4.** **Un toque** en un pósit lo marca o lo desmarca; en el fondo, nada. Ni el doble toque ni
-  el clic derecho abren menús, y un nodo-nota **no entra** en su nota.
+  el clic derecho abren menús, y un nodo que enlaza a una nota **no entra** en ella.
 - **I5.** ⚠️ Arrastrar un **marcado** mueve **todo el grupo** a la vez, y las líneas lo siguen.
   *(Con la consola.)* `n = 0; elnotas.store.subscribe(() => n++)` antes de arrastrar: al soltar,
   `n` vale **1**. Recargar: siguen donde se dejaron.

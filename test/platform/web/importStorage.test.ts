@@ -15,6 +15,8 @@ import { UI_STATE_KEY, createLocalStorageUiState } from "#platform/web/LocalStor
 import { boot } from "#platform/web/boot"
 import type { Backup } from "#platform/web/backup"
 import { makeBackup } from "#platform/web/backup"
+import { rehearseImport } from "#platform/web/rehearseImport"
+import type { ImportSummary } from "#ui/index"
 import { collectBackup } from "#platform/web/exportBackup"
 import type { ImportAtBoot } from "#platform/web/importStorage"
 import {
@@ -28,6 +30,7 @@ import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
 import { silentLogger } from "../../core/ports/FakeLogger"
 import { MIGRADA, conLaMigracion, cortandoEn } from "./migracionDePrueba"
+import { FICHEROS_ESQUEMA_UNO, NODOS_MIGRADOS, nodosDe } from "./esquemaUno"
 
 const reloj: Clock = { now: (): number => 1000 }
 
@@ -261,4 +264,28 @@ test("importada, si la migración se corta a medias, el siguiente arranque la te
   const migrada: Result<App, BootError> = await arrancarMigrando(almacen)
   if (!migrada.ok) assert.fail("tenía que arrancar")
   assert.deepEqual(nombresDe(migrada.value), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+})
+
+test("una copia v1 con los nodos de antes pasa el ensayo y, importada, arranca con ellos convertidos", async (): Promise<void> => {
+  const copia: Backup = makeBackup({ exportedAt: 0, files: FICHEROS_ESQUEMA_UNO, uiState: null })
+  const ensayo: Result<ImportSummary, BootError> = await rehearseImport(copia, {
+    logger: silentLogger,
+    clock: reloj,
+    ids: ids(),
+  })
+  if (!ensayo.ok) assert.fail(`el ensayo tenía que pasar: ${JSON.stringify(ensayo.error)}`)
+
+  const almacen: FakeStorage = await esteDispositivo()
+  assert.equal(requestImport(almacen, copia), true)
+  assert.deepEqual(await importIfRequested(almacen), { kind: "imported" })
+  const arrancada: Result<App, BootError> = await boot({
+    logger: silentLogger,
+    blobs: createLocalStorageBlobStore(almacen),
+    clock: reloj,
+    ids: ids(),
+    schedule: nuncaSalta,
+    skipCorrupt: true,
+  })
+  if (!arrancada.ok) assert.fail(`tenía que arrancar: ${JSON.stringify(arrancada.error)}`)
+  assert.deepEqual(nodosDe(arrancada.value.store.getState().diagrams), NODOS_MIGRADOS)
 })

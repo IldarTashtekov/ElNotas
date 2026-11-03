@@ -29,7 +29,7 @@ móvil cerrando la app en segundo plano**, que no se puede provocar desde Node.
 
 La misma que `VERIFICACION-MANUAL.md`: `npm run build:web`, servir, y abrir por `localhost` o,
 en el móvil, por la IP del ordenador. Para C6, la copia publicada e instalada. Hace falta **una
-ventana con una nota** en la lista y **un diagrama con un nodo-nota**, también puesto como ventana.
+ventana con una nota** en la lista y **un diagrama con un nodo que enlaza a una nota**, también puesto como ventana.
 
 ---
 

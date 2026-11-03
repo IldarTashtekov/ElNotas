@@ -614,6 +614,31 @@ test("FileStorageAdapter: un diagrama bien formado se lee", async (): Promise<vo
   )
 })
 
+/* Las dos formas del esquema 1, de arriba, y la de hoy, sin tipo. */
+const NODO_NUEVO: Readonly<Record<string, unknown>> = {
+  id: "c",
+  text: "[Compra](#compra)",
+  positionX: 0,
+  positionY: 0,
+  done: false,
+}
+
+test("FileStorageAdapter: un nodo de hoy, sin tipo, se lee", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({ c: NODO_NUEVO }, {})), false)
+})
+
+test("FileStorageAdapter: un nodo de hoy sin texto es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({ c: { ...NODO_NUEVO, text: undefined } }, {})), true)
+})
+
+test("FileStorageAdapter: un nodo-nota del esquema 1 sin «noteId» es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({ b: { ...NODO_NOTA, noteId: undefined } }, {})), true)
+})
+
+test("FileStorageAdapter: un nodo de un tipo desconocido es corrupt", async (): Promise<void> => {
+  assert.equal(await esCorrupt(diagramaCon({ a: { ...NODO_TEXTO, type: "image-node" } }, {})), true)
+})
+
 test("FileStorageAdapter: un diagrama con un nodo al que le falta la X es corrupt", async (): Promise<void> => {
   /* Sólo falta la X: con las dos ausentes, quitar una comprobación no se notaría. */
   assert.equal(await esCorrupt(diagramaCon({ a: { ...NODO_TEXTO, positionX: undefined } }, {})), true)
@@ -675,7 +700,6 @@ test("FileStorageAdapter: un diagrama escrito por put vuelve a leerse: el valida
     ...MUDANZA,
     nodes: {
       [diagramNodeId("a")]: {
-        type: "simple-node",
         id: diagramNodeId("a"),
         text: "Cajas",
         positionX: -5,
@@ -683,9 +707,8 @@ test("FileStorageAdapter: un diagrama escrito por put vuelve a leerse: el valida
         done: true,
       },
       [diagramNodeId("b")]: {
-        type: "note-node",
         id: diagramNodeId("b"),
-        noteId: noteId("compra"),
+        text: "[Compra](#compra)\n**dos** líneas",
         positionX: 0,
         positionY: 0,
         done: false,

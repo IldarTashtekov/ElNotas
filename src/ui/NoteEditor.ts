@@ -25,7 +25,7 @@ import type {
   RoutineId,
   UseCases,
 } from "#core/index"
-import { contentId, isCheckBox } from "#core/index"
+import { buildLink, contentId, isCheckBox } from "#core/index"
 import type { ActivePart, LinkPart } from "./activeLine.js"
 import { activeLine, activeParts, domToRaw, rawToDom, visibleRuns } from "./activeLine.js"
 import type { ActiveLine } from "./activeLine.js"
@@ -43,7 +43,6 @@ import type { LinkBubble } from "./linkBubble.js"
 import { createLinkBubble } from "./linkBubble.js"
 import type { LinkKind, ResolvedLink } from "./linkActions.js"
 import {
-  buildLink,
   changeLink,
   defaultLinkText,
   linkAtCursor,

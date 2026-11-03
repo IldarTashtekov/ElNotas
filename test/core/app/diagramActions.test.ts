@@ -5,8 +5,8 @@
  * `diagramOperations.test.ts`; aquí se prueba lo que añade el reducer: que cada
  * acción llega a su operación, que se estampa `meta` **sólo** si algo cambió, que
  * sobre un diagrama que no existe nada pasa, y las tres que tienen lógica propia
- * —crear, borrar (que limpia los contextos) y añadir un nodo-nota, que mira si la
- * nota existe—. Al final, lo que `delete-note` hace a los diagramas.
+ * —crear y borrar, que limpia los contextos—. Al final, lo que `delete-note` NO
+ * hace a los diagramas.
  */
 
 import { test } from "node:test"
@@ -16,7 +16,7 @@ import type { ActionMeta, DiagramAction } from "#core/app/Action"
 import { reduce } from "#core/app/reduce"
 import type { AppState } from "#core/domain/AppState"
 import type { Context } from "#core/domain/Context"
-import type { Diagram, DiagramNode, NoteNode, SimpleNode } from "#core/domain/Diagram"
+import type { Diagram, DiagramNode } from "#core/domain/Diagram"
 import type { ContextId, DiagramId, DiagramNodeId, DiagramRelationId, NoteId } from "#core/domain/Ids"
 import {
   contextId,
@@ -47,8 +47,7 @@ const ID_VACIO: ContextId = contextId("vacio")
 const HORA_INICIAL: number = 0
 const META: ActionMeta = { now: 1000, revision: revision("rev-nueva") }
 
-const texto = (id: DiagramNodeId, text: string): SimpleNode => ({
-  type: "simple-node",
+const texto = (id: DiagramNodeId, text: string): DiagramNode => ({
   id,
   text,
   positionX: 0,
@@ -141,7 +140,7 @@ const CASOS: ReadonlyArray<Caso> = [
     noAplica: { type: "set-node-text", diagramId: d, nodeId: ID_CAJAS, text: "Cajas", meta: META },
     comprobar: (x: Diagram): boolean => {
       const n: DiagramNode | undefined = x.nodes[ID_CAJAS]
-      return n?.type === "simple-node" && n.text === "Cajas grandes"
+      return n?.text === "Cajas grandes"
     },
   },
   {
@@ -234,38 +233,6 @@ for (const caso of CASOS) {
   })
 }
 
-/* ────────────────────────── add-node de un nodo-nota ──────────────────────── */
-
-const nodoNota = (nota: NoteId): NoteNode => ({
-  type: "note-node",
-  id: ID_NODO_NUEVO,
-  noteId: nota,
-  positionX: 0,
-  positionY: 0,
-  done: false,
-})
-
-test("add-node de un nodo-nota a una nota que existe lo añade", (): void => {
-  const r: AppState = reduce(estado(), {
-    type: "add-node",
-    diagramId: ID_MUDANZA,
-    node: nodoNota(ID_COMPRA),
-    meta: META,
-  })
-  assert.equal(mudanzaDe(r).nodes[ID_NODO_NUEVO]?.type, "note-node")
-})
-
-test("add-node de un nodo-nota a una nota que NO existe devuelve el MISMO estado", (): void => {
-  const s: AppState = estado()
-  const r: AppState = reduce(s, {
-    type: "add-node",
-    diagramId: ID_MUDANZA,
-    node: nodoNota(noteId("no-existe")),
-    meta: META,
-  })
-  assert.strictEqual(r, s)
-})
-
 /* ──────────────────────────────── create-diagram ─────────────────────────── */
 
 test("create-diagram crea un diagrama vacío con sus metadatos", (): void => {
@@ -342,59 +309,21 @@ test("delete-diagram sobre un diagrama que no existe devuelve el MISMO estado", 
 })
 
 /* ────────────────────── delete-note, del lado de los diagramas ──────────────
-    Borrar una nota pasa sus nodos-nota a «Nota perdida» en TODOS los diagramas,
-    con el mismo meta, y deja por referencia los que no la usaban. */
+    Un nodo que enlaza a la nota borrada se queda como estaba: el enlace, roto,
+    se ve apagado. Ningún diagrama cambia. */
 
-/** Mudanza y Viaje apuntan a Compra; Obra, no. */
-const conNodosNota = (): AppState => {
-  const s: AppState = estado()
-  const mudanza: Diagram = mudanzaDe(s)
-  const obra: Diagram = diagrama(diagramId("obra"), "Obra", { [ID_CAJAS]: texto(ID_CAJAS, "Yeso") }, {})
-  return {
-    ...s,
+test("delete-note deja el MISMO objeto diagrams, también con nodos que la enlazaban", (): void => {
+  const s0: AppState = estado()
+  const mudanza: Diagram = mudanzaDe(s0)
+  const s: AppState = {
+    ...s0,
     diagrams: {
-      ...s.diagrams,
+      ...s0.diagrams,
       [ID_MUDANZA]: {
         ...mudanza,
-        nodes: { ...mudanza.nodes, [ID_LLAVES]: { ...nodoNota(ID_COMPRA), id: ID_LLAVES } },
+        nodes: { ...mudanza.nodes, [ID_LLAVES]: texto(ID_LLAVES, `[Compra](#${ID_COMPRA})`) },
       },
-      [ID_VIAJE]: diagrama(ID_VIAJE, "Viaje", { [ID_NODO_NUEVO]: nodoNota(ID_COMPRA) }, {}),
-      [obra.id]: obra,
     },
   }
-}
-
-const borrarCompra = (s: AppState): AppState =>
-  reduce(s, { type: "delete-note", noteId: ID_COMPRA, meta: META })
-
-test("delete-note pasa su nodo-nota a «Nota perdida» y conserva sus relaciones", (): void => {
-  const s: AppState = conNodosNota()
-  const r: AppState = borrarCompra(s)
-  const m: Diagram = mudanzaDe(r)
-  const llaves: DiagramNode | undefined = m.nodes[ID_LLAVES]
-
-  assert.equal(llaves?.type === "simple-node" && llaves.text, "Nota perdida")
-  assert.strictEqual(m.relations, mudanzaDe(s).relations)
-  assert.strictEqual(m.nodes[ID_CAJAS], mudanzaDe(s).nodes[ID_CAJAS])
-})
-
-test("delete-note toca TODOS los diagramas que la usaban, con el MISMO meta", (): void => {
-  const r: AppState = borrarCompra(conNodosNota())
-  const viaje: Diagram | undefined = r.diagrams[ID_VIAJE]
-
-  assert.equal(viaje?.nodes[ID_NODO_NUEVO]?.type, "simple-node")
-  assert.strictEqual(mudanzaDe(r).revision, META.revision)
-  assert.strictEqual(viaje?.revision, META.revision)
-  assert.equal(viaje?.updatedAt, META.now)
-})
-
-test("delete-note deja INTACTOS, por referencia, los diagramas que no la usaban", (): void => {
-  const s: AppState = conNodosNota()
-  const obra: DiagramId = diagramId("obra")
-  assert.strictEqual(borrarCompra(s).diagrams[obra], s.diagrams[obra])
-})
-
-test("delete-note de una nota que ningún diagrama usa deja el MISMO objeto diagrams", (): void => {
-  const s: AppState = estado() // Compra existe, pero ningún nodo la usa
-  assert.strictEqual(borrarCompra(s).diagrams, s.diagrams)
+  assert.strictEqual(reduce(s, { type: "delete-note", noteId: ID_COMPRA, meta: META }).diagrams, s.diagrams)
 })

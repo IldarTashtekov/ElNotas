@@ -225,17 +225,6 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
       lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
       que la pulsación larga no saque el menú del sistema) y los anota.
-- [ ] **15b. Un solo tipo de nodo: texto con Markdown, y el enlace dentro** *(pensar)*. Tras la 15a. El
-      nodo es posición, «hecho» y un texto con el subconjunto de Markdown de las notas, de una o varias
-      líneas; desaparecen el tipo, el nodo-nota, `loseNote`, «Nota perdida» y `addNoteNode`. El enlace
-      no lo lee el core, como en las notas: roto, se ve apagado. **Migración 1→2, la primera real:**
-      todo nodo-nota pasa a `[nombre](#id)`, con el nombre escapado (el escape vive hoy en `ui/`:
-      moverlo o repetirlo en el core); sin nota, `[Nota perdida](#id)`, e ilegible, `[Nota ilegible](#id)`.
-      Un nodo ya nuevo se deja igual. `schema.ts` acepta las dos formas del nodo: la vieja, para que la
-      migración la reciba. Cambian en `CLAUDE.md` «Nodo-nota con el título en directo» y la
-      excepción del enlace, que cubre también los nodos. **Se cierra cuando** las pruebas del nodo único
-      y de la migración pasan (también una copia de seguridad v1 importada), hay roturas que las tumben,
-      y una app con datos viejos arranca en el panel con sus nodos convertidos.
 - [ ] **16. El lienzo pinta Markdown y abre enlaces** *(pensar)*. Tras la 15b. El nodo se pinta como una
       línea de nota: negrita, cursiva y enlaces —a webs también, y las direcciones sueltas—, los rotos
       apagados. **Un nodo cuyo texto es sólo un enlace a algo de la app enseña el nombre actual de lo
@@ -454,8 +443,10 @@ una tarea con su cierre.
 
 - [ ] **Un fichero ilegible no se migra** *(salió en la 15a, 2026-11-03)*. El arranque se salta lo
       ilegible, así que la migración no lo ve; si después alguien lo arregla a mano, llega con la forma
-      vieja y una versión ya nueva, y se lee como ilegible otra vez. Opciones: dejarlo así, o que una
-      copia de seguridad recuerde la versión de cada fichero. **Se cierra cuando** el usuario elige y
+      vieja y una versión ya nueva. Desde la 15b, `schema.ts` acepta las dos formas del nodo, así que un
+      diagrama así se lee sin migrar: un nodo-nota viejo llega sin texto. Opciones: dejarlo así, que el
+      validador rechace la forma vieja con la versión nueva, o que una copia de seguridad recuerde la
+      versión de cada fichero. **Se cierra cuando** el usuario elige y
       la decisión queda escrita aquí.
 
 - [ ] **La pregunta de importar no cuenta los eventos** *(salió en la 7g, 2026-10-28)*. «La copia

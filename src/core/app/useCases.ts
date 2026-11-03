@@ -136,19 +136,12 @@ export interface UseCases {
   /** Como `deleteNote`: devuelve el borrado, y tampoco sirve de undo. */
   readonly deleteDiagram: (diagramId: DiagramId) => Diagram | null
   /**
-   * Pone un nodo en el lienzo, sin marcar. El id lo genera aquí, y por eso hay
-   * dos, uno por clase de nodo, como `insertText` e `insertCheckBox`.
+   * Pone un nodo en el lienzo, sin marcar, con su texto: un enlace a una nota, a
+   * otra cosa o a una web va escrito dentro. El id lo genera aquí.
    */
   readonly addTextNode: (
     diagramId: DiagramId,
     text: string,
-    positionX: number,
-    positionY: number,
-  ) => Diagram | null
-  /** `null` también si la nota no existe. */
-  readonly addNoteNode: (
-    diagramId: DiagramId,
-    noteId: NoteId,
     positionX: number,
     positionY: number,
   ) => Diagram | null
@@ -420,29 +413,8 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         type: "add-node",
         diagramId,
         node: {
-          type: "simple-node",
           id: diagramNodeIdNuevo(ids),
           text,
-          positionX,
-          positionY,
-          done: false,
-        },
-        meta: meta(),
-      }),
-
-    addNoteNode: (
-      diagramId: DiagramId,
-      noteId: NoteId,
-      positionX: number,
-      positionY: number,
-    ): Diagram | null =>
-      trasDiagrama(diagramId, {
-        type: "add-node",
-        diagramId,
-        node: {
-          type: "note-node",
-          id: diagramNodeIdNuevo(ids),
-          noteId,
           positionX,
           positionY,
           done: false,

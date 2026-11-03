@@ -228,6 +228,13 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **La barra de la nota, sólo con símbolos** 2026-11-04, a petición del usuario: ☐ ↳ ⠿ ✕ y, para enlazar, una
   cadena en SVG (ningún carácter monocromo la tiene), con su nombre en `aria-label` y `title`, en un renglón
   que se desliza en vez de saltar de línea.
+- **Tarea 15b de la Fase 10, un solo tipo de nodo** 2026-11-03, rama `nodo-unico`: el nodo es posición,
+  «hecho» y texto con Markdown; fuera el tipo, el nodo-nota, `loseNote`, «Nota perdida» y `addNoteNode`, y
+  `delete-note` ya no toca los diagramas. La primera migración real, 1→2 (`nodoUnico`): un nodo-nota pasa a
+  `[nombre](#id)`, o a «Nota perdida» o «Nota ilegible» (el arranque le dice qué es ilegible con `refOf`).
+  `buildLink` baja al core para escapar igual. Hasta la 16, el lienzo enseña el nombre de la nota de un nodo
+  que sólo la enlaza y la abre al tocarlo (`soleLink`). Probada con un esquema 1 escrito a mano
+  (`test/platform/web/esquemaUno.ts`), arrancado y en una copia v1 importada.
 - **Tarea 15a de la Fase 10, un arranque que migra de verdad** 2026-11-03, rama `arranque-que-migra`: con
   migraciones aplicadas, `boot` guarda las entidades que cambian —cada una esperando su revisión— y sólo
   después apunta la versión; cortado a medias, el siguiente arranque repite sobre la mezcla, y por eso

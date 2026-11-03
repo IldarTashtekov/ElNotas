@@ -9,14 +9,12 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { Diagram, DiagramNode, DiagramRelation, NoteNode, SimpleNode } from "#core/domain/Diagram"
+import type { Diagram, DiagramNode, DiagramRelation } from "#core/domain/Diagram"
 import type { DiagramNodeId, DiagramRelationId } from "#core/domain/Ids"
-import { diagramId, diagramNodeId, diagramRelationId, noteId, revision } from "#core/domain/Ids"
+import { diagramId, diagramNodeId, diagramRelationId, revision } from "#core/domain/Ids"
 import {
   addNode,
   addRelation,
-  LOST_NOTE_TEXT,
-  loseNote,
   removeNode,
   removeRelation,
   setNodeDone,
@@ -30,7 +28,7 @@ import {
 
 /* ─────────────────────────── El diagrama de pruebas ───────────────────────────
 
-        Cajas ──R1──▶ [nota Compra] ──R3──▶ Furgoneta
+        Cajas ──R1──▶ [Compra](#nota-compra) ──R3──▶ Furgoneta
               ◀──R2──
 */
 
@@ -46,10 +44,7 @@ const R3: DiagramRelationId = diagramRelationId("r3")
 const R_NUEVA: DiagramRelationId = diagramRelationId("nueva")
 const R_INEXISTENTE: DiagramRelationId = diagramRelationId("no-existe")
 
-const NOTA_COMPRA = noteId("nota-compra")
-
-const textoEn = (id: DiagramNodeId, text: string, x: number, y: number): SimpleNode => ({
-  type: "simple-node",
+const textoEn = (id: DiagramNodeId, text: string, x: number, y: number): DiagramNode => ({
   id,
   text,
   positionX: x,
@@ -66,10 +61,9 @@ const relacion = (id: DiagramRelationId, from: DiagramNodeId, to: DiagramNodeId)
 })
 
 const mudanza = (): Diagram => {
-  const compra: NoteNode = {
-    type: "note-node",
+  const compra: DiagramNode = {
     id: ID_COMPRA,
-    noteId: NOTA_COMPRA,
+    text: "[Compra](#nota-compra)",
     positionX: 100,
     positionY: 0,
     done: true,
@@ -108,7 +102,7 @@ const rel = (d: Diagram, id: DiagramRelationId): DiagramRelation => {
 
 test("addNode añade el nodo y deja lo demás por referencia", (): void => {
   const d: Diagram = mudanza()
-  const nuevo: SimpleNode = textoEn(ID_NODO_NUEVO, "Llaves", -10, 5)
+  const nuevo: DiagramNode = textoEn(ID_NODO_NUEVO, "Llaves", -10, 5)
   const r: Diagram = addNode(d, nuevo)
   assert.strictEqual(r.nodes[ID_NODO_NUEVO], nuevo)
   assert.strictEqual(r.nodes[ID_CAJAS], d.nodes[ID_CAJAS])
@@ -128,11 +122,11 @@ test("addNode: con una posición no finita, devuelve el MISMO diagrama", (): voi
 
 /* ────────────────────────────── setNodeText ────────────────────────────── */
 
-test("setNodeText cambia el texto de un nodo de texto, y sólo eso", (): void => {
+test("setNodeText cambia el texto de un nodo, y sólo eso", (): void => {
   const d: Diagram = mudanza()
   const r: Diagram = setNodeText(d, ID_CAJAS, "Cajas grandes")
   const cajas: DiagramNode = nodo(r, ID_CAJAS)
-  assert.equal(cajas.type === "simple-node" && cajas.text, "Cajas grandes")
+  assert.equal(cajas.text, "Cajas grandes")
   assert.strictEqual(r.nodes[ID_FURGONETA], d.nodes[ID_FURGONETA])
   assert.strictEqual(r.relations, d.relations)
 })
@@ -142,9 +136,9 @@ test("setNodeText: con el mismo texto, devuelve el MISMO diagrama", (): void => 
   assert.strictEqual(setNodeText(d, ID_CAJAS, "Cajas"), d)
 })
 
-test("setNodeText: sobre un nodo-nota, devuelve el MISMO diagrama", (): void => {
-  const d: Diagram = mudanza()
-  assert.strictEqual(setNodeText(d, ID_COMPRA, "Otro título"), d)
+test("setNodeText: también el de un nodo que enlaza a una nota", (): void => {
+  const r: Diagram = setNodeText(mudanza(), ID_COMPRA, "Otro título")
+  assert.equal(nodo(r, ID_COMPRA).text, "Otro título")
 })
 
 test("setNodeText: con un nodo que no existe, devuelve el MISMO diagrama", (): void => {
@@ -154,7 +148,7 @@ test("setNodeText: con un nodo que no existe, devuelve el MISMO diagrama", (): v
 
 /* ──────────────────────────── setNodePosition ──────────────────────────── */
 
-test("setNodePosition mueve el nodo, también un nodo-nota", (): void => {
+test("setNodePosition mueve el nodo, también uno que enlaza a una nota", (): void => {
   const d: Diagram = mudanza()
   const r: Diagram = setNodePosition(d, ID_COMPRA, -3.5, 40)
   assert.equal(nodo(r, ID_COMPRA).positionX, -3.5)
@@ -229,7 +223,7 @@ test("shiftNodes: sin ningún nodo que exista, o sin ninguno, devuelve el MISMO 
 
 /* ────────────────────────────── setNodeDone ────────────────────────────── */
 
-test("setNodeDone marca un nodo de texto y desmarca un nodo-nota", (): void => {
+test("setNodeDone marca un nodo y desmarca otro", (): void => {
   const d: Diagram = mudanza()
   assert.equal(nodo(setNodeDone(d, ID_CAJAS, true), ID_CAJAS).done, true)
   assert.equal(nodo(setNodeDone(d, ID_COMPRA, false), ID_COMPRA).done, false)
@@ -273,44 +267,6 @@ test("removeNode: si no lo tocaba ninguna relación, el MISMO objeto relations",
 test("removeNode: con un nodo que no existe, devuelve el MISMO diagrama", (): void => {
   const d: Diagram = mudanza()
   assert.strictEqual(removeNode(d, ID_NODO_INEXISTENTE), d)
-})
-
-/* ──────────────────────────────── loseNote ─────────────────────────────── */
-
-test("loseNote convierte el nodo-nota en «Nota perdida» y conserva id, posición y hecho", (): void => {
-  const d: Diagram = mudanza()
-  const r: Diagram = loseNote(d, NOTA_COMPRA)
-  assert.deepEqual(nodo(r, ID_COMPRA), {
-    type: "simple-node",
-    id: ID_COMPRA,
-    positionX: 100,
-    positionY: 0,
-    done: true,
-    text: LOST_NOTE_TEXT,
-  })
-  assert.equal(LOST_NOTE_TEXT, "Nota perdida")
-  // Las relaciones siguen: el nodo es el mismo, con otra pinta.
-  assert.strictEqual(r.relations, d.relations)
-  assert.strictEqual(r.nodes[ID_CAJAS], d.nodes[ID_CAJAS])
-})
-
-test("loseNote convierte TODOS los nodos de esa nota, no sólo el primero", (): void => {
-  const otro: NoteNode = {
-    type: "note-node",
-    id: ID_NODO_NUEVO,
-    noteId: NOTA_COMPRA,
-    positionX: 0,
-    positionY: 0,
-    done: false,
-  }
-  const r: Diagram = loseNote(addNode(mudanza(), otro), NOTA_COMPRA)
-  assert.equal(nodo(r, ID_COMPRA).type, "simple-node")
-  assert.equal(nodo(r, ID_NODO_NUEVO).type, "simple-node")
-})
-
-test("loseNote: si ningún nodo apunta a esa nota, devuelve el MISMO diagrama", (): void => {
-  const d: Diagram = mudanza()
-  assert.strictEqual(loseNote(d, noteId("otra")), d)
 })
 
 /* ────────────────────────────── addRelation ────────────────────────────── */

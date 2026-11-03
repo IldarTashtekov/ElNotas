@@ -6,14 +6,11 @@
  * equivalente. Cada caso en que no aplica tiene su prueba.
  *
  * Todas son puras. No estampan `updatedAt` ni `revision`: eso lo hace el reducer,
- * sólo si algo cambió. Lo que mira fuera del diagrama —que una nota exista— también.
+ * sólo si algo cambió.
  */
 
-import type { Diagram, DiagramNode, DiagramRelation, SimpleNode } from "./Diagram.js"
-import type { DiagramNodeId, DiagramRelationId, NoteId } from "./Ids.js"
-
-/** El texto que queda en un nodo-nota cuando su nota ya no está. */
-export const LOST_NOTE_TEXT: string = "Nota perdida"
+import type { Diagram, DiagramNode, DiagramRelation } from "./Diagram.js"
+import type { DiagramNodeId, DiagramRelationId } from "./Ids.js"
 
 const posicionValida = (x: number, y: number): boolean =>
   Number.isFinite(x) && Number.isFinite(y)
@@ -61,15 +58,12 @@ export const addNode = (diagram: Diagram, node: DiagramNode): Diagram => {
 }
 
 /**
- * Cambia el texto de un nodo de texto.
+ * Cambia el texto de un nodo.
  *
- * **No hace nada si:** el nodo no existe · es un nodo-nota, que enseña el título
- * de su nota · el texto ya es ese.
+ * **No hace nada si:** el nodo no existe · el texto ya es ese.
  */
 export const setNodeText = (diagram: Diagram, id: DiagramNodeId, text: string): Diagram =>
-  enNodo(diagram, id, (node: DiagramNode): DiagramNode =>
-    node.type !== "simple-node" || node.text === text ? node : { ...node, text },
-  )
+  enNodo(diagram, id, (node: DiagramNode): DiagramNode => (node.text === text ? node : { ...node, text }))
 
 /**
  * Lleva un nodo a otra posición.
@@ -151,39 +145,6 @@ export const removeNode = (diagram: Diagram, id: DiagramNodeId): Diagram => {
         )
 
   return { ...diagram, nodes, relations }
-}
-
-/**
- * Convierte en nodos de texto «Nota perdida» los nodos-nota de una nota que ya no
- * está. Conservan id, posición, hecho y relaciones.
- *
- * **No hace nada si:** ningún nodo apunta a esa nota.
- */
-export const loseNote = (diagram: Diagram, noteId: NoteId): Diagram => {
-  const perdidos: ReadonlyArray<DiagramNode> = Object.values<DiagramNode>(diagram.nodes).filter(
-    (n: DiagramNode): boolean => n.type === "note-node" && n.noteId === noteId,
-  )
-  if (perdidos.length === 0) return diagram
-
-  const textos: ReadonlyArray<SimpleNode> = perdidos.map(
-    (n: DiagramNode): SimpleNode => ({
-      type: "simple-node",
-      id: n.id,
-      positionX: n.positionX,
-      positionY: n.positionY,
-      done: n.done,
-      text: LOST_NOTE_TEXT,
-    }),
-  )
-  return {
-    ...diagram,
-    nodes: {
-      ...diagram.nodes,
-      ...Object.fromEntries(
-        textos.map((n: SimpleNode): readonly [DiagramNodeId, SimpleNode] => [n.id, n]),
-      ),
-    },
-  }
 }
 
 /* ────────────────────────────── Relaciones ────────────────────────────── */

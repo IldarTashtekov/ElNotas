@@ -178,8 +178,7 @@ export interface RenameNote {
  *
  * **La primera acción del proyecto que toca varias entidades a la vez:** hay que
  * quitarla también de todos los contextos que la listaban, o queda una `ItemRef`
- * apuntando a nada; y sus nodos-nota pasan a «Nota perdida» en todos los
- * diagramas.
+ * apuntando a nada. Los enlaces a ella, en notas y en nodos, se quedan: rotos.
  */
 export interface DeleteNote {
   readonly type: "delete-note"

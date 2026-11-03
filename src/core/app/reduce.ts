@@ -23,7 +23,6 @@ import type { Diagram } from "../domain/Diagram.js"
 import {
   addNode,
   addRelation,
-  loseNote,
   removeNode,
   removeRelation,
   setNodeDone,
@@ -251,34 +250,6 @@ const sinReferenciasA = (
   }
 }
 
-/**
- * Pasa a «Nota perdida» los nodos-nota de una nota en **todos** los diagramas.
- *
- * Misma disciplina que `sinReferenciasA`: los diagramas que no la usaban salen
- * intactos, por referencia, y si no la usaba ninguno, el mismo objeto `diagrams`.
- * Los tocados reciben todos el MISMO `meta`.
- */
-const sinNotaEnDiagramas = (
-  diagrams: AppState["diagrams"],
-  noteId: NoteId,
-  meta: ActionMeta,
-): AppState["diagrams"] => {
-  const tocados: ReadonlyArray<Diagram> = Object.values<Diagram>(diagrams).flatMap(
-    (d: Diagram): ReadonlyArray<Diagram> => {
-      const siguiente: Diagram = loseNote(d, noteId)
-      return siguiente === d ? [] : [{ ...siguiente, ...stamp(meta) }]
-    },
-  )
-  if (tocados.length === 0) return diagrams
-
-  return {
-    ...diagrams,
-    ...Object.fromEntries(
-      tocados.map((d: Diagram): readonly [DiagramId, Diagram] => [d.id, d]),
-    ),
-  }
-}
-
 export const reduce = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case "set-checked":
@@ -401,8 +372,6 @@ export const reduce = (state: AppState, action: Action): AppState => {
           { kind: "note", id: action.noteId },
           action.meta,
         ),
-        // Y en los diagramas, sus nodos-nota pasan a «Nota perdida».
-        diagrams: sinNotaEnDiagramas(state.diagrams, action.noteId, action.meta),
       }
     }
 
@@ -543,10 +512,6 @@ export const reduce = (state: AppState, action: Action): AppState => {
     }
 
     case "add-node":
-      // Lo único que la operación no puede mirar: que la nota exista.
-      if (action.node.type === "note-node" && state.notes[action.node.noteId] === undefined) {
-        return state
-      }
       return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
         addNode(d, action.node),
       )

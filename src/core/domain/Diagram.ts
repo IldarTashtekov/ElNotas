@@ -2,34 +2,24 @@
  * Diagramas: un lienzo libre con nodos que se colocan a mano y relaciones entre
  * ellos.
  *
- * Un nodo es una caja con texto o una que lleva a una nota; una relación une dos
- * nodos, con flecha o sin ella, y puede llevar un texto. Entre dos nodos puede
- * haber tantas relaciones como se quiera.
+ * Un nodo es una caja con texto, con el mismo Markdown que una línea de nota: lo
+ * que lleve a una nota, a otra cosa de la app o a una web es un enlace dentro de
+ * ese texto. Una relación une dos nodos, con flecha o sin ella, y puede llevar un
+ * texto. Entre dos nodos puede haber tantas relaciones como se quiera.
  */
 
 import type { Versioned } from "./Versioned.js"
-import type { DiagramId, DiagramNodeId, DiagramRelationId, NoteId } from "./Ids.js"
+import type { DiagramId, DiagramNodeId, DiagramRelationId } from "./Ids.js"
 
-interface DiagramNodeBase {
+/** Un nodo del lienzo. Sus enlaces no los lee el core, como los de una nota. */
+export interface DiagramNode {
   readonly id: DiagramNodeId
   readonly positionX: number
   readonly positionY: number
   readonly done: boolean
-}
-
-/** Nodo con una etiqueta de texto. */
-export interface SimpleNode extends DiagramNodeBase {
-  readonly type: "simple-node"
+  /** Markdown, de una línea o de varias. */
   readonly text: string
 }
-
-/** Nodo que al pincharlo abre una Nota. Enseña el título de la nota, no guarda copia. */
-export interface NoteNode extends DiagramNodeBase {
-  readonly type: "note-node"
-  readonly noteId: NoteId
-}
-
-export type DiagramNode = SimpleNode | NoteNode
 
 /**
  * Una relación de `from` a `to`. Sin flecha (`directed: false`) conserva los dos

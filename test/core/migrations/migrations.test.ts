@@ -1,10 +1,9 @@
 /**
  * La hidratación y el runner de migraciones: la parte pura del arranque.
  *
- * Las migraciones se prueban con una lista **inventada aquí**, no con
- * `MIGRATIONS`, que está vacía a propósito porque todavía no hay nada guardado
- * con un esquema viejo. Probar el runner no exige inventarse un pasado: exige
- * inyectarle una lista, que es justo por lo que la recibe por parámetro.
+ * El runner se prueba con una lista **inventada aquí**, no con `MIGRATIONS`:
+ * probarlo no exige las migraciones de verdad, exige inyectarle una lista, que
+ * es justo por lo que la recibe por parámetro. Las de verdad, en su fichero.
  */
 
 import { test } from "node:test"
@@ -14,9 +13,9 @@ import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
 import type { CalendarEvent } from "#core/domain/CalendarEvent"
 import type { Context } from "#core/domain/Context"
-import type { Diagram, DiagramNode, DiagramRelation, NoteNode, SimpleNode } from "#core/domain/Diagram"
+import type { Diagram, DiagramNode, DiagramRelation } from "#core/domain/Diagram"
 import type { MigrationError } from "#core/domain/errors/MigrationError"
-import type { DiagramNodeId, DiagramRelationId, ItemRef, NoteId } from "#core/domain/Ids"
+import type { DiagramNodeId, DiagramRelationId, ItemRef } from "#core/domain/Ids"
 import {
   contextId,
   diagramId,
@@ -234,30 +233,20 @@ test("hydrate no se inventa un hidden en un contexto que no lo tenía", (): void
 })
 
 /* ─────────────────────────── hydrate y los diagramas ───────────────────────────
-    Dos limpiezas: la relación con un extremo que no está (o de un nodo a sí
-    mismo) se tira, y el nodo de una nota que ya no existe —y no está ilegible—
-    pasa a «Nota perdida». */
+    Una limpieza: la relación con un extremo que no está (o de un nodo a sí
+    mismo) se tira. Un nodo que enlaza a una nota que no está se queda igual: el
+    enlace, roto, se ve apagado. */
 
 const ID_A: DiagramNodeId = diagramNodeId("a")
 const ID_B: DiagramNodeId = diagramNodeId("b")
-const ID_NODO_NOTA: DiagramNodeId = diagramNodeId("nodo-nota")
+const ID_ENLACE: DiagramNodeId = diagramNodeId("enlace")
 
-const nodoTexto = (id: DiagramNodeId): SimpleNode => ({
-  type: "simple-node",
+const nodoTexto = (id: DiagramNodeId, text: string = id): DiagramNode => ({
   id,
-  text: id,
+  text,
   positionX: 0,
   positionY: 0,
   done: false,
-})
-
-const nodoDeNota = (nota: NoteId): NoteNode => ({
-  type: "note-node",
-  id: ID_NODO_NOTA,
-  noteId: nota,
-  positionX: 7,
-  positionY: 8,
-  done: true,
 })
 
 const relacion = (id: string, from: DiagramNodeId, to: DiagramNodeId): DiagramRelation => ({
@@ -282,8 +271,8 @@ const diagramaCon = (
   revision: revision("rev-mudanza"),
 })
 
-const hidratado = (d: Diagram, notas: ReadonlyArray<Note>, ilegible?: (item: ItemRef) => boolean): Diagram => {
-  const r: Diagram | undefined = hydrate({ notes: notas, diagrams: [d], contexts: [] }, ilegible).diagrams[d.id]
+const hidratado = (d: Diagram, notas: ReadonlyArray<Note>): Diagram => {
+  const r: Diagram | undefined = hydrate({ notes: notas, diagrams: [d], contexts: [] }).diagrams[d.id]
   if (r === undefined) assert.fail("el diagrama no ha llegado al estado")
   return r
 }
@@ -305,43 +294,16 @@ test("hydrate tira la relación de un nodo a sí mismo", (): void => {
   assert.deepEqual(hidratado(d, []).relations, {})
 })
 
-test("hydrate pasa a «Nota perdida» el nodo de una nota que no existe", (): void => {
-  const d: Diagram = diagramaCon([nodoDeNota(ID_FANTASMA)], [])
-  assert.deepEqual(hidratado(d, []).nodes[ID_NODO_NOTA], {
-    type: "simple-node",
-    id: ID_NODO_NOTA,
-    positionX: 7,
-    positionY: 8,
-    done: true,
-    text: "Nota perdida",
-  })
-})
-
-test("hydrate CONSERVA el nodo de una nota ilegible: no está perdida", (): void => {
-  const d: Diagram = diagramaCon([nodoDeNota(ID_ROTA)], [])
-  assert.strictEqual(hidratado(d, [], esRota), d)
-})
-
-test("hydrate conserva el nodo de una nota que existe", (): void => {
-  const d: Diagram = diagramaCon([nodoDeNota(ID_COMPRA)], [])
-  assert.strictEqual(hidratado(d, [COMPRA]), d)
-})
-
-test("hydrate hace las dos limpiezas en el mismo diagrama, y conserva las relaciones del nodo perdido", (): void => {
-  const d: Diagram = diagramaCon(
-    [nodoTexto(ID_A), nodoDeNota(ID_FANTASMA)],
-    [relacion("al-perdido", ID_A, ID_NODO_NOTA), relacion("rota", ID_A, diagramNodeId("x"))],
-  )
-  const r: Diagram = hidratado(d, [])
-  assert.deepEqual(Object.keys(r.relations), ["al-perdido"])
-  assert.equal(r.nodes[ID_NODO_NOTA]?.type, "simple-node")
+test("hydrate deja IGUAL el nodo que enlaza a una nota que no está", (): void => {
+  const d: Diagram = diagramaCon([nodoTexto(ID_ENLACE, `[Vieja](#${ID_FANTASMA})`)], [])
+  assert.strictEqual(hidratado(d, []), d)
 })
 
 test("un arranque NORMAL devuelve los diagramas INTACTOS, por referencia", (): void => {
   /* La misma razón que con los contextos: un diagrama copiado sin necesidad
      saldría sucio en el primer diff y se reescribiría en disco. */
   const d: Diagram = diagramaCon(
-    [nodoTexto(ID_A), nodoTexto(ID_B), nodoDeNota(ID_COMPRA)],
+    [nodoTexto(ID_A), nodoTexto(ID_B), nodoTexto(ID_ENLACE, `[Compra](#${ID_COMPRA})`)],
     [relacion("r", ID_A, ID_B)],
   )
   assert.strictEqual(hidratado(d, [COMPRA]), d)
@@ -407,10 +369,8 @@ test("una migración que REVIENTA se devuelve, no se escapa lanzando", () => {
       `runMigrations` como excepción** — por una firma que promete `Result` y
       desde la función que este fichero llama "pura y TOTAL".
 
-      No era alcanzable en producción sólo porque `MIGRATIONS` está vacía. La
-      primera migración de verdad es exactamente este caso, y corre al arrancar
-      la app sobre las notas del usuario: el peor sitio para una excepción
-      suelta.
+      Una migración de verdad corre al arrancar la app sobre las notas del
+      usuario: el peor sitio para una excepción suelta.
 
       `migrate` es código ajeno, igual que el `fn` de `transaction`, y por eso
       se trata igual.
@@ -491,9 +451,8 @@ test("runMigrations es TOTAL: no lanza ni con lo que antes lanzaba", () => {
   assert.doesNotThrow(() => runMigrations("viejo", 1, { migrations: [], target: 2 }))
 })
 
-test("la lista de migraciones está vacía, y es correcto", () => {
-  // No hay nada guardado con un esquema viejo: el primero es el primero.
-  // Escribir una migración de ejemplo sería inventarse un pasado que no existe.
-  assert.deepEqual(MIGRATIONS, [])
-  assert.equal(CURRENT_SCHEMA_VERSION, 1)
+test("cada migración de la lista tiene su escalón, y llegan a la versión actual", () => {
+  const desde: ReadonlyArray<number> = MIGRATIONS.map((m: Migration): number => m.from)
+  assert.deepEqual(desde, [1])
+  assert.equal(CURRENT_SCHEMA_VERSION, 2)
 })

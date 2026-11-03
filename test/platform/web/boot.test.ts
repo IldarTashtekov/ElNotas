@@ -36,6 +36,7 @@ import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
 import { silentLogger } from "../../core/ports/FakeLogger"
 import { MIGRADA, VERSION_MIGRADA, conLaMigracion, cortandoEn } from "./migracionDePrueba"
+import { ID_DIAGRAMA_VIEJO, NODOS_MIGRADOS, escribirEsquemaUno, nodosDe } from "./esquemaUno"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 
@@ -446,4 +447,31 @@ test("cortada al apuntar la versión, lo migrado está y el siguiente arranque s
   const app: App = appDe(await arrancarMigrando(contado.storage))
   assert.deepEqual(nombresDe(app), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
   assert.deepEqual(contado.escritas(), ["elnotas:blob:manifest.json"])
+})
+
+/* ───────────────── El esquema 1 de verdad: los nodos de antes ───────────────── */
+
+/** Lo que hay en disco del diagrama viejo, sin pasar por el adaptador. */
+const nodosEnDisco = async (almacen: Storage): Promise<unknown> => {
+  const leido: Result<Uint8Array | null, StorageError> = await createLocalStorageBlobStore(almacen).read(
+    `diagrams/${ID_DIAGRAMA_VIEJO}.json`,
+  )
+  if (!leido.ok || leido.value === null) assert.fail("el diagrama tenía que estar en disco")
+  const diagrama: { readonly nodes: unknown } = JSON.parse(new TextDecoder().decode(leido.value))
+  return diagrama.nodes
+}
+
+test("un almacén del esquema 1 arranca con sus nodos de un solo tipo, y los deja guardados", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  await escribirEsquemaUno(createLocalStorageBlobStore(almacen))
+
+  const app: App = appDe(await arrancar(almacen, true))
+  assert.deepEqual(nodosDe(app.store.getState().diagrams), NODOS_MIGRADOS)
+  assert.deepEqual(await nodosEnDisco(almacen), NODOS_MIGRADOS)
+  assert.equal(await versionDe(almacen), CURRENT_SCHEMA_VERSION)
+
+  /* Ya migrado, el siguiente arranque no escribe nada. */
+  const contado: ReturnType<typeof contandoEscrituras> = contandoEscrituras(almacen)
+  appDe(await arrancar(contado.storage, true))
+  assert.deepEqual(contado.escritas(), [])
 })

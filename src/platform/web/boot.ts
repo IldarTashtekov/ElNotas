@@ -43,7 +43,7 @@ import {
   runMigrations,
 } from "#core/index"
 import type { OnCorrupt, OnError, Schedule, WriteBehind } from "#storage/index"
-import { createFileStorageAdapter, createWriteBehind, pathOf } from "#storage/index"
+import { createFileStorageAdapter, createWriteBehind, pathOf, refOf } from "#storage/index"
 
 export interface BootDeps {
   readonly blobs: BlobStore
@@ -158,12 +158,20 @@ export const boot = async ({
   const routines: Result<ReadonlyArray<Routine>, StorageError> = await adapter.routines.getAll()
   if (!routines.ok) return routines
 
+  const ilegibles: ReadonlySet<string> = new Set<string>(
+    saltados.flatMap((f: StorageError): ReadonlyArray<string> => (f.kind === "corrupt" ? [f.path] : [])),
+  )
   const guardado: StoredEntities = {
     notes: notes.value,
     diagrams: diagrams.value,
     contexts: contexts.value,
     events: events.value,
     routines: routines.value,
+    /* La migración no los ve, pero un enlace a uno de ellos no es como uno a lo que no está. */
+    unreadable: [...ilegibles].flatMap((camino: string): ReadonlyArray<ItemRef> => {
+      const ref: ItemRef | null = refOf(camino)
+      return ref === null ? [] : [ref]
+    }),
   }
   const migrado: Result<MigrationResult, MigrationError> = runMigrations(
     guardado,
@@ -191,9 +199,6 @@ export const boot = async ({
     if (!apuntada.ok) return apuntada
   }
 
-  const ilegibles: ReadonlySet<string> = new Set<string>(
-    saltados.flatMap((f: StorageError): ReadonlyArray<string> => (f.kind === "corrupt" ? [f.path] : [])),
-  )
   const estado: AppState = hydrate(
     migradas,
     (item: ItemRef): boolean => {

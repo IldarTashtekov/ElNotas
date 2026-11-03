@@ -208,7 +208,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
 - Selección por pulsación larga. «Mover a…» mueve y no confirma. Reordenar, con el `⠿` de la selección, no en el General.
 - Texto: subconjunto de Markdown; **sólo la línea activa se edita en crudo**. El enlace `[texto](#id)` (nota, diagrama,
-  evento o rutina) **no lo lee el core** (excepción a la integridad referencial): roto, se ve apagado y no falla. Una
+  evento o rutina), en una nota o en un nodo, **no lo lee el core** (excepción a la integridad referencial): roto, se ve apagado y no falla. Una
   casilla cuyo texto es sólo un enlace a rutina es un atajo: marca **hoy**, sin guardar nada en la nota.
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí. Título sólo en la cabecera,
   renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
@@ -227,7 +227,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - El encuadre (centro y escala, no píxeles), en el `UiState`; se escribe al soltar, sin temporizador. La mira: origen, ×1.
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
 - Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira.
-- Nodo-nota con el título en directo; sin nota, «Nota perdida» (en `delete-note` y `hydrate`).
+- Un solo tipo de nodo: posición, «hecho» y texto con Markdown. A una nota se enlaza dentro del texto, `[nombre](#id)`.
 - Gestos «doble = menú o crear»; mover guarda al soltar. Móvil = escritorio.
 - Nota creada desde el lienzo: a todos los contextos del diagrama. Un diagrama se borra como una nota.
 

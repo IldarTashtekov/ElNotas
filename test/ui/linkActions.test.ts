@@ -9,14 +9,13 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Clock, Context, Diagram, IdGenerator, Note, Store, UseCases } from "#core/index"
-import { createStore, createUseCases } from "#core/index"
+import { buildLink, createStore, createUseCases } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { AppState, Day, EventId, Routine, Time } from "#core/index"
 import type { FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
 import { readMarkdownLine } from "#ui/markdownLine"
 import type { LinkChoices } from "#ui/linkActions"
 import {
-  buildLink,
   changeLink,
   defaultLinkText,
   isWebAddress,
@@ -25,6 +24,7 @@ import {
   removeLink,
   resolveLink,
   routineShortcut,
+  soleLink,
 } from "#ui/linkActions"
 
 interface Escenario {
@@ -357,6 +357,25 @@ test("linkChoices: eventos con su día al lado (próximos, con los de todo el d�
     ["2026-10-30 Dentista", "2026-10-30 08:30 Temprano", "2026-11-05 Lejano", "2026-10-01 09:00 Pasado"],
   )
   assert.deepEqual(r.routines.map((x: { readonly name: string }): string => x.name), ["Leer"])
+})
+
+/* ── soleLink ── */
+
+const unico = (state: AppState, raw: string): ReturnType<typeof soleLink> =>
+  soleLink(state, readMarkdownLine(raw), raw)
+
+test("soleLink: el texto entero es un enlace guardado e interno, y dice a qué lleva", (): void => {
+  const { store, nota }: ReturnType<typeof conCalendario> = conCalendario()
+  assert.deepEqual(unico(store.getState(), ` [Compra](#${nota.id}) `), { kind: "note", id: nota.id })
+})
+
+test("soleLink: con texto al lado, dos enlaces, web o roto, nada", (): void => {
+  const { store, nota }: ReturnType<typeof conCalendario> = conCalendario()
+  const s: AppState = store.getState()
+  assert.strictEqual(unico(s, `ver [Compra](#${nota.id})`), null)
+  assert.strictEqual(unico(s, `[a](#${nota.id})[b](#${nota.id})`), null)
+  assert.strictEqual(unico(s, "[w](https://a.es)"), null)
+  assert.strictEqual(unico(s, "[x](#no-esta)"), null)
 })
 
 /* ── routineShortcut ── */

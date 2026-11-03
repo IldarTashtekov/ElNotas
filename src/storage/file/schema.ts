@@ -150,7 +150,9 @@ const nodo = (x: unknown): Problem => {
     (): Problem => booleano(x, "done"),
   )
   if (base !== null) return base
-  if (x["type"] === "simple-node") return texto(x, "text")
+  /* Sin `type`, el nodo de hoy. Con él, los dos del esquema 1, que la migración
+     convierte: hay que poder leerlos para que les llegue. */
+  if (!("type" in x) || x["type"] === "simple-node") return texto(x, "text")
   if (x["type"] === "note-node") return texto(x, "noteId")
   return "un nodo no es de un tipo conocido"
 }

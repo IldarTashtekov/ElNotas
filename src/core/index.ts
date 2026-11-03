@@ -85,6 +85,7 @@ export type { BlobStore } from "./ports/BlobStore.js"
 /* Entidades */
 export type { Note } from "./domain/Note.js"
 export type { Diagram, DiagramNode, DiagramRelation } from "./domain/Diagram.js"
+export { buildLink } from "./domain/link.js"
 export type { Context } from "./domain/Context.js"
 export type { CalendarEvent } from "./domain/CalendarEvent.js"
 export type { Routine } from "./domain/Routine.js"

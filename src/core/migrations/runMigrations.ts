@@ -3,16 +3,14 @@
  *
  * Cada paso es una función de datos a datos: recibe lo guardado con el formato
  * `n` y devuelve lo mismo con el `n+1`. No toca el almacén —escribir es de quien
- * llama—, y por eso esto se prueba sin ficheros ni navegador.
- *
- * La lista está vacía, y es correcto: todavía no hay nada guardado con un formato
- * viejo. Lo que hace falta es el runner, para que el día que la haya sólo haya que
- * añadir una fila.
+ * llama—, y por eso esto se prueba sin ficheros ni navegador. Una migración nueva
+ * es una fila más en la lista, y subir la versión.
  */
 
 import { err, ok } from "../domain/Result.js"
 import type { Result } from "../domain/Result.js"
 import type { MigrationError } from "../domain/errors/MigrationError.js"
+import { nodoUnico } from "./nodoUnico.js"
 
 /**
  * De un esquema al siguiente. Pura: no toca el almacén; lo migrado lo guarda el
@@ -33,11 +31,11 @@ export interface Migration {
 /**
  * La versión de esquema que entiende esta versión del código.
  *
- * **1, no 0**, y la distinción importa: un almacén responde `0` cuando está
- * vacío —nunca se ha escrito nada— y ése es el caso de "primer arranque", no el
- * de "esquema viejo". Distinguirlos es lo que evita intentar migrar la nada.
+ * Empezó en **1, no 0**, y la distinción importa: un almacén responde `0` cuando
+ * está vacío —nunca se ha escrito nada— y ése es el caso de "primer arranque", no
+ * el de "esquema viejo". Distinguirlos es lo que evita intentar migrar la nada.
  */
-export const CURRENT_SCHEMA_VERSION: number = 1
+export const CURRENT_SCHEMA_VERSION: number = 2
 
 /**
  * Lo que responde un almacén en el que **nunca se ha escrito nada**.
@@ -49,8 +47,8 @@ export const CURRENT_SCHEMA_VERSION: number = 1
  */
 export const EMPTY_STORE_VERSION: number = 0
 
-/** Las migraciones conocidas, en orden. Vacía a propósito: ver arriba. */
-export const MIGRATIONS: ReadonlyArray<Migration> = []
+/** Las migraciones conocidas, en orden. */
+export const MIGRATIONS: ReadonlyArray<Migration> = [nodoUnico]
 
 export interface MigrationResult {
   readonly data: unknown

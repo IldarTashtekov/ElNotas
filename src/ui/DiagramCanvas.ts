@@ -38,7 +38,7 @@ import type {
   Unsubscribe,
   UseCases,
 } from "#core/index"
-import { diagramNodeId, diagramRelationId } from "#core/index"
+import { buildLink, diagramNodeId, diagramRelationId } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { crosshairButton, selectButton, svg } from "./canvasButtons.js"
 import type { Rect } from "./canvasSelection.js"
@@ -47,6 +47,9 @@ import type { DiagramFraming } from "./diagramFraming.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
 import { DOUBLE_TAP_MS, LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from "./gestures.js"
+import type { ResolvedLink } from "./linkActions.js"
+import { soleLink } from "./linkActions.js"
+import { readMarkdownLine } from "./markdownLine.js"
 import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
@@ -253,10 +256,20 @@ export const createDiagramCanvas = ({
   /** El que se está editando: mientras dura, su texto no se repinta. */
   let editando: DiagramNodeId | null = null
 
-  const textoDe = (nodo: DiagramNode, estado: AppState): string => {
-    if (nodo.type === "simple-node") return nodo.text
-    return estado.notes[nodo.noteId]?.name ?? "Nota ilegible"
+  /** La nota a la que lleva un nodo cuyo texto es sólo un enlace a ella, o `null`. */
+  const notaDe = (nodo: DiagramNode, estado: AppState): NoteId | null => {
+    const destino: ResolvedLink = soleLink(estado, readMarkdownLine(nodo.text), nodo.text)
+    return destino?.kind === "note" ? destino.id : null
   }
+
+  /* Un nodo que sólo enlaza a una nota enseña su nombre de ahora; el resto, lo escrito. */
+  const textoDe = (nodo: DiagramNode, estado: AppState): string => {
+    const nota: NoteId | null = notaDe(nodo, estado)
+    return nota === null ? nodo.text : (estado.notes[nota]?.name ?? nodo.text)
+  }
+
+  /** El texto de un nodo que lleva a una nota. */
+  const enlaceA = (nota: Note): string => buildLink(nota.name, `#${nota.id}`) ?? nota.name
 
   const positDe = (id: DiagramNodeId): HTMLElement | null =>
     capa.querySelector<HTMLElement>(`.posit[data-id="${CSS.escape(id)}"]`)
@@ -311,7 +324,7 @@ export const createDiagramCanvas = ({
         colocar(el, dondeSeVe(nodo))
         el.classList.toggle("hecho", nodo.done)
         el.classList.toggle("marcado", marcados.has(nodo.id))
-        el.classList.toggle("nota", nodo.type === "note-node")
+        el.classList.toggle("nota", notaDe(nodo, estado) !== null)
         const texto: Element | null = el.querySelector(".texto")
         const nuevo: string = textoDe(nodo, estado)
         if (texto !== null && editando !== nodo.id && texto.textContent !== nuevo) {
@@ -484,7 +497,7 @@ export const createDiagramCanvas = ({
     const nodo: DiagramNode | undefined = diagrama()?.nodes[id]
     const el: HTMLElement | null = positDe(id)
     const texto: HTMLElement | null = el?.querySelector<HTMLElement>(".texto") ?? null
-    if (nodo?.type !== "simple-node" || el === null || texto === null || editando !== null) return
+    if (nodo === undefined || el === null || texto === null || editando !== null) return
 
     const campo: HTMLTextAreaElement = elemento("textarea")
     campo.className = "posit-campo"
@@ -570,7 +583,7 @@ export const createDiagramCanvas = ({
     lista.append(
       ...notas.map((nota: Note): HTMLButtonElement =>
         opcion(nota.name, (): void => {
-          ponerNodo((): Diagram | null => useCases.addNoteNode(diagramId, nota.id, p.x, p.y))
+          ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, enlaceA(nota), p.x, p.y))
         }),
       ),
     )
@@ -597,7 +610,7 @@ export const createDiagramCanvas = ({
       opcion("Nota nueva", (): void => {
         const nota: Note | null = createNoteForDiagram(useCases, store.getState(), diagramId)
         if (nota === null) return
-        ponerNodo((): Diagram | null => useCases.addNoteNode(diagramId, nota.id, p.x, p.y))
+        ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, enlaceA(nota), p.x, p.y))
         onOpenNote(nota.id)
       }),
     )
@@ -789,7 +802,7 @@ export const createDiagramCanvas = ({
     const titulo: string = textoDe(nodo, store.getState())
     menu.open(titulo === "" ? "Nodo" : titulo, acciones(
       opcion("Conectar", (): void => empezarAConectar(id)),
-      ...(nodo.type === "simple-node" ? [opcion("Editar", (): void => editar(id))] : []),
+      opcion("Editar", (): void => editar(id)),
       opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
         useCases.setNodeDone(diagramId, id, !nodo.done)
       }),
@@ -1054,12 +1067,12 @@ export const createDiagramCanvas = ({
       return
     }
     toqueAnterior = toque
-    /* Un toque en un nodo-nota entra en la nota, pero espera lo que tarda el
-       segundo toque de un doble: si llega, era el menú. Una nota ilegible no se abre. */
+    /* Un toque en un nodo que lleva a una nota entra en ella, pero espera lo que
+       tarda el segundo toque de un doble: si llega, era el menú. Un enlace roto no se abre. */
     cancelarApertura()
     const nodo: DiagramNode | undefined = g.nodo === null ? undefined : diagrama()?.nodes[g.nodo]
-    if (nodo?.type !== "note-node" || store.getState().notes[nodo.noteId] === undefined) return
-    const nota: NoteId = nodo.noteId
+    const nota: NoteId | null = nodo === undefined ? null : notaDe(nodo, store.getState())
+    if (nota === null) return
     abrirLuego = setTimeout((): void => {
       abrirLuego = null
       onOpenNote(nota)

@@ -35,7 +35,7 @@ atrás roto.
 ## Preparación
 
 La misma que `VERIFICACION-MANUAL-LIENZO.md`. Hace falta **un diagrama con tres pósits**
-separados —A, B y C—, y uno de ellos **nodo-nota**.
+separados —A, B y C—, y uno de ellos **enlazando a una nota** (creado con *Nota nueva*).
 
 En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mismos menús.
 
@@ -43,11 +43,11 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 
 ## A. Conectar
 
-- **A1.** El menú de un pósit empieza por **Conectar** (también en un nodo-nota). Al elegirlo,
+- **A1.** El menú de un pósit empieza por **Conectar** (también en el que enlaza a una nota). Al elegirlo,
   arriba sale **«Toca el nodo de destino»** y el pósit de origen queda **marcado con el borde iluminado**.
 - **A2.** Tocar otro pósit crea la línea **con flecha, del origen al destino**. El aviso y la
   marca se van.
-- **A3.** Conectando, tocar un **nodo-nota** como destino lo une y **no entra** en la nota.
+- **A3.** Conectando, tocar el **que enlaza a una nota** como destino lo une y **no entra** en la nota.
 - **A4.** Cancelan sin crear nada: tocar **el fondo**, tocar **el propio origen**, el **clic
   derecho** y el **atrás** (en Android, el del sistema). El atrás cancela **sólo** el modo: el
   diagrama sigue abierto.
@@ -94,7 +94,7 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 ## E. Lo que arrastra a las líneas
 
 - **E1.** **Borrar un pósit** borra **todas sus líneas**, las que salen y las que llegan.
-- **E2.** Borrar la nota de un nodo-nota: el nodo pasa a «Nota perdida» y **sus líneas se
+- **E2.** Borrar la nota de un nodo que la enlaza: el nodo se queda, con el enlace roto, y **sus líneas se
   quedan**.
 
 ---

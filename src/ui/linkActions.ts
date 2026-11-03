@@ -1,8 +1,7 @@
 /**
  * Lo que se hace con los enlaces de una línea de nota: saber a qué lleva uno
  * interno, cuál hay bajo el cursor, cómo se quita su marca dejando el texto,
- * qué se puede enlazar, cómo se escribe un enlace, qué texto lleva por defecto y
- * cómo se cambia.
+ * qué se puede enlazar, qué texto lleva por defecto un enlace y cómo se cambia.
  * Puro: ni DOM ni core más allá de leer el estado.
  */
 
@@ -18,7 +17,7 @@ import type {
   Routine,
   RoutineId,
 } from "#core/index"
-import { diagramId, eventId, noteId, routineId } from "#core/index"
+import { buildLink, diagramId, eventId, noteId, routineId } from "#core/index"
 import type { FormattedLine, LineLink, LineSpan } from "./markdownLine.js"
 
 /** Lo que hay detrás de un enlace interno, o `null` si está roto. */
@@ -50,10 +49,11 @@ export const resolveLink = (state: AppState, id: string): ResolvedLink => {
 }
 
 /**
- * A qué lleva una línea cuyo texto es TODO un enlace guardado y interno, o `null`
- * si tiene otra cosa al lado, más de un enlace, es web, no está guardado o está roto.
+ * A qué lleva una línea —o un nodo— cuyo texto es TODO un enlace guardado e
+ * interno, o `null` si tiene otra cosa al lado, más de un enlace, es web, no está
+ * guardado o está roto.
  */
-const destinoUnico = (state: AppState, line: FormattedLine, raw: string): ResolvedLink => {
+export const soleLink = (state: AppState, line: FormattedLine, raw: string): ResolvedLink => {
   const unico: LineLink | undefined = line.links[0]
   if (line.links.length !== 1 || unico === undefined) return null
   if (!unico.saved || unico.target.kind !== "internal") return null
@@ -75,7 +75,7 @@ export const routineShortcut = (
   raw: string,
   today: Day | null,
 ): { readonly id: RoutineId; readonly marked: boolean } | null => {
-  const destino: ResolvedLink = destinoUnico(state, line, raw)
+  const destino: ResolvedLink = soleLink(state, line, raw)
   if (destino === null || destino.kind !== "routine") return null
   const rutina: Routine | undefined = state.routines[destino.id]
   if (rutina === undefined) return null
@@ -171,18 +171,6 @@ export const linkChoices = (state: AppState, excluding: NoteId, today: Day | nul
     .map((r: Routine): LinkChoice<RoutineId> => ({ id: r.id, name: r.name }))
     .sort(porNombre),
 })
-
-/**
- * `[texto](destino)`, con el texto escapado (`\`, `[`, `]` y `*` llevan una barra
- * delante) y «enlace» si el texto está en blanco. El destino se escribe tal cual:
- * quien llama lo da bien (un id, o una dirección que pasó `isWebAddress`). Un `)`
- * en el destino lo cerraría antes de tiempo: no se enlaza y vuelve `null`.
- */
-export const buildLink = (texto: string, destino: string): string | null => {
-  if (destino.includes(")")) return null
-  const visible: string = texto.trim() === "" ? "enlace" : texto
-  return `[${visible.replace(/[\\[\]*]/g, "\\$&")}](${destino})`
-}
 
 /**
  * El texto que lleva un enlace nuevo si nadie escribe otro. Una web, su host sin

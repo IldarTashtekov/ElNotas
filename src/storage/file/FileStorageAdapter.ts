@@ -30,7 +30,7 @@ import type {
   StorageAdapter,
   StorageError,
 } from "#core/index"
-import { err, ok } from "#core/index"
+import { diagramId, diagramRef, err, noteId, noteRef, ok } from "#core/index"
 import type { Problem } from "./schema.js"
 import {
   contextProblem,
@@ -102,6 +102,25 @@ export const pathOf = (item: ItemRef): string | null => {
     item.id,
   )
   return camino.ok ? camino.value : null
+}
+
+/**
+ * Lo contrario de `pathOf`: la referencia a la nota o al diagrama guardados en ese
+ * camino, o `null` si no es uno de ellos o su nombre no se puede descodificar.
+ */
+export const refOf = (camino: string): ItemRef | null => {
+  const carpeta: string | null = esEntidadDe(CARPETA_NOTAS, camino)
+    ? CARPETA_NOTAS
+    : esEntidadDe(CARPETA_DIAGRAMAS, camino)
+      ? CARPETA_DIAGRAMAS
+      : null
+  if (carpeta === null) return null
+  try {
+    const id: string = decodeURIComponent(camino.slice(carpeta.length, camino.length - EXTENSION.length))
+    return carpeta === CARPETA_NOTAS ? noteRef(noteId(id)) : diagramRef(diagramId(id))
+  } catch {
+    return null
+  }
 }
 
 /**

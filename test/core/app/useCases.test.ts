@@ -201,7 +201,6 @@ const CABLEADO: ReadonlyArray<
   ["rename-diagram", (u: UseCases): Diagram | null => u.renameDiagram(ID_DIAGRAMA, "Otro")],
   ["delete-diagram", (u: UseCases): Diagram | null => u.deleteDiagram(ID_DIAGRAMA)],
   ["add-node", (u: UseCases): Diagram | null => u.addTextNode(ID_DIAGRAMA, "Cajas", 0, 0)],
-  ["add-node", (u: UseCases): Diagram | null => u.addNoteNode(ID_DIAGRAMA, ID_NOTA, 0, 0)],
   ["set-node-text", (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "x")],
   [
     "set-node-position",
@@ -274,14 +273,13 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cuarenta y cinco casos de uso para cuarenta y tres acciones**: `insert` tiene dos
+      Son **cuarenta y cuatro casos de uso para cuarenta y tres acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
-      capa y hay que saber qué clase de línea se está creando; y por lo mismo
-      `add-node` tiene dos, `addTextNode` y `addNoteNode`.
+      capa y hay que saber qué clase de línea se está creando.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 44, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 44, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
@@ -432,9 +430,8 @@ const mudanza = (): Diagram => ({
   id: ID_DIAGRAMA,
   name: "Mudanza",
   nodes: {
-    [ID_NODO]: { type: "simple-node", id: ID_NODO, text: "Cajas", positionX: 0, positionY: 0, done: false },
+    [ID_NODO]: { id: ID_NODO, text: "Cajas", positionX: 0, positionY: 0, done: false },
     [ID_OTRO_NODO]: {
-      type: "simple-node",
       id: ID_OTRO_NODO,
       text: "Llaves",
       positionX: 0,
@@ -455,8 +452,6 @@ const conDiagrama = (d: Diagram): AppState => ({ ...VACIO, diagrams: { [d.id]: d
 const NO_OP_CON_DIAGRAMA: ReadonlyArray<readonly [string, (u: UseCases) => Diagram | null]> = [
   ["renameDiagram", (u: UseCases): Diagram | null => u.renameDiagram(ID_DIAGRAMA, "Mudanza")],
   ["addTextNode", (u: UseCases): Diagram | null => u.addTextNode(ID_DIAGRAMA, "x", Number.NaN, 0)],
-  // La nota no existe: es lo que mira el reducer antes de la operación.
-  ["addNoteNode", (u: UseCases): Diagram | null => u.addNoteNode(ID_DIAGRAMA, ID_NOTA, 0, 0)],
   ["setNodeText", (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "Cajas")],
   ["setNodePosition", (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 0, 0)],
   ["shiftNodes", (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 0, 0)],
@@ -529,29 +524,10 @@ test("addTextNode da al nodo su propio id, nace sin marcar y donde se le dice", 
   assert.equal(app.idsGenerados(), 2, "hacen falta dos ids: el del nodo y el de la revisión")
   assert.notEqual(nodo.id, accion.meta.revision)
   assert.deepEqual(nodo, {
-    type: "simple-node",
     id: nodo.id,
     text: "Cajas",
     positionX: -4,
     positionY: 7,
-    done: false,
-  })
-})
-
-test("addNoteNode mete un nodo-nota, no uno de texto", (): void => {
-  const app = montar()
-  app.useCases.addNoteNode(ID_DIAGRAMA, ID_NOTA, 3, 4)
-  const accion: Action = app.ultima()
-  const nodo: DiagramNode = unicoNodo(accion)
-
-  assert.equal(app.idsGenerados(), 2)
-  assert.notEqual(nodo.id, accion.meta.revision)
-  assert.deepEqual(nodo, {
-    type: "note-node",
-    id: nodo.id,
-    noteId: ID_NOTA,
-    positionX: 3,
-    positionY: 4,
     done: false,
   })
 })
