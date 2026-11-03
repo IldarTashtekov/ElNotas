@@ -137,6 +137,34 @@ location.reload()
 Cómo se pasa y cómo se marca cada paso: `test/PASAR-LAS-LISTAS.md`.
 
 ```
+Fecha:        2026-11-03
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       e80cbe5, árbol limpio
+Origen:       localhost:8001, vacío al empezar
+
+Preparación ✅ — «Casa» con «Compra» y «Viaje», «Plano» arrastrado y acercado, tres ventanas
+    (General, Calendario, Casa), fósforo elegido en verde. Al recargar con Casa activa, vuelve a
+    Casa; «Plano» se abre en ×1,82, el encuadre de antes. Todo en `elnotas:ui`, y ninguna clave vieja
+E1  🔁 simulado — el «Guardar como», por uno que guarda en memoria: propone
+       elnotas-backup-2026-11-03.json y dice «Copia guardada.»
+E2  ✅ — "backupVersion": 2, los 5 ficheros, y en `uiState` las 3 ventanas, "phosphor": "green",
+       el encuadre en `framings` y la pestaña del calendario; ni `windows` ni `phosphor` sueltos
+I1  🔁 simulado — el selector de ficheros: «La copia trae 2 notas, 1 diagrama y 1 contexto…» y
+       «Sustituir todo» en rojo
+I3  ✅ — con «Sobra», ámbar, la pestaña en Eventos y sin encuadres: recarga y queda como la copia,
+       sin «Sobra», verde, tres ventanas, el encuadre ×1,82 y Rutinas; la marca de importar, quitada
+I9  🔁 simulado (el selector) — una v1 hecha a mano con las notas de E1 y `windows`, "phosphor":
+       "magenta" y `framing` sueltos, con la app en ámbar: entran «Compra» y «Viaje», el fósforo
+       es verde (ni el de la copia ni el de antes), sólo el General, «Plano» centrado a ×1, y
+       `elnotas:ui` no existe hasta que se cambie algo
+V2  ✅ — a 375 px, la página no se desplaza de lado (scrollWidth 375)
+
+Notas: sólo los pasos que tocó la tarea 9. A 334 px de ancho y con la barra de desplazamiento del
+escritorio, «Importar copia» se sale 18 px; a 375 px, que es lo que pide V2, cabe.
+```
+
+```
 Fecha:        anotada el 2026-10-17; probado antes, sin fecha exacta
 Navegador:    la PWA instalada en el móvil del usuario (Android)
 Quién:        el usuario, en su móvil

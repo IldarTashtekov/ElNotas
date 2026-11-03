@@ -159,6 +159,24 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 ## Pasadas
 
 ```
+Fecha:        2026-11-03
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       e80cbe5, árbol limpio
+Origen:       localhost:8001
+
+A10 ✅ — Rutinas en la vista de ▦ deja `calendarTab: "routines"` en `elnotas:ui`; al recargar, las
+    dos pestañas (vista y ventana) siguen en Rutinas
+D1  🔁 simulado — el «Guardar como», dentro de la página: la copia lleva `uiState.calendarTab`
+    "routines". Sin rutinas ni eventos: no se miraron `events/…` ni `calendarOrder.routines`
+D2  🔁 simulado — el selector de ficheros: con la pestaña cambiada a Eventos, «Sustituir todo»
+    deja `calendarTab` "routines", el de la copia
+
+Notas: sólo los pasos que tocó la tarea 9 (el estado de la UI en un objeto). D4, con rutinas y su
+orden dentro de `uiState`, lo cubren las pruebas de Node de la importación; no se repitió aquí.
+```
+
+```
 Fecha:        2026-10-29
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel
