@@ -472,7 +472,7 @@ export const ROTURAS = [
     prueba: "pulsar un día abre su hoja sólo en Eventos",
   },
   {
-    nombre: "rutinas: el doble toque del nombre suelta la rutina en vez de dejarla tocada",
+    nombre: "rutinas: el doble toque de la fila suelta la rutina en vez de dejarla tocada",
     fichero: "src/ui/routineList.ts",
     buscar: "{ touched: archivada ? tocada : id, openSheet: true }",
     poner: "{ touched: tocada === id ? null : id, openSheet: true }",
@@ -480,7 +480,7 @@ export const ROTURAS = [
     prueba: "el segundo de un doble toque abre la hoja y la deja tocada, aunque el primero la soltara",
   },
   {
-    nombre: "rutinas: un toque en el nombre de una archivada la toca",
+    nombre: "rutinas: un toque en la fila de una archivada la toca",
     fichero: "src/ui/routineList.ts",
     buscar: "  if (archivada) return { touched: tocada, openSheet: false }\n",
     poner: "",

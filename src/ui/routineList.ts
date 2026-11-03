@@ -75,24 +75,24 @@ export const routineList = (state: AppState, order: CalendarOrder, hoy: Day | nu
 export const touchedRoutineIds = (lista: RoutineList, tocada: string | null): ReadonlySet<string> =>
   new Set<string>(lista.visible.map((f: RoutineRow): string => f.id).filter((id: string): boolean => id === tocada))
 
-/** Lo que hace pulsar el nombre de una rutina: qué queda tocado y si se abre su hoja. */
-export interface NameTap {
+/** Lo que hace pulsar la fila de una rutina: qué queda tocado y si se abre su hoja. */
+export interface RowTap {
   readonly touched: string | null
   readonly openSheet: boolean
 }
 
 /**
- * Pulsar el nombre: un toque la toca o la suelta, como el resto de la fila; el
- * segundo de un doble toque abre su hoja y la deja tocada, sin esperar a ver si
- * llega. En una archivada sólo cuenta el doble toque.
+ * Pulsar la fila, fuera de las casillas de los días: un toque la toca o la
+ * suelta; el segundo de un doble toque abre su hoja y la deja tocada, sin
+ * esperar a ver si llega. En una archivada sólo cuenta el doble toque.
  */
-export const nameTap = (
+export const rowTap = (
   previo: Tap | null,
   actual: Tap,
   tocada: string | null,
   id: string,
   archivada: boolean,
-): NameTap => {
+): RowTap => {
   if (isDoubleTap(previo, actual)) return { touched: archivada ? tocada : id, openSheet: true }
   if (archivada) return { touched: tocada, openSheet: false }
   return { touched: tocada === id ? null : id, openSheet: false }

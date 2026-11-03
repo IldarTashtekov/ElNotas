@@ -1,8 +1,8 @@
 /**
  * La lista de rutinas bajo el mes, como una tabla: una fila por rutina con los
- * siete días de la semana de hoy, que se marcan pulsándolos. Tocar una fila, o
- * su nombre, la deja «tocada» y sólo ella pinta sus días en el mes. Pulsar dos
- * veces el nombre abre la hoja con renombrar, meta, archivar y borrar; las
+ * siete días de la semana de hoy, que se marcan pulsándolos. Tocar una fila la
+ * deja «tocada» y sólo ella pinta sus días en el mes. Pulsarla dos veces, fuera
+ * de los días, abre la hoja con renombrar, meta, archivar y borrar; las
  * archivadas van en una vista aparte. Mantener pulsada una fila la mueve. Un
  * botón en la cabecera cambia el mes por la gráfica de la tocada, y al revés.
  *
@@ -18,12 +18,12 @@ import { attachDragReorder } from "./dragReorder.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
 import type { RoutineChartView } from "./routineCharts.js"
-import type { NameTap, RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "./routineList.js"
+import type { RoutineList, RoutineRow, RowTap, WeekCell, WeekHeading, WeekRow } from "./routineList.js"
 import {
   currentWeek,
   movedOrder,
-  nameTap,
   routineList,
+  rowTap,
   touchedRoutineIds,
   weekHeadings,
   weekSummary,
@@ -83,7 +83,7 @@ export const createRoutinesPanel = ({
   /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna está tocada y el mes no pinta rutinas. */
   let tocada: string | null = null
   let verArchivadas: boolean = false
-  let toqueNombre: Tap | null = null
+  let toqueFila: Tap | null = null
 
   const raiz: HTMLElement = elemento("section")
   raiz.className = "grupos rutinas"
@@ -157,9 +157,13 @@ export const createRoutinesPanel = ({
     const nombre: HTMLButtonElement = elemento("button", f.name)
     nombre.type = "button"
     nombre.className = "rutina-nombre"
-    nombre.addEventListener("click", (e: MouseEvent): void => pulsarNombre(f, e))
     nombre.setAttribute("aria-label", `Opciones de ${f.name}`)
     li.append(nombre)
+    /* Toda la fila, menos las casillas de los días: ahí un doble clic marcaría y desmarcaría. */
+    li.addEventListener("click", (e: MouseEvent): void => {
+      if (e.target instanceof Element && e.target.closest("button:not(.rutina-nombre)") !== null) return
+      pulsarFila(f, e)
+    })
     const rutina: Routine | undefined = store.getState().routines[f.id as RoutineId]
     /* Las archivadas llegan sin «hoy»: sólo el nombre. */
     const semana: WeekRow | null = hoy === null || rutina === undefined ? null : currentWeek(rutina, hoy)
@@ -172,24 +176,17 @@ export const createRoutinesPanel = ({
       const tocadaAhora: boolean = tocada === f.id
       li.classList.toggle("tocada", tocadaAhora)
       li.setAttribute("aria-current", tocadaAhora ? "true" : "false")
-      /* Tocar la fila, donde no haya un botón, la toca o la suelta. */
-      li.addEventListener("click", (e: MouseEvent): void => {
-        if (e.target instanceof Element && e.target.closest("button") !== null) return
-        tocada = tocada === f.id ? null : f.id
-        pintar()
-        onTouched()
-      })
     }
     return li
   }
 
-  /* El primer toque del nombre se recuerda aquí, fuera de la fila: tocar repinta y la fila es otra. */
-  const pulsarNombre = (f: RoutineRow, e: MouseEvent): void => {
+  /* El primer toque se recuerda aquí, fuera de la fila: tocar repinta y la fila es otra. */
+  const pulsarFila = (f: RoutineRow, e: MouseEvent): void => {
     const toque: Tap = { x: e.clientX, y: e.clientY, time: e.timeStamp, target: f.id }
     /* Con el teclado no hay doble pulsación: Intro cuenta como la segunda. */
-    const previo: Tap | null = e.detail === 0 ? toque : toqueNombre
-    const r: NameTap = nameTap(previo, toque, tocada, f.id, f.archived)
-    toqueNombre = r.openSheet ? null : toque
+    const previo: Tap | null = e.detail === 0 ? toque : toqueFila
+    const r: RowTap = rowTap(previo, toque, tocada, f.id, f.archived)
+    toqueFila = r.openSheet ? null : toque
     if (r.touched !== tocada) {
       tocada = r.touched
       pintar()

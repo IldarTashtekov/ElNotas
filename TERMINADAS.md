@@ -213,6 +213,8 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Fase 10, tarea 11: la gráfica de semanas de una rutina** 2026-11-03: en Rutinas, `%`/`▦` cambia el mes por la
   gráfica de la tocada (días cumplidos por semana, de 0 a 7, con la meta discontinua); zoom a lo ancho con la rueda y
   dos dedos (`chartAxis`), y el modo y el tramo de cada rutina, en `routineCharts` del `UiState`. Eventos, siempre el mes.
+- **Fase 10, el doble clic en toda la fila de una rutina** 2026-11-03, a petición del usuario: el toque y el doble
+  toque (`rowTap`, antes `nameTap`) se escuchan en toda la fila, menos en las casillas de los días, que sólo marcan.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

@@ -123,14 +123,15 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 - **E3.** La fila enseña **sólo** la semana de hoy; no hay semanas anteriores ni «Ver más».
 - **E4.** Pulsar un día de esa semana lo **marca** (X) o lo **desmarca** (·); los días que aún no
   han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la cuenta lleva **✓**.
-- **E5.** **Tocar** una fila (en cualquier parte que no sea un botón, en su **nombre**, o marcando un día) la resalta:
+- **E5.** **Tocar** una fila (en cualquier parte: su **nombre**, su cuenta, el hueco entre ellos, o marcando un día) la resalta:
   en la pestaña **Rutinas** el mes enseña con el **borde brillante** los días marcados **sólo de la rutina
   tocada**; tocar otra cambia el mes; tocar la tocada, fuera de las casillas, la suelta. Al empezar
   no hay ninguna tocada y ningún día con borde. En la pestaña **Eventos** el mes pinta sólo los
   eventos, con un asterisco a un lado del número, y ningún borde brillante.
-- **E6.** Un **doble clic** en el **nombre** abre una hoja con **Renombrar**, **Cambiar meta**,
-  **Archivar** y **Borrar**, y la rutina queda **tocada** al cerrarla (esté como estuviera antes).
-  Un solo clic no abre nada. Con el teclado, **Intro** sobre el nombre abre la hoja. Cambiar la
+- **E6.** Un **doble clic** en **cualquier parte de la fila** (el nombre, la cuenta o el hueco)
+  abre una hoja con **Renombrar**, **Cambiar meta**, **Archivar** y **Borrar**, y la rutina queda
+  **tocada** al cerrarla (esté como estuviera antes). En las **casillas de los días** el doble clic
+  sólo marca y desmarca, sin hoja. Un solo clic no abre nada. Con el teclado, **Intro** sobre el nombre abre la hoja. Cambiar la
   meta **recalcula** las semanas pasadas.
 - **E6b.** En la pestaña **Rutinas**, pulsar un día del **mes** no hace nada: ni hoja ni «+ Evento»,
   y el puntero no es de mano. ‹ ›, **hoy** y volver a **Eventos** siguen funcionando, y en Eventos
@@ -141,7 +142,7 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 - **E7.** **Borrar** pide confirmar y dice cuántos días se pierden y que se puede **archivar**
   («¿Borrar la rutina «X»? Se pierden sus n días marcados…»); al aceptar, desaparece.
 - **E8.** **Archivar** la quita de la tabla y del mes y aparece **«▸ Archivadas (n)»**, con sólo el
-  nombre; un clic no hace nada y el **doble clic** ofrece **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**.
+  nombre; un clic no hace nada y el **doble clic** en la fila ofrece **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**.
   Desarchivar la devuelve.
 - **E9.** **Mantener pulsada** una fila la levanta y se arrastra; al soltar queda en su sitio y **no**
   abre la hoja. Tras **recargar** conserva el orden; la rutina tocada, no.
@@ -183,7 +184,7 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 - **M5.** **▦** abre el calendario; el atrás del móvil cierra primero la hoja y luego el calendario.
 - **M6.** **Mantener pulsada** una fila de la lista de rutinas la levanta con el dedo, y los siete días
   de una semana se marcan con el dedo sin pulsar el vecino.
-- **M7.** Un **doble toque** en el nombre de una rutina abre su hoja y la deja tocada; un toque
+- **M7.** Un **doble toque** en la fila de una rutina (fuera de los días) abre su hoja y la deja tocada; un toque
   la toca o la suelta, y la página **no** se amplía con el doble toque.
 - **M8.** En la **gráfica** de una rutina, **pellizcar** con dos dedos la acerca o la aleja sólo a lo
   ancho, y arrastrar con uno va a otras semanas; la página **no** se amplía ni se desliza.
@@ -191,6 +192,21 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-11-03
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       cf6c003 más el doble clic en toda la fila, sin comitear
+Origen:       localhost:8001
+
+E5  ✅ — un clic en el hueco entre el nombre y los días suelta la tocada, sin abrir nada
+E6  ✅ — doble clic con el ratón en la cuenta «0/3» y en el hueco: la hoja con Renombrar, Cambiar
+    meta, Archivar y Borrar, y «Correr» tocada. Un doble clic en una casilla de día no abre hoja
+
+Notas: el usuario usaba el panel a la vez; dos doble clics que no abrieron nada llevaban clics
+suyos en medio (visto con un registro de los eventos), y sin ellos abrieron la hoja las dos veces.
+```
 
 ```
 Fecha:        2026-11-03

@@ -210,7 +210,7 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       el dedo. **Se cierra cuando** el usuario pasa en el móvil M1 a M8 de
       `test/ui/VERIFICACION-CALENDARIO.md` (arrastrar una rutina con el dedo, los selectores nativos de día
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
-      tabla sin pulsar el vecino, el doble toque en el nombre de una rutina, y el pellizco en la gráfica de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
+      tabla sin pulsar el vecino, el doble toque en la fila de una rutina, y el pellizco en la gráfica de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
