@@ -361,13 +361,19 @@ export const createCalendarPanel = ({
   /* ── La gráfica, en el sitio del mes ── */
 
   const grafica: RoutineChart = createRoutineChart({ store, today, charts: routineCharts })
+  /* El mes y la gráfica, uno encima de otro en el mismo sitio. El mes, tapado,
+     sigue midiendo sus seis semanas: lo de debajo no se mueve al cambiar. */
+  const bloqueMes: HTMLElement = elemento("div")
+  bloqueMes.className = "mes"
+  bloqueMes.append(barra, cabeza, rejilla)
+  const sitio: HTMLElement = elemento("div")
+  sitio.className = "mes-sitio"
+  sitio.append(bloqueMes, grafica.element)
   /** En Rutinas, con tabla y la gráfica elegida, ésta ocupa el sitio del mes; si no, el mes. */
   const ponerModo = (): void => {
     const conGrafica: boolean =
       tabs.get() === "routines" && routineCharts.view() === "chart" && rutinas.hasTable()
-    barra.hidden = conGrafica
-    cabeza.hidden = conGrafica
-    rejilla.hidden = conGrafica
+    bloqueMes.classList.toggle("tapado", conGrafica)
     grafica.element.hidden = !conGrafica
     if (conGrafica) grafica.show([...rutinas.touched()][0] ?? null)
   }
@@ -394,7 +400,7 @@ export const createCalendarPanel = ({
   }
   elegirPestana(tabs.get())
 
-  raiz.append(barra, cabeza, rejilla, grafica.element, pestanas, eventos.element, rutinas.element, hoja.element)
+  raiz.append(sitio, pestanas, eventos.element, rutinas.element, hoja.element)
   pintarMes()
 
   /* Los cambios del almacén repintan el mes y, con la hoja abierta, la lista del día. */

@@ -169,6 +169,9 @@ En la pestaña **Rutinas**, con alguna rutina con meta y días cumplidos en vari
 - **G6.** Pasar a **Eventos** enseña siempre el **mes**; volver a **Rutinas** deja el modo en que
   estaba (gráfica o mes).
 - **G7.** A **375 px** la gráfica cabe sin barra horizontal y mide lo que medía el mes.
+- **G8.** **Eventos | Rutinas no se mueve:** ni al cambiar del mes a la gráfica, ni al pasar de un
+  mes de seis semanas a uno de cinco (noviembre y diciembre de 2026). El mes de cinco deja vacía la
+  sexta fila.
 
 ## M. Sólo en el móvil
 
@@ -192,6 +195,20 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-11-03
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       c8b416c más el sitio fijo del mes, sin comitear
+Origen:       localhost:8001
+
+G8  ✅ — la parte de arriba de Eventos | Rutinas, a 473 px en noviembre (6 filas) y diciembre
+    (5) en Eventos, en Rutinas con el mes y con la gráfica; la gráfica mide 401 px, lo mismo que el mes
+G7  ✅ — a 592 px (el ancho del panel) sin barra horizontal
+
+Notas: los cambios de mes y de modo, con clics por JavaScript; las alturas, del DOM.
+```
 
 ```
 Fecha:        2026-11-03

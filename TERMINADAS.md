@@ -215,6 +215,8 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   dos dedos (`chartAxis`), y el modo y el tramo de cada rutina, en `routineCharts` del `UiState`. Eventos, siempre el mes.
 - **Fase 10, el doble clic en toda la fila de una rutina** 2026-11-03, a petición del usuario: el toque y el doble
   toque (`rowTap`, antes `nameTap`) se escuchan en toda la fila, menos en las casillas de los días, que sólo marcan.
+- **Fase 10, el sitio del mes, fijo** 2026-11-03, a petición del usuario: la rejilla reserva siempre seis filas y la
+  gráfica se apila encima del mes tapado, con su mismo alto: Eventos | Rutinas ya no se mueve.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.
