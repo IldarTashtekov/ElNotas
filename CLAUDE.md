@@ -226,7 +226,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería.
 - El encuadre (centro y escala, no píxeles), en el `UiState`; se escribe al soltar, sin temporizador. La mira: origen, ×1.
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
-- Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira.
+- Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira; su papelera confirma.
 - Un solo tipo de nodo: posición, «hecho» y texto. Sin Markdown en el lienzo: texto, o un enlace entero con el nombre de lo enlazado.
 - Gestos «doble = menú o crear»; mover guarda al soltar. Móvil = escritorio.
 - En el lienzo se crea un texto o un enlace; una nota, no. Un diagrama se borra como una nota.

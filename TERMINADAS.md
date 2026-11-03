@@ -248,6 +248,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Sin «Nota nueva» en el lienzo, y el lienzo de una ventana cabe** 2026-11-04, rama `nodo-unico`: el menú de
   crear queda en Texto y Enlazar… (`createNoteForDiagram`, fuera); con un diagrama, la vista ventanas es una
   columna del alto de la pantalla y la mira y seleccionar ya no salen cortadas.
+- **Borrar lo marcado en el lienzo** 2026-11-04, rama `nodo-unico`: en el modo de seleccionar, una papelera junto
+  al botón, apagada sin marcados, como la de Ordenar en las notas; pregunta con hoja y borra con una acción
+  nueva, `remove-nodes` (`removeNodes`, con las líneas que tocan a cualquiera). `removeNode` es ya uno de ellos.
 - **`check:roturas` en ~2 min, no ~40** 2026-11-04, rama `nodo-unico`: se compila una vez; cada rotura traduce a
   JS sólo el fichero roto (`transpileModule`, sin mirar tipos) y pasa sólo su fichero de pruebas, el espejo o
   el de `pruebasEn`. Cierra la idea aparcada de acelerarla; generar las roturas solas sigue descartado.

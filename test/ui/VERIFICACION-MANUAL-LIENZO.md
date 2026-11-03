@@ -196,6 +196,11 @@ Con un diagrama de cuatro pósits o más y alguna línea entre ellos.
   y nada más: la vista sigue abierta.
 - **I8.** Con el modo puesto, **✕ Salir** sale de la vista **de una vez**. En una ventana, tocar
   otra pestaña cambia de ventana, y luego **ningún atrás** se gasta sin hacer nada.
+- **I9.** Con el modo puesto sale una **papelera** junto al botón de seleccionar (en la barra; en
+  una ventana, flotando a su izquierda), **apagada** sin nada marcado; fuera del modo no se ve.
+- **I10.** Con dos marcados, la papelera pregunta **«¿Borrar 2 nodos?»** en una hoja; *Cancelar*
+  no borra nada. **Borrar** los quita **con sus líneas**, en una sola acción (`n` vale **1**, como
+  en I5), y se sigue en el modo con la papelera apagada.
 
 ## J. El avance por los bordes
 

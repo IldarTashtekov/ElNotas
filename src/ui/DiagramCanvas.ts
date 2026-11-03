@@ -20,6 +20,7 @@
  * El botón de seleccionar, junto a la mira, cambia de modo: arrastrar dibuja un
  * rectángulo que marca lo que toca, arrastrar un marcado mueve el grupo, un
  * toque marca o desmarca, y el corcho se desplaza con dos dedos o con la rueda.
+ * A su lado, la papelera borra lo marcado, tras preguntarlo.
  *
  * Es el mismo en la vista diagrama y en una ventana de diagrama: cada una le pone
  * su marco alrededor.
@@ -43,7 +44,7 @@ import type {
 } from "#core/index"
 import { diagramNodeId, diagramRelationId } from "#core/index"
 import type { BackStack } from "./backStack.js"
-import { crosshairButton, selectButton, svg } from "./canvasButtons.js"
+import { crosshairButton, selectButton, svg, trashButton } from "./canvasButtons.js"
 import type { Rect } from "./canvasSelection.js"
 import { EDGE_SPEED_PX_S, boxesTouching, edgeDirection, rectBetween } from "./canvasSelection.js"
 import type { DiagramFraming } from "./diagramFraming.js"
@@ -74,8 +75,8 @@ import {
   relationCurve,
   relationsOf,
 } from "./relationGeometry.js"
-import type { Sheet } from "./sheet.js"
-import { createSheet } from "./sheet.js"
+import type { Confirm, Sheet } from "./sheet.js"
+import { createConfirm, createSheet } from "./sheet.js"
 import type { Framing, Point, Viewport } from "./viewport.js"
 import {
   centeredViewport,
@@ -113,6 +114,8 @@ export interface DiagramCanvas {
   readonly recenter: () => void
   /** El botón de seleccionar. Con la mira flotante ya va en el lienzo; si no, a la barra. */
   readonly selectButton: HTMLButtonElement
+  /** La papelera de lo marcado, que sólo se ve en el modo. Va donde el de seleccionar. */
+  readonly trashButton: HTMLButtonElement
   /**
    * Cierra sus modos —seleccionar, conectar—, que son capas del atrás. Antes de
    * salir de la vista o de cambiar de ventana: si no, lo primero que cerraría el
@@ -311,6 +314,7 @@ export const createDiagramCanvas = ({
       marcados = new Set<DiagramNodeId>(
         [...marcados].filter((id: DiagramNodeId): boolean => actual.nodes[id] !== undefined),
       )
+      pintarPapelera()
     }
     const estado: AppState = store.getState()
     const orden: ReadonlyArray<string> = paintOrder(Object.keys(actual.nodes), levantados)
@@ -679,6 +683,7 @@ export const createDiagramCanvas = ({
 
   const marcar = (siguientes: ReadonlySet<DiagramNodeId>): void => {
     marcados = siguientes
+    pintarPapelera()
     for (const el of nodosCapa.querySelectorAll<HTMLElement>(".posit[data-id]")) {
       const id: string | undefined = el.dataset["id"]
       el.classList.toggle("marcado", id !== undefined && marcados.has(diagramNodeId(id)))
@@ -688,6 +693,22 @@ export const createDiagramCanvas = ({
   const pintarModo = (): void => {
     botonSeleccion.setAttribute("aria-pressed", String(seleccionando))
     lienzo.classList.toggle("seleccionando", seleccionando)
+    pintarPapelera()
+  }
+
+  /* La papelera, como la de Ordenar en las notas: en el modo, apagada sin nada marcado. */
+  const pintarPapelera = (): void => {
+    botonPapelera.hidden = !seleccionando
+    botonPapelera.disabled = marcados.size === 0
+  }
+
+  const confirmar: Confirm = createConfirm(menu)
+  const borrarMarcados = (): void => {
+    const ids: ReadonlyArray<DiagramNodeId> = [...marcados]
+    if (!seleccionando || ids.length === 0) return
+    confirmar(ids.length === 1 ? "¿Borrar 1 nodo?" : `¿Borrar ${ids.length} nodos?`, "Borrar", (): void => {
+      useCases.removeNodes(diagramId, ids)
+    })
   }
 
   /* Como *Conectar*, es una capa: el atrás sale del modo, y el botón también. */
@@ -707,8 +728,10 @@ export const createDiagramCanvas = ({
   }
 
   const botonSeleccion: HTMLButtonElement = selectButton(alternarSeleccion)
-  /* Con la mira flotante, junto a ella; si no, quien monta el lienzo lo pone en su barra. */
-  if (floatingCrosshair) lienzo.append(botonSeleccion)
+  const botonPapelera: HTMLButtonElement = trashButton(borrarMarcados)
+  pintarPapelera()
+  /* Con la mira flotante, junto a ella; si no, quien monta el lienzo los pone en su barra. */
+  if (floatingCrosshair) lienzo.append(botonSeleccion, botonPapelera)
 
   const dibujarRectangulo = (a: Point, b: Point): void => {
     const r: Rect = rectBetween(a, b)
@@ -1218,6 +1241,7 @@ export const createDiagramCanvas = ({
     element: marco,
     recenter,
     selectButton: botonSeleccion,
+    trashButton: botonPapelera,
     /* Los dos no pueden estar a la vez: entrar a seleccionar acaba con *Conectar*. */
     closeModes: (): void => {
       if (seleccionando || conectando !== null) back.close()

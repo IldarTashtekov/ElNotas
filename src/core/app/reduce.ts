@@ -24,6 +24,7 @@ import {
   addNode,
   addRelation,
   removeNode,
+  removeNodes,
   removeRelation,
   setNodeDone,
   setNodePosition,
@@ -539,6 +540,11 @@ export const reduce = (state: AppState, action: Action): AppState => {
     case "remove-node":
       return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
         removeNode(d, action.nodeId),
+      )
+
+    case "remove-nodes":
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
+        removeNodes(d, action.nodeIds),
       )
 
     case "add-relation":

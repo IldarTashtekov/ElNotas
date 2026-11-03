@@ -91,7 +91,7 @@ export const mountDiagramView = (
   })
   const barra: HTMLElement = elemento("div")
   barra.className = "barra barra-diagrama"
-  barra.append(crosshairButton(lienzo.recenter), lienzo.selectButton, salir)
+  barra.append(crosshairButton(lienzo.recenter), lienzo.selectButton, lienzo.trashButton, salir)
 
   const pintar = (): void => {
     const actual: Diagram | undefined = diagrama()

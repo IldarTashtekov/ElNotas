@@ -16,6 +16,7 @@ import {
   addNode,
   addRelation,
   removeNode,
+  removeNodes,
   removeRelation,
   setNodeDone,
   setNodePosition,
@@ -267,6 +268,36 @@ test("removeNode: si no lo tocaba ninguna relación, el MISMO objeto relations",
 test("removeNode: con un nodo que no existe, devuelve el MISMO diagrama", (): void => {
   const d: Diagram = mudanza()
   assert.strictEqual(removeNode(d, ID_NODO_INEXISTENTE), d)
+})
+
+/* ────────────────────────────── removeNodes ────────────────────────────── */
+
+test("removeNodes borra todos los que nombra y las relaciones que tocan a cualquiera", (): void => {
+  const d: Diagram = mudanza()
+  const r: Diagram = removeNodes(d, [ID_CAJAS, ID_FURGONETA])
+  assert.deepEqual(Object.keys(r.nodes), [ID_COMPRA])
+  assert.deepEqual(Object.keys(r.relations), [])
+  assert.strictEqual(r.nodes[ID_COMPRA], d.nodes[ID_COMPRA])
+})
+
+test("removeNodes: un id repetido o que no existe no cuenta; lo que queda, por referencia", (): void => {
+  const d: Diagram = mudanza()
+  const r: Diagram = removeNodes(d, [ID_FURGONETA, ID_NODO_INEXISTENTE, ID_FURGONETA])
+  assert.deepEqual(Object.keys(r.nodes).sort(), [ID_CAJAS, ID_COMPRA])
+  assert.deepEqual(Object.keys(r.relations).sort(), [R1, R2])
+  assert.strictEqual(r.nodes[ID_CAJAS], d.nodes[ID_CAJAS])
+  assert.strictEqual(r.relations[R1], d.relations[R1])
+})
+
+test("removeNodes: si no lo tocaba ninguna relación, el MISMO objeto relations", (): void => {
+  const d: Diagram = addNode(mudanza(), textoEn(ID_NODO_NUEVO, "Suelto", 0, 0))
+  assert.strictEqual(removeNodes(d, [ID_NODO_NUEVO]).relations, d.relations)
+})
+
+test("removeNodes: sin ningún nodo que exista, o sin ninguno, devuelve el MISMO diagrama", (): void => {
+  const d: Diagram = mudanza()
+  assert.strictEqual(removeNodes(d, [ID_NODO_INEXISTENTE]), d)
+  assert.strictEqual(removeNodes(d, []), d)
 })
 
 /* ────────────────────────────── addRelation ────────────────────────────── */

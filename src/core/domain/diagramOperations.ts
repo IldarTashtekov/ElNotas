@@ -126,13 +126,29 @@ export const setNodeDone = (diagram: Diagram, id: DiagramNodeId, done: boolean):
  *
  * **No hace nada si:** el nodo no existe.
  */
-export const removeNode = (diagram: Diagram, id: DiagramNodeId): Diagram => {
-  if (diagram.nodes[id] === undefined) return diagram
-  const { [id]: _fuera, ...nodes } = diagram.nodes
+export const removeNode = (diagram: Diagram, id: DiagramNodeId): Diagram => removeNodes(diagram, [id])
+
+/**
+ * Borra varios nodos a la vez, con todas las relaciones que tocan a alguno: lo
+ * que hay debajo de la papelera de lo marcado. Un id repetido cuenta una vez;
+ * uno que no existe, nada.
+ *
+ * **No hace nada si:** ningún nodo existe.
+ */
+export const removeNodes = (diagram: Diagram, ids: ReadonlyArray<DiagramNodeId>): Diagram => {
+  const fuera: ReadonlySet<DiagramNodeId> = new Set<DiagramNodeId>(
+    ids.filter((id: DiagramNodeId): boolean => diagram.nodes[id] !== undefined),
+  )
+  if (fuera.size === 0) return diagram
+  const nodes: Diagram["nodes"] = Object.fromEntries(
+    Object.values<DiagramNode>(diagram.nodes)
+      .filter((n: DiagramNode): boolean => !fuera.has(n.id))
+      .map((n: DiagramNode): readonly [DiagramNodeId, DiagramNode] => [n.id, n]),
+  )
 
   const quedan: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(
     diagram.relations,
-  ).filter((r: DiagramRelation): boolean => r.from !== id && r.to !== id)
+  ).filter((r: DiagramRelation): boolean => !fuera.has(r.from) && !fuera.has(r.to))
   // Si no tocaba ninguna, el mismo objeto `relations`: no se copia por copiar.
   const relations: Diagram["relations"] =
     quedan.length === Object.keys(diagram.relations).length

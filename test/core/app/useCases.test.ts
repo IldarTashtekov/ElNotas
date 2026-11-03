@@ -5,7 +5,7 @@
  * tentación es no probarla. Pero es la **única** que lee el mundo, y hay tres
  * cosas que sólo pasan aquí y que ninguna prueba del reducer puede ver:
  *
- *   1. **el cableado**: cuarenta y cuatro bloques casi idénticos uno debajo de otro son
+ *   1. **el cableado**: cuarenta y cinco bloques casi idénticos uno debajo de otro son
  *      justo donde se cuela un copy-paste, y un `renameNote` que despachara
  *      `delete-note` borraría notas al renombrarlas sin que fallara nada en el
  *      reducer, que haría exactamente lo que le piden;
@@ -166,7 +166,7 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
   contexts: Object.fromEntries(ctxs.map((c: Context): [ContextId, Context] => [c.id, c])),
 })
 
-/* ──────────────────── (1) El cableado: los cuarenta y cuatro ─────────────────── */
+/* ──────────────────── (1) El cableado: los cuarenta y cinco ──────────────────── */
 
 /**
  * Cada caso de uso con el `type` que tiene que despachar. Si alguien añade uno y
@@ -209,6 +209,7 @@ const CABLEADO: ReadonlyArray<
   ["shift-nodes", (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 1, 2)],
   ["set-node-done", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true)],
   ["remove-node", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO)],
+  ["remove-nodes", (u: UseCases): Diagram | null => u.removeNodes(ID_DIAGRAMA, [ID_NODO, ID_OTRO_NODO])],
   [
     "add-relation",
     (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_OTRO_NODO),
@@ -273,17 +274,17 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cuarenta y cuatro casos de uso para cuarenta y tres acciones**: `insert` tiene dos
+      Son **cuarenta y cinco casos de uso para cuarenta y cuatro acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 44, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 44, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 43, "el catálogo son CUARENTA Y TRES acciones")
+  assert.equal(tipos.size, 44, "el catálogo son CUARENTA Y CUATRO acciones")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */
@@ -457,6 +458,7 @@ const NO_OP_CON_DIAGRAMA: ReadonlyArray<readonly [string, (u: UseCases) => Diagr
   ["shiftNodes", (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 0, 0)],
   ["setNodeDone", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, false)],
   ["removeNode", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, diagramNodeId("fantasma"))],
+  ["removeNodes", (u: UseCases): Diagram | null => u.removeNodes(ID_DIAGRAMA, [diagramNodeId("fantasma")])],
   ["addRelation", (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_NODO)],
   [
     "setRelationEnds",
@@ -655,6 +657,7 @@ test("las acciones que NO crean nada piden un solo id: el de la revisión", () =
     (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 1, 1),
     (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true),
     (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO),
+    (u: UseCases): Diagram | null => u.removeNodes(ID_DIAGRAMA, [ID_NODO]),
     (u: UseCases): Diagram | null =>
       u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
     (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, false),

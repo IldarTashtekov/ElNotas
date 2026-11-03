@@ -1,6 +1,7 @@
 /**
  * Los botones del lienzo, que van flotando sobre él o en la barra de quien lo
- * monta: la mira, que vuelve al origen, y el de seleccionar nodos. No son del
+ * monta: la mira, que vuelve al origen, el de seleccionar nodos y la papelera
+ * de lo marcado. No son del
  * lienzo: tocarlos no arrastra el corcho ni abre ningún menú.
  */
 
@@ -46,6 +47,18 @@ const dibujoSeleccion = (): SVGSVGElement => {
   return dibujo(marco)
 }
 
+/** La papelera, como la de Ordenar en las notas: la tapa, el asa, el cubo y sus dos rayas. */
+const dibujoPapelera = (): SVGSVGElement =>
+  dibujo(
+    ...["M4 6.5h16", "M9.5 6.5V4h5v2.5", "M6 6.5 7.2 20h9.6L18 6.5", "M10 10.5v6", "M14 10.5v6"].map(
+      (d: string): SVGPathElement => {
+        const trazo: SVGPathElement = svg("path")
+        trazo.setAttribute("d", d)
+        return trazo
+      },
+    ),
+  )
+
 /** Un botón con dibujo y sin texto, que no deja pasar su toque al lienzo. */
 const botonDeLienzo = (
   clase: string,
@@ -80,3 +93,7 @@ export const selectButton = (alPulsar: () => void): HTMLButtonElement => {
   b.setAttribute("aria-pressed", "false")
   return b
 }
+
+/** La papelera de lo marcado. Quien la crea la enseña sólo en el modo de seleccionar. */
+export const trashButton = (alPulsar: () => void): HTMLButtonElement =>
+  botonDeLienzo("papelera-lienzo", "Borrar los marcados", dibujoPapelera(), alPulsar)

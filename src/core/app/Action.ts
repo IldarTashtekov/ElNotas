@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son cuarenta y tres. Aquí están las nueve de contenido; las de Nota, Contexto,
+ * Son cuarenta y cuatro. Aquí están las nueve de contenido; las de Nota, Contexto,
  * Diagrama, Calendario y Rutina, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -278,7 +278,7 @@ export type ContextAction =
   | ShowItems
   | ReorderItems
 
-/* ────────────────────────── Las catorce de Diagrama ────────────────────────── */
+/* ────────────────────────── Las quince de Diagrama ─────────────────────────── */
 
 /** «Se creó un diagrama vacío». El id llega hecho, del `IdGenerator`. */
 export interface CreateDiagram {
@@ -354,6 +354,14 @@ export interface RemoveNode {
   readonly meta: ActionMeta
 }
 
+/** «Se borraron los marcados», cada uno con sus relaciones, de una vez. */
+export interface RemoveNodes {
+  readonly type: "remove-nodes"
+  readonly diagramId: DiagramId
+  readonly nodeIds: ReadonlyArray<DiagramNodeId>
+  readonly meta: ActionMeta
+}
+
 /** «Se unieron dos nodos». Llega construida, con su id. */
 export interface AddRelation {
   readonly type: "add-relation"
@@ -405,6 +413,7 @@ export type DiagramAction =
   | ShiftNodes
   | SetNodeDone
   | RemoveNode
+  | RemoveNodes
   | AddRelation
   | SetRelationEnds
   | SetRelationDirected
@@ -495,7 +504,7 @@ export type RoutineAction =
   | SetRoutineGoal
   | DeleteRoutine
 
-/** El catálogo entero: 9 + 3 + 9 + 14 + 3 + 5 = **cuarenta y tres**. */
+/** El catálogo entero: 9 + 3 + 9 + 15 + 3 + 5 = **cuarenta y cuatro**. */
 export type Action =
   | ContentAction
   | NoteAction

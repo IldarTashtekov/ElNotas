@@ -100,6 +100,22 @@ export const ROTURAS = [
     prueba: "shiftNodes: un id repetido desplaza una vez",
   },
   {
+    nombre: "core: borrar varios nodos quita las líneas que llegan a cualquiera",
+    fichero: "src/core/domain/diagramOperations.ts",
+    buscar: "(r: DiagramRelation): boolean => !fuera.has(r.from) && !fuera.has(r.to)",
+    poner: "(r: DiagramRelation): boolean => !fuera.has(r.from)",
+    caza: "pruebas",
+    prueba: "removeNodes borra todos los que nombra y las relaciones que tocan a cualquiera",
+  },
+  {
+    nombre: "core: borrar varios nodos que no existen devuelve el mismo diagrama",
+    fichero: "src/core/domain/diagramOperations.ts",
+    buscar: "  if (fuera.size === 0) return diagram\n",
+    poner: "  if (fuera.size < 0) return diagram\n",
+    caza: "pruebas",
+    prueba: "removeNodes: sin ningún nodo que exista, o sin ninguno, devuelve el MISMO diagrama",
+  },
+  {
     nombre: "core: desplazar un grupo sin moverlo devuelve el mismo diagrama",
     fichero: "src/core/domain/diagramOperations.ts",
     buscar: "  if (!posicionValida(dx, dy) || (dx === 0 && dy === 0)) return diagram\n",

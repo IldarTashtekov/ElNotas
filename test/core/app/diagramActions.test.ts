@@ -168,6 +168,12 @@ const CASOS: ReadonlyArray<Caso> = [
     comprobar: (x: Diagram): boolean => x.nodes[ID_CAJAS] === undefined && x.relations[ID_R1] === undefined,
   },
   {
+    nombre: "remove-nodes",
+    cambia: { type: "remove-nodes", diagramId: d, nodeIds: [ID_CAJAS, ID_NODO_NUEVO], meta: META },
+    noAplica: { type: "remove-nodes", diagramId: d, nodeIds: [ID_NODO_NUEVO], meta: META },
+    comprobar: (x: Diagram): boolean => x.nodes[ID_CAJAS] === undefined && x.relations[ID_R1] === undefined,
+  },
+  {
     nombre: "add-relation",
     cambia: {
       type: "add-relation",

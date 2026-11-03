@@ -169,6 +169,8 @@ export interface UseCases {
     done: boolean,
   ) => Diagram | null
   readonly removeNode: (diagramId: DiagramId, nodeId: DiagramNodeId) => Diagram | null
+  /** Borra varios nodos, con una sola acción: la papelera de lo marcado. */
+  readonly removeNodes: (diagramId: DiagramId, nodeIds: ReadonlyArray<DiagramNodeId>) => Diagram | null
   /** Une `from` con `to`, con flecha y sin texto. El id se genera aquí. */
   readonly addRelation: (
     diagramId: DiagramId,
@@ -453,6 +455,9 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     removeNode: (diagramId: DiagramId, nodeId: DiagramNodeId): Diagram | null =>
       trasDiagrama(diagramId, { type: "remove-node", diagramId, nodeId, meta: meta() }),
+
+    removeNodes: (diagramId: DiagramId, nodeIds: ReadonlyArray<DiagramNodeId>): Diagram | null =>
+      trasDiagrama(diagramId, { type: "remove-nodes", diagramId, nodeIds, meta: meta() }),
 
     addRelation: (diagramId: DiagramId, from: DiagramNodeId, to: DiagramNodeId): Diagram | null =>
       trasDiagrama(diagramId, {
