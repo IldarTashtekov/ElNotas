@@ -6,9 +6,9 @@
  * centro si nunca se movió. La mira lo devuelve al origen: abajo a la derecha del
  * lienzo, o en la barra de quien lo monta.
  *
- * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, o
- * un nodo de una nota que ya existe o de una nueva; en un pósit, el suyo:
- * conectar, editar, hecho, borrar. *Conectar* espera a que se toque el nodo de
+ * Doble toque —o clic derecho— en el fondo abre el menú para crear: un texto, un
+ * enlace (con la hoja de enlazar de las notas) o una nota nueva; en un pósit, el
+ * suyo: conectar, editar, enlazar o cambiar y quitar el enlace, hecho, borrar. *Conectar* espera a que se toque el nodo de
  * destino, y el fondo lo cancela. Doble toque —o clic derecho— en una línea abre
  * el suyo: invertir, con o sin dirección, texto, borrar. El texto de una línea
  * la sigue, sin salir nunca boca abajo. Un nodo es un texto, que se ve tal cual
@@ -27,6 +27,7 @@
 
 import type {
   AppState,
+  Day,
   Diagram,
   DiagramId,
   DiagramNode,
@@ -41,7 +42,7 @@ import type {
   Unsubscribe,
   UseCases,
 } from "#core/index"
-import { buildLink, diagramNodeId, diagramRelationId } from "#core/index"
+import { diagramNodeId, diagramRelationId } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import { crosshairButton, selectButton, svg } from "./canvasButtons.js"
 import type { Rect } from "./canvasSelection.js"
@@ -50,9 +51,20 @@ import type { DiagramFraming } from "./diagramFraming.js"
 import { briefNotice, elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
 import { DOUBLE_TAP_MS, LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from "./gestures.js"
-import type { ResolvedLink } from "./linkActions.js"
+import type { LinkKind, ResolvedLink } from "./linkActions.js"
+import { linkChoices } from "./linkActions.js"
+import { openLinkSheet } from "./linkSheet.js"
 import type { NodeContent } from "./nodeContent.js"
-import { canEditNodeText, editedNodeText, readNode } from "./nodeContent.js"
+import {
+  canEditNodeText,
+  editedNodeText,
+  linkNodeText,
+  linkSheetAddress,
+  linkSheetText,
+  readNode,
+  textNodeText,
+  unlinkedNodeText,
+} from "./nodeContent.js"
 import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
@@ -93,6 +105,8 @@ export interface DiagramCanvasDeps {
   readonly onOpenDiagram: (id: DiagramId) => void
   readonly onOpenEvent: (id: EventId) => void
   readonly onOpenRoutine: (id: RoutineId) => void
+  /** El día de hoy en este dispositivo, para ordenar los eventos de la hoja de enlazar. */
+  readonly today: () => Day | null
 }
 
 export interface DiagramCanvas {
@@ -169,6 +183,7 @@ export const createDiagramCanvas = ({
   onOpenDiagram,
   onOpenEvent,
   onOpenRoutine,
+  today,
 }: DiagramCanvasDeps): DiagramCanvas => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -205,6 +220,9 @@ export const createDiagramCanvas = ({
   lienzo.setAttribute("aria-label", "Lienzo del diagrama")
   lienzo.append(capa)
   const menu: Sheet = createSheet(back)
+  /* La de enlazar, aparte: se abre al elegir en la de los menús, y el cierre de ésa,
+     que llega después, la vaciaría si fuera la misma. */
+  const hojaEnlace: Sheet = createSheet(back)
   /* Transparente para la columna: el lienzo es el que ocupa el sitio. */
   const marco: HTMLElement = elemento("div")
   marco.className = "lienzo-marco"
@@ -214,7 +232,7 @@ export const createDiagramCanvas = ({
   avisoConectar.setAttribute("role", "status")
   avisoConectar.hidden = true
   lienzo.append(avisoConectar)
-  marco.append(lienzo, menu.element)
+  marco.append(lienzo, menu.element, hojaEnlace.element)
 
   /* ── El encuadre ── */
 
@@ -271,7 +289,7 @@ export const createDiagramCanvas = ({
   const textoDe = (nodo: DiagramNode, estado: AppState): string => readNode(estado, nodo.text).text
 
   /** El texto de un nodo que lleva a una nota. */
-  const enlaceA = (nota: Note): string => buildLink(nota.name, `#${nota.id}`) ?? nota.name
+  const enlaceA = (nota: Note): string => linkNodeText(nota.name, `#${nota.id}`, nota.name) ?? textNodeText(nota.name)
 
   const positDe = (id: DiagramNodeId): HTMLElement | null =>
     capa.querySelector<HTMLElement>(`.posit[data-id="${CSS.escape(id)}"]`)
@@ -578,21 +596,26 @@ export const createDiagramCanvas = ({
     return diagramNodeId(nuevo)
   }
 
-  /** Las notas que se pueden poner, por nombre, para elegir una en la misma hoja. */
-  const elegirNota = (caja: HTMLElement, p: Point): void => {
-    const notas: ReadonlyArray<Note> = [...Object.values<Note>(store.getState().notes)].sort(
-      (a: Note, b: Note): number => a.name.localeCompare(b.name),
-    )
-    const lista: HTMLElement = elemento("div")
-    lista.className = "selector"
-    lista.append(
-      ...notas.map((nota: Note): HTMLButtonElement =>
-        opcion(nota.name, (): void => {
-          ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, enlaceA(nota), p.x, p.y))
-        }),
-      ),
-    )
-    caja.replaceChildren(lista)
+  /**
+   * La hoja de enlazar de las notas: con lo elegido y el texto
+   * escrito, `poner` recibe el texto guardado del nodo. Un destino que no se puede
+   * escribir no hace nada.
+   */
+  const elegirEnlace = (titulo: string, actual: string, poner: (texto: string) => void): void => {
+    const estado: AppState = store.getState()
+    const nodo: NodeContent = readNode(estado, actual)
+    const si = (texto: string | null): void => {
+      if (texto !== null) poner(texto)
+    }
+    openLinkSheet(hojaEnlace, {
+      title: titulo,
+      choices: linkChoices(estado, null, today()),
+      initialText: linkSheetText(nodo),
+      initialAddress: linkSheetAddress(nodo),
+      onPickAddress: (direccion: string, texto: string): void => si(linkNodeText(texto, direccion)),
+      onPick: (_tipo: LinkKind, destino: string, nombre: string, texto: string): void =>
+        si(linkNodeText(texto, `#${destino}`, nombre)),
+    })
   }
 
   /** Crear en el sitio donde se pidió. */
@@ -600,10 +623,6 @@ export const createDiagramCanvas = ({
     const p: Point = toCanvas(vista, donde)
     const caja: HTMLElement = elemento("div")
     caja.className = "hoja-acciones"
-    /* Ésta no cierra la hoja: la lista de notas sustituye a las opciones, en la misma. */
-    const existente: HTMLButtonElement = elemento("button", "Nota existente")
-    existente.type = "button"
-    existente.addEventListener("click", (): void => elegirNota(caja, p))
     caja.append(
       opcion("Texto", (): void => {
         const nuevo: DiagramNodeId | null = ponerNodo((): Diagram | null =>
@@ -611,7 +630,11 @@ export const createDiagramCanvas = ({
         )
         if (nuevo !== null) editar(nuevo)
       }),
-      ...(Object.keys(store.getState().notes).length > 0 ? [existente] : []),
+      opcion("Enlazar…", (): void => {
+        elegirEnlace("Enlazar", "", (texto: string): void => {
+          ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, texto, p.x, p.y))
+        })
+      }),
       opcion("Nota nueva", (): void => {
         const nota: Note | null = createNoteForDiagram(useCases, store.getState(), diagramId)
         if (nota === null) return
@@ -809,6 +832,18 @@ export const createDiagramCanvas = ({
       opcion("Conectar", (): void => empezarAConectar(id)),
       /* Uno que enlaza a algo de la app enseña su nombre: no hay texto propio que editar. */
       ...(canEditNodeText(contenido) ? [opcion("Editar", (): void => editar(id))] : []),
+      opcion(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar…", (): void => {
+        elegirEnlace(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar", nodo.text, (texto: string): void => {
+          useCases.setNodeText(diagramId, id, texto)
+        })
+      }),
+      ...(contenido.kind === "link"
+        ? [
+            opcion("Quitar enlace", (): void => {
+              useCases.setNodeText(diagramId, id, unlinkedNodeText(store.getState(), nodo.text))
+            }),
+          ]
+        : []),
       opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
         useCases.setNodeDone(diagramId, id, !nodo.done)
       }),

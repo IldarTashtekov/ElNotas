@@ -1,7 +1,8 @@
 /**
  * Lo que es un nodo del lienzo: un texto que se ve tal cual se escribió, o un
  * enlace entero que enseña el nombre de ahora de lo enlazado (o su texto, si es
- * una web o está roto). Y qué se guarda al cambiar lo que se ve.
+ * una web o está roto). Y qué se guarda al cambiar lo que se ve, al enlazarlo y
+ * al quitarle el enlace.
  */
 
 import { test } from "node:test"
@@ -11,7 +12,16 @@ import type { AppState, CalendarEvent, Clock, Day, Diagram, IdGenerator, Note, R
 import { buildLink, createStore, createUseCases } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { NodeContent } from "#ui/nodeContent"
-import { canEditNodeText, editedNodeText, readNode, textNodeText } from "#ui/nodeContent"
+import {
+  canEditNodeText,
+  editedNodeText,
+  linkNodeText,
+  linkSheetAddress,
+  linkSheetText,
+  readNode,
+  textNodeText,
+  unlinkedNodeText,
+} from "#ui/nodeContent"
 
 interface Escenario {
   readonly store: Store
@@ -129,4 +139,40 @@ test("editedNodeText: un enlace a algo de la app no cambia, y «Editar» no se o
   assert.strictEqual(canEditNodeText(readNode(s, "[x](#fantasma)")), false)
   assert.strictEqual(canEditNodeText(readNode(s, "[t](https://a.es)")), true)
   assert.strictEqual(canEditNodeText(readNode(s, "Cajas")), true)
+})
+
+/* ── Enlazar y quitar el enlace ── */
+
+test("linkNodeText: con el texto escrito, o sin él el nombre o el host; un destino con «)», null", (): void => {
+  const { store, nota }: Escenario = escenario()
+  const s: AppState = store.getState()
+  assert.strictEqual(linkNodeText("Mi [lista]", `#${nota.id}`, "Compra"), buildLink("Mi [lista]", `#${nota.id}`))
+  assert.strictEqual(readNode(s, linkNodeText(" ", `#${nota.id}`, "Compra") ?? "").text, "Compra")
+  assert.strictEqual(linkNodeText("", "https://www.aemet.es/x"), "[aemet.es](https://www.aemet.es/x)")
+  assert.strictEqual(linkNodeText("x", "https://a.es/(b)"), null)
+})
+
+test("unlinkedNodeText: se queda lo que se veía, como texto; uno de texto no cambia", (): void => {
+  const { store, useCases, nota }: Escenario = escenario()
+  useCases.renameNote(nota.id, "Compra *ya*")
+  const s: AppState = store.getState()
+  const sinEnlace: string = unlinkedNodeText(s, `[x](#${nota.id})`)
+  assert.deepEqual(readNode(s, sinEnlace), { kind: "text", text: "Compra *ya*" })
+  assert.deepEqual(readNode(s, unlinkedNodeText(s, "[El tiempo](https://aemet.es)")), { kind: "text", text: "El tiempo" })
+  const texto: string = textNodeText("a * b")
+  assert.strictEqual(unlinkedNodeText(s, texto), texto)
+})
+
+test("la hoja de enlazar: el texto de uno de texto o de una web, y su dirección; vacía en uno de la app", (): void => {
+  const { store, nota }: Escenario = escenario()
+  const s: AppState = store.getState()
+  const web: NodeContent = readNode(s, "[El tiempo](https://aemet.es)")
+  assert.strictEqual(linkSheetText(web), "El tiempo")
+  assert.strictEqual(linkSheetAddress(web), "https://aemet.es")
+  const interno: NodeContent = readNode(s, `[x](#${nota.id})`)
+  assert.strictEqual(linkSheetText(interno), "")
+  assert.strictEqual(linkSheetAddress(interno), "")
+  const texto: NodeContent = readNode(s, textNodeText("2 * 3"))
+  assert.strictEqual(linkSheetText(texto), "2 * 3")
+  assert.strictEqual(linkSheetAddress(texto), "")
 })

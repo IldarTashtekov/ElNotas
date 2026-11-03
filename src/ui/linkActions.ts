@@ -148,11 +148,11 @@ const eventosParaEnlazar = (
 }
 
 /**
- * A qué se puede enlazar desde la nota `excluding`: las demás notas, los
- * diagramas, los eventos (con su día y su hora al lado) y las rutinas. Los
- * contextos, por ahora, no.
+ * A qué se puede enlazar desde la nota `excluding` (o desde un diagrama, con
+ * `null`): las demás notas, los diagramas, los eventos (con su día y su hora al
+ * lado) y las rutinas. Los contextos, por ahora, no.
  */
-export const linkChoices = (state: AppState, excluding: NoteId, today: Day | null): LinkChoices => ({
+export const linkChoices = (state: AppState, excluding: NoteId | null, today: Day | null): LinkChoices => ({
   notes: Object.values(state.notes)
     .filter((n: Note): boolean => n.id !== excluding)
     .map((n: Note): LinkChoice<NoteId> => ({ id: n.id, name: n.name }))

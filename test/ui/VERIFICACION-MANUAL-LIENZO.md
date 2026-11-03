@@ -137,8 +137,10 @@ otro diagrama, un evento y una rutina, y nodos que los enlacen, uno a una web y 
   vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la página**.
 - **F4.** **Doble toque** en un nodo que enlaza a algo de la app abre su menú **sin «Editar»**, y
   **no entra**.
-- **F5.** **Nota existente** cambia la hoja a la lista de notas, por nombre; elegir una pone su
-  nodo **sin entrar** en ella. La misma nota puede estar en dos nodos.
+- **F5.** El menú de crear ofrece **Texto**, **Enlazar…** y **Nota nueva**. *Enlazar…* abre la hoja
+  de enlazar de las notas (texto, dirección y, debajo, notas, diagramas, eventos y rutinas); elegir
+  algo con el texto en blanco pone un nodo con **su nombre**, donde se tocó, **sin entrar**. La
+  misma nota puede estar en dos nodos.
 - **F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio, **apagados** (raya
   y letra), con el texto que tenía el enlace; un toque avisa «El enlace ya no existe».
 - **F7.** Unos datos guardados antes del nodo único (esquema 1) arrancan con sus nodos-nota
@@ -149,6 +151,12 @@ otro diagrama, un evento y una rutina, y nodos que los enlacen, uno a una web y 
   enseña igual, sin barras; añadir ` # (b)` y guardar se ve igual que se escribió.
 - **F10.** «Editar» en el de una web enseña **sólo su texto**; cambiarlo cambia lo que se ve y el
   toque sigue abriendo la misma web.
+- **F11.** El menú de un nodo-enlace trae **Cambiar enlace** y **Quitar enlace**. *Cambiar enlace*
+  abre la misma hoja (en uno de web, con su texto y su dirección); pegar `https://aemet.es` con el
+  texto `Tiempo *hoy*` lo deja en `Tiempo *hoy*`, tal cual, y un toque abre la web.
+- **F12.** *Quitar enlace* lo deja como texto, con **lo que se veía**, sin la raya gruesa.
+- **F13.** El menú de un nodo de texto trae **Enlazar…**: la hoja llega con su texto, y elegir una
+  rutina lo convierte en un nodo-enlace con el nombre de la rutina.
 
 ## G. El diagrama como ventana
 

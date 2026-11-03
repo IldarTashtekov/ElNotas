@@ -247,6 +247,7 @@ export const mountWindowsView = (
       onOpenDiagram: (otro: DiagramId): void => onOpenDiagram(otro, false),
       onOpenEvent,
       onOpenRoutine,
+      today,
     })
     zonaLienzo.append(instancia.element)
     lienzo = { diagrama: id, instancia }

@@ -8,7 +8,7 @@
  * lienzo en la vista ventanas, sin exit.
  */
 
-import type { Diagram, DiagramId, EventId, NoteId, RoutineId, Store, Unsubscribe, UseCases } from "#core/index"
+import type { Day, Diagram, DiagramId, EventId, NoteId, RoutineId, Store, Unsubscribe, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
@@ -33,6 +33,8 @@ export interface DiagramViewDeps {
   readonly onOpenDiagram: (id: DiagramId) => void
   readonly onOpenEvent: (id: EventId) => void
   readonly onOpenRoutine: (id: RoutineId) => void
+  /** El día de hoy, para la hoja de enlazar un nodo. */
+  readonly today: () => Day | null
 }
 
 /** Devuelve la función que la desmonta. */
@@ -50,6 +52,7 @@ export const mountDiagramView = (
     onOpenDiagram,
     onOpenEvent,
     onOpenRoutine,
+    today,
   }: DiagramViewDeps,
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
@@ -76,6 +79,7 @@ export const mountDiagramView = (
     onOpenDiagram,
     onOpenEvent,
     onOpenRoutine,
+    today,
   })
 
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")

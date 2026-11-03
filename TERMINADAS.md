@@ -240,6 +240,11 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   nombre de ahora de lo enlazado, o su texto si es una web o está roto; con la raya gruesa, y apagado si está
   roto. Un toque abre nota, diagrama, evento, rutina o web; «Editar» enseña sólo lo que se ve, escapa al
   guardar y no sale en un enlace a algo de la app. El lienzo recibe los cuatro `onOpen…`.
+- **Tarea 17 de la Fase 10, poner, cambiar y quitar el enlace de un nodo** 2026-11-04, rama `nodo-unico`: el menú
+  de crear es Texto, Enlazar… y Nota nueva («Nota existente» se va: la hoja de enlazar ya trae las notas); el de un
+  nodo, Enlazar… en uno de texto, y Cambiar enlace y Quitar enlace en un nodo-enlace. Es la hoja de las notas, en una
+  segunda hoja del lienzo: el cierre de la de los menús, que llega después, vaciaría la misma. Sin texto, el
+  enlace toma el nombre o el host (`linkNodeText`); quitarlo deja lo que se veía (`unlinkedNodeText`).
 - **Tarea 15a de la Fase 10, un arranque que migra de verdad** 2026-11-03, rama `arranque-que-migra`: con
   migraciones aplicadas, `boot` guarda las entidades que cambian —cada una esperando su revisión— y sólo
   después apunta la versión; cortado a medias, el siguiente arranque repite sobre la mezcla, y por eso

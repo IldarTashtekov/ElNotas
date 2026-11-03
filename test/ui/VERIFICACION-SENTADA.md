@@ -377,8 +377,8 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
   atrás vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la app**.
 - **LZ-F4.** **Doble toque** en un nodo-nota abre su menú **sin «Editar»**, y **no entra** en la
   nota.
-- **LZ-F5.** **Nota existente** cambia la hoja a la lista de notas, por nombre; elegir una pone su
-  nodo **sin entrar** en ella. La misma nota puede estar en dos nodos.
+- **LZ-F5.** **Enlazar…** abre la hoja de enlazar de las notas; elegir una nota pone su nodo **sin
+  entrar** en ella. La misma nota puede estar en dos nodos.
 - **LZ-F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio, **apagados**,
   con su texto; un toque avisa «El enlace ya no existe».
 

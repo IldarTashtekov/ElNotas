@@ -1,14 +1,15 @@
 /**
  * Lo que es un nodo del lienzo, leído de su texto guardado: un texto, o un enlace
  * entero. En el lienzo no se ve ni se escribe Markdown: aquí se decide qué se
- * enseña de un nodo, a qué lleva y qué se guarda cuando se cambia lo que se ve.
+ * enseña de un nodo, a qué lleva y qué se guarda cuando se cambia lo que se ve,
+ * cuando se enlaza y cuando se le quita el enlace.
  * Puro: ni DOM ni core más allá de leer el estado.
  */
 
 import type { AppState } from "#core/index"
 import { buildLink } from "#core/index"
 import type { ResolvedLink } from "./linkActions.js"
-import { resolveLink } from "./linkActions.js"
+import { defaultLinkText, resolveLink } from "./linkActions.js"
 import type { FormattedLine, LineLink, LineSpan, LinkTarget } from "./markdownLine.js"
 import { readMarkdownLine } from "./markdownLine.js"
 
@@ -101,3 +102,29 @@ export const editedNodeText = (state: AppState, raw: string, visible: string): s
 /** Si «Editar» tiene algo que cambiar: en uno que enlaza a algo de la app, no. */
 export const canEditNodeText = (nodo: NodeContent): boolean =>
   nodo.kind === "text" || nodo.target.kind === "web"
+
+/**
+ * El texto guardado de un nodo que enlaza a `destino` (`#id` o una web). Sin
+ * texto escrito, el de por defecto: el nombre de lo enlazado o el host de la
+ * web. `null` si el enlace no se puede escribir (un `)` en el destino).
+ */
+export const linkNodeText = (texto: string, destino: string, nombre?: string): string | null =>
+  buildLink(texto.trim() === "" ? defaultLinkText(destino, nombre) : texto, destino)
+
+/** El texto guardado de un nodo al quitarle el enlace: un texto con lo que se veía. Uno de texto no cambia. */
+export const unlinkedNodeText = (state: AppState, raw: string): string => {
+  const nodo: NodeContent = readNode(state, raw)
+  return nodo.kind === "text" ? raw : textNodeText(nodo.text)
+}
+
+/**
+ * Lo que lleva el campo del texto en la hoja de enlazar un nodo: lo que se ve de
+ * uno de texto o de uno a una web. En uno a algo de la app se ve el nombre de lo
+ * enlazado, sea cual sea su texto: vacío, para que tome el del nuevo destino.
+ */
+export const linkSheetText = (nodo: NodeContent): string =>
+  nodo.kind === "text" || nodo.target.kind === "web" ? nodo.text : ""
+
+/** Lo que lleva el campo de la dirección en la hoja: la web de un nodo que la enlaza, o nada. */
+export const linkSheetAddress = (nodo: NodeContent): string =>
+  nodo.kind === "link" && nodo.target.kind === "web" ? nodo.target.href : ""

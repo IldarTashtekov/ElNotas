@@ -211,6 +211,12 @@ test("linkChoices: el orden ignora tildes y mayúsculas; sin nada que enlazar, l
   assert.deepEqual(linkChoices(emptyAppState(), nota.id, null), { notes: [], diagrams: [], events: [], routines: [] })
 })
 
+test("linkChoices: desde un diagrama, sin nota que quitar, salen todas", (): void => {
+  const { store, nota }: Escenario = escenario()
+  const r: LinkChoices = linkChoices(store.getState(), null, null)
+  assert.ok(r.notes.some((n: { readonly id: string }): boolean => n.id === nota.id))
+})
+
 /* ── buildLink ── */
 
 test("buildLink: [texto](destino), con los destinos tal cual", (): void => {

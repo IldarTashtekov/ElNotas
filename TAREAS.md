@@ -225,13 +225,6 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
       lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
       que la pulsación larga no saque el menú del sistema) y los anota.
-- [ ] **17. Poner, cambiar y quitar el enlace de un nodo** *(mecánica)*. Tras la 16. Como en las
-      notas, con la hoja de enlazar, nunca escribiendo el enlace. Al crear, el menú ofrece **Texto**,
-      **Enlazar…** (la hoja de las notas, con su campo para pegar una web: pone un nodo-enlace) y
-      **Nota nueva** (crea la nota, la mete en los contextos del diagrama y pone su nodo-enlace). En el
-      menú de un nodo, **Cambiar enlace** (la misma hoja; a un nodo de texto se lo pone) y **Quitar
-      enlace** (se queda el texto que se veía). **Se cierra cuando** el panel crea los tres, cambia y
-      quita un enlace, también a una web, y la lista del lienzo los recoge.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
