@@ -96,7 +96,7 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 ### El arranque
 
 - **CTX-A1.** Recién vacía, al abrir se ve **una ventana: el General**, vacía, con una fila de pestañas
-  que lleva sólo **≡** (sin nombre) y el **+**, y debajo la cabecera con ▦ y ⚙.
+  que lleva sólo **≡ General** y el **+**, y debajo la cabecera con ▦ y ⚙.
 - **CTX-A2.** ⚙ → *Contextos* → crear «Compra». Al volver a la ventana, **Compra no tiene ventana
   todavía**: crear un contexto no se la da.
 - **CTX-A3.** El **+** de la fila de pestañas → *Compra*. Aparece una pestaña «Compra» al final y
@@ -106,8 +106,8 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 ### La vista ventanas
 
 - **CTX-B1.** Arriba, una pestaña por ventana, con su símbolo delante (≡ General, ▤ contexto);
-  la activa, en vídeo inverso, y tocar otra lleva a esa ventana. El General va fijo el primero, sólo
-  con su ≡ y separado del resto por una raya; no se desliza ni se arrastra.
+  la activa, en vídeo inverso, y tocar otra lleva a esa ventana. El General es una más: con su
+  nombre, en el carril y se arrastra como las otras.
 - **CTX-B2.** Tocar el título de un contexto lo convierte en un campo. **Intro** guarda;
   **Escape** 💻 cancela; **tocar fuera** guarda. El nombre nuevo sobrevive a recargar.
 - **CTX-B3.** Tocar el título del **General no hace nada**.
@@ -144,8 +144,7 @@ Con tres o cuatro ventanas, además del General:
 - **CTX-D4.** Con más pestañas de las que caben: **deslizar** el carril con el dedo lo mueve **sin
   levantar ninguna**; arrastrando una levantada cerca del borde, el carril se desliza solo.
 - **CTX-D5.** 📱 La pulsación larga **no** selecciona texto ni saca el menú del sistema.
-- **CTX-D6.** Mantener pulsado el **General** o el calendario no los levanta: las fijas no se
-  arrastran ni se deslizan. Un **toque corto** en cualquier pestaña no la levanta: sólo lleva a su ventana.
+- **CTX-D6.** El **General** y el **calendario** se levantan y se arrastran como cualquier otra. Un **toque corto** en cualquier pestaña no la levanta: sólo lleva a su ventana.
 
 ### El «+» de las pestañas
 
@@ -154,7 +153,7 @@ Con tres o cuatro ventanas, además del General:
   Contexto nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene
   ventana**: el General no sale si ya es ventana; las notas, tras «Notas:».
 - **CTX-I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**: su pestaña sale
-  al final del carril, activa, y el + sigue ahí (el General y el calendario, a su sitio fijo).
+  al final del carril, activa, y el + sigue ahí (también el General y el calendario).
 - **CTX-I4.** «+ Contexto nuevo» crea uno y llega a él **con el título ya en edición**: escribir e
   Intro le pone el nombre.
 - **CTX-I5.** La hoja se cierra **sin cambiar nada** con *Cancelar*, con Escape 💻, **tocando

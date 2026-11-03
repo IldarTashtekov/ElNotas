@@ -30,7 +30,7 @@ lista con **dos ventanas** como mínimo (el General y otra).
 - **A3.** Con el calendario abierto con el icono, **recargar**: se vuelve a la ventana, **no** al
   calendario (como con ⚙).
 - **A4.** El «+» del final de la fila de pestañas abre «Añadir ventana», que ofrece **«Calendario»**.
-  Al elegirlo aparece una pestaña fija con sólo **▦**, tras el General (o la primera, si no hay General), y queda activa.
+  Al elegirlo aparece la pestaña **▦ Calendario**, al final, y queda activa.
 - **A5.** Con la pestaña puesta, el «+» **ya no ofrece «Calendario»**: sólo hay uno.
 - **A6.** Tocar la pestaña ▦: se ve su contenido, con la cabecera de
   las ventanas, y el título «Calendario» **no se renombra**.

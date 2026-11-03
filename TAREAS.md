@@ -415,10 +415,6 @@ una tarea con su cierre.
 
 **No las resuelva por su cuenta quien implemente.** Si te topas con una, pregunta.
 
-- [ ] **Las pestañas fijas, sólo con su símbolo** *(salió en la 13, 2026-11-03)*. Con su nombre,
-      el General y el calendario se comían media fila a 475 px; se quedaron en ≡ y ▦. Opciones:
-      así, o con nombre y menos sitio para el carril. **Se cierra cuando** el usuario elige y la
-      decisión queda escrita aquí.
 - [ ] **Marcar un día de una semana pasada** *(salió en la 7l, 2026-10-29)*. Con sólo la semana
       de hoy en cada rutina ya no hay dónde corregir un día olvidado de la semana pasada, aunque el
       core lo permite. Opciones: pulsar el día en el mes con la pestaña Rutinas, o nada. Sin

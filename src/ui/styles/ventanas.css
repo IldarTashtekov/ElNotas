@@ -3,7 +3,7 @@
  * como tarjetas, el modo selección, y los vacíos y los avisos de arriba.
  */
 
-/* ── Las pestañas: las fijas quietas, el carril que se desliza y el «+» ── */
+/* ── Las pestañas: el carril que se desliza y el «+» ── */
 .pestanas {
   align-items: stretch;
   border-bottom: 1px solid var(--rowline);
@@ -18,12 +18,6 @@
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-  /* Las fijas, separadas del carril por una raya. */
-  & > .pestanas-fijas {
-    border-right: 1px solid var(--line);
-    margin-right: 0.25rem;
-    padding-right: 0.25rem;
   }
   & > .pestanas-carril {
     flex: 1;
@@ -94,14 +88,6 @@
 }
 .pestanas-carril.arrastrando {
   cursor: grabbing;
-}
-/* Las fijas, sólo con su símbolo: siempre a la vista sin comerse la fila. */
-.pestanas-fijas .pestana-ventana {
-  min-width: 0;
-
-  & .nombre {
-    display: none;
-  }
 }
 
 /* ── La cabecera: título, ▦ y ⚙ ── */

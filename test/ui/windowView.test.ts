@@ -10,7 +10,7 @@ import type { AppState, Context, Diagram, ItemRef, Note } from "#core/index"
 import { contextId, diagramId, diagramRef, noteId, noteRef } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import { revision } from "#core/domain/Ids"
-import type { ListItem, WindowTab, WindowTabs, WindowView } from "#ui/windowView"
+import type { ListItem, WindowTab, WindowView } from "#ui/windowView"
 import type { WindowRef } from "#ui/windows"
 import type { WindowsLayout } from "#ui/windows"
 import { CALENDAR, GENERAL } from "#ui/windows"
@@ -66,18 +66,18 @@ test("sin ventana activa, la pantalla vacía", (): void => {
 const pestanas = (tabs: ReadonlyArray<WindowTab>): ReadonlyArray<string> =>
   tabs.map((t: WindowTab): string => `${t.index}:${t.symbol} ${t.title}${t.active ? " *" : ""}`)
 
-test("las pestañas: las fijas aparte, cada una con su puesto, su símbolo y cuál es la activa", (): void => {
+test("las pestañas: todas iguales, el General y el calendario también, cada una con su puesto, su símbolo y cuál es la activa", (): void => {
   const deNota: WindowRef = { kind: "note", id: LECHE.id }
-  const tabs: WindowTabs = windowTabs({ windows: [GENERAL, CALENDAR, COMPRA, deNota], active: COMPRA }, ESTADO)
-  assert.deepEqual(pestanas(tabs.pinned), ["0:≡ General", "1:▦ Calendario"])
-  assert.deepEqual(pestanas(tabs.scrolling), ["2:▤ Compra *", "3:¶ Leche"])
+  const tabs: ReadonlyArray<WindowTab> = windowTabs({ windows: [CALENDAR, COMPRA, GENERAL, deNota], active: COMPRA }, ESTADO)
+  assert.deepEqual(pestanas(tabs), ["0:▦ Calendario", "1:▤ Compra *", "2:≡ General", "3:¶ Leche"])
 })
 
-test("sin el General ni el calendario, todas se deslizan; sin ventanas, ninguna", (): void => {
-  const tabs: WindowTabs = windowTabs({ windows: [COMPRA, TRABAJO], active: TRABAJO }, ESTADO)
-  assert.deepEqual(tabs.pinned, [])
-  assert.deepEqual(pestanas(tabs.scrolling), ["0:▤ Compra", "1:▤ Trabajo *"])
-  assert.deepEqual(windowTabs({ windows: [], active: null }, ESTADO), { pinned: [], scrolling: [] })
+test("sin ventanas, ninguna pestaña", (): void => {
+  assert.deepEqual(pestanas(windowTabs({ windows: [COMPRA, TRABAJO], active: TRABAJO }, ESTADO)), [
+    "0:▤ Compra",
+    "1:▤ Trabajo *",
+  ])
+  assert.deepEqual(windowTabs({ windows: [], active: null }, ESTADO), [])
 })
 
 test("un contexto se titula con su nombre y se renombra", (): void => {

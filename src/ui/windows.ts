@@ -89,36 +89,14 @@ export const guardWindows = (layout: WindowsLayout, state: AppState): WindowsLay
 /* ──────────────────── Editar la lista, desde las pestañas ─────────────────── */
 
 /*
-    El General y el calendario, si están, van fijos delante —el General primero—
-    y no se arrastran. Las demás ediciones van por posición, porque es lo que se
-    toca en la fila. Ninguna comprueba que el contenido exista —lo mira el modelo
+    Todas las pestañas son iguales, también el General y el calendario. Las
+    ediciones van por posición, porque es lo que se toca en la fila. Ninguna comprueba que el contenido exista —lo mira el modelo
     antes de llamarlas, y la guarda después— y todas devuelven el MISMO objeto si
     no cambian nada.
 */
 
-/** Delante, en este orden: el General y el calendario. */
-const puestoFijo = (ref: WindowRef): number | null =>
-  ref.kind === "general" ? 0 : ref.kind === "calendar" ? 1 : null
-
-/** Cuántas pestañas fijas hay al principio. */
-export const pinnedCount = (layout: WindowsLayout): number =>
-  layout.windows.filter((ref: WindowRef): boolean => puestoFijo(ref) !== null).length
-
-/** Las fijas, delante y en su orden; las demás, como estaban. */
-export const pinFixed = (layout: WindowsLayout): WindowsLayout => {
-  const fijas: ReadonlyArray<WindowRef> = layout.windows
-    .filter((ref: WindowRef): boolean => puestoFijo(ref) !== null)
-    .sort((a: WindowRef, b: WindowRef): number => (puestoFijo(a) ?? 0) - (puestoFijo(b) ?? 0))
-  const yaEstan: boolean = fijas.every((ref: WindowRef, i: number): boolean => layout.windows[i] === ref)
-  if (yaEstan) return layout
-  const resto: ReadonlyArray<WindowRef> = layout.windows.filter(
-    (ref: WindowRef): boolean => puestoFijo(ref) === null,
-  )
-  return { windows: [...fijas, ...resto], active: layout.active }
-}
-
 /**
- * Añade una pestaña y la deja activa: al final, o en su sitio si es fija. Si ya
+ * Añade una pestaña al final y la deja activa. Si ya
  * estaba, sólo pasa a ella.
  */
 export const addWindow = (layout: WindowsLayout, ref: WindowRef): WindowsLayout => {
@@ -126,18 +104,7 @@ export const addWindow = (layout: WindowsLayout, ref: WindowRef): WindowsLayout 
   if (ya !== undefined) {
     return layout.active !== null && sameWindow(layout.active, ya) ? layout : { ...layout, active: ya }
   }
-  const fijo: number | null = puestoFijo(ref)
-  /* Una fija va detrás de las fijas que van antes que ella: el calendario, tras el General. */
-  const puesto: number =
-    fijo === null
-      ? layout.windows.length
-      : layout.windows.filter((w: WindowRef): boolean => (puestoFijo(w) ?? Infinity) < fijo).length
-  const windows: ReadonlyArray<WindowRef> = [
-    ...layout.windows.slice(0, puesto),
-    ref,
-    ...layout.windows.slice(puesto),
-  ]
-  return { windows, active: ref }
+  return { windows: [...layout.windows, ref], active: ref }
 }
 
 /**
@@ -158,12 +125,11 @@ export const closeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout =
 
 /**
  * Lleva la pestaña `de` al puesto `a`, corriendo las de en medio. La activa no
- * cambia. Las fijas ni se mueven ni dejan que otra se meta entre ellas.
+ * cambia.
  */
 export const moveWindow = (layout: WindowsLayout, de: number, a: number): WindowsLayout => {
   const movida: WindowRef | undefined = layout.windows[de]
-  const fijas: number = pinnedCount(layout)
-  if (movida === undefined || de === a || de < fijas || a < fijas || a >= layout.windows.length) return layout
+  if (movida === undefined || de === a || a < 0 || a >= layout.windows.length) return layout
   const sin: ReadonlyArray<WindowRef> = layout.windows.filter(
     (_: WindowRef, j: number): boolean => j !== de,
   )

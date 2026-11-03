@@ -23,8 +23,6 @@ import {
   closeWindowAt,
   guardWindows,
   moveWindow,
-  pinFixed,
-  pinnedCount,
   sameWindow,
 } from "#ui/windows"
 import { parseWindowsLayout } from "#ui/windows"
@@ -159,14 +157,10 @@ test("addWindow de la que ya es activa devuelve el MISMO objeto", (): void => {
   assert.strictEqual(addWindow(TRES, ventana("compra")), TRES)
 })
 
-test("addWindow del General lo pone el primero, y el calendario tras él", (): void => {
-  const conGeneral: WindowsLayout = addWindow(TRES, GENERAL)
-  assert.deepEqual(conGeneral.windows[0], GENERAL)
-  assert.deepEqual(addWindow(conGeneral, CALENDAR).windows.slice(0, 3), [GENERAL, CALENDAR, ventana("casa")])
-  /* Sin el General, el calendario va el primero; y el General, luego, delante de él. */
+test("addWindow del General o del calendario los pone al final, como a cualquier otra", (): void => {
   const conCalendario: WindowsLayout = addWindow(TRES, CALENDAR)
-  assert.deepEqual(conCalendario.windows[0], CALENDAR)
-  assert.deepEqual(addWindow(conCalendario, GENERAL).windows.slice(0, 2), [GENERAL, CALENDAR])
+  assert.deepEqual(conCalendario.windows, [...TRES.windows, CALENDAR])
+  assert.deepEqual(addWindow(conCalendario, GENERAL).windows, [...TRES.windows, CALENDAR, GENERAL])
 })
 
 test("closeWindowAt de la activa pasa a la de su derecha", (): void => {
@@ -215,38 +209,10 @@ test("moveWindow al mismo sitio, o fuera de rango, devuelve el MISMO objeto", ()
   assert.strictEqual(moveWindow(TRES, -1, 0), TRES)
 })
 
-const CON_FIJAS: WindowsLayout = {
-  windows: [GENERAL, CALENDAR, ventana("casa"), ventana("trabajo")],
-  active: GENERAL,
-}
-
-test("las fijas son el General y el calendario de delante", (): void => {
-  assert.equal(pinnedCount(CON_FIJAS), 2)
-  assert.equal(pinnedCount(TRES), 0)
-})
-
-test("moveWindow no saca una fija de su sitio ni mete otra entre ellas: el MISMO objeto", (): void => {
-  assert.strictEqual(moveWindow(CON_FIJAS, 0, 3), CON_FIJAS)
-  assert.strictEqual(moveWindow(CON_FIJAS, 1, 2), CON_FIJAS)
-  assert.strictEqual(moveWindow(CON_FIJAS, 3, 1), CON_FIJAS)
-  assert.strictEqual(moveWindow(CON_FIJAS, 2, 0), CON_FIJAS)
-  assert.deepEqual(moveWindow(CON_FIJAS, 3, 2).windows.slice(2), [ventana("trabajo"), ventana("casa")])
-})
-
-test("pinFixed pone delante el General y el calendario, en ese orden, y deja lo demás como estaba", (): void => {
-  const desordenada: WindowsLayout = {
-    windows: [ventana("casa"), CALENDAR, ventana("trabajo"), GENERAL],
-    active: CALENDAR,
-  }
-  assert.deepEqual(pinFixed(desordenada), {
-    windows: [GENERAL, CALENDAR, ventana("casa"), ventana("trabajo")],
-    active: CALENDAR,
-  })
-})
-
-test("pinFixed de una lista ya en orden devuelve el MISMO objeto", (): void => {
-  assert.strictEqual(pinFixed(CON_FIJAS), CON_FIJAS)
-  assert.strictEqual(pinFixed(TRES), TRES)
+test("moveWindow lleva el General y el calendario como a cualquier otra", (): void => {
+  const conAmbos: WindowsLayout = { windows: [GENERAL, CALENDAR, ventana("casa")], active: GENERAL }
+  assert.deepEqual(moveWindow(conAmbos, 0, 2).windows, [CALENDAR, ventana("casa"), GENERAL])
+  assert.deepEqual(moveWindow(conAmbos, 2, 0).windows, [ventana("casa"), GENERAL, CALENDAR])
 })
 
 /* ────────────────────────── Las ventanas de tipo nota ──────────────────────── */

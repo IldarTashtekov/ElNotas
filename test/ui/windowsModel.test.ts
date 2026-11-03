@@ -232,7 +232,7 @@ test("añadir pone la nueva al final, la deja activa y lo guarda", (): void => {
   assert.equal(persistence.guardados().length, 1)
 })
 
-test("lo guardado con el General o el calendario en medio se lee con ellos delante, y se guarda así", (): void => {
+test("lo guardado con el General y el calendario en medio se lee tal cual, sin escribir", (): void => {
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const persistence: AlmacenFalso = almacen(
@@ -240,8 +240,8 @@ test("lo guardado con el General o el calendario en medio se lee con ellos delan
   )
   const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence })
 
-  assert.deepEqual(model.getLayout().windows, [GENERAL, CALENDAR, ventana(casa)])
-  assert.equal(persistence.guardados().length, 1)
+  assert.deepEqual(model.getLayout().windows, [ventana(casa), CALENDAR, GENERAL])
+  assert.equal(persistence.guardados().length, 0)
 })
 
 test("borrar desde el General una nota que es ventana la quita EN LA MISMA SESIÓN", (): void => {
@@ -261,7 +261,7 @@ test("borrar desde el General una nota que es ventana la quita EN LA MISMA SESI�
   assert.deepEqual(model.getLayout(), { windows: [GENERAL], active: GENERAL })
 })
 
-test("move reordena y lo guarda; al mismo sitio o sobre el General, ni avisa ni escribe", (): void => {
+test("move reordena y lo guarda, también el General; al mismo sitio, ni avisa ni escribe", (): void => {
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
   const obra: ContextId = creado("Obra")
@@ -270,14 +270,15 @@ test("move reordena y lo guarda; al mismo sitio o sobre el General, ni avisa ni 
   const antes: WindowsLayout = model.getLayout()
 
   model.move(1, 1)
-  model.move(2, 0)
   assert.strictEqual(model.getLayout(), antes)
   assert.equal(persistence.guardados().length, 0)
 
   model.move(2, 1)
   assert.deepEqual(model.getLayout().windows, [GENERAL, ventana(obra), ventana(casa)])
+  model.move(0, 2)
+  assert.deepEqual(model.getLayout().windows, [ventana(obra), ventana(casa), GENERAL])
   assert.deepEqual(model.getLayout().active, GENERAL)
-  assert.equal(persistence.guardados().length, 1)
+  assert.equal(persistence.guardados().length, 2)
 })
 
 test("un fallo al guardar la lista queda en el registro", (): void => {

@@ -1,6 +1,6 @@
 /**
- * Qué enseña la vista ventanas ahora mismo: la fila de pestañas —las fijas y las
- * que se deslizan, cada una con su símbolo—, y de la ventana activa, su título, si
+ * Qué enseña la vista ventanas ahora mismo: la fila de pestañas, cada una con su
+ * símbolo, y de la ventana activa, su título, si
  * se puede renombrar y sus notas y diagramas —o la nota o el diagrama que enseña,
  * si es una ventana de nota o de diagrama—.
  *
@@ -20,7 +20,7 @@ import type {
 } from "#core/index"
 import { diagramRef, noteRef } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
-import { pinnedCount, sameWindow } from "./windows.js"
+import { sameWindow } from "./windows.js"
 
 export const GENERAL_TITLE: string = "General"
 export const CALENDAR_TITLE: string = "Calendario"
@@ -61,12 +61,6 @@ export interface WindowTab {
   readonly active: boolean
 }
 
-/** La fila de pestañas: las fijas delante, quietas, y las demás, que se deslizan. */
-export interface WindowTabs {
-  readonly pinned: ReadonlyArray<WindowTab>
-  readonly scrolling: ReadonlyArray<WindowTab>
-}
-
 const VACIA: WindowView = { kind: "empty" }
 
 /** Cómo se llama lo que enseña una ventana. Vacío si ya no existe: la guarda lo quita. */
@@ -101,8 +95,8 @@ export const windowSymbol = (ref: WindowRef): string => {
   }
 }
 
-export const windowTabs = (layout: WindowsLayout, state: AppState): WindowTabs => {
-  const tabs: ReadonlyArray<WindowTab> = layout.windows.map(
+export const windowTabs = (layout: WindowsLayout, state: AppState): ReadonlyArray<WindowTab> =>
+  layout.windows.map(
     (ref: WindowRef, index: number): WindowTab => ({
       ref,
       index,
@@ -111,9 +105,6 @@ export const windowTabs = (layout: WindowsLayout, state: AppState): WindowTabs =
       active: layout.active !== null && sameWindow(ref, layout.active),
     }),
   )
-  const fijas: number = pinnedCount(layout)
-  return { pinned: tabs.slice(0, fijas), scrolling: tabs.slice(fijas) }
-}
 
 const deNota = (n: Note): ListItem => ({ ref: noteRef(n.id), name: n.name })
 const deDiagrama = (d: Diagram): ListItem => ({ ref: diagramRef(d.id), name: d.name })

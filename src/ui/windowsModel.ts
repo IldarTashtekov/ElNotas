@@ -15,7 +15,6 @@ import {
   guardWindows,
   parseWindowsLayout,
   moveWindow,
-  pinFixed,
   sameWindow,
   windowExists,
 } from "./windows.js"
@@ -56,8 +55,7 @@ export const createWindowsModel = ({ store, persistence, logger }: WindowsModelD
   const inicial: WindowsLayout =
     leido.ok && leido.value !== null ? parseWindowsLayout(leido.value) : DEFAULT_LAYOUT
 
-  /* Lo guardado antes de las pestañas puede traer el General o el calendario en medio. */
-  let layout: WindowsLayout = guardWindows(pinFixed(inicial), store.getState())
+  let layout: WindowsLayout = guardWindows(inicial, store.getState())
   let listeners: ReadonlyArray<WindowsListener> = []
 
   /* Un fallo al guardar no se avisa: lo único que se pierde es el orden de las

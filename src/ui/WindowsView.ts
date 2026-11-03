@@ -1,7 +1,7 @@
 /**
- * La vista ventanas, la principal: arriba, las pestañas —el General y el
- * calendario fijos delante y con sólo su símbolo, las demás en una fila que se desliza y se reordena
- * manteniendo pulsada una, la ✕ en la activa y un «+» al final—; debajo, el
+ * La vista ventanas, la principal: arriba, las pestañas —en una fila que se
+ * desliza y se reordena manteniendo pulsada una, la ✕ en la activa y un «+» al
+ * final—; debajo, el
  * título de la activa —que se renombra tocándolo, salvo en el General—, sus
  * notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
  * que la vista nota, con su barra y sin exit; una de diagrama, el mismo lienzo
@@ -42,12 +42,11 @@ import { createNoteEditor } from "./NoteEditor.js"
 import type { ItemList } from "./ItemList.js"
 import { createItemList } from "./ItemList.js"
 import { newWindowButtons } from "./newWindowButtons.js"
-import type { ReconcileSteps } from "./reconcile.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { WindowRow } from "./settingsContent.js"
 import { addWindowChoices, choiceGroupLabel } from "./settingsContent.js"
 import { createSheet } from "./sheet.js"
-import type { WindowTab, WindowTabs, WindowView } from "./windowView.js"
+import type { WindowTab, WindowView } from "./windowView.js"
 import { windowTabs, windowView } from "./windowView.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
@@ -112,9 +111,7 @@ export const mountWindowsView = (
     onOpenRoutine,
   }: WindowsViewDeps,
 ): void => {
-  /* La fila de pestañas: las fijas, quietas; las demás, en su carril, y el «+». */
-  const fijas: HTMLOListElement = elemento("ol")
-  fijas.className = "pestanas-fijas"
+  /* La fila de pestañas: todas en su carril, que se desliza, y el «+». */
   const carril: HTMLOListElement = elemento("ol")
   carril.className = "pestanas-carril"
   const agregar: HTMLButtonElement = flecha("+", "Añadir ventana")
@@ -122,7 +119,7 @@ export const mountWindowsView = (
   const pestanas: HTMLElement = elemento("nav")
   pestanas.className = "pestanas"
   pestanas.setAttribute("aria-label", "Ventanas")
-  pestanas.append(fijas, carril, agregar)
+  pestanas.append(carril, agregar)
   const titulo: EditableTitle = createEditableTitle("Nombre", (nombre: string): void => {
     /* Se lee al guardar: es la ventana en la que se empezó a escribir. */
     if (vista.kind !== "window") return
@@ -302,14 +299,12 @@ export const mountWindowsView = (
     }
   }
 
-  /* Reordenar: mantener pulsada una del carril. Las fijas no están en él. */
+  /* Reordenar: mantener pulsada una pestaña. */
   attachDragReorder(carril, {
     fichas: "li.pestana-ventana",
     ignorar: ".cerrar",
     onMove: (de: number, a: number): void => {
-      if (pestanas.classList.contains("apagadas")) return
-      const delante: number = windowTabs(windows.getLayout(), store.getState()).pinned.length
-      windows.move(de + delante, a + delante)
+      if (!pestanas.classList.contains("apagadas")) windows.move(de, a)
     },
   })
 
@@ -382,16 +377,12 @@ export const mountWindowsView = (
     pintadoLayout = layout
     vista = windowView(layout, estado)
 
-    const tabs: WindowTabs = windowTabs(layout, estado)
-    const pasos: ReconcileSteps<WindowTab, Element> = {
+    reconcile<WindowTab, Element>(carril, windowTabs(layout, estado), {
       key: claveDe,
       keyOf: (el: Element): string | null => el.getAttribute("data-key"),
       create: crearPestana,
       update: ponerPestana,
-    }
-    reconcile<WindowTab, Element>(fijas, tabs.pinned, pasos)
-    reconcile<WindowTab, Element>(carril, tabs.scrolling, pasos)
-    fijas.hidden = tabs.pinned.length === 0
+    })
 
     if (vista.kind === "empty") {
       cabecera.hidden = true

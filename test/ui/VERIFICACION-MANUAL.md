@@ -82,7 +82,7 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
 ## A. Arranque y la rebanada
 
 - **A1.** Recién limpio, al abrir se ve **una ventana: el General**, vacía: arriba, la fila de
-  pestañas con sólo **≡** (en vídeo inverso) y el **+**; debajo, el título, ▦ y ⚙.
+  pestañas con sólo **≡ General** (en vídeo inverso) y el **+**; debajo, el título, ▦ y ⚙.
 - **A2.** ⚙ → *Contextos* → crear «Compra». Vuelve a la ventana: **Compra no tiene ventana
   todavía** (crear un contexto no se la da).
 - **A3.** El **+** de las pestañas → *Compra*: aparece la pestaña **▤ Compra**, al final y activa.
@@ -119,7 +119,7 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
   «Borrar todo», la página **se recarga en blanco**: sin notas, sin diagramas, sin contextos y
   con el General como única ventana. **Recargar otra vez**: sigue en blanco.
 
-## D. Las pestañas: reordenar, fijas y cerrar
+## D. Las pestañas: reordenar y cerrar
 
 Con el General, el calendario y tres o cuatro contextos de ventana:
 
@@ -132,8 +132,8 @@ Con el General, el calendario y tres o cuatro contextos de ventana:
   levantar ninguna**; arrastrando una levantada cerca del borde, se desliza solo. La activa
   queda siempre a la vista, y un nombre largo se corta con «…».
 - **D5.** En el móvil, la pulsación larga **no** selecciona texto ni saca el menú del sistema.
-- **D6.** El **General** y el **calendario** van **fijos delante**, sólo con ≡ y ▦, separados
-  por una raya: no se deslizan, no se levantan y ninguna se puede soltar delante de ellas.
+- **D6.** El **General** y el **calendario** son pestañas como las demás: con su nombre, en el
+  carril, y se arrastran a cualquier puesto.
   Pulsar la **✕** de la activa la cierra **sin preguntar** y pasa a la de su derecha (o a la
   de su izquierda si era la última); cerrar el General también vale.
 
@@ -192,7 +192,7 @@ el navegador **resalta en color los nodos que cambian**.
   nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene ventana** (el
   General no sale si ya es ventana; las notas, tras «Notas:»).
 - **I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**: su pestaña,
-  activa. El General y el calendario no van al final: a **su sitio fijo** delante.
+  activa. El General y el calendario, también al final.
 - **I4.** «+ Contexto nuevo» crea uno y llega a él **con el título ya en edición**: escribir y
   Intro le pone el nombre.
 - **I5.** La hoja se cierra **sin cambiar nada** con *Cancelar*, con **Escape**, **tocando fuera**
