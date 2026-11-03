@@ -12,7 +12,7 @@ import type { Point } from "./viewport.js"
 export const LONG_PRESS_MS: number = 500
 /** Lo que se puede mover el dedo sin que deje de ser un toque o una pulsación. */
 export const MOVE_TOLERANCE_PX: number = 10
-/** Lo que se espera al segundo toque; es también lo que tarda en abrirse un nodo-nota. */
+/** Lo que se espera al segundo toque; es también lo que tarda en abrirse un nodo-enlace. */
 export const DOUBLE_TAP_MS: number = 250
 /** Lo lejos que puede caer el segundo toque del primero: un dedo no repite el sitio exacto. */
 export const DOUBLE_TAP_DISTANCE_PX: number = 25

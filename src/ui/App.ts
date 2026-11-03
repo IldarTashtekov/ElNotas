@@ -164,6 +164,9 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
         editName,
         onExit: back.close,
         onOpenNote: abrirNota,
+        onOpenDiagram: (id: DiagramId): void => abrirDiagrama(id, false),
+        onOpenEvent: (id: EventId): void => abrirCalendario({ kind: "event", id }),
+        onOpenRoutine: (id: RoutineId): void => abrirCalendario({ kind: "routine", id }),
       }),
     )
 

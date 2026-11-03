@@ -379,8 +379,8 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
   nota.
 - **LZ-F5.** **Nota existente** cambia la hoja a la lista de notas, por nombre; elegir una pone su
   nodo **sin entrar** en ella. La misma nota puede estar en dos nodos.
-- **LZ-F6.** Borrar la nota (papelera del General): sus nodos pasan a **«Nota perdida»**, como
-  pósits de texto normales, en su sitio. Se pueden editar.
+- **LZ-F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio, **apagados**,
+  con su texto; un toque avisa «El enlace ya no existe».
 
 ### El diagrama como ventana
 
@@ -461,7 +461,7 @@ Hace falta **un diagrama con tres pósits** separados —A, B y C—, y uno de e
 ### Lo que arrastra a las líneas
 
 - **RL-E1.** **Borrar un pósit** borra **todas sus líneas**, las que salen y las que llegan.
-- **RL-E2.** Borrar la nota de un nodo-nota: el nodo pasa a «Nota perdida» y **sus líneas se
+- **RL-E2.** Borrar la nota de un nodo que la enlaza: el nodo se queda, apagado, y **sus líneas se
   quedan**.
 
 ## 6. Sin conexión, que nada se pierda, y girar

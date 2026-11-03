@@ -225,16 +225,6 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
       lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
       que la pulsación larga no saque el menú del sistema) y los anota.
-- [ ] **16. El nodo-enlace: se ve y se abre sin Markdown** *(pensar)*. Tras la 15b. Decidido con el
-      usuario el 2026-11-04: **en el lienzo no se ve ni se escribe Markdown nunca**, y un nodo es una de
-      dos cosas: **texto**, o **un enlace entero** (su texto guardado es sólo `[visible](destino)`); no
-      hay texto con un enlace en medio. El nodo-enlace se pinta con la raya gruesa: a algo de la app,
-      con el nombre actual de lo enlazado; a una web, con su texto; roto, apagado. Un toque lo abre,
-      tras esperar por si es doble; una web, como en las notas. El de texto se ve tal cual lo escrito:
-      sus símbolos se escapan al guardar. «Editar» enseña sólo el texto que se ve. **Se cierra cuando**
-      las pruebas de qué se pinta y de qué se guarda al editar pasan, y el panel enseña un nodo-enlace
-      que sigue el nombre, uno roto apagado, un `*` escrito que se ve como `*`, y un toque que abre
-      nota, diagrama, evento, rutina y web.
 - [ ] **17. Poner, cambiar y quitar el enlace de un nodo** *(mecánica)*. Tras la 16. Como en las
       notas, con la hoja de enlazar, nunca escribiendo el enlace. Al crear, el menú ofrece **Texto**,
       **Enlazar…** (la hoja de las notas, con su campo para pegar una web: pone un nodo-enlace) y

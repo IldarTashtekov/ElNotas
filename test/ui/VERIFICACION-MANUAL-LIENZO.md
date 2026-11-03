@@ -121,9 +121,11 @@ directamente.
 - **E1.** *(Móvil.)* ⚠️ Crear o editar un pósit **en la mitad de abajo** de la pantalla: al salir
   el teclado, **el corcho sube** y el pósit que se escribe **queda a la vista**.
 
-## F. Los nodos que enlazan a una nota
+## F. Los nodos-enlace
 
-Un nodo cuyo texto es sólo el enlace a una nota, `[nombre](#id)`: así quedan los nodos-nota de antes.
+Un nodo es **texto** o **un enlace entero**; en el lienzo no se ve Markdown. Hacen falta una nota,
+otro diagrama, un evento y una rutina, y nodos que los enlacen, uno a una web y uno roto (con
+`?depurar`, `useCases.addTextNode(id, "[x](#<id>)", x, y)`).
 
 - **F1.** **Nota nueva** crea «Nueva Nota», pone un nodo que la enlaza (con la **raya gruesa**) donde se
   tocó y **entra en la nota**. Renombrarla, **✕ Salir**: se vuelve **al diagrama**, y el nodo
@@ -133,14 +135,20 @@ Un nodo cuyo texto es sólo el enlace a una nota, `[nombre](#id)`: así quedan l
   contexto.
 - **F3.** **Un toque** en un nodo que enlaza a una nota **entra en la nota**, tras un instante muy corto. El atrás
   vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la página**.
-- **F4.** **Doble toque** en un nodo que enlaza a una nota abre su menú, **con «Editar»**, y **no
-  entra** en la nota. «Editar» enseña el enlace en crudo.
+- **F4.** **Doble toque** en un nodo que enlaza a algo de la app abre su menú **sin «Editar»**, y
+  **no entra**.
 - **F5.** **Nota existente** cambia la hoja a la lista de notas, por nombre; elegir una pone su
   nodo **sin entrar** en ella. La misma nota puede estar en dos nodos.
-- **F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio con el enlace,
-  roto, escrito tal cual; un toque ya no entra. Se pueden editar.
+- **F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio, **apagados** (raya
+  y letra), con el texto que tenía el enlace; un toque avisa «El enlace ya no existe».
 - **F7.** Unos datos guardados antes del nodo único (esquema 1) arrancan con sus nodos-nota
   convertidos en enlaces: con el nombre de su nota, o «Nota perdida» o «Nota ilegible».
+- **F8.** Un toque en el nodo de **otro diagrama** lo abre encima; en el de un **evento** o una
+  **rutina**, el calendario con él; en el de una **web**, una pestaña nueva.
+- **F9.** Un nodo de texto con `2 * 3 [a]`: se ve **tal cual**, sin negrita ni enlace. «Editar» lo
+  enseña igual, sin barras; añadir ` # (b)` y guardar se ve igual que se escribió.
+- **F10.** «Editar» en el de una web enseña **sólo su texto**; cambiarlo cambia lo que se ve y el
+  toque sigue abriendo la misma web.
 
 ## G. El diagrama como ventana
 

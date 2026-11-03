@@ -94,7 +94,7 @@ En escritorio, «doble toque» es doble clic, y el **clic derecho** abre los mis
 ## E. Lo que arrastra a las líneas
 
 - **E1.** **Borrar un pósit** borra **todas sus líneas**, las que salen y las que llegan.
-- **E2.** Borrar la nota de un nodo que la enlaza: el nodo se queda, con el enlace roto, y **sus líneas se
+- **E2.** Borrar la nota de un nodo que la enlaza: el nodo se queda, apagado, y **sus líneas se
   quedan**.
 
 ---

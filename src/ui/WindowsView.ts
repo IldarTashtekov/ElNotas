@@ -244,6 +244,9 @@ export const mountWindowsView = (
       /* Una ventana no tiene barra: la mira va sobre el lienzo. */
       floatingCrosshair: true,
       onOpenNote,
+      onOpenDiagram: (otro: DiagramId): void => onOpenDiagram(otro, false),
+      onOpenEvent,
+      onOpenRoutine,
     })
     zonaLienzo.append(instancia.element)
     lienzo = { diagrama: id, instancia }

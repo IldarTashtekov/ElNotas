@@ -3,12 +3,12 @@
  * lienzo, y abajo la barra con la mira, que lo devuelve al inicio, el botón de
  * seleccionar nodos y el exit.
  *
- * Se sale con el exit o con el atrás. Un nodo-nota abre su nota encima, y al
- * salir de ella se vuelve aquí. Un diagrama que es ventana enseña el mismo
+ * Se sale con el exit o con el atrás. Un nodo-enlace abre encima lo que enlaza,
+ * y al salir de ello se vuelve aquí. Un diagrama que es ventana enseña el mismo
  * lienzo en la vista ventanas, sin exit.
  */
 
-import type { Diagram, DiagramId, NoteId, Store, Unsubscribe, UseCases } from "#core/index"
+import type { Diagram, DiagramId, EventId, NoteId, RoutineId, Store, Unsubscribe, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
@@ -28,14 +28,29 @@ export interface DiagramViewDeps {
   /** Recién creado: llega con el nombre a punto de escribirse. */
   readonly editName: boolean
   readonly onExit: () => void
-  /** Entrar en la nota de un nodo-nota: se abre encima, y al salir se vuelve aquí. */
+  /** Abrir lo que enlaza un nodo: se abre encima, y al salir se vuelve aquí. */
   readonly onOpenNote: (id: NoteId) => void
+  readonly onOpenDiagram: (id: DiagramId) => void
+  readonly onOpenEvent: (id: EventId) => void
+  readonly onOpenRoutine: (id: RoutineId) => void
 }
 
 /** Devuelve la función que la desmonta. */
 export const mountDiagramView = (
   raiz: HTMLElement,
-  { store, useCases, back, diagramId, framing, editName, onExit, onOpenNote }: DiagramViewDeps,
+  {
+    store,
+    useCases,
+    back,
+    diagramId,
+    framing,
+    editName,
+    onExit,
+    onOpenNote,
+    onOpenDiagram,
+    onOpenEvent,
+    onOpenRoutine,
+  }: DiagramViewDeps,
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -58,6 +73,9 @@ export const mountDiagramView = (
     /* La mira va en la barra, con el exit. */
     floatingCrosshair: false,
     onOpenNote,
+    onOpenDiagram,
+    onOpenEvent,
+    onOpenRoutine,
   })
 
   const salir: HTMLButtonElement = elemento("button", "✕ Salir")

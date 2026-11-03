@@ -11,8 +11,9 @@
  * conectar, editar, hecho, borrar. *Conectar* espera a que se toque el nodo de
  * destino, y el fondo lo cancela. Doble toque —o clic derecho— en una línea abre
  * el suyo: invertir, con o sin dirección, texto, borrar. El texto de una línea
- * la sigue, sin salir nunca boca abajo. Un toque en un nodo-nota entra en su nota, tras esperar un
- * instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
+ * la sigue, sin salir nunca boca abajo. Un nodo es un texto, que se ve tal cual
+ * se escribió, o un enlace entero, que enseña el nombre de lo enlazado; un toque
+ * en él lo abre, tras esperar un instante por si llega el segundo toque. Un pósit se mueve arrastrándolo con el
  * ratón, o manteniéndolo pulsado y arrastrando con el dedo, y se guarda una vez,
  * al soltar; con el dedo junto a un borde, el corcho avanza hacia ese lado.
  *
@@ -32,8 +33,10 @@ import type {
   DiagramNodeId,
   DiagramRelation,
   DiagramRelationId,
+  EventId,
   Note,
   NoteId,
+  RoutineId,
   Store,
   Unsubscribe,
   UseCases,
@@ -44,12 +47,12 @@ import { crosshairButton, selectButton, svg } from "./canvasButtons.js"
 import type { Rect } from "./canvasSelection.js"
 import { EDGE_SPEED_PX_S, boxesTouching, edgeDirection, rectBetween } from "./canvasSelection.js"
 import type { DiagramFraming } from "./diagramFraming.js"
-import { elemento } from "./dom.js"
+import { briefNotice, elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
 import { DOUBLE_TAP_MS, LONG_PRESS_MS, isDoubleTap, movedBeyondTolerance } from "./gestures.js"
 import type { ResolvedLink } from "./linkActions.js"
-import { soleLink } from "./linkActions.js"
-import { readMarkdownLine } from "./markdownLine.js"
+import type { NodeContent } from "./nodeContent.js"
+import { canEditNodeText, editedNodeText, readNode } from "./nodeContent.js"
 import { createNoteForDiagram } from "./noteActions.js"
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
@@ -85,8 +88,11 @@ export interface DiagramCanvasDeps {
   readonly framing: DiagramFraming
   /** Si pone su propia mira, flotando abajo a la derecha. Sin ella, quien lo monta usa `recenter`. */
   readonly floatingCrosshair: boolean
-  /** Entrar en la nota de un nodo-nota. */
+  /** Abrir lo que enlaza un nodo: se abre encima. */
   readonly onOpenNote: (id: NoteId) => void
+  readonly onOpenDiagram: (id: DiagramId) => void
+  readonly onOpenEvent: (id: EventId) => void
+  readonly onOpenRoutine: (id: RoutineId) => void
 }
 
 export interface DiagramCanvas {
@@ -112,6 +118,8 @@ const REJILLA: number = 24
 const MARGEN_TECLADO_PX: number = 16
 /** El `target` de un toque en el fondo, para distinguirlo de uno en un pósit. */
 const FONDO: string = "fondo"
+/** Lo que dura el aviso de un enlace roto. */
+const AVISO_ROTO_MS: number = 1500
 
 /** Para que la punta de flecha de cada lienzo tenga su id: puede haber dos montados. */
 let lienzosCreados: number = 0
@@ -158,6 +166,9 @@ export const createDiagramCanvas = ({
   framing,
   floatingCrosshair,
   onOpenNote,
+  onOpenDiagram,
+  onOpenEvent,
+  onOpenRoutine,
 }: DiagramCanvasDeps): DiagramCanvas => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
@@ -256,17 +267,8 @@ export const createDiagramCanvas = ({
   /** El que se está editando: mientras dura, su texto no se repinta. */
   let editando: DiagramNodeId | null = null
 
-  /** La nota a la que lleva un nodo cuyo texto es sólo un enlace a ella, o `null`. */
-  const notaDe = (nodo: DiagramNode, estado: AppState): NoteId | null => {
-    const destino: ResolvedLink = soleLink(estado, readMarkdownLine(nodo.text), nodo.text)
-    return destino?.kind === "note" ? destino.id : null
-  }
-
-  /* Un nodo que sólo enlaza a una nota enseña su nombre de ahora; el resto, lo escrito. */
-  const textoDe = (nodo: DiagramNode, estado: AppState): string => {
-    const nota: NoteId | null = notaDe(nodo, estado)
-    return nota === null ? nodo.text : (estado.notes[nota]?.name ?? nodo.text)
-  }
+  /** Lo que enseña un nodo: su texto, o el nombre de lo que enlaza. */
+  const textoDe = (nodo: DiagramNode, estado: AppState): string => readNode(estado, nodo.text).text
 
   /** El texto de un nodo que lleva a una nota. */
   const enlaceA = (nota: Note): string => buildLink(nota.name, `#${nota.id}`) ?? nota.name
@@ -324,9 +326,11 @@ export const createDiagramCanvas = ({
         colocar(el, dondeSeVe(nodo))
         el.classList.toggle("hecho", nodo.done)
         el.classList.toggle("marcado", marcados.has(nodo.id))
-        el.classList.toggle("nota", notaDe(nodo, estado) !== null)
+        const contenido: NodeContent = readNode(estado, nodo.text)
+        el.classList.toggle("enlace", contenido.kind === "link")
+        el.classList.toggle("roto", contenido.kind === "link" && contenido.broken)
         const texto: Element | null = el.querySelector(".texto")
-        const nuevo: string = textoDe(nodo, estado)
+        const nuevo: string = contenido.text
         if (texto !== null && editando !== nodo.id && texto.textContent !== nuevo) {
           texto.textContent = nuevo
         }
@@ -501,7 +505,8 @@ export const createDiagramCanvas = ({
 
     const campo: HTMLTextAreaElement = elemento("textarea")
     campo.className = "posit-campo"
-    campo.value = nodo.text
+    /* Sólo lo que se ve: los símbolos del Markdown no se escriben aquí. */
+    campo.value = readNode(store.getState(), nodo.text).text
     campo.setAttribute("aria-label", "Texto del nodo")
     const ajustarAlto = (): void => {
       campo.style.height = "auto"
@@ -515,7 +520,7 @@ export const createDiagramCanvas = ({
       editando = null
       const valor: string = campo.value
       campo.replaceWith(texto)
-      if (guardar) useCases.setNodeText(diagramId, id, valor)
+      if (guardar) useCases.setNodeText(diagramId, id, editedNodeText(store.getState(), nodo.text, valor))
       pintar()
     }
     campo.addEventListener("input", ajustarAlto)
@@ -799,10 +804,11 @@ export const createDiagramCanvas = ({
   const menuNodo = (id: DiagramNodeId): void => {
     const nodo: DiagramNode | undefined = diagrama()?.nodes[id]
     if (nodo === undefined) return
-    const titulo: string = textoDe(nodo, store.getState())
-    menu.open(titulo === "" ? "Nodo" : titulo, acciones(
+    const contenido: NodeContent = readNode(store.getState(), nodo.text)
+    menu.open(contenido.text === "" ? "Nodo" : contenido.text, acciones(
       opcion("Conectar", (): void => empezarAConectar(id)),
-      opcion("Editar", (): void => editar(id)),
+      /* Uno que enlaza a algo de la app enseña su nombre: no hay texto propio que editar. */
+      ...(canEditNodeText(contenido) ? [opcion("Editar", (): void => editar(id))] : []),
       opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
         useCases.setNodeDone(diagramId, id, !nodo.done)
       }),
@@ -1040,6 +1046,24 @@ export const createDiagramCanvas = ({
     }
   }
 
+  /** Abre lo que enlaza un nodo, leído al abrirlo: pudo borrarse mientras se esperaba. */
+  const abrirEnlace = (raw: string): void => {
+    const contenido: NodeContent = readNode(store.getState(), raw)
+    if (contenido.kind !== "link") return
+    if (contenido.target.kind === "web") {
+      window.open(contenido.target.href, "_blank", "noopener,noreferrer")
+      return
+    }
+    const destino: ResolvedLink = contenido.resolved
+    if (destino === null) briefNotice("El enlace ya no existe", AVISO_ROTO_MS)
+    else if (destino.kind === "note") onOpenNote(destino.id)
+    /* El mismo diagrama ya está abierto: encima, sería otra vez él. */
+    else if (destino.kind === "diagram") {
+      if (destino.id !== diagramId) onOpenDiagram(destino.id)
+    } else if (destino.kind === "event") onOpenEvent(destino.id)
+    else onOpenRoutine(destino.id)
+  }
+
   /** Un toque suelto, sin moverse: puede ser el segundo de un doble toque. */
   const tocado = (g: Gesto, donde: Point, cuando: number): void => {
     /* Conectando, un toque es el destino —el fondo cancela— y nada más: ni abre la
@@ -1067,15 +1091,14 @@ export const createDiagramCanvas = ({
       return
     }
     toqueAnterior = toque
-    /* Un toque en un nodo que lleva a una nota entra en ella, pero espera lo que
-       tarda el segundo toque de un doble: si llega, era el menú. Un enlace roto no se abre. */
+    /* Un toque en un nodo-enlace lo abre, pero espera lo que tarda el segundo
+       toque de un doble: si llega, era el menú. */
     cancelarApertura()
     const nodo: DiagramNode | undefined = g.nodo === null ? undefined : diagrama()?.nodes[g.nodo]
-    const nota: NoteId | null = nodo === undefined ? null : notaDe(nodo, store.getState())
-    if (nota === null) return
+    if (nodo === undefined || readNode(store.getState(), nodo.text).kind !== "link") return
     abrirLuego = setTimeout((): void => {
       abrirLuego = null
-      onOpenNote(nota)
+      abrirEnlace(nodo.text)
     }, DOUBLE_TAP_MS)
   }
 

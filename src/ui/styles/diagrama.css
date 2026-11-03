@@ -217,9 +217,16 @@
   white-space: pre-wrap;
   width: 8rem;
 
-  /* Un nodo-nota, con la misma raya gruesa que un diagrama en la lista. */
-  &.nota {
+  /* Un nodo-enlace, con la misma raya gruesa que un diagrama en la lista; roto,
+     apagado, como un enlace roto en una nota. */
+  &.enlace {
     border-left: 4px solid var(--accent);
+  }
+  &.roto {
+    border-left-color: var(--dim);
+    & .texto {
+      color: var(--dim);
+    }
   }
   &.hecho .texto {
     opacity: 0.55;

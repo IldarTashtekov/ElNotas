@@ -235,6 +235,11 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   `buildLink` baja al core para escapar igual. Hasta la 16, el lienzo enseña el nombre de la nota de un nodo
   que sólo la enlaza y la abre al tocarlo (`soleLink`). Probada con un esquema 1 escrito a mano
   (`test/platform/web/esquemaUno.ts`), arrancado y en una copia v1 importada.
+- **Tarea 16 de la Fase 10, el nodo-enlace** 2026-11-04, rama `nodo-unico`: en el lienzo no se ve ni se escribe
+  Markdown. `nodeContent` lee un nodo como texto (sin las barras de escape) o como un enlace entero, que enseña el
+  nombre de ahora de lo enlazado, o su texto si es una web o está roto; con la raya gruesa, y apagado si está
+  roto. Un toque abre nota, diagrama, evento, rutina o web; «Editar» enseña sólo lo que se ve, escapa al
+  guardar y no sale en un enlace a algo de la app. El lienzo recibe los cuatro `onOpen…`.
 - **Tarea 15a de la Fase 10, un arranque que migra de verdad** 2026-11-03, rama `arranque-que-migra`: con
   migraciones aplicadas, `boot` guarda las entidades que cambian —cada una esperando su revisión— y sólo
   después apunta la versión; cortado a medias, el siguiente arranque repite sobre la mezcla, y por eso

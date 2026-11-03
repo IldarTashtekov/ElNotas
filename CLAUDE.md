@@ -227,7 +227,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - El encuadre (centro y escala, no píxeles), en el `UiState`; se escribe al soltar, sin temporizador. La mira: origen, ×1.
 - `DiagramRelation` en un multigrafo, flecha y texto opcionales; de un nodo a sí mismo, no-op.
 - Nodos y relaciones en `Record`, sin `parents`/`children`. *Invertir* = `set-relation-ends`. Selección: un modo junto a la mira.
-- Un solo tipo de nodo: posición, «hecho» y texto con Markdown. A una nota se enlaza dentro del texto, `[nombre](#id)`.
+- Un solo tipo de nodo: posición, «hecho» y texto. Sin Markdown en el lienzo: texto, o un enlace entero con el nombre de lo enlazado.
 - Gestos «doble = menú o crear»; mover guarda al soltar. Móvil = escritorio.
 - Nota creada desde el lienzo: a todos los contextos del diagrama. Un diagrama se borra como una nota.
 
