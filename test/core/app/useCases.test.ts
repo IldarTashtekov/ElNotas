@@ -184,6 +184,7 @@ const CABLEADO: ReadonlyArray<
   ["merge", (u) => u.merge(ID_NOTA, ID_LINEA)],
   ["convert-to-checkbox", (u) => u.convertToCheckBox(ID_NOTA, ID_LINEA)],
   ["convert-to-text", (u) => u.convertToText(ID_NOTA, ID_LINEA)],
+  ["move", (u: UseCases): Note | null => u.move(ID_NOTA, [ID_LINEA], rootEnd)],
   ["create-note", (u) => u.createNote("Compra")],
   ["rename-note", (u) => u.renameNote(ID_NOTA, "Otra")],
   ["delete-note", (u) => u.deleteNote(ID_NOTA)],
@@ -273,18 +274,18 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cuarenta y cuatro casos de uso para cuarenta y dos acciones**: `insert` tiene dos
+      Son **cuarenta y cinco casos de uso para cuarenta y tres acciones**: `insert` tiene dos
       —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
       capa y hay que saber qué clase de línea se está creando; y por lo mismo
       `add-node` tiene dos, `addTextNode` y `addNoteNode`.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 44, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 44, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
-  assert.equal(tipos.size, 42, "el catálogo son CUARENTA Y DOS acciones")
+  assert.equal(tipos.size, 43, "el catálogo son CUARENTA Y TRES acciones")
 })
 
 /* ────────────────── (2) Los ids que se generan en esta capa ───────────────── */
@@ -362,6 +363,7 @@ const NO_OP_CON_NOTA: ReadonlyArray<readonly [string, (u: UseCases) => Note | nu
   ["merge", (u) => u.merge(ID_NOTA, ID_LINEA)],
   ["convertToCheckBox", (u) => u.convertToCheckBox(ID_NOTA, ID_LINEA)],
   ["convertToText", (u) => u.convertToText(ID_NOTA, ID_LINEA)],
+  ["move", (u: UseCases): Note | null => u.move(ID_NOTA, [ID_LINEA], rootEnd)],
   // Renombrar con el nombre que ya tiene: no-op. `notaCon` la llama "Compra".
   ["renameNote", (u) => u.renameNote(ID_NOTA, "Compra")],
   // Insertar TRAS una línea que no existe: no-op. Con `rootEnd` sí aplicaría.
@@ -369,7 +371,7 @@ const NO_OP_CON_NOTA: ReadonlyArray<readonly [string, (u: UseCases) => Note | nu
   ["insertCheckBox", (u) => u.insertCheckBox(ID_NOTA, "hola", after(contentId("fantasma")))],
 ]
 
-test("⚠️ un no-op devuelve null AUNQUE la nota exista — los diez, uno por uno", () => {
+test("⚠️ un no-op devuelve null AUNQUE la nota exista — los once, uno por uno", () => {
   for (const [nombre, llamar] of NO_OP_CON_NOTA) {
     const nota: Note = notaCon(ID_NOTA, [])
     const { store, useCases } = montarDeVerdad(conNotas(nota))

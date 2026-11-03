@@ -424,6 +424,35 @@ otra casilla con `hoy [Leer](#id-de-la-rutina)`; y una línea de texto con `[Lee
 - **T7.** Borrar la rutina o el evento: sus enlaces se ven **apagados**, «Abrir» dice «El enlace ya no
   existe» y la casilla-atajo es una **casilla normal**.
 
+## U. Ordenar las líneas *(Fase 10, tarea 12)*
+
+Una nota con: texto `Compra semanal`; casilla `Fruta` con hijas `Manzanas` y `Peras`; casillas
+`Limpieza` y `Pagar luz`.
+
+- **U1.** «⠿ Ordenar» en la barra: se pone en vídeo inverso, cada línea enseña su `⠿` a la izquierda y
+  «☐ Casilla», «↳ Anidar» y «Enlazar…» se apagan. Tocar una línea **no** pone el cursor ni abre el
+  teclado, y no se selecciona texto.
+- **U2.** Tocar `Manzanas` y `Pagar luz` las elige (fondo de color, `⠿` brillante); tocar otra vez una la
+  suelta. Tocar la caja de una casilla elige la línea, **no** la marca.
+- **U3.** Arrastrar el `⠿` de `Pagar luz` (elegida) hasta debajo de `Compra semanal`, sin irse a la
+  derecha: mientras se arrastra, las elegidas se ven apagadas y una **raya** enseña dónde caerán; al
+  soltar quedan `Manzanas` y `Pagar luz` **juntas, en ese orden**, bajo `Compra semanal`, en la raíz. Las
+  dos siguen elegidas.
+- **U4.** Arrastrar el `⠿` de una línea **sin elegir** la mueve sólo a ella.
+- **U5.** Arrastrar `Limpieza` bajo `Peras` yéndose a la derecha: la raya se corre un nivel por cada
+  sangría, hasta uno más que la de encima; al soltar queda como hija o nieta según la raya. Volver a la
+  izquierda del todo la saca del árbol.
+- **U6.** Entre una casilla y su primera hija la raya **no** sale a la raíz. Arrastrando un **texto**
+  (o una selección con uno), la raya no se mete nunca: entre hijas desaparece y soltar no hace nada.
+- **U7.** Una casilla que se mueve **lleva a sus hijas** y conserva su marca. Soltar donde estaban no
+  cambia nada (ni la fecha de la nota).
+- **U8.** En una nota larga, con el dedo junto al borde de arriba o de abajo la nota **se desplaza
+  sola** y la raya la sigue.
+- **U9.** Volver a pulsar «⠿ Ordenar» sale: los `⠿` desaparecen, se olvida la elección y tocar una
+  línea vuelve a escribir en ella.
+- **U10.** *(móvil, el usuario)* Arrastrar con el dedo desde el `⠿` **no** desplaza la página; desde el
+  resto de la línea, sí. La barra, con el botón nuevo, en dos renglones a 375 px.
+
 ## Comportamientos conocidos
 
 No son fallos; se anotan para que no se marquen como tales, y para decidir si se aguantan:
@@ -687,3 +716,25 @@ ya apuntada en *A decidir*. Móvil: el usuario.
 
 Notas: «El enlace ya no existe» al pulsar «Abrir» de uno roto no se repitió (es el mismo camino de O8).
 Sin probar: la lista de ⚙ de «Cambiar» con estos tipos, y el móvil (el usuario).
+
+### Pasada 11 — escritorio, U (ordenar las líneas, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-11-03 |
+| Navegador y versión | el navegador del panel (Linux) |
+| Quién | Claude, en el panel; el móvil, el usuario |
+| Commit | el de la tarea 12, con el árbol a punto de comitear |
+| Origen | `localhost:8001`, con `?depurar`, la nota «Prueba ordenar» |
+
+| Paso | Resultado |
+|---|---|
+| U1 | ✅ el botón en vídeo inverso, los `⠿` a la vista y Casilla, Anidar y Enlazar apagados |
+| U2 | ✅ tocar `Manzanas` y `Pagar luz` las deja elegidas, y nada más |
+| U3 | ✅ arrastrando el `⠿` de `Pagar luz` con el ratón bajo `Compra semanal`: quedan `Manzanas`, `Pagar luz` en la raíz, en ese orden, y siguen elegidas |
+| U5 | ✅ (con eventos de puntero lanzados a mano) `Limpieza` bajo `Peras` dos sangrías a la derecha: la raya, a la altura del final de `Peras` y dos niveles dentro; al soltar, nieta de `Fruta` |
+| U6 | ✅ (igual) `Compra semanal` entre `Fruta` y su hija: la raya se oculta y soltar no mueve nada |
+| U9 | ✅ salir: sin `⠿` ni elegidas, y tocar `Compra semanal` la pone a escribir |
+
+Sin probar: U4, U7 y U8 en pantalla (U7 lo cubren las pruebas de `move`), y U10 en el móvil (el usuario).
+

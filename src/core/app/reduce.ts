@@ -51,6 +51,7 @@ import {
   convertToText,
   insert,
   merge,
+  move,
   remove,
   setChecked,
   setText,
@@ -63,9 +64,9 @@ import type { Action, ActionMeta } from "./Action.js"
  * si cambió algo**.
  *
  * ⚠️ **Esta función existe para que la comparación esté escrita UNA sola vez.**
- * Las ocho acciones de contenido se reducen igual —buscar la nota, llamar a la
- * operación, comparar, estampar—, y copiar esas catorce líneas ocho veces sería
- * dar ocho oportunidades de olvidarse del `===`. Olvidarlo no rompe nada
+ * Las nueve acciones de contenido se reducen igual —buscar la nota, llamar a la
+ * operación, comparar, estampar—, y copiar esas catorce líneas nueve veces sería
+ * dar nueve oportunidades de olvidarse del `===`. Olvidarlo no rompe nada
  * visible: la app funciona, sólo redibuja y escribe de más para siempre.
  *
  * Es el mismo razonamiento que hizo que la primitiva A del helper llevara la
@@ -348,6 +349,15 @@ export const reduce = (state: AppState, action: Action): AppState => {
         action.meta,
         (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
           convertToText(c, action.contentId),
+      )
+
+    case "move":
+      return onContent(
+        state,
+        action.noteId,
+        action.meta,
+        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+          move(c, action.contentIds, action.position),
       )
 
     /* ───────────────────────────── Nota ───────────────────────────── */

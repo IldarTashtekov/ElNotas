@@ -53,7 +53,7 @@ export type { MigrationError } from "./domain/errors/MigrationError.js"
 
 /* El "dónde": vocabulario de posiciones para insertar */
 export type { Position } from "./domain/Position.js"
-export { after, lastChildOf, rootEnd } from "./domain/Position.js"
+export { after, before, lastChildOf, rootEnd } from "./domain/Position.js"
 
 /* La capa de aplicación: la caja del estado y los casos de uso */
 export type { Store, Unsubscribe } from "./app/Store.js"

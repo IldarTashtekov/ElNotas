@@ -217,6 +217,10 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   toque (`rowTap`, antes `nameTap`) se escuchan en toda la fila, menos en las casillas de los días, que sólo marcan.
 - **Fase 10, el sitio del mes, fijo** 2026-11-03, a petición del usuario: la rejilla reserva siempre seis filas y la
   gráfica se apila encima del mes tapado, con su mismo alto: Eventos | Rutinas ya no se mueve.
+- **Fase 10, tarea 12: ordenar las líneas de una nota** 2026-11-03: `move`, la novena operación, lleva varias
+  líneas con sus hijas, juntas y en orden de lectura, a una `Position` (con `before`, su cuarto caso); con un texto,
+  sólo a la raíz. En pantalla, «⠿ Ordenar»: tocar elige, se arrastra por el `⠿`, la profundidad la da el dedo y una
+  raya enseña dónde cae (`lineOrder`, `orderMode`). Falta el móvil (en `TAREAS.md`).
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

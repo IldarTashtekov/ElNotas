@@ -170,8 +170,9 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca. En un contexto, `hidden` ⊆ `items`.
 - Calendario: `Day`/`Time` son texto; eventos y rutinas en el core, **sin grupos**; semanas de lunes a domingo;
   «hoy» lo da la plataforma; su orden, fuera del core. Evento: `*` en el día, **sin estado de hecho**; rutina tocada: sus días, con borde brillante.
-- `Position`: `root-end`, `after`, `last-child-of`, sólo para `insert`. ⚠️ No la justifiques por la barra.
-- Ocho operaciones; **ni `move` ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente.
+- `Position`: `root-end`, `after`, `before`, `last-child-of`, para `insert` y `move`. ⚠️ No la justifiques por la barra.
+- Nueve operaciones; **ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente. `move`: varias, juntas,
+  con sus hijas; con un texto, a la raíz. «⠿ Ordenar»: tocar elige, se arrastra por el `⠿`, el dedo da la profundidad.
 - Marcar una casilla NO arrastra a sus hijas; la cascada, si llega, en una sola acción.
 - `remove`, `merge` y `convertToText` de una línea con hijas: no-op. No existe «borrar una rama».
 - `WritingMode` = «☐ Casilla» + anidar (sólo con casilla, actúa una vez). No se persiste. El resto
@@ -250,7 +251,6 @@ Los principios, en `ARCHITECTURE.md`. Si una está mal, **plantéalo como duda**
 
 No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas*.
 
-- Reordenar y re-anidar líneas (`move`, `indent`, `outdent`), hasta contestar las tres preguntas
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
 - La nube con Supabase (diseñada, sin fase: `TAREAS.md` → *La nube*) · `storageTarget`

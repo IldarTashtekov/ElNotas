@@ -1,5 +1,5 @@
 /**
- * Las ocho operaciones sobre el contenido de una nota.
+ * Las nueve operaciones sobre el contenido de una nota.
  *
  * Viven juntas a propósito: comparten una misma disciplina, y leerlas seguidas es
  * como se comprueba que se aplica igual en todas.
@@ -18,6 +18,7 @@ import type { CheckBox, Content, Text } from "./Content.js"
 import { checkBox, isCheckBox, isText, text } from "./Content.js"
 import type { ContentId } from "./Ids.js"
 import type { Position } from "./Position.js"
+import { after } from "./Position.js"
 import { updateContainerOf } from "./updateContainerOf.js"
 import { mapPreservingIdentity, updateContent } from "./updateContent.js"
 
@@ -79,15 +80,19 @@ const existsIn = (items: ReadonlyArray<Content>, id: ContentId): boolean =>
       item.id === id || (isCheckBox(item) && existsIn(item.children, id)),
   )
 
-/** Mete el bloque justo detrás de `afterId`. Lista intacta si `afterId` no está. */
-const insertAfter = <T extends Content>(
+/**
+ * Mete el bloque justo al lado de `targetId`: detrás (`1`) o delante (`0`).
+ * Lista intacta si `targetId` no está.
+ */
+const insertNextTo = <T extends Content>(
   items: ReadonlyArray<T>,
-  afterId: ContentId,
+  targetId: ContentId,
   block: T,
+  side: 0 | 1,
 ): ReadonlyArray<T> => {
-  const index: number = items.findIndex((item: T): boolean => item.id === afterId)
+  const index: number = items.findIndex((item: T): boolean => item.id === targetId)
   if (index === -1) return items
-  return [...items.slice(0, index + 1), block, ...items.slice(index + 1)]
+  return [...items.slice(0, index + side), block, ...items.slice(index + side)]
 }
 
 /**
@@ -113,18 +118,21 @@ export const insert = (
     case "root-end":
       return [...content, block]
 
-    case "after": {
+    case "after":
+    case "before": {
       const targetId: ContentId = position.id
+      const side: 0 | 1 = position.at === "after" ? 1 : 0
       return updateContainerOf(content, targetId, {
         onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          insertAfter(items, targetId, block),
+          insertNextTo(items, targetId, block, side),
         onParent: (parent: CheckBox): CheckBox => {
           // Un texto suelto no cabe entre hijas. Sin este descarte no compila.
           if (!isCheckBox(block)) return parent
-          const children: ReadonlyArray<CheckBox> = insertAfter(
+          const children: ReadonlyArray<CheckBox> = insertNextTo(
             parent.children,
             targetId,
             block,
+            side,
           )
           return children === parent.children ? parent : { ...parent, children }
         },
@@ -181,6 +189,83 @@ export const remove = (
       return children === parent.children ? parent : { ...parent, children }
     },
   })
+
+/* ───────────────────────────── Moviendo ─────────────────────────────
+    La del modo Ordenar: varias líneas, cada una con sus hijas, a otro sitio. */
+
+/** Las elegidas que no van ya dentro de otra elegida, en orden de lectura. */
+const ramasElegidas = (
+  items: ReadonlyArray<Content>,
+  elegidas: ReadonlySet<ContentId>,
+): ReadonlyArray<Content> =>
+  items.flatMap((item: Content): ReadonlyArray<Content> =>
+    elegidas.has(item.id) ? [item] : isCheckBox(item) ? ramasElegidas(item.children, elegidas) : [],
+  )
+
+/** La casilla sin las hijas que se van, a cualquier profundidad; sin ninguna, la MISMA. */
+const podar = (casilla: CheckBox, fuera: ReadonlySet<ContentId>): CheckBox => {
+  const hijas: ReadonlyArray<CheckBox> = casilla.children
+    .filter((hija: CheckBox): boolean => !fuera.has(hija.id))
+    .map((hija: CheckBox): CheckBox => podar(hija, fuera))
+  const iguales: boolean =
+    hijas.length === casilla.children.length &&
+    hijas.every((hija: CheckBox, i: number): boolean => hija === casilla.children[i])
+  return iguales ? casilla : { ...casilla, children: hijas }
+}
+
+/** ¿Los mismos ids, en el mismo orden y anidados igual? Mover no cambia nada más. */
+const mismaForma = (a: ReadonlyArray<Content>, b: ReadonlyArray<Content>): boolean =>
+  a.length === b.length &&
+  a.every((x: Content, i: number): boolean => {
+    const y: Content | undefined = b[i]
+    if (y === undefined || x.id !== y.id) return false
+    return isCheckBox(x) && isCheckBox(y) ? mismaForma(x.children, y.children) : x.type === y.type
+  })
+
+/**
+ * Lleva esas líneas, cada una con sus hijas, al sitio que diga la posición. Quedan
+ * **juntas y en el orden en que se leían**, sea cual sea el orden de `ids`; una
+ * elegida que va dentro de otra elegida viaja con su madre. Su marca no cambia.
+ *
+ * **No hace nada si:** ninguno de los ids existe · el destino no existe, o es una
+ * de las que se mueven o va dentro de una · se pide meter un texto suelto entre
+ * hijas o un texto como destino de `last-child-of` · **quedan donde estaban**.
+ *
+ * No se escribe como `remove` + `insert`: `remove` se niega con las casillas con
+ * hijas, y aquí las hijas viajan con ella.
+ */
+export const move = (
+  content: ReadonlyArray<Content>,
+  ids: ReadonlyArray<ContentId>,
+  position: Position,
+): ReadonlyArray<Content> => {
+  const elegidas: ReadonlySet<ContentId> = new Set(ids)
+  const ramas: ReadonlyArray<Content> = ramasElegidas(content, elegidas)
+  const [primera, ...resto] = ramas
+  if (primera === undefined) return content
+
+  const fuera: ReadonlySet<ContentId> = new Set(ramas.map((r: Content): ContentId => r.id))
+  const sinEllas: ReadonlyArray<Content> = content
+    .filter((item: Content): boolean => !fuera.has(item.id))
+    .map((item: Content): Content => (isCheckBox(item) ? podar(item, fuera) : item))
+
+  /* La primera va a la posición pedida, y cada una de las demás, detrás de la anterior. */
+  interface Paso {
+    readonly lista: ReadonlyArray<Content>
+    readonly previa: ContentId
+  }
+  const { lista: movido }: Paso = resto.reduce(
+    (paso: Paso, rama: Content): Paso => ({
+      lista: insert(paso.lista, rama, after(paso.previa)),
+      previa: rama.id,
+    }),
+    { lista: insert(sinEllas, primera, position), previa: primera.id },
+  )
+
+  /* Un `insert` que no aplicó deja fuera alguna: entonces no se mueve ninguna. */
+  if (!ramas.every((r: Content): boolean => existsIn(movido, r.id))) return content
+  return mismaForma(movido, content) ? content : movido
+}
 
 /* ───────────────────────────── Cambiando de clase ─────────────────────────────
     Las dos que dispara el botón de `ModosEscritura`, y también el

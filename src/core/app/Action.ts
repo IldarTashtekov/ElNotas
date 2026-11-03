@@ -5,7 +5,7 @@
  * apunte en un libro de cuentas, y eso tiene consecuencias prácticas: se puede
  * registrar, guardar, comparar en una prueba o mandar por la red tal cual.
  *
- * Son cuarenta y dos. Aquí están las ocho de contenido; las de Nota, Contexto,
+ * Son cuarenta y tres. Aquí están las nueve de contenido; las de Nota, Contexto,
  * Diagrama, Calendario y Rutina, abajo.
  * Es una unión discriminada por `type`, así que el `switch` del reducer **deja de
  * compilar** en cuanto se añada una acción sin tratar.
@@ -48,7 +48,7 @@ export interface ActionMeta {
   readonly revision: Revision
 }
 
-/* ─────────────────────────── Las ocho de contenido ────────────────────────────
+/* ─────────────────────────── Las nueve de contenido ───────────────────────────
     Todas llevan `noteId` —el contenido vive dentro de una nota— y todas se
     reducen igual: llamar a su operación y comparar. Ver `reduce.ts`. */
 
@@ -75,7 +75,7 @@ export interface SetText {
  *
  * El bloque llega **ya construido, con su id**, porque el dominio no genera
  * identificadores: lo hace el caso de uso, que es quien tiene el `IdGenerator`.
- * Y el "aquí" es un `Position`, que tiene tres casos y ni uno más.
+ * Y el "aquí" es un `Position`, que tiene cuatro casos y ni uno más.
  */
 export interface Insert {
   readonly type: "insert"
@@ -96,7 +96,7 @@ export interface Remove {
 /**
  * «Se partió esta línea por aquí» — Intro en medio de una línea.
  *
- * La **única** de las ocho que necesita un id nuevo: al partir nacen dos líneas,
+ * La **única** de las nueve que necesita un id nuevo: al partir nacen dos líneas,
  * y la segunda necesita el suyo. Llega hecho, como el de `insert`.
  */
 export interface Split {
@@ -132,7 +132,19 @@ export interface ConvertToText {
   readonly meta: ActionMeta
 }
 
-/** Las que operan sobre el contenido de una nota. Ocho. */
+/**
+ * «Estas líneas, con sus hijas, van aquí» — el modo Ordenar. Juntas y en el orden
+ * en que se leían; no-op si no caben ahí o si quedan donde estaban.
+ */
+export interface Move {
+  readonly type: "move"
+  readonly noteId: NoteId
+  readonly contentIds: ReadonlyArray<ContentId>
+  readonly position: Position
+  readonly meta: ActionMeta
+}
+
+/** Las que operan sobre el contenido de una nota. Nueve. */
 export type ContentAction =
   | SetChecked
   | SetText
@@ -142,6 +154,7 @@ export type ContentAction =
   | Merge
   | ConvertToCheckBox
   | ConvertToText
+  | Move
 
 /* ──────────────────────────── Las tres de Nota ────────────────────────────── */
 
@@ -483,7 +496,7 @@ export type RoutineAction =
   | SetRoutineGoal
   | DeleteRoutine
 
-/** El catálogo entero: 8 + 3 + 9 + 14 + 3 + 5 = **cuarenta y dos**. */
+/** El catálogo entero: 9 + 3 + 9 + 14 + 3 + 5 = **cuarenta y tres**. */
 export type Action =
   | ContentAction
   | NoteAction

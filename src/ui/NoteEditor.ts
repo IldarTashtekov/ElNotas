@@ -1,7 +1,8 @@
 /**
  * El editor de una nota en pantalla: cada línea se escribe en su sitio, Intro y
  * Retroceso hacen lo que dicen las tablas del teclado, las flechas saltan de una
- * línea a otra y la barra lleva el interruptor de casilla y anidar.
+ * línea a otra y la barra lleva el interruptor de casilla y anidar, y el modo
+ * Ordenar, que mueve líneas arrastrándolas (`orderMode.ts`).
  *
  * Qué hace cada tecla lo decide `editor.ts`; aquí sólo se leen los eventos y se
  * pone el cursor donde toca. Sólo la línea que se está escribiendo es editable:
@@ -20,6 +21,7 @@ import type {
   EventId,
   Note,
   NoteId,
+  Position,
   RoutineId,
   UseCases,
 } from "#core/index"
@@ -54,6 +56,8 @@ import { openLinkSheet } from "./linkSheet.js"
 import type { FormattedLine, LineLink, LineSpan, TextSpan } from "./markdownLine.js"
 import { rawOffset, readMarkdownLine } from "./markdownLine.js"
 import { lastLine, lineBeside, locate } from "./noteTree.js"
+import type { OrderMode } from "./orderMode.js"
+import { createOrderMode } from "./orderMode.js"
 import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { Sheet } from "./sheet.js"
 import type { WritingMode } from "./writingMode.js"
@@ -433,6 +437,10 @@ export const createNoteEditor = ({
     const fila: HTMLElement = elemento("div")
     fila.dataset["id"] = content.id
     fila.className = isCheckBox(content) ? "linea casilla" : "linea"
+    /* El asa del modo Ordenar: sólo se ve con él puesto. */
+    const asa: HTMLSpanElement = elemento("span", "⠿")
+    asa.className = "asa"
+    asa.setAttribute("aria-hidden", "true")
     /* Nace sin editar: sólo lo es la línea activa, y lo pone `activar`. */
     const campo: HTMLSpanElement = elemento("span")
     campo.className = "texto"
@@ -451,9 +459,9 @@ export const createNoteEditor = ({
       })
       const hijas: HTMLElement = elemento("div")
       hijas.className = "hijas"
-      fila.append(marca, campo, hijas)
+      fila.append(asa, marca, campo, hijas)
     } else {
-      fila.append(campo)
+      fila.append(asa, campo)
     }
     return fila
   }
@@ -517,9 +525,28 @@ export const createNoteEditor = ({
     pintadosEventos = estado.events
     pintadasRutinas = estado.routines
     pintarLista(lineas, nota.content)
+    orden.refresh()
     empezar.hidden = nota.content.length > 0
     actualizarBurbuja()
   }
+
+  /* ── El modo Ordenar: con él puesto no se escribe ── */
+
+  const orden: OrderMode = createOrderMode({
+    element,
+    lines: lineas,
+    content: (): ReadonlyArray<Content> | null => deps.note()?.content ?? null,
+    onMove: (ids: ReadonlyArray<ContentId>, at: Position): void => {
+      useCases.move(noteId, ids, at)
+    },
+    onToggle: (on: boolean): void => {
+      if (on) {
+        desactivar()
+        window.getSelection()?.removeAllRanges()
+      }
+      pintarBarra()
+    },
+  })
 
   /* ── La línea activa: la única editable, y en crudo ── */
 
@@ -1248,10 +1275,13 @@ export const createNoteEditor = ({
   anidar.classList.add("anidar")
 
   const pintarBarra = (): void => {
+    /* Ordenando no se escribe: lo de escribir se apaga. */
+    casilla.disabled = orden.active()
+    enlazar.disabled = orden.active()
     casilla.setAttribute("aria-pressed", modo.checkbox ? "true" : "false")
     casilla.classList.toggle("activo", modo.checkbox)
     casilla.textContent = modo.checkbox ? "☑ Casilla" : "☐ Casilla"
-    anidar.disabled = !modo.checkbox
+    anidar.disabled = !modo.checkbox || orden.active()
     anidar.setAttribute("aria-pressed", modo.nestArmed ? "true" : "false")
     /* ⚠️ El armado tiene que verse: actúa sobre una línea que todavía no existe. */
     anidar.classList.toggle("activo", modo.nestArmed)
@@ -1261,11 +1291,12 @@ export const createNoteEditor = ({
 
   return {
     element,
-    modeButtons: [casilla, anidar, enlazar],
+    modeButtons: [casilla, anidar, enlazar, orden.button],
     refresh,
     destroy: (): void => {
       document.removeEventListener("selectionchange", recordarCursor)
       document.removeEventListener("copy", copiar)
+      orden.destroy()
     },
   }
 }

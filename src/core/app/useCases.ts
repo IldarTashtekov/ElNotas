@@ -88,6 +88,12 @@ export interface UseCases {
     contentId: ContentId,
   ) => Note | null
   readonly convertToText: (noteId: NoteId, contentId: ContentId) => Note | null
+  /** Lleva esas líneas, con sus hijas, a esa posición: el modo Ordenar. */
+  readonly move: (
+    noteId: NoteId,
+    contentIds: ReadonlyArray<ContentId>,
+    at: Position,
+  ) => Note | null
 
   /**
    * Crea una nota vacía y la devuelve. El id se genera aquí y sale dentro de
@@ -324,6 +330,9 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
 
     convertToText: (noteId: NoteId, contentId: ContentId): Note | null =>
       trasNota(noteId, { type: "convert-to-text", noteId, contentId, meta: meta() }),
+
+    move: (noteId: NoteId, contentIds: ReadonlyArray<ContentId>, at: Position): Note | null =>
+      trasNota(noteId, { type: "move", noteId, contentIds, position: at, meta: meta() }),
 
     /* ── Nota ── */
 

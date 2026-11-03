@@ -116,6 +116,49 @@
   flex-basis: 100%;
   padding-left: 1.6rem;
 }
+/* El asa del modo Ordenar: sólo con él puesto. */
+.asa {
+  display: none;
+}
+/* Ordenando no se escribe ni se selecciona texto: se eligen líneas y se arrastran por su ⠿. */
+.contenido.ordenando {
+  user-select: none;
+  -webkit-user-select: none;
+
+  & .texto {
+    cursor: pointer;
+  }
+  & .asa {
+    align-self: flex-start;
+    color: var(--muted);
+    cursor: grab;
+    display: block;
+    flex: none;
+    padding: 0.12rem 0.5rem 0.12rem 0.1rem;
+    /* El dedo en el ⠿ arrastra la línea, no desplaza la página. */
+    touch-action: none;
+  }
+  & .linea.elegida > .texto {
+    background: var(--accent-soft);
+  }
+  & .linea.elegida > .asa {
+    color: var(--accent);
+  }
+  & .linea.moviendo {
+    opacity: 0.4;
+  }
+  &.arrastrando .asa {
+    cursor: grabbing;
+  }
+}
+/* Dónde caerán las líneas que se arrastran, a su profundidad. */
+.raya-orden {
+  background: var(--accent);
+  height: 2px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
 .empezar {
   cursor: text;
   font-style: italic;

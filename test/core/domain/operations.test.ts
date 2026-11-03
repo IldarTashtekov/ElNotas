@@ -14,12 +14,13 @@ import type { CheckBox, Content } from "#core/domain/Content"
 import { checkBox, isCheckBox, text } from "#core/domain/Content"
 import { contentId } from "#core/domain/Ids"
 import type { Position } from "#core/domain/Position"
-import { after, lastChildOf, rootEnd } from "#core/domain/Position"
+import { after, before, lastChildOf, rootEnd } from "#core/domain/Position"
 import {
   convertToCheckBox,
   convertToText,
   insert,
   merge,
+  move,
   remove,
   setChecked,
   setText,
@@ -744,4 +745,103 @@ test("texto → casilla → texto devuelve una línea equivalente, y con el mism
   assert.equal(final.type, original.type)
   assert.equal(final.id, original.id)
   assert.equal(final.text, original.text)
+})
+
+/* ══════════════════════════════ insert before ══════════════════════════════ */
+
+test("insert before: mete justo delante, en la raíz y entre hijas", (): void => {
+  const enLaRaiz: ReadonlyArray<Content> = insert(listaDeLaCompra(), casillaNueva(), before(ID_COMPRA))
+  assert.equal(bloqueEn(enLaRaiz, 0).id, ID_NUEVO)
+
+  const entreHijas: ReadonlyArray<Content> = insert(listaDeLaCompra(), casillaNueva(), before(ID_MANZANAS))
+  assert.deepEqual(
+    casillaEn(entreHijas, 1).children.map((h: CheckBox): string => h.id),
+    [ID_NUEVO, ID_MANZANAS, ID_PERAS],
+  )
+})
+
+test("insert before: no hace nada con un texto suelto entre hijas ni con un destino que no existe", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(insert(antes, textoNuevo(), before(ID_MANZANAS)), antes)
+  assert.strictEqual(insert(antes, casillaNueva(), before(ID_INEXISTENTE)), antes)
+})
+
+/* ══════════════════════════════════ move ══════════════════════════════════ */
+
+/** El árbol como ids, con las hijas entre corchetes: lo que mover cambia. */
+const forma = (items: ReadonlyArray<Content>): ReadonlyArray<unknown> =>
+  items.map((item: Content): unknown =>
+    isCheckBox(item) && item.children.length > 0 ? [item.id, forma(item.children)] : item.id,
+  )
+
+test("move: una casilla viaja con sus hijas", (): void => {
+  const despues: ReadonlyArray<Content> = move(listaDeLaCompra(), [ID_FRUTA], after(ID_LIMPIEZA))
+  assert.deepEqual(forma(despues), [
+    ID_COMPRA,
+    [ID_LIMPIEZA, [ID_FREGONA]],
+    [ID_FRUTA, [ID_MANZANAS, ID_PERAS]],
+  ])
+})
+
+test("move: varias quedan juntas y en el orden en que se leían, no en el de los ids", (): void => {
+  const despues: ReadonlyArray<Content> = move(listaDeLaCompra(), [ID_FREGONA, ID_MANZANAS], after(ID_COMPRA))
+  assert.deepEqual(forma(despues), [ID_COMPRA, ID_MANZANAS, ID_FREGONA, [ID_FRUTA, [ID_PERAS]], ID_LIMPIEZA])
+})
+
+test("move: una elegida dentro de otra elegida va con su madre", (): void => {
+  const despues: ReadonlyArray<Content> = move(listaDeLaCompra(), [ID_MANZANAS, ID_FRUTA], rootEnd)
+  assert.deepEqual(forma(despues), [ID_COMPRA, [ID_LIMPIEZA, [ID_FREGONA]], [ID_FRUTA, [ID_MANZANAS, ID_PERAS]]])
+})
+
+test("move: saca una hija del árbol, a la primera del todo", (): void => {
+  const despues: ReadonlyArray<Content> = move(listaDeLaCompra(), [ID_PERAS], before(ID_COMPRA))
+  assert.deepEqual(forma(despues), [ID_PERAS, ID_COMPRA, [ID_FRUTA, [ID_MANZANAS]], [ID_LIMPIEZA, [ID_FREGONA]]])
+})
+
+test("move: mete una casilla con hijas dentro de otra, y como primera hija", (): void => {
+  const dentro: ReadonlyArray<Content> = move(listaDeLaCompra(), [ID_LIMPIEZA], lastChildOf(ID_MANZANAS))
+  assert.deepEqual(forma(dentro), [
+    ID_COMPRA,
+    [ID_FRUTA, [[ID_MANZANAS, [[ID_LIMPIEZA, [ID_FREGONA]]]], ID_PERAS]],
+  ])
+  const primera: ReadonlyArray<Content> = move(listaDeLaCompra(), [ID_FREGONA], before(ID_MANZANAS))
+  assert.deepEqual(forma(primera), [ID_COMPRA, [ID_FRUTA, [ID_FREGONA, ID_MANZANAS, ID_PERAS]], ID_LIMPIEZA])
+})
+
+test("move: la marca no cambia, y lo que no va en el camino es lo MISMO", (): void => {
+  const antes: ReadonlyArray<Content> = setChecked(listaDeLaCompra(), ID_PERAS, true)
+  const despues: ReadonlyArray<Content> = move(antes, [ID_PERAS], after(ID_COMPRA))
+  const peras: CheckBox = casillaEn(despues, 1)
+  assert.equal(peras.id, ID_PERAS)
+  assert.equal(peras.checked, true)
+  assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0))
+  assert.strictEqual(casillaEn(despues, 3), casillaEn(antes, 2), "'Limpieza' intacta")
+})
+
+test("move: no hace nada si ninguno existe o el destino no existe", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(move(antes, [ID_INEXISTENTE], rootEnd), antes)
+  assert.strictEqual(move(antes, [], rootEnd), antes)
+  assert.strictEqual(move(antes, [ID_PERAS], after(ID_INEXISTENTE)), antes)
+})
+
+test("move: no hace nada si el destino se mueve o va dentro de lo que se mueve", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(move(antes, [ID_FRUTA], after(ID_FRUTA)), antes)
+  assert.strictEqual(move(antes, [ID_FRUTA], after(ID_PERAS)), antes)
+  assert.strictEqual(move(antes, [ID_FRUTA], lastChildOf(ID_MANZANAS)), antes)
+})
+
+test("move: no hace nada si un texto suelto acabaría entre hijas, y no mueve ninguna", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(move(antes, [ID_COMPRA], after(ID_MANZANAS)), antes)
+  assert.strictEqual(move(antes, [ID_COMPRA], lastChildOf(ID_LIMPIEZA)), antes)
+  assert.strictEqual(move(antes, [ID_LIMPIEZA, ID_COMPRA], before(ID_PERAS)), antes)
+})
+
+test("move: no hace nada si quedan donde estaban", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(move(antes, [ID_FRUTA], after(ID_COMPRA)), antes)
+  assert.strictEqual(move(antes, [ID_MANZANAS, ID_PERAS], lastChildOf(ID_FRUTA)), antes)
+  assert.strictEqual(move(antes, [ID_COMPRA], before(ID_FRUTA)), antes)
 })
