@@ -1,6 +1,6 @@
 /**
  * Lo que enseña la vista ventanas, calculado sin DOM: título, si se renombra, las
- * notas y diagramas de cada ventana, y las flechas que no dan la vuelta.
+ * notas y diagramas de cada ventana, y la fila de pestañas.
  */
 
 import { test } from "node:test"
@@ -10,11 +10,11 @@ import type { AppState, Context, Diagram, ItemRef, Note } from "#core/index"
 import { contextId, diagramId, diagramRef, noteId, noteRef } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import { revision } from "#core/domain/Ids"
-import type { ListItem, WindowView } from "#ui/windowView"
+import type { ListItem, WindowTab, WindowTabs, WindowView } from "#ui/windowView"
 import type { WindowRef } from "#ui/windows"
 import type { WindowsLayout } from "#ui/windows"
-import { GENERAL } from "#ui/windows"
-import { GENERAL_TITLE, windowView } from "#ui/windowView"
+import { CALENDAR, GENERAL } from "#ui/windows"
+import { GENERAL_TITLE, windowTabs, windowView } from "#ui/windowView"
 
 const nota = (id: string, name: string): Note => ({
   id: noteId(id),
@@ -63,24 +63,21 @@ test("sin ventana activa, la pantalla vacía", (): void => {
   assert.deepEqual(windowView({ windows: [], active: null }, ESTADO), { kind: "empty" })
 })
 
-test("en la primera no hay anterior; en la del medio, las dos; en la última no hay siguiente", (): void => {
-  const primera: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: TRES, active: COMPRA })
-  assert.equal(primera.prev, null)
-  assert.deepEqual(primera.next, GENERAL)
+const pestanas = (tabs: ReadonlyArray<WindowTab>): ReadonlyArray<string> =>
+  tabs.map((t: WindowTab): string => `${t.index}:${t.symbol} ${t.title}${t.active ? " *" : ""}`)
 
-  const medio: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: TRES, active: GENERAL })
-  assert.deepEqual(medio.prev, COMPRA)
-  assert.deepEqual(medio.next, TRABAJO)
-
-  const ultima: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: TRES, active: TRABAJO })
-  assert.deepEqual(ultima.prev, GENERAL)
-  assert.equal(ultima.next, null)
+test("las pestañas: las fijas aparte, cada una con su puesto, su símbolo y cuál es la activa", (): void => {
+  const deNota: WindowRef = { kind: "note", id: LECHE.id }
+  const tabs: WindowTabs = windowTabs({ windows: [GENERAL, CALENDAR, COMPRA, deNota], active: COMPRA }, ESTADO)
+  assert.deepEqual(pestanas(tabs.pinned), ["0:≡ General", "1:▦ Calendario"])
+  assert.deepEqual(pestanas(tabs.scrolling), ["2:▤ Compra *", "3:¶ Leche"])
 })
 
-test("con una sola ventana no hay ninguna flecha", (): void => {
-  const sola: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: [GENERAL], active: GENERAL })
-  assert.equal(sola.prev, null)
-  assert.equal(sola.next, null)
+test("sin el General ni el calendario, todas se deslizan; sin ventanas, ninguna", (): void => {
+  const tabs: WindowTabs = windowTabs({ windows: [COMPRA, TRABAJO], active: TRABAJO }, ESTADO)
+  assert.deepEqual(tabs.pinned, [])
+  assert.deepEqual(pestanas(tabs.scrolling), ["0:▤ Compra", "1:▤ Trabajo *"])
+  assert.deepEqual(windowTabs({ windows: [], active: null }, ESTADO), { pinned: [], scrolling: [] })
 })
 
 test("un contexto se titula con su nombre y se renombra", (): void => {
@@ -161,7 +158,6 @@ test("una ventana de nota: se titula con la nota, la renombra, y no lleva lista"
   assert.equal(vista.editsNote, LECHE.id)
   assert.equal(vista.renames, null)
   assert.deepEqual(vista.items, [])
-  assert.deepEqual(vista.prev, GENERAL)
 })
 
 test("en una ventana de contexto o del General no se edita ninguna nota", (): void => {
@@ -256,8 +252,6 @@ test("la ventana del calendario: se titula «Calendario», no se renombra, no ll
   assert.equal(vista.editsNote, null)
   assert.equal(vista.editsDiagram, null)
   assert.deepEqual(vista.items, [])
-  assert.equal(vista.prev, GENERAL)
-  assert.equal(vista.next, null)
 })
 
 test("en una ventana que no es la del calendario no se enseña el calendario", (): void => {

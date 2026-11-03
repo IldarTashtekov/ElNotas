@@ -140,10 +140,10 @@ directamente.
 
 ## G. El diagrama como ventana
 
-- **G1.** En la última ventana, el **+** ofrece los diagramas bajo el rótulo
-  **«Diagramas:»**, detrás de «Notas:». En ⚙, *Cambiar contenido* y *Añadir detrás* también.
+- **G1.** El **+** del final de la fila de pestañas ofrece los diagramas bajo el rótulo
+  **«Diagramas:»**, detrás de «Notas:».
 - **G2.** Una ventana de diagrama enseña el **lienzo** bajo la cabecera, **sin ✕ Salir** y sin los
-  **+**; ◀ ▶ y ⚙ siguen. Tocar el título lo renombra.
+  **+**; las pestañas, ▦ y ⚙ siguen. Tocar el título lo renombra.
 - **G3.** Todo lo de B, C y D funciona igual dentro de la ventana.
 - **G4.** **Recargar** con la ventana de diagrama activa: sigue ahí.
 - **G5.** Un nodo-nota de una ventana de diagrama abre su nota **encima**; salir vuelve a la
@@ -177,8 +177,8 @@ Con un diagrama de cuatro pósits o más y alguna línea entre ellos.
   *(escritorio)*; Ctrl + rueda, o el pellizco del trackpad, acerca y aleja.
 - **I7.** **Volver a pulsar** el botón sale del modo y **quita las marcas**. El **atrás** también,
   y nada más: la vista sigue abierta.
-- **I8.** Con el modo puesto, **✕ Salir** sale de la vista **de una vez**. En una ventana, ◀ ▶
-  cambian de ventana, y luego **ningún atrás** se gasta sin hacer nada.
+- **I8.** Con el modo puesto, **✕ Salir** sale de la vista **de una vez**. En una ventana, tocar
+  otra pestaña cambia de ventana, y luego **ningún atrás** se gasta sin hacer nada.
 
 ## J. El avance por los bordes
 

@@ -29,15 +29,14 @@ lista con **dos ventanas** como mínimo (el General y otra).
   navegador** hace lo mismo.
 - **A3.** Con el calendario abierto con el icono, **recargar**: se vuelve a la ventana, **no** al
   calendario (como con ⚙).
-- **A4.** En ⚙, «Añadir ventana» (la ficha «+» o el ⋮ de una ficha) ofrece **«Calendario»**, justo
-  detrás de «General». Al elegirlo aparece una ficha «Calendario» en la lista.
-- **A5.** Con la ficha puesta, el «+» de la última ventana **ya no ofrece «Calendario»**; en ⚙ se
-  sigue ofreciendo, pero elegirlo otra vez **no añade otra ficha**: sólo hay uno.
-- **A6.** Pasar con ◀ ▶ hasta la ventana del calendario: se ve su contenido, con la cabecera de
-  las ventanas (sin ✕), y el título «Calendario» **no se renombra**.
+- **A4.** El «+» del final de la fila de pestañas abre «Añadir ventana», que ofrece **«Calendario»**.
+  Al elegirlo aparece una pestaña fija con sólo **▦**, tras el General (o la primera, si no hay General), y queda activa.
+- **A5.** Con la pestaña puesta, el «+» **ya no ofrece «Calendario»**: sólo hay uno.
+- **A6.** Tocar la pestaña ▦: se ve su contenido, con la cabecera de
+  las ventanas, y el título «Calendario» **no se renombra**.
 - **A7.** Con la ventana del calendario activa, **recargar**: se vuelve **a esa ventana**.
 - **A8.** Con la ventana del calendario, pulsar **▦**: se abre el calendario encima, y ✕ vuelve a la ventana.
-- **A9.** Quitar la ficha del calendario en ⚙ (⋮ → Quitar): desaparece de la lista, y **▦** sigue abriéndolo.
+- **A9.** Cerrar la pestaña del calendario con su **✕** (estando activa): desaparece de la fila, y el **▦** de la cabecera sigue abriéndolo.
 - **A10.** Elegir la pestaña **Rutinas** en la vista del icono ▦, salir con ✕ y volver a abrirla con
   ▦: sigue en **Rutinas**. Lo mismo entre la vista y la ventana del calendario (se comparte); al
   **recargar** sigue en **Rutinas** (`calendarTab` en `elnotas:ui`). Volver a **Eventos** y

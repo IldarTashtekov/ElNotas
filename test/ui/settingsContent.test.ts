@@ -56,11 +56,7 @@ const TRABAJO: WindowRef = { kind: "context", id: contextId("t") }
 const titulos = (filas: ReadonlyArray<WindowRow>): ReadonlyArray<string> =>
   filas.map((f: WindowRow): string => f.title)
 
-const CONTENIDO: SettingsContent = settingsContent({ windows: [TRABAJO, GENERAL], active: GENERAL }, ESTADO)
-
-test("las ventanas salen en su orden, con su título", (): void => {
-  assert.deepEqual(titulos(CONTENIDO.windows), ["Trabajo", GENERAL_TITLE])
-})
+const CONTENIDO: SettingsContent = settingsContent(ESTADO)
 
 test("los contextos salen TODOS, estén o no en una ventana, por nombre", (): void => {
   assert.deepEqual(
@@ -81,13 +77,7 @@ test("se puede elegir el General, cada contexto y cada nota: en ese orden, y por
   ])
 })
 
-test("una ventana de nota sale en la lista con el nombre de la nota", (): void => {
-  const deNota: WindowRef = { kind: "note", id: noteId("n1") }
-  const contenido: SettingsContent = settingsContent({ windows: [deNota], active: deNota }, ESTADO)
-  assert.deepEqual(titulos(contenido.windows), ["Diario"])
-})
-
-/* ── El «+» de la última ventana ── */
+/* ── El «+» de las pestañas ── */
 
 test("el «+» ofrece lo que NO tiene ventana: sin el General ni Trabajo, que ya la tienen", (): void => {
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [TRABAJO, GENERAL], active: GENERAL }, ESTADO)
@@ -101,7 +91,7 @@ test("el «+» esconde también una nota que ya es ventana, y ofrece el General 
 })
 
 test("con todo en ventanas, el «+» no ofrece nada", (): void => {
-  const todas: ReadonlyArray<WindowRef> = settingsContent({ windows: [], active: null }, ESTADO).choices.map(
+  const todas: ReadonlyArray<WindowRef> = settingsContent(ESTADO).choices.map(
     (f: WindowRow): WindowRef => f.ref,
   )
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: todas, active: GENERAL }, ESTADO)
@@ -128,7 +118,7 @@ const CON_DIAGRAMAS: AppState = {
 }
 
 test("los diagramas se pueden elegir como ventana: detrás de las notas, por nombre", (): void => {
-  const opciones: ReadonlyArray<WindowRow> = settingsContent({ windows: [], active: null }, CON_DIAGRAMAS).choices
+  const opciones: ReadonlyArray<WindowRow> = settingsContent(CON_DIAGRAMAS).choices
   assert.deepEqual(titulos(opciones).slice(-4), ["Diario", "Recetas", "Boda", "Mudanza"])
   assert.equal(opciones[opciones.length - 1]?.ref.kind, "diagram")
 })
@@ -141,7 +131,7 @@ test("el «+» no ofrece un diagrama que ya está en una ventana", (): void => {
 })
 
 test("los rótulos: «Notas:» ante la primera nota y «Diagramas:» ante el primer diagrama, y en nada más", (): void => {
-  const opciones: ReadonlyArray<WindowRow> = settingsContent({ windows: [], active: null }, CON_DIAGRAMAS).choices
+  const opciones: ReadonlyArray<WindowRow> = settingsContent(CON_DIAGRAMAS).choices
   const rotulos: ReadonlyArray<string> = opciones.flatMap((o: WindowRow, i: number): ReadonlyArray<string> => {
     const r: string | null = choiceGroupLabel(opciones, i)
     return r === null ? [] : [`${r} ${o.title}`]
@@ -151,7 +141,7 @@ test("los rótulos: «Notas:» ante la primera nota y «Diagramas:» ante el pri
 
 test("sin notas, el rótulo de diagramas va igual ante el primero; fuera de la lista, ninguno", (): void => {
   const sinNotas: AppState = { ...CON_DIAGRAMAS, notes: {} }
-  const opciones: ReadonlyArray<WindowRow> = settingsContent({ windows: [], active: null }, sinNotas).choices
+  const opciones: ReadonlyArray<WindowRow> = settingsContent(sinNotas).choices
   const primero: number = opciones.findIndex((o: WindowRow): boolean => o.ref.kind === "diagram")
   assert.equal(choiceGroupLabel(opciones, primero), "Diagramas:")
   assert.equal(choiceGroupLabel(opciones, 0), null)

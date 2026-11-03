@@ -1,6 +1,6 @@
 /*
  * La configuración: los rótulos de sección, crear un contexto, el selector de
- * contenido y las ventanas como fichas con forma de móvil que se arrastran.
+ * contenido (también el del «+» de las pestañas) y las acciones de una hoja.
  */
 
 h2 {
@@ -135,103 +135,7 @@ ul.ajustes .secundario {
   padding: 0.55rem 0.9rem;
 }
 
-/* ── Las ventanas en ⚙: una fila de fichas que se desliza ── */
-.fichas {
-  align-items: center;
-  column-gap: 0.5rem;
-  display: flex;
-  overflow-x: auto;
-  padding: 0.35rem 0.1rem 0.6rem;
-  scrollbar-width: thin;
-
-  & > ol {
-    column-gap: 0.5rem;
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-}
-/* Cada ventana, un móvil en pequeño: tamaño fijo, lo que no quepa se corta. */
-.ficha {
-  background: var(--row);
-  border: 1.5px solid var(--rowline);
-  cursor: grab;
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  height: 7.5rem;
-  overflow: hidden;
-  padding: 0.9rem 0.35rem 0.2rem;
-  position: relative;
-  transition: transform 0.15s ease;
-  width: 4.25rem;
-  /* La pulsación larga arrastra: ni seleccionar texto ni el menú de iOS. */
-  -webkit-touch-callout: none;
-  user-select: none;
-
-  /* El altavoz de arriba, para que se lea como pantalla. */
-  &::before {
-    background: var(--rowline);
-    content: "";
-    height: 3px;
-    left: 50%;
-    position: absolute;
-    top: 0.4rem;
-    transform: translateX(-50%);
-    width: 1.2rem;
-  }
-  & .nombre {
-    flex: 1;
-    /* La monoespaciada es ancha: así cabe una palabra de ocho letras. */
-    font-size: 0.68rem;
-    font-weight: 600;
-    line-height: 1.25;
-    min-height: 0;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-  }
-  & .menu {
-    align-self: flex-end;
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    flex: none;
-    font-size: 1rem;
-    line-height: 1;
-    padding: 0.2rem 0.3rem;
-
-    &:hover {
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-  }
-  &.levantada {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    cursor: grabbing;
-    position: relative;
-    transition: none;
-    z-index: 1;
-  }
-}
-.fichas.arrastrando {
-  cursor: grabbing;
-}
-.ficha-mas {
-  background: var(--accent);
-  border: none;
-  color: var(--sobre-color);
-  cursor: pointer;
-  flex: none;
-  font-size: 1.3rem;
-  height: 2.1rem;
-  line-height: 1;
-  text-shadow: none;
-  width: 2.1rem;
-}
-/* Las tres acciones de ⋮, dentro de su hoja. */
+/* Las acciones de una hoja, una bajo otra. */
 .hoja-acciones {
   display: flex;
   flex-direction: column;

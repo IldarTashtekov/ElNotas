@@ -220,30 +220,11 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       cierra cuando** el usuario pasa en el móvil U4, U7, U8 y U10 de
       `test/ui/VERIFICACION-MANUAL-EDITOR.md` (arrastrar con el dedo desde el `⠿` sin que se mueva la
       página, el desplazamiento solo junto al borde, y la barra en dos renglones a 375 px) y los anota.
-- [ ] **13. Las ventanas como pestañas** *(pensar)*. Pedido por el usuario el 2026-11-03: cambiar
-      de ventana como en un navegador, sin ir de una en una con ◀ ▶. **Reabre** «fichas en ⚙ que se
-      arrastran; "+" en vídeo inverso en la última ventana».
-      **En pantalla.** Arriba de la vista ventanas, una fila de pestañas con el título de cada
-      ventana; la activa, en vídeo inverso. Tocar una lleva a ella. Al final de la fila, un «+»
-      que abre el selector de hoy (contexto, nota o diagrama nuevos, o uno que ya exista); la
-      nueva va al final y queda activa. Fuera los ◀ ▶ y **toda la sección de ventanas de ⚙**,
-      con su ⋮: «Cambiar contenido» y «Añadir detrás» desaparecen (se cierra, se abre otra y se
-      arrastra a su sitio).
-      - **Muchas pestañas:** la fila se desliza de lado, como las fichas de ⚙ hoy; cada pestaña
-        con un ancho mínimo, el nombre largo cortado con «…», y la activa siempre a la vista.
-        **El General y el calendario, fijos al principio y siempre a la vista**: no se deslizan
-        con el resto. **Se pueden cerrar** como cualquier otra; si están, van delante, el General
-        primero, y arrastrar no las saca de ahí ni mete otra entre ellas.
-      - **Cerrar:** una ✕ **sólo en la activa**, sin confirmar (sólo quita la referencia). Sin
-        ninguna, la pantalla vacía de hoy.
-      - **Reordenar:** manteniendo pulsada una pestaña y arrastrándola, con `dragReorder.ts`.
-      - **Renombrar:** el título grande se queda debajo de las pestañas, renombrable como hoy.
-      - **Un símbolo delante del nombre** según el tipo (contexto, nota, diagrama, calendario),
-        en caracteres monocromos del fósforo, no emojis; cuáles, al construirla.
-      Lo que no cambia: lo que se abre desde un enlace se apila encima, no abre pestaña.
-      **Se cierra cuando** lo que decide (la pestaña activa al añadir y al quitar, qué queda a la
-      vista) tiene sus pruebas en Node, `check` pasa, la decisión cerrada de `CLAUDE.md` está
-      cambiada, y la lista de las ventanas tiene sus pasos, pasados en el ordenador y en el móvil.
+- [ ] **13. Las ventanas como pestañas: el móvil** *(a pasar por el usuario)*. Hecha el
+      2026-11-03 y en `TERMINADAS.md`; las secciones A, B, D e I de `test/ui/VERIFICACION-MANUAL.md`,
+      pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
+      lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
+      que la pulsación larga no saque el menú del sistema) y los anota.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
@@ -434,6 +415,10 @@ una tarea con su cierre.
 
 **No las resuelva por su cuenta quien implemente.** Si te topas con una, pregunta.
 
+- [ ] **Las pestañas fijas, sólo con su símbolo** *(salió en la 13, 2026-11-03)*. Con su nombre,
+      el General y el calendario se comían media fila a 475 px; se quedaron en ≡ y ▦. Opciones:
+      así, o con nombre y menos sitio para el carril. **Se cierra cuando** el usuario elige y la
+      decisión queda escrita aquí.
 - [ ] **Marcar un día de una semana pasada** *(salió en la 7l, 2026-10-29)*. Con sólo la semana
       de hoy en cada rutina ya no hay dónde corregir un día olvidado de la semana pasada, aunque el
       core lo permite. Opciones: pulsar el día en el mes con la pestaña Rutinas, o nada. Sin

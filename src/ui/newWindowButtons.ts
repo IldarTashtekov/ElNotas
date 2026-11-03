@@ -1,7 +1,7 @@
 /**
  * Los tres botones de crear algo y enseñarlo en una ventana nueva —contexto,
- * nota y diagrama—, en vídeo inverso y uno bajo otro. Los usan el «+» de la
- * última ventana y la configuración, para que ofrezcan lo mismo.
+ * nota y diagrama—, en vídeo inverso y uno bajo otro. Los pone el «+» de las
+ * pestañas, en su hoja.
  *
  * Crea; lo que se hace con la ventana nueva lo decide quien los pone.
  */

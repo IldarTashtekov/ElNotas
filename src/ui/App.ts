@@ -127,7 +127,7 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   /* Salir ES ir atrás: así el exit y el atrás del navegador no pueden divergir. */
   const abrirConfiguracion = (): void =>
     abrirEncima(null, (raiz: HTMLElement): (() => void) =>
-      mountSettingsView(raiz, { ...deps, confirm, back, onExit: back.close }),
+      mountSettingsView(raiz, { ...deps, confirm, onExit: back.close }),
     )
   /* Como la configuración: no lleva `abierta`, al recargar no se vuelve a ella. */
   const abrirCalendario = (target?: CalendarTarget): void =>

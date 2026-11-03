@@ -95,36 +95,37 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 
 ### El arranque
 
-- **CTX-A1.** Recién vacía, al abrir se ve **una ventana: el General**, vacía, con ⚙ y sin ◀ ▶.
+- **CTX-A1.** Recién vacía, al abrir se ve **una ventana: el General**, vacía, con una fila de pestañas
+  que lleva sólo **≡** (sin nombre) y el **+**, y debajo la cabecera con ▦ y ⚙.
 - **CTX-A2.** ⚙ → *Contextos* → crear «Compra». Al volver a la ventana, **Compra no tiene ventana
   todavía**: crear un contexto no se la da.
-- **CTX-A3.** ⚙ → ⋮ de *General* → *Añadir detrás* → *Compra*. Al salir aparece ▶, y lleva a
-  Compra.
+- **CTX-A3.** El **+** de la fila de pestañas → *Compra*. Aparece una pestaña «Compra» al final y
+  queda activa; tocar ≡ lleva al General.
 - **CTX-A4.** **Recargar** estando en Compra: vuelve a Compra, con sus ventanas intactas.
 
 ### La vista ventanas
 
-- **CTX-B1.** En la primera ventana no hay ◀; en la última no hay ▶. Pulsar donde estarían no hace
-  nada: no da la vuelta.
+- **CTX-B1.** Arriba, una pestaña por ventana, con su símbolo delante (≡ General, ▤ contexto);
+  la activa, en vídeo inverso, y tocar otra lleva a esa ventana. El General va fijo el primero, sólo
+  con su ≡ y separado del resto por una raya; no se desliza ni se arrastra.
 - **CTX-B2.** Tocar el título de un contexto lo convierte en un campo. **Intro** guarda;
   **Escape** 💻 cancela; **tocar fuera** guarda. El nombre nuevo sobrevive a recargar.
 - **CTX-B3.** Tocar el título del **General no hace nada**.
 - **CTX-B4.** Un contexto sin notas dice «Esta ventana no tiene notas ni diagramas.».
-- **CTX-B5.** Quitar todas las ventanas desde ⚙: sale «No hay ninguna ventana» **con el ⚙**, que
-  sigue funcionando. *(Luego, volver a poner General y Compra.)*
+- **CTX-B5.** Cerrar todas las ventanas con la **✕** de la pestaña activa (sin confirmar; al cerrar
+  la activa se pasa a la de su derecha, o a la de su izquierda si era la última): sale «No hay
+  ninguna ventana» **con el ⚙**, que sigue funcionando, y la fila de pestañas con su **+** arriba.
+  *(Luego, volver a poner General y Compra con el +.)*
 
 ### La configuración
 
 - **CTX-C1.** ⚙ abre la configuración; **✕** vuelve a **la misma ventana** de la que se entró.
 - **CTX-C2.** Lo mismo con **el atrás**. Tiene que salir de la configuración, **no de la app**.
 - **CTX-C3.** En la ventana principal, sin nada encima, el atrás no hace nada propio de la app.
-- **CTX-C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** al
-  final. ⋮ abre una hoja con *Cambiar contenido*, *Añadir detrás* y *Quitar*, que hacen lo que
-  dicen; las dos primeras enseñan la lista **en la misma hoja**. La **+** añade al final. Un
-  **toque corto** en una ficha no hace nada. Encima del selector, los **mismos tres botones** que
-  en el «+» de la última ventana (CTX-I2): *+ Contexto nuevo*, *+ Nota nueva* y *+ Diagrama
-  nuevo* crean «Nuevo contexto», «Nueva Nota» o «Nuevo diagrama» y lo ponen en esa ventana, **sin
-  salir de ⚙**; la nota y el diagrama, sin contexto.
+- **CTX-C4.** ⚙ ya **no tiene sección «Ventanas»**: sólo *Contextos*, *Pantalla* y *Datos*, sin
+  fichas, sin ⋮, sin *Cambiar contenido* ni *Añadir detrás*. Las ventanas se manejan desde la
+  fila de pestañas: el **+** añade, la **✕** de la activa cierra y mantener pulsada una pestaña
+  la reordena (D).
 - **CTX-C5.** *Borrar* un contexto **pregunta** («¿Borrar «X»? Sus notas seguirán en General.») con
   una **hoja desde abajo** y un botón rojo «Borrar», no con un diálogo del navegador. Con
   *Cancelar*, Escape 💻 o el atrás, no pasa nada y **se sigue en la configuración**. Con «Borrar»
@@ -134,31 +135,31 @@ comparten notas. Lo creado en uno no aparece en otro, y eso no es un fallo.
 
 ### Reordenar las ventanas arrastrando
 
-Con tres o cuatro ventanas, en ⚙:
+Con tres o cuatro ventanas, además del General:
 
-- **CTX-D1.** **Mantener pulsada** una ficha medio segundo la **levanta**: se resalta con el borde del fósforo.
+- **CTX-D1.** **Mantener pulsada** una pestaña del carril medio segundo la **levanta**: se resalta con el borde del fósforo.
 - **CTX-D2.** Arrastrándola, las demás **se corren** para hacerle hueco; al soltar **queda en ese
-  puesto**, y al salir ◀ ▶ recorren las ventanas en el orden nuevo. Sobrevive a recargar.
+  puesto**, y la fila enseña las ventanas en el orden nuevo. Sobrevive a recargar.
 - **CTX-D3.** Soltarla en su sitio no cambia nada.
-- **CTX-D4.** Con más fichas de las que caben: **deslizar** la fila con el dedo la mueve **sin
-  levantar ninguna**; arrastrando una levantada cerca del borde, la fila se desliza sola.
+- **CTX-D4.** Con más pestañas de las que caben: **deslizar** el carril con el dedo lo mueve **sin
+  levantar ninguna**; arrastrando una levantada cerca del borde, el carril se desliza solo.
 - **CTX-D5.** 📱 La pulsación larga **no** selecciona texto ni saca el menú del sistema.
-- **CTX-D6.** Pulsar **⋮** no levanta la ficha: abre la hoja. El atrás (o Escape 💻) cierra la hoja
-  y **se sigue en ⚙**.
+- **CTX-D6.** Mantener pulsado el **General** o el calendario no los levanta: las fijas no se
+  arrastran ni se deslizan. Un **toque corto** en cualquier pestaña no la levanta: sólo lleva a su ventana.
 
-### El «+» de la última ventana
+### El «+» de las pestañas
 
-- **CTX-I1.** En la última ventana, en el sitio de ▶, hay un **+** en vídeo inverso; en las demás, ▶ y no el +.
+- **CTX-I1.** Al final de la fila de pestañas hay un **+** en vídeo inverso, sea cual sea la ventana activa.
 - **CTX-I2.** Tocarlo sube una **hoja desde abajo** con tres botones en vídeo inverso, uno bajo otro —«+
   Contexto nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene
   ventana**: el General no sale si ya es ventana; las notas, tras «Notas:».
-- **CTX-I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**; aparece ◀ a la
-  ventana de antes y el + sigue en la nueva última.
+- **CTX-I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**: su pestaña sale
+  al final del carril, activa, y el + sigue ahí (el General y el calendario, a su sitio fijo).
 - **CTX-I4.** «+ Contexto nuevo» crea uno y llega a él **con el título ya en edición**: escribir e
   Intro le pone el nombre.
 - **CTX-I5.** La hoja se cierra **sin cambiar nada** con *Cancelar*, con Escape 💻, **tocando
   fuera** y con **el atrás**, y en ningún caso se sale de la app.
-- **CTX-I6.** Durante el modo selección (abajo, CTX-E), el + se apaga como ◀ ▶ y ⚙.
+- **CTX-I6.** Durante el modo selección (abajo, CTX-E), el + se apaga como las pestañas, ▦ y ⚙.
 - **CTX-I7.** «+ Nota nueva» crea una «Nueva Nota» y llega a ella **con el título ya en edición**,
   como CTX-I4; «+ Diagrama nuevo», lo mismo con «Nuevo diagrama» y su lienzo. Los dos nacen **sin
   contexto**: salen en el General y en ningún contexto. Sobreviven a abrir la app de nuevo.
@@ -178,7 +179,7 @@ Con dos o tres notas en Compra (el botón **+** grande, varias veces):
   **Espacio** entra o alterna.
 - **CTX-E6.** Se sale con Escape 💻 y con **el atrás**, sin salir de la app.
 - **CTX-E7.** Durante la selección: abajo la barra con la cuenta, la papelera y *Mover a…*; **el
-  botón + desaparece**; **◀ ▶ y ⚙ se apagan** y no responden.
+  botón + desaparece**; **las pestañas, el +, ▦ y ⚙ se apagan** y no responden.
 - **CTX-E8.** En un contexto la papelera dice **«Quitar»**, **no pregunta**, y las notas **siguen
   en el General**.
 - **CTX-E9.** En el General dice **«Borrar»** y **pregunta** con la hoja de abajo. Con *Cancelar*,
@@ -195,7 +196,7 @@ Para cada apartado, una nota nueva con el botón **+** grande vale: nace vacía 
 ### Abrir y salir
 
 - **ED-A1.** Tocar una nota de la lista la abre; 💻 **Intro** con el foco en la fila, también.
-- **ED-A2.** La cabecera lleva **sólo el título**: ni ◀ ▶ ni ⚙. Tocar el título lo renombra.
+- **ED-A2.** La cabecera lleva **sólo el título**, sin ⚙. Tocar el título lo renombra.
 - **ED-A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado), **Enlazar…** y **✕ Salir**.
 - **ED-A4.** **✕ Salir** y **el atrás** vuelven a **la misma ventana**.
 - **ED-A5.** Recargar con la nota abierta vuelve a la nota (las capas).
@@ -283,9 +284,9 @@ En el móvil, con el **borrar del teclado** (es también ED-H2).
 
 ### Ventanas de tipo nota
 
-- **ED-I1.** ⚙ → ⋮ de una ventana → *Añadir detrás* (o la ficha **+**) → bajo «Notas:», elegir una
-  nota. Aparece como ventana.
-- **ED-I2.** En esa ventana: cabecera con **◀ ▶ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
+- **ED-I1.** El **+** del final de la fila de pestañas → bajo «Notas:», elegir una nota. Aparece
+  como pestaña, al final, y queda activa.
+- **ED-I2.** En esa ventana: las pestañas arriba, la cabecera con **el título, ▦ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
   Todo lo de ED-B a ED-G funciona igual.
 - **ED-I3.** Renombrarla por el título renombra la nota: se ve en el General.
 - **ED-I4.** Borrar esa nota desde el General (selección → Borrar): su ventana **desaparece en la
@@ -384,10 +385,10 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ### El diagrama como ventana
 
-- **LZ-G1.** En la última ventana, el **+** ofrece los diagramas bajo **«Diagramas:»**, detrás
-  de «Notas:». En ⚙, *Cambiar contenido* y *Añadir detrás* también.
+- **LZ-G1.** El **+** del final de la fila de pestañas ofrece los diagramas bajo **«Diagramas:»**,
+  detrás de «Notas:».
 - **LZ-G2.** Una ventana de diagrama enseña el **lienzo** bajo la cabecera, **sin ✕ Salir** y sin
-  los **+**; ◀ ▶ y ⚙ siguen. Tocar el título lo renombra.
+  los **+**; las pestañas, ▦ y ⚙ siguen. Tocar el título lo renombra.
 - **LZ-G3.** Todo lo de LZ-B, LZ-C y LZ-D funciona igual dentro de la ventana.
 - **LZ-G4.** **Recargar** con la ventana de diagrama activa: sigue ahí.
 - **LZ-G5.** Un nodo-nota de una ventana de diagrama abre su nota **encima**; salir vuelve a la

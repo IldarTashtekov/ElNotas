@@ -47,8 +47,8 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
   negro), para no confundirse con el de nota.
 - **T4.** **Sólo lo de borrar y los errores son rojos**: «Borrar» en ⚙, «Borrar todo», el botón de
   la pregunta antes de borrar y el borde del aviso de guardado detenido.
-- **T5.** Las fichas de ⚙ enseñan **palabras de ocho letras enteras** («contexto», «diagrama»),
-  sin partirlas.
+- **T5.** Las pestañas con un nombre largo lo **cortan con «…»**, sin partirlo ni desbordar, y
+  las palabras de ocho letras («contexto», «diagrama») se ven enteras cuando caben.
 - **T6.** El **foco del teclado** (tabulador) es un recuadro del color del fósforo, recto, no el anillo blanco y
   redondo del navegador.
 - **T8.** En ⚙, la sección **Pantalla** tiene **Verde**, **Ámbar** y **Magenta**, el elegido en vídeo
@@ -58,7 +58,7 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
 
 ## G. Que los toques sigan llegando
 
-- **G1.** ⚠️ Con las líneas de barrido encima, **todo responde al primer toque**: ◀ ▶ ⚙, abrir
+- **G1.** ⚠️ Con las líneas de barrido encima, **todo responde al primer toque**: las pestañas, ▦, ⚙, abrir
   una nota, las casillas, los botones de las barras, las hojas. *(En el navegador del panel, los
   clics simulados de ⚙ fallaron a ratos y por código funcionaba: aquí se mira con el dedo y el
   ratón de verdad.)*

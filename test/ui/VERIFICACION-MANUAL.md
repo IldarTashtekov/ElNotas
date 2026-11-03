@@ -81,22 +81,23 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
 
 ## A. Arranque y la rebanada
 
-- **A1.** Recién limpio, al abrir se ve **una ventana: el General**, vacía, con ⚙ y sin ◀ ▶.
+- **A1.** Recién limpio, al abrir se ve **una ventana: el General**, vacía: arriba, la fila de
+  pestañas con sólo **≡** (en vídeo inverso) y el **+**; debajo, el título, ▦ y ⚙.
 - **A2.** ⚙ → *Contextos* → crear «Compra». Vuelve a la ventana: **Compra no tiene ventana
   todavía** (crear un contexto no se la da).
-- **A3.** ⚙ → ⋮ de *General* → *Añadir detrás* → *Compra*. Sal: aparece ▶, y lleva a Compra.
+- **A3.** El **+** de las pestañas → *Compra*: aparece la pestaña **▤ Compra**, al final y activa.
 - **A4.** **Recargar** estando en Compra: vuelve a Compra, con sus ventanas intactas.
 
 ## B. La vista ventanas
 
-- **B1.** En la primera ventana no hay ◀; en la última no hay ▶. Pulsar donde estarían no hace
-  nada (no da la vuelta).
+- **B1.** Tocar una pestaña lleva a su ventana y la pone en vídeo inverso; sólo la activa lleva
+  **✕**. Tocar la activa no hace nada.
 - **B2.** Tocar el título de un contexto lo convierte en un campo. **Intro** guarda; **Escape**
   cancela; **tocar fuera** guarda. El nombre nuevo sobrevive a recargar.
 - **B3.** Tocar el título del **General no hace nada**.
 - **B4.** Un contexto sin notas dice «Esta ventana no tiene notas ni diagramas.».
-- **B5.** Quitar todas las ventanas desde ⚙: sale «No hay ninguna ventana» **con el ⚙**, que
-  sigue funcionando.
+- **B5.** Cerrar todas las ventanas con su ✕: sale «No hay ninguna ventana» **con el ⚙**, que
+  sigue funcionando, y la fila de pestañas con su **+**.
 
 ## C. La vista configuración
 
@@ -104,11 +105,8 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
 - **C2.** Lo mismo con el **atrás del navegador**, y en Android con el **gesto o botón atrás del
   sistema**. Tiene que salir de la configuración, **no de la app**.
 - **C3.** En la ventana principal (sin nada encima), el atrás no hace nada propio de la app.
-- **C4.** Las ventanas son **fichas en una fila**, con ⋮ cada una y una ficha **+** al
-  final. ⋮ abre una hoja con *Cambiar contenido*, *Añadir detrás* y *Quitar*, que hacen lo que
-  dicen; las dos primeras enseñan la lista **en la misma hoja**. La **+** añade al final. Un
-  **toque corto** en una ficha no hace nada.
-  *+ Contexto nuevo* en el selector crea «Nuevo contexto» y lo pone en esa ventana.
+- **C4.** La configuración **no tiene sección de ventanas**: sólo *Contextos*, *Pantalla* y
+  *Datos*. Las ventanas se gestionan desde sus pestañas (secciones D e I).
 - **C5.** *Borrar* un contexto **pregunta** («¿Borrar «X»? Sus notas seguirán en General.»).
   La pregunta es una **hoja desde abajo** con un botón rojo «Borrar», no un diálogo del
   navegador. Con *Cancelar*, Escape o el atrás, no pasa nada y **se sigue en la configuración**.
@@ -121,20 +119,23 @@ y recargar. En el móvil, borrar los datos del sitio desde los ajustes del naveg
   «Borrar todo», la página **se recarga en blanco**: sin notas, sin diagramas, sin contextos y
   con el General como única ventana. **Recargar otra vez**: sigue en blanco.
 
-## D. Reordenar las ventanas arrastrando
+## D. Las pestañas: reordenar, fijas y cerrar
 
-Con tres o cuatro ventanas, en ⚙:
+Con el General, el calendario y tres o cuatro contextos de ventana:
 
-- **D1.** **Mantener pulsada** una ficha medio segundo la **levanta** (se resalta con el borde del fósforo).
-  Con el ratón, igual: mantener el botón.
+- **D1.** **Mantener pulsada** una pestaña del carril medio segundo la **levanta** (se resalta
+  con el borde del fósforo). Con el ratón, igual: mantener el botón.
 - **D2.** Arrastrándola, las demás **se corren** para hacerle hueco; al soltar, **queda en ese
-  puesto**, y al salir ◀ ▶ recorren las ventanas en el orden nuevo. Sobrevive a recargar.
+  puesto**. Sobrevive a recargar.
 - **D3.** Soltarla en su sitio no cambia nada.
-- **D4.** Con más fichas de las que caben: **deslizar** la fila con el dedo la mueve **sin levantar
-  ninguna**; arrastrando una levantada cerca del borde, la fila se desliza sola.
+- **D4.** Con más pestañas de las que caben: **deslizar** el carril con el dedo lo mueve **sin
+  levantar ninguna**; arrastrando una levantada cerca del borde, se desliza solo. La activa
+  queda siempre a la vista, y un nombre largo se corta con «…».
 - **D5.** En el móvil, la pulsación larga **no** selecciona texto ni saca el menú del sistema.
-- **D6.** Pulsar **⋮** no levanta la ficha: abre la hoja. El atrás (o Escape) cierra la hoja y
-  **se sigue en ⚙**.
+- **D6.** El **General** y el **calendario** van **fijos delante**, sólo con ≡ y ▦, separados
+  por una raya: no se deslizan, no se levantan y ninguna se puede soltar delante de ellas.
+  Pulsar la **✕** de la activa la cierra **sin preguntar** y pasa a la de su derecha (o a la
+  de su izquierda si era la última); cerrar el General también vale.
 
 ## E. La lista de un contexto
 
@@ -152,7 +153,7 @@ Con dos o tres notas en Compra (el botón **+** grande, varias veces):
   (Tab), **Espacio** entra o alterna.
 - **E6.** Se sale con **Escape** y con **atrás** (en Android, el del sistema), sin salir de la
   app.
-- **E7.** Durante la selección: abajo la barra con la cuenta, la papelera, *Mover a…* y, en un contexto, *Ocultar*; **el botón + desaparece**; **◀ ▶ y ⚙ se apagan** y no responden.
+- **E7.** Durante la selección: abajo la barra con la cuenta, la papelera, *Mover a…* y, en un contexto, *Ocultar*; **el botón + desaparece**; **las pestañas, su +, ▦ y ⚙ se apagan** y no responden.
 - **E8.** En un contexto la papelera dice **«Quitar»**, **no pregunta**, y las notas **siguen en el
   General**.
 - **E9.** En el General dice **«Borrar»** y **pregunta** con la hoja de abajo. Con *Cancelar*,
@@ -184,19 +185,19 @@ el navegador **resalta en color los nodos que cambian**.
 - **G2.** Quitarla (`localStorage.removeItem("elnotas:blob:notes/rota.json")`) y recargar: el
   aviso desaparece.
 
-## I. El «+» de la última ventana
+## I. El «+» de las pestañas
 
-- **I1.** En la última ventana, en el sitio de ▶, hay un **+** en vídeo inverso; en las demás, ▶ y no el +.
+- **I1.** Al final de la fila de pestañas hay un **+** en vídeo inverso, en cualquier ventana.
 - **I2.** Tocarlo sube una **hoja desde abajo** con tres botones en vídeo inverso, uno bajo otro —«+ Contexto
   nuevo», «+ Nota nueva» y «+ Diagrama nuevo»— y, debajo, **sólo lo que no tiene ventana** (el
   General no sale si ya es ventana; las notas, tras «Notas:»).
-- **I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**; aparece ◀ a la
-  ventana de antes y el + sigue en la nueva última.
+- **I3.** Elegir un contexto o una nota lo añade **al final** y **se va a él**: su pestaña,
+  activa. El General y el calendario no van al final: a **su sitio fijo** delante.
 - **I4.** «+ Contexto nuevo» crea uno y llega a él **con el título ya en edición**: escribir y
   Intro le pone el nombre.
 - **I5.** La hoja se cierra **sin cambiar nada** con *Cancelar*, con **Escape**, **tocando fuera**
   y con el **atrás** (en Android, el del sistema), y en ningún caso se sale de la app.
-- **I6.** Durante el modo selección, el + se apaga como ◀ ▶ y ⚙.
+- **I6.** Durante el modo selección, el + se apaga como las pestañas, ▦ y ⚙.
 - **I7.** «+ Nota nueva» crea una «Nueva Nota» y llega a ella **con el título ya en edición**, como
   I4; «+ Diagrama nuevo», lo mismo con «Nuevo diagrama» y su lienzo. Los dos nacen **sin
   contexto**: salen en el General y en ningún contexto. Sobreviven a recargar, en su ventana.

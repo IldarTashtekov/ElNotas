@@ -44,7 +44,7 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 ## A. Abrir y salir
 
 - **A1.** Tocar una nota de la lista la abre; **Intro** con el foco en la fila, también.
-- **A2.** La cabecera lleva **sólo el título**: ni ◀ ▶ ni ⚙. Tocar el título lo renombra.
+- **A2.** La cabecera lleva **sólo el título**, sin ⚙. Tocar el título lo renombra.
 - **A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado), **Enlazar…** y **✕ Salir**.
 - **A4.** **✕ Salir** y el **atrás** (en Android, el del sistema) vuelven a **la misma ventana**.
 - **A5.** Recargar con la nota abierta vuelve a la nota (las capas).
@@ -126,9 +126,9 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 
 ## I. Ventanas de tipo nota
 
-- **I1.** ⚙ → ⋮ de una ventana → *Añadir detrás* (o la ficha **+**) → en la lista, bajo «Notas:», elegir una nota. Aparece como
-  ventana.
-- **I2.** En esa ventana: cabecera con **◀ ▶ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
+- **I1.** El **+** del final de la fila de pestañas → en la hoja, bajo «Notas:», elegir una nota. Aparece como
+  pestaña, al final, y queda activa.
+- **I2.** En esa ventana: las pestañas arriba, la cabecera con **el título, ▦ y ⚙**, el editor debajo y la barra **sin ✕ Salir**.
   Todo lo de B–G funciona igual.
 - **I3.** Renombrarla por el título renombra la nota (se ve en el General).
 - **I4.** Borrar esa nota desde el General (selección → Borrar): su ventana **desaparece en la

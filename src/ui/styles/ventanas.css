@@ -1,9 +1,110 @@
 /*
- * La vista ventanas: la cabecera con ◀ título ▶ ⚙, las notas como tarjetas, el
- * modo selección, y los vacíos y los avisos de arriba.
+ * La vista ventanas: las pestañas, la cabecera con el título, ▦ y ⚙, las notas
+ * como tarjetas, el modo selección, y los vacíos y los avisos de arriba.
  */
 
-/* ── La cabecera: ◀ título ▶ ⚙ ── */
+/* ── Las pestañas: las fijas quietas, el carril que se desliza y el «+» ── */
+.pestanas {
+  align-items: stretch;
+  border-bottom: 1px solid var(--rowline);
+  display: flex;
+  margin: 0 -1rem;
+  padding: 0.35rem 0.5rem 0;
+
+  & > ol {
+    display: flex;
+    flex: none;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  /* Las fijas, separadas del carril por una raya. */
+  & > .pestanas-fijas {
+    border-right: 1px solid var(--line);
+    margin-right: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  & > .pestanas-carril {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  & > .agregar {
+    align-self: center;
+    flex: none;
+  }
+  /* Seleccionando en la lista no se cambia de ventana. */
+  &.apagadas .pestana-ventana {
+    color: var(--dim);
+    cursor: default;
+  }
+}
+.pestana-ventana {
+  align-items: center;
+  border: 1px solid var(--rowline);
+  border-bottom: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  gap: 0.35rem;
+  max-width: 11rem;
+  min-width: 5.5rem;
+  padding: 0.4rem 0.55rem;
+  transition: transform 0.15s ease;
+  /* La pulsación larga arrastra: ni seleccionar texto ni el menú de iOS. */
+  -webkit-touch-callout: none;
+  user-select: none;
+
+  & .simbolo {
+    flex: none;
+  }
+  & .nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & .cerrar {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    flex: none;
+    font: inherit;
+    line-height: 1;
+    padding: 0 0.1rem;
+  }
+  /* La activa, en vídeo inverso. */
+  &.activa {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    text-shadow: none;
+  }
+  &.levantada {
+    border-color: var(--accent);
+    position: relative;
+    transition: none;
+    z-index: 1;
+  }
+}
+.pestanas-carril.arrastrando {
+  cursor: grabbing;
+}
+/* Las fijas, sólo con su símbolo: siempre a la vista sin comerse la fila. */
+.pestanas-fijas .pestana-ventana {
+  min-width: 0;
+
+  & .nombre {
+    display: none;
+  }
+}
+
+/* ── La cabecera: título, ▦ y ⚙ ── */
 .cabecera {
   align-items: center;
   border-bottom: 1px solid var(--rowline);

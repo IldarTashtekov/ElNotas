@@ -1,7 +1,9 @@
 /**
- * La vista ventanas, la principal: una ventana cada vez, con ◀ ▶ para pasar a la
- * de al lado —y en la última, un «+» para añadir otra detrás—, el título —que se
- * renombra tocándolo, salvo en el General—, sus notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
+ * La vista ventanas, la principal: arriba, las pestañas —el General y el
+ * calendario fijos delante y con sólo su símbolo, las demás en una fila que se desliza y se reordena
+ * manteniendo pulsada una, la ✕ en la activa y un «+» al final—; debajo, el
+ * título de la activa —que se renombra tocándolo, salvo en el General—, sus
+ * notas y el ⚙ de la configuración. Una ventana de nota enseña el mismo editor
  * que la vista nota, con su barra y sin exit; una de diagrama, el mismo lienzo
  * que la vista diagrama, también sin exit. Sin ventanas, una pantalla vacía.
  *
@@ -30,6 +32,7 @@ import { createCalendarPanel } from "./CalendarPanel.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { createDiagramCanvas } from "./DiagramCanvas.js"
+import { attachDragReorder } from "./dragReorder.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { corruptNotice, elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
@@ -39,11 +42,13 @@ import { createNoteEditor } from "./NoteEditor.js"
 import type { ItemList } from "./ItemList.js"
 import { createItemList } from "./ItemList.js"
 import { newWindowButtons } from "./newWindowButtons.js"
+import type { ReconcileSteps } from "./reconcile.js"
+import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
 import type { WindowRow } from "./settingsContent.js"
 import { addWindowChoices, choiceGroupLabel } from "./settingsContent.js"
 import { createSheet } from "./sheet.js"
-import type { WindowView } from "./windowView.js"
-import { windowView } from "./windowView.js"
+import type { WindowTab, WindowTabs, WindowView } from "./windowView.js"
+import { windowTabs, windowView } from "./windowView.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
 
@@ -80,11 +85,9 @@ const flecha = (texto: string, etiqueta: string): HTMLButtonElement => {
   return boton
 }
 
-/** Se ocultan sin quitarlas del sitio, para que el título no baile. */
-const mostrar = (el: HTMLElement, visible: boolean): void => {
-  el.style.visibility = visible ? "visible" : "hidden"
-  el.setAttribute("aria-hidden", visible ? "false" : "true")
-}
+/** La clave de una pestaña: su puesto y lo que enseña. */
+const claveDe = ({ index, ref }: WindowTab): string =>
+  `${index}:${ref.kind === "general" || ref.kind === "calendar" ? ref.kind : `${ref.kind}:${ref.id}`}`
 
 export const mountWindowsView = (
   raiz: HTMLElement,
@@ -109,11 +112,17 @@ export const mountWindowsView = (
     onOpenRoutine,
   }: WindowsViewDeps,
 ): void => {
-  const anterior: HTMLButtonElement = flecha("◀", "Ventana anterior")
-  const siguiente: HTMLButtonElement = flecha("▶", "Ventana siguiente")
-  /* En la última ventana, en el sitio de ▶. */
+  /* La fila de pestañas: las fijas, quietas; las demás, en su carril, y el «+». */
+  const fijas: HTMLOListElement = elemento("ol")
+  fijas.className = "pestanas-fijas"
+  const carril: HTMLOListElement = elemento("ol")
+  carril.className = "pestanas-carril"
   const agregar: HTMLButtonElement = flecha("+", "Añadir ventana")
   agregar.classList.add("agregar")
+  const pestanas: HTMLElement = elemento("nav")
+  pestanas.className = "pestanas"
+  pestanas.setAttribute("aria-label", "Ventanas")
+  pestanas.append(fijas, carril, agregar)
   const titulo: EditableTitle = createEditableTitle("Nombre", (nombre: string): void => {
     /* Se lee al guardar: es la ventana en la que se empezó a escribir. */
     if (vista.kind !== "window") return
@@ -132,11 +141,12 @@ export const mountWindowsView = (
   const calendario: HTMLButtonElement = flecha("▦", "Calendario")
   calendario.classList.add("icono-calendario")
   calendario.addEventListener("click", onOpenCalendar)
-  cabecera.append(anterior, titulo.element, siguiente, agregar, calendario, ajustes)
+  cabecera.append(titulo.element, calendario, ajustes)
 
-  /* Mientras se selecciona se apagan ◀ ▶ + y ⚙: no se sale de la lista a medias. */
+  /* Mientras se selecciona se apagan las pestañas, el + y ⚙: no se sale de la lista a medias. */
   const apagar = (seleccionando: boolean): void => {
-    for (const b of [anterior, siguiente, agregar, calendario, ajustes]) {
+    pestanas.classList.toggle("apagadas", seleccionando)
+    for (const b of [agregar, calendario, ajustes]) {
       b.disabled = seleccionando
       b.classList.toggle("apagado", seleccionando)
     }
@@ -150,7 +160,8 @@ export const mountWindowsView = (
     onOpenNote,
     onOpenDiagram,
   })
-  /* Sin ventanas no hay cabecera, pero el ⚙ tiene que seguir: es la salida. */
+  /* Sin ventanas no hay cabecera, pero el ⚙ tiene que seguir: es la salida. Las
+     pestañas, con su «+», también. */
   const sinVentanas: HTMLElement = elemento("div")
   sinVentanas.className = "vacia"
   sinVentanas.append(elemento("p", "No hay ninguna ventana."), engranaje())
@@ -241,27 +252,85 @@ export const mountWindowsView = (
     lienzo = { diagrama: id, instancia }
   }
 
+  /* ── Las pestañas: tocar una lleva a ella; su ✕, sólo en la activa, la cierra ── */
+
+  /** La pestaña que se pintó en cada `li`, para saber cuál se toca. */
+  const pintadas: WeakMap<Element, WindowTab> = new WeakMap<Element, WindowTab>()
+
   /* Cambiar de ventana rehace el lienzo: los modos del que se va, cerrados antes. */
-  anterior.addEventListener("click", (): void => {
-    if (vista.kind !== "window" || vista.prev === null) return
+  const alTocarPestana = (evento: MouseEvent): void => {
+    if (!(evento.target instanceof Element) || pestanas.classList.contains("apagadas")) return
+    const li: Element | null = evento.target.closest("li.pestana-ventana")
+    const tab: WindowTab | undefined = li === null ? undefined : pintadas.get(li)
+    if (tab === undefined) return
     lienzo?.instancia.closeModes()
-    windows.setActive(vista.prev)
-  })
-  siguiente.addEventListener("click", (): void => {
-    if (vista.kind !== "window" || vista.next === null) return
-    lienzo?.instancia.closeModes()
-    windows.setActive(vista.next)
+    /* Sin confirmar: sólo quita la referencia, y se vuelve a abrir con el «+». */
+    if (evento.target.closest(".cerrar") !== null) windows.close(tab.index)
+    else windows.setActive(tab.ref)
+  }
+  pestanas.addEventListener("click", alTocarPestana)
+
+  const crearPestana = (tab: WindowTab): Element => {
+    const li: HTMLLIElement = elemento("li")
+    li.className = "pestana-ventana"
+    li.dataset["key"] = claveDe(tab)
+    li.setAttribute("role", "tab")
+    const simbolo: HTMLSpanElement = elemento("span", tab.symbol)
+    simbolo.className = "simbolo"
+    simbolo.setAttribute("aria-hidden", "true")
+    const nombre: HTMLSpanElement = elemento("span")
+    nombre.className = "nombre"
+    const cerrar: HTMLButtonElement = elemento("button", "✕")
+    cerrar.type = "button"
+    cerrar.className = "cerrar"
+    li.append(simbolo, nombre, cerrar)
+    return li
+  }
+
+  const ponerPestana = (li: Element, tab: WindowTab): void => {
+    pintadas.set(li, tab)
+    const nombre: Element | null = li.querySelector(".nombre")
+    if (nombre !== null) setTextIfChanged(nombre, tab.title)
+    setAttrIfChanged(li, "title", tab.title)
+    setAttrIfChanged(li, "aria-label", tab.title)
+    setAttrIfChanged(li, "aria-selected", tab.active ? "true" : "false")
+    if (li.classList.contains("activa") !== tab.active) li.classList.toggle("activa", tab.active)
+    const cerrar: HTMLElement | null = li.querySelector<HTMLElement>(".cerrar")
+    if (cerrar !== null) {
+      cerrar.hidden = !tab.active
+      setAttrIfChanged(cerrar, "aria-label", `Cerrar «${tab.title}»`)
+    }
+  }
+
+  /* Reordenar: mantener pulsada una del carril. Las fijas no están en él. */
+  attachDragReorder(carril, {
+    fichas: "li.pestana-ventana",
+    ignorar: ".cerrar",
+    onMove: (de: number, a: number): void => {
+      if (pestanas.classList.contains("apagadas")) return
+      const delante: number = windowTabs(windows.getLayout(), store.getState()).pinned.length
+      windows.move(de + delante, a + delante)
+    },
   })
 
-  /* ── El «+»: añadir una ventana detrás de la última, e ir a ella ── */
+  /** La activa, siempre a la vista: si se sale del carril, se desliza hasta ella. */
+  const mostrarActiva = (): void => {
+    const activa: HTMLElement | null = carril.querySelector<HTMLElement>("li.pestana-ventana.activa")
+    if (activa === null) return
+    const caja: DOMRect = carril.getBoundingClientRect()
+    const suya: DOMRect = activa.getBoundingClientRect()
+    if (suya.left < caja.left) carril.scrollLeft -= caja.left - suya.left
+    else if (suya.right > caja.right) carril.scrollLeft += suya.right - caja.right
+  }
+
+  /* ── El «+»: añadir una ventana al final, e ir a ella ── */
 
   const hoja: Sheet = createSheet(back)
 
   const anadir = (ref: WindowRef): void => {
     hoja.close()
     lienzo?.instancia.closeModes()
-    windows.insertAfter(windows.getLayout().windows.length - 1, ref)
-    windows.setActive(ref)
+    windows.add(ref)
   }
 
   /** El rótulo de un grupo del selector, si a esa opción le toca uno. */
@@ -313,6 +382,17 @@ export const mountWindowsView = (
     pintadoLayout = layout
     vista = windowView(layout, estado)
 
+    const tabs: WindowTabs = windowTabs(layout, estado)
+    const pasos: ReconcileSteps<WindowTab, Element> = {
+      key: claveDe,
+      keyOf: (el: Element): string | null => el.getAttribute("data-key"),
+      create: crearPestana,
+      update: ponerPestana,
+    }
+    reconcile<WindowTab, Element>(fijas, tabs.pinned, pasos)
+    reconcile<WindowTab, Element>(carril, tabs.scrolling, pasos)
+    fijas.hidden = tabs.pinned.length === 0
+
     if (vista.kind === "empty") {
       cabecera.hidden = true
       notas.update(null, [], [])
@@ -325,10 +405,6 @@ export const mountWindowsView = (
 
     cabecera.hidden = false
     sinVentanas.hidden = true
-    mostrar(anterior, vista.prev !== null)
-    /* ▶ y + comparten el sitio: en la última ventana está el +. */
-    siguiente.hidden = vista.next === null
-    agregar.hidden = vista.next !== null
 
     titulo.show(
       vista.title,
@@ -359,10 +435,13 @@ export const mountWindowsView = (
       notas.element.hidden = false
       notas.update(vista.ref, vista.items, vista.hidden)
     }
+    /* Al final: lo montado debajo puede cambiar el ancho de la fila. */
+    mostrarActiva()
   }
 
   raiz.replaceChildren(
     ...(corrupt.length > 0 ? [corruptNotice(corrupt)] : []),
+    pestanas,
     cabecera,
     notas.element,
     zonaEditor,

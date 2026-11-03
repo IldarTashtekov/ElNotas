@@ -19,11 +19,12 @@ import {
   CALENDAR,
   DEFAULT_LAYOUT,
   GENERAL,
+  addWindow,
+  closeWindowAt,
   guardWindows,
-  insertWindowAfter,
   moveWindow,
-  removeWindowAt,
-  replaceWindowAt,
+  pinFixed,
+  pinnedCount,
   sameWindow,
 } from "#ui/windows"
 import { parseWindowsLayout } from "#ui/windows"
@@ -131,65 +132,72 @@ test("lo guardado pasa por JSON y vuelve igual", (): void => {
   assert.deepEqual(parseWindowsLayout(JSON.parse(JSON.stringify(layout))), layout)
 })
 
-/* ─────────────────── Las ediciones de la configuración ──────────────────── */
+/* ───────────────────────── Las ediciones de las pestañas ─────────────────── */
 
 const TRES: WindowsLayout = {
-  windows: [ventana("casa"), GENERAL, ventana("trabajo")],
-  active: GENERAL,
+  windows: [ventana("casa"), ventana("compra"), ventana("trabajo")],
+  active: ventana("compra"),
 }
 
-test("replaceWindowAt cambia sólo esa ventana", (): void => {
-  const editado: WindowsLayout = replaceWindowAt(TRES, 2, ventana("compra"))
-  assert.deepEqual(editado.windows, [ventana("casa"), GENERAL, ventana("compra")])
-  assert.deepEqual(editado.active, GENERAL)
+test("addWindow pone la nueva al final y la deja activa", (): void => {
+  const editado: WindowsLayout = addWindow(TRES, ventana("x"))
+  assert.deepEqual(editado.windows, [...TRES.windows, ventana("x")])
+  assert.deepEqual(editado.active, ventana("x"))
 })
 
-test("replaceWindowAt de la activa: la activa sigue a la ventana, no a lo que enseñaba", (): void => {
-  /* Se entró a configuración desde esa ventana, y al salir se vuelve a ella. */
-  const editado: WindowsLayout = replaceWindowAt(TRES, 1, ventana("compra"))
-  assert.deepEqual(editado.active, ventana("compra"))
+test("addWindow a una lista vacía la deja como la única, activa", (): void => {
+  assert.deepEqual(addWindow({ windows: [], active: null }, GENERAL), { windows: [GENERAL], active: GENERAL })
 })
 
-test("replaceWindowAt por lo mismo que ya enseña, o fuera de rango, devuelve el MISMO objeto", (): void => {
-  assert.strictEqual(replaceWindowAt(TRES, 0, ventana("casa")), TRES)
-  assert.strictEqual(replaceWindowAt(TRES, 3, ventana("casa")), TRES)
-  assert.strictEqual(replaceWindowAt(TRES, -1, ventana("casa")), TRES)
+test("addWindow de una que ya está sólo pasa a ella, sin repetirla", (): void => {
+  const editado: WindowsLayout = addWindow(TRES, ventana("trabajo"))
+  assert.strictEqual(editado.windows, TRES.windows)
+  assert.deepEqual(editado.active, ventana("trabajo"))
 })
 
-test("insertWindowAfter mete detrás de esa, y no toca la activa", (): void => {
-  const editado: WindowsLayout = insertWindowAfter(TRES, 0, ventana("compra"))
-  assert.deepEqual(editado.windows, [ventana("casa"), ventana("compra"), GENERAL, ventana("trabajo")])
-  assert.deepEqual(editado.active, GENERAL)
+test("addWindow de la que ya es activa devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(addWindow(TRES, ventana("compra")), TRES)
 })
 
-test("insertWindowAfter la última, y con -1 la primera", (): void => {
-  const detras: ReadonlyArray<WindowRef> = insertWindowAfter(TRES, 2, ventana("x")).windows
-  assert.deepEqual(detras[detras.length - 1], ventana("x"))
-  assert.deepEqual(insertWindowAfter(TRES, -1, ventana("x")).windows[0], ventana("x"))
+test("addWindow del General lo pone el primero, y el calendario tras él", (): void => {
+  const conGeneral: WindowsLayout = addWindow(TRES, GENERAL)
+  assert.deepEqual(conGeneral.windows[0], GENERAL)
+  assert.deepEqual(addWindow(conGeneral, CALENDAR).windows.slice(0, 3), [GENERAL, CALENDAR, ventana("casa")])
+  /* Sin el General, el calendario va el primero; y el General, luego, delante de él. */
+  const conCalendario: WindowsLayout = addWindow(TRES, CALENDAR)
+  assert.deepEqual(conCalendario.windows[0], CALENDAR)
+  assert.deepEqual(addWindow(conCalendario, GENERAL).windows.slice(0, 2), [GENERAL, CALENDAR])
 })
 
-test("insertWindowAfter en una lista vacía, con -1", (): void => {
-  const vacia: WindowsLayout = { windows: [], active: null }
-  assert.deepEqual(insertWindowAfter(vacia, -1, GENERAL).windows, [GENERAL])
+test("closeWindowAt de la activa pasa a la de su derecha", (): void => {
+  const editado: WindowsLayout = closeWindowAt(TRES, 1)
+  assert.deepEqual(editado.windows, [ventana("casa"), ventana("trabajo")])
+  assert.deepEqual(editado.active, ventana("trabajo"))
 })
 
-test("insertWindowAfter fuera de rango devuelve el MISMO objeto", (): void => {
-  assert.strictEqual(insertWindowAfter(TRES, 3, GENERAL), TRES)
-  assert.strictEqual(insertWindowAfter(TRES, -2, GENERAL), TRES)
+test("closeWindowAt de la activa, si es la última, pasa a la de su izquierda", (): void => {
+  const enLaUltima: WindowsLayout = { ...TRES, active: ventana("trabajo") }
+  assert.deepEqual(closeWindowAt(enLaUltima, 2).active, ventana("compra"))
 })
 
-test("removeWindowAt quita sólo esa", (): void => {
-  assert.deepEqual(removeWindowAt(TRES, 0).windows, [GENERAL, ventana("trabajo")])
+test("closeWindowAt de la única deja la pantalla vacía", (): void => {
+  assert.deepEqual(closeWindowAt({ windows: [GENERAL], active: GENERAL }, 0), { windows: [], active: null })
 })
 
-test("removeWindowAt fuera de rango devuelve el MISMO objeto", (): void => {
-  assert.strictEqual(removeWindowAt(TRES, 3), TRES)
-  assert.strictEqual(removeWindowAt(TRES, -1), TRES)
+test("closeWindowAt de otra no toca la activa", (): void => {
+  const editado: WindowsLayout = closeWindowAt(TRES, 0)
+  assert.deepEqual(editado.windows, [ventana("compra"), ventana("trabajo")])
+  assert.strictEqual(editado.active, TRES.active)
+})
+
+test("closeWindowAt fuera de rango devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(closeWindowAt(TRES, 3), TRES)
+  assert.strictEqual(closeWindowAt(TRES, -1), TRES)
 })
 
 test("moveWindow hacia delante y hacia atrás corre las de en medio", (): void => {
-  const [a, b, c]: ReadonlyArray<WindowRef> = TRES.windows
-  if (a === undefined || b === undefined || c === undefined) assert.fail("TRES tiene tres")
+  const [a, b, c] = TRES.windows
+  assert.ok(a !== undefined && b !== undefined && c !== undefined)
   assert.deepEqual(moveWindow(TRES, 0, 2).windows, [b, c, a])
   assert.deepEqual(moveWindow(TRES, 2, 0).windows, [c, a, b])
   assert.deepEqual(moveWindow(TRES, 1, 2).windows, [a, c, b])
@@ -205,6 +213,40 @@ test("moveWindow al mismo sitio, o fuera de rango, devuelve el MISMO objeto", ()
   assert.strictEqual(moveWindow(TRES, 0, 3), TRES)
   assert.strictEqual(moveWindow(TRES, 0, -1), TRES)
   assert.strictEqual(moveWindow(TRES, -1, 0), TRES)
+})
+
+const CON_FIJAS: WindowsLayout = {
+  windows: [GENERAL, CALENDAR, ventana("casa"), ventana("trabajo")],
+  active: GENERAL,
+}
+
+test("las fijas son el General y el calendario de delante", (): void => {
+  assert.equal(pinnedCount(CON_FIJAS), 2)
+  assert.equal(pinnedCount(TRES), 0)
+})
+
+test("moveWindow no saca una fija de su sitio ni mete otra entre ellas: el MISMO objeto", (): void => {
+  assert.strictEqual(moveWindow(CON_FIJAS, 0, 3), CON_FIJAS)
+  assert.strictEqual(moveWindow(CON_FIJAS, 1, 2), CON_FIJAS)
+  assert.strictEqual(moveWindow(CON_FIJAS, 3, 1), CON_FIJAS)
+  assert.strictEqual(moveWindow(CON_FIJAS, 2, 0), CON_FIJAS)
+  assert.deepEqual(moveWindow(CON_FIJAS, 3, 2).windows.slice(2), [ventana("trabajo"), ventana("casa")])
+})
+
+test("pinFixed pone delante el General y el calendario, en ese orden, y deja lo demás como estaba", (): void => {
+  const desordenada: WindowsLayout = {
+    windows: [ventana("casa"), CALENDAR, ventana("trabajo"), GENERAL],
+    active: CALENDAR,
+  }
+  assert.deepEqual(pinFixed(desordenada), {
+    windows: [GENERAL, CALENDAR, ventana("casa"), ventana("trabajo")],
+    active: CALENDAR,
+  })
+})
+
+test("pinFixed de una lista ya en orden devuelve el MISMO objeto", (): void => {
+  assert.strictEqual(pinFixed(CON_FIJAS), CON_FIJAS)
+  assert.strictEqual(pinFixed(TRES), TRES)
 })
 
 /* ────────────────────────── Las ventanas de tipo nota ──────────────────────── */
@@ -326,20 +368,9 @@ test("el calendario sólo es igual a sí mismo", (): void => {
   assert.equal(sameWindow(CALENDAR, ventana("calendar")), false)
 })
 
-test("insertWindowAfter no mete un segundo calendario: devuelve el MISMO objeto", (): void => {
-  const layout: WindowsLayout = { windows: [GENERAL, CALENDAR], active: GENERAL }
-  assert.strictEqual(insertWindowAfter(layout, 0, CALENDAR), layout)
-})
-
-test("insertWindowAfter mete el calendario si aún no está", (): void => {
-  const layout: WindowsLayout = { windows: [GENERAL], active: GENERAL }
-  assert.deepEqual(insertWindowAfter(layout, 0, CALENDAR).windows, [GENERAL, CALENDAR])
-})
-
-test("replaceWindowAt no pone un segundo calendario, pero sí cambia el calendario por otra cosa", (): void => {
-  const layout: WindowsLayout = { windows: [GENERAL, CALENDAR], active: GENERAL }
-  assert.strictEqual(replaceWindowAt(layout, 0, CALENDAR), layout)
-  assert.deepEqual(replaceWindowAt(layout, 1, ventana("casa")).windows, [GENERAL, ventana("casa")])
+test("addWindow no mete un segundo calendario: devuelve el MISMO objeto", (): void => {
+  const layout: WindowsLayout = { windows: [GENERAL, CALENDAR], active: CALENDAR }
+  assert.strictEqual(addWindow(layout, CALENDAR), layout)
 })
 
 test("una ventana de calendario se lee de lo guardado, también como la activa", (): void => {

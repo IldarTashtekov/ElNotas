@@ -10,12 +10,12 @@ import type { AppState, Logger, Result, StorageError, Store, Unsubscribe } from 
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import {
   DEFAULT_LAYOUT,
+  addWindow,
+  closeWindowAt,
   guardWindows,
-  insertWindowAfter,
   parseWindowsLayout,
   moveWindow,
-  removeWindowAt,
-  replaceWindowAt,
+  pinFixed,
   sameWindow,
   windowExists,
 } from "./windows.js"
@@ -33,11 +33,12 @@ export interface WindowsModel {
   readonly getLayout: () => WindowsLayout
   /** No hace nada si esa ventana no está entre las visibles o ya era la activa. */
   readonly setActive: (ref: WindowRef) => void
-  /** Las tres ediciones de la configuración. Pasan por la guarda antes de quedarse. */
-  readonly replaceAt: (i: number, ref: WindowRef) => void
-  readonly insertAfter: (i: number, ref: WindowRef) => void
-  readonly removeAt: (i: number) => void
-  /** Lleva la ventana `de` al puesto `a`: es lo que hace arrastrar en la configuración. */
+  /** Añade una ventana y la deja activa; si ya estaba, sólo pasa a ella. Las
+      ediciones pasan por la guarda antes de quedarse. */
+  readonly add: (ref: WindowRef) => void
+  /** Cierra la ventana `i`; si era la activa, pasa a la de al lado. */
+  readonly close: (i: number) => void
+  /** Lleva la ventana `de` al puesto `a`: es lo que hace arrastrar una pestaña. */
   readonly move: (de: number, a: number) => void
   readonly subscribe: (listener: WindowsListener) => Unsubscribe
 }
@@ -55,7 +56,8 @@ export const createWindowsModel = ({ store, persistence, logger }: WindowsModelD
   const inicial: WindowsLayout =
     leido.ok && leido.value !== null ? parseWindowsLayout(leido.value) : DEFAULT_LAYOUT
 
-  let layout: WindowsLayout = guardWindows(inicial, store.getState())
+  /* Lo guardado antes de las pestañas puede traer el General o el calendario en medio. */
+  let layout: WindowsLayout = guardWindows(pinFixed(inicial), store.getState())
   let listeners: ReadonlyArray<WindowsListener> = []
 
   /* Un fallo al guardar no se avisa: lo único que se pierde es el orden de las
@@ -73,7 +75,7 @@ export const createWindowsModel = ({ store, persistence, logger }: WindowsModelD
     for (const listener of listeners) listener(layout)
   }
 
-  /* Lo leído venía con referencias rotas: se limpia también en el almacén. */
+  /* Lo leído venía con referencias rotas, o desordenado: se arregla también en el almacén. */
   if (layout !== inicial && leido.ok && leido.value !== null) guardar()
 
   store.subscribe((state: AppState): void => cambiar(guardWindows(layout, state)))
@@ -95,13 +97,10 @@ export const createWindowsModel = ({ store, persistence, logger }: WindowsModelD
 
     /* Una ventana a algo que no existe no se llega a meter: la guarda la
        quitaría, pero devolviendo una lista nueva, y se guardaría sin cambios. */
-    replaceAt: (i: number, ref: WindowRef): void => {
-      if (windowExists(ref, store.getState())) editar(replaceWindowAt(layout, i, ref))
+    add: (ref: WindowRef): void => {
+      if (windowExists(ref, store.getState())) editar(addWindow(layout, ref))
     },
-    insertAfter: (i: number, ref: WindowRef): void => {
-      if (windowExists(ref, store.getState())) editar(insertWindowAfter(layout, i, ref))
-    },
-    removeAt: (i: number): void => editar(removeWindowAt(layout, i)),
+    close: (i: number): void => editar(closeWindowAt(layout, i)),
     move: (de: number, a: number): void => editar(moveWindow(layout, de, a)),
 
     subscribe: (listener: WindowsListener): Unsubscribe => {

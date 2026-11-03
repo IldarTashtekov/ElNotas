@@ -86,60 +86,84 @@ export const guardWindows = (layout: WindowsLayout, state: AppState): WindowsLay
   return windows === layout.windows && active === layout.active ? layout : { windows, active }
 }
 
-/* ─────────────── Editar la lista, desde la vista configuración ───────────── */
+/* ──────────────────── Editar la lista, desde las pestañas ─────────────────── */
 
 /*
-    Las tres ediciones van por posición, porque es lo que se toca en la lista.
-    Ninguna comprueba que el contenido exista —lo mira el modelo antes de
-    llamarlas, y la guarda después— y todas devuelven el MISMO objeto si no
-    cambian nada.
+    El General y el calendario, si están, van fijos delante —el General primero—
+    y no se arrastran. Las demás ediciones van por posición, porque es lo que se
+    toca en la fila. Ninguna comprueba que el contenido exista —lo mira el modelo
+    antes de llamarlas, y la guarda después— y todas devuelven el MISMO objeto si
+    no cambian nada.
 */
 
-/** El calendario es único: no se mete otro si ya está. */
-const repetida = (layout: WindowsLayout, ref: WindowRef): boolean =>
-  ref.kind === "calendar" && layout.windows.some((w: WindowRef): boolean => w.kind === "calendar")
+/** Delante, en este orden: el General y el calendario. */
+const puestoFijo = (ref: WindowRef): number | null =>
+  ref.kind === "general" ? 0 : ref.kind === "calendar" ? 1 : null
 
-/** Cambia lo que enseña la ventana `i`. Si era la activa, la activa la sigue. */
-export const replaceWindowAt = (layout: WindowsLayout, i: number, ref: WindowRef): WindowsLayout => {
-  const actual: WindowRef | undefined = layout.windows[i]
-  if (actual === undefined || sameWindow(actual, ref) || repetida(layout, ref)) return layout
+/** Cuántas pestañas fijas hay al principio. */
+export const pinnedCount = (layout: WindowsLayout): number =>
+  layout.windows.filter((ref: WindowRef): boolean => puestoFijo(ref) !== null).length
 
-  const windows: ReadonlyArray<WindowRef> = layout.windows.map(
-    (w: WindowRef, j: number): WindowRef => (j === i ? ref : w),
+/** Las fijas, delante y en su orden; las demás, como estaban. */
+export const pinFixed = (layout: WindowsLayout): WindowsLayout => {
+  const fijas: ReadonlyArray<WindowRef> = layout.windows
+    .filter((ref: WindowRef): boolean => puestoFijo(ref) !== null)
+    .sort((a: WindowRef, b: WindowRef): number => (puestoFijo(a) ?? 0) - (puestoFijo(b) ?? 0))
+  const yaEstan: boolean = fijas.every((ref: WindowRef, i: number): boolean => layout.windows[i] === ref)
+  if (yaEstan) return layout
+  const resto: ReadonlyArray<WindowRef> = layout.windows.filter(
+    (ref: WindowRef): boolean => puestoFijo(ref) === null,
   )
-  const eraActiva: boolean = layout.active !== null && sameWindow(actual, layout.active)
-  return { windows, active: eraActiva ? ref : layout.active }
+  return { windows: [...fijas, ...resto], active: layout.active }
 }
 
-/** Mete una ventana detrás de la `i`. Con `-1`, la primera: es como se añade a una lista vacía. */
-export const insertWindowAfter = (
-  layout: WindowsLayout,
-  i: number,
-  ref: WindowRef,
-): WindowsLayout => {
-  if (i < -1 || i >= layout.windows.length || repetida(layout, ref)) return layout
+/**
+ * Añade una pestaña y la deja activa: al final, o en su sitio si es fija. Si ya
+ * estaba, sólo pasa a ella.
+ */
+export const addWindow = (layout: WindowsLayout, ref: WindowRef): WindowsLayout => {
+  const ya: WindowRef | undefined = layout.windows.find((w: WindowRef): boolean => sameWindow(w, ref))
+  if (ya !== undefined) {
+    return layout.active !== null && sameWindow(layout.active, ya) ? layout : { ...layout, active: ya }
+  }
+  const fijo: number | null = puestoFijo(ref)
+  /* Una fija va detrás de las fijas que van antes que ella: el calendario, tras el General. */
+  const puesto: number =
+    fijo === null
+      ? layout.windows.length
+      : layout.windows.filter((w: WindowRef): boolean => (puestoFijo(w) ?? Infinity) < fijo).length
   const windows: ReadonlyArray<WindowRef> = [
-    ...layout.windows.slice(0, i + 1),
+    ...layout.windows.slice(0, puesto),
     ref,
-    ...layout.windows.slice(i + 1),
+    ...layout.windows.slice(puesto),
   ]
-  return { windows, active: layout.active }
+  return { windows, active: ref }
 }
 
-/** Quita la ventana `i`. Sólo la referencia: lo que enseñaba sigue en el almacén. */
-export const removeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout => {
-  if (layout.windows[i] === undefined) return layout
+/**
+ * Cierra la pestaña `i`: sólo la referencia, lo que enseñaba sigue en el
+ * almacén. Si era la activa, pasa a la de su derecha, o a la de su izquierda si
+ * era la última; sin ninguna, a ninguna.
+ */
+export const closeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout => {
+  const cerrada: WindowRef | undefined = layout.windows[i]
+  if (cerrada === undefined) return layout
   const windows: ReadonlyArray<WindowRef> = layout.windows.filter(
     (_: WindowRef, j: number): boolean => j !== i,
   )
-  /* La activa no se toca aquí: si era ésta, la guarda elige otra. */
-  return { windows, active: layout.active }
+  const eraActiva: boolean = layout.active !== null && sameWindow(cerrada, layout.active)
+  const active: WindowRef | null = eraActiva ? (windows[i] ?? windows[i - 1] ?? null) : layout.active
+  return { windows, active }
 }
 
-/** Lleva la ventana `de` al puesto `a`, corriendo las de en medio. La activa no cambia. */
+/**
+ * Lleva la pestaña `de` al puesto `a`, corriendo las de en medio. La activa no
+ * cambia. Las fijas ni se mueven ni dejan que otra se meta entre ellas.
+ */
 export const moveWindow = (layout: WindowsLayout, de: number, a: number): WindowsLayout => {
   const movida: WindowRef | undefined = layout.windows[de]
-  if (movida === undefined || de === a || a < 0 || a >= layout.windows.length) return layout
+  const fijas: number = pinnedCount(layout)
+  if (movida === undefined || de === a || de < fijas || a < fijas || a >= layout.windows.length) return layout
   const sin: ReadonlyArray<WindowRef> = layout.windows.filter(
     (_: WindowRef, j: number): boolean => j !== de,
   )

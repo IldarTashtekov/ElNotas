@@ -4,7 +4,7 @@
  * dónde ha caído. Con dedo y con ratón por igual.
  *
  * Antes de levantarse, mover el dedo es deslizar la fila, no arrastrar. La fila
- * puede ser horizontal (las fichas de ⚙) o vertical (la lista de grupos).
+ * puede ser horizontal (las pestañas) o vertical (la lista de grupos).
  * Devuelve la función que lo suelta todo, para cuando se desmonta la fila.
  */
 

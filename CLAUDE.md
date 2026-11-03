@@ -200,11 +200,11 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 **Navegación y UI**
 - Cinco vistas: ventanas, nota, diagrama, calendario, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia (General, calendario o contexto); la lista, en el `UiState`, filtrada por `guardWindows`. Sin nada
-  guardado, el General. Un contexto en dos ventanas, sí. Un fallo al guardar no avisa.
+  guardado, el General. Una ventana repetida, no: añadirla la activa. Un fallo al guardar no avisa.
 - Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
   `sessionStorage`), también en cadena (nota → nota por un enlace); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
-- Fichas en ⚙ que se arrastran; «+» en vídeo inverso en la última ventana para añadir otra. Ahí y en
-  ⚙ se crea contexto, nota o diagrama; los dos últimos, sin contexto.
+- Ventanas en pestañas: ✕ sólo en la activa, sin confirmar; el General y el calendario, fijos delante y sólo
+  con su símbolo; el resto se desliza y se reordena con pulsación larga. Su «+», al final: contexto, nota o diagrama (los dos últimos, sin contexto). ⚙, sólo contextos.
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
 - Selección por pulsación larga. «Mover a…» mueve y no confirma. Reordenar, con el `⠿` de la selección, no en el General.
 - Texto: subconjunto de Markdown; **sólo la línea activa se edita en crudo**. El enlace `[texto](#id)` (nota, diagrama,

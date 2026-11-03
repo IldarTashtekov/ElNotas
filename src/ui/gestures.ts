@@ -3,7 +3,7 @@
  * pulsación larga. Puro, sin DOM: el lienzo le pasa dónde y cuándo.
  *
  * Los umbrales de la pulsación larga son los mismos que los del arrastre de las
- * fichas de ventanas, para que los dos gestos se sientan igual.
+ * pestañas de ventanas, para que los dos gestos se sientan igual.
  */
 
 import type { Point } from "./viewport.js"

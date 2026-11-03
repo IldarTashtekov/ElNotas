@@ -1,30 +1,23 @@
 /**
- * La vista configuración: las ventanas, como una fila de fichas que se desliza
- * —arrastrar una para reordenar, ⋮ para cambiar lo que enseña, añadir otra detrás
- * o quitarla—, los contextos, con crear y borrar, el color de la pantalla, y abajo
- * los datos: exportar e importar una copia, y «Borrar todo», que deja la app en
- * blanco tras preguntar.
+ * La vista configuración: los contextos, con crear y borrar, el color de la
+ * pantalla, y abajo los datos: exportar e importar una copia, y «Borrar todo»,
+ * que deja la app en blanco tras preguntar.
  *
  * Se monta al abrirla y se desmonta al salir, así que lo que hubiera a medias
  * no sobrevive a salir y volver.
  */
 
 import type { AppState, Context, Logger, Unsubscribe, Store, UseCases } from "#core/index"
-import type { BackStack } from "./backStack.js"
 import type { BackupActions, ExportResult, ImportPreparation } from "./backup.js"
 import { elemento } from "./dom.js"
-import { newWindowButtons } from "./newWindowButtons.js"
 import { NEW_CONTEXT_NAME } from "./noteActions.js"
-import { attachDragReorder } from "./dragReorder.js"
 import type { Phosphor, PhosphorChoice, PhosphorSetting } from "./phosphor.js"
 import { PHOSPHORS } from "./phosphor.js"
-import type { Confirm, Sheet } from "./sheet.js"
-import { createSheet } from "./sheet.js"
-import { reconcile, setAttrIfChanged, setTextIfChanged } from "./reconcile.js"
-import type { SettingsContent, WindowRow } from "./settingsContent.js"
+import type { Confirm } from "./sheet.js"
+import { reconcile, setTextIfChanged } from "./reconcile.js"
+import type { SettingsContent } from "./settingsContent.js"
 import {
   IMPORT_NOT_APPLIED,
-  choiceGroupLabel,
   exportMessage,
   importProblem,
   importQuestion,
@@ -32,18 +25,13 @@ import {
   settingsContent,
   versionLine,
 } from "./settingsContent.js"
-import type { WindowRef, WindowsLayout } from "./windows.js"
-import type { WindowsModel } from "./windowsModel.js"
 
 export interface SettingsViewDeps {
   readonly store: Store
   readonly useCases: UseCases
-  readonly windows: WindowsModel
   readonly phosphor: PhosphorSetting
   /** Pregunta antes de borrar. Lo pone quien monta la vista. */
   readonly confirm: Confirm
-  /** Para la hoja de ⋮, que se cierra con el atrás. */
-  readonly back: BackStack
   readonly onExit: () => void
   /**
    * Deja la app en blanco: lo hace quien sabe dónde se guarda, porque la UI no
@@ -71,10 +59,8 @@ export const mountSettingsView = (
   {
     store,
     useCases,
-    windows,
     phosphor,
     confirm,
-    back,
     onExit,
     onResetAll,
     backup,
@@ -90,7 +76,6 @@ export const mountSettingsView = (
   salir.setAttribute("aria-label", "Salir de la configuración")
   cabecera.append(titulo, salir)
 
-  const listaVentanas: HTMLElement = elemento("div")
   const listaContextos: HTMLUListElement = elemento("ul")
   listaContextos.className = "ajustes"
 
@@ -103,138 +88,20 @@ export const mountSettingsView = (
   formulario.addEventListener("submit", (evento: SubmitEvent): void => {
     evento.preventDefault()
     const nombre: string = campo.value.trim()
-    /* Crear aquí NO le da ventana: para eso está la sección de arriba. */
+    /* Crear aquí NO le da ventana: para eso está el «+» de las pestañas. */
     useCases.createContext(nombre === "" ? NEW_CONTEXT_NAME : nombre)
     campo.value = ""
   })
 
-  /* ── Las ventanas: fichas en una fila que se desliza, y una «+» al final ── */
-
-  const fichas: HTMLOListElement = elemento("ol")
-  const mas: HTMLButtonElement = boton("+", (): void => {
-    const ultima: number = windows.getLayout().windows.length - 1
-    elegir("Añadir ventana", (ref: WindowRef): void => windows.insertAfter(ultima, ref))
-  }, "ficha-mas")
-  mas.setAttribute("aria-label", "Añadir ventana")
-  const fila: HTMLElement = elemento("div")
-  fila.className = "fichas"
-  fila.append(fichas, mas)
-  listaVentanas.append(fila)
-
-  /* Arrastrar es mantener pulsada una ficha; el ⋮ no la levanta. */
-  const soltarArrastre: () => void = attachDragReorder(fila, {
-    fichas: "li.ficha",
-    ignorar: "button",
-    onMove: (de: number, a: number): void => windows.move(de, a),
-  })
-
-  /* ── La hoja de ⋮: las tres acciones, y elegir contenido dentro de ella ── */
-
-  const hoja: Sheet = createSheet(back)
-
-  /** Lo que se puede poner en una ventana, y qué hacer con lo elegido. */
-  const opciones = (alElegir: (ref: WindowRef) => void): ReadonlyArray<HTMLElement> => {
-    const vista: SettingsContent = settingsContent(windows.getLayout(), store.getState())
-    const elegido = (ref: WindowRef): void => {
-      hoja.close()
-      alElegir(ref)
-    }
-    /* Lo mismo que el «+» de la última ventana: contexto, nota o diagrama nuevos. */
-    const nuevos: HTMLElement = newWindowButtons(useCases, elegido)
-    const caja: HTMLElement = elemento("div")
-    caja.className = "selector"
-    /* Las notas y los diagramas, detrás de su rótulo: sin él, una nota y un
-       contexto con el mismo nombre no se distinguirían. */
-    caja.append(
-      ...vista.choices.flatMap((opcion: WindowRow, i: number): ReadonlyArray<HTMLElement> => {
-        const texto: string | null = choiceGroupLabel(vista.choices, i)
-        const grupo: HTMLElement = elemento("span", texto ?? "")
-        grupo.className = "grupo"
-        return [
-          ...(texto === null ? [] : [grupo]),
-          boton(opcion.title, (): void => elegido(opcion.ref)),
-        ]
-      }),
-    )
-    return [nuevos, caja]
-  }
-
-  const elegir = (titulo: string, alElegir: (ref: WindowRef) => void): void =>
-    hoja.open(titulo, opciones(alElegir))
-
-  const menu = (i: number, titulo: string): void => {
-    const caja: HTMLElement = elemento("div")
-    caja.className = "hoja-acciones"
-    /* Cambiar y añadir siguen en la misma hoja: la lista sustituye a las acciones. */
-    const enLaHoja = (alElegir: (ref: WindowRef) => void): void =>
-      caja.replaceChildren(...opciones(alElegir))
-    caja.append(
-      boton("Cambiar contenido", (): void =>
-        enLaHoja((ref: WindowRef): void => windows.replaceAt(i, ref)),
-      ),
-      boton("Añadir detrás", (): void =>
-        enLaHoja((ref: WindowRef): void => windows.insertAfter(i, ref)),
-      ),
-      /* Quitar no confirma: sólo quita la referencia, y se vuelve a añadir. */
-      boton("Quitar", (): void => {
-        hoja.close()
-        windows.removeAt(i)
-      }, "peligro"),
-    )
-    hoja.open(titulo, [caja])
-  }
-
   /* ── Pintar ── */
 
   let pintadoEstado: AppState | null = null
-  let pintadoLayout: WindowsLayout | null = null
 
-  /** Una fila de la lista de ventanas, con su posición: es lo que la identifica. */
-  interface FilaVentana {
-    readonly ventana: WindowRow
-    readonly i: number
-  }
-
-  const claveDe = (ref: WindowRef): string =>
-    ref.kind === "general" || ref.kind === "calendar" ? ref.kind : `${ref.kind}:${ref.id}`
-
-  const pintar = (forzar: boolean = false): void => {
+  const pintar = (): void => {
     const estado: AppState = store.getState()
-    const layout: WindowsLayout = windows.getLayout()
-    if (!forzar && estado === pintadoEstado && layout === pintadoLayout) return
+    if (estado === pintadoEstado) return
     pintadoEstado = estado
-    pintadoLayout = layout
-    const vista: SettingsContent = settingsContent(layout, estado)
-
-    /* Por posición y contenido: sin ventanas duplicadas que confundir, y lo que
-       no cambió se queda como estaba. */
-    reconcile<FilaVentana, Element>(
-      fichas,
-      vista.windows.map((ventana: WindowRow, i: number): FilaVentana => ({ ventana, i })),
-      {
-        key: ({ ventana, i }: FilaVentana): string => `${i}:${claveDe(ventana.ref)}`,
-        keyOf: (el: Element): string | null => el.getAttribute("data-key"),
-        create: ({ ventana, i }: FilaVentana): Element => {
-          const li: HTMLLIElement = elemento("li")
-          li.className = "ficha"
-          li.dataset["key"] = `${i}:${claveDe(ventana.ref)}`
-          const nombre: HTMLSpanElement = elemento("span")
-          nombre.className = "nombre"
-          /* El título se lee al pulsar: la ficha sobrevive a los renombrados. */
-          const puntos: HTMLButtonElement = boton("⋮", (): void =>
-            menu(i, nombre.textContent ?? ""),
-          "menu")
-          li.append(nombre, puntos)
-          return li
-        },
-        update: (li: Element, { ventana }: FilaVentana): void => {
-          const nombre: Element | null = li.firstElementChild
-          if (nombre !== null) setTextIfChanged(nombre, ventana.title)
-          const puntos: Element | null = li.lastElementChild
-          if (puntos !== null) setAttrIfChanged(puntos, "aria-label", `Acciones de «${ventana.title}»`)
-        },
-      },
-    )
+    const vista: SettingsContent = settingsContent(estado)
 
     /* Por `data-id`: renombrar un contexto no rehace las demás filas. */
     reconcile<Context, Element>(listaContextos, vista.contexts, {
@@ -401,23 +268,17 @@ export const mountSettingsView = (
   vista.className = "vista-ajustes"
   vista.append(
     cabecera,
-    seccion("Ventanas", listaVentanas),
     seccion("Contextos", formulario, listaContextos),
     seccion("Pantalla", fosforos),
     datos,
     pie,
-    hoja.element,
   )
   raiz.replaceChildren(vista)
   pintar()
-  const bajas: ReadonlyArray<Unsubscribe> = [
-    store.subscribe((): void => pintar()),
-    windows.subscribe((): void => pintar()),
-  ]
+  const baja: Unsubscribe = store.subscribe((): void => pintar())
 
   return (): void => {
-    for (const baja of bajas) baja()
-    soltarArrastre()
+    baja()
     raiz.replaceChildren()
   }
 }

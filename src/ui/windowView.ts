@@ -1,7 +1,8 @@
 /**
- * Qué enseña la vista ventanas ahora mismo: la ventana activa, su título, si se
- * puede renombrar, sus notas y diagramas —o la nota o el diagrama que enseña, si
- * es una ventana de nota o de diagrama— y si hay ventana antes y después.
+ * Qué enseña la vista ventanas ahora mismo: la fila de pestañas —las fijas y las
+ * que se deslizan, cada una con su símbolo—, y de la ventana activa, su título, si
+ * se puede renombrar y sus notas y diagramas —o la nota o el diagrama que enseña,
+ * si es una ventana de nota o de diagrama—.
  *
  * Es un cálculo puro sobre el estado y la lista de ventanas, así que todo lo que
  * decide la pantalla se prueba en Node; al DOM sólo le queda pintarlo.
@@ -19,7 +20,7 @@ import type {
 } from "#core/index"
 import { diagramRef, noteRef } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
-import { sameWindow } from "./windows.js"
+import { pinnedCount, sameWindow } from "./windows.js"
 
 export const GENERAL_TITLE: string = "General"
 export const CALENDAR_TITLE: string = "Calendario"
@@ -48,10 +49,23 @@ export type WindowView =
       readonly items: ReadonlyArray<ListItem>
       /** Lo oculto del contexto, en su orden. Vacío fuera de una ventana de contexto. */
       readonly hidden: ReadonlyArray<ListItem>
-      /** Sin anterior en la primera ni siguiente en la última: no es circular. */
-      readonly prev: WindowRef | null
-      readonly next: WindowRef | null
     }
+
+/** Una pestaña de la fila. */
+export interface WindowTab {
+  readonly ref: WindowRef
+  /** Su puesto en la lista de ventanas: es lo que se cierra o se mueve. */
+  readonly index: number
+  readonly title: string
+  readonly symbol: string
+  readonly active: boolean
+}
+
+/** La fila de pestañas: las fijas delante, quietas, y las demás, que se deslizan. */
+export interface WindowTabs {
+  readonly pinned: ReadonlyArray<WindowTab>
+  readonly scrolling: ReadonlyArray<WindowTab>
+}
 
 const VACIA: WindowView = { kind: "empty" }
 
@@ -69,6 +83,36 @@ export const windowTitle = (ref: WindowRef, state: AppState): string => {
     case "diagram":
       return state.diagrams[ref.id]?.name ?? ""
   }
+}
+
+/** El símbolo de cada tipo, delante del nombre: caracteres del fósforo, nunca emojis. */
+export const windowSymbol = (ref: WindowRef): string => {
+  switch (ref.kind) {
+    case "general":
+      return "≡"
+    case "calendar":
+      return "▦"
+    case "context":
+      return "▤"
+    case "note":
+      return "¶"
+    case "diagram":
+      return "◇"
+  }
+}
+
+export const windowTabs = (layout: WindowsLayout, state: AppState): WindowTabs => {
+  const tabs: ReadonlyArray<WindowTab> = layout.windows.map(
+    (ref: WindowRef, index: number): WindowTab => ({
+      ref,
+      index,
+      title: windowTitle(ref, state),
+      symbol: windowSymbol(ref),
+      active: layout.active !== null && sameWindow(ref, layout.active),
+    }),
+  )
+  const fijas: number = pinnedCount(layout)
+  return { pinned: tabs.slice(0, fijas), scrolling: tabs.slice(fijas) }
 }
 
 const deNota = (n: Note): ListItem => ({ ref: noteRef(n.id), name: n.name })
@@ -109,12 +153,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
   const activa: WindowRef | null = layout.active
   if (activa === null) return VACIA
 
-  const i: number = layout.windows.findIndex((ref: WindowRef): boolean => sameWindow(ref, activa))
-  if (i === -1) return VACIA
-  const vecinas: { readonly prev: WindowRef | null; readonly next: WindowRef | null } = {
-    prev: layout.windows[i - 1] ?? null,
-    next: layout.windows[i + 1] ?? null,
-  }
+  if (!layout.windows.some((ref: WindowRef): boolean => sameWindow(ref, activa))) return VACIA
 
   if (activa.kind === "general") {
     return {
@@ -127,7 +166,6 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       showsCalendar: false,
       items: todo(state),
       hidden: [],
-      ...vecinas,
     }
   }
 
@@ -144,7 +182,6 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       showsCalendar: false,
       items: [],
       hidden: [],
-      ...vecinas,
     }
   }
 
@@ -161,7 +198,6 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       showsCalendar: false,
       items: [],
       hidden: [],
-      ...vecinas,
     }
   }
 
@@ -176,7 +212,6 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
       showsCalendar: true,
       items: [],
       hidden: [],
-      ...vecinas,
     }
   }
 
@@ -194,6 +229,5 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     showsCalendar: false,
     items: deContexto(ctx, state, false),
     hidden: deContexto(ctx, state, true),
-    ...vecinas,
   }
 }

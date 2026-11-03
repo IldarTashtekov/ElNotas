@@ -1,8 +1,7 @@
 /**
- * Qué enseña la vista configuración: las ventanas en su orden, todos los
- * contextos, y lo que se puede elegir como contenido de una ventana: el General,
- * el calendario, los contextos, las notas y los diagramas. Y lo que dice al borrar, exportar e
- * importar.
+ * Qué enseña la vista configuración: todos los contextos, y lo que dice al
+ * borrar, exportar e importar. Y lo que ofrece el «+» de las pestañas: el General,
+ * el calendario, los contextos, las notas y los diagramas que aún no son ventana.
  *
  * Puro, como `windowView`: la pantalla sólo lo pinta.
  */
@@ -20,7 +19,6 @@ export interface WindowRow {
 }
 
 export interface SettingsContent {
-  readonly windows: ReadonlyArray<WindowRow>
   /** Todos los que existen, estén o no en alguna ventana, por nombre. */
   readonly contexts: ReadonlyArray<Context>
   /** Lo que puede enseñar una ventana: el General, cada contexto, cada nota y cada diagrama. */
@@ -32,7 +30,7 @@ const fila = (state: AppState): ((ref: WindowRef) => WindowRow) => (ref: WindowR
   title: windowTitle(ref, state),
 })
 
-export const settingsContent = (layout: WindowsLayout, state: AppState): SettingsContent => {
+export const settingsContent = (state: AppState): SettingsContent => {
   const contexts: ReadonlyArray<Context> = [...Object.values<Context>(state.contexts)].sort(
     (a: Context, b: Context): number => a.name.localeCompare(b.name),
   )
@@ -50,18 +48,17 @@ export const settingsContent = (layout: WindowsLayout, state: AppState): Setting
     ...diagramas.map((d: Diagram): WindowRef => ({ kind: "diagram", id: d.id })),
   ]
   return {
-    windows: layout.windows.map(fila(state)),
     contexts,
     choices: choices.map(fila(state)),
   }
 }
 
 /**
- * Lo que ofrece el «+» de la última ventana: lo mismo que el selector de la
- * configuración, menos lo que ya está en alguna ventana.
+ * Lo que ofrece el «+» de las pestañas: todo lo que puede enseñar una ventana,
+ * menos lo que ya está en alguna.
  */
 export const addWindowChoices = (layout: WindowsLayout, state: AppState): ReadonlyArray<WindowRow> =>
-  settingsContent(layout, state).choices.filter(
+  settingsContent(state).choices.filter(
     (opcion: WindowRow): boolean =>
       !layout.windows.some((w: WindowRef): boolean => sameWindow(w, opcion.ref)),
   )

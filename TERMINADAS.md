@@ -221,6 +221,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   líneas con sus hijas, juntas y en orden de lectura, a una `Position` (con `before`, su cuarto caso); con un texto,
   sólo a la raíz. En pantalla, «⠿ Ordenar»: tocar elige, se arrastra por el `⠿`, la profundidad la da el dedo y una
   raya enseña dónde cae (`lineOrder`, `orderMode`). Falta el móvil (en `TAREAS.md`).
+- **Fase 10, tarea 13: las ventanas como pestañas** 2026-11-03: una fila de pestañas sobre la vista ventanas, con
+  símbolo por tipo, la activa en vídeo inverso y su ✕, y un «+» al final; el General y el calendario, fijos delante
+  (`pinFixed`, `addWindow`, `closeWindowAt`). Fuera los ◀ ▶ y las fichas de ⚙. Falta el móvil (en `TAREAS.md`).
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

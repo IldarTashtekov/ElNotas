@@ -1,9 +1,9 @@
 /*
  * Las hojas que suben desde abajo —añadir una ventana, las acciones de ⋮, la
- * pregunta antes de borrar— y el «+» de la última ventana, que abre una.
+ * pregunta antes de borrar— y el «+» de las pestañas, que abre una.
  */
 
-/* ── El «+» de la última ventana, en el sitio de ▶ ── */
+/* ── El «+» de las pestañas, al final de la fila ── */
 .flecha.agregar {
   align-items: center;
   background: var(--accent);
