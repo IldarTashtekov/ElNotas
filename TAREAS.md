@@ -241,6 +241,30 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       decisiones cerradas de `CLAUDE.md` que toca están cambiadas (las ocho operaciones, `Position`
       y la línea de *Fuera de alcance*), y la lista del editor tiene sus pasos, pasados en el
       ordenador y en el móvil.
+- [ ] **13. Las ventanas como pestañas** *(pensar)*. Pedido por el usuario el 2026-11-03: cambiar
+      de ventana como en un navegador, sin ir de una en una con ◀ ▶. **Reabre** «fichas en ⚙ que se
+      arrastran; "+" en vídeo inverso en la última ventana».
+      **En pantalla.** Arriba de la vista ventanas, una fila de pestañas con el título de cada
+      ventana; la activa, en vídeo inverso. Tocar una lleva a ella. Al final de la fila, un «+»
+      que abre el selector de hoy (contexto, nota o diagrama nuevos, o uno que ya exista); la
+      nueva va al final y queda activa. Fuera los ◀ ▶ y **toda la sección de ventanas de ⚙**,
+      con su ⋮: «Cambiar contenido» y «Añadir detrás» desaparecen (se cierra, se abre otra y se
+      arrastra a su sitio).
+      - **Muchas pestañas:** la fila se desliza de lado, como las fichas de ⚙ hoy; cada pestaña
+        con un ancho mínimo, el nombre largo cortado con «…», y la activa siempre a la vista.
+        **El General y el calendario, fijos al principio y siempre a la vista**: no se deslizan
+        con el resto (el usuario, «menú y calendario», 2026-11-03). **A decidir:** si «menú» es el
+        General, y si esas dos se pueden cerrar o están siempre.
+      - **Cerrar:** una ✕ **sólo en la activa**, sin confirmar (sólo quita la referencia). Sin
+        ninguna, la pantalla vacía de hoy.
+      - **Reordenar:** manteniendo pulsada una pestaña y arrastrándola, con `dragReorder.ts`.
+      - **Renombrar:** el título grande se queda debajo de las pestañas, renombrable como hoy.
+      - **Un símbolo delante del nombre** según el tipo (contexto, nota, diagrama, calendario),
+        en caracteres monocromos del fósforo, no emojis; cuáles, al construirla.
+      Lo que no cambia: lo que se abre desde un enlace se apila encima, no abre pestaña.
+      **Se cierra cuando** lo que decide (la pestaña activa al añadir y al quitar, qué queda a la
+      vista) tiene sus pruebas en Node, `check` pasa, la decisión cerrada de `CLAUDE.md` está
+      cambiada, y la lista de las ventanas tiene sus pasos, pasados en el ordenador y en el móvil.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
