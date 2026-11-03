@@ -1,7 +1,7 @@
 /**
  * El contenido del calendario: el mes como rejilla con sus días marcados, mes
- * anterior y siguiente y «hoy», y al pulsar un día una hoja con sus eventos,
- * donde se crean, se editan, se marcan como hechos y se borran.
+ * anterior y siguiente y «hoy», y en la pestaña Eventos, al pulsar un día, una
+ * hoja con sus eventos, donde se crean, se editan y se borran.
  *
  * Lo que se enseña lo calcula `calendarMonth`; aquí sólo se pinta y se escucha.
  * Lo comparten la vista del icono y la ventana de la lista.
@@ -22,7 +22,7 @@ import type {
 import type { BackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import type { CalendarTab, CalendarTabSetting } from "./calendarTab.js"
-import { DEFAULT_CALENDAR_TAB } from "./calendarTab.js"
+import { DEFAULT_CALENDAR_TAB, daysOpenSheet } from "./calendarTab.js"
 import type { DayCell, MonthRef, MonthView } from "./calendarMonth.js"
 import { dayTitle, eventsOfDay, monthOf, monthView, sameMonth, shiftMonth, WEEKDAYS } from "./calendarMonth.js"
 import { elemento } from "./dom.js"
@@ -143,7 +143,14 @@ export const createCalendarPanel = ({
   }
 
   const celda = (c: DayCell): HTMLButtonElement => {
-    const b: HTMLButtonElement = boton(String(c.number), (): void => abrirDia(c.day), "dia")
+    const b: HTMLButtonElement = boton(String(c.number), (): void => {
+      if (daysOpenSheet(tabs.get())) abrirDia(c.day)
+    }, "dia")
+    /* En Rutinas el día se ve igual pero no reacciona: ni cursor de mano ni foco con el tabulador. */
+    const quieto: boolean = !daysOpenSheet(tabs.get())
+    b.classList.toggle("quieto", quieto)
+    b.tabIndex = quieto ? -1 : 0
+    if (quieto) b.setAttribute("aria-disabled", "true")
     b.classList.toggle("fuera", !c.inMonth)
     b.classList.toggle("hoy", c.isToday)
     /* Cada pestaña pinta lo suyo en el mes: * los eventos, el borde brillante las rutinas marcadas. */

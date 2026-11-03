@@ -207,6 +207,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Fase 10, tarea 9: el estado de la UI en un objeto** ✅ 2026-11-02: fósforo, ventanas, encuadres, orden de las
   rutinas y pestaña del calendario (que ahora se guarda), en `elnotas:ui` con un solo adaptador; fuera los cuatro
   viejos y sus claves, que se borran al arrancar. La copia pasa a la versión 2 con `uiState`; una v1 importa sólo notas.
+- **Fase 10, tarea 10: rutinas con un clic y doble clic, y el mes quieto** 2026-11-03: un clic en el nombre toca la
+  rutina y el doble clic (o Intro) abre su hoja y la deja tocada (`nameTap`); en una archivada, sólo el doble. En
+  Rutinas los días del mes no hacen nada (`daysOpenSheet`), y el cumplido de otro mes, borde sin resplandor.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

@@ -9,7 +9,7 @@ import assert from "node:assert/strict"
 import type { Result, StorageError } from "#core/index"
 import { err, ok } from "#core/index"
 import type { CalendarTab, CalendarTabPersistence, CalendarTabSetting } from "#ui/calendarTab"
-import { createCalendarTabSetting, parseCalendarTab } from "#ui/calendarTab"
+import { createCalendarTabSetting, daysOpenSheet, parseCalendarTab } from "#ui/calendarTab"
 import type { RecordingLogger } from "../core/ports/FakeLogger"
 import { createRecordingLogger, silentLogger } from "../core/ports/FakeLogger"
 
@@ -71,4 +71,9 @@ test("un fallo al guardar queda en el registro, y la pestaña cambia igual", ():
   pestana.set("routines")
   assert.equal(pestana.get(), "routines")
   assert.deepEqual(registro.logged(), ["no se guardó la pestaña del calendario"])
+})
+
+test("pulsar un día abre su hoja sólo en Eventos", (): void => {
+  assert.equal(daysOpenSheet("events"), true)
+  assert.equal(daysOpenSheet("routines"), false)
 })

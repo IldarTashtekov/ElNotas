@@ -1,9 +1,9 @@
 /**
  * La lista de rutinas bajo el mes, como una tabla: una fila por rutina con los
- * siete días de la semana de hoy, que se marcan pulsándolos. Tocar una fila la
- * deja «tocada» y sólo ella pinta sus días en el mes. Pulsar el nombre abre la
- * hoja con renombrar, meta, archivar y borrar; las archivadas van en una vista
- * aparte. Mantener pulsada una fila la mueve.
+ * siete días de la semana de hoy, que se marcan pulsándolos. Tocar una fila, o
+ * su nombre, la deja «tocada» y sólo ella pinta sus días en el mes. Pulsar dos
+ * veces el nombre abre la hoja con renombrar, meta, archivar y borrar; las
+ * archivadas van en una vista aparte. Mantener pulsada una fila la mueve.
  *
  * Qué filas hay y cómo va la semana lo calcula `routineList`; aquí sólo se
  * pinta, se escucha y se guarda el orden.
@@ -15,8 +15,17 @@ import type { CalendarOrder, CalendarOrderPersistence } from "./calendarOrder.js
 import { NO_ORDER, parseCalendarOrder } from "./calendarOrder.js"
 import { attachDragReorder } from "./dragReorder.js"
 import { elemento } from "./dom.js"
-import type { RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "./routineList.js"
-import { currentWeek, movedOrder, routineList, touchedRoutineIds, weekHeadings, weekSummary } from "./routineList.js"
+import type { Tap } from "./gestures.js"
+import type { NameTap, RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "./routineList.js"
+import {
+  currentWeek,
+  movedOrder,
+  nameTap,
+  routineList,
+  touchedRoutineIds,
+  weekHeadings,
+  weekSummary,
+} from "./routineList.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
 
@@ -64,6 +73,7 @@ export const createRoutinesPanel = ({
   /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna está tocada y el mes no pinta rutinas. */
   let tocada: string | null = null
   let verArchivadas: boolean = false
+  let toqueNombre: Tap | null = null
 
   const raiz: HTMLElement = elemento("section")
   raiz.className = "grupos rutinas"
@@ -127,7 +137,10 @@ export const createRoutinesPanel = ({
     li.className = "grupo rutina-fila"
     li.classList.toggle("archivado", f.archived)
     li.dataset["id"] = f.id
-    const nombre: HTMLButtonElement = boton(f.name, (): void => abrirMenu(f), "rutina-nombre")
+    const nombre: HTMLButtonElement = elemento("button", f.name)
+    nombre.type = "button"
+    nombre.className = "rutina-nombre"
+    nombre.addEventListener("click", (e: MouseEvent): void => pulsarNombre(f, e))
     nombre.setAttribute("aria-label", `Opciones de ${f.name}`)
     li.append(nombre)
     const rutina: Routine | undefined = store.getState().routines[f.id as RoutineId]
@@ -151,6 +164,21 @@ export const createRoutinesPanel = ({
       })
     }
     return li
+  }
+
+  /* El primer toque del nombre se recuerda aquí, fuera de la fila: tocar repinta y la fila es otra. */
+  const pulsarNombre = (f: RoutineRow, e: MouseEvent): void => {
+    const toque: Tap = { x: e.clientX, y: e.clientY, time: e.timeStamp, target: f.id }
+    /* Con el teclado no hay doble pulsación: Intro cuenta como la segunda. */
+    const previo: Tap | null = e.detail === 0 ? toque : toqueNombre
+    const r: NameTap = nameTap(previo, toque, tocada, f.id, f.archived)
+    toqueNombre = r.openSheet ? null : toque
+    if (r.touched !== tocada) {
+      tocada = r.touched
+      pintar()
+      onTouched()
+    }
+    if (r.openSheet) abrirMenu(f)
   }
 
   const pintar = (): void => {

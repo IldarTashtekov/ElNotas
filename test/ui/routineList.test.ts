@@ -3,7 +3,8 @@ import { describe, it } from "node:test"
 import type { AppState, Day, Routine, RoutineId } from "#core/index"
 import { revision } from "#core/domain/Ids"
 import { NO_ORDER } from "#ui/calendarOrder"
-import { currentWeek, movedOrder, routineList, touchedRoutineIds, weekHeadings, weekSummary } from "#ui/routineList"
+import { currentWeek, movedOrder, nameTap, routineList, touchedRoutineIds, weekHeadings, weekSummary } from "#ui/routineList"
+import type { Tap } from "#ui/gestures"
 import type { RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "#ui/routineList"
 import { monthView } from "#ui/calendarMonth"
 import type { DayCell, MonthView } from "#ui/calendarMonth"
@@ -122,5 +123,32 @@ describe("orden", (): void => {
     assert.deepEqual(movedOrder(["a", "b", "c"], ["z"], 2, 0), ["c", "a", "b", "z"])
     assert.deepEqual(movedOrder(["a", "b", "c"], [], 1, 1), ["a", "b", "c"])
     assert.deepEqual(movedOrder(["a"], [], 5, 0), ["a"])
+  })
+})
+
+describe("pulsar el nombre", (): void => {
+  const toque = (time: number, target: string = "a", x: number = 10): Tap => ({ x, y: 10, time, target })
+
+  it("un toque toca la rutina, y otro, más tarde, la suelta", (): void => {
+    assert.deepEqual(nameTap(null, toque(0), null, "a", false), { touched: "a", openSheet: false })
+    assert.deepEqual(nameTap(toque(0), toque(1000), "a", "a", false), { touched: null, openSheet: false })
+  })
+
+  it("un toque en otra cambia la tocada", (): void => {
+    assert.deepEqual(nameTap(null, toque(0, "b"), "a", "b", false), { touched: "b", openSheet: false })
+  })
+
+  it("el segundo de un doble toque abre la hoja y la deja tocada, aunque el primero la soltara", (): void => {
+    assert.deepEqual(nameTap(toque(0), toque(200), null, "a", false), { touched: "a", openSheet: true })
+    assert.deepEqual(nameTap(toque(0), toque(200), "a", "a", false), { touched: "a", openSheet: true })
+  })
+
+  it("dos toques en dos rutinas no son un doble toque", (): void => {
+    assert.deepEqual(nameTap(toque(0, "a"), toque(100, "b"), "a", "b", false), { touched: "b", openSheet: false })
+  })
+
+  it("en una archivada un toque no hace nada y el doble abre la hoja sin tocar nada", (): void => {
+    assert.deepEqual(nameTap(null, toque(0), "b", "a", true), { touched: "b", openSheet: false })
+    assert.deepEqual(nameTap(toque(0), toque(200), "b", "a", true), { touched: "b", openSheet: true })
   })
 })

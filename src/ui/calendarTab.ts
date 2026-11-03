@@ -16,6 +16,9 @@ export const DEFAULT_CALENDAR_TAB: CalendarTab = "events"
 export const parseCalendarTab = (guardado: unknown): CalendarTab =>
   guardado === "routines" ? "routines" : DEFAULT_CALENDAR_TAB
 
+/** Si pulsar un día del mes abre su hoja: sólo en Eventos; en Rutinas el mes sólo enseña. */
+export const daysOpenSheet = (tab: CalendarTab): boolean => tab === "events"
+
 /** Dónde se guarda. Lo pone `platform/`. Ninguno de los dos lanza. */
 export interface CalendarTabPersistence {
   /** Lo guardado tal cual, o `null` si nunca se guardó nada. */

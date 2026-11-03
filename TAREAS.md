@@ -207,25 +207,11 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasada 8 en el móvil (S9). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
 - [ ] **7. Calendario: los pasos del móvil** *(a pasar por el usuario)*. Las tareas 7a a 7n y la 8
       están hechas y en `TERMINADAS.md`; quedan los pasos que el panel no puede probar, porque piden
-      el dedo. **Se cierra cuando** el usuario pasa en el móvil M1 a M6 de
+      el dedo. **Se cierra cuando** el usuario pasa en el móvil M1 a M7 de
       `test/ui/VERIFICACION-CALENDARIO.md` (arrastrar una rutina con el dedo, los selectores nativos de día
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
-      tabla sin pulsar el vecino), mira a 375 px los últimos retoques de estilo (asterisco, bordes
+      tabla sin pulsar el vecino, y el doble toque en el nombre de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
-- [ ] **10. Rutinas: seleccionar con un clic, editar con doble clic, y el mes quieto en Rutinas**
-      *(mecánica)*. *Diseñada con el usuario el 2026-11-03.* **Decidido:** un clic en el nombre de
-      una rutina la selecciona o la suelta, como el resto de la fila (es la que pinta sus días en el
-      mes); el **doble clic** (doble toque en el móvil) abre la hoja de edición y la deja
-      seleccionada, aunque el borde parpadee, sin esperar al segundo clic. Mantener pulsado el nombre
-      sigue arrastrando la fila. En una archivada, sólo el doble clic hace algo: abre su hoja. **En la
-      pestaña Rutinas, los días del mes no hacen nada**: ni la hoja del día ni añadir eventos; se ven
-      igual, sin reaccionar al ratón ni cursor de mano. Cambiar de mes, «hoy» y la pestaña Eventos,
-      como están. **Un día cumplido de otro mes** (los que completan la primera o la última fila)
-      conserva el borde brillante, pero su número sigue apagado como el de los demás días de fuera y
-      sin resplandor: hoy el apagado más el brillo lo dejan borroso. **Se cierra cuando** `check`
-      pasa, E6, los pasos de pulsar un día y el del cumplido de fuera del mes de
-      `test/ui/VERIFICACION-CALENDARIO.md` dicen lo nuevo y están pasados en el panel, y el doble
-      toque, en el móvil, queda para el usuario en los pasos del móvil.
 - [ ] **11. Rutinas: la gráfica de semanas, en el sitio del mes** *(pensar)*. *Diseñada con el
       usuario el 2026-11-03.* **Decidido:** en la pestaña Rutinas, un botón cambia el mes por una
       gráfica de la rutina **seleccionada**; sin ninguna, un texto apagado: «Elige una rutina». **El

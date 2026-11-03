@@ -11,6 +11,8 @@ import { compareDays, weekProgress } from "#core/index"
 import type { CalendarOrder } from "./calendarOrder.js"
 import { reconcileOrder } from "./calendarOrder.js"
 import { WEEKDAYS } from "./calendarMonth.js"
+import type { Tap } from "./gestures.js"
+import { isDoubleTap } from "./gestures.js"
 
 export interface RoutineRow {
   readonly id: string
@@ -72,6 +74,29 @@ export const routineList = (state: AppState, order: CalendarOrder, hoy: Day | nu
 /** La rutina tocada pinta el mes si sigue entre las visibles; las archivadas nunca. */
 export const touchedRoutineIds = (lista: RoutineList, tocada: string | null): ReadonlySet<string> =>
   new Set<string>(lista.visible.map((f: RoutineRow): string => f.id).filter((id: string): boolean => id === tocada))
+
+/** Lo que hace pulsar el nombre de una rutina: qué queda tocado y si se abre su hoja. */
+export interface NameTap {
+  readonly touched: string | null
+  readonly openSheet: boolean
+}
+
+/**
+ * Pulsar el nombre: un toque la toca o la suelta, como el resto de la fila; el
+ * segundo de un doble toque abre su hoja y la deja tocada, sin esperar a ver si
+ * llega. En una archivada sólo cuenta el doble toque.
+ */
+export const nameTap = (
+  previo: Tap | null,
+  actual: Tap,
+  tocada: string | null,
+  id: string,
+  archivada: boolean,
+): NameTap => {
+  if (isDoubleTap(previo, actual)) return { touched: archivada ? tocada : id, openSheet: true }
+  if (archivada) return { touched: tocada, openSheet: false }
+  return { touched: tocada === id ? null : id, openSheet: false }
+}
 
 /** Lo que dice la cabecera de una columna de la tabla. */
 export interface WeekHeading {

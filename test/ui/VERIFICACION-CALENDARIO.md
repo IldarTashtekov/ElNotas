@@ -54,7 +54,7 @@ Con la ventana o la vista del calendario abierta, en el mes de hoy.
   completan la primera y la última fila salen **apagados**.
 - **B2.** **›** y **‹** cambian de mes (también a través del fin de año). **hoy** vuelve al mes de
   hoy y, estando ya en él, **no hace nada** (sale apagado).
-- **B3.** Pulsar un día abre una **hoja** con el día como título («2 de julio de 2026»). Sin eventos
+- **B3.** En la pestaña **Eventos**, pulsar un día abre una **hoja** con el día como título («2 de julio de 2026»). Sin eventos
   dice «Sin eventos este día.» y ofrece **+ Evento**.
 - **B4.** **+ Evento** abre el formulario con **Día** (el pulsado), **Hora** (vacía), **Motivo**
   y **Guardar**. Guardar con el motivo vacío crea un evento «Evento».
@@ -123,17 +123,25 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
 - **E3.** La fila enseña **sólo** la semana de hoy; no hay semanas anteriores ni «Ver más».
 - **E4.** Pulsar un día de esa semana lo **marca** (X) o lo **desmarca** (·); los días que aún no
   han llegado salen apagados y **no se pueden marcar**. Al llegar a la meta la cuenta lleva **✓**.
-- **E5.** **Tocar** una fila (en cualquier parte que no sea un botón, o marcando un día) la resalta:
+- **E5.** **Tocar** una fila (en cualquier parte que no sea un botón, en su **nombre**, o marcando un día) la resalta:
   en la pestaña **Rutinas** el mes enseña con el **borde brillante** los días marcados **sólo de la rutina
   tocada**; tocar otra cambia el mes; tocar la tocada, fuera de las casillas, la suelta. Al empezar
   no hay ninguna tocada y ningún día con borde. En la pestaña **Eventos** el mes pinta sólo los
   eventos, con un asterisco a un lado del número, y ningún borde brillante.
-- **E6.** Pulsar el **nombre** abre una hoja con **Renombrar**, **Cambiar meta**, **Archivar** y
-  **Borrar**. Cambiar la meta **recalcula** las semanas pasadas.
+- **E6.** Un **doble clic** en el **nombre** abre una hoja con **Renombrar**, **Cambiar meta**,
+  **Archivar** y **Borrar**, y la rutina queda **tocada** al cerrarla (esté como estuviera antes).
+  Un solo clic no abre nada. Con el teclado, **Intro** sobre el nombre abre la hoja. Cambiar la
+  meta **recalcula** las semanas pasadas.
+- **E6b.** En la pestaña **Rutinas**, pulsar un día del **mes** no hace nada: ni hoja ni «+ Evento»,
+  y el puntero no es de mano. ‹ ›, **hoy** y volver a **Eventos** siguen funcionando, y en Eventos
+  pulsar un día vuelve a abrir su hoja.
+- **E6c.** Con una rutina tocada que tenga cumplido un día de **otro mes** que se ve en la rejilla
+  (la primera o la última fila): ese día lleva el **borde brillante**, pero su número sigue
+  **apagado**, como los otros días de fuera, y **sin resplandor**, nítido.
 - **E7.** **Borrar** pide confirmar y dice cuántos días se pierden y que se puede **archivar**
   («¿Borrar la rutina «X»? Se pierden sus n días marcados…»); al aceptar, desaparece.
 - **E8.** **Archivar** la quita de la tabla y del mes y aparece **«▸ Archivadas (n)»**, con sólo el
-  nombre; pulsarlo ofrece **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**.
+  nombre; un clic no hace nada y el **doble clic** ofrece **Renombrar**, **Cambiar meta**, **Desarchivar** y **Borrar**.
   Desarchivar la devuelve.
 - **E9.** **Mantener pulsada** una fila la levanta y se arrastra; al soltar queda en su sitio y **no**
   abre la hoja. Tras **recargar** conserva el orden; la rutina tocada, no.
@@ -153,10 +161,36 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 - **M5.** **▦** abre el calendario; el atrás del móvil cierra primero la hoja y luego el calendario.
 - **M6.** **Mantener pulsada** una fila de la lista de rutinas la levanta con el dedo, y los siete días
   de una semana se marcan con el dedo sin pulsar el vecino.
+- **M7.** Un **doble toque** en el nombre de una rutina abre su hoja y la deja tocada; un toque
+  la toca o la suelta, y la página **no** se amplía con el doble toque.
 
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-11-03
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       a14862a más los cambios de la tarea 10, sin comitear
+Origen:       localhost:8001
+
+B3  ✅ — en Eventos, pulsar el 5 abre «5 de noviembre de 2026»; cursor de mano
+E5  ✅ — un clic con el ratón en el nombre de «Prueba10» la toca, sin abrir nada
+E6  ✅ — doble clic con el ratón en el nombre: la hoja con Renombrar, Cambiar meta, Archivar y
+    Borrar, y la rutina sigue tocada; Intro con el foco en el nombre también la abre
+E6b ✅ — en Rutinas, pulsar un día no abre hoja y los 42 días llevan cursor normal; ‹ lleva a
+    octubre y «hoy» vuelve; en Eventos ningún día queda quieto
+E6c ✅ — con el 28 de octubre y el 2 de noviembre cumplidos: el 28 lleva el borde, color apagado
+    (el de los días de fuera) y `text-shadow: none`; el 2, el brillo de siempre
+E8  ✅ — archivada: un clic en el nombre no abre nada ni pinta el mes; el doble clic abre su hoja
+    con Desarchivar
+E9  🔁 simulado — pulsación larga en el nombre (700 ms), mover y soltar con eventos de puntero
+    escritos a mano: la fila cambia de sitio, no se abre la hoja y la tocada no cambia
+M7  ⏭ no se puede aquí — el doble toque con el dedo; lo pasa el usuario en el móvil
+
+Notas: el clic y el doble clic, con el ratón del panel, no por JavaScript.
+```
 
 ```
 Fecha:        2026-11-03
