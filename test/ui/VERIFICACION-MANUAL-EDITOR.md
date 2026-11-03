@@ -456,10 +456,10 @@ Una nota con: texto `Compra semanal`; casilla `Fruta` con hijas `Manzanas` y `Pe
 ## V. La barra, sólo con símbolos
 
 - **V1.** La barra de la nota lleva sólo símbolos: **☐** (☑ con la casilla puesta), **↳**,
-  **⚭** (enlazar), **⠿** (ordenar) y, en la vista nota, **✕** a la derecha. Al pasar el ratón,
+  una **cadena** de dos eslabones en diagonal, dibujada en el color del fósforo (enlazar), **⠿** (ordenar) y, en la vista nota, **✕** a la derecha. Al pasar el ratón,
   cada uno dice su nombre: «Casilla», «Anidar», «Enlazar…», «Ordenar», «Salir».
 - **V2.** A 375 px va **en un renglón**; si no cupiera, se desliza de lado, sin saltar de línea.
-- **V3.** Cada uno hace lo de antes: ☐ la casilla, ↳ anidar, ⚭ abre la hoja «Enlazar», ⠿ el
+- **V3.** Cada uno hace lo de antes: ☐ la casilla, ↳ anidar, la cadena abre la hoja «Enlazar», ⠿ el
   modo Ordenar, ✕ sale.
 
 ## Comportamientos conocidos

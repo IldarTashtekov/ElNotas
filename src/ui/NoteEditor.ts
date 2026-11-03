@@ -373,6 +373,29 @@ const botonDeBarra = (simbolo: string, nombre: string, alPulsar: () => void): HT
   return b
 }
 
+const SVG = "http://www.w3.org/2000/svg" as const
+
+/** Dos eslabones en diagonal, de trazo y en el color del texto: un emoji saldría a color. */
+const iconoEnlace = (): SVGSVGElement => {
+  const icono: SVGSVGElement = document.createElementNS(SVG, "svg")
+  icono.setAttribute("viewBox", "0 0 24 24")
+  icono.setAttribute("aria-hidden", "true")
+  icono.classList.add("icono")
+  const eslabones: SVGGElement = document.createElementNS(SVG, "g")
+  eslabones.setAttribute("transform", "rotate(-45 12 12)")
+  /* Cada eslabón, abierto donde pasa por dentro del otro. */
+  for (const d of [
+    "M11 8.5H5.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 0 3.5-3.5",
+    "M13 15.5h5.5a3.5 3.5 0 0 0 0-7h-5a3.5 3.5 0 0 0-3.5 3.5",
+  ]) {
+    const trazo: SVGPathElement = document.createElementNS(SVG, "path")
+    trazo.setAttribute("d", d)
+    eslabones.append(trazo)
+  }
+  icono.append(eslabones)
+  return icono
+}
+
 /* ───────────────────────────────── El editor ────────────────────────────── */
 
 /** Firefox antiguo no entiende `plaintext-only`: ahí se pega como texto a mano. */
@@ -1235,7 +1258,7 @@ export const createNoteEditor = ({
     return caret === null ? null : { line: caret.line, from: caret.offset, to: caret.offset }
   }
 
-  const enlazar: HTMLButtonElement = botonDeBarra("⚭", "Enlazar…", (): void => {
+  const enlazar: HTMLButtonElement = botonDeBarra("", "Enlazar…", (): void => {
     const sel: Seleccion | null = seleccionRecordada()
     const raw: string | undefined = sel === null ? undefined : textoDe(sel.line)
     /* Sin cursor no hay dónde escribirlo, como en «☐ Casilla»: no hace nada. */
@@ -1265,6 +1288,7 @@ export const createNoteEditor = ({
         poner(buildLink(textoDelEnlace(texto, `#${destino}`, nombre), `#${destino}`)),
     })
   })
+  enlazar.replaceChildren(iconoEnlace())
 
   const casilla: HTMLButtonElement = botonDeBarra("☐", "Casilla", (): void => {
     const caret: Caret | null = cursorRecordado()

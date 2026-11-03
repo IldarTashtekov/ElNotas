@@ -105,10 +105,21 @@
 
   & button {
     flex: none;
-    font-size: 1.1rem;
+    font-size: 1.35rem;
     min-width: 2.5rem;
   }
   & .salir {
     margin-left: auto;
+  }
+  /* La cadena de enlazar: dibujada, del tamaño de los símbolos de al lado. */
+  & .icono {
+    display: block;
+    fill: none;
+    height: 1.4rem;
+    margin: auto;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 2.6;
+    width: 1.4rem;
   }
 }
