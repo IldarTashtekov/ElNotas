@@ -7,7 +7,15 @@
  * confirmarlo.
  */
 
-import type { BlobStore, Clock, IdGenerator, Logger, Result, StorageError } from "#core/index"
+import type {
+  BlobStore,
+  Clock,
+  IdGenerator,
+  Logger,
+  MigrationOptions,
+  Result,
+  StorageError,
+} from "#core/index"
 import { ok } from "#core/index"
 import type { ImportSummary } from "#ui/index"
 import type { Backup } from "./backup.js"
@@ -19,6 +27,8 @@ export interface RehearseDeps {
   readonly clock: Clock
   readonly ids: IdGenerator
   readonly logger: Logger
+  /** Para las pruebas: en producción, las migraciones y la versión del core. */
+  readonly migrations?: MigrationOptions
 }
 
 /** Un `BlobStore` sobre un `Map`, sólo para el ensayo. Nada de aquí lanza. */
@@ -42,7 +52,7 @@ const enMemoria = (backup: Backup): BlobStore => {
 
 export const rehearseImport = async (
   backup: Backup,
-  { clock, ids, logger }: RehearseDeps,
+  { clock, ids, logger, migrations = {} }: RehearseDeps,
 ): Promise<Result<ImportSummary, BootError>> => {
   /* Saltando lo ilegible, como el arranque de verdad: si no, una copia con un
      fichero roto no se podría importar nunca, y exportar los lleva a propósito. */
@@ -52,6 +62,7 @@ export const rehearseImport = async (
     ids,
     logger,
     skipCorrupt: true,
+    migrations,
   })
   if (!arrancada.ok) return arrancada
 

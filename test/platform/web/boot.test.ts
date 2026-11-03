@@ -23,7 +23,8 @@ import type {
   Routine,
   StorageError,
 } from "#core/index"
-import { CURRENT_SCHEMA_VERSION, noteRef } from "#core/index"
+import { noteRef } from "#core/index"
+import { CURRENT_SCHEMA_VERSION } from "#core/migrations/runMigrations"
 import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
 import type { Cancel } from "#storage/writeBehind"
@@ -34,6 +35,7 @@ import { boot } from "#platform/web/boot"
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
 import { silentLogger } from "../../core/ports/FakeLogger"
+import { MIGRADA, VERSION_MIGRADA, conLaMigracion, cortandoEn } from "./migracionDePrueba"
 
 /* ────────────────────────────── El escenario ────────────────────────────── */
 
@@ -56,6 +58,17 @@ const arrancar = (almacen: Storage, skipCorrupt: boolean = false): Promise<Resul
     ids: idsSecuenciales(),
     schedule: nuncaSalta,
     skipCorrupt,
+  })
+
+/** Igual, pero con la migración de prueba, que lleva a la versión siguiente. */
+const arrancarMigrando = (almacen: Storage): Promise<Result<App, BootError>> =>
+  boot({
+    logger: silentLogger,
+    blobs: createLocalStorageBlobStore(almacen),
+    clock: reloj,
+    ids: idsSecuenciales(),
+    schedule: nuncaSalta,
+    migrations: conLaMigracion,
   })
 
 const appDe = (r: Result<App, BootError>): App => {
@@ -342,4 +355,95 @@ test("con skipCorrupt, una rutina ilegible se salta y se avisa; sin él, impide 
   assert.equal(app.corrupt.length, 1)
   assert.deepEqual(Object.keys(app.store.getState().routines), [buena.id])
   assert.equal(errorDe(await arrancar(almacen)).kind, "corrupt")
+})
+
+/* ──────────────────────────── Con una migración ─────────────────────────── */
+
+const versionDe = async (almacen: Storage): Promise<number> => {
+  const leida: Result<number, StorageError> = await createFileStorageAdapter(
+    createLocalStorageBlobStore(almacen),
+  ).getSchemaVersion()
+  if (!leida.ok) assert.fail("la versión tenía que leerse")
+  return leida.value
+}
+
+const nombresDe = (app: App): ReadonlyArray<string> =>
+  Object.values(app.store.getState().notes)
+    .map((n: Note): string => n.name)
+    .sort()
+
+/** Un almacén de la versión actual con «Compra», «Viaje» y un contexto. */
+const conDatosViejos = async (): Promise<{ readonly almacen: FakeStorage; readonly notas: ReadonlyArray<Note> }> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const app: App = appDe(await arrancar(almacen))
+  const compra: Note | null = app.useCases.createNote("Compra")
+  const viaje: Note | null = app.useCases.createNote("Viaje")
+  app.useCases.createContext("Casa")
+  escrituraOk(await app.flush())
+  if (compra === null || viaje === null) assert.fail("tenían que crearse")
+  return { almacen, notas: [compra, viaje] }
+}
+
+test("con una migración, se guardan sólo las que cambian y la versión, la última", async (): Promise<void> => {
+  const { almacen, notas } = await conDatosViejos()
+
+  const contado: ReturnType<typeof contandoEscrituras> = contandoEscrituras(almacen)
+  const app: App = appDe(await arrancarMigrando(contado.storage))
+
+  assert.deepEqual(nombresDe(app), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+  /* El contexto no cambia: no se reescribe. Y la versión, después de todo lo demás. */
+  const escritas: ReadonlyArray<string> = contado.escritas()
+  assert.deepEqual(
+    [...escritas.slice(0, -1)].sort(),
+    notas.map((n: Note): string => `elnotas:blob:notes/${n.id}.json`).sort(),
+  )
+  assert.equal(escritas[escritas.length - 1], "elnotas:blob:manifest.json")
+  assert.equal(await versionDe(almacen), VERSION_MIGRADA)
+})
+
+test("lo migrado queda guardado: el siguiente arranque ni migra ni escribe", async (): Promise<void> => {
+  const { almacen } = await conDatosViejos()
+  appDe(await arrancarMigrando(almacen))
+
+  almacen.lanzarEn("setItem", excepcionDeCuota())
+  const otra: App = appDe(await arrancarMigrando(almacen))
+  escrituraOk(await otra.flush())
+  assert.deepEqual(nombresDe(otra), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+})
+
+test("tras migrar, editar una nota migrada se guarda sin choque", async (): Promise<void> => {
+  const { almacen, notas } = await conDatosViejos()
+  const app: App = appDe(await arrancarMigrando(almacen))
+  const compra: Note | undefined = notas[0]
+  if (compra === undefined) assert.fail("tenía que estar")
+  app.useCases.renameNote(compra.id, "Súper")
+  escrituraOk(await app.flush())
+  assert.deepEqual(nombresDe(appDe(await arrancarMigrando(almacen))), ["Súper", `Viaje${MIGRADA}`])
+})
+
+test("cortada a medias, la versión sigue siendo la vieja y el siguiente arranque la termina", async (): Promise<void> => {
+  const { almacen } = await conDatosViejos()
+
+  /* La primera nota se guarda migrada; la segunda ya no cabe. */
+  const fallo: BootError = errorDe(await arrancarMigrando(cortandoEn(almacen, 2)))
+  assert.equal(fallo.kind, "quota-exceeded")
+  assert.equal(await versionDe(almacen), CURRENT_SCHEMA_VERSION)
+
+  /* Sobre esa mezcla, migrar otra vez no la migra dos veces. */
+  const app: App = appDe(await arrancarMigrando(almacen))
+  assert.deepEqual(nombresDe(app), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+  assert.equal(await versionDe(almacen), VERSION_MIGRADA)
+})
+
+test("cortada al apuntar la versión, lo migrado está y el siguiente arranque sólo la apunta", async (): Promise<void> => {
+  const { almacen } = await conDatosViejos()
+
+  /* Dos notas y, la tercera escritura, el manifiesto. */
+  errorDe(await arrancarMigrando(cortandoEn(almacen, 3)))
+  assert.equal(await versionDe(almacen), CURRENT_SCHEMA_VERSION)
+
+  const contado: ReturnType<typeof contandoEscrituras> = contandoEscrituras(almacen)
+  const app: App = appDe(await arrancarMigrando(contado.storage))
+  assert.deepEqual(nombresDe(app), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+  assert.deepEqual(contado.escritas(), ["elnotas:blob:manifest.json"])
 })

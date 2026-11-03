@@ -27,6 +27,7 @@ import {
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
 import { silentLogger } from "../../core/ports/FakeLogger"
+import { MIGRADA, conLaMigracion, cortandoEn } from "./migracionDePrueba"
 
 const reloj: Clock = { now: (): number => 1000 }
 
@@ -220,4 +221,44 @@ test("cancelar quita sólo la marca", async (): Promise<void> => {
   assert.equal(cancelImport(almacen), true)
   assert.deepEqual(await importIfRequested(almacen), { kind: "none" })
   assert.deepEqual(nombresDe(await arrancar(almacen)), ["Vieja"])
+})
+
+/** El arranque que sigue a importar, con la migración de prueba. */
+const arrancarMigrando = (almacen: Storage): Promise<Result<App, BootError>> =>
+  boot({
+    logger: silentLogger,
+    blobs: createLocalStorageBlobStore(almacen),
+    clock: reloj,
+    ids: ids(),
+    schedule: nuncaSalta,
+    migrations: conLaMigracion,
+  })
+
+test("una copia de un formato viejo se importa y el arranque la migra y la guarda", async (): Promise<void> => {
+  const almacen: FakeStorage = await esteDispositivo()
+  requestImport(almacen, await copiaDeOtro())
+  assert.deepEqual(await importIfRequested(almacen), { kind: "imported" })
+
+  const migrada: Result<App, BootError> = await arrancarMigrando(almacen)
+  if (!migrada.ok) assert.fail("tenía que arrancar")
+  assert.deepEqual(nombresDe(migrada.value), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+
+  /* Guardada: otro arranque, sin escribir nada, la ve igual. */
+  almacen.lanzarEn("setItem", excepcionDeCuota())
+  const otra: Result<App, BootError> = await arrancarMigrando(almacen)
+  if (!otra.ok) assert.fail("tenía que arrancar sin escribir")
+  assert.deepEqual(nombresDe(otra.value), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
+})
+
+test("importada, si la migración se corta a medias, el siguiente arranque la termina", async (): Promise<void> => {
+  const almacen: FakeStorage = await esteDispositivo()
+  requestImport(almacen, await copiaDeOtro())
+  await importIfRequested(almacen)
+
+  const cortada: Result<App, BootError> = await arrancarMigrando(cortandoEn(almacen, 2))
+  assert.equal(cortada.ok, false)
+
+  const migrada: Result<App, BootError> = await arrancarMigrando(almacen)
+  if (!migrada.ok) assert.fail("tenía que arrancar")
+  assert.deepEqual(nombresDe(migrada.value), [`Compra${MIGRADA}`, `Viaje${MIGRADA}`])
 })

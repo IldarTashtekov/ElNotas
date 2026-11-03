@@ -69,12 +69,8 @@ export { NO_CHANGES, diffState } from "./app/diffState.js"
    La otra mitad —quién abre el storage, qué se ve sin nada guardado— es Fase 4. */
 export type { StoredEntities } from "./migrations/hydrate.js"
 export { hydrate } from "./migrations/hydrate.js"
-export type { MigrationResult } from "./migrations/runMigrations.js"
-export {
-  CURRENT_SCHEMA_VERSION,
-  EMPTY_STORE_VERSION,
-  runMigrations,
-} from "./migrations/runMigrations.js"
+export type { MigrationOptions, MigrationResult } from "./migrations/runMigrations.js"
+export { EMPTY_STORE_VERSION, runMigrations } from "./migrations/runMigrations.js"
 
 /* Puertos: lo que el core necesita del mundo, y que implementa `platform/` */
 export type { Clock } from "./ports/Clock.js"

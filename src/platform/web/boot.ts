@@ -6,7 +6,8 @@
  * Qué almacén es lo decide quien llama, que le pasa el `BlobStore` ya hecho.
  *
  * Si algo falla al leer, no arranca a medias: devuelve el fallo, y lo guardado
- * no se toca.
+ * no se toca. Si lo guardado es de un formato viejo, guarda lo migrado y después
+ * apunta la versión; cortado a medias, el próximo arranque lo repite.
  */
 
 import type {
@@ -20,8 +21,11 @@ import type {
   ItemRef,
   Logger,
   MigrationError,
+  MigrationOptions,
   MigrationResult,
   Note,
+  Repository,
+  Revision,
   Routine,
   Result,
   StorageAdapter,
@@ -31,7 +35,6 @@ import type {
   UseCases,
 } from "#core/index"
 import {
-  CURRENT_SCHEMA_VERSION,
   EMPTY_STORE_VERSION,
   createStore,
   createUseCases,
@@ -57,6 +60,8 @@ export interface BootDeps {
   /** Para las pruebas: en producción se usan los del write-behind. */
   readonly delayMs?: number
   readonly schedule?: Schedule
+  /** Para las pruebas: en producción, las migraciones y la versión del core. */
+  readonly migrations?: MigrationOptions
 }
 
 /** La app montada. `flush` escribe ya lo pendiente: para el cierre de la página. */
@@ -71,6 +76,51 @@ export interface App {
 /** Los dos orígenes posibles del fallo. Sus `kind` no se solapan. */
 export type BootError = StorageError | MigrationError
 
+/**
+ * Guarda las que la migración cambió —las que ya no son el mismo objeto—, cada
+ * una esperando la revisión con la que se leyó; una nueva, que no haya nada.
+ */
+const guardarCambiadas = async <T extends { readonly id: TId; readonly revision: Revision }, TId extends string>(
+  repo: Repository<T, TId>,
+  antes: ReadonlyArray<T>,
+  despues: ReadonlyArray<T>,
+): Promise<Result<void, StorageError>> => {
+  const leidas: ReadonlyMap<string, T> = new Map<string, T>(antes.map((e: T): readonly [string, T] => [e.id, e]))
+  for (const entidad of despues) {
+    const leida: T | undefined = leidas.get(entidad.id)
+    if (leida === entidad) continue
+    const hecho: Result<void, StorageError> = await repo.put(entidad, leida?.revision ?? null)
+    if (!hecho.ok) return hecho
+  }
+  return ok(undefined)
+}
+
+/** Todo lo migrado, clase a clase. Sobre ficheros no es atómico: lo repite el próximo arranque. */
+const guardarMigrado = (
+  adapter: StorageAdapter,
+  antes: StoredEntities,
+  despues: StoredEntities,
+): Promise<Result<void, StorageError>> =>
+  adapter.transaction(async (): Promise<Result<void, StorageError>> => {
+    const pasos: ReadonlyArray<() => Promise<Result<void, StorageError>>> = [
+      (): Promise<Result<void, StorageError>> => guardarCambiadas(adapter.notes, antes.notes, despues.notes),
+      (): Promise<Result<void, StorageError>> =>
+        guardarCambiadas(adapter.diagrams, antes.diagrams, despues.diagrams),
+      (): Promise<Result<void, StorageError>> =>
+        guardarCambiadas(adapter.contexts, antes.contexts, despues.contexts),
+      /* Eventos y rutinas pueden faltar en lo guardado antes de que existieran. */
+      (): Promise<Result<void, StorageError>> =>
+        guardarCambiadas(adapter.events, antes.events ?? [], despues.events ?? []),
+      (): Promise<Result<void, StorageError>> =>
+        guardarCambiadas(adapter.routines, antes.routines ?? [], despues.routines ?? []),
+    ]
+    for (const paso of pasos) {
+      const hecho: Result<void, StorageError> = await paso()
+      if (!hecho.ok) return hecho
+    }
+    return ok(undefined)
+  })
+
 export const boot = async ({
   blobs,
   clock,
@@ -80,6 +130,7 @@ export const boot = async ({
   onError,
   delayMs,
   schedule,
+  migrations = {},
 }: BootDeps): Promise<Result<App, BootError>> => {
   /* Los ficheros que se saltan: para decirlo, y para que sus referencias no se
      pierdan. Sin `skipCorrupt` no se salta ninguno: se corta la lectura. */
@@ -117,27 +168,34 @@ export const boot = async ({
   const migrado: Result<MigrationResult, MigrationError> = runMigrations(
     guardado,
     version.value,
+    migrations,
   )
   if (!migrado.ok) return migrado
 
+  /* El único casting del arranque: lo que sale de las migraciones es `unknown`.
+     Sin migraciones aplicadas es literalmente `guardado`. Lo leído se validó al
+     leerlo, con las formas que la migración espera; lo migrado lo valida ella. */
+  const migradas: StoredEntities = migrado.value.data as StoredEntities
+
+  /* Lo migrado se guarda ANTES de apuntar la versión: si se corta en medio, la
+     versión sigue siendo la vieja y el próximo arranque migra otra vez. */
+  if (migrado.value.applied > 0) {
+    const guardadas: Result<void, StorageError> = await guardarMigrado(adapter, guardado, migradas)
+    if (!guardadas.ok) return guardadas
+  }
+
   /* Almacén vacío: se apunta ya la versión. Sin esto, uno con notas seguiría
-     diciendo «0», y el día que haya una migración se tomaría por vacío y se la
-     saltaría. Con migraciones aplicadas habría que escribir además lo migrado
-     antes de subir la versión; hoy no hay ninguna, así que ese caso no llega. */
-  if (version.value === EMPTY_STORE_VERSION) {
-    const apuntada: Result<void, StorageError> =
-      await adapter.setSchemaVersion(CURRENT_SCHEMA_VERSION)
+     diciendo «0», y la primera migración lo tomaría por vacío y se la saltaría. */
+  if (version.value === EMPTY_STORE_VERSION || migrado.value.applied > 0) {
+    const apuntada: Result<void, StorageError> = await adapter.setSchemaVersion(migrado.value.version)
     if (!apuntada.ok) return apuntada
   }
 
-  /* El único casting del arranque: lo que sale de las migraciones es `unknown`.
-     Con la lista vacía es literalmente `guardado`; validar la forma de lo leído
-     es otra tarea, la de la validación de esquema. */
   const ilegibles: ReadonlySet<string> = new Set<string>(
     saltados.flatMap((f: StorageError): ReadonlyArray<string> => (f.kind === "corrupt" ? [f.path] : [])),
   )
   const estado: AppState = hydrate(
-    migrado.value.data as StoredEntities,
+    migradas,
     (item: ItemRef): boolean => {
       const camino: string | null = pathOf(item)
       return camino !== null && ilegibles.has(camino)

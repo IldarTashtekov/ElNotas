@@ -8,7 +8,8 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Clock, Context, IdGenerator, Note, Result, Routine, StorageError } from "#core/index"
-import { CURRENT_SCHEMA_VERSION, noteRef, ok } from "#core/index"
+import { noteRef, ok } from "#core/index"
+import { CURRENT_SCHEMA_VERSION } from "#core/migrations/runMigrations"
 import type { Day } from "#core/domain/calendar"
 import { parseDay } from "#core/domain/calendar"
 import type { Cancel } from "#storage/writeBehind"
@@ -24,6 +25,7 @@ import { rehearseImport } from "#platform/web/rehearseImport"
 import type { FakeBlobStore } from "../../storage/file/FakeBlobStore"
 import { createFakeBlobStore } from "../../storage/file/FakeBlobStore"
 import { silentLogger } from "../../core/ports/FakeLogger"
+import { conLaMigracion, conUnaQueFalla } from "./migracionDePrueba"
 
 const reloj: Clock = { now: (): number => 1000 }
 
@@ -172,4 +174,27 @@ test("una copia de antes de quitar los grupos de eventos, con event-groups/, se 
     await rehearseImport(vieja, { logger: silentLogger, clock: reloj, ids: ids() }),
   )
   assert.equal(resumen.unreadable, 0)
+})
+
+test("una copia de un formato viejo se ensaya migrándola, y pasa", async (): Promise<void> => {
+  const { backup } = await copiaDeVerdad()
+  const ensayo: Result<ImportSummary, BootError> = await rehearseImport(backup, {
+    logger: silentLogger,
+    clock: reloj,
+    ids: ids(),
+    migrations: conLaMigracion,
+  })
+  assert.deepEqual(resumenDe(ensayo), { notes: 2, diagrams: 1, contexts: 1, unreadable: 0 })
+})
+
+test("una copia cuya migración revienta se rechaza en el ensayo", async (): Promise<void> => {
+  const { backup } = await copiaDeVerdad()
+  const ensayo: Result<ImportSummary, BootError> = await rehearseImport(backup, {
+    logger: silentLogger,
+    clock: reloj,
+    ids: ids(),
+    migrations: conUnaQueFalla,
+  })
+  if (ensayo.ok) assert.fail("tenía que rechazarla")
+  assert.equal(ensayo.error.kind, "migration-failed")
 })

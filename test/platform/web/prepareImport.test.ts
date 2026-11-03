@@ -7,7 +7,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { Clock, IdGenerator, Result, StorageError } from "#core/index"
-import { CURRENT_SCHEMA_VERSION } from "#core/index"
+import { CURRENT_SCHEMA_VERSION } from "#core/migrations/runMigrations"
 import type { Cancel } from "#storage/writeBehind"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type { ImportPreparation } from "#ui/index"

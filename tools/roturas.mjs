@@ -1354,6 +1354,48 @@ export const ROTURAS = [
     caza: "pruebas",
     prueba: "una casilla, con todo su árbol",
   },
+  /* ── Un arranque que migra de verdad ── */
+  {
+    nombre: "migrar: lo migrado no se guarda",
+    fichero: "src/platform/web/boot.ts",
+    buscar: "  if (migrado.value.applied > 0) {\n",
+    poner: "  if (migrado.value.applied < 0) {\n",
+    caza: "pruebas",
+    prueba: "con una migración, se guardan sólo las que cambian",
+  },
+  {
+    nombre: "migrar: la versión se apunta antes que lo migrado",
+    fichero: "src/platform/web/boot.ts",
+    buscar: "  if (migrado.value.applied > 0) {\n",
+    poner:
+      "  if (migrado.value.applied > 0) {\n    const antes: Result<void, StorageError> = await adapter.setSchemaVersion(migrado.value.version)\n    if (!antes.ok) return antes\n",
+    caza: "pruebas",
+    prueba: "cortada a medias, la versión sigue siendo la vieja",
+  },
+  {
+    nombre: "migrar: se reescriben también las que no cambian",
+    fichero: "src/platform/web/boot.ts",
+    buscar: "    if (leida === entidad) continue\n",
+    poner: "",
+    caza: "pruebas",
+    prueba: "cortada al apuntar la versión, lo migrado está",
+  },
+  {
+    nombre: "migrar: lo migrado se guarda como si fuera nuevo",
+    fichero: "src/platform/web/boot.ts",
+    buscar: "await repo.put(entidad, leida?.revision ?? null)",
+    poner: "await repo.put(entidad, null)",
+    caza: "pruebas",
+    prueba: "con una migración, se guardan sólo las que cambian",
+  },
+  {
+    nombre: "migrar: el ensayo no pasa las migraciones",
+    fichero: "src/platform/web/rehearseImport.ts",
+    buscar: "    migrations,\n  })",
+    poner: "    migrations: { ...migrations, migrations: [] },\n  })",
+    caza: "pruebas",
+    prueba: "una copia cuya migración revienta se rechaza en el ensayo",
+  },
   /* ── Las ventanas como pestañas ── */
   {
     nombre: "pestañas: cerrar la activa salta a la primera",

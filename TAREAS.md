@@ -225,21 +225,14 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
       lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
       que la pulsación larga no saque el menú del sistema) y los anota.
-- [ ] **15a. Un arranque que migra de verdad** *(pensar)*. Decidida con el usuario el 2026-11-03, para
-      la 15b. Hoy `boot` migra en memoria y no guarda lo migrado, y `schema.ts` valida antes de migrar.
-      Hace falta: que la validación acepte la forma vieja que la migración espera; que, con migraciones
-      aplicadas, se guarden las entidades migradas y **después** se apunte la versión; y que migrar sea
-      idempotente, para que un arranque cortado a medias se repita sin daño. Vale igual para importar
-      una copia (el ensayo en memoria y el de verdad). **Se cierra cuando** una migración de prueba
-      pasa por `boot`, `rehearseImport` e `importStorage` con pruebas, también cortada a medias, y hay
-      roturas que las tumben.
 - [ ] **15b. Un solo tipo de nodo: texto con Markdown, y el enlace dentro** *(pensar)*. Tras la 15a. El
       nodo es posición, «hecho» y un texto con el subconjunto de Markdown de las notas, de una o varias
       líneas; desaparecen el tipo, el nodo-nota, `loseNote`, «Nota perdida» y `addNoteNode`. El enlace
       no lo lee el core, como en las notas: roto, se ve apagado. **Migración 1→2, la primera real:**
       todo nodo-nota pasa a `[nombre](#id)`, con el nombre escapado (el escape vive hoy en `ui/`:
       moverlo o repetirlo en el core); sin nota, `[Nota perdida](#id)`, e ilegible, `[Nota ilegible](#id)`.
-      Un nodo ya nuevo se deja igual. Cambian en `CLAUDE.md` «Nodo-nota con el título en directo» y la
+      Un nodo ya nuevo se deja igual. `schema.ts` acepta las dos formas del nodo: la vieja, para que la
+      migración la reciba. Cambian en `CLAUDE.md` «Nodo-nota con el título en directo» y la
       excepción del enlace, que cubre también los nodos. **Se cierra cuando** las pruebas del nodo único
       y de la migración pasan (también una copia de seguridad v1 importada), hay roturas que las tumben,
       y una app con datos viejos arranca en el panel con sus nodos convertidos.
@@ -458,6 +451,12 @@ una tarea con su cierre.
       reducer, las pruebas y el formato en disco.
       **Se cierra cuando** el usuario elige: excepción, escrita en *Decisiones cerradas* de
       `CLAUDE.md`, o una tarea con fase para quitarlo.
+
+- [ ] **Un fichero ilegible no se migra** *(salió en la 15a, 2026-11-03)*. El arranque se salta lo
+      ilegible, así que la migración no lo ve; si después alguien lo arregla a mano, llega con la forma
+      vieja y una versión ya nueva, y se lee como ilegible otra vez. Opciones: dejarlo así, o que una
+      copia de seguridad recuerde la versión de cada fichero. **Se cierra cuando** el usuario elige y
+      la decisión queda escrita aquí.
 
 - [ ] **La pregunta de importar no cuenta los eventos** *(salió en la 7g, 2026-10-28)*. «La copia
       trae 8 notas, 2 diagramas y 2 contextos» no dice cuántos eventos trae,

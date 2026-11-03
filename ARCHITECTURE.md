@@ -405,6 +405,9 @@ globales. Si el destino fuera una base de datos, sería una fila por entidad: la
 Ausente significa «aquí no se ha escrito nunca nada», no «formato viejo»: confundirlo hace buscar una
 migración que no existe. Una versión ilegible sí es un error: migrar sin saber de dónde se viene es la
 forma de estropear lo guardado. **Es el mecanismo de migración**, y por eso llega con quien la lee.
+**Migrar es guardar lo migrado y, sólo después, apuntar la versión.** Cortado en medio, la versión
+sigue siendo la vieja y el siguiente arranque migra otra vez, sobre una mezcla de lo ya migrado y lo
+que no: por eso una migración tiene que poder pasar dos veces sin daño.
 
 **Lo que hace cada escritura, en orden, y con el peor caso inofensivo.** Primero todo lo que se
 guarda, después lo que se borra: morir a mitad deja algo que sobra, nunca una referencia colgando. Una

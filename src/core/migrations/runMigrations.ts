@@ -14,7 +14,16 @@ import { err, ok } from "../domain/Result.js"
 import type { Result } from "../domain/Result.js"
 import type { MigrationError } from "../domain/errors/MigrationError.js"
 
-/** De un esquema al siguiente. Pura: no toca el almacén. */
+/**
+ * De un esquema al siguiente. Pura: no toca el almacén; lo migrado lo guarda el
+ * arranque, entidad a entidad, y apunta la versión al final.
+ *
+ * ⚠️ Por eso **tiene que poder pasar dos veces**: si el arranque se corta a medias,
+ * unas entidades quedan migradas y la versión sigue siendo la vieja, y el próximo
+ * arranque la vuelve a pasar sobre esa mezcla. Una entidad ya migrada, igual.
+ * Además no borra entidades ni toca su `revision`, y devuelve LA MISMA entidad
+ * que no cambia: sólo se guardan las que son otro objeto.
+ */
 export interface Migration {
   /** Versión de la que parte. Produce `from + 1`. */
   readonly from: number

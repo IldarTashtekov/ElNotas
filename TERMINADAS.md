@@ -228,6 +228,12 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **La barra de la nota, sólo con símbolos** 2026-11-04, a petición del usuario: ☐ ↳ ⠿ ✕ y, para enlazar, una
   cadena en SVG (ningún carácter monocromo la tiene), con su nombre en `aria-label` y `title`, en un renglón
   que se desliza en vez de saltar de línea.
+- **Tarea 15a de la Fase 10, un arranque que migra de verdad** 2026-11-03, rama `arranque-que-migra`: con
+  migraciones aplicadas, `boot` guarda las entidades que cambian —cada una esperando su revisión— y sólo
+  después apunta la versión; cortado a medias, el siguiente arranque repite sobre la mezcla, y por eso
+  una `Migration` tiene que poder pasar dos veces. El ensayo y la importación pasan por ahí. Probado con
+  una migración de prueba (`test/platform/web/migracionDePrueba.ts`), cortada en las dos mitades; que
+  `schema.ts` acepte la forma vieja depende de la forma, y va con la 15b.
 - **Tarea 14 de la Fase 10, borrar en «⠿ Ordenar»** 2026-11-03, rama `borrar-en-ordenar`: una papelera
   dibujada en la barra, sólo con el modo y apagada sin nada que borrar; la hoja «¿Borrar N líneas?» y una
   sola acción. `remove` acepta varias, y una casilla se va con todo su árbol, por decisión del usuario
