@@ -130,7 +130,8 @@ Con el General, el calendario y tres o cuatro contextos de ventana:
 - **D3.** Soltarla en su sitio no cambia nada.
 - **D4.** Con más pestañas de las que caben: **deslizar** el carril con el dedo lo mueve **sin
   levantar ninguna**; arrastrando una levantada cerca del borde, se desliza solo. La activa
-  queda siempre a la vista, y un nombre largo se corta con «…».
+  queda siempre a la vista, y un nombre largo se corta con «…». A 375 px caben **tres**
+  pestañas enteras.
 - **D5.** En el móvil, la pulsación larga **no** selecciona texto ni saca el menú del sistema.
 - **D6.** El **General** y el **calendario** son pestañas como las demás: con su nombre, en el
   carril, y se arrastran a cualquier puesto.

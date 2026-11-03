@@ -43,10 +43,11 @@
   cursor: pointer;
   display: flex;
   flex: none;
-  gap: 0.35rem;
-  max-width: 11rem;
-  min-width: 5.5rem;
-  padding: 0.4rem 0.55rem;
+  gap: 0.3rem;
+  /* Tres a la vista en un móvil de 375 px, con el «+». */
+  max-width: 6.25rem;
+  min-width: 4.5rem;
+  padding: 0.4rem 0.45rem;
   transition: transform 0.15s ease;
   /* La pulsación larga arrastra: ni seleccionar texto ni el menú de iOS. */
   -webkit-touch-callout: none;
