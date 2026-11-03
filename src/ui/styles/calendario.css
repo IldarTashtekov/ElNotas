@@ -99,6 +99,68 @@
   text-shadow: none;
 }
 
+/* ── La gráfica de una rutina, en el sitio del mes y de su mismo alto ── */
+.rutina-grafica {
+  /* Los gestos son suyos: ni el navegador desplaza ni acerca la página encima de ella. */
+  height: calc(50vh - 1.9rem);
+  min-height: 10rem;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+/* Sólo el de fuera: los de dentro recortan lo que se sale por los lados. */
+.rutina-grafica > svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+.rutina-grafica-aviso {
+  color: var(--muted);
+  margin: 0;
+  padding-top: 2rem;
+  text-align: center;
+}
+.grafica-eje,
+.grafica-rejilla {
+  stroke: var(--dim);
+}
+.grafica-rejilla {
+  stroke-dasharray: 2 4;
+}
+.grafica-dias,
+.grafica-semana {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+}
+.grafica-dias {
+  text-anchor: end;
+}
+.grafica-semana {
+  text-anchor: middle;
+}
+.grafica-dias-meta {
+  fill: var(--accent);
+}
+.grafica-meta {
+  stroke: var(--accent);
+  stroke-dasharray: 6 4;
+}
+.grafica-linea {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+.grafica-punto {
+  fill: var(--ground);
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+.grafica-punto.cumplida {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
 /* ── La hoja de un día ── */
 .evento-hoja {
   display: flex;
@@ -257,6 +319,15 @@
 }
 .rutinas-cabecera .hoy {
   color: var(--accent);
+}
+/* Encima de la cuenta: % lleva a la gráfica y ▦, de vuelta al mes. */
+.rutinas-vista {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  justify-self: end;
+  padding: 0.3rem 0.2rem;
 }
 .rutina-nombre {
   background: none;

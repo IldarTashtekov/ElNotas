@@ -30,6 +30,7 @@ import { createBackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import type { CalendarTarget } from "./CalendarPanel.js"
 import type { CalendarTabSetting } from "./calendarTab.js"
+import type { RoutineChartsSetting } from "./routineCharts.js"
 import { mountCalendarView } from "./CalendarView.js"
 import type { DiagramFraming } from "./diagramFraming.js"
 import { mountDiagramView } from "./DiagramView.js"
@@ -69,6 +70,8 @@ export interface AppDeps {
   readonly calendarOrder: CalendarOrderPersistence
   /** La pestaña del calendario, compartida por su vista y su ventana. */
   readonly calendarTab: CalendarTabSetting
+  /** La gráfica de las rutinas, compartida por su vista y su ventana. */
+  readonly routineCharts: RoutineChartsSetting
 }
 
 /** Lo que la app ofrece a quien la monta. */

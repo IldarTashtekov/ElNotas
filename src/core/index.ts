@@ -95,8 +95,11 @@ export type { Routine } from "./domain/Routine.js"
 /* Las fechas del calendario: el guardado valida con ellas lo que lee, y la pantalla las pinta. */
 export type { Day, Time } from "./domain/calendar.js"
 export {
+  addDays,
   compareDays,
   dayFromParts,
+  dayOfWeek,
+  daysBetween,
   monthGrid,
   parseDay,
   parseTime,

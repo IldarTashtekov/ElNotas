@@ -1,7 +1,7 @@
 /**
  * El estado de la UI de este dispositivo, en un solo objeto: el fósforo, las
- * ventanas, los encuadres de los diagramas, el orden de las rutinas y la pestaña
- * del calendario. No viaja con las notas.
+ * ventanas, los encuadres de los diagramas, el orden de las rutinas, la pestaña
+ * del calendario y la gráfica de las rutinas. No viaja con las notas.
  *
  * Cada sección se da a quien la usa como la persistencia de siempre: su lectura
  * saca su parte, y su guardado cambia sólo su parte. Dónde se guarda el objeto
@@ -19,6 +19,8 @@ import type { Framings } from "./diagramFraming.js"
 import { parseFramings } from "./diagramFraming.js"
 import type { Phosphor } from "./phosphor.js"
 import { parsePhosphor } from "./phosphor.js"
+import type { RoutineCharts } from "./routineCharts.js"
+import { parseRoutineCharts } from "./routineCharts.js"
 import type { WindowsLayout } from "./windows.js"
 import { parseWindowsLayout } from "./windows.js"
 
@@ -28,6 +30,7 @@ export interface UiState {
   readonly framings: Framings
   readonly calendarOrder: CalendarOrder
   readonly calendarTab: CalendarTab
+  readonly routineCharts: RoutineCharts
 }
 
 /** Lo guardado, sección a sección y sin validar: cada una la valida quien la usa. */
@@ -61,6 +64,7 @@ export const parseUiState = (guardado: unknown): UiState => {
     framings: parseFramings(r["framings"]),
     calendarOrder: parseCalendarOrder(r["calendarOrder"]),
     calendarTab: parseCalendarTab(r["calendarTab"]),
+    routineCharts: parseRoutineCharts(r["routineCharts"]),
   }
 }
 

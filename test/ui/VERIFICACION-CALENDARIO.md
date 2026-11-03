@@ -147,6 +147,28 @@ y otra sin ella; hoy es miércoles 28 de octubre de 2026.
   abre la hoja. Tras **recargar** conserva el orden; la rutina tocada, no.
 - **E10.** A **375 px** y a escritorio no hay barra horizontal y los siete días de la semana caben; el mes no pasa de la mitad de la pantalla.
 
+## G. La gráfica de una rutina
+
+En la pestaña **Rutinas**, con alguna rutina con meta y días cumplidos en varias semanas.
+
+- **G1.** En la cabecera de la tabla, tras L M X J V S D y encima de la columna «n/meta», hay un
+  **%**. Pulsarlo cambia el mes (con su barra y su cabecera) por la gráfica, y el botón pasa a
+  **▦**; pulsar **▦** devuelve el mes. Sin rutinas no hay botón y se ve el mes.
+- **G2.** En la gráfica y sin ninguna rutina tocada, se lee **«Elige una rutina»**. Al tocar una,
+  la gráfica es la suya; tocar otra la cambia.
+- **G3.** Un punto por semana, de lunes a domingo, desde la primera con algún día cumplido hasta
+  la de hoy; las vacías, a 0. A la izquierda 0, 7 y la meta; la meta, una **línea discontinua**, y
+  los puntos que la alcanzan, rellenos. Abajo, el lunes de algunas semanas («d/m»), el de hoy siempre.
+- **G4.** La **rueda** sobre la gráfica acerca o aleja **sólo a lo ancho**, sin mover la semana bajo
+  el puntero y sin desplazar la página; no se acerca a menos de unas 4 semanas ni se aleja más
+  allá de toda la historia. **Arrastrar** con el ratón va a semanas anteriores o vuelve, sin pasar
+  de hoy ni de la primera.
+- **G5.** Tras **recargar**, la pestaña Rutinas sigue en la gráfica y, al tocar la rutina, enseña el
+  tramo que se dejó; otra rutina tiene el suyo.
+- **G6.** Pasar a **Eventos** enseña siempre el **mes**; volver a **Rutinas** deja el modo en que
+  estaba (gráfica o mes).
+- **G7.** A **375 px** la gráfica cabe sin barra horizontal y mide lo que medía el mes.
+
 ## M. Sólo en el móvil
 
 Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
@@ -163,10 +185,36 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
   de una semana se marcan con el dedo sin pulsar el vecino.
 - **M7.** Un **doble toque** en el nombre de una rutina abre su hoja y la deja tocada; un toque
   la toca o la suelta, y la página **no** se amplía con el doble toque.
+- **M8.** En la **gráfica** de una rutina, **pellizcar** con dos dedos la acerca o la aleja sólo a lo
+  ancho, y arrastrar con uno va a otras semanas; la página **no** se amplía ni se desliza.
 
 ---
 
 ## Pasadas
+
+```
+Fecha:        2026-11-03
+Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
+Quién:        Claude, en el panel
+Commit:       0144da5 más los cambios de la tarea 11, sin comitear
+Origen:       localhost:8001
+
+G1  ✅ — «%» encima de «3/3 ✓»; pulsarlo oculta barra, cabecera y rejilla y pasa a «▦» («Ver el
+    mes»); «▦» devuelve el mes. Al borrar las rutinas, sin botón y con el mes
+G2  ✅ — «Elige una rutina» sin tocada; tocar «Correr» enseña la suya y «Leer», la de ella
+G3  ✅ — «Correr» (meta 3, 20 semanas): 0, 3 y 7 a la izquierda, la meta discontinua, los puntos
+    que llegan a 3 rellenos; «Leer» (sin meta): 3 semanas, de 19/10 a 2/11, sin línea de meta
+G4  ✅ — la rueda acerca hasta 4 semanas y no más, y aleja hasta las 20; la página no se desplaza
+    (scrollY 0); arrastrar a la derecha con el ratón lleva a 31/8–12/10, y se guarda al soltar
+G5  ✅ — tras recargar, la gráfica sigue y «Correr» vuelve con las 20 semanas que se dejaron
+G6  ✅ — en Eventos, el mes (con `view: "chart"` guardado); al volver a Rutinas, la gráfica
+G7  ✅ — a 334 px (el ancho del panel) sin barra horizontal; la gráfica, a la altura del mes
+M8  ⏭ no se puede aquí — el pellizco con dos dedos; lo pasa el usuario en el móvil
+
+Notas: la rueda y el arrastre, con el ratón del panel. En la primera pasada salieron dos fallos, ya
+arreglados: el `overflow: visible` alcanzaba al lienzo de dentro y no recortaba (un punto pisaba el
+«3» de la meta), y el rótulo de hoy se cortaba por la derecha.
+```
 
 ```
 Fecha:        2026-11-03

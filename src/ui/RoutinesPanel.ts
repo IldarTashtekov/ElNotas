@@ -3,7 +3,8 @@
  * siete días de la semana de hoy, que se marcan pulsándolos. Tocar una fila, o
  * su nombre, la deja «tocada» y sólo ella pinta sus días en el mes. Pulsar dos
  * veces el nombre abre la hoja con renombrar, meta, archivar y borrar; las
- * archivadas van en una vista aparte. Mantener pulsada una fila la mueve.
+ * archivadas van en una vista aparte. Mantener pulsada una fila la mueve. Un
+ * botón en la cabecera cambia el mes por la gráfica de la tocada, y al revés.
  *
  * Qué filas hay y cómo va la semana lo calcula `routineList`; aquí sólo se
  * pinta, se escucha y se guarda el orden.
@@ -16,6 +17,7 @@ import { NO_ORDER, parseCalendarOrder } from "./calendarOrder.js"
 import { attachDragReorder } from "./dragReorder.js"
 import { elemento } from "./dom.js"
 import type { Tap } from "./gestures.js"
+import type { RoutineChartView } from "./routineCharts.js"
 import type { NameTap, RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "./routineList.js"
 import {
   currentWeek,
@@ -39,6 +41,10 @@ export interface RoutinesPanelDeps {
   readonly logger: Logger
   /** Cambió la rutina tocada: el mes se vuelve a pintar. */
   readonly onTouched: () => void
+  /** Qué ocupa el sitio del mes: el botón de la cabecera enseña a qué se cambia. */
+  readonly chartView: () => RoutineChartView
+  /** Se pulsó el botón: del mes a la gráfica o al revés. */
+  readonly onToggleView: () => void
 }
 
 export interface RoutinesPanel {
@@ -49,6 +55,8 @@ export interface RoutinesPanel {
   readonly update: () => void
   /** Deja esa rutina «tocada», como si se pulsara su fila, y la trae a la vista. */
   readonly touch: (id: RoutineId) => void
+  /** Si hay tabla, con su cabecera y el botón de la gráfica: sin rutinas o sin «hoy», no. */
+  readonly hasTable: () => boolean
   readonly destroy: () => void
 }
 
@@ -69,6 +77,8 @@ export const createRoutinesPanel = ({
   calendarOrder,
   logger,
   onTouched,
+  chartView,
+  onToggleView,
 }: RoutinesPanelDeps): RoutinesPanel => {
   /* Estado de pantalla: nada de esto se guarda. Al empezar ninguna está tocada y el mes no pinta rutinas. */
   let tocada: string | null = null
@@ -108,7 +118,14 @@ export const createRoutinesPanel = ({
         return col
       }),
     )
-    fila.append(elemento("span"))
+    /* Encima de la cuenta, el cambio entre el mes y la gráfica: enseña a qué se pasa. */
+    const grafica: boolean = chartView() === "chart"
+    const cambiar: HTMLButtonElement = boton(grafica ? "▦" : "%", (): void => {
+      onToggleView()
+      pintar()
+    }, "rutinas-vista")
+    cambiar.setAttribute("aria-label", grafica ? "Ver el mes" : "Ver la gráfica")
+    fila.append(cambiar)
     return fila
   }
 
@@ -365,6 +382,7 @@ export const createRoutinesPanel = ({
       onTouched()
       raiz.querySelector(`[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest" })
     },
+    hasTable: (): boolean => today() !== null && filas().visible.length > 0,
     destroy: soltarArrastre,
   }
 }

@@ -14,6 +14,7 @@ import { createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
   CalendarTabSetting,
+  RoutineChartsSetting,
   DiagramFraming,
   ExportResult,
   ImportPreparation,
@@ -25,6 +26,7 @@ import type {
 } from "#ui/index"
 import {
   createCalendarTabSetting,
+  createRoutineChartsSetting,
   createDiagramFraming,
   createPhosphorSetting,
   createWindowsModel,
@@ -187,6 +189,11 @@ const iniciar = async (): Promise<void> => {
     persistence: uiStateSection(estadoUi, "framings"),
     logger: consoleLogger,
   })
+  const routineCharts: RoutineChartsSetting = createRoutineChartsSetting({
+    store: app.store,
+    persistence: uiStateSection(estadoUi, "routineCharts"),
+    logger: consoleLogger,
+  })
   /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
   const backup: BackupActions = {
     exportAll: (): Promise<ExportResult> => {
@@ -217,6 +224,7 @@ const iniciar = async (): Promise<void> => {
     today: (): Day | null => todayOf(systemClock.now()),
     calendarOrder: uiStateSection(estadoUi, "calendarOrder"),
     calendarTab,
+    routineCharts,
     phosphor,
     openLayers: createLocalStorageOpenLayers(almacen),
     corrupt: app.corrupt,

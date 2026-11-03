@@ -207,33 +207,11 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       pasada 8 en el móvil (S9). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
 - [ ] **7. Calendario: los pasos del móvil** *(a pasar por el usuario)*. Las tareas 7a a 7n y la 8
       están hechas y en `TERMINADAS.md`; quedan los pasos que el panel no puede probar, porque piden
-      el dedo. **Se cierra cuando** el usuario pasa en el móvil M1 a M7 de
+      el dedo. **Se cierra cuando** el usuario pasa en el móvil M1 a M8 de
       `test/ui/VERIFICACION-CALENDARIO.md` (arrastrar una rutina con el dedo, los selectores nativos de día
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
-      tabla sin pulsar el vecino, y el doble toque en el nombre de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
+      tabla sin pulsar el vecino, el doble toque en el nombre de una rutina, y el pellizco en la gráfica de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
-- [ ] **11. Rutinas: la gráfica de semanas, en el sitio del mes** *(pensar)*. *Diseñada con el
-      usuario el 2026-11-03.* **Decidido:** en la pestaña Rutinas, un botón cambia el mes por una
-      gráfica de la rutina **seleccionada**; sin ninguna, un texto apagado: «Elige una rutina». **El
-      botón** va en la cabecera de la tabla de rutinas, tras las letras de los días (L M X J V S D),
-      en el hueco que hay encima de la columna «n/n» de días cumplidos: con el mes a la vista
-      enseña `%`, y con la gráfica, `▦` (el símbolo del calendario de la app); pulsarlo cambia de
-      modo. En Eventos siempre se ve el mes; al volver a Rutinas, el modo en que estaba. Sin
-      rutinas no hay cabecera ni botón, y se ve el mes. El eje X son semanas (de lunes a domingo), desde la primera con
-      algún día cumplido hasta la actual (sin ninguno, sólo la actual), y crece con el tiempo; el Y,
-      los días cumplidos esa semana, de 0 a 7, y las semanas sin cumplir cuentan 0. Si la rutina
-      tiene meta semanal, una línea horizontal discontinua a esa altura. **Zoom sólo a lo ancho**,
-      con la rueda y con dos dedos, y arrastrar para moverse; los topes, toda la historia en
-      pantalla y unas 4 semanas. Lo elegido, mes o gráfica, y **el zoom y el tramo de cada rutina**
-      se recuerdan en el `UiState` (secciones nuevas, validadas en `parseUiState`; lo de una rutina
-      que ya no está, se olvida). **El cómo:** las cuentas del eje, en un módulo puro nuevo de una
-      dimensión, siguiendo la idea de `src/ui/viewport.ts` sin tocarlo (sus topes y su pellizco en
-      diagonal son del lienzo); se reutilizan `wheelFactor` y las constantes de `gestures.ts`.
-      **Se cierra cuando** `check` pasa con pruebas en Node de las cuentas del eje y del recuento
-      por semana, cada guarda nueva tiene su rotura en `tools/roturas.mjs`, una sección nueva de
-      `test/ui/VERIFICACION-CALENDARIO.md` está pasada en el panel, y el pellizco con dos dedos
-      queda para el usuario en los pasos del móvil.
-
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por

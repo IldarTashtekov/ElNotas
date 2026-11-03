@@ -3,6 +3,9 @@
  * anterior y siguiente y «hoy», y en la pestaña Eventos, al pulsar un día, una
  * hoja con sus eventos, donde se crean, se editan y se borran.
  *
+ * En la pestaña Rutinas, el sitio del mes lo puede ocupar la gráfica de la
+ * rutina tocada.
+ *
  * Lo que se enseña lo calcula `calendarMonth`; aquí sólo se pinta y se escucha.
  * Lo comparten la vista del icono y la ventana de la lista.
  */
@@ -22,6 +25,7 @@ import type {
 import type { BackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import type { CalendarTab, CalendarTabSetting } from "./calendarTab.js"
+import type { ChartAxis } from "./chartAxis.js"
 import { DEFAULT_CALENDAR_TAB, daysOpenSheet } from "./calendarTab.js"
 import type { DayCell, MonthRef, MonthView } from "./calendarMonth.js"
 import { dayTitle, eventsOfDay, monthOf, monthView, sameMonth, shiftMonth, WEEKDAYS } from "./calendarMonth.js"
@@ -30,6 +34,10 @@ import type { EventFormResult } from "./eventForm.js"
 import { parseEventForm } from "./eventForm.js"
 import type { EventsPanel } from "./EventsPanel.js"
 import { createEventsPanel } from "./EventsPanel.js"
+import type { RoutineChart } from "./RoutineChart.js"
+import { createRoutineChart } from "./RoutineChart.js"
+import type { RoutineCharts, RoutineChartsSetting, RoutineChartView } from "./routineCharts.js"
+import { NO_ROUTINE_CHARTS } from "./routineCharts.js"
 import type { RoutinesPanel } from "./RoutinesPanel.js"
 import { createRoutinesPanel } from "./RoutinesPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
@@ -46,6 +54,22 @@ const enMemoria = (): CalendarTabSetting => {
   }
 }
 
+/** La gráfica sin guardar: la del calendario que no la comparte con nadie. */
+const graficaEnMemoria = (): RoutineChartsSetting => {
+  let actual: RoutineCharts = NO_ROUTINE_CHARTS
+  return {
+    view: (): RoutineChartView => actual.view,
+    setView: (view: RoutineChartView): void => {
+      actual = { ...actual, view }
+    },
+    axis: (id: string): ChartAxis | null => actual.axes[id] ?? null,
+    rememberAxis: (id: string, axis: ChartAxis): void => {
+      actual = { ...actual, axes: { ...actual.axes, [id]: axis } }
+    },
+    save: (): void => undefined,
+  }
+}
+
 export interface CalendarPanelDeps {
   readonly store: Store
   readonly useCases: UseCases
@@ -58,6 +82,8 @@ export interface CalendarPanelDeps {
   readonly logger: Logger
   /** Sin ella, cada calendario empieza en «Eventos». */
   readonly tabs?: CalendarTabSetting
+  /** Sin ella, cada calendario empieza con el mes en Rutinas. */
+  readonly routineCharts?: RoutineChartsSetting
 }
 
 /** Lo que una nota enlaza del calendario: un evento, o una rutina. */
@@ -101,6 +127,7 @@ export const createCalendarPanel = ({
   calendarOrder,
   logger,
   tabs = enMemoria(),
+  routineCharts = graficaEnMemoria(),
 }: CalendarPanelDeps): CalendarPanel => {
   const hoy: Day | null = today()
   let mes: MonthRef = monthOf(hoy ?? ("2026-01-01" as Day))
@@ -320,8 +347,30 @@ export const createCalendarPanel = ({
     today,
     calendarOrder,
     logger,
-    onTouched: (): void => pintarMes(),
+    onTouched: (): void => {
+      pintarMes()
+      ponerModo()
+    },
+    chartView: (): RoutineChartView => routineCharts.view(),
+    onToggleView: (): void => {
+      routineCharts.setView(routineCharts.view() === "chart" ? "month" : "chart")
+      ponerModo()
+    },
   })
+
+  /* ── La gráfica, en el sitio del mes ── */
+
+  const grafica: RoutineChart = createRoutineChart({ store, today, charts: routineCharts })
+  /** En Rutinas, con tabla y la gráfica elegida, ésta ocupa el sitio del mes; si no, el mes. */
+  const ponerModo = (): void => {
+    const conGrafica: boolean =
+      tabs.get() === "routines" && routineCharts.view() === "chart" && rutinas.hasTable()
+    barra.hidden = conGrafica
+    cabeza.hidden = conGrafica
+    rejilla.hidden = conGrafica
+    grafica.element.hidden = !conGrafica
+    if (conGrafica) grafica.show([...rutinas.touched()][0] ?? null)
+  }
 
   /* Las dos listas comparten el sitio: una pestaña elige cuál se ve. */
   const pestanas: HTMLElement = elemento("div")
@@ -330,6 +379,7 @@ export const createCalendarPanel = ({
   const elegirPestana = (cual: CalendarTab): void => {
     tabs.set(cual)
     pintarMes()
+    ponerModo()
     eventos.element.hidden = cual !== "events"
     rutinas.element.hidden = cual !== "routines"
     for (const b of Array.from(pestanas.children)) {
@@ -344,7 +394,7 @@ export const createCalendarPanel = ({
   }
   elegirPestana(tabs.get())
 
-  raiz.append(barra, cabeza, rejilla, pestanas, eventos.element, rutinas.element, hoja.element)
+  raiz.append(barra, cabeza, rejilla, grafica.element, pestanas, eventos.element, rutinas.element, hoja.element)
   pintarMes()
 
   /* Los cambios del almacén repintan el mes y, con la hoja abierta, la lista del día. */
@@ -362,6 +412,7 @@ export const createCalendarPanel = ({
     pintarMes()
     eventos.update()
     rutinas.update()
+    ponerModo()
     if (!hoja.element.hidden && modo?.kind === "lista") pintarCaja()
   })
 
@@ -383,6 +434,7 @@ export const createCalendarPanel = ({
     destroy: (): void => {
       alCambiar()
       rutinas.destroy()
+      grafica.destroy()
     },
   }
 }

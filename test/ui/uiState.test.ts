@@ -42,6 +42,7 @@ test("sin nada guardado, cada sección es la de siempre", (): void => {
     framings: {},
     calendarOrder: { routines: [], archived: [] },
     calendarTab: "events",
+    routineCharts: { view: "month", axes: {} },
   })
 })
 

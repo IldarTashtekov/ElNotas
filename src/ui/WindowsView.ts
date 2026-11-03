@@ -25,6 +25,7 @@ import type { BackStack } from "./backStack.js"
 import type { CalendarOrderPersistence } from "./calendarOrder.js"
 import type { CalendarPanel } from "./CalendarPanel.js"
 import type { CalendarTabSetting } from "./calendarTab.js"
+import type { RoutineChartsSetting } from "./routineCharts.js"
 import { createCalendarPanel } from "./CalendarPanel.js"
 import type { DiagramCanvas } from "./DiagramCanvas.js"
 import type { DiagramFraming } from "./diagramFraming.js"
@@ -60,6 +61,8 @@ export interface WindowsViewDeps {
   readonly calendarOrder: CalendarOrderPersistence
   /** La pestaña del calendario, compartida con su vista. */
   readonly calendarTab: CalendarTabSetting
+  /** La gráfica de las rutinas, compartida con su vista. */
+  readonly routineCharts: RoutineChartsSetting
   readonly logger: Logger
   readonly back: BackStack
   readonly confirm: Confirm
@@ -96,6 +99,7 @@ export const mountWindowsView = (
     today,
     calendarOrder,
     calendarTab,
+    routineCharts,
     logger,
     back,
     confirm,
@@ -163,6 +167,7 @@ export const mountWindowsView = (
     calendarOrder,
     logger,
     tabs: calendarTab,
+    routineCharts,
   })
   const zonaCalendario: HTMLElement = panelCalendario.element
   zonaCalendario.hidden = true

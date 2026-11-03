@@ -210,6 +210,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Fase 10, tarea 10: rutinas con un clic y doble clic, y el mes quieto** 2026-11-03: un clic en el nombre toca la
   rutina y el doble clic (o Intro) abre su hoja y la deja tocada (`nameTap`); en una archivada, sólo el doble. En
   Rutinas los días del mes no hacen nada (`daysOpenSheet`), y el cumplido de otro mes, borde sin resplandor.
+- **Fase 10, tarea 11: la gráfica de semanas de una rutina** 2026-11-03: en Rutinas, `%`/`▦` cambia el mes por la
+  gráfica de la tocada (días cumplidos por semana, de 0 a 7, con la meta discontinua); zoom a lo ancho con la rueda y
+  dos dedos (`chartAxis`), y el modo y el tramo de cada rutina, en `routineCharts` del `UiState`. Eventos, siempre el mes.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

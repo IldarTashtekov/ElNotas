@@ -67,6 +67,7 @@ const PANTALLA: unknown = {
   framings: { d1: { x: 10, y: -20, scale: 2 } },
   calendarOrder: { routines: ["r1", "r2"], archived: [] },
   calendarTab: "routines",
+  routineCharts: { view: "chart", axes: { r1: { span: 8, fromEnd: 1 } } },
 }
 
 const pantallaDe = (almacen: Storage): unknown => JSON.parse(almacen.getItem(UI_STATE_KEY) ?? "null")
