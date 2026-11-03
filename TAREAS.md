@@ -35,6 +35,9 @@ resumen, en `TERMINADAS.md`.
       disparador de anidar se entiende solo— **después de usar la app de verdad varios días**,
       no tras una demo. Un «no se aguanta» reabre la decisión correspondiente, y es un resultado
       válido. **Sin contestar el 2026-09-29, y sigue pendiente el 2026-10-03.**
+      **`move`, contestada el 2026-11-03: no se aguanta**, y abre la tarea 12 de la Fase 10. Su
+      arrastre lleva la profundidad, así que cubre lo que harían `indent`/`outdent`; si además
+      hacen falta como órdenes sueltas, y el disparador de anidar, **siguen sin contestar**.
       **Se cierra cuando** el usuario contesta las tres por escrito aquí, y cada «no se aguanta»
       abre su propia tarea.
 - [ ] **Qué pasa con las notas de `localStorage` al cambiar de destino.** Arrancar en
@@ -212,6 +215,32 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
       tabla sin pulsar el vecino, el doble toque en la fila de una rutina, y el pellizco en la gráfica de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
       brillantes, filas negras) y los anota en la lista.
+- [ ] **12. Ordenar las líneas de una nota** *(pensar)*. Pedido por el usuario el 2026-11-03 al
+      echarlo de menos con el editor delante, que era lo que desaparcaba la idea. **Reabre** «ocho
+      operaciones, ni `move` ni `indent`/`outdent`»: entra `move`, la novena.
+      **En pantalla.** Un modo en la barra de la nota, **«⠿ Ordenar»**, como «☐ Casilla»: no se
+      guarda al recargar, y volver a pulsarlo sale y suelta la elección. Mientras está puesto **no
+      se escribe**: el texto se trata como una lista. Tocar una línea la elige o la suelta, aunque
+      no estén seguidas. Cada línea lleva su `⠿`, y **sólo desde él se arrastra**; el resto de la
+      fila desplaza la nota. Arrastrar una elegida lleva todas; una sin elegir se mueve sola, sin
+      elegirla antes. **Sólo arrastrando**, sin botones (el usuario lo prefiere, menos mecánico).
+      **Dónde caen.** El hueco entre qué líneas, por la altura del dedo; **la profundidad, por lo
+      a la derecha que esté**, y a la izquierda del todo se saca del árbol. Una raya enseña dónde
+      va a caer y sólo se para en sitios válidos: nunca dentro de una línea de texto ni dentro de
+      lo que se arrastra. Al soltar quedan **juntas, en el orden en que estaban en la nota y todas
+      al nivel de la raya**, vengan de donde vengan. Una casilla lleva a sus hijas; si se elige
+      también una hija, va con su madre. **Con una línea de texto entre las elegidas, la raya no
+      baja de nivel**: el texto no puede ser hija. Mover no cambia la marca. Con el dedo junto al
+      borde, la nota se desplaza sola.
+      **En el core.** `move` mueve **varios** en **una** acción. Soltarlos donde estaban, apuntar
+      dentro de lo que se mueve o meter texto dentro de una casilla, no-op que devuelve la misma
+      nota (`strictEqual`). **No puede escribirse como `remove` + `insert`**: heredaría la guarda
+      de las casillas con hijas. `Position` gana un cuarto caso, **`before`**, para «la primera del
+      todo» y «la primera hija», y deja de ser sólo de `insert`.
+      **Se cierra cuando** `move` tiene sus pruebas de no-op y sus roturas, `check` pasa, las
+      decisiones cerradas de `CLAUDE.md` que toca están cambiadas (las ocho operaciones, `Position`
+      y la línea de *Fuera de alcance*), y la lista del editor tiene sus pasos, pasados en el
+      ordenador y en el móvil.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
@@ -458,7 +487,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10 una nota puede enlazar notas y diagramas con `[texto](#id)`; los contextos, no, por ahora (2026-10-25). | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
 | **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
 | **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
-| **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
+| **Reordenar y re-anidar líneas** (`move`, y con ella `indent`/`outdent`) — **desaparcada el 2026-11-03: es la tarea 12 de la Fase 10, y sale de aquí al cerrarla** | No hay quien lo use: sin gesto de arrastrar, `move` no tiene consumidor, y el Tabulador no existe en un móvil. Hoy una lista se queda en el orden en que se escribió, y arreglarla es borrar y reescribir. | Llegar a la Fase 4 y **echarlo de menos con el editor delante**. Es puramente añadido —no cambia ninguna operación, ni el formato en disco, ni obliga a migrar—, así que cuesta lo mismo entonces que hoy. Ojo a dos cosas ese día: hace falta un cuarto caso de `Position` (`before`, para "la primera del todo"), y `move` **no** puede escribirse como `remove` + `insert` o heredaría la guarda de las casillas con hijas. |
 | **Adaptador de MongoDB** (o cualquier base de datos con servidor propio) | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. **Reconsiderado el 2026-10-12** al elegir la nube, y lo mismo vale para SQL con servidor propio: el usuario no quiere mantener un servidor, así que se eligió Supabase (*Pendiente → La nube*). | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
 | **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso son **52 líneas que además saben lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no son 52 líneas; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco (§6.1) y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. **Reconsiderado el 2026-10-12** con «manda el modelo» y Postgres en la nube, y la conclusión no cambia: SQLite en el navegador es posible (wasm sobre OPFS, en un *Worker*), pero sin búsqueda ni volumen no tiene consumidor. Y «un fichero por entidad» se relee como **un documento por entidad**: lo que decide es el grano, no que sea un fichero. |
