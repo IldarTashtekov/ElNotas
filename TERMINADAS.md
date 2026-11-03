@@ -224,6 +224,9 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Fase 10, tarea 13: las ventanas como pestañas** 2026-11-03: una fila de pestañas sobre la vista ventanas, con
   símbolo por tipo, la activa en vídeo inverso y su ✕, y un «+» al final; todas iguales,
   también el General y el calendario (`addWindow`, `closeWindowAt`). Fuera los ◀ ▶ y las fichas de ⚙. Falta el móvil (en `TAREAS.md`).
+- **Pestañas más estrechas** 2026-11-04, a petición del usuario: a lo sumo 6,25rem, para que quepan tres a 375 px.
+- **La barra de la nota, sólo con símbolos** 2026-11-04, a petición del usuario: ☐ ↳ ⚭ ⠿ ✕, con su nombre en
+  `aria-label` y `title`, en un renglón que se desliza en vez de saltar de línea. ⚭ es el de enlazar.
 - **Compactar antes, de verdad** 2026-10-24, rama `fase-10`: `autoCompactWindow` sí actúa; el
   indicador cuenta sobre esa ventana y compacta al agotar su hueco libre. A 283.000, por el usuario,
   para compactar hacia los 250.000.

@@ -57,8 +57,10 @@ export const mountNoteView = (
     sheet,
   })
 
-  const salir: HTMLButtonElement = elemento("button", "✕ Salir")
+  const salir: HTMLButtonElement = elemento("button", "✕")
   salir.type = "button"
+  salir.setAttribute("aria-label", "Salir")
+  salir.title = "Salir"
   salir.className = "salir"
   salir.addEventListener("click", onExit)
   const barra: HTMLElement = elemento("div")

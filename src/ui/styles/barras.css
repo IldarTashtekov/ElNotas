@@ -97,6 +97,18 @@
     }
   }
 }
-.barra-modo .salir {
-  margin-left: auto;
+.barra-modo {
+  /* Sólo símbolos, en un renglón: si no caben, se desliza. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  & button {
+    flex: none;
+    font-size: 1.1rem;
+    min-width: 2.5rem;
+  }
+  & .salir {
+    margin-left: auto;
+  }
 }

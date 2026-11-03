@@ -359,10 +359,15 @@ const enBordeVisual = (campo: HTMLElement, hacia: "prev" | "next"): boolean => {
 
 /* ────────────────────────────────── Botones ─────────────────────────────── */
 
-/** Un botón de la barra que no le quita el foco a la línea: el teclado del móvil no se cierra. */
-const botonDeBarra = (texto: string, alPulsar: () => void): HTMLButtonElement => {
-  const b: HTMLButtonElement = elemento("button", texto)
+/**
+ * Un botón de la barra, sólo con su símbolo y el nombre para quien no lo ve, que
+ * no le quita el foco a la línea: el teclado del móvil no se cierra.
+ */
+const botonDeBarra = (simbolo: string, nombre: string, alPulsar: () => void): HTMLButtonElement => {
+  const b: HTMLButtonElement = elemento("button", simbolo)
   b.type = "button"
+  b.setAttribute("aria-label", nombre)
+  b.title = nombre
   b.addEventListener("pointerdown", (evento: PointerEvent): void => evento.preventDefault())
   b.addEventListener("click", alPulsar)
   return b
@@ -1230,7 +1235,7 @@ export const createNoteEditor = ({
     return caret === null ? null : { line: caret.line, from: caret.offset, to: caret.offset }
   }
 
-  const enlazar: HTMLButtonElement = botonDeBarra("Enlazar…", (): void => {
+  const enlazar: HTMLButtonElement = botonDeBarra("⚭", "Enlazar…", (): void => {
     const sel: Seleccion | null = seleccionRecordada()
     const raw: string | undefined = sel === null ? undefined : textoDe(sel.line)
     /* Sin cursor no hay dónde escribirlo, como en «☐ Casilla»: no hace nada. */
@@ -1261,11 +1266,11 @@ export const createNoteEditor = ({
     })
   })
 
-  const casilla: HTMLButtonElement = botonDeBarra("☐ Casilla", (): void => {
+  const casilla: HTMLButtonElement = botonDeBarra("☐", "Casilla", (): void => {
     const caret: Caret | null = cursorRecordado()
     ordenar((): EditResult => toggleCheckbox(deps, caret, modo))
   })
-  const anidar: HTMLButtonElement = botonDeBarra("↳ Anidar", (): void => {
+  const anidar: HTMLButtonElement = botonDeBarra("↳", "Anidar", (): void => {
     modo = toggleNest(modo)
     pintarBarra()
     const caret: Caret | null = cursorRecordado()
@@ -1280,12 +1285,14 @@ export const createNoteEditor = ({
     enlazar.disabled = orden.active()
     casilla.setAttribute("aria-pressed", modo.checkbox ? "true" : "false")
     casilla.classList.toggle("activo", modo.checkbox)
-    casilla.textContent = modo.checkbox ? "☑ Casilla" : "☐ Casilla"
+    casilla.textContent = modo.checkbox ? "☑" : "☐"
     anidar.disabled = !modo.checkbox || orden.active()
     anidar.setAttribute("aria-pressed", modo.nestArmed ? "true" : "false")
     /* ⚠️ El armado tiene que verse: actúa sobre una línea que todavía no existe. */
     anidar.classList.toggle("activo", modo.nestArmed)
-    anidar.textContent = modo.nestArmed ? "↳ Anidar armado" : "↳ Anidar"
+    const nombre: string = modo.nestArmed ? "Anidar armado" : "Anidar"
+    anidar.setAttribute("aria-label", nombre)
+    anidar.title = nombre
   }
   pintarBarra()
 

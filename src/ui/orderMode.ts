@@ -33,7 +33,7 @@ export interface OrderModeDeps {
 }
 
 export interface OrderMode {
-  /** «⠿ Ordenar», para la barra de la nota. */
+  /** «⠿», Ordenar, para la barra de la nota. */
   readonly button: HTMLButtonElement
   readonly active: () => boolean
   /** Tras repintar las líneas: olvida las elegidas que ya no están y las marca. */
@@ -65,8 +65,10 @@ export const createOrderMode = ({ element, lines, content, onMove, onToggle }: O
   /** Tras arrastrar llega un `click` sobre el ⠿: ése no elige. */
   let tragarClick: boolean = false
 
-  const button: HTMLButtonElement = elemento("button", "⠿ Ordenar")
+  const button: HTMLButtonElement = elemento("button", "⠿")
   button.type = "button"
+  button.setAttribute("aria-label", "Ordenar")
+  button.title = "Ordenar"
   button.className = "ordenar"
   button.addEventListener("pointerdown", (evento: PointerEvent): void => evento.preventDefault())
 

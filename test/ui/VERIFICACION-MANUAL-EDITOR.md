@@ -97,7 +97,7 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 - **E2.** Apagarlo en una casilla de la raíz: vuelve a texto. En una casilla anidada: sigue siendo
   casilla (un texto no cabe ahí), pero el interruptor se apaga.
 - **E3.** Con la casilla apagada, **↳ Anidar** está desactivado.
-- **E4.** Armado, el botón **se ve distinto** (borde discontinuo) y dice «↳ Anidar armado». ¿Se entiende sin que
+- **E4.** Armado, el botón **se ve distinto** (borde discontinuo), y su nombre al pasar por encima es «Anidar armado». ¿Se entiende sin que
   nadie lo explique? *(Anotar la impresión: es una de las tres preguntas del editor, en `TAREAS.md`.)*
 - **E5.** Pulsar los botones de la barra **no cambia de línea** el cursor, y en el móvil **no cierra
   el teclado**.
@@ -451,7 +451,16 @@ Una nota con: texto `Compra semanal`; casilla `Fruta` con hijas `Manzanas` y `Pe
 - **U9.** Volver a pulsar «⠿ Ordenar» sale: los `⠿` desaparecen, se olvida la elección y tocar una
   línea vuelve a escribir en ella.
 - **U10.** *(móvil, el usuario)* Arrastrar con el dedo desde el `⠿` **no** desplaza la página; desde el
-  resto de la línea, sí. La barra, con el botón nuevo, en dos renglones a 375 px.
+  resto de la línea, sí. La barra, en un renglón a 375 px.
+
+## V. La barra, sólo con símbolos
+
+- **V1.** La barra de la nota lleva sólo símbolos: **☐** (☑ con la casilla puesta), **↳**,
+  **⚭** (enlazar), **⠿** (ordenar) y, en la vista nota, **✕** a la derecha. Al pasar el ratón,
+  cada uno dice su nombre: «Casilla», «Anidar», «Enlazar…», «Ordenar», «Salir».
+- **V2.** A 375 px va **en un renglón**; si no cupiera, se desliza de lado, sin saltar de línea.
+- **V3.** Cada uno hace lo de antes: ☐ la casilla, ↳ anidar, ⚭ abre la hoja «Enlazar», ⠿ el
+  modo Ordenar, ✕ sale.
 
 ## Comportamientos conocidos
 

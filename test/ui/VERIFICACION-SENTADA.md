@@ -252,7 +252,7 @@ En el móvil, con el **borrar del teclado** (es también ED-H2).
 - **ED-E2.** Apagarlo en una casilla de la raíz: vuelve a texto. En una casilla anidada: sigue
   siendo casilla —un texto no cabe ahí—, pero el interruptor se apaga.
 - **ED-E3.** Con la casilla apagada, **↳ Anidar** está desactivado.
-- **ED-E4.** Armado, el botón **se ve distinto** (borde discontinuo) y dice «↳ Anidar armado».
+- **ED-E4.** Armado, el botón **se ve distinto** (borde discontinuo), y su nombre al pasar por encima es «Anidar armado».
   **¿Se entiende sin que nadie lo explique?** Anotar la impresión: es una de las tres preguntas del
   editor (`TAREAS.md`).
 - **ED-E5.** Pulsar los botones de la barra **no cambia de línea** el cursor, y 📱 **no cierra el

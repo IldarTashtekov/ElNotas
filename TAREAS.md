@@ -219,7 +219,7 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       2026-11-03 y en `TERMINADAS.md`; los pasos U1, U2, U3, U5, U6 y U9, pasados en el panel. **Se
       cierra cuando** el usuario pasa en el móvil U4, U7, U8 y U10 de
       `test/ui/VERIFICACION-MANUAL-EDITOR.md` (arrastrar con el dedo desde el `⠿` sin que se mueva la
-      página, el desplazamiento solo junto al borde, y la barra en dos renglones a 375 px) y los anota.
+      página, el desplazamiento solo junto al borde, y la barra en un renglón a 375 px) y los anota.
 - [ ] **13. Las ventanas como pestañas: el móvil** *(a pasar por el usuario)*. Hecha el
       2026-11-03 y en `TERMINADAS.md`; las secciones A, B, D e I de `test/ui/VERIFICACION-MANUAL.md`,
       pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
