@@ -4,7 +4,8 @@
  * Cada una cambia `buscar` por `poner` en `fichero` —el texto tiene que estar
  * una sola vez— y dice qué tiene que cazarla: `pruebas` (y, si se da, qué
  * `prueba` tiene que caer), o el nombre de un script de npm (un guardián, o
- * `typecheck`). Una guarda nueva, una rotura nueva aquí.
+ * `typecheck`). Las pruebas que se pasan son las del espejo del fichero roto en
+ * test/, o las de `pruebasEn` si las caza otro. Una guarda nueva, una rotura nueva aquí.
  */
 
 export const ROTURAS = [
@@ -15,6 +16,7 @@ export const ROTURAS = [
     buscar: "  if (content === note.content) return state // ← la línea que lo sostiene todo\n",
     poner: "",
     caza: "pruebas",
+    pruebasEn: "test/core/app/contentActions.test.ts",
     prueba: "set-text con el mismo texto es no-op",
   },
   {
@@ -23,6 +25,7 @@ export const ROTURAS = [
     buscar: "block.checked === checked ? block : { ...block, checked }",
     poner: "({ ...block, checked })",
     caza: "pruebas",
+    pruebasEn: "test/core/app/slice.test.ts",
     prueba: "reduce: marcar lo ya marcado devuelve EL MISMO estado y no ensucia updatedAt",
   },
   {
@@ -31,6 +34,7 @@ export const ROTURAS = [
     buscar: "  if (afectados.length === 0) return contexts\n",
     poner: "  if (afectados.length >= 0) return contexts\n",
     caza: "pruebas",
+    pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "delete-note la quita de TODOS los contextos que la listaban",
   },
   {
@@ -39,6 +43,7 @@ export const ROTURAS = [
     buscar: "  if (afectados.length === 0) return contexts\n",
     poner: "  if (afectados.length === 0) return { ...contexts }\n",
     caza: "pruebas",
+    pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "delete-note de una nota que no está en ningún contexto no toca ninguno",
   },
   {
@@ -47,6 +52,7 @@ export const ROTURAS = [
     buscar: "            contiene(ctx.items, i) &&\n",
     poner: "",
     caza: "pruebas",
+    pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "hide-items de lo que NO está en el contexto es no-op",
   },
   {
@@ -55,6 +61,7 @@ export const ROTURAS = [
     buscar: "  return ctx.hidden === undefined ? { ...ctx, items } : { ...ctx, items, hidden }\n",
     poner: "  return { ...ctx, items }\n",
     caza: "pruebas",
+    pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "remove-item lo saca también de hidden",
   },
   {
@@ -63,6 +70,7 @@ export const ROTURAS = [
     buscar: "ctx.hidden?.filter(enItems)",
     poner: "ctx.hidden?.filter((h: ItemRef): boolean => enItems(h) || true)",
     caza: "pruebas",
+    pruebasEn: "test/core/migrations/migrations.test.ts",
     prueba: "hydrate tira de hidden lo que no está en items, y lo que ya no existe",
   },
   {
@@ -71,6 +79,7 @@ export const ROTURAS = [
     buscar: "        return igual ? ctx : { ...ctx, items }\n",
     poner: "        return igual ? { ...ctx } : { ...ctx, items }\n",
     caza: "pruebas",
+    pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "reorder-items que los suelta donde estaban es no-op",
   },
   {
@@ -79,6 +88,7 @@ export const ROTURAS = [
     buscar: "          ...mueven,\n",
     poner: "          ...action.items,\n",
     caza: "pruebas",
+    pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "reorder-items mueve varios juntos, en el orden en que los lista el contexto",
   },
   {
@@ -111,6 +121,7 @@ export const ROTURAS = [
     buscar: "      action satisfies never\n      return state\n",
     poner: "      action satisfies never\n      return action as unknown as AppState\n",
     caza: "pruebas",
+    pruebasEn: "test/core/app/contentActions.test.ts",
     prueba: "una acción desconocida, llegada sin tipos, no hace nada",
   },
   {
@@ -305,6 +316,7 @@ export const ROTURAS = [
     /* `$$` en `poner`: `replace` lee `$&` como «lo encontrado». */
     poner: 'replace(/[\\\\[*]/g, "\\\\$$&")',
     caza: "pruebas",
+    pruebasEn: "test/ui/linkActions.test.ts",
     prueba: "buildLink: escapa la barra, los corchetes y el asterisco del texto",
   },
   {
@@ -749,6 +761,7 @@ export const ROTURAS = [
     buscar: "return { ...state, events: quedan }",
     poner: "return { ...state, events: { ...state.events, ...quedan } }",
     caza: "pruebas",
+    pruebasEn: "test/core/app/calendarActions.test.ts",
     prueba: "delete-event lo quita y deja los demás intactos",
   },
   {
@@ -757,6 +770,7 @@ export const ROTURAS = [
     buscar: 'const { time: _antes, ...sinHora } = e',
     poner: 'const sinHora: CalendarEvent = e',
     caza: "pruebas",
+    pruebasEn: "test/core/app/calendarActions.test.ts",
     prueba: "update-event cambia día, hora y motivo",
   },
   {
@@ -765,6 +779,7 @@ export const ROTURAS = [
     buscar: 'if (state.events[action.eventId] !== undefined) return state // id repetido',
     poner: 'if (state.events[action.eventId] !== undefined && false) return state // id repetido',
     caza: "pruebas",
+    pruebasEn: "test/core/app/calendarActions.test.ts",
     prueba: "create-event con un id de evento repetido es no-op",
   },
   {
@@ -773,6 +788,7 @@ export const ROTURAS = [
     buscar: 'return valida(valor) === null ? `«${campo}» no es ${esperado}` : null',
     poner: 'return valida(valor) === undefined ? `«${campo}» no es ${esperado}` : null',
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: un evento con un día que no existe es corrupt, y dice por qué",
   },
   {
@@ -781,6 +797,7 @@ export const ROTURAS = [
     buscar: 'o["time"] === undefined ? null',
     poner: 'o["time"] === undefined ? "sin hora"',
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: un evento bien formado se lee, con hora o sin ella",
   },
   {
@@ -789,6 +806,7 @@ export const ROTURAS = [
     buscar: 'const CARPETA_EVENTOS: string = "events/"',
     poner: 'const CARPETA_EVENTOS: string = "notes/"',
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: un evento va a events/",
   },
   {
@@ -1031,6 +1049,7 @@ export const ROTURAS = [
     buscar: "if (action.done && compareDays(action.day, action.today) > 0) return r",
     poner: "if (action.done && compareDays(action.day, action.today) > 99999) return r",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "set-routine-day: el futuro no se marca",
   },
   {
@@ -1039,6 +1058,7 @@ export const ROTURAS = [
     buscar: "compareDays(action.day, action.today) > 0) return r",
     poner: "compareDays(action.day, action.today) >= 0) return r",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "set-routine-day marca hoy y un día pasado, y los deja ordenados",
   },
   {
@@ -1047,6 +1067,7 @@ export const ROTURAS = [
     buscar: "if (action.done && compareDays(",
     poner: "if (compareDays(",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "set-routine-day: quitar la marca de un día vale esté donde esté",
   },
   {
@@ -1055,6 +1076,7 @@ export const ROTURAS = [
     buscar: "[...days, day].sort(compareDays)",
     poner: "[...days, day].sort((a: Day, b: Day): number => compareDays(b, a))",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "withDay pone el día en su sitio, ordenado, y no repite",
   },
   {
@@ -1063,6 +1085,7 @@ export const ROTURAS = [
     buscar: "if (esta === done) return days",
     poner: "if (esta === done) return [...days]",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "withDay devuelve LOS MISMOS días si no cambia nada",
   },
   {
@@ -1071,6 +1094,7 @@ export const ROTURAS = [
     buscar: "n >= 1 && n <= 7",
     poner: "n >= 1 && n <= 8",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "isWeeklyGoal: sólo enteros de 1 a 7",
   },
   {
@@ -1079,6 +1103,7 @@ export const ROTURAS = [
     buscar: "Number.isInteger(n) && n >= 1",
     poner: "n >= 1",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "isWeeklyGoal: sólo enteros de 1 a 7",
   },
   {
@@ -1087,6 +1112,7 @@ export const ROTURAS = [
     buscar: "done >= goal }",
     poner: "done > goal }",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "weekProgress: con meta exacta cumple, y un día menos no",
   },
   {
@@ -1095,6 +1121,7 @@ export const ROTURAS = [
     buscar: "goal !== null && done >= goal",
     poner: "goal === null || done >= goal",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "weekProgress: sin meta ninguna semana cumple, y done sigue contando",
   },
   {
@@ -1103,6 +1130,7 @@ export const ROTURAS = [
     buscar: "const done: number = week.filter((d: Day): boolean => routine.days.includes(d)).length",
     poner: "const done: number = routine.days.length",
     caza: "pruebas",
+    pruebasEn: "test/core/domain/routine.test.ts",
     prueba: "weekProgress cuenta los días marcados de la semana de lunes a domingo",
   },
   {
@@ -1111,6 +1139,7 @@ export const ROTURAS = [
     buscar: "if (action.weeklyGoal !== null && !isWeeklyGoal(action.weeklyGoal)) return state",
     poner: "",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "create-routine: un id repetido o una meta fuera de 1 a 7 no hacen nada",
   },
   {
@@ -1119,6 +1148,7 @@ export const ROTURAS = [
     buscar: "if (action.weeklyGoal !== null && !isWeeklyGoal(action.weeklyGoal)) return r",
     poner: "",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "set-routine-goal: la misma meta, una inválida o una rutina que no existe, nada",
   },
   {
@@ -1127,6 +1157,7 @@ export const ROTURAS = [
     buscar: "if ((r.weeklyGoal ?? null) === action.weeklyGoal) return r",
     poner: "",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "set-routine-goal: la misma meta, una inválida o una rutina que no existe, nada",
   },
   {
@@ -1135,6 +1166,7 @@ export const ROTURAS = [
     buscar: "return { ...state, routines: quedan }",
     poner: "return { ...state, routines: { ...quedan, [action.routineId]: state.routines[action.routineId] as Routine } }",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "delete-routine borra la rutina con sus días y no toca la otra ni lo demás",
   },
   {
@@ -1143,6 +1175,7 @@ export const ROTURAS = [
     buscar: "r.name === action.name ? r : { ...r, name: action.name }",
     poner: "({ ...r, name: action.name })",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "rename-routine cambia el nombre; el mismo nombre o una rutina que no existe, nada",
   },
   {
@@ -1151,6 +1184,7 @@ export const ROTURAS = [
     buscar: "day, done, today, meta: meta() })",
     poner: "day, done, today: today === day ? today : day, meta: meta() })",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "setRoutineDay pasa el «hoy» de quien llama: el futuro devuelve null y el pasado, la rutina",
   },
   {
@@ -1159,6 +1193,7 @@ export const ROTURAS = [
     buscar: "routines: routines ?? NADA,",
     poner: "routines: NADA,",
     caza: "pruebas",
+    pruebasEn: "test/core/app/routineActions.test.ts",
     prueba: "diffState: una rutina nueva, cambiada o borrada sale en routines, y nada más",
   },
   {
@@ -1167,6 +1202,7 @@ export const ROTURAS = [
     buscar: "porId(stored.routines ?? [])",
     poner: "porId([])",
     caza: "pruebas",
+    pruebasEn: "test/core/migrations/migrations.test.ts",
     prueba: "hydrate pasa las rutinas a mapas, por referencia, y sin ellas son un mapa vacío",
   },
   {
@@ -1199,6 +1235,7 @@ export const ROTURAS = [
     buscar: "const CARPETA_RUTINAS: string = \"routines/\"",
     poner: "const CARPETA_RUTINAS: string = \"rutinas/\"",
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: una rutina va a routines/",
   },
   {
@@ -1207,6 +1244,7 @@ export const ROTURAS = [
     buscar: "esTexto(d) && parseDay(d) !== null ? null",
     poner: "esTexto(d) ? null",
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: una rutina con un día que no existe es corrupt, y dice por qué",
   },
   {
@@ -1215,6 +1253,7 @@ export const ROTURAS = [
     buscar: "(typeof o[\"weeklyGoal\"] === \"number\" && isWeeklyGoal(o[\"weeklyGoal\"]))",
     poner: "(typeof o[\"weeklyGoal\"] === \"number\" && (isWeeklyGoal(o[\"weeklyGoal\"]) || true))",
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: una rutina con una meta de 8 es corrupt, y dice por qué",
   },
   {
@@ -1271,6 +1310,7 @@ export const ROTURAS = [
     buscar: "marcadas.set(d, (marcadas.get(d) ?? 0) + 1)",
     poner: "marcadas.set(d, (marcadas.get(d) ?? 0) + 2)",
     caza: "pruebas",
+    pruebasEn: "test/ui/routineList.test.ts",
     prueba: "cuenta por día las elegidas que lo tienen marcado",
   },
   {
@@ -1279,6 +1319,7 @@ export const ROTURAS = [
     buscar: "(r: Routine): boolean => rutinas.has(r.id),",
     poner: "(r: Routine): boolean => rutinas.has(r.id) || true,",
     caza: "pruebas",
+    pruebasEn: "test/ui/routineList.test.ts",
     prueba: "sin elegidas no hay progreso",
   },
   {
@@ -1435,6 +1476,7 @@ export const ROTURAS = [
     buscar: "export const MIGRATIONS: ReadonlyArray<Migration> = [nodoUnico]",
     poner: "export const MIGRATIONS: ReadonlyArray<Migration> = [nodoUnico].filter((): boolean => false)",
     caza: "pruebas",
+    pruebasEn: "test/platform/web/boot.test.ts",
     prueba: "un almacén del esquema 1 arranca con sus nodos",
   },
   {
@@ -1443,6 +1485,7 @@ export const ROTURAS = [
     buscar: "if (!(\"type\" in x) || x[\"type\"] === \"simple-node\") return texto(x, \"text\")",
     poner: "if (x[\"type\"] === \"simple-node\") return texto(x, \"text\")",
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: un nodo de hoy, sin tipo, se lee",
   },
   {
@@ -1451,6 +1494,7 @@ export const ROTURAS = [
     buscar: "if (x[\"type\"] === \"note-node\") return texto(x, \"noteId\")",
     poner: "if (x[\"type\"] === \"note-node\") return null",
     caza: "pruebas",
+    pruebasEn: "test/storage/file/FileStorageAdapter.errors.test.ts",
     prueba: "FileStorageAdapter: un nodo-nota del esquema 1 sin «noteId» es corrupt",
   },
   {
@@ -1467,6 +1511,7 @@ export const ROTURAS = [
     buscar: "const id: string = decodeURIComponent(camino.slice(carpeta.length, camino.length - EXTENSION.length))",
     poner: "const id: string = camino.slice(carpeta.length, camino.length - EXTENSION.length)",
     caza: "pruebas",
+    pruebasEn: "test/storage/file/pathOf.test.ts",
     prueba: "refOf vuelve de un camino a su referencia",
   },
   {

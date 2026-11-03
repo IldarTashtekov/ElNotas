@@ -245,6 +245,12 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
   nodo, Enlazar… en uno de texto, y Cambiar enlace y Quitar enlace en un nodo-enlace. Es la hoja de las notas, en una
   segunda hoja del lienzo: el cierre de la de los menús, que llega después, vaciaría la misma. Sin texto, el
   enlace toma el nombre o el host (`linkNodeText`); quitarlo deja lo que se veía (`unlinkedNodeText`).
+- **Sin «Nota nueva» en el lienzo, y el lienzo de una ventana cabe** 2026-11-04, rama `nodo-unico`: el menú de
+  crear queda en Texto y Enlazar… (`createNoteForDiagram`, fuera); con un diagrama, la vista ventanas es una
+  columna del alto de la pantalla y la mira y seleccionar ya no salen cortadas.
+- **`check:roturas` en ~2 min, no ~40** 2026-11-04, rama `nodo-unico`: se compila una vez; cada rotura traduce a
+  JS sólo el fichero roto (`transpileModule`, sin mirar tipos) y pasa sólo su fichero de pruebas, el espejo o
+  el de `pruebasEn`. Cierra la idea aparcada de acelerarla; generar las roturas solas sigue descartado.
 - **Tarea 15a de la Fase 10, un arranque que migra de verdad** 2026-11-03, rama `arranque-que-migra`: con
   migraciones aplicadas, `boot` guarda las entidades que cambian —cada una esperando su revisión— y sólo
   después apunta la versión; cortado a medias, el siguiente arranque repite sobre la mezcla, y por eso
