@@ -374,3 +374,6 @@ Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d`
   las dos tandas sin fase.
 - **Versión 1.1**, 2026-10-13, etiqueta **`v1.1.0`** (`0558b4a`), con 844 pruebas: la 1 más volver a
   lo abierto al recargar.
+- **Versión 1.2**, 2026-11-03, etiqueta **`v1.2.0`**, con 1349 pruebas: la Fase 10 entera —ocultos,
+  reordenar, Markdown y enlaces, el calendario, las pestañas, ordenar líneas y el lienzo con
+  selección y un solo tipo de nodo—.

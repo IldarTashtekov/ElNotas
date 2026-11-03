@@ -686,8 +686,8 @@ export const ROTURAS = [
   {
     nombre: "check:arquitectura: CLAUDE.md vuelve a llevar una fecha",
     fichero: "CLAUDE.md",
-    buscar: "**Versión 1 cerrada** (última etiqueta, `v1.1.0`)",
-    poner: "**Versión 1 cerrada el 2026-10-13** (última etiqueta, `v1.1.0`)",
+    buscar: "**Versión 1 cerrada** (última etiqueta, `v1.2.0`)",
+    poner: "**Versión 1 cerrada el 2026-10-13** (última etiqueta, `v1.2.0`)",
     caza: "check:arquitectura",
   },
   {
