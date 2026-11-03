@@ -191,13 +191,20 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 
 - **Fase 10, tarea 1: ocultos por contexto** ✅ 2026-10-24, rama `fase-10` (`6b5329d`): `Context.hidden`
   ⊆ `items`, ocultar y mostrar, la fila «Ocultos (n)»; `hydrate` y `schema.ts` tiran lo que no esté en `items`.
+- **Fase 10, tarea 2: reordenar en un contexto** (`1023db8`, `618ad5b`): con el `⠿` del modo selección,
+  lo marcado se mueve en bloque y en su orden; en el General no hay `⠿`. El móvil, pasado el 2026-11-03.
+- **Fase 10, tarea 3: selección de nodos en el lienzo**: un modo junto a la mira, el rectángulo marca, el
+  grupo se mueve en una acción, y todo arrastre de nodos avanza junto al borde. El móvil, pasado el 2026-11-03.
+- **Fase 10, tarea 6: Markdown en pantalla** (6a `36bce45` a 6g `38d905d`): negrita, cursiva, título y
+  enlaces web e internos; la burbuja, «Enlazar…», el enlace como bloque y las marcas escondidas en la línea
+  activa. El móvil, pasado el 2026-11-03; tres detalles, en *Sin decidir*.
 - **Fase 10, tarea 4: seleccionar y copiar texto** ✅ 2026-10-24 (`17ddeb6`, `67102cd`): sólo la línea activa se
   edita, el resto se selecciona de corrido y se copia como texto plano; el usuario lo probó en su móvil.
 - **Fase 10, tarea 7: el calendario** ✅ 2026-10-29 (7a `b98c6f3` a 7n `76513b1`; los retoques, hasta `032c014`):
   `Day` y `Time` como texto con sus cuentas puras; eventos y rutinas en el core y en el guardado
   (`events/`, `routines/`), el calendario como quinta vista y como ventana, el mes con `*` en los días con
   eventos, y las rutinas como tabla donde la fila tocada pinta sus días con borde brillante. **Los grupos de
-  eventos**, hechos en la 7f, se quitaron en la 7m por decisión del usuario. Los pasos del móvil, en `TAREAS.md`.
+  eventos**, hechos en la 7f, se quitaron en la 7m por decisión del usuario. Los pasos del móvil, pasados por el usuario el 2026-11-03.
 - **Fase 10, tarea 8: la documentación** ✅ 2026-10-29 (`ea46ee8`, `e9ce575`): `CLAUDE.md` y `ARCHITECTURE.md` recogen
   el texto, las capas, los ocultos, reordenar, el calendario y la excepción de los enlaces; la auditoría halló 22 puntos.
 - **Fase 10, tareas 9 y 10: enlazar eventos y rutinas** ✅ 2026-10-30 (`46e04c0`): «Enlazar…» ofrece también
@@ -220,10 +227,10 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Fase 10, tarea 12: ordenar las líneas de una nota** 2026-11-03: `move`, la novena operación, lleva varias
   líneas con sus hijas, juntas y en orden de lectura, a una `Position` (con `before`, su cuarto caso); con un texto,
   sólo a la raíz. En pantalla, «⠿ Ordenar»: tocar elige, se arrastra por el `⠿`, la profundidad la da el dedo y una
-  raya enseña dónde cae (`lineOrder`, `orderMode`). Falta el móvil (en `TAREAS.md`).
+  raya enseña dónde cae (`lineOrder`, `orderMode`). El móvil, pasado por el usuario el 2026-11-03.
 - **Fase 10, tarea 13: las ventanas como pestañas** 2026-11-03: una fila de pestañas sobre la vista ventanas, con
   símbolo por tipo, la activa en vídeo inverso y su ✕, y un «+» al final; todas iguales,
-  también el General y el calendario (`addWindow`, `closeWindowAt`). Fuera los ◀ ▶ y las fichas de ⚙. Falta el móvil (en `TAREAS.md`).
+  también el General y el calendario (`addWindow`, `closeWindowAt`). Fuera los ◀ ▶ y las fichas de ⚙. El móvil, pasado por el usuario el 2026-11-03.
 - **Pestañas más estrechas** 2026-11-04, a petición del usuario: a lo sumo 6,25rem, para que quepan tres a 375 px.
 - **La barra de la nota, sólo con símbolos** 2026-11-04, a petición del usuario: ☐ ↳ ⠿ ✕ y, para enlazar, una
   cadena en SVG (ningún carácter monocromo la tiene), con su nombre en `aria-label` y `title`, en un renglón

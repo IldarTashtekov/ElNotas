@@ -295,3 +295,19 @@ Notas: el avance, I5 en la ventana y J se pasaron con eventos de puntero lanzado
 consola, que mantienen el puntero quieto en la franja; en el panel en segundo plano el
 navegador da menos fotogramas y el corcho avanza más despacio. **Falta la pasada en el móvil
 de I y J.**
+
+### Pasada 4 — móvil, I y J (seleccionar, la papelera y avanzar, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-11-03 |
+| Quién | el usuario, en su móvil, con la app publicada |
+| Commit | `5ea9dbd` |
+
+| Paso | Resultado |
+|---|---|
+| I6 (dos dedos) | ✅ |
+| I9, I10 | ✅ |
+| J1, J2 | ✅ |
+
+Notas: el usuario las dio por buenas todas juntas («todo rula»), sin detalle paso a paso.

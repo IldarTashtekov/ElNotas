@@ -277,6 +277,21 @@ siempre.
 Una tabla por pasada. En *Resultado*: ✅, ❌ con lo que pasó, o «no se puede probar aquí» y por
 qué.
 
+### Pasada 5 — móvil, L7 y D (reordenar y pestañas, Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-11-03 |
+| Quién | el usuario, en su móvil, con la app publicada |
+| Commit | `5ea9dbd` |
+
+| Paso | Resultado |
+|---|---|
+| L7 | ✅ |
+| D1, D2, D4, D5 | ✅ |
+
+Notas: el usuario las dio por buenas todas juntas («todo rula»), sin detalle paso a paso.
+
 ### Pasada 4 — escritorio, sólo L (reordenar, Fase 10)
 
 | | |

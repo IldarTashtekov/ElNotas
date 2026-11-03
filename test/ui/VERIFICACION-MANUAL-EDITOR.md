@@ -760,3 +760,24 @@ Sin probar: la lista de ⚙ de «Cambiar» con estos tipos, y el móvil (el usua
 
 Sin probar: U4, U7 y U8 en pantalla (U7 lo cubren las pruebas de `move`), y U10 en el móvil (el usuario).
 
+
+### Pasada 12 — móvil, lo que pedía el dedo de M, N–S y U (Fase 10)
+
+| | |
+|---|---|
+| Fecha | 2026-11-03 |
+| Quién | el usuario, en su móvil, con la app publicada |
+| Commit | `5ea9dbd` |
+
+| Paso | Resultado |
+|---|---|
+| M4 | ✅ |
+| N8 (pegar fuera de la app) | ✅ |
+| O3, O4 | ✅ |
+| P14 | ✅ |
+| S9 | ✅ |
+| U4, U7, U8, U10 | ✅ |
+
+Notas: el usuario las dio por buenas todas juntas («todo rula»), sin detalle paso a paso. Cierra
+lo del móvil de las pasadas 6, 7, 8 y 11; lo de R sin probar en el ordenador (varios enlaces
+pegados, texto vacío, R8) sigue sin pasar.

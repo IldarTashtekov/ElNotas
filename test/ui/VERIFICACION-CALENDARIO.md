@@ -197,6 +197,17 @@ Los pasa el usuario, en la PWA instalada o en el navegador del móvil.
 
 ```
 Fecha:        2026-11-03
+Quién:        el usuario, en su móvil, con la app publicada
+Commit:       5ea9dbd
+
+M1–M8  ✅
+375 px ✅ — el asterisco, los bordes brillantes y las filas negras
+
+Notas: el usuario las dio por buenas todas juntas («todo rula»), sin detalle paso a paso.
+```
+
+```
+Fecha:        2026-11-03
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel
 Commit:       c8b416c más el sitio fijo del mes, sin comitear

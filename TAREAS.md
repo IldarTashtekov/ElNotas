@@ -129,102 +129,11 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
   plano**: los enlaces como su texto visible, las casillas sólo con su texto. Ni «copiar nota» ni
   «copiar desde aquí».
 
-- [ ] **2. Reordenar en un contexto** *(pensar)*. Una acción que mueve **varios** elementos a una
-      posición, como un bloque pegado y en su orden relativo; soltarlos donde estaban no hace nada
-      y devuelve el mismo contexto (`strictEqual`). En pantalla: en el modo selección sale el `⠿`
-      en todas las filas; arrastrar uno mueve todo lo seleccionado, y si la fila no lo estaba, se
-      suma antes. Al soltar se sigue en el modo selección. En el General no hay `⠿`. Reutiliza lo
-      que se pueda de `dragReorder.ts` y `dropIndex.ts`. **Se cierra cuando** la acción tiene sus
-      pruebas de no-op y su rotura, `check` pasa y la lista manual tiene sus pasos, en el ordenador
-      y en el móvil.
-      **Hecho en el ordenador** (`1023db8`, `618ad5b`; sección L, pasada 4). **Falta L7 en el
-      móvil**, que pasa el usuario.
-- [ ] **3. Selección de nodos en el lienzo** *(pensar)*. Un botón junto a la mira activa el modo,
-      en vídeo inverso. Arrastrar sobre vacío **o sobre un nodo sin marcar** dibuja un rectángulo:
-      al soltar, se marca **todo lo que toca** y sustituye a la selección anterior, y el
-      rectángulo desaparece. Arrastrar un nodo marcado mueve el grupo, con **una sola acción** y un
-      solo guardado al soltar. Dentro del modo, el lienzo se desplaza con dos dedos o con la rueda.
-      Volver a pulsar el botón sale y quita la selección. **Además, para todo arrastre de nodos**,
-      dentro o fuera del modo: con el dedo en una franja junto al borde (unos 40 px), el lienzo
-      avanza hacia ese lado a velocidad **fija y moderada**; el encuadre se guarda al soltar, como
-      hoy. **Se cierra cuando** la acción de mover varios tiene sus pruebas y su rotura, la decisión
-      «sin selección» está cambiada en `CLAUDE.md`, y las listas del lienzo tienen sus pasos,
-      pasados en el ordenador y en el móvil.
-      **Hecho en el ordenador** (secciones I y J de `VERIFICACION-MANUAL-LIENZO.md`, pasada 3).
-      **Falta pasar I y J en el móvil**: dos dedos, el arrastre del grupo y el avance por los bordes.
-- [ ] **6. Markdown en pantalla** *(pensar)*. El subconjunto: `**negrita**` (más brillo),
-      `*cursiva*`, `# ` al principio de la línea (título), `[texto](https://…)` y los internos,
-      `[texto](#id)`; además, lo que empiece por `http://`, `https://` o `www.` se detecta solo (`www.` se abre
-      con `https://` delante; un dominio pelado, no). La barra invertida escribe las marcas
-      literales. **La línea activa se ve en crudo; las demás, formateadas.** Con el cursor dentro de
-      un enlace sale una **burbuja** con «↗ Abrir» (y «Cambiar» y «Quitar» si es un enlace
-      guardado); un interno se abre apilado encima; uno roto (su id ya no existe) se ve apagado, con
-      el color de `--dim` y sin añadir texto (2026-10-24), y al pulsarlo sale «El enlace ya no existe» durante segundo y medio. La
-      barra invertida delante de un enlace, a decidir al plantear esta tarea. En la
-      barra de la nota, **«Enlazar…»**: pegar una dirección o elegir nota, diagrama o contexto en
-      una lista como la de «Mover a…», y se escribe el enlace donde está el cursor. Leer el formato
-      es una pieza pura, con pruebas en Node. **Se cierra cuando** esa pieza tiene sus pruebas,
-      `check` pasa y la lista del editor tiene sus pasos, pasados en el ordenador y en el móvil.
-      **Por piezas, un commit cada una** (acordado el 2026-10-24): **6a**, el lector de formato
-      puro con sus pruebas: la especificación, con todos los casos raros y la barra invertida, la
-      escribe Opus *(pensar)*; la construye un subagente con Sonnet *(mecánica)*. **6b**, pintar
-      las líneas y que un toque en una formateada deje el cursor en su sitio del texto en crudo:
-      Opus *(pensar)*. **6c**, la burbuja y el aviso del enlace roto; **6d**, «Enlazar…»; **6e**,
-      los pasos de la lista y pasarlos en el panel: Sonnet *(mecánica)*, con especificación
-      cerrada, parando ante cualquier decisión, y Opus revisa antes del commit. Haiku, sólo para
-      búsquedas y resumir salidas largas, no para código.
-      **Hecho en el ordenador** (6a `36bce45`, 6b `971ada1`, 6c `d34dee4`, 6d `225385d`, y los pasos
-      de la lista en `6359079`; secciones N a Q de `VERIFICACION-MANUAL-EDITOR.md`, pasada 5;
-      `check:roturas` entera, 70 caen). **Falta pasar en el móvil** la pasada 6: M4, N, O, P y Q.
-      **6f, el enlace como bloque** (pedido por el usuario el 2026-10-27, al probarlo; sustituye
-      lo de «línea activa en crudo» **sólo para los enlaces guardados**): en la línea activa un
-      `[texto](destino)` **no se ve en Markdown**, es un bloque con su texto, que no se edita letra
-      a letra; Retroceso pegado a él lo borra entero. Tocarlo saca la burbuja. Lo guardado sigue
-      siendo Markdown. **«Enlazar…»** gana un campo **Texto** (vacío: el dominio, o el nombre de
-      la nota); con texto seleccionado, ése es el texto, web o interno. **«Cambiar»** abre la misma
-      hoja con texto y destino rellenos. Las direcciones sueltas (`https://…` sin corchetes) se
-      siguen viendo tal cual al escribirlas. Por piezas: **6f-1**, lo puro (partir la línea en
-      tramos y bloques, pasar posiciones de lo que se ve a lo crudo, el texto por omisión, cambiar
-      texto y destino) con pruebas; **6f-2**, el editor, la hoja y la burbuja, y los pasos de la
-      lista, pasados en el panel. Ambas, con subagente Sonnet *(mecánica)* sobre esta
-      especificación, y Claude revisa.
-      **Hecho** (6f-1 `9f86d3c`, 6f-2 `08aeeee`; el usuario lo dio por bueno en su navegador el
-      2026-10-27). R3, R6 y R10 pasadas en el panel el 2026-10-28 (pasada 9). **Falta** lo que
-      quedó sin probar de R1 a R9 (varios enlaces pegados, R5 entre bloques, R7 con texto vacío,
-      R8, R9 por separado), y en el móvil la pasada 7. **A decidir con el usuario:** si al elegir una dirección como texto
-      el campo Texto debe llevar el dominio, y si un `[texto](destino)` escrito o pegado a mano en
-      la línea activa se convierte en bloque al momento (hoy, al reactivar la línea).
-      **6g, las marcas de negrita y cursiva escondidas** (pedido por el usuario el 2026-10-27, que
-      eligió dejar la sintaxis como está: `**negrita**` y `*cursiva*`): en la línea activa, los
-      `*` y `**` **no se ven salvo con el cursor dentro de la palabra o pegado a ella**; al
-      entrar aparecen para poder editarlos, y la palabra se ve ya en negrita o cursiva mientras
-      se escribe. El `# ` del título se queda visible mientras la línea está activa (la palabra es
-      toda la línea). Las barras `\` también se ven. Las marcas son texto de verdad, sólo ocultas
-      por CSS, de modo que lo guardado y las posiciones crudas no cambian. Por piezas: **6g-1**,
-      lo puro (el lector dice qué marcas forman cada par; la línea activa se parte en tramos con
-      su estilo y sus marcas) con pruebas; **6g-2**, el DOM (pintar y repintar al teclear sin
-      perder el cursor ni romper la composición del móvil; revelar al mover el cursor) y los
-      pasos de la lista. Con subagente Sonnet *(mecánica)* sobre esta especificación, y Claude revisa.
-      **Hecho** (6g-1 `7d84b31`, 6g-2 `38d905d`; el usuario lo probó en el ordenador y lo dio por
-      bueno el 2026-10-27). S5, S6 y S8 pasadas en el panel el 2026-10-28 (pasada 9). **Falta** la
-      pasada 8 en el móvil (S9). **A decidir:** si copiar dentro de la línea activa saca los asteriscos escondidos.
-- [ ] **7. Calendario: los pasos del móvil** *(a pasar por el usuario)*. Las tareas 7a a 7n y la 8
-      están hechas y en `TERMINADAS.md`; quedan los pasos que el panel no puede probar, porque piden
-      el dedo. **Se cierra cuando** el usuario pasa en el móvil M1 a M8 de
-      `test/ui/VERIFICACION-CALENDARIO.md` (arrastrar una rutina con el dedo, los selectores nativos de día
-      y hora, el teclado sobre «Guardar», la rejilla a 375 px, ▦ y el atrás, y marcar los siete días de la
-      tabla sin pulsar el vecino, el doble toque en la fila de una rutina, y el pellizco en la gráfica de una rutina), mira a 375 px los últimos retoques de estilo (asterisco, bordes
-      brillantes, filas negras) y los anota en la lista.
-- [ ] **12. Ordenar las líneas de una nota: el móvil** *(a pasar por el usuario)*. Hecha el
-      2026-11-03 y en `TERMINADAS.md`; los pasos U1, U2, U3, U5, U6 y U9, pasados en el panel. **Se
-      cierra cuando** el usuario pasa en el móvil U4, U7, U8 y U10 de
-      `test/ui/VERIFICACION-MANUAL-EDITOR.md` (arrastrar con el dedo desde el `⠿` sin que se mueva la
-      página, el desplazamiento solo junto al borde, y la barra en un renglón a 375 px) y los anota.
-- [ ] **13. Las ventanas como pestañas: el móvil** *(a pasar por el usuario)*. Hecha el
-      2026-11-03 y en `TERMINADAS.md`; las secciones A, B, D e I de `test/ui/VERIFICACION-MANUAL.md`,
-      pasadas en el panel. **Se cierra cuando** el usuario pasa en el móvil D1, D2, D4 y D5 de esa
-      lista (levantar y arrastrar una pestaña con el dedo, deslizar el carril sin levantar ninguna, y
-      que la pulsación larga no saque el menú del sistema) y los anota.
+- [ ] **Cerrar la fase** *(pensar)*. Todo está construido y pasado en el ordenador y en el móvil
+      (el usuario, el 2026-11-03). Queda lo de cada cierre: `check:roturas` entera, la auditoría de
+      la documentación por un subagente que no haya escrito nada de la fase, y el repaso de la
+      memoria y de `.claude/settings.local.json`. **Se cierra cuando** las tres están hechas, el
+      informe de la auditoría se ha enseñado al usuario y la fase pasa a `TERMINADAS.md`.
 ### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, empieza al cerrar la 10
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
@@ -414,6 +323,14 @@ una tarea con su cierre.
 ## Sin decidir
 
 **No las resuelva por su cuenta quien implemente.** Si te topas con una, pregunta.
+
+- [ ] **Tres detalles de los enlaces y las marcas** *(salieron en la 6f y la 6g, 2026-10-27)*. ¿Al
+      elegir una dirección web sin texto, el campo Texto lleva el dominio? ¿Un `[texto](destino)`
+      escrito o pegado a mano en la línea activa se vuelve bloque al momento (hoy, al salir de la
+      línea y volver)? ¿Copiar dentro de la línea activa lleva los asteriscos escondidos (hoy, sí)?
+      Quedan además sin pasar en el ordenador unos casos de la sección R de
+      `test/ui/VERIFICACION-MANUAL-EDITOR.md` (varios enlaces pegados, texto vacío, R8). **Se cierra
+      cuando** el usuario contesta las tres y la respuesta queda escrita aquí.
 
 - [ ] **Marcar un día de una semana pasada** *(salió en la 7l, 2026-10-29)*. Con sólo la semana
       de hoy en cada rutina ya no hay dónde corregir un día olvidado de la semana pasada, aunque el
