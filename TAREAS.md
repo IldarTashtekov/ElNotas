@@ -253,8 +253,8 @@ se plantea ahora, como tarea 7, antes de la documentación de cierre.
       - **Muchas pestañas:** la fila se desliza de lado, como las fichas de ⚙ hoy; cada pestaña
         con un ancho mínimo, el nombre largo cortado con «…», y la activa siempre a la vista.
         **El General y el calendario, fijos al principio y siempre a la vista**: no se deslizan
-        con el resto (el usuario, «menú y calendario», 2026-11-03). **A decidir:** si «menú» es el
-        General, y si esas dos se pueden cerrar o están siempre.
+        con el resto. **Se pueden cerrar** como cualquier otra; si están, van delante, el General
+        primero, y arrastrar no las saca de ahí ni mete otra entre ellas.
       - **Cerrar:** una ✕ **sólo en la activa**, sin confirmar (sólo quita la referencia). Sin
         ninguna, la pantalla vacía de hoy.
       - **Reordenar:** manteniendo pulsada una pestaña y arrastrándola, con `dragReorder.ts`.
