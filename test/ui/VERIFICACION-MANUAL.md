@@ -233,8 +233,8 @@ Con Compra con cuatro notas y un diagrama, y una segunda ventana de contexto, Ca
   se ve **en la lista, no oculta**. Lo mismo si ya estaba oculta en Casa.
 - **K7.** La papelera en los ocultos dice **«Quitar»**: la saca del contexto, y sigue en el
   General.
-- **K8.** Un diagrama de Compra, abierto: crear una nota **desde el lienzo**. De vuelta en
-  Compra, la nota nueva **no sale en la lista**: está en «Ocultos».
+- **K8.** Una nota oculta de Compra **sigue siendo del contexto**: desde un diagrama de Compra,
+  *Enlazar…* la ofrece y un toque en su nodo la abre; de vuelta en Compra, sigue en «Ocultos».
 
 ## L. Reordenar un contexto
 

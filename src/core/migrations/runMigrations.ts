@@ -79,10 +79,9 @@ export interface MigrationResult {
 /**
  * Lo inyectable, y por qué lo es.
  *
- * Con `CURRENT_SCHEMA_VERSION` valiendo 1 y el almacén vacío valiendo 0 **no
- * existe hoy ninguna versión intermedia**, así que dos de los caminos de esta
- * función —encadenar migraciones y avisar de que falta una— no son alcanzables
- * desde fuera y quedarían sin probar hasta el día que hicieran falta de verdad.
+ * Con una sola migración real (la del 1 al 2), dos de los caminos de esta
+ * función —encadenar varias y avisar de que falta una— no son alcanzables desde
+ * fuera y quedarían sin probar hasta el día que hicieran falta de verdad.
  * Que es el peor día para descubrir que están mal.
  *
  * Inyectarlos es la misma solución que el `schedule` del write-behind: en

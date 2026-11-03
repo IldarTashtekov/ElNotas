@@ -8,8 +8,8 @@ framework y sin dependencias de runtime. El código vive en `src/` —`core/` (e
 `test/`, en un árbol que calca el de `src/`.
 
 **Publicada** en <https://ildartashtekov.github.io/ElNotas/>, y se instala en el móvil como app
-(PWA). Hace notas con casillas anidadas, las agrupa en contextos y las enseña en ventanas que se
-pasan de lado; dibuja diagramas en un lienzo libre, con pósits y líneas entre ellos. Tiene aspecto
+(PWA). Hace notas con casillas anidadas, las agrupa en contextos y las enseña en ventanas, como
+pestañas; lleva un calendario con eventos y rutinas; dibuja diagramas en un lienzo libre, con pósits y líneas entre ellos. Tiene aspecto
 de terminal de fósforo, verde, ámbar o magenta. Guarda en el `localStorage` del navegador, y en
 ⚙ → Datos se **exporta una copia** a un fichero y se **importa** sustituyendo todo.
 

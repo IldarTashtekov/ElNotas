@@ -45,7 +45,7 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 
 - **A1.** Tocar una nota de la lista la abre; **Intro** con el foco en la fila, también.
 - **A2.** La cabecera lleva **sólo el título**, sin ⚙. Tocar el título lo renombra.
-- **A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado), **Enlazar…** y **✕ Salir**.
+- **A3.** Abajo, la barra, sólo con símbolos: **☐**, **↳** (apagado), la cadena de enlazar, **⠿** y **✕** (sección V).
 - **A4.** **✕ Salir** y el **atrás** (en Android, el del sistema) vuelven a **la misma ventana**.
 - **A5.** Recargar con la nota abierta vuelve a la nota (las capas).
 
@@ -481,8 +481,8 @@ No son fallos; se anotan para que no se marquen como tales, y para decidir si se
 
 - **Varias «Nueva Nota» iguales** en el selector de ventanas: toda nota nace con ese nombre. Es
   decisión (2026-09-29): pueden existir notas con el mismo nombre; lo que las distingue es su id.
-- **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y
-  **no se puede reordenar**: no hay `move`. Las dos cosas son preguntas del editor, en `TAREAS.md`.
+- **No hay `indent` ni `outdent`**: para cambiar de nivel una línea, se arrastra en «⠿ Ordenar»
+  (sección U). Si además hacen falta como órdenes sueltas es una pregunta del editor, en `TAREAS.md`.
 - **Una selección que empieza en la línea que se está escribiendo no sale de ella**: el navegador
   no deja que salga de un campo editable. Para seleccionar varias, se empieza en otra línea.
 - **La burbuja del enlace flota bajo la línea activa y puede tapar la siguiente.** Decisión del

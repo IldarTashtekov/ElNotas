@@ -79,7 +79,7 @@ src/
 │   │   └── errors/#   ← StorageError y MigrationError. Sin index.ts, como domain/
 │   ├── ports/     # ← los SEIS: Clock, IdGenerator, Repository, StorageAdapter, BlobStore, Logger
 │   ├── app/       # ← acciones + reduce + Store + useCases + diffState
-│   ├── migrations/# ← hydrate + runMigrations (la mitad PURA del arranque)
+│   ├── migrations/# ← hydrate + runMigrations + cada migración (la mitad PURA del arranque)
 │   └── index.ts
 ├── storage/       # ← memory/ · file/ · blobs/ (BlobStore es OTRO puerto). Conoce al core; él a ella no
 ├── ui/            # ← vanilla, con styles/ (un CSS por vista). Conoce sólo al core
@@ -199,7 +199,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 
 **Navegación y UI**
 - Cinco vistas: ventanas, nota, diagrama, calendario, configuración. Lo de encima **se apila**; exit, paso a paso.
-- Ventana = referencia (General, calendario o contexto); la lista, en el `UiState`, filtrada por `guardWindows`. Sin nada
+- Ventana = referencia (General, calendario, contexto, nota o diagrama); la lista, en el `UiState`, filtrada por `guardWindows`. Sin nada
   guardado, el General. Una ventana repetida, no: añadirla la activa. Un fallo al guardar no avisa.
 - Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
   `sessionStorage`), también en cadena (nota → nota por un enlace); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
@@ -213,7 +213,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí. Título sólo en la cabecera,
   renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
 - El atrás del navegador cierra lo de encima; una capa sin entrada en el historial se cierra sin ir atrás.
-- `UiState` (fósforo, ventanas, encuadres, orden de rutinas, pestaña del calendario): un objeto en `elnotas:ui`, un
+- `UiState` (fósforo, ventanas, encuadres, orden y gráficas de rutinas, pestaña del calendario): un objeto en `elnotas:ui`, un
   adaptador, sin core ni versión; guardar una sección no pisa las otras. Las capas, fuera: dónde se está, no cómo se ve.
 
 **Aspecto**

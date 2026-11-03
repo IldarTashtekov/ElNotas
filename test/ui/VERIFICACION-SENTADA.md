@@ -8,7 +8,7 @@ instalada— y en el escritorio:
 |---|---|---|
 | `CTX-` | `VERIFICACION-MANUAL.md` | Fase 4 · Contextos: ventanas, configuración, la lista de un contexto |
 | `ED-` | `VERIFICACION-MANUAL-EDITOR.md` | Fase 4 · Notas: el editor |
-| `LZ-` | `VERIFICACION-MANUAL-LIENZO.md` | Fase 5 · Lienzo: el corcho, los pósits, los nodos-nota |
+| `LZ-` | `VERIFICACION-MANUAL-LIENZO.md` | Fase 5 · Lienzo: el corcho, los pósits, los nodos-enlace |
 | `RL-` | `VERIFICACION-MANUAL-RELACIONES.md` | Fase 5 · Relaciones: las líneas |
 | `PWA-` | `VERIFICACION-MANUAL-PWA.md` | Fase 6: la app instalada |
 
@@ -196,7 +196,7 @@ Para cada apartado, una nota nueva con el botón **+** grande vale: nace vacía 
 
 - **ED-A1.** Tocar una nota de la lista la abre; 💻 **Intro** con el foco en la fila, también.
 - **ED-A2.** La cabecera lleva **sólo el título**, sin ⚙. Tocar el título lo renombra.
-- **ED-A3.** Abajo, la barra: **☐ Casilla**, **↳ Anidar** (apagado), **Enlazar…** y **✕ Salir**.
+- **ED-A3.** Abajo, la barra, sólo con símbolos: **☐**, **↳** (apagado), la cadena de enlazar, **⠿** y **✕**.
 - **ED-A4.** **✕ Salir** y **el atrás** vuelven a **la misma ventana**.
 - **ED-A5.** Recargar con la nota abierta vuelve a la nota (las capas).
 
@@ -345,7 +345,7 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
   descarta lo escrito. Tocar fuera también guarda.
 - **LZ-C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en tenue.
 - **LZ-C5.** **Doble toque en un pósit** abre su menú, con su texto de título: *Conectar · Editar ·
-  Marcar hecho · Borrar*. *Conectar* se prueba en la parte 5.
+  Enlazar… · Marcar hecho · Borrar*. *Conectar* se prueba en la parte 5.
 - **LZ-C6.** **Marcar hecho** lo atenúa y lo tacha; el menú dice entonces **Desmarcar hecho**.
 - **LZ-C7.** **Borrar** lo quita **sin preguntar**, y con él sus líneas.
 - **LZ-C8.** Un texto largo se parte en líneas y **el pósit crece hacia abajo**; el ancho no cambia.
@@ -365,17 +365,17 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 - **LZ-E1.** 📱 ⚠️ Crear o editar un pósit **en la mitad de abajo** de la pantalla: al salir el
   teclado, **el corcho sube** y el pósit que se escribe **queda a la vista**.
 
-### Los nodos-nota
+### Los nodos-enlace
 
-- **LZ-F1.** Un nodo-nota lleva la **raya gruesa**. Entrar en la nota, renombrarla, **✕ Salir**:
+- **LZ-F1.** Un nodo que enlaza a una nota lleva la **raya gruesa**. Entrar en la nota, renombrarla, **✕ Salir**:
   se vuelve **al diagrama**, y el nodo enseña **el nombre nuevo**.
-- **LZ-F2.** El menú de crear **no** ofrece *Nota nueva*.
-- **LZ-F3.** ⚠️ **Un toque** en un nodo-nota **entra en la nota**, tras un instante muy corto. El
+- **LZ-F2.** El menú de crear **no** ofrece *Nota nueva*: una nota se crea fuera y se enlaza.
+- **LZ-F3.** ⚠️ **Un toque** en un nodo que enlaza a una nota **entra en la nota**, tras un instante muy corto. El
   atrás vuelve al diagrama, y **otro atrás** a la ventana: **no se sale de la app**.
-- **LZ-F4.** **Doble toque** en un nodo-nota abre su menú **sin «Editar»**, y **no entra** en la
-  nota.
-- **LZ-F5.** **Enlazar…** abre la hoja de enlazar de las notas; elegir una nota pone su nodo **sin
-  entrar** en ella. La misma nota puede estar en dos nodos.
+- **LZ-F4.** **Doble toque** en un nodo que enlaza a algo de la app abre su menú **sin «Editar»**,
+  y **no entra**.
+- **LZ-F5.** El menú de crear ofrece **Texto** y **Enlazar…**; *Enlazar…* abre la hoja de enlazar
+  de las notas, y elegir una nota pone un nodo con su nombre **sin entrar** en ella. La misma nota puede estar en dos nodos.
 - **LZ-F6.** Borrar la nota (papelera del General): sus nodos se quedan en su sitio, **apagados**,
   con su texto; un toque avisa «El enlace ya no existe».
 
@@ -387,7 +387,7 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
   los **+**; las pestañas, ▦ y ⚙ siguen. Tocar el título lo renombra.
 - **LZ-G3.** Todo lo de LZ-B, LZ-C y LZ-D funciona igual dentro de la ventana.
 - **LZ-G4.** **Recargar** con la ventana de diagrama activa: sigue ahí.
-- **LZ-G5.** Un nodo-nota de una ventana de diagrama abre su nota **encima**; salir vuelve a la
+- **LZ-G5.** Un nodo que enlaza a una nota, en una ventana de diagrama abre su nota **encima**; salir vuelve a la
   ventana.
 - **LZ-G6.** Borrar el diagrama desde el General: **su ventana desaparece**.
 - **LZ-G7.** El encuadre es **el mismo en la ventana y en la vista propia** del diagrama: moverlo
@@ -402,15 +402,15 @@ Hace falta **un contexto con alguna nota** y, para LZ-F2, **un segundo contexto*
 
 ## 5. Las relaciones
 
-Hace falta **un diagrama con tres pósits** separados —A, B y C—, y uno de ellos **nodo-nota**.
+Hace falta **un diagrama con tres pósits** separados —A, B y C—, y uno de ellos **enlazando a una nota**.
 
 ### Conectar
 
-- **RL-A1.** El menú de un pósit empieza por **Conectar**, también en un nodo-nota. Al elegirlo,
+- **RL-A1.** El menú de un pósit empieza por **Conectar**, también en el que enlaza a una nota. Al elegirlo,
   arriba sale **«Toca el nodo de destino»** y el pósit de origen queda **marcado con el borde iluminado**.
 - **RL-A2.** Tocar otro pósit crea la línea **con flecha, del origen al destino**. El aviso y la
   marca se van.
-- **RL-A3.** Conectando, tocar un **nodo-nota** como destino lo une y **no entra** en la nota.
+- **RL-A3.** Conectando, tocar el **que enlaza a una nota** como destino lo une y **no entra** en la nota.
 - **RL-A4.** Cancelan sin crear nada: tocar **el fondo**, tocar **el propio origen**, el **clic
   derecho** 💻 y **el atrás**. El atrás cancela **sólo** el modo: el diagrama sigue abierto.
 - **RL-A5.** Conectar **dos veces** A con B: salen **dos** líneas. Y B con A: una tercera, en el
@@ -606,8 +606,8 @@ No son fallos; se anotan para no marcarlos como tales, y para decidir si se agua
 
 - **Varias «Nueva Nota» iguales** en los selectores: toda nota nace con ese nombre, y pueden
   existir notas con el mismo nombre; lo que las distingue es su id (2026-09-29).
-- **Una línea en el nivel equivocado se borra y se reescribe**: no hay `indent` ni `outdent`. Y
-  **no se puede reordenar**: no hay `move`. Las dos son preguntas abiertas del editor (`TAREAS.md`).
+- **No hay `indent` ni `outdent`**: para cambiar de nivel una línea, se arrastra en «⠿ Ordenar».
+  Si además hacen falta como órdenes sueltas es una pregunta del editor (`TAREAS.md`).
 
 **De la Fase 5:**
 

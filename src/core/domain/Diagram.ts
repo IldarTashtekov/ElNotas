@@ -2,9 +2,9 @@
  * Diagramas: un lienzo libre con nodos que se colocan a mano y relaciones entre
  * ellos.
  *
- * Un nodo es una caja con texto, con el mismo Markdown que una línea de nota: lo
- * que lleve a una nota, a otra cosa de la app o a una web es un enlace dentro de
- * ese texto. Una relación une dos nodos, con flecha o sin ella, y puede llevar un
+ * Un nodo es una caja con texto, o con un enlace entero `[texto](destino)` a una
+ * nota, a otra cosa de la app o a una web; fuera de eso, el texto no se lee como
+ * Markdown. Una relación une dos nodos, con flecha o sin ella, y puede llevar un
  * texto. Entre dos nodos puede haber tantas relaciones como se quiera.
  */
 
@@ -17,7 +17,7 @@ export interface DiagramNode {
   readonly positionX: number
   readonly positionY: number
   readonly done: boolean
-  /** Markdown, de una línea o de varias. */
+  /** Texto, de una línea o de varias, o un enlace entero. */
   readonly text: string
 }
 

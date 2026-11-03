@@ -185,11 +185,30 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 `ecb4734` (`check:referencias`), `b766ed3` (compactar), `3abee67` (la regla ajustada), `c1aad28`
 (la auditoría).
 
+### Fase 10 — Funcionalidades nuevas: ocultos, reordenar, selección en el lienzo, texto, y Markdown ✅ CERRADA el 2026-11-03
+
+Decidida el 2026-10-18 a partir de una lista que el usuario trajo de usar la app, y cerrada con
+1349 pruebas y 199 roturas a propósito, todas cazadas. **Contextos:** ocultos (`hidden` ⊆ `items`)
+y reordenar en bloque con el `⠿`. **Lienzo:** un modo de seleccionar junto a la mira, mover el
+grupo en una acción, avanzar junto al borde y borrar lo marcado con una papelera; **un solo tipo
+de nodo**, texto o enlace entero, con la primera migración de verdad (1→2). **Editor:** sólo la
+línea activa se edita, se selecciona y copia de corrido, un subconjunto de Markdown con enlaces
+internos por id, la burbuja, «Enlazar…», el enlace como bloque, las marcas escondidas y ordenar
+líneas con `move`, la novena operación. **El calendario:** eventos y rutinas en el core, como
+quinta vista y como ventana, con la gráfica de semanas. **Ventanas** como pestañas, y el estado
+de la UI en un objeto que viaja en la copia v2. **Herramientas:** `check:roturas` de ~40 a ~2 min.
+El móvil, pasado por el usuario el 2026-11-03. La auditoría de cierre halló 15 afirmaciones falsas
+y 5 dudosas, corregidas. **Deuda:** tres detalles de los enlaces en *Sin decidir*, partir
+`DiagramCanvas.ts` y si la Fase 10.2 reabre «Sin Markdown en el lienzo» (en `TAREAS.md`).
+Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d` (Markdown),
+`b98c6f3`–`76513b1` (calendario), `fcedb9a` (`move`), `67fb919` (pestañas), `adafa1f` (nodo
+único), `cd05b4c` (roturas rápidas), `5ea9dbd` (borrar lo marcado).
+
 ---
 
 ## Tareas sueltas terminadas
 
-- **Fase 10, tarea 1: ocultos por contexto** ✅ 2026-10-24, rama `fase-10` (`6b5329d`): `Context.hidden`
+- **Fase 10, tarea 1: ocultos por contexto** 2026-10-24, rama `fase-10` (`6b5329d`): `Context.hidden`
   ⊆ `items`, ocultar y mostrar, la fila «Ocultos (n)»; `hydrate` y `schema.ts` tiran lo que no esté en `items`.
 - **Fase 10, tarea 2: reordenar en un contexto** (`1023db8`, `618ad5b`): con el `⠿` del modo selección,
   lo marcado se mueve en bloque y en su orden; en el General no hay `⠿`. El móvil, pasado el 2026-11-03.
@@ -198,20 +217,20 @@ Commits clave: `71c7bac` (el *sandbox*), `3fac90d` (el hook de `main`), `826bd10
 - **Fase 10, tarea 6: Markdown en pantalla** (6a `36bce45` a 6g `38d905d`): negrita, cursiva, título y
   enlaces web e internos; la burbuja, «Enlazar…», el enlace como bloque y las marcas escondidas en la línea
   activa. El móvil, pasado el 2026-11-03; tres detalles, en *Sin decidir*.
-- **Fase 10, tarea 4: seleccionar y copiar texto** ✅ 2026-10-24 (`17ddeb6`, `67102cd`): sólo la línea activa se
+- **Fase 10, tarea 4: seleccionar y copiar texto** 2026-10-24 (`17ddeb6`, `67102cd`): sólo la línea activa se
   edita, el resto se selecciona de corrido y se copia como texto plano; el usuario lo probó en su móvil.
-- **Fase 10, tarea 7: el calendario** ✅ 2026-10-29 (7a `b98c6f3` a 7n `76513b1`; los retoques, hasta `032c014`):
+- **Fase 10, tarea 7: el calendario** 2026-10-29 (7a `b98c6f3` a 7n `76513b1`; los retoques, hasta `032c014`):
   `Day` y `Time` como texto con sus cuentas puras; eventos y rutinas en el core y en el guardado
   (`events/`, `routines/`), el calendario como quinta vista y como ventana, el mes con `*` en los días con
   eventos, y las rutinas como tabla donde la fila tocada pinta sus días con borde brillante. **Los grupos de
   eventos**, hechos en la 7f, se quitaron en la 7m por decisión del usuario. Los pasos del móvil, pasados por el usuario el 2026-11-03.
-- **Fase 10, tarea 8: la documentación** ✅ 2026-10-29 (`ea46ee8`, `e9ce575`): `CLAUDE.md` y `ARCHITECTURE.md` recogen
+- **Fase 10, tarea 8: la documentación** 2026-10-29 (`ea46ee8`, `e9ce575`): `CLAUDE.md` y `ARCHITECTURE.md` recogen
   el texto, las capas, los ocultos, reordenar, el calendario y la excepción de los enlaces; la auditoría halló 22 puntos.
-- **Fase 10, tareas 9 y 10: enlazar eventos y rutinas** ✅ 2026-10-30 (`46e04c0`): «Enlazar…» ofrece también
+- **Fase 10, tareas 9 y 10: enlazar eventos y rutinas** 2026-10-30 (`46e04c0`): «Enlazar…» ofrece también
   eventos y rutinas; un evento abre el calendario en su hoja de edición, una rutina la pestaña Rutinas con su fila
   tocada. Una casilla cuyo texto es sólo un enlace a rutina es un atajo: marca o desmarca **hoy** con
   `set-routine-day` y se ve según los días de la rutina (nada se guarda en la nota). Sin cambios en el core.
-- **Fase 10, tarea 9: el estado de la UI en un objeto** ✅ 2026-11-02: fósforo, ventanas, encuadres, orden de las
+- **Fase 10, tarea 9: el estado de la UI en un objeto** 2026-11-02: fósforo, ventanas, encuadres, orden de las
   rutinas y pestaña del calendario (que ahora se guarda), en `elnotas:ui` con un solo adaptador; fuera los cuatro
   viejos y sus claves, que se borran al arrancar. La copia pasa a la versión 2 con `uiState`; una v1 importa sólo notas.
 - **Fase 10, tarea 10: rutinas con un clic y doble clic, y el mes quieto** 2026-11-03: un clic en el nombre toca la

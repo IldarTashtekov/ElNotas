@@ -94,7 +94,7 @@ directamente.
   lo escrito. Tocar fuera también guarda.
 - **C4.** Un pósit vacío **se queda**, y enseña «Sin texto» en tenue.
 - **C5.** **Doble toque en un pósit** abre su menú, con su texto de título: *Conectar · Editar ·
-  Marcar hecho · Borrar*. *(Escritorio: también con clic derecho.)* *Conectar* se prueba en
+  Enlazar… · Marcar hecho · Borrar* (en un nodo-enlace, *Cambiar enlace* y *Quitar enlace* en vez de *Enlazar…*). *(Escritorio: también con clic derecho.)* *Conectar* se prueba en
   `VERIFICACION-MANUAL-RELACIONES.md`.
 - **C6.** **Marcar hecho** lo atenúa y lo tacha; el menú dice entonces **Desmarcar hecho**.
 - **C7.** **Borrar** lo quita **sin preguntar**, y con él sus líneas.

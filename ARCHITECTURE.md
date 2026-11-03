@@ -335,12 +335,13 @@ formato de pantalla, y una nota importada con un enlace huérfano seguiría sien
 caso de error en vez de tiparlo, y es lo que hace que **el dominio no pueda fallar por diseño**.
 
 **Las primitivas son mínimas; lo compuesto se compone fuera.** Una operación hace una cosa. Marcar una
-casilla no arrastra a sus hijas; borrar no se lleva una rama. Si algún día hace falta la cascada, se
+casilla no arrastra a sus hijas. Si algún día hace falta la cascada, se
 compone recorriendo con la primitiva **y se pliega en una sola acción**: N despachos serían N
 estampas, N avisos y N escrituras.
 
 **Nada desaparece sin que el usuario lo esté mirando.** Lo que haría desaparecer contenido que no se
-ve —borrar o absorber una línea con hijas— es un no-op. Un borrado accidental de cuarenta casillas no
+ve —absorber o convertir una línea con hijas— es un no-op; borrar una casilla con su árbol sólo se
+hace eligiéndola y confirmando con la cuenta de lo que se va. Un borrado accidental de cuarenta casillas no
 es un deshacer más: es la clase de pérdida que hace que dejes de fiarte de la app.
 
 **Sobrevive con su identidad lo que ya estaba.** Cuando una operación parte, une o convierte, la línea
