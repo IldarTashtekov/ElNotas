@@ -334,6 +334,8 @@ Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d`
 - ❌ **Un adaptador de Google Drive**, 2026-10-12: guarda ficheros, y manda el modelo (*La nube*).
 - ❌ **Los enlaces del texto en el core** (Fase 10, tarea 5), 2026-10-24: pasarlos a «perdido» al
   borrar costaba mucho; un enlace roto se ve roto en pantalla y vuelve si vuelve lo que señalaba.
+- ❌ **La Fase 10.2, formato en los pósits del lienzo**, 2026-11-04: al usuario sólo le importaba el
+  enlace, ya hecho en la Fase 10; se queda «Sin Markdown en el lienzo».
 
 ## Decisiones cerradas
 
@@ -367,6 +369,7 @@ Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d`
   toque marca o desmarca el pósit; «Salir» y cambiar de ventana cierran antes el modo abierto; lo
   seleccionado de una nota, en vídeo inverso.
 - **El sync entre dispositivos**, diseñado el 2026-10-12 con la copia en conflicto (*La nube*).
+- **La nube, aparcada** el 2026-11-04: la copia de seguridad basta por ahora (*Ideas aparcadas*).
 
 ## Hitos
 

@@ -85,7 +85,7 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 10.1 — Equipo: un revisor, y un verificador si puede — PLANIFICADA, la siguiente
+### Fase 10.1 — Herramientas: un revisor, un verificador si puede, el formateador y las roturas aparte — PLANIFICADA, la siguiente
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
 filtros antes de llegar al usuario. Va después de la 10 a propósito: la correa larga se prueba
@@ -93,7 +93,8 @@ primero con funcionalidades de verdad, y lo que salga de ahí cambiará este dis
 app.** **Se apoya en la 9.1 y no la repite:** el sandbox y los permisos, `.claude/agents/` en
 `ask`, la regla de cuándo para Claude, un commit por tarea en su rama, la etiqueta *(mecánica)* o
 *(pensar)*, que también elige el modelo de cada agente, y compactar y retomar solo. Lo nuevo son
-los dos agentes y el recorrido.
+los dos agentes y el recorrido. **Ampliada por el usuario el 2026-11-04** con dos tareas más de
+herramientas: el formateador, que estaba sin fase, y que las roturas compilen en su propia carpeta.
 
 **Decidido con el usuario el 2026-10-18:**
 - **Claude, en la sesión principal, dirige y escribe el código**; no hay agente coordinador: un
@@ -125,110 +126,7 @@ los dos agentes y el recorrido.
 - [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
-- [ ] **5. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
-      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. Y la auditoría
-      de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
-      `check:arquitectura` pasa y la auditoría no deja nada falso.
-
-### Fase 10.2 — Formato en los pósits del lienzo — PLANIFICADA, empieza al cerrar la 10.1
-
-**Decidida con el usuario el 2026-10-25**, con el calendario, que el 2026-10-27 volvió a la
-Fase 10 (tarea 7). **Sin plantear**: se plantea con el usuario antes de construir nada. Los
-enlaces en los pósits y el nodo único ya están hechos (Fase 10, tareas 15-17): queda el formato.
-
-- [ ] **1. Formato en los pósits de texto del lienzo** *(a plantear)*. Choca con la decisión
-      cerrada «Sin Markdown en el lienzo» (`CLAUDE.md`), tomada al hacer el nodo-enlace.
-      **Se cierra cuando** el usuario decide si esa decisión se reabre: si no, la fase se
-      descarta; si sí, esta entrada se sustituye por sus tareas, cada una con su etiqueta y su cierre.
-
-### La nube: copia de seguridad y sincronización con Supabase — DISEÑADA el 2026-10-12, sin fase
-
-Decidida con el usuario el 2026-10-12, en una conversación. **Sin fase asignada y sin una línea de
-código.** Lo que tenga de principio pasa a `ARCHITECTURE.md` (§6) cuando se construya; hasta entonces vive aquí.
-**Para qué, las dos cosas:** copia de seguridad, y las mismas notas en el móvil (Android, la PWA) y
-en el ordenador.
-
-**Decidido:**
-
-- **Manda el modelo, no el fichero.** Una nota es un dato estructurado —ids de línea, `revision`,
-  reglas de casillas—, y un fichero o una fila es su copia guardada. «Manda el fichero», al estilo
-  Obsidian, sería refundar el core. Consecuencia: **la nube es una base de datos**, no un sitio de
-  ficheros. Markdown, sólo para exportar (ver *Sin fase asignada*).
-- **Supabase** (Postgres gestionado). Es la única base de datos a la que el navegador llega **sin
-  servidor propio**: habla HTTPS y trae de serie el inicio de sesión y las reglas por usuario (*Row
-  Level Security*). El usuario no quiere mantener un servidor.
-- **Una fila por entidad, con su JSON dentro** (id, tipo, `revision`, contenido, hora de escritura,
-  marca de borrado). Es el mismo grano que los ficheros de hoy, y `schema.ts` sirve igual para
-  validar lo que baja.
-- **La forma:** el core habla sólo con lo local, como hoy, y **un sincronizador** se pone entre lo
-  local y la nube. El core no sabe que Supabase existe. **Todo lo que baja entra por el core**, con
-  una acción nueva («aplicar lo remoto»), y nunca se escribe directamente en `localStorage`: si no,
-  la pantalla no se entera y el `writeBehind` lo pisaría con lo que tiene en memoria. **Reparto:**
-  la acción y la política de conflictos, en `core/`; el adaptador y el sincronizador, en `storage/`;
-  cuándo sincronizar, la sesión y ⚙, en `platform/web/`. Sin `CompositeStorage`.
-- **Un puerto nuevo, sin nada de Supabase dentro**, en vez de ampliar `StorageAdapter`. Tres
-  operaciones: «dame lo que cambió desde este punto» (los cambios y un punto nuevo, opaco), «sube
-  esto si la revisión remota sigue siendo X» (ok, o `stale` con la versión remota) y «borra esto si
-  sigue siendo X». En Supabase **el punto es la hora del servidor**, no la del dispositivo, así que
-  los relojes desajustados no importan; y **los borrados son marcas**, no filas quitadas, para que el
-  otro dispositivo se entere. Sin Supabase dentro para que mañana lo cumpla otro transporte (el
-  peer-to-peer de *Ideas aparcadas*).
-- **El estado de sincronización, persistido en local** (que fuera dato ya estaba decidido): por
-  cada entidad, **la última revisión sincronizada**, y los ids borrados pendientes de subir. Una
-  entidad está pendiente si su revisión local es distinta de la sincronizada. Son unos bytes por
-  nota: **cabe en `localStorage`**.
-- **El eco**, resuelto con eso mismo: «aplicar lo remoto» **conserva la revisión que trae**; el
-  sincronizador la apunta como sincronizada y no la vuelve a subir. Sin marcas especiales.
-- **Conflictos: copia en conflicto.** Si al subir sale `stale`, la versión remota queda como la
-  oficial y la local se guarda como una entidad nueva, «‹nombre› (conflicto)», en los mismos
-  contextos; los nodos de diagrama siguen apuntando a la original. Así para notas y diagramas. **En
-  los contextos, se suman las referencias de los dos lados**: una quitada puede reaparecer, y eso
-  molesta pero no pierde nada. **Editar gana a borrar:** lo borrado en un lado y editado en el otro
-  sigue vivo. **Nunca se pierde nada, y no se guarda la versión base.** El usuario eligió primero la
-  fusión a tres bandas y la cambió por ésta: en una app personal el conflicto es raro —sin
-  conexión, la pausa de Supabase, un dispositivo que no se ha puesto al día—, y la fusión cuesta
-  mucho (guardar la base duplica lo local, y la función de fusión es la pieza más cara). Aparcada
-  abajo, con lo que se decidió de ella.
-- **Lo local sigue mandando en cada dispositivo**, y la app funciona sin red.
-- **ElNotas sigue sin cuentas: abrir la app no pide nada, nunca.** La conexión vive en ⚙, en una
-  sección «Nube» con la lista de servicios (hoy, Supabase). Cada servicio tiene conectar,
-  desconectar, estado y su adaptador. **Conectar se hace una vez:** la dirección y la clave pública
-  del proyecto (públicas por diseño; lo que protege las notas son las reglas de la base, y no van en
-  el repo), y **un código de 6 cifras por correo**. El código sirve en cualquier navegador; el enlace
-  por correo también valdría en Android, pero obliga a gestionar la vuelta a la app.
-- **La sesión (el token de renovación) se guarda en el navegador**, sin cifrar por ahora. **Cambia
-  la regla de `CLAUDE.md`**, que decía «token en memoria». Si caduca, la app sigue en local, la cola
-  espera y ⚙ ofrece «Reconectar», sin interrumpir.
-- **«Quitar»** desconecta, invalida la sesión en Supabase y la olvida. La copia remota se queda.
-- **El código, incluido pero dormido**: se activa en ⚙. Sin `import()` dinámico, que reabriría la
-  actualización en silencio de la PWA (§8.6).
-- **La pausa del plan gratuito** (una semana sin actividad): **una tarea programada en GitHub
-  Actions** que hace una consulta cada pocos días, con la dirección del proyecto en los *secrets*
-  del repo. El aviso «la nube no responde» en ⚙, igualmente, por si la tarea falla.
-- **Se sigue con la PWA.** Capacitor o Tauri, más adelante y como complemento, no como sustituto.
-
-**Sin fase por ahora** *(el usuario, 2026-10-17)*. Lo de abajo, salvo asignarle fase, no son
-tareas pendientes: es lo que hay que hacer **al construirla**, y entonces cada punto pasa a ser
-una tarea con su cierre.
-
-**Propuesto, sin objeción del usuario, por confirmar al construir:**
-
-- **«Borrar todo» se lleva también la conexión**, porque borra las claves `elnotas:`.
-
-**Por comprobar antes de construir**, porque se dijo de memoria:
-
-- Qué cuenta como «actividad» para la pausa de Supabase, y si basta con la consulta de la tarea.
-- Que GitHub desactiva las tareas programadas de un repo público tras 60 días sin actividad, y
-      qué se hace entonces (reactivarla a mano, con el aviso por correo).
-- El inicio de sesión de Supabase con `fetch` y sin su librería: el código por correo, la
-      renovación del token y su rotación.
-- Que Supabase acepta peticiones desde `ildartashtekov.github.io` (CORS).
-
-- [ ] **Asignarle fase**, con el usuario. **Se cierra cuando** el usuario se la asigna.
-
-### Sin fase asignada
-
-- [ ] **Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, tras la revisión
+- [ ] **5. Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, y metido en esta fase el 2026-11-04, tras la revisión
       de estilo de la 7n: hoy nada fija el ancho de línea ni la forma del código, y hay unas 15
       líneas de más de 120 caracteres en `src/ui`. **Toca una dependencia** (una de desarrollo, que
       no entra en el bundle): la regla de «dependencias sólo cuando se usan» pide mirar antes si
@@ -239,14 +137,64 @@ una tarea con su cierre.
       pase reformatea todo el repo en un commit aparte. **Se cierra cuando** el usuario elige y,
       con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
       `CLAUDE.md` recoge el comando.
+- [ ] **6. Las roturas, en su propia carpeta** *(mecánica)*. Hoy `check` y `check:roturas` compilan
+      en `tmp-test/` y se pisan si corren a la vez; lo evita sólo la memoria de Claude. *Decidido por el
+      usuario el 2026-11-04*: que puedan correr **en paralelo**, cada una con su carpeta, en vez de
+      esperar turno con una marca de «ocupado». Lo delicado: los alias de prueba apuntan a
+      `tmp-test/src` (condición `compiled` de `package.json`), así que la carpeta de las roturas lleva
+      su propio `package.json` con los alias hacia la suya. **Se cierra cuando** las dos, lanzadas a la
+      vez, acaban bien y cazan lo mismo que solas, y la regla «nunca a la vez» sale de `CLAUDE.md`.
+- [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
+      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. Y la auditoría
+      de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
+      `check:arquitectura` pasa y la auditoría no deja nada falso.
+
+### Fase 11 — Dos idiomas: español e inglés — PLANIFICADA, después de la 10.1
+
+**Pedida por el usuario el 2026-11-04.** **Qué es:** que la app hable en español o en inglés, a
+elegir en ⚙. Se traduce lo que escribe la app (botones, hojas, avisos, ⚙, los fallos de
+`messages.ts`, el «General», los días y los meses); **lo que escribe el usuario, no**. El core no
+se toca: no tiene textos para quien usa la app. Cero dependencias.
+
+**Planteado con el usuario el 2026-11-04:**
+- **Un objeto de textos por idioma** en `src/ui/` (`es` y `en`, con el mismo tipo): si a `en` le
+  falta un texto, no compila. Cada texto se pide por su nombre (`textos.borrar`), no con una
+  función y una clave en texto (`t("borrar")`), que no caza una clave mal escrita.
+- **Las frases con datos, funciones** dentro de cada idioma (`textos.notasEnLaCopia(8)`).
+- **Se elige una vez, al arrancar**, y lo inyecta `platform/web/`, como los adaptadores.
+  Cambiar de idioma en ⚙ recarga la app.
+- **Días y meses, con `Intl`** del navegador; la semana sigue empezando en lunes.
+
+Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos están juntos.
+
+- [ ] **1. Las decisiones abiertas** *(pensar)*: el idioma de partida (siempre español, o el del
+      navegador); si el idioma viaja en la copia (en el `UiState`) o es del dispositivo; si «Nueva
+      Nota» y los demás nombres por defecto se crean en el idioma elegido; recargar o cambiar al
+      momento; y si se traduce el `manifest` (la app instalada y la publicada). **Se cierra cuando**
+      el usuario contesta las cinco y quedan escritas aquí.
+- [ ] **2. Sacar los textos a `es`** *(mecánica, larga: subagente con Sonnet)*, sin cambiar nada de
+      lo que se ve. **Se cierra cuando** ningún texto para quien usa la app queda escrito suelto en
+      `src/ui/`, `npm run check` pasa sin tocar las pruebas que comparan frases y las listas manuales
+      no ven diferencia.
+- [ ] **3. La traducción, `en`** *(pensar)*, con pruebas en inglés de las frases con datos.
+      **Se cierra cuando** `en` compila con el mismo tipo que `es` y sus pruebas pasan.
+- [ ] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
+      página y las fechas con `Intl`. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
+      entera tras recargar, con sus pruebas y su paso en la lista manual.
+- [ ] **5. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
+      cuando** la pasada está anotada sin textos en español sueltos, `CLAUDE.md` recoge la regla de
+      los textos y la auditoría de cierre de fase no deja nada falso.
+
+### Sin fase asignada
+
 - [ ] **Ajustes a la correa larga, de la prueba de la Fase 10** *(pensar)*. *Propuestos el
       2026-10-29* al cerrar la 10; `CLAUDE.md` → *Cómo se trabaja* cambia sólo si el usuario lo
-      acepta. Tres: (1) **una parada tras plantear una *(pensar)* de UI**, enseñando el
+      acepta. Dos: (1) **una parada tras plantear una *(pensar)* de UI**, enseñando el
       planteamiento o una maqueta antes de implementar (la 7k a la 7n fueron rehacer lo ya hecho);
-      (2) **un guardián para `tmp-test/`**: que `check:roturas` y `check` se nieguen a correr a la
-      vez, en vez de depender de la memoria de Claude; (3) **marcar lo sustituido** en la crónica de
+      (2) **marcar lo sustituido** en la crónica de
       `TAREAS.md` al quitar un concepto («sustituido por la 7m»), porque la auditoría de la 10
-      volvió a encontrar grupos, 🔔 y ✗ descritos como vigentes. **Se cierra cuando** el usuario
+      volvió a encontrar grupos, 🔔 y ✗ descritos como vigentes. El tercero, que `check` y
+      `check:roturas` no se pisen, pasó a la Fase 10.1 (tarea 6). **Se cierra cuando** el usuario
       acepta o descarta cada uno y lo aceptado queda en `CLAUDE.md` o en un guardián con su rotura.
 - [ ] **Exportar a Markdown**, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
       modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
@@ -346,13 +294,14 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10 una nota puede enlazar notas y diagramas con `[texto](#id)`; los contextos, no, por ahora (2026-10-25). | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
 | **Manejar el lienzo con teclado**, y reordenar las fichas de ⚙ con teclado | El usuario lo dejó para más adelante (Fase 5); no bloqueaba nada. | Que lo pida el usuario. |
 | **Anotar los tipos en las pruebas viejas** (942 anotaciones de `test/core/` y `test/storage/`, medido el 2026-09-19) | Deuda aceptada a sabiendas: trabajo mecánico que no caza ningún fallo, con un diff irrevisable. Lo que se escribe o se toca ya cumple la regla, y eso impide que crezca. | Tocar esas pruebas por otro motivo: lo que se toque, se anota. |
-| **Adaptador de MongoDB** (o cualquier base de datos con servidor propio) | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. **Reconsiderado el 2026-10-12** al elegir la nube, y lo mismo vale para SQL con servidor propio: el usuario no quiere mantener un servidor, así que se eligió Supabase (*Pendiente → La nube*). | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
+| **Adaptador de MongoDB** (o cualquier base de datos con servidor propio) | Requiere un backend HTTP propio: el driver de Mongo habla TCP y no funciona desde navegador, y la Data API de Atlas está retirada. **Reconsiderado el 2026-10-12** al elegir la nube, y lo mismo vale para SQL con servidor propio: el usuario no quiere mantener un servidor, así que se eligió Supabase (*Ideas aparcadas → La nube*). | Que hubiera ya un backend propio por otro motivo. Montar uno solo para esto no sale a cuenta. |
 | **`storageTarget` por contexto** (enrutar notas privadas a un backend concreto) | Presupone varios backends, que no existen. | Lo mismo que el anterior, más una necesidad real de separar notas por destino. |
 | **Cambiar `LocalStorageBlobStore` por IndexedDB**, o por una base ligera (SQLite compilado a wasm, o similar) | Como tecnología, IndexedDB gana casi en todo —cuota de cientos de MB frente a ~5 MB, `Uint8Array` nativo frente al base64 que cuesta un 33% más, asíncrona de verdad cuando el puerto ya es `async`—, y aun así no compensa, por tres motivos. **(1) El hueco ya está ocupado:** "almacén grande, privado del origen, sin diálogo y con bytes nativos" es **OPFS**, que ya está construido y es el mismo `DirectoryHandleBlobStore` con otro handle. Un `IndexedDbBlobStore` sería una cuarta implementación duplicando a una existente, en el mismo *bucket* de cuota. **(2) El valor de `localStorage` aquí no es guardar, es que se puede falsear honradamente en Node**: Node no tiene ninguna de las dos, y el `Storage` falso es **un fichero corto que además sabe lanzar la excepción de cuota**. De ahí cuelga **la tercera pasada de la suite de contratos** (§6.3), la que monta la pila entera sobre un `BlobStore` de producción y que se ganó el sitio cazando fallos que las otras dos no veían (5 de 7 y 3 de 6, medidos). Falsear IndexedDB no es un fichero corto; sería `fake-indexeddb` —una dependencia, contra la política— o quedarse sin esa pasada. **(3) Una base ligera no es un `BlobStore` siquiera:** sustituiría a `StorageAdapter` entero, y choca de frente con el formato en disco (§6.1) y con "un fichero por entidad", que es decisión cerrada. Además arrastra ~1 MB de wasm en un proyecto de cero dependencias de runtime. | Que los ~5 MB **aprieten de verdad** — y ese día la respuesta sigue siendo **OPFS primero**, que no cuesta código. O que aparezca una necesidad que sólo una base cubre: consultas por contenido, índices, búsqueda de texto completo. Nada de eso tiene consumidor mientras `getAll` sea N lecturas al arrancar. **No confundir con lo que sí está planificado:** IndexedDB **entrará** para **guardar el handle de la carpeta** y hacer posible el botón de "reconectar carpeta"; eso no es esta idea y no está aparcado. *(Aquí decía «entra en la Fase 4»; desde el 2026-09-20 la carpeta del usuario como destino está fuera de la Fase 4, así que entra el día que lo haga ella.)* Verificado el 2026-09-13 en el andamio de la verificación manual: el handle vuelve tras recargar, con el permiso intacto y sin diálogo. **Reconsiderado el 2026-10-12** con «manda el modelo» y Postgres en la nube, y la conclusión no cambia: SQLite en el navegador es posible (wasm sobre OPFS, en un *Worker*), pero sin búsqueda ni volumen no tiene consumidor. Y «un fichero por entidad» se relee como **un documento por entidad**: lo que decide es el grano, no que sea un fichero. |
 | **Replantear los efectos que no devuelven nada en clave más funcional** (el `Listener` del `Store` como flujo, `Cancel`/`Unsubscribe` con ámbito) | Salió de un inventario de **todas las funciones que devuelven `void`** en `src/core` y `src/storage`, hecho el 2026-09-19. **Ese inventario ya dio un arreglo real y está construido**: los casos de uso devolvían `void` y ahora devuelven la entidad o `null`. Lo que queda no es el mismo caso, y el criterio que los separa es el que hay que conservar: **¿la vuelta llevaría información que NO se deduce de los argumentos?** `dispatch(action)` no se deducía —lo decide el reducer—, y por eso valía la pena. `setItem(k, v)` se deduce entero: después de eso `k` vale `v`, así que devolver algo sería devolverle al llamante lo que él trajo. `clearTimeout` deja un solo bit —«¿seguía pendiente?»— que **ningún** sitio de los tres que cancelan miraría. **Y la reformulación buena no es cambiar retornos, son otras dos, las dos con su pega: (1) el `Listener` como flujo de estados**, con el write-behind convertido en un `scan` en vez de un objeto con cuatro variables mutables — pero eso **no elimina el `void`, lo centraliza**, y el `Store` ya tiene esa propiedad por otro camino («la única mutación del proyecto»); además construir el flujo a mano choca con cero dependencias y `rxjs` es justo lo que no se instala aquí. **(2) `Cancel` y `Unsubscribe` con adquirir-y-liberar por ámbito**, que es la forma funcional de un recurso — pero **no encaja con el debounce**, que necesita cancelar y reprogramar desde fuera en cada tecla: la vida de ese temporizador no es un bloque, es una carrera contra la siguiente pulsación. | **La Fase 4**, y en concreto el punto en que haya **dos suscriptores** (la UI y la persistencia) en vez de uno: es cuando un flujo empieza a pagar y se puede decidir con el caso delante. Ese día hay que resolver antes lo de cero dependencias. ⚠️ **Desde la Fase 4 hay dos suscriptores** —la UI y el write-behind— y esto **no se ha reabierto**: la UI se escribió con el `Listener` tal cual. **No confundir con el caso que quedaba vivo del mismo inventario:** el `void flush()` del write-behind, donde el error del flush automático no lo veía nadie — no se arreglaba con un retorno porque **no hay quien llame, es un temporizador**, y su arreglo fue el `onError`, **hecho en la Fase 4** (`f406d96`). |
 | **Una librería pequeña sólo para mover y acercar el lienzo** (pan/zoom, sin dependencias propias) | Decidido el 2026-10-03 hacer el lienzo **desde cero**: las librerías de lienzo completas exigen React o guardan su propio estado, y mover y acercar son unas pocas cuentas puras que se prueban en Node. | **Que el pellizco o el arrastre no se dejen domar en el móvil real.** El lienzo se hizo sin ella, y **aún no se ha probado en el móvil**: se sabrá al pasar su lista, que desde el 2026-10-04 va al final de la Fase 5, con las relaciones ya encima. Ese día se evalúa una que haga **sólo** eso y no guarde estado; sería la primera dependencia de runtime, así que con el mismo cuidado que Snabbdom. |
 | **Shells de escritorio y móvil (Tauri / Capacitor)** | Envuelven el output del build web. Ese build existe desde la Fase 4 (`npm run build:web`, a `dist/web/`), y desde la Fase 6 se publica como PWA, que ya da la app instalada en el móvil. | Era «una Fase 4 terminada», y ya se cumple. **Qué lo reabre ahora, sin decidir con el usuario.** Y ese es el momento de reconsiderar los workspaces de npm, no antes. **Desde el 2026-10-12, dos motivos con nombre:** el peer-to-peer automático (abajo) y guardar la sesión de la nube en el llavero del sistema. *Decidido ese día: se sigue con la PWA.* |
-| **CRDTs y colaboración en tiempo real** | Un salto enorme de complejidad para un problema que en una app personal es raro. El sync entre dispositivos ya está diseñado, con su copia en conflicto (*Pendiente → La nube*). | Colaborar con otras personas en la misma nota. |
+| **La nube: copia de seguridad y sincronización con Supabase** (el diseño entero, en *La nube: el diseño*, debajo de esta tabla) | Diseñada el 2026-10-12 y aparcada por el usuario el 2026-11-04: la copia de seguridad en `.json` ya da la copia, y pasar las notas de un dispositivo a otro a mano con ella le basta. A cambio se ahorra un servicio externo con su cuenta y su pausa, la pieza más delicada del core («aplicar lo remoto» y las copias en conflicto) y guardar una sesión en el navegador. | Que pasar las notas a mano con la copia se haga pesado, o que se pierda una edición por importar encima. Ese día, antes de construir, lo de *Por comprobar* de su diseño. |
+| **CRDTs y colaboración en tiempo real** | Un salto enorme de complejidad para un problema que en una app personal es raro. El sync entre dispositivos ya está diseñado, con su copia en conflicto (*Ideas aparcadas → La nube*). | Colaborar con otras personas en la misma nota. |
 | **Importar una copia mezclándola** con lo que hay, en vez de sustituir (con la copia en conflicto de *La nube*) | Estudiada el 2026-10-12 al construir la copia de seguridad, y el usuario eligió sustituir porque **mezclar toca el core** y sustituir no. Cómo sería: lo que no está, se añade; con la misma `revision`, nada; con otra, la local se queda como oficial y la de la copia entra como «‹nombre› (conflicto)», en los mismos contextos; los contextos suman referencias. Sus dos pegas: **restaurar una copia vieja llena la app de «(conflicto)»** —sin recordar qué `revision` se vio la última vez, una versión antigua de la nota no se distingue de una edición hecha en otro sitio— y **lo borrado reaparece**, porque no hay registro de borrados. Habría que añadir la regla de no repetir una copia «(conflicto)» con el mismo contenido, para que importar dos veces no duplique. | **Empezar la nube.** La acción «aplicar lo remoto» y su política de conflictos son la misma pieza del core que necesita el sincronizador: hecha para uno, la otra sale casi gratis, y entonces importar puede ofrecer «Sustituir todo» o «Añadir a lo que hay». O querer pasar notas entre dispositivos a mano con un fichero. |
 | **Fusión a tres bandas en los conflictos** | Elegida primero por el usuario el 2026-10-12 y cambiada ese mismo día por la copia en conflicto: el conflicto es raro en una app personal, y la fusión exige **guardar la base** de cada entidad (lo local se duplica) y escribir la función de fusión, la pieza más cara del sync. Lo que se decidió de ella, por si vuelve: fusionar **por campos**; **editar gana a borrar** en todos los niveles; en un choque real (el mismo campo en los dos lados) **gana el más nuevo**, usando la `updatedAt` de la entidad y aceptando que se pierde la otra versión; las inserciones en el mismo sitio se quedan las dos, la más nueva primero; y en los diagramas, nodo a nodo y relación a relación. La facilitan los ids de línea y los `Record` del diagrama; `move` la complica (mover y editar a la vez). ⚠️ «Gana el más nuevo» aquí **no** reabre el «gana el último» descartado: aquél era sobre la entidad entera; éste, sólo sobre el campo que chocó después de fusionar. | Que las copias en conflicto salgan **más de lo esperado** usando la app. Ese día se empieza a guardar la base; no hace falta migrar lo ya guardado. |
 | **Sincronizar sin nube, entre pares** (*peer-to-peer*) | Preguntado el 2026-10-12, y al usuario le atraía más que la base de datos. Tres variantes, cada una con su pega. **(1) Manual, en la PWA, con WebRTC:** los dos dispositivos se presentan con QR, pero son **dos escaneos** (oferta y respuesta) **cada vez**, o un servicio público sólo para el saludo; y las dos apps abiertas a la vez. **(2) Automático** («enciendo el ordenador y se sincroniza»): una PWA no puede escuchar conexiones ni correr en segundo plano, y una página HTTPS no puede llamar a `http://192.168.x.x`. Pide **app nativa en los dos lados**. **(3) PWA más un servicio Kotlin aparte en cada dispositivo**, hablando por `localhost`: es la versión frágil de la (2). Chrome está poniendo permiso a que las webs públicas lleguen a la red local, Android exige una notificación fija para el segundo plano, y son dos programas más por dispositivo. Lo limpio es **Capacitor con plugins en Kotlin**, que es la (2). Ninguna da copia fuera de casa. | **(1):** querer prescindir de la nube y aceptar que sincronizar sea un gesto. **(2):** la app nativa (fila de los shells). Las dos entrarían como **un servicio más** en la sección «Nube» de ⚙, con el puerto sin Supabase dentro y la misma política de conflictos. |
@@ -369,3 +318,86 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Snabbdom, o cualquier DOM virtual mínimo** | Preguntado el 2026-09-20. Es el **único candidato honesto** de todos los que se plantearon, porque aporta sólo *diffing* (~3 KB) y no duplica nada: el estado ya está resuelto. Aun así no ahora, y el motivo es el mismo que hace difícil a esta app — lo que describe §7, *reconciliar por `data-id`* y **saltarse el nodo enfocado**, es un vdom a mano recortado alrededor de la única excepción que un vdom genérico expresa mal. Daría el 90% y habría que pelearse con él justo en el 10% que decide si la app se siente bien. Sería además la **primera dependencia de runtime** del proyecto. | **Cambiado con el usuario el 2026-10-03: ya no cuenta el tamaño, cuentan los fallos.** Se reabre cuando aparezcan **fallos de sincronizar el DOM** —un dato que cambia y no se repinta, un nodo que se repinta de más, una lista que se desordena al repintar—, que son los que el *diffing* evita. El tamaño (~600 líneas) se descartó como disparador: se pasó sin que saliera ni un fallo de ésos. ⚠️ Ese día se evalúa **Snabbdom, no React ni Svelte ni Angular**: los frameworks traen estado, y el estado ya está construido. |
 | **Un motor de edición** (ProseMirror, Lexical, CodeMirror) | Preguntado el 2026-09-20, y es **lo único que ahorraría semanas de verdad**: resuelven cursor, selección, deshacer y anidamiento, que es literalmente la Fase 4. Por eso mismo es lo más caro: **traen su propio modelo de documento**. `Note`, `Content`, las nueve operaciones, la lógica del editor de `src/ui/` y buena parte de las pruebas pasarían a ser redundantes. No complementan el core, **lo sustituyen**. | Querer **texto rico** — negritas, enlaces, tablas. Hoy `Content` es `Text \| CheckBox` con cadenas planas y no hay nada que ganar. Ese día la pregunta ya no es «qué librería de vistas», es **«¿se rehace el núcleo?»**, y es una decisión de otro tamaño: conviene no llegar a ella por accidente, añadiendo formato poco a poco. |
 | **Un framework con estado dentro** (React, Angular, Svelte, Redux) · **htmx** | Preguntados el 2026-09-20 y descartados en bloque, para no volver a discutirlos de uno en uno. **Redux ya está construido**: `Store.ts` son 65 líneas con `getState`/`dispatch`/`subscribe` sobre un reducer puro, más lo que Redux no da —la invariante de identidad, en `if (next === state) return`—. **React** es débil exactamente donde esta app es difícil: el vdom y `contenteditable` se llevan mal porque el navegador muta el DOM mientras se escribe (Facebook abandonó Draft.js; ProseMirror, CodeMirror y Lexical gestionan el DOM ellos mismos), así que §7 obligaría a salirse de React justo en el componente que importa. **Angular** es de otra escala. **Svelte** es el mejor de los cuatro, pero sus *stores* compiten con el `Store` que ya existe y exige compilador. **htmx** es de otro paradigma: vive de que un servidor devuelva HTML, y esta app no tiene servidor. | Nada previsible. Si algún día se reabre, se reabre por la fila de **Snabbdom** —diffing sin estado—, que es la única necesidad real que podría aparecer. |
+
+### La nube: el diseño — DISEÑADA el 2026-10-12, APARCADA el 2026-11-04
+
+Decidida con el usuario el 2026-10-12, en una conversación, y **aparcada por él el 2026-11-04**, sin
+una línea de código (por qué y qué la desbloquea, en su fila de la tabla). Lo que tenga de principio pasa a `ARCHITECTURE.md` (§6) cuando se construya; hasta entonces vive aquí.
+**Para qué, las dos cosas:** copia de seguridad, y las mismas notas en el móvil (Android, la PWA) y
+en el ordenador.
+
+**Decidido:**
+
+- **Manda el modelo, no el fichero.** Una nota es un dato estructurado —ids de línea, `revision`,
+  reglas de casillas—, y un fichero o una fila es su copia guardada. «Manda el fichero», al estilo
+  Obsidian, sería refundar el core. Consecuencia: **la nube es una base de datos**, no un sitio de
+  ficheros. Markdown, sólo para exportar (ver *Sin fase asignada*).
+- **Supabase** (Postgres gestionado). Es la única base de datos a la que el navegador llega **sin
+  servidor propio**: habla HTTPS y trae de serie el inicio de sesión y las reglas por usuario (*Row
+  Level Security*). El usuario no quiere mantener un servidor.
+- **Una fila por entidad, con su JSON dentro** (id, tipo, `revision`, contenido, hora de escritura,
+  marca de borrado). Es el mismo grano que los ficheros de hoy, y `schema.ts` sirve igual para
+  validar lo que baja.
+- **La forma:** el core habla sólo con lo local, como hoy, y **un sincronizador** se pone entre lo
+  local y la nube. El core no sabe que Supabase existe. **Todo lo que baja entra por el core**, con
+  una acción nueva («aplicar lo remoto»), y nunca se escribe directamente en `localStorage`: si no,
+  la pantalla no se entera y el `writeBehind` lo pisaría con lo que tiene en memoria. **Reparto:**
+  la acción y la política de conflictos, en `core/`; el adaptador y el sincronizador, en `storage/`;
+  cuándo sincronizar, la sesión y ⚙, en `platform/web/`. Sin `CompositeStorage`.
+- **Un puerto nuevo, sin nada de Supabase dentro**, en vez de ampliar `StorageAdapter`. Tres
+  operaciones: «dame lo que cambió desde este punto» (los cambios y un punto nuevo, opaco), «sube
+  esto si la revisión remota sigue siendo X» (ok, o `stale` con la versión remota) y «borra esto si
+  sigue siendo X». En Supabase **el punto es la hora del servidor**, no la del dispositivo, así que
+  los relojes desajustados no importan; y **los borrados son marcas**, no filas quitadas, para que el
+  otro dispositivo se entere. Sin Supabase dentro para que mañana lo cumpla otro transporte (el
+  peer-to-peer de *Ideas aparcadas*).
+- **El estado de sincronización, persistido en local** (que fuera dato ya estaba decidido): por
+  cada entidad, **la última revisión sincronizada**, y los ids borrados pendientes de subir. Una
+  entidad está pendiente si su revisión local es distinta de la sincronizada. Son unos bytes por
+  nota: **cabe en `localStorage`**.
+- **El eco**, resuelto con eso mismo: «aplicar lo remoto» **conserva la revisión que trae**; el
+  sincronizador la apunta como sincronizada y no la vuelve a subir. Sin marcas especiales.
+- **Conflictos: copia en conflicto.** Si al subir sale `stale`, la versión remota queda como la
+  oficial y la local se guarda como una entidad nueva, «‹nombre› (conflicto)», en los mismos
+  contextos; los nodos de diagrama siguen apuntando a la original. Así para notas y diagramas. **En
+  los contextos, se suman las referencias de los dos lados**: una quitada puede reaparecer, y eso
+  molesta pero no pierde nada. **Editar gana a borrar:** lo borrado en un lado y editado en el otro
+  sigue vivo. **Nunca se pierde nada, y no se guarda la versión base.** El usuario eligió primero la
+  fusión a tres bandas y la cambió por ésta: en una app personal el conflicto es raro —sin
+  conexión, la pausa de Supabase, un dispositivo que no se ha puesto al día—, y la fusión cuesta
+  mucho (guardar la base duplica lo local, y la función de fusión es la pieza más cara). Aparcada
+  en la tabla de arriba, con lo que se decidió de ella.
+- **Lo local sigue mandando en cada dispositivo**, y la app funciona sin red.
+- **ElNotas sigue sin cuentas: abrir la app no pide nada, nunca.** La conexión vive en ⚙, en una
+  sección «Nube» con la lista de servicios (hoy, Supabase). Cada servicio tiene conectar,
+  desconectar, estado y su adaptador. **Conectar se hace una vez:** la dirección y la clave pública
+  del proyecto (públicas por diseño; lo que protege las notas son las reglas de la base, y no van en
+  el repo), y **un código de 6 cifras por correo**. El código sirve en cualquier navegador; el enlace
+  por correo también valdría en Android, pero obliga a gestionar la vuelta a la app.
+- **La sesión (el token de renovación) se guarda en el navegador**, sin cifrar por ahora. **Cambia
+  la regla de `CLAUDE.md`**, que decía «token en memoria». Si caduca, la app sigue en local, la cola
+  espera y ⚙ ofrece «Reconectar», sin interrumpir.
+- **«Quitar»** desconecta, invalida la sesión en Supabase y la olvida. La copia remota se queda.
+- **El código, incluido pero dormido**: se activa en ⚙. Sin `import()` dinámico, que reabriría la
+  actualización en silencio de la PWA (§8.6).
+- **La pausa del plan gratuito** (una semana sin actividad): **una tarea programada en GitHub
+  Actions** que hace una consulta cada pocos días, con la dirección del proyecto en los *secrets*
+  del repo. El aviso «la nube no responde» en ⚙, igualmente, por si la tarea falla.
+- **Se sigue con la PWA.** Capacitor o Tauri, más adelante y como complemento, no como sustituto.
+
+**Aparcada** *(el usuario, 2026-11-04; sin fase desde el 2026-10-17)*. Lo de abajo no son tareas
+pendientes: es lo que hay que hacer **al construirla**, y entonces cada punto pasa a ser una tarea
+con su cierre.
+
+**Propuesto, sin objeción del usuario, por confirmar al construir:**
+
+- **«Borrar todo» se lleva también la conexión**, porque borra las claves `elnotas:`.
+
+**Por comprobar antes de construir**, porque se dijo de memoria:
+
+- Qué cuenta como «actividad» para la pausa de Supabase, y si basta con la consulta de la tarea.
+- Que GitHub desactiva las tareas programadas de un repo público tras 60 días sin actividad, y
+      qué se hace entonces (reactivarla a mano, con el aviso por correo).
+- El inicio de sesión de Supabase con `fetch` y sin su librería: el código por correo, la
+      renovación del token y su rotación.
+- Que Supabase acepta peticiones desde `ildartashtekov.github.io` (CORS).

@@ -136,7 +136,7 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   comprobación automática, a propósito: no la propongas** (§2.4).
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Diagram)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** Web: la sesión de un servicio externo, en el
-  navegador, revocable desde ⚙ (sin construir: `TAREAS.md` → *La nube*). Desktop: keychain.
+  navegador, revocable desde ⚙ (aparcada: `TAREAS.md` → *Ideas aparcadas*). Desktop: keychain.
 - **Comentarios en castellano.** La **cabecera** responde a «¿para qué sirve esto?» en 3-8 líneas,
   sin porqués. **Los comentarios de dentro se quedan.** Al quitar una cabecera, si explicaba un
   principio que no está en `ARCHITECTURE.md`, se mueve allí (§8.7). Sin `§` en el código
@@ -253,7 +253,7 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
-- La nube con Supabase (diseñada, sin fase: `TAREAS.md` → *La nube*) · `storageTarget`
+- La nube con Supabase (diseñada y aparcada: `TAREAS.md` → *Ideas aparcadas*) · `storageTarget`
 - Exportar a Markdown · importar mezclando · formato de texto y texto más grande (sin fase)
 - Shells de desktop y móvil (Tauri / Capacitor) · sync entre pares · CRDTs, colaboración
 
