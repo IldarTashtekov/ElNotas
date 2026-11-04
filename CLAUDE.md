@@ -255,7 +255,7 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
 - La nube con Supabase (diseñada y aparcada: `TAREAS.md` → *Ideas aparcadas*) · `storageTarget`
 - Exportar a Markdown · importar mezclando · formato de texto y texto más grande (sin fase)
-- Shells de desktop y móvil (Tauri / Capacitor) · sync entre pares · CRDTs, colaboración
+- Sync entre pares · CRDTs, colaboración. Android (Capacitor) y escritorio (Tauri), en las fases 12 y 13
 
 ## Plan por fases
 

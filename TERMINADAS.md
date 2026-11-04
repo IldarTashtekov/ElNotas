@@ -370,6 +370,7 @@ Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d`
   seleccionado de una nota, en vídeo inverso.
 - **El sync entre dispositivos**, diseñado el 2026-10-12 con la copia en conflicto (*La nube*).
 - **La nube, aparcada** el 2026-11-04: la copia de seguridad basta por ahora (*Ideas aparcadas*).
+- **Los shells de Capacitor y Tauri**, desaparcados el 2026-11-04: las fases 12 y 13, autocontenidas.
 
 ## Hitos
 
