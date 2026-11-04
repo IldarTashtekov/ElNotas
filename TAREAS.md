@@ -150,12 +150,13 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa y la auditoría no deja nada falso.
 
-### Fase 11 — Dos idiomas: español e inglés — PLANIFICADA, después de la 10.1
+### Fase 11 — Dos idiomas, español e inglés, y exportar a Markdown — PLANIFICADA, después de la 10.1
 
 **Pedida por el usuario el 2026-11-04.** **Qué es:** que la app hable en español o en inglés, a
 elegir en ⚙. Se traduce lo que escribe la app (botones, hojas, avisos, ⚙, los fallos de
 `messages.ts`, el «General», los días y los meses); **lo que escribe el usuario, no**. El core no
-se toca: no tiene textos para quien usa la app. Cero dependencias.
+se toca: no tiene textos para quien usa la app. Cero dependencias. **Y exportar las notas a
+Markdown** (tarea 5), que estaba sin fase.
 
 **Planteado con el usuario el 2026-11-04:**
 - **Un objeto de textos por idioma** en `src/ui/` (`es` y `en`, con el mismo tipo): si a `en` le
@@ -182,7 +183,15 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
 - [ ] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
       página y las fechas con `Intl`. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
       entera tras recargar, con sus pruebas y su paso en la lista manual.
-- [ ] **5. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
+- [ ] **5. Exportar las notas a Markdown** *(pensar)*, metida en esta fase por el usuario el
+      2026-11-04, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
+      modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
+      Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
+      nuevas, sin ida y vuelta. Es otra cosa que la copia: el JSON es para restaurar, el Markdown
+      para leer, y los diagramas no caben en él.
+      **Se cierra cuando** la conversión de una nota a Markdown tiene sus pruebas, el botón de ⚙
+      descarga el fichero y la lista manual tiene su paso.
+- [ ] **6. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
       cuando** la pasada está anotada sin textos en español sueltos, `CLAUDE.md` recoge la regla de
       los textos y la auditoría de cierre de fase no deja nada falso.
 
@@ -262,13 +271,6 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       volvió a encontrar grupos, 🔔 y ✗ descritos como vigentes. El tercero, que `check` y
       `check:roturas` no se pisen, pasó a la Fase 10.1 (tarea 6). **Se cierra cuando** el usuario
       acepta o descarta cada uno y lo aceptado queda en `CLAUDE.md` o en un guardián con su rotura.
-- [ ] **Exportar a Markdown**, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
-      modelo» (ver *La nube*): así no hacen falta ni los ids de línea, ni escapar lo que parece
-      Markdown, ni decidir qué pasa con lo editado fuera. Importar `.md`, si llega, crearía notas
-      nuevas, sin ida y vuelta. Es otra cosa que la copia: el JSON es para restaurar, el Markdown
-      para leer, y los diagramas no caben en él.
-      **Se cierra cuando** la conversión de una nota a Markdown tiene sus pruebas, el botón de ⚙
-      descarga el fichero y la lista manual tiene su paso.
 - [ ] **Negrita, cursiva, tachado y subrayado en el editor.** *Pedido por el usuario el
       2026-10-11*, tras usar la app en el móvil. **Fuera de la fase de refactor, por decisión
       suya**: va aparte. Hoy el texto de una línea es una cadena plana en el
