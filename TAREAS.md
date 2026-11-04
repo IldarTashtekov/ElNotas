@@ -203,13 +203,21 @@ de construir nada.
   *service worker*, que sobra.
 - **Las notas de la PWA se pasan con la copia de seguridad**; eso contesta la deuda de la Fase 4
   sobre las notas de `localStorage` al cambiar de destino.
+- **La copia de seguridad automática** *(el usuario, 2026-11-04)*: el mismo `.json` de exportar,
+  escrito solo en una carpeta que se elige una vez en ⚙ («cambiar carpeta», «última copia: hace
+  2 h»). Sin segundo plano: con la app abierta, tras guardar cambios y como mucho cada X horas, o al
+  abrirla si la última es vieja. **Dos o tres copias rotando**, no una sobrescrita: si se guardara
+  algo estropeado, no pisa la buena. Si otra app sincroniza esa carpeta (Drive, Syncthing…), es copia
+  fuera del móvil sin que ElNotas hable con ninguna nube. En la PWA del móvil no se puede: Chrome no
+  deja escribir un fichero sin pedirlo cada vez.
 - Notificaciones, compartir desde otras apps, widgets o Play Store: extras, a decidir aparte.
 
 - [ ] **1. Las decisiones abiertas** *(pensar)*: aceptar `@capacitor/core` como primera dependencia
       de runtime o evitarla; los ficheros en la carpeta privada de la app (se van al desinstalar) o
       en una del usuario (con permisos); qué pasa con la PWA publicada; `.apk` a mano o Play Store;
-      dónde vive la segunda composición junto a `platform/web/`, y si es el momento de los
-      *workspaces* de npm. **Se cierra cuando** el usuario contesta y esta entrada se sustituye por
+      dónde vive la segunda composición junto a `platform/web/`; si es el momento de los
+      *workspaces* de npm; y de la copia automática, cada cuánto y cuántas copias rotan.
+      **Se cierra cuando** el usuario contesta y esta entrada se sustituye por
       las tareas de la fase, cada una con su etiqueta y su cierre.
 
 ### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
@@ -218,7 +226,8 @@ de construir nada.
 de la 12** (reutiliza su `BlobStore` sobre ficheros), y **mejor en pantalla grande**: lo que el
 usuario busca en el escritorio son **ventanas divididas** (dos lado a lado: una nota y su diagrama,
 dos notas, una nota y el calendario) y **más atajos de teclado al escribir**. Tauri aporta además
-las combinaciones que el navegador se reserva (Ctrl+W, Ctrl+T, Ctrl+N…). **Sin plantear.**
+las combinaciones que el navegador se reserva (Ctrl+W, Ctrl+T, Ctrl+N…). **La copia de seguridad
+automática** de la 12 viene casi gratis, con la misma pieza de ficheros. **Sin plantear.**
 
 - [ ] **1. Las decisiones abiertas** *(pensar)*: cuántos paneles y qué cabe en cada uno; si lo
       dividido va al `UiState`; si un enlace se abre en el otro panel; qué pasa en el móvil; qué
