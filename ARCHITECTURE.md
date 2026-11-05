@@ -769,6 +769,11 @@ con lo que lo reabriría.
 **Una tarea dice cómo se cierra.** Qué prueba, guardián, lista o decisión demuestra que está hecha
 (`npm run check:tareas`). Sin eso, «hecho» es una opinión.
 
+**Quien escribe no se da el visto bueno.** Lo que no vigila ningún guardián lo mira otro que no ha
+escrito el cambio: no comparte las suposiciones de quien lo hizo, y por eso ve lo que éste da por
+bueno. Los filtros van de lo barato a lo caro —el guardián, la lectura, el navegador— y cada uno se
+pone a prueba igual que una guarda: con un fallo metido a propósito que tiene que cazar.
+
 **Se automatiza lo que depende de acordarse.** Lo que hoy depende de que alguien se acuerde —pasar
 los checks, romper a propósito, mirar un documento— se convierte en algo que falla solo (§1). Lo que
 no se puede automatizar se queda en `CLAUDE.md`, que se carga en cada sesión, y es lo único que hay

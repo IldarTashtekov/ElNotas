@@ -15,8 +15,8 @@ arreglas lo que falla ni apuntas la pasada. Eso lo hace quien te llama.
 2. Lee la lista entera que te toca antes de dar el primer paso.
 3. Quien te llama ya ha lanzado `npm run build:web`. Tú **no** compilas ni lanzas `npm run`.
 4. Abre el servidor con `preview_start`: `web-8001` si la lista borra o escribe datos, `web` si
-   sólo mira. Apunta el commit con `git rev-parse --short HEAD` y si el árbol está limpio
-   (`git status --short`).
+   sólo mira. Apunta el commit con `git rev-parse --short HEAD` y, con `git status --short`,
+   qué ficheros van sin comitear (los ` M`; los `??` vacíos son del *sandbox*, no cuentan).
 5. **Recarga sin caché**, o pasarás la lista sobre lo que el navegador guardó de antes: el
    servidor no le impide guardar el CSS ni los módulos. Con `javascript_tool`, pide de nuevo todo
    lo cargado y recarga:

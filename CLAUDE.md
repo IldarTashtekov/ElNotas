@@ -27,21 +27,17 @@ Qué fase hay en curso y qué queda, en `TAREAS.md`.
 - **`src/ui/`** — vanilla: las cinco vistas, el editor, el lienzo y el calendario.
 
 **Qué se prueba dónde:** lo que exige la interfaz, en el contrato; lo de una sola implementación,
-aparte (§6.3). En la UI, lo que decide es pura y con pruebas en Node; el DOM, **a mano** con las
-listas `VERIFICACION-*.md` de `test/`, que también puede pasar Claude con el navegador del panel
-(cómo, en `test/PASAR-LAS-LISTAS.md`; lo que borra, en `localhost:8001`, `web-8001`). El panel **sí**
-registra *service workers*; lo que sólo se ve en el móvil —la PWA instalada, el selector de
-Android— lo pasa el usuario.
+aparte (§6.3). En la UI, lo que decide es pura y con pruebas en Node; el DOM, con las listas
+`VERIFICACION-*.md` de `test/`, que pasa el verificador en el panel (`test/PASAR-LAS-LISTAS.md`; lo
+que borra, en `localhost:8001`). Lo que sólo se ve en el móvil —la PWA, Android— lo pasa el usuario.
 
-**`npm run check` no puede pasar en falso:** falla si no hay ninguna prueba compilada. **No lo
-«arregles» quitando el guardián** (§1).
+**`npm run check` no puede pasar en falso:** sin pruebas compiladas, falla. **No quites el guardián** (§1).
 
 ⚠️ **Cada guarda y cada invariante se verifica ROMPIÉNDOLA a propósito** y viendo caer lo que la
 vigila. **Una guarda nueva, una rotura nueva en `tools/roturas.mjs`**; `npm run check:roturas` las
-pasa todas (~2 min) al cerrar la tanda y la fase; al cerrar una tarea, `-- <filtro>`, sólo las suyas.
+pasa todas (~2 min) en una copia, así que van enteras, en segundo plano, en cada tarea.
 
-**Node, el de `.nvmrc`.** Si la sesión no lo tiene en el `PATH`, antepón
-`~/.nvm/versions/node/<versión>/bin`; los hooks ya lo cogen solos.
+**Node, el de `.nvmrc`.** Si no está en el `PATH`, antepón `~/.nvm/versions/node/<versión>/bin`.
 
 ## Cómo se trabaja
 
@@ -55,6 +51,11 @@ escribe en el proyecto; `npm audit` y lo que necesite red, lo lanza el usuario.
 - **Cada tarea, etiquetada al planificarla:** *(mecánica)*, cuando el cómo ya está decidido: si es
   larga, un subagente con Sonnet, que para ante cualquier decisión, y Claude la revisa; si es
   corta, Claude, que el subagente cuesta más que el cambio. *(pensar)*: Claude, con Opus.
+- **El recorrido de cada tarea:** código → `check` → **revisor** (`.claude/agents/revisor.md`), y si
+  objeta, Claude corrige, unas 3 vueltas como mucho o se aparca como duda → **verificador**
+  (`verificador.md`), si se ve en el navegador: sólo los pasos que toca, sobre el cambio sin
+  comitear → las roturas → commit. Quien escribe no se da el visto bueno. Una *(pensar)* de UI
+  **para tras plantearla**: el usuario ve el planteamiento o una maqueta antes del código.
 - **Al cerrar cada tarea**, lo suelto sale de `TAREAS.md` a `TERMINADAS.md` en una línea, sin ✅.
   Antes del commit, si el check pasa se mira en su código de salida: un `| tail` lo tapa.
 - **Se para y se pregunta** ante una decisión no cerrada o que choque con una cerrada, al elegir
@@ -62,11 +63,10 @@ escribe en el proyecto; `npm audit` y lo que necesite red, lo lanza el usuario.
   puerto, o un fallo sin arreglo. **Una duda que no bloquea**, a `TAREAS.md` → *Sin decidir*.
 - **Al acabar la tanda**, al usuario: lo hecho, los commits, las dudas apuntadas y **lo que falta**.
 
-**Al cerrar una fase**, además de `check:roturas` entera:
+**Al cerrar una fase**, además de `check:roturas` y las listas que se pasan en el panel, enteras:
 1. **Auditoría de la documentación.** Un subagente que no ha escrito nada de la fase lee contra el
-   repo `CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas de `test/` y lo de
-   `.claude/`, y devuelve cada afirmación falsa con fichero, línea y por qué. Claude la corrige y
-   le enseña el informe al usuario.
+   repo `CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas de `test/` y `.claude/`,
+   y devuelve cada afirmación falsa con fichero, línea y por qué; Claude corrige y se lo enseña al usuario.
 2. **Repaso de la memoria de Claude**: lo que el repo ya cuenta o ha dejado de ser verdad, fuera; y
    `.claude/settings.local.json`, podado a lo de leer o consultar.
 
@@ -156,8 +156,8 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - CSS nativo, sin Tailwind ni preprocesador: un fichero por vista **en el orden de la cascada**,
   anidamiento nativo, `@layer base`, colores sólo en `base.css`. Al tocarlo, comparar el estilo calculado.
 - Sin bundler: `importmap` y `.js` en los relativos. `node:test`, no vitest. Pruebas en `test/`.
-- Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o Claude en el
-  panel. Si tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`;
+- Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o el verificador
+  en el panel. Si tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`;
   las dos excepciones, en `TERMINADAS.md`).
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
 - Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el

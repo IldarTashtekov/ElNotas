@@ -5,13 +5,21 @@ dice qué se comprueba; esto dice cómo se pasa y cómo se apunta.
 
 ## Quién la pasa
 
-- **Claude, con el navegador del panel**, todo lo que el panel puede hacer: es lo primero.
+- **El verificador** (`.claude/agents/verificador.md`), con el navegador del panel, todo lo que el
+  panel puede hacer: es lo primero. Claude apunta lo que devuelve.
 - **El usuario, en el móvil**, lo que sólo se ve ahí: la PWA instalada, el selector de Android,
   el teclado del móvil. Lo menos posible.
 
+**Cuánto:** en cada tarea, sólo los pasos que toca el cambio; al cerrar la fase, la lista entera.
+
 ## Reglas
 
-> **Sobre un commit con el árbol limpio**, y se apunta el commit. Si no, la pasada vale poco.
+> **Se apunta el commit, y qué ficheros llevaba sin comitear.** En una tarea se pasa sobre su
+> cambio aún sin comitear, para arreglar lo que falle antes de que entre en la rama; al cerrar la
+> fase, sobre el árbol limpio.
+
+> **Antes del primer paso, se recarga sin caché**, o se pasa sobre el CSS y los módulos de antes:
+> el servidor no impide que el navegador los guarde. La orden, en la ficha del verificador.
 
 > **Lo que borra, en un origen aparte**: `localhost:8001` (`web-8001` en `.claude/launch.json`)
 > empieza vacío y no toca lo que haya en `localhost:8000`.
@@ -39,7 +47,7 @@ Al final de la lista, en su sección de resultados (**Pasadas** u **Hoja de resu
 Fecha:        AAAA-MM-DD
 Navegador:    (nombre y versión: navigator.userAgent)
 Quién:        Claude, en el panel · o · el usuario, en (móvil y navegador)
-Commit:       (git rev-parse --short HEAD), árbol limpio
+Commit:       (git rev-parse --short HEAD), árbol limpio · o · más lo sin comitear (qué ficheros)
 Origen:       (localhost:8001, la publicada…)
 
 E1  🔁 simulado — el «Guardar como», por uno que guarda en memoria; …
