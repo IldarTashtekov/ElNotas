@@ -84,12 +84,7 @@ export const crosshairButton = (alPulsar: () => void): HTMLButtonElement =>
 
 /** El de seleccionar nodos. Quien lo crea le pone `aria-pressed` según el modo. */
 export const selectButton = (alPulsar: () => void): HTMLButtonElement => {
-  const b: HTMLButtonElement = botonDeLienzo(
-    "seleccionar",
-    "Seleccionar nodos",
-    dibujoSeleccion(),
-    alPulsar,
-  )
+  const b: HTMLButtonElement = botonDeLienzo("seleccionar", "Seleccionar nodos", dibujoSeleccion(), alPulsar)
   b.setAttribute("aria-pressed", "false")
   return b
 }

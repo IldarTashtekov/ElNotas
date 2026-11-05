@@ -26,10 +26,7 @@ import type { ContentId } from "./Ids.js"
  * ensucia `updatedAt`, la persistencia escribe, el `Store` notifica y el render
  * redibuja, aunque no haya cambiado nada.
  */
-export const mapPreservingIdentity = <T>(
-  items: ReadonlyArray<T>,
-  fn: (item: T) => T,
-): ReadonlyArray<T> => {
+export const mapPreservingIdentity = <T>(items: ReadonlyArray<T>, fn: (item: T) => T): ReadonlyArray<T> => {
   let changed: boolean = false
   const next: ReadonlyArray<T> = items.map((item: T): T => {
     const updated: T = fn(item)

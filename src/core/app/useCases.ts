@@ -53,47 +53,24 @@ import type { IdGenerator } from "../ports/IdGenerator.js"
 import type { Store } from "./Store.js"
 
 export interface UseCases {
-  readonly setChecked: (
-    noteId: NoteId,
-    contentId: ContentId,
-    checked: boolean,
-  ) => Note | null
-  readonly setText: (
-    noteId: NoteId,
-    contentId: ContentId,
-    value: string,
-  ) => Note | null
+  readonly setChecked: (noteId: NoteId, contentId: ContentId, checked: boolean) => Note | null
+  readonly setText: (noteId: NoteId, contentId: ContentId, value: string) => Note | null
   /**
    * Mete una línea de texto. El id lo genera **aquí**, no la UI: es esta capa la
    * que tiene el `IdGenerator`. Por eso hay dos casos de uso para una sola
    * acción —uno por clase de línea— en vez de uno que reciba el bloque hecho.
    */
   readonly insertText: (noteId: NoteId, value: string, at: Position) => Note | null
-  readonly insertCheckBox: (
-    noteId: NoteId,
-    value: string,
-    at: Position,
-  ) => Note | null
+  readonly insertCheckBox: (noteId: NoteId, value: string, at: Position) => Note | null
   /** Una casilla, con todo su árbol. `null` si no existe ninguna. */
   readonly remove: (noteId: NoteId, contentIds: ReadonlyArray<ContentId>) => Note | null
   /** Parte una línea por `offset`. El id de la mitad nueva se genera aquí. */
-  readonly split: (
-    noteId: NoteId,
-    contentId: ContentId,
-    offset: number,
-  ) => Note | null
+  readonly split: (noteId: NoteId, contentId: ContentId, offset: number) => Note | null
   readonly merge: (noteId: NoteId, contentId: ContentId) => Note | null
-  readonly convertToCheckBox: (
-    noteId: NoteId,
-    contentId: ContentId,
-  ) => Note | null
+  readonly convertToCheckBox: (noteId: NoteId, contentId: ContentId) => Note | null
   readonly convertToText: (noteId: NoteId, contentId: ContentId) => Note | null
   /** Lleva esas líneas, con sus hijas, a esa posición: el modo Ordenar. */
-  readonly move: (
-    noteId: NoteId,
-    contentIds: ReadonlyArray<ContentId>,
-    at: Position,
-  ) => Note | null
+  readonly move: (noteId: NoteId, contentIds: ReadonlyArray<ContentId>, at: Position) => Note | null
 
   /**
    * Crea una nota vacía y la devuelve. El id se genera aquí y sale dentro de
@@ -120,15 +97,8 @@ export interface UseCases {
   readonly hideItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>) => Context | null
   readonly showItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>) => Context | null
   /** Los pone juntos delante de `before`, o al final con `null`. Una acción para todos. */
-  readonly reorderItems: (
-    contextId: ContextId,
-    items: ReadonlyArray<ItemRef>,
-    before: ItemRef | null,
-  ) => Context | null
-  readonly setDefaultView: (
-    contextId: ContextId,
-    view: DefaultView,
-  ) => Context | null
+  readonly reorderItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>, before: ItemRef | null) => Context | null
+  readonly setDefaultView: (contextId: ContextId, view: DefaultView) => Context | null
 
   /** Crea un diagrama vacío y lo devuelve, con su id dentro, como `createNote`. */
   readonly createDiagram: (name: string) => Diagram | null
@@ -139,17 +109,8 @@ export interface UseCases {
    * Pone un nodo en el lienzo, sin marcar, con su texto: un enlace a una nota, a
    * otra cosa o a una web va escrito dentro. El id lo genera aquí.
    */
-  readonly addTextNode: (
-    diagramId: DiagramId,
-    text: string,
-    positionX: number,
-    positionY: number,
-  ) => Diagram | null
-  readonly setNodeText: (
-    diagramId: DiagramId,
-    nodeId: DiagramNodeId,
-    text: string,
-  ) => Diagram | null
+  readonly addTextNode: (diagramId: DiagramId, text: string, positionX: number, positionY: number) => Diagram | null
+  readonly setNodeText: (diagramId: DiagramId, nodeId: DiagramNodeId, text: string) => Diagram | null
   readonly setNodePosition: (
     diagramId: DiagramId,
     nodeId: DiagramNodeId,
@@ -163,20 +124,12 @@ export interface UseCases {
     dx: number,
     dy: number,
   ) => Diagram | null
-  readonly setNodeDone: (
-    diagramId: DiagramId,
-    nodeId: DiagramNodeId,
-    done: boolean,
-  ) => Diagram | null
+  readonly setNodeDone: (diagramId: DiagramId, nodeId: DiagramNodeId, done: boolean) => Diagram | null
   readonly removeNode: (diagramId: DiagramId, nodeId: DiagramNodeId) => Diagram | null
   /** Borra varios nodos, con una sola acción: la papelera de lo marcado. */
   readonly removeNodes: (diagramId: DiagramId, nodeIds: ReadonlyArray<DiagramNodeId>) => Diagram | null
   /** Une `from` con `to`, con flecha y sin texto. El id se genera aquí. */
-  readonly addRelation: (
-    diagramId: DiagramId,
-    from: DiagramNodeId,
-    to: DiagramNodeId,
-  ) => Diagram | null
+  readonly addRelation: (diagramId: DiagramId, from: DiagramNodeId, to: DiagramNodeId) => Diagram | null
   readonly setRelationEnds: (
     diagramId: DiagramId,
     relationId: DiagramRelationId,
@@ -188,27 +141,15 @@ export interface UseCases {
     relationId: DiagramRelationId,
     directed: boolean,
   ) => Diagram | null
-  readonly setRelationLabel: (
-    diagramId: DiagramId,
-    relationId: DiagramRelationId,
-    label: string,
-  ) => Diagram | null
-  readonly removeRelation: (
-    diagramId: DiagramId,
-    relationId: DiagramRelationId,
-  ) => Diagram | null
+  readonly setRelationLabel: (diagramId: DiagramId, relationId: DiagramRelationId, label: string) => Diagram | null
+  readonly removeRelation: (diagramId: DiagramId, relationId: DiagramRelationId) => Diagram | null
 
   /**
    * Crea un evento y lo devuelve. El id se genera aquí. El motivo puede ir
    * vacío. `null` sólo si el id ya existía.
    */
   readonly createEvent: (day: Day, time: Time | null, title: string) => CalendarEvent | null
-  readonly updateEvent: (
-    eventId: EventId,
-    day: Day,
-    time: Time | null,
-    title: string,
-  ) => CalendarEvent | null
+  readonly updateEvent: (eventId: EventId, day: Day, time: Time | null, title: string) => CalendarEvent | null
   /** Como `deleteNote`: devuelve el borrado, y tampoco sirve de undo. */
   readonly deleteEvent: (eventId: EventId) => CalendarEvent | null
   /** Crea una rutina. `null` si la meta no es de 1 a 7 (o el id ya existía). */
@@ -218,12 +159,7 @@ export interface UseCases {
    * Marca o desmarca un día. `today` es el de la plataforma: un día posterior no se
    * marca, y entonces devuelve `null`.
    */
-  readonly setRoutineDay: (
-    routineId: RoutineId,
-    day: Day,
-    done: boolean,
-    today: Day,
-  ) => Routine | null
+  readonly setRoutineDay: (routineId: RoutineId, day: Day, done: boolean, today: Day) => Routine | null
   readonly setRoutineGoal: (routineId: RoutineId, weeklyGoal: number | null) => Routine | null
   /** Con todos sus días. Devuelve la borrada. */
   readonly deleteRoutine: (routineId: RoutineId) => Routine | null
@@ -271,11 +207,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
   }
 
   return {
-    setChecked: (
-      noteId: NoteId,
-      contentId: ContentId,
-      checked: boolean,
-    ): Note | null =>
+    setChecked: (noteId: NoteId, contentId: ContentId, checked: boolean): Note | null =>
       trasNota(noteId, { type: "set-checked", noteId, contentId, checked, meta: meta() }),
 
     setText: (noteId: NoteId, contentId: ContentId, value: string): Note | null =>
@@ -339,8 +271,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
     renameNote: (noteId: NoteId, name: string): Note | null =>
       trasNota(noteId, { type: "rename-note", noteId, name, meta: meta() }),
 
-    deleteNote: (noteId: NoteId): Note | null =>
-      trasNota(noteId, { type: "delete-note", noteId, meta: meta() }),
+    deleteNote: (noteId: NoteId): Note | null => trasNota(noteId, { type: "delete-note", noteId, meta: meta() }),
 
     /* ── Contexto ── */
 
@@ -377,11 +308,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
     showItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>): Context | null =>
       trasContexto(contextId, { type: "show-items", contextId, items, meta: meta() }),
 
-    reorderItems: (
-      contextId: ContextId,
-      items: ReadonlyArray<ItemRef>,
-      before: ItemRef | null,
-    ): Context | null =>
+    reorderItems: (contextId: ContextId, items: ReadonlyArray<ItemRef>, before: ItemRef | null): Context | null =>
       trasContexto(contextId, { type: "reorder-items", contextId, items, before, meta: meta() }),
 
     setDefaultView: (contextId: ContextId, view: DefaultView): Context | null =>
@@ -405,12 +332,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
     deleteDiagram: (diagramId: DiagramId): Diagram | null =>
       trasDiagrama(diagramId, { type: "delete-diagram", diagramId, meta: meta() }),
 
-    addTextNode: (
-      diagramId: DiagramId,
-      text: string,
-      positionX: number,
-      positionY: number,
-    ): Diagram | null =>
+    addTextNode: (diagramId: DiagramId, text: string, positionX: number, positionY: number): Diagram | null =>
       trasDiagrama(diagramId, {
         type: "add-node",
         diagramId,
@@ -442,12 +364,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    shiftNodes: (
-      diagramId: DiagramId,
-      nodeIds: ReadonlyArray<DiagramNodeId>,
-      dx: number,
-      dy: number,
-    ): Diagram | null =>
+    shiftNodes: (diagramId: DiagramId, nodeIds: ReadonlyArray<DiagramNodeId>, dx: number, dy: number): Diagram | null =>
       trasDiagrama(diagramId, { type: "shift-nodes", diagramId, nodeIds, dx, dy, meta: meta() }),
 
     setNodeDone: (diagramId: DiagramId, nodeId: DiagramNodeId, done: boolean): Diagram | null =>
@@ -482,11 +399,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    setRelationDirected: (
-      diagramId: DiagramId,
-      relationId: DiagramRelationId,
-      directed: boolean,
-    ): Diagram | null =>
+    setRelationDirected: (diagramId: DiagramId, relationId: DiagramRelationId, directed: boolean): Diagram | null =>
       trasDiagrama(diagramId, {
         type: "set-relation-directed",
         diagramId,
@@ -495,11 +408,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
         meta: meta(),
       }),
 
-    setRelationLabel: (
-      diagramId: DiagramId,
-      relationId: DiagramRelationId,
-      label: string,
-    ): Diagram | null =>
+    setRelationLabel: (diagramId: DiagramId, relationId: DiagramRelationId, label: string): Diagram | null =>
       trasDiagrama(diagramId, {
         type: "set-relation-label",
         diagramId,
@@ -582,5 +491,4 @@ const diagramIdNuevo = (ids: IdGenerator): DiagramId => diagramId(ids.next())
 const eventIdNuevo = (ids: IdGenerator): EventId => eventId(ids.next())
 const routineIdNuevo = (ids: IdGenerator): RoutineId => routineId(ids.next())
 const diagramNodeIdNuevo = (ids: IdGenerator): DiagramNodeId => diagramNodeId(ids.next())
-const diagramRelationIdNuevo = (ids: IdGenerator): DiagramRelationId =>
-  diagramRelationId(ids.next())
+const diagramRelationIdNuevo = (ids: IdGenerator): DiagramRelationId => diagramRelationId(ids.next())

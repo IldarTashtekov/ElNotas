@@ -66,10 +66,7 @@ const CON_FORMATO: ReadonlyArray<Content> = [
 ]
 
 test("sin las marcas de formato: los enlaces, como su texto visible", (): void => {
-  assert.equal(
-    copiedText(CON_FORMATO, en("titulo", 0), en("cola", 4), null),
-    "Título\na b web\nc *d",
-  )
+  assert.equal(copiedText(CON_FORMATO, en("titulo", 0), en("cola", 4), null), "Título\na b web\nc *d")
 })
 
 test("los offset cuentan lo que se ve, no la cadena cruda", (): void => {
@@ -80,8 +77,5 @@ test("los offset cuentan lo que se ve, no la cadena cruda", (): void => {
 
 test("la línea que se ve en crudo se copia en crudo", (): void => {
   assert.equal(copiedText(CON_FORMATO, en("medio", 2), en("medio", 7), contentId("medio")), "**b**")
-  assert.equal(
-    copiedText(CON_FORMATO, en("titulo", 0), en("medio", 7), contentId("titulo")),
-    "# Título\na b web",
-  )
+  assert.equal(copiedText(CON_FORMATO, en("titulo", 0), en("medio", 7), contentId("titulo")), "# Título\na b web")
 })

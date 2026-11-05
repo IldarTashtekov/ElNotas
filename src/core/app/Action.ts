@@ -146,15 +146,7 @@ export interface Move {
 
 /** Las que operan sobre el contenido de una nota. Nueve. */
 export type ContentAction =
-  | SetChecked
-  | SetText
-  | Insert
-  | Remove
-  | Split
-  | Merge
-  | ConvertToCheckBox
-  | ConvertToText
-  | Move
+  SetChecked | SetText | Insert | Remove | Split | Merge | ConvertToCheckBox | ConvertToText | Move
 
 /* ──────────────────────────── Las tres de Nota ────────────────────────────── */
 
@@ -497,18 +489,7 @@ export interface DeleteRoutine {
   readonly meta: ActionMeta
 }
 
-export type RoutineAction =
-  | CreateRoutine
-  | RenameRoutine
-  | SetRoutineDay
-  | SetRoutineGoal
-  | DeleteRoutine
+export type RoutineAction = CreateRoutine | RenameRoutine | SetRoutineDay | SetRoutineGoal | DeleteRoutine
 
 /** El catálogo entero: 9 + 3 + 9 + 15 + 3 + 5 = **cuarenta y cuatro**. */
-export type Action =
-  | ContentAction
-  | NoteAction
-  | ContextAction
-  | DiagramAction
-  | CalendarAction
-  | RoutineAction
+export type Action = ContentAction | NoteAction | ContextAction | DiagramAction | CalendarAction | RoutineAction

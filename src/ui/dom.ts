@@ -27,9 +27,7 @@ export const corruptNotice = (corrupt: ReadonlyArray<StorageError>): HTMLElement
   aviso.className = "aviso aviso-temporal"
   aviso.setAttribute("role", "alert")
   const lista: HTMLUListElement = elemento("ul")
-  lista.append(
-    ...corrupt.map((fallo: StorageError): HTMLLIElement => elemento("li", describeStorageError(fallo))),
-  )
+  lista.append(...corrupt.map((fallo: StorageError): HTMLLIElement => elemento("li", describeStorageError(fallo))))
   aviso.append(
     elemento(
       "p",

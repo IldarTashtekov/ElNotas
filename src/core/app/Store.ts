@@ -56,9 +56,7 @@ export const createStore = (initial: AppState): Store => {
     subscribe: (listener: Listener): Unsubscribe => {
       listeners = [...listeners, listener]
       return (): void => {
-        listeners = listeners.filter(
-          (suscrito: Listener): boolean => suscrito !== listener,
-        )
+        listeners = listeners.filter((suscrito: Listener): boolean => suscrito !== listener)
       }
     },
   }

@@ -97,5 +97,4 @@ export const createFakeStorage = (): FakeStorage => {
  * fabrica cada prueba con un objeto literal, porque el caso que modelan es
  * precisamente el de un navegador que **no** lanza una `DOMException` de manual.
  */
-export const excepcionDeCuota = (): DOMException =>
-  new DOMException("no queda sitio", "QuotaExceededError")
+export const excepcionDeCuota = (): DOMException => new DOMException("no queda sitio", "QuotaExceededError")

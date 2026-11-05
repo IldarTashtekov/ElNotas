@@ -68,9 +68,7 @@ const etiquetaDe = (line: FormattedLine, link: LineLink): string =>
     heading: false,
     links: [],
     runs: [],
-    spans: line.spans.filter(
-      (s: LineSpan): boolean => s.kind === "text" && s.link === link,
-    ),
+    spans: line.spans.filter((s: LineSpan): boolean => s.kind === "text" && s.link === link),
   })
 
 // Los pares que contienen [start, end) entre sus marcas, el más interno el último.
@@ -120,9 +118,7 @@ export const activeLine = (raw: string): ActiveLine => {
   let hasta: number = 0
   for (const s of line.spans) {
     if (s.end <= hasta) continue
-    const link: LineLink | undefined = guardados.find(
-      (l: LineLink): boolean => l.start <= s.start && s.start < l.end,
-    )
+    const link: LineLink | undefined = guardados.find((l: LineLink): boolean => l.start <= s.start && s.start < l.end)
     if (link !== undefined) {
       partes.push({
         kind: "link",
@@ -195,9 +191,7 @@ export const rawToDom = (partes: ReadonlyArray<ActivePart>, raw: number): DomPos
   const primera: ActivePart | undefined = partes[0]
   if (primera === undefined) return { partIndex: 0, offset: 0 }
   const alBorde = (i: number, final: boolean): DomPosition =>
-    final
-      ? { partIndex: i, offset: 1, side: "after" }
-      : { partIndex: i, offset: 0, side: "before" }
+    final ? { partIndex: i, offset: 1, side: "after" } : { partIndex: i, offset: 0, side: "before" }
   if (raw <= primera.start) {
     return primera.kind === "link" ? alBorde(0, false) : { partIndex: 0, offset: 0 }
   }

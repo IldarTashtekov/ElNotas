@@ -40,10 +40,7 @@ const ID_INEXISTENTE = contentId("no-existe")
 const listaDeLaCompra = (): ReadonlyArray<Content> => [
   text(ID_COMPRA, "Compra semanal"),
   checkBox(ID_FRUTA, "Fruta", {
-    children: [
-      checkBox(ID_MANZANAS, "Manzanas"),
-      checkBox(ID_PERAS, "Peras"),
-    ],
+    children: [checkBox(ID_MANZANAS, "Manzanas"), checkBox(ID_PERAS, "Peras")],
   }),
   checkBox(ID_LIMPIEZA, "Limpieza", {
     children: [checkBox(ID_FREGONA, "Fregona")],
@@ -125,24 +122,12 @@ test("al marcar Peras se reconstruye sólo el camino hasta ella", () => {
   /* Identidad — lo que SÍ es nuevo: los tres del camino */
   assert.notStrictEqual(despues, antes, "el array raíz es nuevo")
   assert.notStrictEqual(frutaDespues, casillaEn(antes, 1), "Fruta es nueva")
-  assert.notStrictEqual(
-    hijaEn(frutaDespues.children, 1),
-    hijaEn(casillaEn(antes, 1).children, 1),
-    "Peras es nueva",
-  )
+  assert.notStrictEqual(hijaEn(frutaDespues.children, 1), hijaEn(casillaEn(antes, 1).children, 1), "Peras es nueva")
 
   /* Identidad — lo que NO se tocó: sigue siendo el mismo objeto */
   assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0), "'Compra semanal' intacto")
-  assert.strictEqual(
-    casillaEn(despues, 2),
-    casillaEn(antes, 2),
-    "'Limpieza' intacta, y con ella todo su subárbol",
-  )
-  assert.strictEqual(
-    hijaEn(frutaDespues.children, 0),
-    hijaEn(casillaEn(antes, 1).children, 0),
-    "'Manzanas' intacta",
-  )
+  assert.strictEqual(casillaEn(despues, 2), casillaEn(antes, 2), "'Limpieza' intacta, y con ella todo su subárbol")
+  assert.strictEqual(hijaEn(frutaDespues.children, 0), hijaEn(casillaEn(antes, 1).children, 0), "'Manzanas' intacta")
 })
 
 test("el árbol de antes sigue intacto: nada se modificó en el sitio", () => {
@@ -150,11 +135,7 @@ test("el árbol de antes sigue intacto: nada se modificó en el sitio", () => {
 
   updateContent(antes, ID_PERAS, marcar(true))
 
-  assert.equal(
-    hijaEn(casillaEn(antes, 1).children, 1).checked,
-    false,
-    "marcar no debe mutar el árbol original",
-  )
+  assert.equal(hijaEn(casillaEn(antes, 1).children, 1).checked, false, "marcar no debe mutar el árbol original")
 })
 
 /* ──────────────── 4. La discriminación entre texto y casilla ──────────────── */
@@ -207,7 +188,10 @@ test("cambia el texto de un bloque de la raíz", () => {
 test("mapPreservingIdentity devuelve la entrada si nada cambió", () => {
   const items = [{ n: 1 }, { n: 2 }]
 
-  assert.strictEqual(mapPreservingIdentity(items, (x) => x), items)
+  assert.strictEqual(
+    mapPreservingIdentity(items, (x) => x),
+    items,
+  )
 })
 
 test("mapPreservingIdentity devuelve array nuevo si cambió un solo elemento", () => {

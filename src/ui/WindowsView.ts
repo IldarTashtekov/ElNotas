@@ -401,13 +401,9 @@ export const mountWindowsView = (
     cabecera.hidden = false
     sinVentanas.hidden = true
 
-    titulo.show(
-      vista.title,
-      vista.renames !== null || vista.editsNote !== null || vista.editsDiagram !== null,
-    )
+    titulo.show(vista.title, vista.renames !== null || vista.editsNote !== null || vista.editsDiagram !== null)
 
-    const nota: Note | undefined =
-      vista.editsNote === null ? undefined : estado.notes[vista.editsNote]
+    const nota: Note | undefined = vista.editsNote === null ? undefined : estado.notes[vista.editsNote]
     zonaCalendario.hidden = !vista.showsCalendar
     if (vista.showsCalendar) {
       notas.element.hidden = true

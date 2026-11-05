@@ -39,9 +39,7 @@ export interface StoredEntities {
   readonly unreadable?: ReadonlyArray<ItemRef>
 }
 
-const porId = <TId extends string, T extends { readonly id: TId }>(
-  xs: ReadonlyArray<T>,
-): Readonly<Record<TId, T>> =>
+const porId = <TId extends string, T extends { readonly id: TId }>(xs: ReadonlyArray<T>): Readonly<Record<TId, T>> =>
   Object.fromEntries(xs.map((x: T): readonly [TId, T] => [x.id, x])) as Record<TId, T>
 
 /** Si una referencia apunta a algo que está guardado pero no se pudo leer. */
@@ -56,8 +54,7 @@ const nadaIlegible: Unreadable = (): boolean => false
 const diagramaLimpio = (d: Diagram): Diagram => {
   const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(d.relations)
   const sanas: ReadonlyArray<DiagramRelation> = relaciones.filter(
-    (r: DiagramRelation): boolean =>
-      r.from !== r.to && d.nodes[r.from] !== undefined && d.nodes[r.to] !== undefined,
+    (r: DiagramRelation): boolean => r.from !== r.to && d.nodes[r.from] !== undefined && d.nodes[r.to] !== undefined,
   )
   if (sanas.length === relaciones.length) return d
   return {
@@ -68,24 +65,19 @@ const diagramaLimpio = (d: Diagram): Diagram => {
   }
 }
 
-export const hydrate = (
-  stored: StoredEntities,
-  ilegible: Unreadable = nadaIlegible,
-): AppState => {
+export const hydrate = (stored: StoredEntities, ilegible: Unreadable = nadaIlegible): AppState => {
   const notes: AppState["notes"] = porId(stored.notes)
   const diagrams: AppState["diagrams"] = porId(stored.diagrams.map(diagramaLimpio))
 
   /* Se queda lo que está, y lo que está pero no se pudo leer. */
   const existe = (item: ItemRef): boolean =>
-    (item.kind === "note" ? notes[item.id] !== undefined : diagrams[item.id] !== undefined) ||
-    ilegible(item)
+    (item.kind === "note" ? notes[item.id] !== undefined : diagrams[item.id] !== undefined) || ilegible(item)
 
   const contexts: AppState["contexts"] = porId(
     stored.contexts.map((ctx: Context): Context => {
       const items: ReadonlyArray<ItemRef> = ctx.items.filter(existe)
       /* Lo oculto, sólo si sigue en `items`: ocultar es de lo que el contexto tiene. */
-      const enItems = (h: ItemRef): boolean =>
-        items.some((i: ItemRef): boolean => i.kind === h.kind && i.id === h.id)
+      const enItems = (h: ItemRef): boolean => items.some((i: ItemRef): boolean => i.kind === h.kind && i.id === h.id)
       const hidden: ReadonlyArray<ItemRef> | undefined = ctx.hidden?.filter(enItems)
       /* Si no sobraba ninguna, se devuelve el contexto TAL CUAL. `filter` crea
          siempre un array nuevo, y un contexto nuevo al arrancar saldría sucio en

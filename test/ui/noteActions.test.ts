@@ -188,17 +188,12 @@ const conDiagrama = (): Escenario & { readonly mudanza: DiagramId } => {
   return { ...e, mudanza: d.id }
 }
 
-const refsDe = (state: AppState, id: ContextId): ReadonlyArray<ItemRef> =>
-  state.contexts[id]?.items ?? []
+const refsDe = (state: AppState, id: ContextId): ReadonlyArray<ItemRef> => state.contexts[id]?.items ?? []
 
 test("+ Diagrama en un contexto crea un «Nuevo diagrama» DENTRO de él, detrás de las notas", (): void => {
   const { store, compra, leche, pan, mudanza } = conDiagrama()
   assert.equal(store.getState().diagrams[mudanza]?.name, NEW_DIAGRAM_NAME)
-  assert.deepEqual(refsDe(store.getState(), compra), [
-    noteRef(leche),
-    noteRef(pan),
-    diagramRef(mudanza),
-  ])
+  assert.deepEqual(refsDe(store.getState(), compra), [noteRef(leche), noteRef(pan), diagramRef(mudanza)])
 })
 
 test("+ Diagrama desde el General lo crea sin contexto", (): void => {
@@ -253,7 +248,10 @@ test("contextsWith da los contextos que listan algo, por nombre", (): void => {
     (c: Context): string => c.name,
   )
   assert.deepEqual(nombres, ["Casa", "Compra"])
-  assert.deepEqual(contextsWith(store.getState(), diagramRef(mudanza)).map((c: Context): ContextId => c.id), [casa, compra])
+  assert.deepEqual(
+    contextsWith(store.getState(), diagramRef(mudanza)).map((c: Context): ContextId => c.id),
+    [casa, compra],
+  )
 })
 
 test("contextsWith no confunde un diagrama con una nota del mismo id", (): void => {

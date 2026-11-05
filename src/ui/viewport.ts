@@ -96,8 +96,7 @@ const puntoMedio = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y
  */
 export const pinch = (inicio: Viewport, a0: Point, b0: Point, a1: Point, b1: Point): Viewport => {
   const antes: number = distancia(a0, b0)
-  const scale: number =
-    antes === 0 ? inicio.scale : clampScale((inicio.scale * distancia(a1, b1)) / antes)
+  const scale: number = antes === 0 ? inicio.scale : clampScale((inicio.scale * distancia(a1, b1)) / antes)
   return conPuntoEn(toCanvas(inicio, puntoMedio(a0, b0)), puntoMedio(a1, b1), scale)
 }
 

@@ -46,8 +46,7 @@ export const attachDragReorder = (fila: HTMLElement, opciones: DragReorderOption
   let arrastre: Arrastre | null = null
   const vertical: boolean = opciones.eje === "y"
 
-  const fichas = (): ReadonlyArray<HTMLElement> =>
-    [...fila.querySelectorAll<HTMLElement>(opciones.fichas)]
+  const fichas = (): ReadonlyArray<HTMLElement> => [...fila.querySelectorAll<HTMLElement>(opciones.fichas)]
 
   /** La posición del dedo a lo largo de la fila, dentro de su contenido: no cambia al deslizarla. */
   const enContenido = (evento: { readonly clientX: number; readonly clientY: number }): number =>
@@ -114,8 +113,7 @@ export const attachDragReorder = (fila: HTMLElement, opciones: DragReorderOption
     if (candidata === null && arrastre === null) return
     if (arrastre === null) {
       const lejos: boolean =
-        Math.abs(evento.clientX - origen.x) > TOLERANCIA_PX ||
-        Math.abs(evento.clientY - origen.y) > TOLERANCIA_PX
+        Math.abs(evento.clientX - origen.x) > TOLERANCIA_PX || Math.abs(evento.clientY - origen.y) > TOLERANCIA_PX
       if (lejos) {
         cancelarEspera()
         candidata = null

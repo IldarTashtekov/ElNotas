@@ -120,10 +120,14 @@ export const createRoutinesPanel = ({
     )
     /* Encima de la cuenta, el cambio entre el mes y la gráfica: enseña a qué se pasa. */
     const grafica: boolean = chartView() === "chart"
-    const cambiar: HTMLButtonElement = boton(grafica ? "▦" : "%", (): void => {
-      onToggleView()
-      pintar()
-    }, "rutinas-vista")
+    const cambiar: HTMLButtonElement = boton(
+      grafica ? "▦" : "%",
+      (): void => {
+        onToggleView()
+        pintar()
+      },
+      "rutinas-vista",
+    )
     cambiar.setAttribute("aria-label", grafica ? "Ver el mes" : "Ver la gráfica")
     fila.append(cambiar)
     return fila
@@ -252,16 +256,15 @@ export const createRoutinesPanel = ({
     const opciones: HTMLElement = elemento("div")
     opciones.className = "rutina-metas"
     const metas: ReadonlyArray<number | null> = [null, 1, 2, 3, 4, 5, 6, 7]
-    const botones: ReadonlyArray<HTMLButtonElement> = metas.map(
-      (m: number | null): HTMLButtonElement =>
-        boton(
-          m === null ? "Sin meta" : String(m),
-          (): void => {
-            alElegir(m)
-            marcar(m)
-          },
-          "rutina-meta",
-        ),
+    const botones: ReadonlyArray<HTMLButtonElement> = metas.map((m: number | null): HTMLButtonElement =>
+      boton(
+        m === null ? "Sin meta" : String(m),
+        (): void => {
+          alElegir(m)
+          marcar(m)
+        },
+        "rutina-meta",
+      ),
     )
     const marcar = (elegida: number | null): void => {
       botones.forEach((b: HTMLButtonElement, i: number): void => {
@@ -335,9 +338,13 @@ export const createRoutinesPanel = ({
       (): void => {
         const orden: CalendarOrder = leerOrden()
         /* Las que ya no existen se podan al guardar. */
-        const archivadas: ReadonlyArray<string> = (f.archived ? orden.archived.filter((x: string): boolean => x !== id) : [...orden.archived, id])
-          .filter((x: string): boolean => store.getState().routines[x as RoutineId] !== undefined)
-        const guardado: ReturnType<CalendarOrderPersistence["save"]> = calendarOrder.save({ ...orden, archived: archivadas })
+        const archivadas: ReadonlyArray<string> = (
+          f.archived ? orden.archived.filter((x: string): boolean => x !== id) : [...orden.archived, id]
+        ).filter((x: string): boolean => store.getState().routines[x as RoutineId] !== undefined)
+        const guardado: ReturnType<CalendarOrderPersistence["save"]> = calendarOrder.save({
+          ...orden,
+          archived: archivadas,
+        })
         if (!guardado.ok) logger.failure("no se guardó lo archivado", guardado.error)
         hoja.close()
         pintar()

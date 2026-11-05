@@ -26,7 +26,7 @@ import { silentLogger } from "../../core/ports/FakeLogger"
 
 const sinPintar = (): void => undefined
 
-const errorDe =<T>(r: Result<T, StorageError>): StorageError => {
+const errorDe = <T>(r: Result<T, StorageError>): StorageError => {
   if (r.ok) assert.fail("tenía que fallar")
   return r.error
 }
@@ -88,7 +88,9 @@ test("«Borrar todo» se lleva también el estado de la UI", (): void => {
 test("AL RECARGAR, el fósforo y la pestaña vuelven como se dejaron, cada uno en su sección", (): void => {
   const almacen: FakeStorage = createFakeStorage()
   const antes: UiStatePersistence = createLocalStorageUiState(almacen)
-  createPhosphorSetting({ persistence: uiStateSection(antes, "phosphor"), apply: sinPintar, logger: silentLogger }).set("magenta")
+  createPhosphorSetting({ persistence: uiStateSection(antes, "phosphor"), apply: sinPintar, logger: silentLogger }).set(
+    "magenta",
+  )
   createCalendarTabSetting({ persistence: uiStateSection(antes, "calendarTab"), logger: silentLogger }).set("routines")
 
   const despues: UiStatePersistence = createLocalStorageUiState(almacen)

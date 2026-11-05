@@ -92,7 +92,8 @@ export const createSheet = (back: BackStack): Sheet => {
  */
 export type Confirm = (pregunta: string, boton: string, alAceptar: () => void) => void
 
-export const createConfirm = (sheet: Sheet): Confirm =>
+export const createConfirm =
+  (sheet: Sheet): Confirm =>
   (pregunta: string, boton: string, alAceptar: () => void): void => {
     const texto: HTMLParagraphElement = elemento("p", pregunta)
     texto.className = "hoja-pregunta"

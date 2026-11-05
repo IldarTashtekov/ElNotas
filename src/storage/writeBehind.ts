@@ -11,14 +11,7 @@
  * pierde. Se paga llamando a `flush()` al cerrar, y eso es de la Fase 4.
  */
 
-import type {
-  AppState,
-  Logger,
-  Result,
-  StateDiff,
-  StorageAdapter,
-  StorageError,
-} from "#core/index"
+import type { AppState, Logger, Result, StateDiff, StorageAdapter, StorageError } from "#core/index"
 import { NO_CHANGES, diffState, err, ok } from "#core/index"
 
 /** Deshace una espera programada. */
@@ -93,9 +86,7 @@ const avisar = (onError: OnError | undefined, fallo: StorageError): void => {
 
 /** El mismo mapa sin esa entidad. */
 const sin = <TId extends string, T>(mapa: Readonly<Record<TId, T>>, id: TId): Readonly<Record<TId, T>> =>
-  Object.fromEntries(
-    Object.entries<T>(mapa).filter(([clave]: [string, T]): boolean => clave !== id),
-  ) as Record<TId, T>
+  Object.fromEntries(Object.entries<T>(mapa).filter(([clave]: [string, T]): boolean => clave !== id)) as Record<TId, T>
 
 const porSetTimeout: Schedule = (fn: () => void, ms: number): Cancel => {
   const id: ReturnType<typeof setTimeout> = setTimeout(fn, ms)
@@ -198,17 +189,26 @@ export const createWriteBehind = ({
           escrito = { ...escrito, notes: sin(escrito.notes, id) }
         }
         for (const id of cambios.diagrams.deleted) {
-          const r: Result<void, StorageError> = await adapter.diagrams.delete(id, escrito.diagrams[id]?.revision ?? null)
+          const r: Result<void, StorageError> = await adapter.diagrams.delete(
+            id,
+            escrito.diagrams[id]?.revision ?? null,
+          )
           if (!r.ok) return r
           escrito = { ...escrito, diagrams: sin(escrito.diagrams, id) }
         }
         for (const id of cambios.contexts.deleted) {
-          const r: Result<void, StorageError> = await adapter.contexts.delete(id, escrito.contexts[id]?.revision ?? null)
+          const r: Result<void, StorageError> = await adapter.contexts.delete(
+            id,
+            escrito.contexts[id]?.revision ?? null,
+          )
           if (!r.ok) return r
           escrito = { ...escrito, contexts: sin(escrito.contexts, id) }
         }
         for (const id of cambios.routines.deleted) {
-          const w: Result<void, StorageError> = await adapter.routines.delete(id, escrito.routines[id]?.revision ?? null)
+          const w: Result<void, StorageError> = await adapter.routines.delete(
+            id,
+            escrito.routines[id]?.revision ?? null,
+          )
           if (!w.ok) return w
           escrito = { ...escrito, routines: sin(escrito.routines, id) }
         }
@@ -255,8 +255,7 @@ export const createWriteBehind = ({
       cancelarEspera = null
     }
 
-    const siguiente: Promise<Result<void, StorageError>> =
-      cola.then(escribirPendiente)
+    const siguiente: Promise<Result<void, StorageError>> = cola.then(escribirPendiente)
     /* La cola ya no necesita "perdonar" nada: un fallo de escritura es ahora un
        valor y no una excepción, así que no puede envenenar las escrituras
        futuras. Si algo llegara a rechazar aquí sería un adaptador incumpliendo
@@ -283,8 +282,7 @@ export const createWriteBehind = ({
       if (cancelarEspera !== null) cancelarEspera()
       /* Pero no se programa nada si está detenido: esa espera sólo serviría para
          volver a fallar igual. */
-      cancelarEspera =
-        detenido !== null ? null : schedule(guardarProgramado, delayMs)
+      cancelarEspera = detenido !== null ? null : schedule(guardarProgramado, delayMs)
     },
     flush,
   }

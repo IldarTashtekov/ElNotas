@@ -100,9 +100,7 @@ const contando = (
 
   /* Genérico también en el retorno: desde el paso 0 lo que devuelven `put` y
      `delete` es un `Result`, y el contador tiene que dejarlo pasar intacto. */
-  const contar = <A extends unknown[], R>(
-    fn: (...args: A) => Promise<R>,
-  ): ((...args: A) => Promise<R>) => {
+  const contar = <A extends unknown[], R>(fn: (...args: A) => Promise<R>): ((...args: A) => Promise<R>) => {
     return async (...args) => {
       escrituras += 1
       return fn(...args)
@@ -464,9 +462,10 @@ test("onError avisa UNA sola vez: detenido, los flush siguientes no repiten el a
 
 test("un guardado automático que falla queda en el registro; uno pedido con flush, no", async (): Promise<void> => {
   const reloj: ReturnType<typeof relojDeMentira> = relojDeMentira()
-  const almacen: ReturnType<typeof fallandoAlEscribir> = fallandoAlEscribir(
-    (): StorageError => ({ kind: "io", cause: "x" }),
-  )
+  const almacen: ReturnType<typeof fallandoAlEscribir> = fallandoAlEscribir((): StorageError => ({
+    kind: "io",
+    cause: "x",
+  }))
   const registro: RecordingLogger = createRecordingLogger()
   const wb: ReturnType<typeof createWriteBehind> = createWriteBehind({
     logger: registro.logger,

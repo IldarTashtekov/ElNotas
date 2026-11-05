@@ -19,8 +19,7 @@ const ficherosTs = (dir, acc = []) => {
   return acc
 }
 
-const leer = (fichero) =>
-  ts.createSourceFile(fichero, readFileSync(fichero, "utf8"), ts.ScriptTarget.Latest, true)
+const leer = (fichero) => ts.createSourceFile(fichero, readFileSync(fichero, "utf8"), ts.ScriptTarget.Latest, true)
 
 const MODULOS = readdirSync("src").filter((m) => {
   try {

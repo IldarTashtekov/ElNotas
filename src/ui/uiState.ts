@@ -52,8 +52,7 @@ export interface UiStateSection<K extends keyof UiState> {
 
 type Registro = Record<string, unknown>
 
-const esRegistro = (x: unknown): x is Registro =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 /** Lo guardado → el estado. Cada sección pasa por su lector: una rota vuelve a lo de siempre sin tirar las otras. */
 export const parseUiState = (guardado: unknown): UiState => {

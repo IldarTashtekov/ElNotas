@@ -30,8 +30,7 @@ const NOTA: ReadonlyArray<Content> = [
   text(contentId("fin"), "Fin"),
 ]
 
-const ids = (lineas: ReadonlyArray<Content>): ReadonlyArray<string> =>
-  lineas.map((l: Content): string => l.id)
+const ids = (lineas: ReadonlyArray<Content>): ReadonlyArray<string> => lineas.map((l: Content): string => l.id)
 
 test("se lee de arriba abajo: cada casilla y, detrás, sus hijas", (): void => {
   assert.deepEqual(ids(inReadingOrder(NOTA)), ["intro", "compra", "leche", "entera", "pan", "fin"])

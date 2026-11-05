@@ -121,7 +121,9 @@ test("un formato más nuevo que la app se rechaza, sin arrancar", async (): Prom
 test("un fichero ilegible no impide importar: se cuenta y se salta", async (): Promise<void> => {
   const { backup } = await copiaDeVerdad()
   const conRota: Backup = conFicheros(backup, { ...backup.files, "notes/rota.json": "no es json" })
-  const resumen: ImportSummary = resumenDe(await rehearseImport(conRota, { logger: silentLogger, clock: reloj, ids: ids() }))
+  const resumen: ImportSummary = resumenDe(
+    await rehearseImport(conRota, { logger: silentLogger, clock: reloj, ids: ids() }),
+  )
   assert.equal(resumen.notes, 2)
   assert.equal(resumen.unreadable, 1)
 })
@@ -139,7 +141,7 @@ test("una copia con eventos lleva sus ficheros, y un evento con un día inválid
   const evento: string | undefined = caminos.find((c: string): boolean => c.startsWith("events/"))
   assert.ok(evento !== undefined, "la copia lleva el evento")
 
-  const roto: Backup = conFicheros(backup, { ...backup.files, [evento]: "{\"id\":\"x\",\"day\":\"2026-02-30\"}" })
+  const roto: Backup = conFicheros(backup, { ...backup.files, [evento]: '{"id":"x","day":"2026-02-30"}' })
   const resumen: ImportSummary = resumenDe(
     await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() }),
   )
@@ -158,17 +160,14 @@ test("una copia con rutinas lleva su fichero, pasa el ensayo, y una con un día 
   )
 
   const roto: Backup = conFicheros(backup, { ...backup.files, [rutina]: texto.replace("2026-07-02", "2026-02-30") })
-  assert.equal(
-    resumenDe(await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() })).unreadable,
-    1,
-  )
+  assert.equal(resumenDe(await rehearseImport(roto, { logger: silentLogger, clock: reloj, ids: ids() })).unreadable, 1)
 })
 
 test("una copia de antes de quitar los grupos de eventos, con event-groups/, se ensaya sin quejas", async (): Promise<void> => {
   const { backup } = await copiaDeVerdad()
   const vieja: Backup = conFicheros(backup, {
     ...backup.files,
-    "event-groups/salud.json": "{\"id\":\"salud\",\"name\":\"Salud\",\"events\":[]}",
+    "event-groups/salud.json": '{"id":"salud","name":"Salud","events":[]}',
   })
   const resumen: ImportSummary = resumenDe(
     await rehearseImport(vieja, { logger: silentLogger, clock: reloj, ids: ids() }),

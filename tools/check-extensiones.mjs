@@ -29,11 +29,7 @@ const especificadorDe = (n) => {
     return n.moduleSpecifier
   }
   if (ts.isImportTypeNode(n) && ts.isLiteralTypeNode(n.argument)) return n.argument.literal
-  if (
-    ts.isCallExpression(n) &&
-    n.expression.kind === ts.SyntaxKind.ImportKeyword &&
-    n.arguments[0] !== undefined
-  ) {
+  if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword && n.arguments[0] !== undefined) {
     return n.arguments[0]
   }
   return null

@@ -168,10 +168,7 @@ test("list devuelve los caminos SIN prefijo y sólo los del prefijo pedido", asy
   await blobs.write("diagrams/c.json", bytes(3))
   await blobs.write("manifest.json", bytes(4))
 
-  assert.deepEqual([...valorDe(await blobs.list("notes/"))].sort(), [
-    "notes/a.json",
-    "notes/b.json",
-  ])
+  assert.deepEqual([...valorDe(await blobs.list("notes/"))].sort(), ["notes/a.json", "notes/b.json"])
 })
 
 test("list de un prefijo sin nada devuelve una lista vacía, no un error", async () => {

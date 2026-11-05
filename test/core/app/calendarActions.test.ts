@@ -173,10 +173,7 @@ test("delete-event lo quita y deja los demás intactos, por referencia", () => {
 
 test("delete-event de un evento que no está es no-op", () => {
   const antes: AppState = estado()
-  assert.strictEqual(
-    reduce(antes, { type: "delete-event", eventId: eventId("no-esta"), meta: META }),
-    antes,
-  )
+  assert.strictEqual(reduce(antes, { type: "delete-event", eventId: eventId("no-esta"), meta: META }), antes)
 })
 
 /* ───────────────────────────────── diffState ───────────────────────────────── */

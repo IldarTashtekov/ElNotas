@@ -10,9 +10,7 @@
  * falta de verdad se añade entonces.
  */
 
-export type Result<T, E> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: E }
+export type Result<T, E> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E }
 
 /*
     Los dos constructores, como en `Ids.ts`, `Content.ts` y `Position.ts`: quien

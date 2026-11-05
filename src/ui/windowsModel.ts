@@ -52,8 +52,7 @@ export const createWindowsModel = ({ store, persistence, logger }: WindowsModelD
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer se empieza como la primera vez: sin la lista se pierde
      el orden de las ventanas, no ninguna nota. */
-  const inicial: WindowsLayout =
-    leido.ok && leido.value !== null ? parseWindowsLayout(leido.value) : DEFAULT_LAYOUT
+  const inicial: WindowsLayout = leido.ok && leido.value !== null ? parseWindowsLayout(leido.value) : DEFAULT_LAYOUT
 
   let layout: WindowsLayout = guardWindows(inicial, store.getState())
   let listeners: ReadonlyArray<WindowsListener> = []
@@ -78,16 +77,13 @@ export const createWindowsModel = ({ store, persistence, logger }: WindowsModelD
 
   store.subscribe((state: AppState): void => cambiar(guardWindows(layout, state)))
 
-  const editar = (siguiente: WindowsLayout): void =>
-    cambiar(guardWindows(siguiente, store.getState()))
+  const editar = (siguiente: WindowsLayout): void => cambiar(guardWindows(siguiente, store.getState()))
 
   return {
     getLayout: (): WindowsLayout => layout,
 
     setActive: (ref: WindowRef): void => {
-      const visible: WindowRef | undefined = layout.windows.find((w: WindowRef): boolean =>
-        sameWindow(w, ref),
-      )
+      const visible: WindowRef | undefined = layout.windows.find((w: WindowRef): boolean => sameWindow(w, ref))
       if (visible === undefined) return
       if (layout.active !== null && sameWindow(layout.active, visible)) return
       cambiar({ ...layout, active: visible })

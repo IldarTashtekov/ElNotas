@@ -9,15 +9,7 @@
  * General, que no tiene de dónde quitar, BORRA de verdad.
  */
 
-import type {
-  AppState,
-  Context,
-  ContextId,
-  Diagram,
-  ItemRef,
-  Note,
-  UseCases,
-} from "#core/index"
+import type { AppState, Context, ContextId, Diagram, ItemRef, Note, UseCases } from "#core/index"
 import { diagramRef, noteRef } from "#core/index"
 import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
@@ -49,10 +41,7 @@ export const createDiagramIn = (useCases: UseCases, ventana: WindowRef): Diagram
  * diagrama nacen sin contexto, como desde el General. Devuelve la ventana que
  * los enseña, o `null` si no se pudo crear.
  */
-export const createAsWindow = (
-  useCases: UseCases,
-  kind: "context" | "note" | "diagram",
-): WindowRef | null => {
+export const createAsWindow = (useCases: UseCases, kind: "context" | "note" | "diagram"): WindowRef | null => {
   if (kind === "context") {
     const contexto: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
     return contexto === null ? null : { kind: "context", id: contexto.id }
@@ -68,11 +57,7 @@ export const createAsWindow = (
 /** Si la papelera de esta ventana borra de verdad, que es cuando hay que confirmar. */
 export const trashDeletes = (ventana: WindowRef): boolean => ventana.kind === "general"
 
-export const trashItems = (
-  useCases: UseCases,
-  ventana: WindowRef,
-  refs: ReadonlyArray<ItemRef>,
-): void => {
+export const trashItems = (useCases: UseCases, ventana: WindowRef, refs: ReadonlyArray<ItemRef>): void => {
   for (const ref of refs) {
     if (ventana.kind === "general") {
       if (ref.kind === "note") useCases.deleteNote(ref.id)
@@ -142,7 +127,5 @@ export const deleteQuestion = (items: ReadonlyArray<ListItem>): string => {
 /** Los contextos que listan esto, por nombre. */
 export const contextsWith = (state: AppState, ref: ItemRef): ReadonlyArray<Context> =>
   [...Object.values<Context>(state.contexts)]
-    .filter((ctx: Context): boolean =>
-      ctx.items.some((i: ItemRef): boolean => i.kind === ref.kind && i.id === ref.id),
-    )
+    .filter((ctx: Context): boolean => ctx.items.some((i: ItemRef): boolean => i.kind === ref.kind && i.id === ref.id))
     .sort((a: Context, b: Context): number => a.name.localeCompare(b.name))

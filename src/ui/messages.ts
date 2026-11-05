@@ -40,8 +40,6 @@ export const describeImportFailure = (fallo: StorageError): string =>
 
 /** Para el arranque, que puede fallar por cualquiera de los dos lados. */
 export const describeBootError = (fallo: StorageError | MigrationError): string =>
-  fallo.kind === "schema-from-future" ||
-  fallo.kind === "missing-migration" ||
-  fallo.kind === "migration-failed"
+  fallo.kind === "schema-from-future" || fallo.kind === "missing-migration" || fallo.kind === "migration-failed"
     ? describeMigrationError(fallo)
     : describeStorageError(fallo)

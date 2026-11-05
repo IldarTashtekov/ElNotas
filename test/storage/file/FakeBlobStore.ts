@@ -96,10 +96,7 @@ export const createFakeBlobStore = (): FakeBlobStore => {
       const fallo: StorageError | null = falloArmado("list")
       if (fallo !== null) return err(fallo)
 
-      const encontrados: ReadonlyArray<string> = [
-        ...archivos.keys(),
-        ...fantasmas,
-      ].filter((c) => c.startsWith(prefijo))
+      const encontrados: ReadonlyArray<string> = [...archivos.keys(), ...fantasmas].filter((c) => c.startsWith(prefijo))
       /* Sin orden garantizado en el puerto, así que este falso devuelve el de
          inserción del `Map`. El adaptador no debe depender de ninguno: `getAll`
          tampoco promete orden. */

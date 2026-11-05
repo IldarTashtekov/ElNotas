@@ -76,9 +76,7 @@ const borrarLoDeAntes = (almacen: Storage): unknown => {
     const claves: ReadonlyArray<string> = Array.from(
       { length: almacen.length },
       (_: unknown, i: number): string | null => almacen.key(i),
-    ).filter(
-      (k: string | null): k is string => k !== null && k.startsWith(PREFIJO) && k !== IMPORT_KEY,
-    )
+    ).filter((k: string | null): k is string => k !== null && k.startsWith(PREFIJO) && k !== IMPORT_KEY)
     for (const clave of claves) almacen.removeItem(clave)
     return null
   } catch (causa: unknown) {
@@ -112,9 +110,7 @@ export const importIfRequested = async (almacen: Storage): Promise<ImportAtBoot>
      lo de siempre en vez de llegar raro a la pantalla. Los encuadres de
      diagramas que no vengan en la copia los quita el arranque. */
   if (copia.uiState !== null) {
-    const pantalla: Result<void, StorageError> = createLocalStorageUiState(almacen).save(
-      parseUiState(copia.uiState),
-    )
+    const pantalla: Result<void, StorageError> = createLocalStorageUiState(almacen).save(parseUiState(copia.uiState))
     if (!pantalla.ok) return { kind: "failed", error: pantalla.error }
   }
 

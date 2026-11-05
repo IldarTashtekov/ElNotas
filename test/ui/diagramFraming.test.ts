@@ -7,16 +7,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type {
-  Clock,
-  Diagram,
-  DiagramId,
-  IdGenerator,
-  Result,
-  StorageError,
-  Store,
-  UseCases,
-} from "#core/index"
+import type { Clock, Diagram, DiagramId, IdGenerator, Result, StorageError, Store, UseCases } from "#core/index"
 import { createStore, createUseCases, err, ok } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { DiagramFraming } from "#ui/index"

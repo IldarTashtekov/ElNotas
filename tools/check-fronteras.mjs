@@ -60,10 +60,7 @@ const PELIGROSAS = [
   [/^String\.fromCharCode$/, "spread grande → RangeError"],
   [/\.decode$/, "TextDecoder con fatal → TypeError"],
   [/^almacen\.(getItem|setItem|removeItem|key)$/, "localStorage → Security/Quota"],
-  [
-    /\.(getFileHandle|getDirectoryHandle|removeEntry|getFile|createWritable)$/,
-    "File System Access API",
-  ],
+  [/\.(getFileHandle|getDirectoryHandle|removeEntry|getFile|createWritable)$/, "File System Access API"],
   [/\.arrayBuffer$/, "lectura del File"],
   [/\.text$/, "lectura del File"],
   [/\.showSaveFilePicker$/, "«Guardar como»: cancelar es un AbortError"],
@@ -142,18 +139,12 @@ const ayudanteQueLoContiene = (n, sf) => {
   return null
 }
 
-const esExportado = (n) =>
-  n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) === true
+const esExportado = (n) => n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) === true
 
 const infracciones = []
 
 for (const fichero of DIRECTORIOS.flatMap((d) => ficherosTs(d))) {
-  const sf = ts.createSourceFile(
-    fichero,
-    readFileSync(fichero, "utf8"),
-    ts.ScriptTarget.ES2020,
-    true,
-  )
+  const sf = ts.createSourceFile(fichero, readFileSync(fichero, "utf8"), ts.ScriptTarget.ES2020, true)
 
   /* Primera pasada: toda llamada interesante, con dónde está y si está tapada. */
   const llamadas = []
@@ -191,9 +182,7 @@ for (const fichero of DIRECTORIOS.flatMap((d) => ficherosTs(d))) {
 
       Termina porque el conjunto sólo crece y hay finitos ayudantes.
   */
-  const seEscapa = new Set(
-    llamadas.filter((ll) => ll.dentroDe?.exportado === true).map((ll) => ll.dentroDe.nombre),
-  )
+  const seEscapa = new Set(llamadas.filter((ll) => ll.dentroDe?.exportado === true).map((ll) => ll.dentroDe.nombre))
   let cambió = true
   while (cambió) {
     cambió = false

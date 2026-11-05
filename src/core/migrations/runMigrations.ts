@@ -119,9 +119,7 @@ export const runMigrations = (
   let applied: number = 0
 
   while (actual < target) {
-    const paso: Migration | undefined = migrations.find(
-      (m: Migration): boolean => m.from === actual,
-    )
+    const paso: Migration | undefined = migrations.find((m: Migration): boolean => m.from === actual)
     if (paso === undefined) {
       const falta: MigrationError = { kind: "missing-migration", from: actual }
       return err(falta)

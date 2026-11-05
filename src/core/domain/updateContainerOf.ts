@@ -17,10 +17,7 @@ import type { ContentId } from "./Ids.js"
 import { mapPreservingIdentity } from "./updateContent.js"
 
 /** ¿Está esa línea directamente en esta lista? Sin bajar a las hijas. */
-const contains = (
-  items: ReadonlyArray<{ readonly id: ContentId }>,
-  id: ContentId,
-): boolean =>
+const contains = (items: ReadonlyArray<{ readonly id: ContentId }>, id: ContentId): boolean =>
   items.some((item: { readonly id: ContentId }): boolean => item.id === id)
 
 export interface ContainerTransform {

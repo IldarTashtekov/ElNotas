@@ -23,16 +23,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type {
-  AppState,
-  Clock,
-  Content,
-  IdGenerator,
-  Note,
-  Result,
-  StorageAdapter,
-  StorageError,
-} from "#core/index"
+import type { AppState, Clock, Content, IdGenerator, Note, Result, StorageAdapter, StorageError } from "#core/index"
 import { checkBox, text } from "#core/domain/Content"
 import { contentId, createStore, createUseCases, isCheckBox, noteId } from "#core/index"
 import { revision } from "#core/domain/Ids"
@@ -79,15 +70,11 @@ const valorDe = <T>(r: Result<T, StorageError>): T => {
 }
 
 /** Cuenta escrituras y transacciones sin cambiar el comportamiento. */
-const contando = (
-  base: StorageAdapter,
-): { adapter: StorageAdapter; escrituras: () => number } => {
+const contando = (base: StorageAdapter): { adapter: StorageAdapter; escrituras: () => number } => {
   let n = 0
   /* Genérico en el retorno: lo que devuelven `put` y `delete` es un `Result` y
      tiene que pasar por aquí intacto. */
-  const contar = <A extends unknown[], R>(
-    fn: (...args: A) => Promise<R>,
-  ): ((...args: A) => Promise<R>) => {
+  const contar = <A extends unknown[], R>(fn: (...args: A) => Promise<R>): ((...args: A) => Promise<R>) => {
     return async (...args) => {
       n += 1
       return fn(...args)
@@ -139,8 +126,7 @@ const montar = async () => {
 
   const useCases = createUseCases({ clock, ids, store })
 
-  const notaGuardada = async (): Promise<Note | null> =>
-    valorDe(await adapter.notes.get(ID_NOTA))
+  const notaGuardada = async (): Promise<Note | null> => valorDe(await adapter.notes.get(ID_NOTA))
   const notaEnMemoria = (): Note | undefined => store.getState().notes[ID_NOTA]
 
   return {
@@ -168,11 +154,7 @@ test("marcar una casilla YA marcada no llega a disco", async () => {
 
   assert.equal(app.avisos(), 0, "el Store ha avisado de un cambio que no hubo")
   assert.equal(app.escrituras(), 0, "ha escrito a disco sin que cambiara nada")
-  assert.equal(
-    app.notaEnMemoria()?.updatedAt,
-    HORA_INICIAL,
-    "ha ensuciado updatedAt",
-  )
+  assert.equal(app.notaEnMemoria()?.updatedAt, HORA_INICIAL, "ha ensuciado updatedAt")
 })
 
 test("tres marcados redundantes seguidos siguen sin llegar a disco", async () => {

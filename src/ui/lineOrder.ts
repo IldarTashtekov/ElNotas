@@ -108,7 +108,10 @@ export const dropTarget = (
   if (encima === undefined) return { depth, position: debajo === undefined ? rootEnd : before(debajo.id) }
   /* Un nivel más dentro que la de encima: su primera hija, o la única. */
   if (depth === encima.depth + 1) {
-    return { depth, position: debajo !== undefined && debajo.depth === depth ? before(debajo.id) : lastChildOf(encima.id) }
+    return {
+      depth,
+      position: debajo !== undefined && debajo.depth === depth ? before(debajo.id) : lastChildOf(encima.id),
+    }
   }
   /* Si no, detrás de la de encima o de la madre suya que esté a esa profundidad. */
   const hermana: FlatLine | undefined = rest

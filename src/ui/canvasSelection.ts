@@ -31,10 +31,7 @@ export const rectBetween = (a: Point, b: Point): Rect => ({
  * Los que toca el rectángulo, aunque sea sólo con un borde. Cada caja se mide
  * desde su centro, como se coloca un pósit.
  */
-export const boxesTouching = (
-  cajas: ReadonlyMap<string, Box>,
-  r: Rect,
-): ReadonlyArray<string> =>
+export const boxesTouching = (cajas: ReadonlyMap<string, Box>, r: Rect): ReadonlyArray<string> =>
   [...cajas.entries()]
     .filter(
       ([, c]: readonly [string, Box]): boolean =>

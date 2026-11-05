@@ -12,18 +12,13 @@
 import type { Diagram, DiagramNode, DiagramRelation } from "./Diagram.js"
 import type { DiagramNodeId, DiagramRelationId } from "./Ids.js"
 
-const posicionValida = (x: number, y: number): boolean =>
-  Number.isFinite(x) && Number.isFinite(y)
+const posicionValida = (x: number, y: number): boolean => Number.isFinite(x) && Number.isFinite(y)
 
 /**
  * Transforma un nodo y devuelve el diagrama con él. Si el nodo no existe, o `f`
  * lo devuelve tal cual, el diagrama de entrada: la comparación, escrita una vez.
  */
-const enNodo = (
-  diagram: Diagram,
-  id: DiagramNodeId,
-  f: (node: DiagramNode) => DiagramNode,
-): Diagram => {
+const enNodo = (diagram: Diagram, id: DiagramNodeId, f: (node: DiagramNode) => DiagramNode): Diagram => {
   const node: DiagramNode | undefined = diagram.nodes[id]
   if (node === undefined) return diagram
   const siguiente: DiagramNode = f(node)
@@ -71,17 +66,10 @@ export const setNodeText = (diagram: Diagram, id: DiagramNodeId, text: string): 
  * **No hace nada si:** el nodo no existe · ya está ahí · la posición no es un
  * número finito.
  */
-export const setNodePosition = (
-  diagram: Diagram,
-  id: DiagramNodeId,
-  positionX: number,
-  positionY: number,
-): Diagram => {
+export const setNodePosition = (diagram: Diagram, id: DiagramNodeId, positionX: number, positionY: number): Diagram => {
   if (!posicionValida(positionX, positionY)) return diagram
   return enNodo(diagram, id, (node: DiagramNode): DiagramNode =>
-    node.positionX === positionX && node.positionY === positionY
-      ? node
-      : { ...node, positionX, positionY },
+    node.positionX === positionX && node.positionY === positionY ? node : { ...node, positionX, positionY },
   )
 }
 
@@ -92,12 +80,7 @@ export const setNodePosition = (
  * **No hace nada si:** el desplazamiento es cero o no es un número finito ·
  * ningún nodo existe.
  */
-export const shiftNodes = (
-  diagram: Diagram,
-  ids: ReadonlyArray<DiagramNodeId>,
-  dx: number,
-  dy: number,
-): Diagram => {
+export const shiftNodes = (diagram: Diagram, ids: ReadonlyArray<DiagramNodeId>, dx: number, dy: number): Diagram => {
   if (!posicionValida(dx, dy) || (dx === 0 && dy === 0)) return diagram
   return [...new Set<DiagramNodeId>(ids)].reduce(
     (d: Diagram, id: DiagramNodeId): Diagram =>
@@ -116,9 +99,7 @@ export const shiftNodes = (
  * **No hace nada si:** el nodo no existe · ya está en ese valor.
  */
 export const setNodeDone = (diagram: Diagram, id: DiagramNodeId, done: boolean): Diagram =>
-  enNodo(diagram, id, (node: DiagramNode): DiagramNode =>
-    node.done === done ? node : { ...node, done },
-  )
+  enNodo(diagram, id, (node: DiagramNode): DiagramNode => (node.done === done ? node : { ...node, done }))
 
 /**
  * Borra un nodo y, en la misma operación, todas las relaciones que lo tocan: una
@@ -146,19 +127,14 @@ export const removeNodes = (diagram: Diagram, ids: ReadonlyArray<DiagramNodeId>)
       .map((n: DiagramNode): readonly [DiagramNodeId, DiagramNode] => [n.id, n]),
   )
 
-  const quedan: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(
-    diagram.relations,
-  ).filter((r: DiagramRelation): boolean => !fuera.has(r.from) && !fuera.has(r.to))
+  const quedan: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(diagram.relations).filter(
+    (r: DiagramRelation): boolean => !fuera.has(r.from) && !fuera.has(r.to),
+  )
   // Si no tocaba ninguna, el mismo objeto `relations`: no se copia por copiar.
   const relations: Diagram["relations"] =
     quedan.length === Object.keys(diagram.relations).length
       ? diagram.relations
-      : Object.fromEntries(
-          quedan.map((r: DiagramRelation): readonly [DiagramRelationId, DiagramRelation] => [
-            r.id,
-            r,
-          ]),
-        )
+      : Object.fromEntries(quedan.map((r: DiagramRelation): readonly [DiagramRelationId, DiagramRelation] => [r.id, r]))
 
   return { ...diagram, nodes, relations }
 }
@@ -206,28 +182,16 @@ export const setRelationEnds = (
  *
  * **No hace nada si:** la relación no existe · ya está en ese valor.
  */
-export const setRelationDirected = (
-  diagram: Diagram,
-  id: DiagramRelationId,
-  directed: boolean,
-): Diagram =>
-  enRelacion(diagram, id, (r: DiagramRelation): DiagramRelation =>
-    r.directed === directed ? r : { ...r, directed },
-  )
+export const setRelationDirected = (diagram: Diagram, id: DiagramRelationId, directed: boolean): Diagram =>
+  enRelacion(diagram, id, (r: DiagramRelation): DiagramRelation => (r.directed === directed ? r : { ...r, directed }))
 
 /**
  * Cambia el texto de una relación; vacío es sin texto.
  *
  * **No hace nada si:** la relación no existe · el texto ya es ese.
  */
-export const setRelationLabel = (
-  diagram: Diagram,
-  id: DiagramRelationId,
-  label: string,
-): Diagram =>
-  enRelacion(diagram, id, (r: DiagramRelation): DiagramRelation =>
-    r.label === label ? r : { ...r, label },
-  )
+export const setRelationLabel = (diagram: Diagram, id: DiagramRelationId, label: string): Diagram =>
+  enRelacion(diagram, id, (r: DiagramRelation): DiagramRelation => (r.label === label ? r : { ...r, label }))
 
 /**
  * Borra una relación. Los nodos no se tocan.

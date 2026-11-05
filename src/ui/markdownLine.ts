@@ -8,8 +8,7 @@
 
 /** Adónde lleva un enlace: una dirección web lista para abrir, o el id de algo de la app. */
 export type LinkTarget =
-  | { readonly kind: "web"; readonly href: string }
-  | { readonly kind: "internal"; readonly id: string }
+  { readonly kind: "web"; readonly href: string } | { readonly kind: "internal"; readonly id: string }
 
 /** Un enlace de la línea, con su sitio en la cadena cruda, marcas incluidas. */
 export interface LineLink {
@@ -105,9 +104,7 @@ const contar = (cadena: string, c: string): number => {
 // Dirección suelta que empieza en `i`, o null.
 const direccionSuelta = (raw: string, i: number, hasta: number): Hallazgo | null => {
   if (i > 0 && esPalabra(raw[i - 1])) return null
-  const prefijo: string | undefined = PREFIJOS_DIRECCION.find((p: string): boolean =>
-    empiezaSinMayus(raw, i, p),
-  )
+  const prefijo: string | undefined = PREFIJOS_DIRECCION.find((p: string): boolean => empiezaSinMayus(raw, i, p))
   if (prefijo === undefined) return null
   let fin: number = i
   while (fin < hasta && !esBlanco(raw[fin])) fin++
@@ -189,13 +186,7 @@ const enlaceEn = (raw: string, i: number, hasta: number): Hallazgo | null =>
   enlaceGuardado(raw, i, hasta) ?? direccionSuelta(raw, i, hasta)
 
 // Dónde empieza la siguiente unidad que no se parte al buscar un cierre.
-const siguienteUnidad = (
-  raw: string,
-  k: number,
-  hasta: number,
-  conEnlaces: boolean,
-  saltarDoble: boolean,
-): number => {
+const siguienteUnidad = (raw: string, k: number, hasta: number, conEnlaces: boolean, saltarDoble: boolean): number => {
   const c: string | undefined = raw[k]
   if (c === "\\" && k + 1 < hasta) {
     if (conEnlaces) {
@@ -220,13 +211,7 @@ const siguienteUnidad = (
 const cierreNegrita = (raw: string, i: number, hasta: number, conEnlaces: boolean): number => {
   let k: number = i + 2
   while (k < hasta) {
-    if (
-      raw[k] === "*" &&
-      raw[k + 1] === "*" &&
-      k + 1 < hasta &&
-      k >= i + 3 &&
-      !esBlanco(raw[k - 1])
-    ) {
+    if (raw[k] === "*" && raw[k + 1] === "*" && k + 1 < hasta && k >= i + 3 && !esBlanco(raw[k - 1])) {
       let j: number = k
       if (raw[i + 2] === "*") while (j + 2 < hasta && raw[j + 2] === "*") j++
       return j
@@ -240,12 +225,7 @@ const cierreNegrita = (raw: string, i: number, hasta: number, conEnlaces: boolea
 const cierreCursiva = (raw: string, i: number, hasta: number, conEnlaces: boolean): number => {
   let k: number = i + 1
   while (k < hasta) {
-    if (
-      raw[k] === "*" &&
-      !(raw[k + 1] === "*" && k + 1 < hasta) &&
-      k >= i + 2 &&
-      !esBlanco(raw[k - 1])
-    ) {
+    if (raw[k] === "*" && !(raw[k + 1] === "*" && k + 1 < hasta) && k >= i + 2 && !esBlanco(raw[k - 1])) {
       return k
     }
     k = siguienteUnidad(raw, k, hasta, conEnlaces, true)

@@ -17,7 +17,10 @@ const QUE_SENALAN = ["CLAUDE.md", "TAREAS.md", "TERMINADAS.md", "README.md"]
 const PARRAFO = String.fromCharCode(0xa7)
 const REFERENCIA = new RegExp(`${PARRAFO}(\\d+(?:\\.\\d+)*)`, "g")
 
-const FECHA = { patron: /\b\d{4}-\d{2}-\d{2}\b/, porque: "lleva una fecha: es crónica, y vive en TERMINADAS.md y git log" }
+const FECHA = {
+  patron: /\b\d{4}-\d{2}-\d{2}\b/,
+  porque: "lleva una fecha: es crónica, y vive en TERMINADAS.md y git log",
+}
 
 const REGLAS_ARQUITECTURA = [
   {
@@ -59,7 +62,9 @@ const leer = (fichero) => readFileSync(fichero, "utf8").split("\n")
 const hallados = DOCUMENTOS.flatMap(({ fichero, tope, reglas }) => {
   const suyas = leer(fichero)
   const malas = suyas.flatMap((linea, i) =>
-    reglas.flatMap((r) => (r.patron.test(linea) ? [`  ${fichero}:${i + 1}  ${r.porque}\n      ${linea.trim().slice(0, 100)}`] : [])),
+    reglas.flatMap((r) =>
+      r.patron.test(linea) ? [`  ${fichero}:${i + 1}  ${r.porque}\n      ${linea.trim().slice(0, 100)}`] : [],
+    ),
   )
   return suyas.length > tope
     ? [...malas, `  ${fichero}: ${suyas.length} líneas, y el tope es ${tope}: si crece, que cueste y se piense`]

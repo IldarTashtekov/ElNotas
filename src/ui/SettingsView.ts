@@ -56,17 +56,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
 /** Devuelve la función que la desmonta. */
 export const mountSettingsView = (
   raiz: HTMLElement,
-  {
-    store,
-    useCases,
-    phosphor,
-    confirm,
-    onExit,
-    onResetAll,
-    backup,
-    version,
-    logger,
-  }: SettingsViewDeps,
+  { store, useCases, phosphor, confirm, onExit, onResetAll, backup, version, logger }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
   titulo.className = "titulo"
@@ -112,14 +102,18 @@ export const mountSettingsView = (
         li.dataset["id"] = ctx.id
         li.append(
           elemento("span"),
-          boton("Borrar", (): void => {
-            /* El nombre se lee al pulsar: la fila sobrevive a los renombrados. */
-            const nombre: string = store.getState().contexts[ctx.id]?.name ?? ctx.name
-            /* Una de las pocas confirmaciones de la app: no tiene vuelta atrás. */
-            confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`, "Borrar", (): void => {
-              useCases.deleteContext(ctx.id)
-            })
-          }, "secundario"),
+          boton(
+            "Borrar",
+            (): void => {
+              /* El nombre se lee al pulsar: la fila sobrevive a los renombrados. */
+              const nombre: string = store.getState().contexts[ctx.id]?.name ?? ctx.name
+              /* Una de las pocas confirmaciones de la app: no tiene vuelta atrás. */
+              confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`, "Borrar", (): void => {
+                useCases.deleteContext(ctx.id)
+              })
+            },
+            "secundario",
+          ),
         )
         return li
       },
@@ -128,7 +122,6 @@ export const mountSettingsView = (
         if (nombre !== null) setTextIfChanged(nombre, ctx.name)
       },
     })
-
   }
 
   const seccion = (nombre: string, ...hijos: ReadonlyArray<HTMLElement>): HTMLElement => {
@@ -170,12 +163,16 @@ export const mountSettingsView = (
   sinBorrar.className = "aviso"
   sinBorrar.setAttribute("role", "alert")
   sinBorrar.hidden = true
-  const borrarTodo: HTMLButtonElement = boton("Borrar todo", (): void => {
-    /* La pregunta se cuenta al pulsar: dice lo que hay ahora. */
-    confirm(resetQuestion(store.getState()), "Borrar todo", (): void => {
-      sinBorrar.hidden = onResetAll()
-    })
-  }, "borrar-todo")
+  const borrarTodo: HTMLButtonElement = boton(
+    "Borrar todo",
+    (): void => {
+      /* La pregunta se cuenta al pulsar: dice lo que hay ahora. */
+      confirm(resetQuestion(store.getState()), "Borrar todo", (): void => {
+        sinBorrar.hidden = onResetAll()
+      })
+    },
+    "borrar-todo",
+  )
   const explicacion: HTMLParagraphElement = elemento(
     "p",
     "Borra todas las notas, diagramas, contextos y ventanas de este navegador, y deja la app como recién instalada.",
@@ -266,13 +263,7 @@ export const mountSettingsView = (
   pie.className = "version"
   const vista: HTMLElement = elemento("div")
   vista.className = "vista-ajustes"
-  vista.append(
-    cabecera,
-    seccion("Contextos", formulario, listaContextos),
-    seccion("Pantalla", fosforos),
-    datos,
-    pie,
-  )
+  vista.append(cabecera, seccion("Contextos", formulario, listaContextos), seccion("Pantalla", fosforos), datos, pie)
   raiz.replaceChildren(vista)
   pintar()
   const baja: Unsubscribe = store.subscribe((): void => pintar())

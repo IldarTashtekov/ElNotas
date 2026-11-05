@@ -78,8 +78,7 @@ const nota = (s: AppState): Note => {
 
 const lineas = (s: AppState): ReadonlyArray<Content> => nota(s).content
 
-const buscar = (s: AppState, id: typeof ID_TITULO): Content | undefined =>
-  lineas(s).find((c) => c.id === id)
+const buscar = (s: AppState, id: typeof ID_TITULO): Content | undefined => lineas(s).find((c) => c.id === id)
 
 /** Todo no-op tiene que cumplir las dos cosas, no sólo una. */
 const esNoOp = (antes: AppState, despues: AppState, que: string): void => {

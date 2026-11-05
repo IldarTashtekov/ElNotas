@@ -6,17 +6,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type {
-  Clock,
-  Context,
-  ContextId,
-  IdGenerator,
-  Note,
-  Result,
-  StorageError,
-  Store,
-  UseCases,
-} from "#core/index"
+import type { Clock, Context, ContextId, IdGenerator, Note, Result, StorageError, Store, UseCases } from "#core/index"
 import { createStore, createUseCases, err, ok } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { WindowRef } from "#ui/windows"
@@ -235,9 +225,7 @@ test("añadir pone la nueva al final, la deja activa y lo guarda", (): void => {
 test("lo guardado con el General y el calendario en medio se lee tal cual, sin escribir", (): void => {
   const { store, creado } = escenario()
   const casa: ContextId = creado("Casa")
-  const persistence: AlmacenFalso = almacen(
-    ok({ windows: [ventana(casa), CALENDAR, GENERAL], active: ventana(casa) }),
-  )
+  const persistence: AlmacenFalso = almacen(ok({ windows: [ventana(casa), CALENDAR, GENERAL], active: ventana(casa) }))
   const model: WindowsModel = createWindowsModel({ logger: silentLogger, store, persistence })
 
   assert.deepEqual(model.getLayout().windows, [ventana(casa), CALENDAR, GENERAL])

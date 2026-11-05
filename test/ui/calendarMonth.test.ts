@@ -12,15 +12,7 @@ import { emptyAppState } from "#core/domain/AppState"
 import { eventId } from "#core/domain/Ids"
 import { revision } from "#core/domain/Ids"
 import type { DayCell, MonthRef, MonthView } from "#ui/calendarMonth"
-import {
-  dayTitle,
-  eventsOfDay,
-  monthOf,
-  monthTitle,
-  monthView,
-  sameMonth,
-  shiftMonth,
-} from "#ui/calendarMonth"
+import { dayTitle, eventsOfDay, monthOf, monthTitle, monthView, sameMonth, shiftMonth } from "#ui/calendarMonth"
 
 const dia = (texto: string): Day => {
   const d: Day | null = parseDay(texto)

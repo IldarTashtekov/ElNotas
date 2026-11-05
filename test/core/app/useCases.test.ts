@@ -128,9 +128,7 @@ const montar = () => {
 }
 
 /** El `Store` de verdad, reducer incluido. Para ver qué devuelve cada caso de uso. */
-const montarDeVerdad = (
-  inicial: AppState = VACIO,
-): { readonly store: Store; readonly useCases: UseCases } => {
+const montarDeVerdad = (inicial: AppState = VACIO): { readonly store: Store; readonly useCases: UseCases } => {
   let idsGenerados: number = 0
   const clock: Clock = { now: (): number => HORA }
   const ids: IdGenerator = { next: (): string => `id-${(idsGenerados += 1)}` }
@@ -202,50 +200,25 @@ const CABLEADO: ReadonlyArray<
   ["delete-diagram", (u: UseCases): Diagram | null => u.deleteDiagram(ID_DIAGRAMA)],
   ["add-node", (u: UseCases): Diagram | null => u.addTextNode(ID_DIAGRAMA, "Cajas", 0, 0)],
   ["set-node-text", (u: UseCases): Diagram | null => u.setNodeText(ID_DIAGRAMA, ID_NODO, "x")],
-  [
-    "set-node-position",
-    (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 1, 2),
-  ],
+  ["set-node-position", (u: UseCases): Diagram | null => u.setNodePosition(ID_DIAGRAMA, ID_NODO, 1, 2)],
   ["shift-nodes", (u: UseCases): Diagram | null => u.shiftNodes(ID_DIAGRAMA, [ID_NODO], 1, 2)],
   ["set-node-done", (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true)],
   ["remove-node", (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO)],
   ["remove-nodes", (u: UseCases): Diagram | null => u.removeNodes(ID_DIAGRAMA, [ID_NODO, ID_OTRO_NODO])],
-  [
-    "add-relation",
-    (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_OTRO_NODO),
-  ],
+  ["add-relation", (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_OTRO_NODO)],
   [
     "set-relation-ends",
-    (u: UseCases): Diagram | null =>
-      u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
+    (u: UseCases): Diagram | null => u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
   ],
-  [
-    "set-relation-directed",
-    (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, false),
-  ],
-  [
-    "set-relation-label",
-    (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "antes"),
-  ],
-  [
-    "remove-relation",
-    (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, ID_RELACION),
-  ],
-  [
-    "create-event",
-    (u: UseCases): CalendarEvent | null => u.createEvent(DIA, HORA_DEL_DIA, "Cita"),
-  ],
-  [
-    "update-event",
-    (u: UseCases): CalendarEvent | null => u.updateEvent(ID_EVENTO, DIA, null, "Otra"),
-  ],
+  ["set-relation-directed", (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, false)],
+  ["set-relation-label", (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "antes")],
+  ["remove-relation", (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, ID_RELACION)],
+  ["create-event", (u: UseCases): CalendarEvent | null => u.createEvent(DIA, HORA_DEL_DIA, "Cita")],
+  ["update-event", (u: UseCases): CalendarEvent | null => u.updateEvent(ID_EVENTO, DIA, null, "Otra")],
   ["delete-event", (u: UseCases): CalendarEvent | null => u.deleteEvent(ID_EVENTO)],
   ["create-routine", (u: UseCases): Routine | null => u.createRoutine("Correr", 3)],
   ["rename-routine", (u: UseCases): Routine | null => u.renameRoutine(ID_RUTINA, "Trotar")],
-  [
-    "set-routine-day",
-    (u: UseCases): Routine | null => u.setRoutineDay(ID_RUTINA, DIA, true, DIA),
-  ],
+  ["set-routine-day", (u: UseCases): Routine | null => u.setRoutineDay(ID_RUTINA, DIA, true, DIA)],
   ["set-routine-goal", (u: UseCases): Routine | null => u.setRoutineGoal(ID_RUTINA, 5)],
   ["delete-routine", (u: UseCases): Routine | null => u.deleteRoutine(ID_RUTINA)],
 ]
@@ -389,9 +362,7 @@ test("⚠️ un no-op devuelve null AUNQUE la nota exista — los once, uno por 
  * tenía, ocultar lo que no tiene, mostrar lo que no estaba oculto—.
  * `deleteContext` siempre aplica si el contexto está.
  */
-const NO_OP_CON_CONTEXTO: ReadonlyArray<
-  readonly [string, (u: UseCases) => Context | null]
-> = [
+const NO_OP_CON_CONTEXTO: ReadonlyArray<readonly [string, (u: UseCases) => Context | null]> = [
   ["addItem", (u) => u.addItem(ID_CONTEXTO, noteRef(noteId("fantasma")))],
   ["removeItem", (u) => u.removeItem(ID_CONTEXTO, noteRef(noteId("fantasma")))],
   ["setDefaultView", (u) => u.setDefaultView(ID_CONTEXTO, { type: "context" })],
@@ -462,18 +433,11 @@ const NO_OP_CON_DIAGRAMA: ReadonlyArray<readonly [string, (u: UseCases) => Diagr
   ["addRelation", (u: UseCases): Diagram | null => u.addRelation(ID_DIAGRAMA, ID_NODO, ID_NODO)],
   [
     "setRelationEnds",
-    (u: UseCases): Diagram | null =>
-      u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_NODO, ID_OTRO_NODO),
+    (u: UseCases): Diagram | null => u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_NODO, ID_OTRO_NODO),
   ],
-  [
-    "setRelationDirected",
-    (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, true),
-  ],
+  ["setRelationDirected", (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, true)],
   ["setRelationLabel", (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "")],
-  [
-    "removeRelation",
-    (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, diagramRelationId("fantasma")),
-  ],
+  ["removeRelation", (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, diagramRelationId("fantasma"))],
 ]
 
 test("⚠️ un no-op devuelve null AUNQUE el diagrama exista — los trece", (): void => {
@@ -658,8 +622,7 @@ test("las acciones que NO crean nada piden un solo id: el de la revisión", () =
     (u: UseCases): Diagram | null => u.setNodeDone(ID_DIAGRAMA, ID_NODO, true),
     (u: UseCases): Diagram | null => u.removeNode(ID_DIAGRAMA, ID_NODO),
     (u: UseCases): Diagram | null => u.removeNodes(ID_DIAGRAMA, [ID_NODO]),
-    (u: UseCases): Diagram | null =>
-      u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
+    (u: UseCases): Diagram | null => u.setRelationEnds(ID_DIAGRAMA, ID_RELACION, ID_OTRO_NODO, ID_NODO),
     (u: UseCases): Diagram | null => u.setRelationDirected(ID_DIAGRAMA, ID_RELACION, false),
     (u: UseCases): Diagram | null => u.setRelationLabel(ID_DIAGRAMA, ID_RELACION, "x"),
     (u: UseCases): Diagram | null => u.removeRelation(ID_DIAGRAMA, ID_RELACION),

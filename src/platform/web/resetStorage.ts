@@ -34,9 +34,7 @@ export const resetIfRequested = (almacen: Storage): boolean => {
     const claves: ReadonlyArray<string> = Array.from(
       { length: almacen.length },
       (_: unknown, i: number): string | null => almacen.key(i),
-    ).filter(
-      (k: string | null): k is string => k !== null && k.startsWith(PREFIJO) && k !== RESET_KEY,
-    )
+    ).filter((k: string | null): k is string => k !== null && k.startsWith(PREFIJO) && k !== RESET_KEY)
     for (const clave of claves) almacen.removeItem(clave)
     almacen.removeItem(RESET_KEY)
     return true

@@ -34,14 +34,7 @@ import type {
   Store,
   UseCases,
 } from "#core/index"
-import {
-  EMPTY_STORE_VERSION,
-  createStore,
-  createUseCases,
-  hydrate,
-  ok,
-  runMigrations,
-} from "#core/index"
+import { EMPTY_STORE_VERSION, createStore, createUseCases, hydrate, ok, runMigrations } from "#core/index"
 import type { OnCorrupt, OnError, Schedule, WriteBehind } from "#storage/index"
 import { createFileStorageAdapter, createWriteBehind, pathOf, refOf } from "#storage/index"
 
@@ -104,10 +97,8 @@ const guardarMigrado = (
   adapter.transaction(async (): Promise<Result<void, StorageError>> => {
     const pasos: ReadonlyArray<() => Promise<Result<void, StorageError>>> = [
       (): Promise<Result<void, StorageError>> => guardarCambiadas(adapter.notes, antes.notes, despues.notes),
-      (): Promise<Result<void, StorageError>> =>
-        guardarCambiadas(adapter.diagrams, antes.diagrams, despues.diagrams),
-      (): Promise<Result<void, StorageError>> =>
-        guardarCambiadas(adapter.contexts, antes.contexts, despues.contexts),
+      (): Promise<Result<void, StorageError>> => guardarCambiadas(adapter.diagrams, antes.diagrams, despues.diagrams),
+      (): Promise<Result<void, StorageError>> => guardarCambiadas(adapter.contexts, antes.contexts, despues.contexts),
       /* Eventos y rutinas pueden faltar en lo guardado antes de que existieran. */
       (): Promise<Result<void, StorageError>> =>
         guardarCambiadas(adapter.events, antes.events ?? [], despues.events ?? []),
@@ -138,10 +129,7 @@ export const boot = async ({
   const apuntar: OnCorrupt = (fallo: StorageError): void => {
     saltados = [...saltados, fallo]
   }
-  const adapter: StorageAdapter = createFileStorageAdapter(
-    blobs,
-    skipCorrupt ? { onCorrupt: apuntar } : {},
-  )
+  const adapter: StorageAdapter = createFileStorageAdapter(blobs, skipCorrupt ? { onCorrupt: apuntar } : {})
 
   const version: Result<number, StorageError> = await adapter.getSchemaVersion()
   if (!version.ok) return version
@@ -150,8 +138,7 @@ export const boot = async ({
   if (!notes.ok) return notes
   const diagrams: Result<ReadonlyArray<Diagram>, StorageError> = await adapter.diagrams.getAll()
   if (!diagrams.ok) return diagrams
-  const contexts: Result<ReadonlyArray<Context>, StorageError> =
-    await adapter.contexts.getAll()
+  const contexts: Result<ReadonlyArray<Context>, StorageError> = await adapter.contexts.getAll()
   if (!contexts.ok) return contexts
   const events: Result<ReadonlyArray<CalendarEvent>, StorageError> = await adapter.events.getAll()
   if (!events.ok) return events
@@ -173,11 +160,7 @@ export const boot = async ({
       return ref === null ? [] : [ref]
     }),
   }
-  const migrado: Result<MigrationResult, MigrationError> = runMigrations(
-    guardado,
-    version.value,
-    migrations,
-  )
+  const migrado: Result<MigrationResult, MigrationError> = runMigrations(guardado, version.value, migrations)
   if (!migrado.ok) return migrado
 
   /* El único casting del arranque: lo que sale de las migraciones es `unknown`.
@@ -199,13 +182,10 @@ export const boot = async ({
     if (!apuntada.ok) return apuntada
   }
 
-  const estado: AppState = hydrate(
-    migradas,
-    (item: ItemRef): boolean => {
-      const camino: string | null = pathOf(item)
-      return camino !== null && ilegibles.has(camino)
-    },
-  )
+  const estado: AppState = hydrate(migradas, (item: ItemRef): boolean => {
+    const camino: string | null = pathOf(item)
+    return camino !== null && ilegibles.has(camino)
+  })
 
   const store: Store = createStore(estado)
   const writer: WriteBehind = createWriteBehind({

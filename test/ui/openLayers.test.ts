@@ -7,16 +7,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type {
-  Clock,
-  Diagram,
-  IdGenerator,
-  Note,
-  Result,
-  StorageError,
-  Store,
-  UseCases,
-} from "#core/index"
+import type { Clock, Diagram, IdGenerator, Note, Result, StorageError, Store, UseCases } from "#core/index"
 import { createStore, createUseCases, diagramId, err, noteId, ok } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { OpenLayers, OpenLayersPersistence } from "#ui/index"
@@ -136,10 +127,9 @@ test("una nota y un diagrama no se confunden aunque compartan id", (): void => {
 
 test("al arrancar se abre lo guardado que sigue ahí", (): void => {
   const { store, nota }: Escenario = escenario()
-  assert.deepEqual(
-    layersToRestore(almacen(ok([{ kind: "note", id: nota.id }])), store.getState()),
-    [{ kind: "note", id: nota.id }],
-  )
+  assert.deepEqual(layersToRestore(almacen(ok([{ kind: "note", id: nota.id }])), store.getState()), [
+    { kind: "note", id: nota.id },
+  ])
 })
 
 test("al arrancar, lo guardado que ya no está no se abre", (): void => {
@@ -149,9 +139,7 @@ test("al arrancar, lo guardado que ya no está no se abre", (): void => {
     { kind: "diagram", id: diagrama.id },
     { kind: "note", id: nota.id },
   ]
-  assert.deepEqual(layersToRestore(almacen(ok(guardado)), store.getState()), [
-    { kind: "diagram", id: diagrama.id },
-  ])
+  assert.deepEqual(layersToRestore(almacen(ok(guardado)), store.getState()), [{ kind: "diagram", id: diagrama.id }])
 })
 
 test("si no se puede leer, no se abre nada", (): void => {

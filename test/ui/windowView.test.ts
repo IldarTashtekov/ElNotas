@@ -56,8 +56,7 @@ const ventanaDe = (layout: WindowsLayout): Extract<WindowView, { kind: "window" 
   return vista
 }
 
-const nombres = (items: ReadonlyArray<ListItem>): ReadonlyArray<string> =>
-  items.map((i: ListItem): string => i.name)
+const nombres = (items: ReadonlyArray<ListItem>): ReadonlyArray<string> => items.map((i: ListItem): string => i.name)
 
 test("sin ventana activa, la pantalla vacía", (): void => {
   assert.deepEqual(windowView({ windows: [], active: null }, ESTADO), { kind: "empty" })
@@ -68,7 +67,10 @@ const pestanas = (tabs: ReadonlyArray<WindowTab>): ReadonlyArray<string> =>
 
 test("las pestañas: todas iguales, el General y el calendario también, cada una con su puesto, su símbolo y cuál es la activa", (): void => {
   const deNota: WindowRef = { kind: "note", id: LECHE.id }
-  const tabs: ReadonlyArray<WindowTab> = windowTabs({ windows: [CALENDAR, COMPRA, GENERAL, deNota], active: COMPRA }, ESTADO)
+  const tabs: ReadonlyArray<WindowTab> = windowTabs(
+    { windows: [CALENDAR, COMPRA, GENERAL, deNota], active: COMPRA },
+    ESTADO,
+  )
   assert.deepEqual(pestanas(tabs), ["0:▦ Calendario", "1:▤ Compra *", "2:≡ General", "3:¶ Leche"])
 })
 

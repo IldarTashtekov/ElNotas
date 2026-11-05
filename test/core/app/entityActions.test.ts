@@ -58,11 +58,7 @@ const MUDANZA: Diagram = {
   revision: revision("rev-mudanza"),
 }
 
-const contexto = (
-  id: typeof ID_CASA,
-  name: string,
-  items: Context["items"],
-): Context => ({
+const contexto = (id: typeof ID_CASA, name: string, items: Context["items"]): Context => ({
   id,
   name,
   defaultView: { type: "context" },
@@ -125,18 +121,12 @@ test("rename-note cambia el nombre y estampa", () => {
 
 test("rename-note con el mismo nombre es no-op", () => {
   const antes = estado()
-  assert.strictEqual(
-    reduce(antes, { type: "rename-note", noteId: ID_COMPRA, name: "Compra", meta: META }),
-    antes,
-  )
+  assert.strictEqual(reduce(antes, { type: "rename-note", noteId: ID_COMPRA, name: "Compra", meta: META }), antes)
 })
 
 test("rename-note sobre una nota inexistente es no-op", () => {
   const antes = estado()
-  assert.strictEqual(
-    reduce(antes, { type: "rename-note", noteId: noteId("no-existe"), name: "x", meta: META }),
-    antes,
-  )
+  assert.strictEqual(reduce(antes, { type: "rename-note", noteId: noteId("no-existe"), name: "x", meta: META }), antes)
 })
 
 test("rename-note NO toca los contextos", () => {
@@ -192,10 +182,7 @@ test("delete-note de una nota que no está en ningún contexto no toca ninguno",
 
 test("delete-note sobre una nota inexistente es no-op", () => {
   const antes = estado()
-  assert.strictEqual(
-    reduce(antes, { type: "delete-note", noteId: noteId("no-existe"), meta: META }),
-    antes,
-  )
+  assert.strictEqual(reduce(antes, { type: "delete-note", noteId: noteId("no-existe"), meta: META }), antes)
 })
 
 /* ──────────────────────────────── Contexto ────────────────────────────────── */
@@ -221,10 +208,7 @@ test("delete-context NO borra las notas que contenía", () => {
 
 test("rename-context con el mismo nombre es no-op", () => {
   const antes = estado()
-  assert.strictEqual(
-    reduce(antes, { type: "rename-context", contextId: ID_CASA, name: "Casa", meta: META }),
-    antes,
-  )
+  assert.strictEqual(reduce(antes, { type: "rename-context", contextId: ID_CASA, name: "Casa", meta: META }), antes)
 })
 
 /* ──────────────── add-item: el otro lado de la integridad ─────────────────── */
@@ -478,11 +462,8 @@ const conCuatro = (): AppState => {
   }
 }
 
-const reordenar = (
-  s: AppState,
-  items: ReadonlyArray<ItemRef>,
-  before: ItemRef | null,
-): AppState => reduce(s, { type: "reorder-items", contextId: ID_CASA, items, before, meta: META })
+const reordenar = (s: AppState, items: ReadonlyArray<ItemRef>, before: ItemRef | null): AppState =>
+  reduce(s, { type: "reorder-items", contextId: ID_CASA, items, before, meta: META })
 
 test("reorder-items mueve varios juntos, en el orden en que los lista el contexto", (): void => {
   // Pedidos al revés: se quedan en su orden relativo, no en el de la petición.

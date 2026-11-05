@@ -35,8 +35,7 @@ export const noteId = (raw: string): NoteId => raw as NoteId
 export const diagramId = (raw: string): DiagramId => raw as DiagramId
 export const contextId = (raw: string): ContextId => raw as ContextId
 export const diagramNodeId = (raw: string): DiagramNodeId => raw as DiagramNodeId
-export const diagramRelationId = (raw: string): DiagramRelationId =>
-  raw as DiagramRelationId
+export const diagramRelationId = (raw: string): DiagramRelationId => raw as DiagramRelationId
 export const eventId = (raw: string): EventId => raw as EventId
 export const routineId = (raw: string): RoutineId => raw as RoutineId
 export const contentId = (raw: string): ContentId => raw as ContentId
@@ -50,8 +49,7 @@ export const revision = (raw: string): Revision => raw as Revision
  * cosa que Note y Diagram no son entre sí (los dos son { id, name, ... }).
  */
 export type ItemRef =
-  | { readonly kind: "note"; readonly id: NoteId }
-  | { readonly kind: "diagram"; readonly id: DiagramId }
+  { readonly kind: "note"; readonly id: NoteId } | { readonly kind: "diagram"; readonly id: DiagramId }
 
 export const noteRef = (id: NoteId): ItemRef => ({ kind: "note", id })
 export const diagramRef = (id: DiagramId): ItemRef => ({ kind: "diagram", id })

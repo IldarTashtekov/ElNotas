@@ -16,8 +16,7 @@ export interface EventInput {
 }
 
 export type EventFormResult =
-  | { readonly ok: true; readonly input: EventInput }
-  | { readonly ok: false; readonly problem: string }
+  { readonly ok: true; readonly input: EventInput } | { readonly ok: false; readonly problem: string }
 
 /** El motivo que se le pone a un evento sin motivo, como «Nueva Nota» a una nota. */
 export const NEW_EVENT_TITLE: string = "Evento"

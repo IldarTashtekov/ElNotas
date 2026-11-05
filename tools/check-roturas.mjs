@@ -16,7 +16,16 @@
  * pasada, y lo que se edite mientras tanto no se pisa.
  */
 import { spawn, spawnSync } from "node:child_process"
-import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import ts from "typescript"
 import { ROTURAS } from "./roturas.mjs"
@@ -72,17 +81,20 @@ const lanzar = (orden, args) =>
   })
 
 const npm = (script) => lanzar("npm", ["run", script])
-const pruebas = (ficheros) =>
-  lanzar(process.execPath, ["--conditions=compiled", "--test", ...ficheros.map(compilado)])
+const pruebas = (ficheros) => lanzar(process.execPath, ["--conditions=compiled", "--test", ...ficheros.map(compilado)])
 
 /* Las opciones de tsconfig.test.json, para traducir un fichero igual que lo compila `npm test`. */
-const config = ts.getParsedCommandLineOfConfigFile("tsconfig.test.json", {}, {
-  ...ts.sys,
-  onUnRecoverableConfigFileDiagnostic: (d) => {
-    console.error(ts.flattenDiagnosticMessageText(d.messageText, "\n"))
-    process.exit(1)
+const config = ts.getParsedCommandLineOfConfigFile(
+  "tsconfig.test.json",
+  {},
+  {
+    ...ts.sys,
+    onUnRecoverableConfigFileDiagnostic: (d) => {
+      console.error(ts.flattenDiagnosticMessageText(d.messageText, "\n"))
+      process.exit(1)
+    },
   },
-})
+)
 const compilado = (fichero) => `${SALIDA}/${fichero.replace(/\.ts$/, ".js")}`
 /** El JS de un fichero, sin mirar los tipos, o `null` si ni siquiera se puede leer como TypeScript. */
 const traducir = (fichero, codigo) => {
@@ -176,7 +188,10 @@ for (const rotura of elegidas) {
     const caidas = [
       ...new Set((r.salida.match(/^✖ (?!failing tests).*$/gm) ?? []).map((c) => c.replace(/ \([\d.]+ms\)$/, ""))),
     ]
-    const vistas = caidas.slice(0, 3).map((c) => `\n             ${c}`).join("")
+    const vistas = caidas
+      .slice(0, 3)
+      .map((c) => `\n             ${c}`)
+      .join("")
     const mas = caidas.length > 3 ? `\n             … y ${caidas.length - 3} más` : ""
     console.log(`✓ cazada    ${nombre}${vistas}${mas}`)
   }

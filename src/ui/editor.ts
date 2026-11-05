@@ -37,9 +37,7 @@ const contenido = (deps: EditorDeps): ReadonlyArray<Content> => deps.note()?.con
 /** La última hija de una casilla, que es donde nace una línea anidada. */
 const ultimaHija = (content: ReadonlyArray<Content>, id: ContentId): Content | null => {
   const madre: Content | undefined = locate(content, id)?.line
-  return madre !== undefined && isCheckBox(madre)
-    ? (madre.children[madre.children.length - 1] ?? null)
-    : null
+  return madre !== undefined && isCheckBox(madre) ? (madre.children[madre.children.length - 1] ?? null) : null
 }
 
 /** Parte la línea y deja la mitad nueva de la clase que diga el interruptor. */
@@ -88,11 +86,7 @@ export const pressEnter = (deps: EditorDeps, caret: Caret, mode: WritingMode): E
   const donde: Position = anida ? lastChildOf(linea.id) : after(linea.id)
   const nota: Note | null = deps.useCases.insertCheckBox(deps.noteId, "", donde)
   const nueva: Content | null =
-    nota === null
-      ? null
-      : anida
-        ? ultimaHija(nota.content, linea.id)
-        : nextSibling(nota.content, linea.id)
+    nota === null ? null : anida ? ultimaHija(nota.content, linea.id) : nextSibling(nota.content, linea.id)
   return {
     caret: nueva === null ? caret : { line: nueva.id, offset: 0 },
     /* Sólo se desarma si ha anidado: desde un texto no puede, y espera a la siguiente. */
@@ -105,11 +99,7 @@ export const pressEnter = (deps: EditorDeps, caret: Caret, mode: WritingMode): E
  * primero intenta quitar la casilla; si no cambió nada —era texto, o una casilla
  * anidada o con hijas—, une con la de arriba.
  */
-export const pressBackspaceAtStart = (
-  deps: EditorDeps,
-  caret: Caret,
-  mode: WritingMode,
-): EditResult => {
+export const pressBackspaceAtStart = (deps: EditorDeps, caret: Caret, mode: WritingMode): EditResult => {
   const antes: Located | null = locate(contenido(deps), caret.line)
   if (antes === null) return { caret: null, mode }
 
@@ -136,16 +126,11 @@ export const pressBackspaceAtStart = (
  *     encender en una casilla              nada: ya lo es
  *     apagar en una casilla                pasa a texto, si cabe; y se desarma anidar
  */
-export const toggleCheckbox = (
-  deps: EditorDeps,
-  caret: Caret | null,
-  mode: WritingMode,
-): EditResult => {
+export const toggleCheckbox = (deps: EditorDeps, caret: Caret | null, mode: WritingMode): EditResult => {
   const encender: boolean = !mode.checkbox
   /* Cambiar el interruptor desarma anidar: lo armado era para el modo de antes. */
   const modo: WritingMode = { checkbox: encender, nestArmed: false }
-  const linea: Content | undefined =
-    caret === null ? undefined : locate(contenido(deps), caret.line)?.line
+  const linea: Content | undefined = caret === null ? undefined : locate(contenido(deps), caret.line)?.line
   if (caret === null || linea === undefined) return { caret, mode: modo }
 
   if (!encender) {

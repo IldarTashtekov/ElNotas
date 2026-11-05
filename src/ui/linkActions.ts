@@ -32,8 +32,7 @@ export type ResolvedLink =
 export type LinkKind = NonNullable<ResolvedLink>["kind"]
 
 // `id` sale del texto de una nota: "constructor" o "__proto__" no son claves del almacén.
-const tiene = (registro: object, id: string): boolean =>
-  Object.prototype.hasOwnProperty.call(registro, id)
+const tiene = (registro: object, id: string): boolean => Object.prototype.hasOwnProperty.call(registro, id)
 
 /**
  * A qué lleva el `#id` de un enlace: una nota, un diagrama, un evento o una
@@ -112,8 +111,7 @@ export const removeLink = (
 }
 
 /** Si es una dirección web que se puede enlazar: `http://`, `https://` o `www.` y algo detrás, sin espacios. */
-export const isWebAddress = (texto: string): boolean =>
-  /^(https?:\/\/|www\.)\S+$/i.test(texto.trim())
+export const isWebAddress = (texto: string): boolean => /^(https?:\/\/|www\.)\S+$/i.test(texto.trim())
 
 /** Algo que se puede enlazar: su nombre (el texto por defecto del enlace) y, si lo hay, un detalle que se ve al lado. */
 export interface LinkChoice<Id extends string> {
@@ -134,10 +132,7 @@ const porNombre = (a: { readonly name: string }, b: { readonly name: string }): 
   a.name.localeCompare(b.name, "es", { sensitivity: "base" })
 
 /** Los eventos de hoy en adelante, del más próximo al más lejano, y luego los pasados, del más reciente atrás. */
-const eventosParaEnlazar = (
-  eventos: ReadonlyArray<CalendarEvent>,
-  hoy: Day | null,
-): ReadonlyArray<CalendarEvent> => {
+const eventosParaEnlazar = (eventos: ReadonlyArray<CalendarEvent>, hoy: Day | null): ReadonlyArray<CalendarEvent> => {
   const orden = (a: CalendarEvent, b: CalendarEvent): number =>
     a.day === b.day ? (a.time ?? "").localeCompare(b.time ?? "") : a.day.localeCompare(b.day)
   const todos: ReadonlyArray<CalendarEvent> = [...eventos].sort(orden)

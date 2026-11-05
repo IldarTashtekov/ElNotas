@@ -58,11 +58,7 @@ test("dos entre el mismo par, una a cada lado, AUNQUE vayan en sentidos contrari
 })
 
 test("tres entre el mismo par: una recta en medio y una a cada lado", (): void => {
-  const c: ReadonlyMap<string, number> = fanOffsets([
-    rel("r3", "a", "b"),
-    rel("r1", "a", "b"),
-    rel("r2", "b", "a"),
-  ])
+  const c: ReadonlyMap<string, number> = fanOffsets([rel("r3", "a", "b"), rel("r1", "a", "b"), rel("r2", "b", "a")])
   assert.deepEqual([c.get("r1"), c.get("r2"), c.get("r3")], [-FAN_SPACING, 0, FAN_SPACING])
 })
 

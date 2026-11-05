@@ -32,13 +32,7 @@ import type {
 } from "#core/index"
 import { diagramId, diagramRef, err, noteId, noteRef, ok } from "#core/index"
 import type { Problem } from "./schema.js"
-import {
-  contextProblem,
-  diagramProblem,
-  eventProblem,
-  noteProblem,
-  routineProblem,
-} from "./schema.js"
+import { contextProblem, diagramProblem, eventProblem, noteProblem, routineProblem } from "./schema.js"
 
 /* ════════════════════════════ El esquema en disco ══════════════════════════ */
 
@@ -184,10 +178,7 @@ const aBytes = (valor: unknown): Result<Uint8Array, StorageError> => {
  * `[]` dentro es JSON válido y no es una entidad. La forma campo a campo no se
  * mira aquí, sino en `entidadDe`, con los validadores de `schema.ts`.
  */
-const parsear = (
-  camino: string,
-  bytes: Uint8Array,
-): Result<Record<string, unknown>, StorageError> => {
+const parsear = (camino: string, bytes: Uint8Array): Result<Record<string, unknown>, StorageError> => {
   try {
     const texto: string = descodificador.decode(bytes)
     const valor: unknown = JSON.parse(texto)
@@ -219,11 +210,7 @@ type Validador = (o: Record<string, unknown>) => Problem
  * Lo que no la tenga es `corrupt`, con el motivo: un fichero que parsea pero no
  * es una nota no se puede leer como nota.
  */
-const entidadDe = <T>(
-  camino: string,
-  bytes: Uint8Array,
-  valida: Validador,
-): Result<T, StorageError> => {
+const entidadDe = <T>(camino: string, bytes: Uint8Array, valida: Validador): Result<T, StorageError> => {
   const parsed: Result<Record<string, unknown>, StorageError> = parsear(camino, bytes)
   if (!parsed.ok) return parsed
 
@@ -296,10 +283,7 @@ const avisar = (onCorrupt: OnCorrupt, fallo: StorageError): Result<void, Storage
  * adaptador de memoria. Lo único que necesita saber de la entidad es que lleva
  * su `id` dentro.
  */
-const createFileRepository = <
-  T extends { readonly id: TId; readonly revision: Revision },
-  TId extends string,
->(
+const createFileRepository = <T extends { readonly id: TId; readonly revision: Revision }, TId extends string>(
   blobs: BlobStore,
   carpeta: string,
   valida: Validador,
@@ -326,96 +310,93 @@ const createFileRepository = <
   }
 
   return {
-  get: async (id: TId): Promise<Result<T | null, StorageError>> => {
-    const destino: Result<string, StorageError> = caminoDe(carpeta, id)
-    if (!destino.ok) return destino
+    get: async (id: TId): Promise<Result<T | null, StorageError>> => {
+      const destino: Result<string, StorageError> = caminoDe(carpeta, id)
+      if (!destino.ok) return destino
 
-    return leerEntidad<T>(blobs, destino.value, valida)
-  },
+      return leerEntidad<T>(blobs, destino.value, valida)
+    },
 
-  /**
-   * Con `onCorrupt`, un fichero ilegible **se salta y se avisa de cuál**: una
-   * nota rota ya no impide abrir la app. Sólo se salta `corrupt`; cualquier otro
-   * fallo sigue cortando, porque ahí no se sabe qué hay en disco.
-   *
-   * ⚠️ Sin `onCorrupt`, el primer `corrupt` corta la lectura entera, con el `path`
-   * del culpable. Saltárselo en silencio sería peor: nadie sabría que falta.
-   */
-  getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> => {
-    const listado: Result<ReadonlyArray<string>, StorageError> = await blobs.list(carpeta)
-    if (!listado.ok) return listado
+    /**
+     * Con `onCorrupt`, un fichero ilegible **se salta y se avisa de cuál**: una
+     * nota rota ya no impide abrir la app. Sólo se salta `corrupt`; cualquier otro
+     * fallo sigue cortando, porque ahí no se sabe qué hay en disco.
+     *
+     * ⚠️ Sin `onCorrupt`, el primer `corrupt` corta la lectura entera, con el `path`
+     * del culpable. Saltárselo en silencio sería peor: nadie sabría que falta.
+     */
+    getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> => {
+      const listado: Result<ReadonlyArray<string>, StorageError> = await blobs.list(carpeta)
+      if (!listado.ok) return listado
 
-    /* Acumulador local, y no contradice la regla de inmutabilidad: lo que ésa
+      /* Acumulador local, y no contradice la regla de inmutabilidad: lo que ésa
        prohíbe es mutar datos del dominio, y esto es un array que se construye
        aquí y sale de una pieza — igual que el `[...map.values()]` del adaptador
        de memoria. Hace falta un bucle porque hay que cortar al primer fallo. */
-    const entidades: T[] = []
+      const entidades: T[] = []
 
-    for (const camino of listado.value) {
-      if (!esEntidadDe(carpeta, camino)) continue
+      for (const camino of listado.value) {
+        if (!esEntidadDe(carpeta, camino)) continue
 
-      /* El `corrupt` puede nacer abajo —el sobre del blob— o aquí, al parsear. */
-      const entidad: Result<T | null, StorageError> = await leerEntidad<T>(blobs, camino, valida)
+        /* El `corrupt` puede nacer abajo —el sobre del blob— o aquí, al parsear. */
+        const entidad: Result<T | null, StorageError> = await leerEntidad<T>(blobs, camino, valida)
 
-      if (!entidad.ok) {
-        if (entidad.error.kind !== "corrupt" || onCorrupt === undefined) return entidad
-        const avisado: Result<void, StorageError> = avisar(onCorrupt, entidad.error)
-        if (!avisado.ok) return avisado
-        continue
-      }
+        if (!entidad.ok) {
+          if (entidad.error.kind !== "corrupt" || onCorrupt === undefined) return entidad
+          const avisado: Result<void, StorageError> = avisar(onCorrupt, entidad.error)
+          if (!avisado.ok) return avisado
+          continue
+        }
 
-      /* Estaba en el listado y ya no está: lo han borrado entre el `list` y el
+        /* Estaba en el listado y ya no está: lo han borrado entre el `list` y el
          `read`. No es un fallo — es exactamente lo que `getAll` habría
          devuelto si el borrado hubiera llegado un instante antes. */
-      if (entidad.value === null) continue
+        if (entidad.value === null) continue
 
-      entidades.push(entidad.value)
-    }
+        entidades.push(entidad.value)
+      }
 
-    return ok(entidades)
-  },
+      return ok(entidades)
+    },
 
-  put: async (entity: T, expected: Revision | null): Promise<Result<void, StorageError>> => {
-    const destino: Result<string, StorageError> = caminoDe(carpeta, entity.id)
-    if (!destino.ok) return destino
+    put: async (entity: T, expected: Revision | null): Promise<Result<void, StorageError>> => {
+      const destino: Result<string, StorageError> = caminoDe(carpeta, entity.id)
+      if (!destino.ok) return destino
 
-    const esperado: Result<T | null, StorageError> = await comprobar(destino.value, entity.id, expected)
-    if (!esperado.ok) return esperado
+      const esperado: Result<T | null, StorageError> = await comprobar(destino.value, entity.id, expected)
+      if (!esperado.ok) return esperado
 
-    const bytes: Result<Uint8Array, StorageError> = aBytes(entity)
-    if (!bytes.ok) return bytes
+      const bytes: Result<Uint8Array, StorageError> = aBytes(entity)
+      if (!bytes.ok) return bytes
 
-    /* El `Result` del `BlobStore` sale tal cual, sin mirarlo siquiera: si es un
+      /* El `Result` del `BlobStore` sale tal cual, sin mirarlo siquiera: si es un
        `quota-exceeded`, quien llama necesita ese `kind` para dejar de insistir
        y avisar de que hay que hacer hueco. */
-    return blobs.write(destino.value, bytes.value)
-  },
+      return blobs.write(destino.value, bytes.value)
+    },
 
-  /* Borrar lo que no está no es un error, se esperara lo que se esperara: si no
+    /* Borrar lo que no está no es un error, se esperara lo que se esperara: si no
      hay nada, no se mira. Y el propio `BlobStore` promete lo mismo en su puerto. */
-  delete: async (id: TId, expected: Revision | null): Promise<Result<void, StorageError>> => {
-    const destino: Result<string, StorageError> = caminoDe(carpeta, id)
-    if (!destino.ok) return destino
+    delete: async (id: TId, expected: Revision | null): Promise<Result<void, StorageError>> => {
+      const destino: Result<string, StorageError> = caminoDe(carpeta, id)
+      if (!destino.ok) return destino
 
-    const actual: Result<T | null, StorageError> = await leerEntidad<T>(blobs, destino.value, valida)
-    if (!actual.ok) return actual
-    if (actual.value === null) return ok(undefined)
-    if (actual.value.revision !== expected) {
-      const choque: StorageError = { kind: "stale", id }
-      return err(choque)
-    }
+      const actual: Result<T | null, StorageError> = await leerEntidad<T>(blobs, destino.value, valida)
+      if (!actual.ok) return actual
+      if (actual.value === null) return ok(undefined)
+      if (actual.value.revision !== expected) {
+        const choque: StorageError = { kind: "stale", id }
+        return err(choque)
+      }
 
-    return blobs.delete(destino.value)
-  },
+      return blobs.delete(destino.value)
+    },
   }
 }
 
 /* ═════════════════════════════ El adaptador ═══════════════════════════════ */
 
-export const createFileStorageAdapter = (
-  blobs: BlobStore,
-  { onCorrupt }: FileStorageOptions = {},
-): StorageAdapter => {
+export const createFileStorageAdapter = (blobs: BlobStore, { onCorrupt }: FileStorageOptions = {}): StorageAdapter => {
   const notes: Repository<Note, NoteId> = createFileRepository<Note, NoteId>(
     blobs,
     CARPETA_NOTAS,
@@ -469,9 +450,7 @@ export const createFileStorageAdapter = (
      * síncrona rompería antes de que existiera promesa, y no habría `catch` a
      * tiempo.
      */
-    transaction: async <T>(
-      fn: () => Promise<Result<T, StorageError>>,
-    ): Promise<Result<T, StorageError>> => {
+    transaction: async <T>(fn: () => Promise<Result<T, StorageError>>): Promise<Result<T, StorageError>> => {
       try {
         return await fn()
       } catch (fallo: unknown) {
@@ -492,15 +471,11 @@ export const createFileStorageAdapter = (
      * guardado de verdad.
      */
     getSchemaVersion: async (): Promise<Result<number, StorageError>> => {
-      const leido: Result<Uint8Array | null, StorageError> =
-        await blobs.read(CAMINO_MANIFEST)
+      const leido: Result<Uint8Array | null, StorageError> = await blobs.read(CAMINO_MANIFEST)
       if (!leido.ok) return leido
       if (leido.value === null) return ok(0)
 
-      const manifest: Result<Record<string, unknown>, StorageError> = parsear(
-        CAMINO_MANIFEST,
-        leido.value,
-      )
+      const manifest: Result<Record<string, unknown>, StorageError> = parsear(CAMINO_MANIFEST, leido.value)
       if (!manifest.ok) return manifest
 
       const version: unknown = manifest.value["schemaVersion"]

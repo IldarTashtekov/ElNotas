@@ -34,12 +34,7 @@ import type { Result } from "#core/domain/Result"
 import type { StoredEntities } from "#core/migrations/hydrate"
 import { hydrate } from "#core/migrations/hydrate"
 import type { Migration, MigrationResult } from "#core/migrations/runMigrations"
-import {
-  CURRENT_SCHEMA_VERSION,
-  EMPTY_STORE_VERSION,
-  MIGRATIONS,
-  runMigrations,
-} from "#core/migrations/runMigrations"
+import { CURRENT_SCHEMA_VERSION, EMPTY_STORE_VERSION, MIGRATIONS, runMigrations } from "#core/migrations/runMigrations"
 
 /**
  * Abre un resultado que se espera **bueno**, y falla la prueba con un mensaje
@@ -193,10 +188,7 @@ test("con sólo una ilegible de más, el contexto queda INTACTO, por referencia"
 })
 
 test("la nota ilegible NO entra en el estado: sólo se conserva su referencia", (): void => {
-  const state = hydrate(
-    { notes: [COMPRA], diagrams: [], contexts: [contexto(ID_CASA, [noteRef(ID_ROTA)])] },
-    esRota,
-  )
+  const state = hydrate({ notes: [COMPRA], diagrams: [], contexts: [contexto(ID_CASA, [noteRef(ID_ROTA)])] }, esRota)
   assert.equal(state.notes[ID_ROTA], undefined)
 })
 
@@ -257,10 +249,7 @@ const relacion = (id: string, from: DiagramNodeId, to: DiagramNodeId): DiagramRe
   label: "",
 })
 
-const diagramaCon = (
-  nodos: ReadonlyArray<DiagramNode>,
-  relaciones: ReadonlyArray<DiagramRelation>,
-): Diagram => ({
+const diagramaCon = (nodos: ReadonlyArray<DiagramNode>, relaciones: ReadonlyArray<DiagramRelation>): Diagram => ({
   id: diagramId("mudanza"),
   name: "Mudanza",
   nodes: Object.fromEntries(nodos.map((n: DiagramNode): readonly [DiagramNodeId, DiagramNode] => [n.id, n])),
@@ -385,9 +374,7 @@ test("una migración que REVIENTA se devuelve, no se escapa lanzando", () => {
     },
   ]
 
-  const fallo: MigrationError = errorDe(
-    runMigrations("viejo", 1, { migrations: pasos, target: 2 }),
-  )
+  const fallo: MigrationError = errorDe(runMigrations("viejo", 1, { migrations: pasos, target: 2 }))
 
   assert.equal(fallo.kind, "migration-failed")
   if (fallo.kind === "migration-failed") {

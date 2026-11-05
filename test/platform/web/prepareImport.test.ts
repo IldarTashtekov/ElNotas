@@ -83,10 +83,7 @@ const escena = (): Escena => {
 
 test("una copia buena está lista, dice qué trae y no cambia nada", async (): Promise<void> => {
   const e: Escena = escena()
-  const lista: ImportPreparation = await prepareImport(
-    fichero(JSON.stringify(await copiaDeVerdad())),
-    e.deps,
-  )
+  const lista: ImportPreparation = await prepareImport(fichero(JSON.stringify(await copiaDeVerdad())), e.deps)
   if (lista.kind !== "ready") assert.fail(`tenía que estar lista: ${lista.kind}`)
   assert.deepEqual(lista.summary, { notes: 1, diagrams: 0, contexts: 1, unreadable: 0 })
   assert.deepEqual(e.almacen.claves(), [])
@@ -95,10 +92,7 @@ test("una copia buena está lista, dice qué trae y no cambia nada", async (): P
 
 test("al confirmarla, la apunta y recarga", async (): Promise<void> => {
   const e: Escena = escena()
-  const lista: ImportPreparation = await prepareImport(
-    fichero(JSON.stringify(await copiaDeVerdad())),
-    e.deps,
-  )
+  const lista: ImportPreparation = await prepareImport(fichero(JSON.stringify(await copiaDeVerdad())), e.deps)
   if (lista.kind !== "ready") assert.fail("tenía que estar lista")
   assert.equal(lista.apply(), true)
   assert.notEqual(e.almacen.getItem(IMPORT_KEY), null)
@@ -107,10 +101,7 @@ test("al confirmarla, la apunta y recarga", async (): Promise<void> => {
 
 test("si no cabe al confirmarla, lo dice y no recarga", async (): Promise<void> => {
   const e: Escena = escena()
-  const lista: ImportPreparation = await prepareImport(
-    fichero(JSON.stringify(await copiaDeVerdad())),
-    e.deps,
-  )
+  const lista: ImportPreparation = await prepareImport(fichero(JSON.stringify(await copiaDeVerdad())), e.deps)
   if (lista.kind !== "ready") assert.fail("tenía que estar lista")
   e.almacen.lanzarEn("setItem", excepcionDeCuota())
   assert.equal(lista.apply(), false)
@@ -142,10 +133,7 @@ test("una copia con la que no arrancaría se rechaza con el error del arranque",
       "manifest.json": JSON.stringify({ schemaVersion: CURRENT_SCHEMA_VERSION + 1 }),
     },
   })
-  const salida: ImportPreparation = await prepareImport(
-    fichero(JSON.stringify(futura)),
-    escena().deps,
-  )
+  const salida: ImportPreparation = await prepareImport(fichero(JSON.stringify(futura)), escena().deps)
   if (salida.kind !== "wont-boot") assert.fail(`tenía que rechazarla: ${salida.kind}`)
   assert.equal(salida.error.kind, "schema-from-future")
 })

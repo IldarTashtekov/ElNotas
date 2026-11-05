@@ -64,10 +64,13 @@ for (let i = 0; i < lineas.length; i++) {
     enCurso = true
     nivelEnCurso = n
   }
-  if (cerrada(l)) sobran.push(`  ${FICHERO}:${i + 1}  una fase cerrada: su resumen va a ${TERMINADAS}\n      ${l.slice(0, 90)}`)
+  if (cerrada(l))
+    sobran.push(`  ${FICHERO}:${i + 1}  una fase cerrada: su resumen va a ${TERMINADAS}\n      ${l.slice(0, 90)}`)
   if (enCurso) continue
-  if (/^\s*- \[x\]/i.test(l)) sobran.push(`  ${FICHERO}:${i + 1}  una casilla marcada fuera de la fase en curso\n      ${l.trim().slice(0, 90)}`)
-  if (l.includes("~~")) sobran.push(`  ${FICHERO}:${i + 1}  un tachado fuera de la fase en curso\n      ${l.trim().slice(0, 90)}`)
+  if (/^\s*- \[x\]/i.test(l))
+    sobran.push(`  ${FICHERO}:${i + 1}  una casilla marcada fuera de la fase en curso\n      ${l.trim().slice(0, 90)}`)
+  if (l.includes("~~"))
+    sobran.push(`  ${FICHERO}:${i + 1}  un tachado fuera de la fase en curso\n      ${l.trim().slice(0, 90)}`)
 }
 
 /* Las fases de TERMINADAS.md, resumidas: de su título al siguiente, sin las líneas en blanco del final. */
@@ -79,7 +82,9 @@ for (let i = 0; i < terminadas.length; i++) {
   while (fin > i + 1 && terminadas[fin - 1].trim() === "") fin--
   const largo = fin - i - 1
   if (largo > TOPE_FASE) {
-    sobran.push(`  ${TERMINADAS}:${i + 1}  ${largo} líneas, y el tope es ${TOPE_FASE}\n      ${terminadas[i].slice(0, 90)}`)
+    sobran.push(
+      `  ${TERMINADAS}:${i + 1}  ${largo} líneas, y el tope es ${TOPE_FASE}\n      ${terminadas[i].slice(0, 90)}`,
+    )
   }
 }
 

@@ -71,9 +71,7 @@ export const windowExists = (ref: WindowRef, state: AppState): boolean => {
  * sabe sin comparar campo a campo que no hay nada que guardar ni que repintar.
  */
 export const guardWindows = (layout: WindowsLayout, state: AppState): WindowsLayout => {
-  const siguenTodas: boolean = layout.windows.every((ref: WindowRef): boolean =>
-    windowExists(ref, state),
-  )
+  const siguenTodas: boolean = layout.windows.every((ref: WindowRef): boolean => windowExists(ref, state))
   const windows: ReadonlyArray<WindowRef> = siguenTodas
     ? layout.windows
     : layout.windows.filter((ref: WindowRef): boolean => windowExists(ref, state))
@@ -115,9 +113,7 @@ export const addWindow = (layout: WindowsLayout, ref: WindowRef): WindowsLayout 
 export const closeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout => {
   const cerrada: WindowRef | undefined = layout.windows[i]
   if (cerrada === undefined) return layout
-  const windows: ReadonlyArray<WindowRef> = layout.windows.filter(
-    (_: WindowRef, j: number): boolean => j !== i,
-  )
+  const windows: ReadonlyArray<WindowRef> = layout.windows.filter((_: WindowRef, j: number): boolean => j !== i)
   const eraActiva: boolean = layout.active !== null && sameWindow(cerrada, layout.active)
   const active: WindowRef | null = eraActiva ? (windows[i] ?? windows[i - 1] ?? null) : layout.active
   return { windows, active }
@@ -130,17 +126,14 @@ export const closeWindowAt = (layout: WindowsLayout, i: number): WindowsLayout =
 export const moveWindow = (layout: WindowsLayout, de: number, a: number): WindowsLayout => {
   const movida: WindowRef | undefined = layout.windows[de]
   if (movida === undefined || de === a || a < 0 || a >= layout.windows.length) return layout
-  const sin: ReadonlyArray<WindowRef> = layout.windows.filter(
-    (_: WindowRef, j: number): boolean => j !== de,
-  )
+  const sin: ReadonlyArray<WindowRef> = layout.windows.filter((_: WindowRef, j: number): boolean => j !== de)
   const windows: ReadonlyArray<WindowRef> = [...sin.slice(0, a), movida, ...sin.slice(a)]
   return { windows, active: layout.active }
 }
 
 /* ───────────────────── De lo guardado a una lista válida ─────────────────── */
 
-const esObjeto = (x: unknown): x is Record<string, unknown> =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esObjeto = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x)
 
 /** Una referencia leída, o `null` si no tiene forma de ninguna. */
 const refDe = (x: unknown): WindowRef | null => {
@@ -171,8 +164,9 @@ export const parseWindowsLayout = (guardado: unknown): WindowsLayout => {
     .map(refDe)
     .filter((ref: WindowRef | null): ref is WindowRef => ref !== null)
     /* Un calendario repetido, a mano o en una copia, se queda en el primero. */
-    .filter((ref: WindowRef, i: number, todas: ReadonlyArray<WindowRef>): boolean =>
-      ref.kind !== "calendar" || todas.findIndex((w: WindowRef): boolean => w.kind === "calendar") === i,
+    .filter(
+      (ref: WindowRef, i: number, todas: ReadonlyArray<WindowRef>): boolean =>
+        ref.kind !== "calendar" || todas.findIndex((w: WindowRef): boolean => w.kind === "calendar") === i,
     )
   return { windows, active: refDe(guardado["active"]) }
 }

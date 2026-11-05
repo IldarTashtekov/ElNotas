@@ -88,8 +88,7 @@ export interface CalendarPanelDeps {
 
 /** Lo que una nota enlaza del calendario: un evento, o una rutina. */
 export type CalendarTarget =
-  | { readonly kind: "event"; readonly id: EventId }
-  | { readonly kind: "routine"; readonly id: RoutineId }
+  { readonly kind: "event"; readonly id: EventId } | { readonly kind: "routine"; readonly id: RoutineId }
 
 export interface CalendarPanel {
   readonly element: HTMLElement
@@ -147,11 +146,15 @@ export const createCalendarPanel = ({
   anterior.setAttribute("aria-label", "Mes anterior")
   const siguiente: HTMLButtonElement = boton("›", (): void => ir(1), "flecha")
   siguiente.setAttribute("aria-label", "Mes siguiente")
-  const irAHoy: HTMLButtonElement = boton("hoy", (): void => {
-    if (hoy === null) return
-    mes = monthOf(hoy)
-    pintarMes()
-  }, "secundario mes-hoy")
+  const irAHoy: HTMLButtonElement = boton(
+    "hoy",
+    (): void => {
+      if (hoy === null) return
+      mes = monthOf(hoy)
+      pintarMes()
+    },
+    "secundario mes-hoy",
+  )
   const barra: HTMLElement = elemento("div")
   barra.className = "mes-barra"
   barra.append(anterior, titulo, siguiente, irAHoy)
@@ -170,9 +173,13 @@ export const createCalendarPanel = ({
   }
 
   const celda = (c: DayCell): HTMLButtonElement => {
-    const b: HTMLButtonElement = boton(String(c.number), (): void => {
-      if (daysOpenSheet(tabs.get())) abrirDia(c.day)
-    }, "dia")
+    const b: HTMLButtonElement = boton(
+      String(c.number),
+      (): void => {
+        if (daysOpenSheet(tabs.get())) abrirDia(c.day)
+      },
+      "dia",
+    )
     /* En Rutinas el día se ve igual pero no reacciona: ni cursor de mano ni foco con el tabulador. */
     const quieto: boolean = !daysOpenSheet(tabs.get())
     b.classList.toggle("quieto", quieto)
@@ -234,10 +241,14 @@ export const createCalendarPanel = ({
     const lista: HTMLElement = elemento("div")
     lista.className = "eventos"
     lista.append(...(eventos.length === 0 ? [elemento("p", "Sin eventos este día.")] : eventos.map(fila)))
-    const nuevo: HTMLButtonElement = boton("+ Evento", (): void => {
-      modo = { kind: "formulario", day, editando: null }
-      pintarCaja()
-    }, "hoja-nuevo")
+    const nuevo: HTMLButtonElement = boton(
+      "+ Evento",
+      (): void => {
+        modo = { kind: "formulario", day, editando: null }
+        pintarCaja()
+      },
+      "hoja-nuevo",
+    )
     /* El día va dentro del contenido, no como título de la hoja: al mover un evento a otro día cambia. */
     const cabecera: HTMLHeadingElement = elemento("h2", dayTitle(day))
     caja.replaceChildren(cabecera, lista, nuevo)
@@ -291,20 +302,28 @@ export const createCalendarPanel = ({
     acciones.append(boton("Guardar", guardar, "hoja-nuevo"))
     if (evento !== undefined) {
       acciones.append(
-        boton("Borrar", (): void => {
-          confirm("¿Borrar este evento? No se puede deshacer.", "Borrar", (): void => {
-            useCases.deleteEvent(evento.id)
-            modo = { kind: "lista", day: evento.day }
-            pintarCaja()
-          })
-        }, "hoja-peligro"),
+        boton(
+          "Borrar",
+          (): void => {
+            confirm("¿Borrar este evento? No se puede deshacer.", "Borrar", (): void => {
+              useCases.deleteEvent(evento.id)
+              modo = { kind: "lista", day: evento.day }
+              pintarCaja()
+            })
+          },
+          "hoja-peligro",
+        ),
       )
     }
 
-    const volver: HTMLButtonElement = boton("‹ Volver al día", (): void => {
-      modo = { kind: "lista", day }
-      pintarCaja()
-    }, "secundario")
+    const volver: HTMLButtonElement = boton(
+      "‹ Volver al día",
+      (): void => {
+        modo = { kind: "lista", day }
+        pintarCaja()
+      },
+      "secundario",
+    )
     caja.replaceChildren(
       volver,
       elemento("p", evento === undefined ? "Evento nuevo" : "Editar evento"),
@@ -371,8 +390,7 @@ export const createCalendarPanel = ({
   sitio.append(bloqueMes, grafica.element)
   /** En Rutinas, con tabla y la gráfica elegida, ésta ocupa el sitio del mes; si no, el mes. */
   const ponerModo = (): void => {
-    const conGrafica: boolean =
-      tabs.get() === "routines" && routineCharts.view() === "chart" && rutinas.hasTable()
+    const conGrafica: boolean = tabs.get() === "routines" && routineCharts.view() === "chart" && rutinas.hasTable()
     bloqueMes.classList.toggle("tapado", conGrafica)
     grafica.element.hidden = !conGrafica
     if (conGrafica) grafica.show([...rutinas.touched()][0] ?? null)
@@ -392,7 +410,10 @@ export const createCalendarPanel = ({
       b.setAttribute("aria-selected", b.getAttribute("data-pestana") === tabs.get() ? "true" : "false")
     }
   }
-  for (const [cual, texto] of [["events", "Eventos"], ["routines", "Rutinas"]] as const) {
+  for (const [cual, texto] of [
+    ["events", "Eventos"],
+    ["routines", "Rutinas"],
+  ] as const) {
     const b: HTMLButtonElement = boton(texto, (): void => elegirPestana(cual), "pestana")
     b.setAttribute("role", "tab")
     b.setAttribute("data-pestana", cual)
@@ -407,10 +428,7 @@ export const createCalendarPanel = ({
   let pintadoEventos: AppState["events"] | null = null
   let pintadoRutinas: AppState["routines"] | null = null
   const alCambiar: Unsubscribe = store.subscribe((estado: AppState): void => {
-    if (
-      estado.events === pintadoEventos &&
-      estado.routines === pintadoRutinas
-    ) {
+    if (estado.events === pintadoEventos && estado.routines === pintadoRutinas) {
       return
     }
     pintadoEventos = estado.events

@@ -11,18 +11,22 @@
  * si el fondo del manifiesto no es el `--ground` de base.css.
  */
 import { createHash } from "node:crypto"
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs"
 import { dirname, join, posix, sep } from "node:path"
 
 const DESTINO = "dist/pages"
 
 /** Lo que se publica, con su ruta del repo: ficheros sueltos y carpetas enteras. */
-const FICHEROS = [
-  "index.html",
-  "manifest.webmanifest",
-  "assets/icono/icono-192.png",
-  "assets/icono/icono-512.png",
-]
+const FICHEROS = ["index.html", "manifest.webmanifest", "assets/icono/icono-192.png", "assets/icono/icono-512.png"]
 const CARPETAS = ["dist/web", "src/ui/styles"]
 
 /** El service worker, que no se copia tal cual: se le pone delante la huella y la lista. */

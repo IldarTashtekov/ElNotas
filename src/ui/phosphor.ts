@@ -25,8 +25,7 @@ export const DEFAULT_PHOSPHOR: Phosphor = "green"
 
 /** Cualquier cosa que no sea un fósforo conocido es el de siempre. */
 export const parsePhosphor = (guardado: unknown): Phosphor =>
-  PHOSPHORS.find((opcion: PhosphorChoice): boolean => opcion.value === guardado)?.value ??
-  DEFAULT_PHOSPHOR
+  PHOSPHORS.find((opcion: PhosphorChoice): boolean => opcion.value === guardado)?.value ?? DEFAULT_PHOSPHOR
 
 /** Dónde se guarda. Lo pone `platform/`. Ninguno de los dos lanza. */
 export interface PhosphorPersistence {
@@ -48,11 +47,7 @@ export interface PhosphorSettingDeps {
   readonly logger: Logger
 }
 
-export const createPhosphorSetting = ({
-  persistence,
-  apply,
-  logger,
-}: PhosphorSettingDeps): PhosphorSetting => {
+export const createPhosphorSetting = ({ persistence, apply, logger }: PhosphorSettingDeps): PhosphorSetting => {
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer, el de siempre: lo único que se pierde es un color. */
   let actual: Phosphor = leido.ok ? parsePhosphor(leido.value) : DEFAULT_PHOSPHOR

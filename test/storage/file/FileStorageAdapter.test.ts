@@ -21,6 +21,4 @@ import { runStorageContract } from "../contract-tests/storageContract"
 import { createFakeBlobStore } from "./FakeBlobStore"
 import { createFileStorageAdapter } from "#storage/file/FileStorageAdapter"
 
-runStorageContract("FileStorageAdapter", () =>
-  createFileStorageAdapter(createFakeBlobStore()),
-)
+runStorageContract("FileStorageAdapter", () => createFileStorageAdapter(createFakeBlobStore()))

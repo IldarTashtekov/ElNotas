@@ -207,11 +207,7 @@ test("quita una nieta copiando sólo el camino: raíz, Fruta y Manzanas", () => 
   /* Compartidos: todo lo demás */
   assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0), "'Compra semanal' intacto")
   assert.strictEqual(casillaEn(despues, 2), casillaEn(antes, 2), "'Limpieza' intacta")
-  assert.strictEqual(
-    hijaEn(frutaDespues.children, 1),
-    hijaEn(casillaEn(antes, 1).children, 1),
-    "'Peras' intacta",
-  )
+  assert.strictEqual(hijaEn(frutaDespues.children, 1), hijaEn(casillaEn(antes, 1).children, 1), "'Peras' intacta")
 })
 
 test("no muta el árbol original", () => {

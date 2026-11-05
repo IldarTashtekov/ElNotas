@@ -155,11 +155,7 @@ test("reduce: no toca las demás notas", () => {
 
   const despues = reduce(antes, accionMarcar())
 
-  assert.strictEqual(
-    notaDe(despues, ID_OTRA_NOTA),
-    notaDe(antes, ID_OTRA_NOTA),
-    "el diario es el mismo objeto",
-  )
+  assert.strictEqual(notaDe(despues, ID_OTRA_NOTA), notaDe(antes, ID_OTRA_NOTA), "el diario es el mismo objeto")
 })
 
 test("reduce: no muta el estado que recibe", () => {

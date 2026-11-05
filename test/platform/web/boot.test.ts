@@ -100,8 +100,7 @@ test("un almacén vacío queda marcado con la versión actual del formato", asyn
   appDe(await arrancar(almacen))
 
   const blobs: BlobStore = createLocalStorageBlobStore(almacen)
-  const version: Result<number, StorageError> =
-    await createFileStorageAdapter(blobs).getSchemaVersion()
+  const version: Result<number, StorageError> = await createFileStorageAdapter(blobs).getSchemaVersion()
   assert.deepEqual(version, { ok: true, value: CURRENT_SCHEMA_VERSION })
 })
 
@@ -116,9 +115,7 @@ test("LA REBANADA: un contexto creado sobrevive a recargar", async (): Promise<v
   /* «Recargar»: otro arranque, con Store, escritor y casos de uso nuevos. Sólo
      el almacén es el mismo. */
   const segunda: App = appDe(await arrancar(almacen))
-  const contextos: ReadonlyArray<Context> = Object.values<Context>(
-    segunda.store.getState().contexts,
-  )
+  const contextos: ReadonlyArray<Context> = Object.values<Context>(segunda.store.getState().contexts)
 
   assert.equal(contextos.length, 1)
   assert.deepEqual(contextos[0], creado)
@@ -295,10 +292,7 @@ test("con skipCorrupt, un evento ilegible se salta y se avisa", async (): Promis
   escrituraOk(await primera.flush())
 
   /* El fichero del evento «Roto» se estropea: día que no existe. */
-  almacen.escribirCrudo(
-    `elnotas:blob:events/${roto.id}.json`,
-    btoa(JSON.stringify({ ...roto, day: "2026-02-30" })),
-  )
+  almacen.escribirCrudo(`elnotas:blob:events/${roto.id}.json`, btoa(JSON.stringify({ ...roto, day: "2026-02-30" })))
 
   const app: App = appDe(await arrancar(almacen, true))
 
@@ -312,10 +306,7 @@ test("sin skipCorrupt, un evento con un día inválido impide arrancar", async (
   const creado: CalendarEvent | null = primera.useCases.createEvent(DIA, null, "Roto")
   if (creado === null) assert.fail("tenía que crearse")
   escrituraOk(await primera.flush())
-  almacen.escribirCrudo(
-    `elnotas:blob:events/${creado.id}.json`,
-    btoa(JSON.stringify({ ...creado, day: "ayer" })),
-  )
+  almacen.escribirCrudo(`elnotas:blob:events/${creado.id}.json`, btoa(JSON.stringify({ ...creado, day: "ayer" })))
 
   assert.equal(errorDe(await arrancar(almacen)).kind, "corrupt")
 })
@@ -346,10 +337,7 @@ test("con skipCorrupt, una rutina ilegible se salta y se avisa; sin él, impide 
   const rota: Routine | null = primera.useCases.createRoutine("Rota", null)
   if (buena === null || rota === null) assert.fail("tenían que crearse")
   escrituraOk(await primera.flush())
-  almacen.escribirCrudo(
-    `elnotas:blob:routines/${rota.id}.json`,
-    btoa(JSON.stringify({ ...rota, days: ["ayer"] })),
-  )
+  almacen.escribirCrudo(`elnotas:blob:routines/${rota.id}.json`, btoa(JSON.stringify({ ...rota, days: ["ayer"] })))
 
   const app: App = appDe(await arrancar(almacen, true))
 

@@ -13,13 +13,7 @@ import type { SettingsContent, WindowRow } from "#ui/settingsContent"
 import type { WindowRef } from "#ui/windows"
 import { CALENDAR, GENERAL } from "#ui/windows"
 import { GENERAL_TITLE } from "#ui/windowView"
-import {
-  addWindowChoices,
-  choiceGroupLabel,
-  resetQuestion,
-  settingsContent,
-  versionLine,
-} from "#ui/settingsContent"
+import { addWindowChoices, choiceGroupLabel, resetQuestion, settingsContent, versionLine } from "#ui/settingsContent"
 
 const contexto = (id: string, name: string): Context => ({
   id: contextId(id),
@@ -53,8 +47,7 @@ const ESTADO: AppState = {
 
 const TRABAJO: WindowRef = { kind: "context", id: contextId("t") }
 
-const titulos = (filas: ReadonlyArray<WindowRow>): ReadonlyArray<string> =>
-  filas.map((f: WindowRow): string => f.title)
+const titulos = (filas: ReadonlyArray<WindowRow>): ReadonlyArray<string> => filas.map((f: WindowRow): string => f.title)
 
 const CONTENIDO: SettingsContent = settingsContent(ESTADO)
 
@@ -91,9 +84,7 @@ test("el «+» esconde también una nota que ya es ventana, y ofrece el General 
 })
 
 test("con todo en ventanas, el «+» no ofrece nada", (): void => {
-  const todas: ReadonlyArray<WindowRef> = settingsContent(ESTADO).choices.map(
-    (f: WindowRow): WindowRef => f.ref,
-  )
+  const todas: ReadonlyArray<WindowRef> = settingsContent(ESTADO).choices.map((f: WindowRow): WindowRef => f.ref)
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: todas, active: GENERAL }, ESTADO)
   assert.deepEqual(titulos(filas), [])
 })
@@ -125,7 +116,10 @@ test("los diagramas se pueden elegir como ventana: detrás de las notas, por nom
 
 test("el «+» no ofrece un diagrama que ya está en una ventana", (): void => {
   const enVentana: WindowRef = { kind: "diagram", id: diagramId("d1") }
-  const opciones: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [enVentana], active: enVentana }, CON_DIAGRAMAS)
+  const opciones: ReadonlyArray<WindowRow> = addWindowChoices(
+    { windows: [enVentana], active: enVentana },
+    CON_DIAGRAMAS,
+  )
   assert.ok(!titulos(opciones).includes("Boda"))
   assert.ok(titulos(opciones).includes("Mudanza"))
 })
@@ -180,10 +174,7 @@ test("sin versión es que se está en desarrollo, y lo dice", (): void => {
 test("el «+» ofrece el calendario una sola vez: con uno en la lista, ya no", (): void => {
   const sin: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [GENERAL], active: GENERAL }, ESTADO)
   assert.equal(titulos(sin).includes("Calendario"), true)
-  const con: ReadonlyArray<WindowRow> = addWindowChoices(
-    { windows: [GENERAL, CALENDAR], active: GENERAL },
-    ESTADO,
-  )
+  const con: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [GENERAL, CALENDAR], active: GENERAL }, ESTADO)
   assert.equal(titulos(con).includes("Calendario"), false)
 })
 

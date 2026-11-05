@@ -54,8 +54,7 @@ export const makeBackup = ({ exportedAt, files, uiState }: BackupParts): Backup 
 
 type Registro = Record<string, unknown>
 
-const esRegistro = (x: unknown): x is Registro =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 const noEs = (detail: string): Result<never, BackupProblem> => {
   const problema: BackupProblem = { kind: "not-a-backup", detail }
@@ -109,22 +108,18 @@ const codificador: TextEncoder = new TextEncoder()
 
 /** Los ficheros de la copia como bytes, que es lo que guarda un `BlobStore`. */
 export const backupBytes = (backup: Backup): ReadonlyArray<readonly [string, Uint8Array]> =>
-  Object.entries(backup.files).map(
-    ([camino, texto]: [string, string]): readonly [string, Uint8Array] => [
-      camino,
-      codificador.encode(texto),
-    ],
-  )
+  Object.entries(backup.files).map(([camino, texto]: [string, string]): readonly [string, Uint8Array] => [
+    camino,
+    codificador.encode(texto),
+  ])
 
-const dosCifras =(n: number): string => String(n).padStart(2, "0")
+const dosCifras = (n: number): string => String(n).padStart(2, "0")
 
 /** `elnotas-backup-AAAA-MM-DD.json`, con la fecha de este dispositivo. */
 export const backupFileName = (now: number): string => {
   const fecha: Date = new Date(now)
-  const dia: string = [
-    String(fecha.getFullYear()),
-    dosCifras(fecha.getMonth() + 1),
-    dosCifras(fecha.getDate()),
-  ].join("-")
+  const dia: string = [String(fecha.getFullYear()), dosCifras(fecha.getMonth() + 1), dosCifras(fecha.getDate())].join(
+    "-",
+  )
   return `elnotas-backup-${dia}.json`
 }

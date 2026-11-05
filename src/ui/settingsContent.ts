@@ -25,17 +25,19 @@ export interface SettingsContent {
   readonly choices: ReadonlyArray<WindowRow>
 }
 
-const fila = (state: AppState): ((ref: WindowRef) => WindowRow) => (ref: WindowRef): WindowRow => ({
-  ref,
-  title: windowTitle(ref, state),
-})
+const fila =
+  (state: AppState): ((ref: WindowRef) => WindowRow) =>
+  (ref: WindowRef): WindowRow => ({
+    ref,
+    title: windowTitle(ref, state),
+  })
 
 export const settingsContent = (state: AppState): SettingsContent => {
   const contexts: ReadonlyArray<Context> = [...Object.values<Context>(state.contexts)].sort(
     (a: Context, b: Context): number => a.name.localeCompare(b.name),
   )
-  const notas: ReadonlyArray<Note> = [...Object.values<Note>(state.notes)].sort(
-    (a: Note, b: Note): number => a.name.localeCompare(b.name),
+  const notas: ReadonlyArray<Note> = [...Object.values<Note>(state.notes)].sort((a: Note, b: Note): number =>
+    a.name.localeCompare(b.name),
   )
   const diagramas: ReadonlyArray<Diagram> = [...Object.values<Diagram>(state.diagrams)].sort(
     (a: Diagram, b: Diagram): number => a.name.localeCompare(b.name),
@@ -59,8 +61,7 @@ export const settingsContent = (state: AppState): SettingsContent => {
  */
 export const addWindowChoices = (layout: WindowsLayout, state: AppState): ReadonlyArray<WindowRow> =>
   settingsContent(state).choices.filter(
-    (opcion: WindowRow): boolean =>
-      !layout.windows.some((w: WindowRef): boolean => sameWindow(w, opcion.ref)),
+    (opcion: WindowRow): boolean => !layout.windows.some((w: WindowRef): boolean => sameWindow(w, opcion.ref)),
   )
 
 /**
@@ -68,10 +69,7 @@ export const addWindowChoices = (layout: WindowsLayout, state: AppState): Readon
  * «Notas:» antes de la primera nota, «Diagramas:» antes del primer diagrama.
  * `null` en las demás, y en el General y los contextos, que van sin rótulo.
  */
-export const choiceGroupLabel = (
-  opciones: ReadonlyArray<WindowRow>,
-  i: number,
-): string | null => {
+export const choiceGroupLabel = (opciones: ReadonlyArray<WindowRow>, i: number): string | null => {
   const opcion: WindowRow | undefined = opciones[i]
   if (opcion === undefined) return null
   const clase: WindowRef["kind"] = opcion.ref.kind
@@ -82,8 +80,7 @@ export const choiceGroupLabel = (
 }
 
 /** «1 nota», «3 notas»: cuántas de algo, en singular o en plural. */
-const cuantas = (n: number, singular: string, plural: string): string =>
-  `${n} ${n === 1 ? singular : plural}`
+const cuantas = (n: number, singular: string, plural: string): string => `${n} ${n === 1 ? singular : plural}`
 
 /**
  * «2 notas, 1 diagrama y 3 contextos». Lo que no hay no se nombra; `null` si no
@@ -134,9 +131,7 @@ export const importQuestion = (resumen: ImportSummary): string => {
 }
 
 /** Por qué no se puede importar ese fichero. */
-export const importProblem = (
-  problema: Exclude<ImportPreparation, { readonly kind: "ready" }>,
-): string => {
+export const importProblem = (problema: Exclude<ImportPreparation, { readonly kind: "ready" }>): string => {
   switch (problema.kind) {
     case "unreadable-file":
       return "No se ha podido leer el fichero."
@@ -150,8 +145,7 @@ export const importProblem = (
 }
 
 /** Cuando se confirmó, pero la copia no cabe para apuntarla. */
-export const IMPORT_NOT_APPLIED: string =
-  "La copia no cabe en el navegador. No se ha cambiado nada."
+export const IMPORT_NOT_APPLIED: string = "La copia no cabe en el navegador. No se ha cambiado nada."
 
 /** Cómo fue exportar. `null` si no hay nada que decir: se canceló. */
 export const exportMessage = (resultado: ExportResult): string | null => {

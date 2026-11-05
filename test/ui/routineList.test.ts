@@ -3,7 +3,15 @@ import { describe, it } from "node:test"
 import type { AppState, Day, Routine, RoutineId } from "#core/index"
 import { revision } from "#core/domain/Ids"
 import { NO_ORDER } from "#ui/calendarOrder"
-import { currentWeek, movedOrder, rowTap, routineList, touchedRoutineIds, weekHeadings, weekSummary } from "#ui/routineList"
+import {
+  currentWeek,
+  movedOrder,
+  rowTap,
+  routineList,
+  touchedRoutineIds,
+  weekHeadings,
+  weekSummary,
+} from "#ui/routineList"
 import type { Tap } from "#ui/gestures"
 import type { RoutineList, RoutineRow, WeekCell, WeekHeading, WeekRow } from "#ui/routineList"
 import { monthView } from "#ui/calendarMonth"
@@ -34,14 +42,23 @@ describe("routineList", (): void => {
   it("cuenta la semana de hoy y la meta", (): void => {
     const e: AppState = estado(rutina("a", ["2026-06-29", "2026-07-01"], { weeklyGoal: 2 }))
     const l: RoutineList = routineList(e, NO_ORDER, HOY)
-    assert.deepEqual(l.visible.map((f: RoutineRow): unknown[] => [f.id, f.done, f.goal, f.met]), [["a", 2, 2, true]])
+    assert.deepEqual(
+      l.visible.map((f: RoutineRow): unknown[] => [f.id, f.done, f.goal, f.met]),
+      [["a", 2, 2, true]],
+    )
   })
 
   it("separa las archivadas y respeta el orden guardado", (): void => {
     const e: AppState = estado(rutina("a", []), rutina("b", []), rutina("c", []))
     const l: RoutineList = routineList(e, { routines: ["b", "a"], archived: ["c"] }, HOY)
-    assert.deepEqual(l.visible.map((f: RoutineRow): string => f.id), ["b", "a"])
-    assert.deepEqual(l.archived.map((f: RoutineRow): string => f.id), ["c"])
+    assert.deepEqual(
+      l.visible.map((f: RoutineRow): string => f.id),
+      ["b", "a"],
+    )
+    assert.deepEqual(
+      l.archived.map((f: RoutineRow): string => f.id),
+      ["c"],
+    )
   })
 
   it("sin hoy no cuenta la semana", (): void => {
@@ -70,7 +87,10 @@ describe("weekHeadings", (): void => {
       h.map((x: WeekHeading): string => `${x.initial}${x.number}`),
       ["L29", "M30", "X1", "J2", "V3", "S4", "D5"],
     )
-    assert.deepEqual(h.map((x: WeekHeading): boolean => x.today), [false, false, false, true, false, false, false])
+    assert.deepEqual(
+      h.map((x: WeekHeading): boolean => x.today),
+      [false, false, false, true, false, false, false],
+    )
   })
 })
 
@@ -80,8 +100,14 @@ describe("currentWeek", (): void => {
     const w: WeekRow | null = currentWeek(r, HOY)
     assert.deepEqual([w?.done, w?.met, w?.goal], [1, true, 1])
     assert.deepEqual(w?.cells.map((c: WeekCell): string => c.day).slice(0, 2), ["2026-06-29", "2026-06-30"])
-    assert.deepEqual(w?.cells.map((c: WeekCell): boolean => c.future), [false, false, false, false, true, true, true])
-    assert.deepEqual(w?.cells.map((c: WeekCell): boolean => c.marked), [false, true, false, false, false, false, false])
+    assert.deepEqual(
+      w?.cells.map((c: WeekCell): boolean => c.future),
+      [false, false, false, false, true, true, true],
+    )
+    assert.deepEqual(
+      w?.cells.map((c: WeekCell): boolean => c.marked),
+      [false, true, false, false, false, false, false],
+    )
   })
 
   it("null donde el calendario se acaba", (): void => {
@@ -106,7 +132,10 @@ describe("monthView con rutinas", (): void => {
       dias
         .filter((c: DayCell): boolean => c.day === "2026-07-01" || c.day === "2026-07-02")
         .map((c: DayCell): number[] => [c.routinesDone, c.routinesTotal]),
-      [[2, 2], [1, 2]],
+      [
+        [2, 2],
+        [1, 2],
+      ],
     )
   })
 

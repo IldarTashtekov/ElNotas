@@ -98,20 +98,10 @@ const partir = (camino: string): CaminoPartido => {
  */
 const clasificar = (fallo: unknown, camino: string): StorageError => {
   const nombre: string | null =
-    typeof fallo === "object" &&
-    fallo !== null &&
-    "name" in fallo &&
-    typeof fallo.name === "string"
-      ? fallo.name
-      : null
+    typeof fallo === "object" && fallo !== null && "name" in fallo && typeof fallo.name === "string" ? fallo.name : null
 
   const codigo: number | null =
-    typeof fallo === "object" &&
-    fallo !== null &&
-    "code" in fallo &&
-    typeof fallo.code === "number"
-      ? fallo.code
-      : null
+    typeof fallo === "object" && fallo !== null && "code" in fallo && typeof fallo.code === "number" ? fallo.code : null
 
   if (nombre === "NotAllowedError" || nombre === "SecurityError") {
     const sinPermiso: StorageError = { kind: "permission-denied" }
@@ -140,10 +130,7 @@ const clasificar = (fallo: unknown, camino: string): StorageError => {
  * él, una promesa rechazada se escaparía del `try` sin que el `catch` llegara a
  * verla — que es la forma más fácil de romper esta regla sin darse cuenta.
  */
-const frontera = async <T>(
-  camino: string,
-  fn: () => Promise<T>,
-): Promise<Result<T, StorageError>> => {
+const frontera = async <T>(camino: string, fn: () => Promise<T>): Promise<Result<T, StorageError>> => {
   try {
     return ok(await fn())
   } catch (fallo: unknown) {
@@ -152,8 +139,7 @@ const frontera = async <T>(
 }
 
 /** Si un `Result` fallido lo hizo por ausencia. Ver la cabecera del fichero. */
-const esAusencia = <T>(r: Result<T, StorageError>): boolean =>
-  !r.ok && r.error.kind === "not-found"
+const esAusencia = <T>(r: Result<T, StorageError>): boolean => !r.ok && r.error.kind === "not-found"
 
 /* ══════════════════════════ Bajar por las carpetas ═════════════════════════ */
 
@@ -190,10 +176,7 @@ const navegar = async (
  * `BlobStore` que cumple el puerto a medias y sólo se notaría el día que el
  * esquema cambie.
  */
-const caminosBajo = async (
-  carpeta: FileSystemDirectoryHandle,
-  prefijo: string,
-): Promise<ReadonlyArray<string>> => {
+const caminosBajo = async (carpeta: FileSystemDirectoryHandle, prefijo: string): Promise<ReadonlyArray<string>> => {
   const encontrados: string[] = []
 
   for await (const entrada of carpeta.values()) {
@@ -222,9 +205,7 @@ const caminosBajo = async (
  * Quién la pide y cómo —`showDirectoryPicker()`, OPFS, un handle rescatado de
  * IndexedDB entre sesiones— es composición, y vive en `platform/` (Fase 4).
  */
-export const createDirectoryHandleBlobStore = (
-  raiz: FileSystemDirectoryHandle,
-): BlobStore => ({
+export const createDirectoryHandleBlobStore = (raiz: FileSystemDirectoryHandle): BlobStore => ({
   /**
    * Ausencia no es fallo: **si no está, `ok(null)`**. Y aquí «no está» incluye
    * que no exista la carpeta intermedia, porque la API lanza el mismo
@@ -240,18 +221,15 @@ export const createDirectoryHandleBlobStore = (
    * tratar de todas formas con el botón de reconectar la carpeta.
    */
   read: async (camino: string): Promise<Result<Uint8Array | null, StorageError>> => {
-    const leido: Result<Uint8Array, StorageError> = await frontera(
-      camino,
-      async (): Promise<Uint8Array> => {
-        const { carpetas, fichero } = partir(camino)
-        const carpeta: FileSystemDirectoryHandle = await navegar(raiz, carpetas, false)
-        const handle: FileSystemFileHandle = await carpeta.getFileHandle(fichero)
-        /* `getFile()` también lanza `NotFoundError` si el fichero desapareció
+    const leido: Result<Uint8Array, StorageError> = await frontera(camino, async (): Promise<Uint8Array> => {
+      const { carpetas, fichero } = partir(camino)
+      const carpeta: FileSystemDirectoryHandle = await navegar(raiz, carpetas, false)
+      const handle: FileSystemFileHandle = await carpeta.getFileHandle(fichero)
+      /* `getFile()` también lanza `NotFoundError` si el fichero desapareció
            entre que se obtuvo el handle y ahora: misma respuesta, ausencia. */
-        const contenido: File = await handle.getFile()
-        return new Uint8Array(await contenido.arrayBuffer())
-      },
-    )
+      const contenido: File = await handle.getFile()
+      return new Uint8Array(await contenido.arrayBuffer())
+    })
 
     return esAusencia(leido) ? ok(null) : leido
   },
@@ -297,14 +275,11 @@ export const createDirectoryHandleBlobStore = (
 
   /** Borrar lo que no está no es un error: el `NotFoundError` sale como `ok`. */
   delete: async (camino: string): Promise<Result<void, StorageError>> => {
-    const borrado: Result<void, StorageError> = await frontera(
-      camino,
-      async (): Promise<void> => {
-        const { carpetas, fichero } = partir(camino)
-        const carpeta: FileSystemDirectoryHandle = await navegar(raiz, carpetas, false)
-        await carpeta.removeEntry(fichero)
-      },
-    )
+    const borrado: Result<void, StorageError> = await frontera(camino, async (): Promise<void> => {
+      const { carpetas, fichero } = partir(camino)
+      const carpeta: FileSystemDirectoryHandle = await navegar(raiz, carpetas, false)
+      await carpeta.removeEntry(fichero)
+    })
 
     return esAusencia(borrado) ? ok(undefined) : borrado
   },
@@ -320,9 +295,7 @@ export const createDirectoryHandleBlobStore = (
    * no hay ningún `notes/`, y el `getAll` de `hydrate` tiene que devolver cero
    * notas en vez de impedir abrir la app.
    */
-  list: async (
-    prefijo: string,
-  ): Promise<Result<ReadonlyArray<string>, StorageError>> => {
+  list: async (prefijo: string): Promise<Result<ReadonlyArray<string>, StorageError>> => {
     const corte: number = prefijo.lastIndexOf("/")
     const base: string = corte === -1 ? "" : prefijo.slice(0, corte + 1)
 
@@ -331,11 +304,7 @@ export const createDirectoryHandleBlobStore = (
       async (): Promise<ReadonlyArray<string>> => {
         /* `tramosDe` y no `partir`: aquí el camino es **entero** una ruta de
            carpetas, y `partir` se comería la última tomándola por fichero. */
-        const carpeta: FileSystemDirectoryHandle = await navegar(
-          raiz,
-          tramosDe(base),
-          false,
-        )
+        const carpeta: FileSystemDirectoryHandle = await navegar(raiz, tramosDe(base), false)
         const todos: ReadonlyArray<string> = await caminosBajo(carpeta, base)
         return todos.filter((c: string): boolean => c.startsWith(prefijo))
       },

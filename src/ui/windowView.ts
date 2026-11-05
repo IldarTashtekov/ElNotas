@@ -8,16 +8,7 @@
  * decide la pantalla se prueba en Node; al DOM sólo le queda pintarlo.
  */
 
-import type {
-  AppState,
-  Context,
-  ContextId,
-  Diagram,
-  DiagramId,
-  ItemRef,
-  Note,
-  NoteId,
-} from "#core/index"
+import type { AppState, Context, ContextId, Diagram, DiagramId, ItemRef, Note, NoteId } from "#core/index"
 import { diagramRef, noteRef } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { sameWindow } from "./windows.js"
@@ -96,25 +87,22 @@ export const windowSymbol = (ref: WindowRef): string => {
 }
 
 export const windowTabs = (layout: WindowsLayout, state: AppState): ReadonlyArray<WindowTab> =>
-  layout.windows.map(
-    (ref: WindowRef, index: number): WindowTab => ({
-      ref,
-      index,
-      title: windowTitle(ref, state),
-      symbol: windowSymbol(ref),
-      active: layout.active !== null && sameWindow(ref, layout.active),
-    }),
-  )
+  layout.windows.map((ref: WindowRef, index: number): WindowTab => ({
+    ref,
+    index,
+    title: windowTitle(ref, state),
+    symbol: windowSymbol(ref),
+    active: layout.active !== null && sameWindow(ref, layout.active),
+  }))
 
 const deNota = (n: Note): ListItem => ({ ref: noteRef(n.id), name: n.name })
 const deDiagrama = (d: Diagram): ListItem => ({ ref: diagramRef(d.id), name: d.name })
 
 /** El General enseña todo, notas y diagramas mezclados, por nombre: no hay otro orden suyo. */
 const todo = (state: AppState): ReadonlyArray<ListItem> =>
-  [
-    ...Object.values<Note>(state.notes).map(deNota),
-    ...Object.values<Diagram>(state.diagrams).map(deDiagrama),
-  ].sort((a: ListItem, b: ListItem): number => a.name.localeCompare(b.name))
+  [...Object.values<Note>(state.notes).map(deNota), ...Object.values<Diagram>(state.diagrams).map(deDiagrama)].sort(
+    (a: ListItem, b: ListItem): number => a.name.localeCompare(b.name),
+  )
 
 /** Lo que una referencia señala, si se puede enseñar: una nota ilegible no. */
 const fila = (item: ItemRef, state: AppState): ReadonlyArray<ListItem> => {
@@ -131,11 +119,7 @@ const oculto = (ctx: Context, item: ItemRef): boolean =>
   (ctx.hidden ?? []).some((h: ItemRef): boolean => h.kind === item.kind && h.id === item.id)
 
 /** Lo de un contexto, oculto o no, en el orden en que lo lista. */
-const deContexto = (
-  ctx: Context,
-  state: AppState,
-  ocultos: boolean,
-): ReadonlyArray<ListItem> =>
+const deContexto = (ctx: Context, state: AppState, ocultos: boolean): ReadonlyArray<ListItem> =>
   ctx.items
     .filter((item: ItemRef): boolean => oculto(ctx, item) === ocultos)
     .flatMap((item: ItemRef): ReadonlyArray<ListItem> => fila(item, state))

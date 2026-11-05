@@ -33,7 +33,18 @@ export interface NoteViewDeps {
 /** Devuelve la función que la desmonta. */
 export const mountNoteView = (
   raiz: HTMLElement,
-  { store, useCases, noteId, onExit, onOpenNote, onOpenDiagram, onOpenEvent, onOpenRoutine, today, sheet }: NoteViewDeps,
+  {
+    store,
+    useCases,
+    noteId,
+    onExit,
+    onOpenNote,
+    onOpenDiagram,
+    onOpenEvent,
+    onOpenRoutine,
+    today,
+    sheet,
+  }: NoteViewDeps,
 ): (() => void) => {
   const nota = (): Note | undefined => store.getState().notes[noteId]
 

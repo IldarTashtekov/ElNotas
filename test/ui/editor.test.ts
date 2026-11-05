@@ -14,17 +14,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type {
-  AppState,
-  CheckBox,
-  Content,
-  ContentId,
-  IdGenerator,
-  Note,
-  NoteId,
-  Store,
-  UseCases,
-} from "#core/index"
+import type { AppState, CheckBox, Content, ContentId, IdGenerator, Note, NoteId, Store, UseCases } from "#core/index"
 import { checkBox, text } from "#core/domain/Content"
 import { contentId, createStore, createUseCases, isCheckBox, noteId } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
@@ -32,13 +22,7 @@ import { revision } from "#core/domain/Ids"
 import type { Caret, EditResult, EditorDeps } from "#ui/editor"
 import type { WritingMode } from "#ui/writingMode"
 import { INITIAL_MODE, toggleNest } from "#ui/writingMode"
-import {
-  pressBackspaceAtStart,
-  pressEnter,
-  startWriting,
-  toggleCheckbox,
-  toggleChecked,
-} from "#ui/editor"
+import { pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "#ui/editor"
 
 /* ─────────────────────────────── El escenario ───────────────────────────── */
 

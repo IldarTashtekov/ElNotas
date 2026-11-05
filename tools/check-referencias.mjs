@@ -31,9 +31,7 @@ const scripts = new Set(Object.keys(paquete.scripts ?? {}))
 const alias = new Set(Object.keys(paquete.imports ?? {}).map((a) => a.replace(/\/\*$/, "")))
 
 const RAIZ = ["CLAUDE.md", "ARCHITECTURE.md", "README.md"]
-const documentos = versionados.filter(
-  (f) => RAIZ.includes(f) || (/^(test|\.claude)\//.test(f) && f.endsWith(".md")),
-)
+const documentos = versionados.filter((f) => RAIZ.includes(f) || (/^(test|\.claude)\//.test(f) && f.endsWith(".md")))
 
 /* De código, no de datos: un `.json` suelto suele ser del almacén o de la copia, no del repo. */
 const CODIGO = /[\w-]\.(ts|js|mjs|md|html|css|webmanifest|yml|sh)$/
@@ -44,7 +42,9 @@ const PRIMER_NIVEL = new Set(versionados.filter((f) => f.includes("/")).map((f) 
 /* Con `/`, si empieza por una carpeta del repo o es de código (`notes/` es del almacén); sin `/`, si es de código. */
 const pareceRuta = (texto) =>
   !NO_ES_RUTA.test(texto) &&
-  (texto.includes("/") ? PRIMER_NIVEL.has(texto.replace(/^(\.\.?\/)+/, "").split("/")[0]) || CODIGO.test(texto) : CODIGO.test(texto))
+  (texto.includes("/")
+    ? PRIMER_NIVEL.has(texto.replace(/^(\.\.?\/)+/, "").split("/")[0]) || CODIGO.test(texto)
+    : CODIGO.test(texto))
 
 const ignorado = (camino) => git("check-ignore", "-q", "--no-index", camino).status === 0
 

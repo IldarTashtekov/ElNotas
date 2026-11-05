@@ -118,7 +118,9 @@ const persistencia = (leido: Result<unknown, StorageError> = ok(null)): AlmacenF
 
 describe("el ajuste", (): void => {
   it("empieza en lo guardado, sin los tramos de rutinas que ya no están", (): void => {
-    const p: AlmacenFalso = persistencia(ok({ view: "chart", axes: { a: { span: 8, fromEnd: 1 }, z: { span: 4, fromEnd: 0 } } }))
+    const p: AlmacenFalso = persistencia(
+      ok({ view: "chart", axes: { a: { span: 8, fromEnd: 1 }, z: { span: 4, fromEnd: 0 } } }),
+    )
     const g: RoutineChartsSetting = createRoutineChartsSetting({
       store: almacenDe(estado(rutina("a", []))),
       persistence: p,

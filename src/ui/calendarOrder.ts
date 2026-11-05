@@ -49,9 +49,7 @@ export const reconcileOrder = (
   guardado: ReadonlyArray<string>,
   existentes: ReadonlyArray<string>,
 ): ReadonlyArray<string> => {
-  const vivos: ReadonlyArray<string> = guardado.filter((id: string): boolean =>
-    existentes.includes(id),
-  )
+  const vivos: ReadonlyArray<string> = guardado.filter((id: string): boolean => existentes.includes(id))
   const nuevos: ReadonlyArray<string> = existentes.filter((id: string): boolean => !vivos.includes(id))
   if (vivos.length === guardado.length && nuevos.length === 0) return guardado
   return [...vivos, ...nuevos]

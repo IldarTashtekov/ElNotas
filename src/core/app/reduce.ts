@@ -34,14 +34,7 @@ import {
   setRelationLabel,
   shiftNodes,
 } from "../domain/diagramOperations.js"
-import type {
-  ContextId,
-  DiagramId,
-  EventId,
-  ItemRef,
-  NoteId,
-  RoutineId,
-} from "../domain/Ids.js"
+import type { ContextId, DiagramId, EventId, ItemRef, NoteId, RoutineId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Routine } from "../domain/Routine.js"
 import { isWeeklyGoal, withDay } from "../domain/Routine.js"
@@ -181,14 +174,11 @@ const onRoutine = (
 }
 
 /** Dos referencias son la misma si coinciden clase e id. */
-const mismoItem = (a: ItemRef, b: ItemRef): boolean =>
-  a.kind === b.kind && a.id === b.id
+const mismoItem = (a: ItemRef, b: ItemRef): boolean => a.kind === b.kind && a.id === b.id
 
 /** ¿Existe de verdad lo que esta referencia señala? */
 const existeItem = (state: AppState, item: ItemRef): boolean =>
-  item.kind === "note"
-    ? state.notes[item.id] !== undefined
-    : state.diagrams[item.id] !== undefined
+  item.kind === "note" ? state.notes[item.id] !== undefined : state.diagrams[item.id] !== undefined
 
 const contiene = (lista: ReadonlyArray<ItemRef>, item: ItemRef): boolean =>
   lista.some((i: ItemRef): boolean => mismoItem(i, item))
@@ -201,12 +191,8 @@ const ocultos = (ctx: Context): ReadonlyArray<ItemRef> => ctx.hidden ?? []
  * contexto no puede seguir oculto en él. Si no estaba, el MISMO contexto.
  */
 const sinItem = (ctx: Context, item: ItemRef): Context => {
-  const items: ReadonlyArray<ItemRef> = ctx.items.filter(
-    (i: ItemRef): boolean => !mismoItem(i, item),
-  )
-  const hidden: ReadonlyArray<ItemRef> = ocultos(ctx).filter(
-    (i: ItemRef): boolean => !mismoItem(i, item),
-  )
+  const items: ReadonlyArray<ItemRef> = ctx.items.filter((i: ItemRef): boolean => !mismoItem(i, item))
+  const hidden: ReadonlyArray<ItemRef> = ocultos(ctx).filter((i: ItemRef): boolean => !mismoItem(i, item))
   // `filter` SIEMPRE devuelve array nuevo: sin esta comparación, quitar algo
   // que no estaba ensuciaría el contexto y lo reescribiría en disco.
   if (items.length === ctx.items.length && hidden.length === ocultos(ctx).length) return ctx
@@ -228,13 +214,9 @@ const mismaVista = (a: DefaultView, b: DefaultView): boolean =>
  * Los que sí la listaban reciben todos el MISMO `meta`, que por eso se construye
  * una sola vez por acción y no uno por entidad.
  */
-const sinReferenciasA = (
-  contexts: AppState["contexts"],
-  item: ItemRef,
-  meta: ActionMeta,
-): AppState["contexts"] => {
-  const afectados: ReadonlyArray<Context> = Object.values<Context>(contexts).filter(
-    (ctx: Context): boolean => contiene(ctx.items, item),
+const sinReferenciasA = (contexts: AppState["contexts"], item: ItemRef, meta: ActionMeta): AppState["contexts"] => {
+  const afectados: ReadonlyArray<Context> = Object.values<Context>(contexts).filter((ctx: Context): boolean =>
+    contiene(ctx.items, item),
   )
   if (afectados.length === 0) return contexts
 
@@ -245,91 +227,55 @@ const sinReferenciasA = (
 
   return {
     ...contexts,
-    ...Object.fromEntries(
-      limpios.map((ctx: Context): readonly [ContextId, Context] => [ctx.id, ctx]),
-    ),
+    ...Object.fromEntries(limpios.map((ctx: Context): readonly [ContextId, Context] => [ctx.id, ctx])),
   }
 }
 
 export const reduce = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case "set-checked":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          setChecked(c, action.contentId, action.checked),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        setChecked(c, action.contentId, action.checked),
       )
 
     case "set-text":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          setText(c, action.contentId, action.value),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        setText(c, action.contentId, action.value),
       )
 
     case "insert":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          insert(c, action.block, action.position),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        insert(c, action.block, action.position),
       )
 
     case "remove":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> => remove(c, action.contentIds),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        remove(c, action.contentIds),
       )
 
     case "split":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          split(c, action.contentId, action.offset, action.newId),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        split(c, action.contentId, action.offset, action.newId),
       )
 
     case "merge":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> => merge(c, action.contentId),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        merge(c, action.contentId),
       )
 
     case "convert-to-checkbox":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          convertToCheckBox(c, action.contentId),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        convertToCheckBox(c, action.contentId),
       )
 
     case "convert-to-text":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          convertToText(c, action.contentId),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        convertToText(c, action.contentId),
       )
 
     case "move":
-      return onContent(
-        state,
-        action.noteId,
-        action.meta,
-        (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          move(c, action.contentIds, action.position),
+      return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+        move(c, action.contentIds, action.position),
       )
 
     /* ───────────────────────────── Nota ───────────────────────────── */
@@ -368,11 +314,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
         ...state,
         notes: quedan,
         // Integridad referencial: los contextos que la listaban se limpian.
-        contexts: sinReferenciasA(
-          state.contexts,
-          { kind: "note", id: action.noteId },
-          action.meta,
-        ),
+        contexts: sinReferenciasA(state.contexts, { kind: "note", id: action.noteId }, action.meta),
       }
     }
 
@@ -417,9 +359,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
       })
 
     case "remove-item":
-      return onContext(state, action.contextId, action.meta, (ctx: Context): Context =>
-        sinItem(ctx, action.item),
-      )
+      return onContext(state, action.contextId, action.meta, (ctx: Context): Context => sinItem(ctx, action.item))
 
     case "hide-items":
       return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
@@ -437,32 +377,20 @@ export const reduce = (state: AppState, action: Action): AppState => {
     case "show-items":
       return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
         const ya: ReadonlyArray<ItemRef> = ocultos(ctx)
-        const quedan: ReadonlyArray<ItemRef> = ya.filter(
-          (i: ItemRef): boolean => !contiene(action.items, i),
-        )
+        const quedan: ReadonlyArray<ItemRef> = ya.filter((i: ItemRef): boolean => !contiene(action.items, i))
         return quedan.length === ya.length ? ctx : { ...ctx, hidden: quedan }
       })
 
     case "reorder-items":
       return onContext(state, action.contextId, action.meta, (ctx: Context): Context => {
-        const mueven: ReadonlyArray<ItemRef> = ctx.items.filter(
-          (i: ItemRef): boolean => contiene(action.items, i),
-        )
+        const mueven: ReadonlyArray<ItemRef> = ctx.items.filter((i: ItemRef): boolean => contiene(action.items, i))
         if (mueven.length === 0) return ctx
-        const quedan: ReadonlyArray<ItemRef> = ctx.items.filter(
-          (i: ItemRef): boolean => !contiene(action.items, i),
-        )
+        const quedan: ReadonlyArray<ItemRef> = ctx.items.filter((i: ItemRef): boolean => !contiene(action.items, i))
         const antes: ItemRef | null = action.before
         const donde: number =
-          antes === null
-            ? quedan.length
-            : quedan.findIndex((i: ItemRef): boolean => mismoItem(i, antes))
+          antes === null ? quedan.length : quedan.findIndex((i: ItemRef): boolean => mismoItem(i, antes))
         if (donde === -1) return ctx
-        const items: ReadonlyArray<ItemRef> = [
-          ...quedan.slice(0, donde),
-          ...mueven,
-          ...quedan.slice(donde),
-        ]
+        const items: ReadonlyArray<ItemRef> = [...quedan.slice(0, donde), ...mueven, ...quedan.slice(donde)]
         /* Soltarlos donde estaban da el mismo orden en un array nuevo: el mismo contexto. */
         const igual: boolean = items.every((i: ItemRef, n: number): boolean => i === ctx.items[n])
         return igual ? ctx : { ...ctx, items }
@@ -470,9 +398,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
 
     case "set-default-view":
       return onContext(state, action.contextId, action.meta, (ctx: Context): Context =>
-        mismaVista(ctx.defaultView, action.view)
-          ? ctx
-          : { ...ctx, defaultView: action.view },
+        mismaVista(ctx.defaultView, action.view) ? ctx : { ...ctx, defaultView: action.view },
       )
 
     /* ─────────────────────────── Diagrama ─────────────────────────── */
@@ -504,18 +430,12 @@ export const reduce = (state: AppState, action: Action): AppState => {
         ...state,
         diagrams: quedan,
         // Integridad referencial, como al borrar una nota. Sus notas se quedan.
-        contexts: sinReferenciasA(
-          state.contexts,
-          { kind: "diagram", id: action.diagramId },
-          action.meta,
-        ),
+        contexts: sinReferenciasA(state.contexts, { kind: "diagram", id: action.diagramId }, action.meta),
       }
     }
 
     case "add-node":
-      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
-        addNode(d, action.node),
-      )
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram => addNode(d, action.node))
 
     case "set-node-text":
       return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
@@ -538,19 +458,13 @@ export const reduce = (state: AppState, action: Action): AppState => {
       )
 
     case "remove-node":
-      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
-        removeNode(d, action.nodeId),
-      )
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram => removeNode(d, action.nodeId))
 
     case "remove-nodes":
-      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
-        removeNodes(d, action.nodeIds),
-      )
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram => removeNodes(d, action.nodeIds))
 
     case "add-relation":
-      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>
-        addRelation(d, action.relation),
-      )
+      return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram => addRelation(d, action.relation))
 
     case "set-relation-ends":
       return onDiagram(state, action.diagramId, action.meta, (d: Diagram): Diagram =>

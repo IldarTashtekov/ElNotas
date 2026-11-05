@@ -67,14 +67,7 @@ import {
 import { paintOrder, raise } from "./paintOrder.js"
 import { reconcile } from "./reconcile.js"
 import type { Box, RelationCurve } from "./relationGeometry.js"
-import {
-  curveMidpoint,
-  curvePath,
-  fanOffsets,
-  labelPath,
-  relationCurve,
-  relationsOf,
-} from "./relationGeometry.js"
+import { curveMidpoint, curvePath, fanOffsets, labelPath, relationCurve, relationsOf } from "./relationGeometry.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createConfirm, createSheet } from "./sheet.js"
 import type { Framing, Point, Viewport } from "./viewport.js"
@@ -288,7 +281,6 @@ export const createDiagramCanvas = ({
   /** Lo que enseña un nodo: su texto, o el nombre de lo que enlaza. */
   const textoDe = (nodo: DiagramNode, estado: AppState): string => readNode(estado, nodo.text).text
 
-
   const positDe = (id: DiagramNodeId): HTMLElement | null =>
     capa.querySelector<HTMLElement>(`.posit[data-id="${CSS.escape(id)}"]`)
 
@@ -300,9 +292,7 @@ export const createDiagramCanvas = ({
   /** Dónde se ve un pósit: donde está, o donde lo lleva el dedo si va en el grupo arrastrado. */
   const dondeSeVe = (nodo: DiagramNode): Point => {
     const d: Point | null =
-      gesto !== null && gesto.levantado && gesto.grupo.includes(nodo.id)
-        ? gesto.desplazamiento
-        : null
+      gesto !== null && gesto.levantado && gesto.grupo.includes(nodo.id) ? gesto.desplazamiento : null
     return { x: nodo.positionX + (d?.x ?? 0), y: nodo.positionY + (d?.y ?? 0) }
   }
 
@@ -318,12 +308,10 @@ export const createDiagramCanvas = ({
     }
     const estado: AppState = store.getState()
     const orden: ReadonlyArray<string> = paintOrder(Object.keys(actual.nodes), levantados)
-    const nodos: ReadonlyArray<DiagramNode> = orden.flatMap(
-      (id: string): ReadonlyArray<DiagramNode> => {
-        const nodo: DiagramNode | undefined = actual.nodes[diagramNodeId(id)]
-        return nodo === undefined ? [] : [nodo]
-      },
-    )
+    const nodos: ReadonlyArray<DiagramNode> = orden.flatMap((id: string): ReadonlyArray<DiagramNode> => {
+      const nodo: DiagramNode | undefined = actual.nodes[diagramNodeId(id)]
+      return nodo === undefined ? [] : [nodo]
+    })
     reconcile<DiagramNode, Element>(nodosCapa, nodos, {
       key: (nodo: DiagramNode): string => nodo.id,
       keyOf: (el: Element): string | null => el.getAttribute("data-id"),
@@ -412,9 +400,7 @@ export const createDiagramCanvas = ({
   const pintarRelaciones = (soloDe: ReadonlyArray<DiagramNodeId> | null = null): void => {
     const actual: Diagram | undefined = diagrama()
     if (actual === undefined) return
-    const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(
-      actual.relations,
-    )
+    const relaciones: ReadonlyArray<DiagramRelation> = Object.values<DiagramRelation>(actual.relations)
     /* El abanico se reparte con todas, aunque sólo se redibujen unas. */
     const curvas: ReadonlyMap<string, number> = fanOffsets(relaciones)
     /* Una línea entre dos del grupo sale dos veces: el `Set` la deja en una. */
@@ -423,9 +409,7 @@ export const createDiagramCanvas = ({
         ? relaciones
         : [
             ...new Set<DiagramRelation>(
-              soloDe.flatMap((id: DiagramNodeId): ReadonlyArray<DiagramRelation> =>
-                relationsOf(relaciones, id),
-              ),
+              soloDe.flatMap((id: DiagramNodeId): ReadonlyArray<DiagramRelation> => relationsOf(relaciones, id)),
             ),
           ]
 
@@ -505,8 +489,7 @@ export const createDiagramCanvas = ({
     const caja: DOMRect = el.getBoundingClientRect()
     const visible: VisualViewport | null = window.visualViewport
     const abajo: number =
-      (visible === null ? window.innerHeight : visible.offsetTop + visible.height) -
-      MARGEN_TECLADO_PX
+      (visible === null ? window.innerHeight : visible.offsetTop + visible.height) - MARGEN_TECLADO_PX
     if (caja.bottom > abajo) {
       vista = panBy(vista, 0, abajo - caja.bottom)
       aplicar()
@@ -586,9 +569,7 @@ export const createDiagramCanvas = ({
   const ponerNodo = (poner: () => Diagram | null): DiagramNodeId | null => {
     const antes: ReadonlySet<string> = new Set<string>(Object.keys(diagrama()?.nodes ?? {}))
     const despues: Diagram | null = poner()
-    const nuevo: string | undefined = Object.keys(despues?.nodes ?? {}).find(
-      (id: string): boolean => !antes.has(id),
-    )
+    const nuevo: string | undefined = Object.keys(despues?.nodes ?? {}).find((id: string): boolean => !antes.has(id))
     if (nuevo === undefined) return null
     levantados = raise(levantados, nuevo)
     pintar()
@@ -753,10 +734,7 @@ export const createDiagramCanvas = ({
       const el: Element | undefined = posits.get(nodo.id)
       if (el instanceof HTMLElement) cajas.set(nodo.id, cajaDe(nodo, el))
     }
-    const tocados: ReadonlyArray<string> = boxesTouching(
-      cajas,
-      rectBetween(toCanvas(vista, a), toCanvas(vista, b)),
-    )
+    const tocados: ReadonlyArray<string> = boxesTouching(cajas, rectBetween(toCanvas(vista, a), toCanvas(vista, b)))
     marcar(new Set<DiagramNodeId>(tocados.map((id: string): DiagramNodeId => diagramNodeId(id))))
   }
 
@@ -766,9 +744,7 @@ export const createDiagramCanvas = ({
     if (id === null) return
     marcar(
       new Set<DiagramNodeId>(
-        marcados.has(id)
-          ? [...marcados].filter((m: DiagramNodeId): boolean => m !== id)
-          : [...marcados, id],
+        marcados.has(id) ? [...marcados].filter((m: DiagramNodeId): boolean => m !== id) : [...marcados, id],
       ),
     )
   }
@@ -813,56 +789,70 @@ export const createDiagramCanvas = ({
       const nodo: DiagramNode | undefined = actual.nodes[n]
       return nodo === undefined ? "?" : textoDe(nodo, store.getState()) || "Sin texto"
     }
-    menu.open(`${nombre(r.from)} ${r.directed ? "→" : "—"} ${nombre(r.to)}`, acciones(
-      /* Sin flecha no hay sentido que invertir: la opción ni sale. */
-      ...(r.directed
-        ? [
-            opcion("Invertir dirección", (): void => {
-              useCases.setRelationEnds(diagramId, id, r.to, r.from)
-            }),
-            opcion("Sin dirección", (): void => {
-              useCases.setRelationDirected(diagramId, id, false)
-            }),
-          ]
-        : [
-            opcion("Con dirección", (): void => {
-              useCases.setRelationDirected(diagramId, id, true)
-            }),
-          ]),
-      opcion("Texto", (): void => editarTexto(id)),
-      opcion("Borrar", (): void => {
-        useCases.removeRelation(diagramId, id)
-      }, "peligro"),
-    ))
+    menu.open(
+      `${nombre(r.from)} ${r.directed ? "→" : "—"} ${nombre(r.to)}`,
+      acciones(
+        /* Sin flecha no hay sentido que invertir: la opción ni sale. */
+        ...(r.directed
+          ? [
+              opcion("Invertir dirección", (): void => {
+                useCases.setRelationEnds(diagramId, id, r.to, r.from)
+              }),
+              opcion("Sin dirección", (): void => {
+                useCases.setRelationDirected(diagramId, id, false)
+              }),
+            ]
+          : [
+              opcion("Con dirección", (): void => {
+                useCases.setRelationDirected(diagramId, id, true)
+              }),
+            ]),
+        opcion("Texto", (): void => editarTexto(id)),
+        opcion(
+          "Borrar",
+          (): void => {
+            useCases.removeRelation(diagramId, id)
+          },
+          "peligro",
+        ),
+      ),
+    )
   }
 
   const menuNodo = (id: DiagramNodeId): void => {
     const nodo: DiagramNode | undefined = diagrama()?.nodes[id]
     if (nodo === undefined) return
     const contenido: NodeContent = readNode(store.getState(), nodo.text)
-    menu.open(contenido.text === "" ? "Nodo" : contenido.text, acciones(
-      opcion("Conectar", (): void => empezarAConectar(id)),
-      /* Uno que enlaza a algo de la app enseña su nombre: no hay texto propio que editar. */
-      ...(canEditNodeText(contenido) ? [opcion("Editar", (): void => editar(id))] : []),
-      opcion(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar…", (): void => {
-        elegirEnlace(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar", nodo.text, (texto: string): void => {
-          useCases.setNodeText(diagramId, id, texto)
-        })
-      }),
-      ...(contenido.kind === "link"
-        ? [
-            opcion("Quitar enlace", (): void => {
-              useCases.setNodeText(diagramId, id, unlinkedNodeText(store.getState(), nodo.text))
-            }),
-          ]
-        : []),
-      opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
-        useCases.setNodeDone(diagramId, id, !nodo.done)
-      }),
-      opcion("Borrar", (): void => {
-        useCases.removeNode(diagramId, id)
-      }, "peligro"),
-    ))
+    menu.open(
+      contenido.text === "" ? "Nodo" : contenido.text,
+      acciones(
+        opcion("Conectar", (): void => empezarAConectar(id)),
+        /* Uno que enlaza a algo de la app enseña su nombre: no hay texto propio que editar. */
+        ...(canEditNodeText(contenido) ? [opcion("Editar", (): void => editar(id))] : []),
+        opcion(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar…", (): void => {
+          elegirEnlace(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar", nodo.text, (texto: string): void => {
+            useCases.setNodeText(diagramId, id, texto)
+          })
+        }),
+        ...(contenido.kind === "link"
+          ? [
+              opcion("Quitar enlace", (): void => {
+                useCases.setNodeText(diagramId, id, unlinkedNodeText(store.getState(), nodo.text))
+              }),
+            ]
+          : []),
+        opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
+          useCases.setNodeDone(diagramId, id, !nodo.done)
+        }),
+        opcion(
+          "Borrar",
+          (): void => {
+            useCases.removeNode(diagramId, id)
+          },
+          "peligro",
+        ),
+      ),
+    )
   }
 
   /* ── Los gestos ── */
@@ -965,16 +955,14 @@ export const createDiagramCanvas = ({
 
   /** El pósit sobre el que cayó un evento, o `null` si fue en el fondo. */
   const nodoDe = (objetivo: EventTarget | null): DiagramNodeId | null => {
-    const el: HTMLElement | null =
-      objetivo instanceof Element ? objetivo.closest<HTMLElement>(".posit[data-id]") : null
+    const el: HTMLElement | null = objetivo instanceof Element ? objetivo.closest<HTMLElement>(".posit[data-id]") : null
     const id: string | undefined = el?.dataset["id"]
     return id === undefined ? null : diagramNodeId(id)
   }
 
   /** La línea sobre la que cayó un evento, o `null`. */
   const relacionDe = (objetivo: EventTarget | null): DiagramRelationId | null => {
-    const el: Element | null =
-      objetivo instanceof Element ? objetivo.closest(".relacion[data-id]") : null
+    const el: Element | null = objetivo instanceof Element ? objetivo.closest(".relacion[data-id]") : null
     const id: string | null = el?.getAttribute("data-id") ?? null
     return id === null ? null : diagramRelationId(id)
   }
@@ -999,10 +987,7 @@ export const createDiagramCanvas = ({
     tragarClick = false
     if (evento.pointerType === "mouse" && evento.button !== 0) return
     /* Dentro del campo que se edita, el dedo es del campo. */
-    if (
-      evento.target instanceof Element &&
-      evento.target.closest(".posit-campo, .etiqueta-campo") !== null
-    ) {
+    if (evento.target instanceof Element && evento.target.closest(".posit-campo, .etiqueta-campo") !== null) {
       return
     }
     const donde: Point = enLienzo(evento)

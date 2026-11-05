@@ -42,9 +42,22 @@ test("parseDay acepta días que existen", () => {
 
 test("parseDay rechaza lo mal escrito y lo que no existe", () => {
   const malos: ReadonlyArray<string> = [
-    "", "2026-7-2", "2026/07/02", "26-07-02", "2026-07-02 ", " 2026-07-02", "2026-07-02T10:00",
-    "2026-13-01", "2026-00-10", "2026-04-31", "2026-02-30", "2023-02-29", "1900-02-29",
-    "2026-07-00", "0000-01-01", "abcd-ef-gh",
+    "",
+    "2026-7-2",
+    "2026/07/02",
+    "26-07-02",
+    "2026-07-02 ",
+    " 2026-07-02",
+    "2026-07-02T10:00",
+    "2026-13-01",
+    "2026-00-10",
+    "2026-04-31",
+    "2026-02-30",
+    "2023-02-29",
+    "1900-02-29",
+    "2026-07-00",
+    "0000-01-01",
+    "abcd-ef-gh",
   ]
   for (const raw of malos) assert.equal(parseDay(raw), null, `«${raw}» no es un día`)
 })
@@ -123,10 +136,12 @@ test("compareDays ordena como el tiempo, también entre años y meses", () => {
   assert.equal(compareDays(d("2026-12-31"), d("2027-01-01")), -1)
   assert.equal(compareDays(d("2026-10-01"), d("2026-09-30")), 1)
   const mezclados: Day[] = [d("2027-01-01"), d("2026-07-02"), d("2026-07-01"), d("2025-12-31")]
-  assert.deepEqual(
-    [...mezclados].sort(compareDays),
-    [d("2025-12-31"), d("2026-07-01"), d("2026-07-02"), d("2027-01-01")],
-  )
+  assert.deepEqual([...mezclados].sort(compareDays), [
+    d("2025-12-31"),
+    d("2026-07-01"),
+    d("2026-07-02"),
+    d("2027-01-01"),
+  ])
 })
 
 test("daysBetween cuenta días con signo", () => {
@@ -155,16 +170,26 @@ test("dayOfWeek con la semana empezando en lunes", () => {
 
 test("weekOf devuelve de lunes a domingo, desde cualquier día de la semana", () => {
   const semana: ReadonlyArray<Day> = [
-    d("2026-06-29"), d("2026-06-30"), d("2026-07-01"), d("2026-07-02"),
-    d("2026-07-03"), d("2026-07-04"), d("2026-07-05"),
+    d("2026-06-29"),
+    d("2026-06-30"),
+    d("2026-07-01"),
+    d("2026-07-02"),
+    d("2026-07-03"),
+    d("2026-07-04"),
+    d("2026-07-05"),
   ]
   for (const dia of semana) assert.deepEqual(weekOf(dia), semana)
 })
 
 test("weekOf cruza meses y años", () => {
   assert.deepEqual(weekOf(d("2025-12-31")), [
-    d("2025-12-29"), d("2025-12-30"), d("2025-12-31"), d("2026-01-01"),
-    d("2026-01-02"), d("2026-01-03"), d("2026-01-04"),
+    d("2025-12-29"),
+    d("2025-12-30"),
+    d("2025-12-31"),
+    d("2026-01-01"),
+    d("2026-01-02"),
+    d("2026-01-03"),
+    d("2026-01-04"),
   ])
 })
 

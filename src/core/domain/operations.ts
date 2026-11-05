@@ -31,15 +31,10 @@ import { mapPreservingIdentity, updateContent } from "./updateContent.js"
  *
  * **No hace nada si:** el id no existe · el texto ya es ese.
  */
-export const setText = (
-  content: ReadonlyArray<Content>,
-  id: ContentId,
-  value: string,
-): ReadonlyArray<Content> =>
+export const setText = (content: ReadonlyArray<Content>, id: ContentId, value: string): ReadonlyArray<Content> =>
   updateContent(content, id, {
     onText: (block: Text): Text => (block.text === value ? block : { ...block, text: value }),
-    onCheckBox: (block: CheckBox): CheckBox =>
-      block.text === value ? block : { ...block, text: value },
+    onCheckBox: (block: CheckBox): CheckBox => (block.text === value ? block : { ...block, text: value }),
   })
 
 /**
@@ -58,15 +53,10 @@ export const setText = (
  * `checked` · ya está en ese valor. Los tres salen de la forma del helper, sin
  * un solo condicional extra: fíjate en que `onText` devuelve la entrada tal cual.
  */
-export const setChecked = (
-  content: ReadonlyArray<Content>,
-  id: ContentId,
-  checked: boolean,
-): ReadonlyArray<Content> =>
+export const setChecked = (content: ReadonlyArray<Content>, id: ContentId, checked: boolean): ReadonlyArray<Content> =>
   updateContent(content, id, {
     onText: (block: Text): Text => block,
-    onCheckBox: (block: CheckBox): CheckBox =>
-      block.checked === checked ? block : { ...block, checked },
+    onCheckBox: (block: CheckBox): CheckBox => (block.checked === checked ? block : { ...block, checked }),
   })
 
 /* ──────────────────────────── Cambiando la estructura ────────────────────────────
@@ -75,10 +65,7 @@ export const setChecked = (
 
 /** ¿Existe ya esa línea en el árbol, a cualquier profundidad? */
 const existsIn = (items: ReadonlyArray<Content>, id: ContentId): boolean =>
-  items.some(
-    (item: Content): boolean =>
-      item.id === id || (isCheckBox(item) && existsIn(item.children, id)),
-  )
+  items.some((item: Content): boolean => item.id === id || (isCheckBox(item) && existsIn(item.children, id)))
 
 /**
  * Mete el bloque justo al lado de `targetId`: detrás (`1`) o delante (`0`).
@@ -107,11 +94,7 @@ const insertNextTo = <T extends Content>(
  * operación sobre ese id actúa siempre sobre la primera coincidencia y jamás
  * sobre la segunda. Sale más barato negarse que detectarlo después.
  */
-export const insert = (
-  content: ReadonlyArray<Content>,
-  block: Content,
-  position: Position,
-): ReadonlyArray<Content> => {
+export const insert = (content: ReadonlyArray<Content>, block: Content, position: Position): ReadonlyArray<Content> => {
   if (existsIn(content, block.id)) return content
 
   switch (position.at) {
@@ -123,17 +106,11 @@ export const insert = (
       const targetId: ContentId = position.id
       const side: 0 | 1 = position.at === "after" ? 1 : 0
       return updateContainerOf(content, targetId, {
-        onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-          insertNextTo(items, targetId, block, side),
+        onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> => insertNextTo(items, targetId, block, side),
         onParent: (parent: CheckBox): CheckBox => {
           // Un texto suelto no cabe entre hijas. Sin este descarte no compila.
           if (!isCheckBox(block)) return parent
-          const children: ReadonlyArray<CheckBox> = insertNextTo(
-            parent.children,
-            targetId,
-            block,
-            side,
-          )
+          const children: ReadonlyArray<CheckBox> = insertNextTo(parent.children, targetId, block, side)
           return children === parent.children ? parent : { ...parent, children }
         },
       })
@@ -159,10 +136,7 @@ export const insert = (
 }
 
 /** La lista sin las elegidas, cada una con todas sus hijas. Sin cambios, la MISMA. */
-const removeFrom = <T extends Content>(
-  items: ReadonlyArray<T>,
-  fuera: ReadonlySet<ContentId>,
-): ReadonlyArray<T> => {
+const removeFrom = <T extends Content>(items: ReadonlyArray<T>, fuera: ReadonlySet<ContentId>): ReadonlyArray<T> => {
   const quedan: ReadonlyArray<T> = items
     .filter((item: T): boolean => !fuera.has(item.id))
     .map((item: T): T => {
@@ -181,19 +155,14 @@ const removeFrom = <T extends Content>(
  *
  * **No hace nada si:** ninguno de los ids existe.
  */
-export const remove = (
-  content: ReadonlyArray<Content>,
-  ids: ReadonlyArray<ContentId>,
-): ReadonlyArray<Content> => removeFrom(content, new Set<ContentId>(ids))
+export const remove = (content: ReadonlyArray<Content>, ids: ReadonlyArray<ContentId>): ReadonlyArray<Content> =>
+  removeFrom(content, new Set<ContentId>(ids))
 
 /* ───────────────────────────── Moviendo ─────────────────────────────
     La del modo Ordenar: varias líneas, cada una con sus hijas, a otro sitio. */
 
 /** Las elegidas que no van ya dentro de otra elegida, en orden de lectura. */
-const ramasElegidas = (
-  items: ReadonlyArray<Content>,
-  elegidas: ReadonlySet<ContentId>,
-): ReadonlyArray<Content> =>
+const ramasElegidas = (items: ReadonlyArray<Content>, elegidas: ReadonlySet<ContentId>): ReadonlyArray<Content> =>
   items.flatMap((item: Content): ReadonlyArray<Content> =>
     elegidas.has(item.id) ? [item] : isCheckBox(item) ? ramasElegidas(item.children, elegidas) : [],
   )
@@ -285,10 +254,7 @@ export const move = (
  * casilla**: ahí no hay textos que convertir, y por eso `onParent` devuelve la
  * madre tal cual.
  */
-export const convertToCheckBox = (
-  content: ReadonlyArray<Content>,
-  id: ContentId,
-): ReadonlyArray<Content> =>
+export const convertToCheckBox = (content: ReadonlyArray<Content>, id: ContentId): ReadonlyArray<Content> =>
   updateContainerOf(content, id, {
     onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
       mapPreservingIdentity(items, (item: Content): Content =>
@@ -311,16 +277,11 @@ export const convertToCheckBox = (
  * El caso de la anidada no está escrito como condición en ninguna parte: sale de
  * que `onParent` devuelva la madre intacta.
  */
-export const convertToText = (
-  content: ReadonlyArray<Content>,
-  id: ContentId,
-): ReadonlyArray<Content> =>
+export const convertToText = (content: ReadonlyArray<Content>, id: ContentId): ReadonlyArray<Content> =>
   updateContainerOf(content, id, {
     onRoot: (items: ReadonlyArray<Content>): ReadonlyArray<Content> =>
       mapPreservingIdentity(items, (item: Content): Content =>
-        item.id === id && isCheckBox(item) && item.children.length === 0
-          ? text(item.id, item.text)
-          : item,
+        item.id === id && isCheckBox(item) && item.children.length === 0 ? text(item.id, item.text) : item,
       ),
     onParent: (parent: CheckBox): CheckBox => parent,
   })
@@ -413,10 +374,7 @@ const enOrdenDeLectura = (content: ReadonlyArray<Content>): ReadonlyArray<Conten
  * **No hace nada si:** el id no existe · es la primera línea de la nota · **la
  * línea que se absorbe tiene hijas** — se quedarían colgando de nada.
  */
-export const merge = (
-  content: ReadonlyArray<Content>,
-  id: ContentId,
-): ReadonlyArray<Content> => {
+export const merge = (content: ReadonlyArray<Content>, id: ContentId): ReadonlyArray<Content> => {
   const lineas: ReadonlyArray<Content> = enOrdenDeLectura(content)
   const index: number = lineas.findIndex((line: Content): boolean => line.id === id)
   const target: Content | undefined = lineas[index]

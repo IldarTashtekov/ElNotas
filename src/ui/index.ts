@@ -12,12 +12,7 @@ export type { DiagramFraming } from "./diagramFraming.js"
 export { createDiagramFraming } from "./diagramFraming.js"
 export type { OpenLayers, OpenLayersPersistence } from "./openLayers.js"
 export { describeBootError, describeImportFailure } from "./messages.js"
-export type {
-  BackupActions,
-  ExportResult,
-  ImportPreparation,
-  ImportSummary,
-} from "./backup.js"
+export type { BackupActions, ExportResult, ImportPreparation, ImportSummary } from "./backup.js"
 export type { WindowsModel } from "./windowsModel.js"
 export { createWindowsModel } from "./windowsModel.js"
 export type { Phosphor, PhosphorSetting } from "./phosphor.js"

@@ -32,10 +32,7 @@ test("con azar a unos, la versión y la variante pisan lo que haya", (): void =>
 
 test("con el crypto de verdad: mil ids con forma de UUID v4 y ninguno repetido", (): void => {
   const ids: IdGenerator = createCryptoIdGenerator(globalThis.crypto)
-  const generados: ReadonlyArray<string> = Array.from(
-    { length: 1000 },
-    (): string => ids.next(),
-  )
+  const generados: ReadonlyArray<string> = Array.from({ length: 1000 }, (): string => ids.next())
 
   for (const id of generados) assert.match(id, UUID_V4)
   assert.equal(new Set<string>(generados).size, generados.length)

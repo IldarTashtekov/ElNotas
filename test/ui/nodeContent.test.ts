@@ -8,7 +8,18 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type { AppState, CalendarEvent, Clock, Day, Diagram, IdGenerator, Note, Routine, Store, UseCases } from "#core/index"
+import type {
+  AppState,
+  CalendarEvent,
+  Clock,
+  Day,
+  Diagram,
+  IdGenerator,
+  Note,
+  Routine,
+  Store,
+  UseCases,
+} from "#core/index"
 import { buildLink, createStore, createUseCases } from "#core/index"
 import { emptyAppState } from "#core/domain/AppState"
 import type { NodeContent } from "#ui/nodeContent"
@@ -158,7 +169,10 @@ test("unlinkedNodeText: se queda lo que se veía, como texto; uno de texto no ca
   const s: AppState = store.getState()
   const sinEnlace: string = unlinkedNodeText(s, `[x](#${nota.id})`)
   assert.deepEqual(readNode(s, sinEnlace), { kind: "text", text: "Compra *ya*" })
-  assert.deepEqual(readNode(s, unlinkedNodeText(s, "[El tiempo](https://aemet.es)")), { kind: "text", text: "El tiempo" })
+  assert.deepEqual(readNode(s, unlinkedNodeText(s, "[El tiempo](https://aemet.es)")), {
+    kind: "text",
+    text: "El tiempo",
+  })
   const texto: string = textNodeText("a * b")
   assert.strictEqual(unlinkedNodeText(s, texto), texto)
 })

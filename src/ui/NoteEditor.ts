@@ -32,13 +32,7 @@ import type { ActiveLine } from "./activeLine.js"
 import { copiedText } from "./copyText.js"
 import { briefNotice, elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
-import {
-  pressBackspaceAtStart,
-  pressEnter,
-  startWriting,
-  toggleCheckbox,
-  toggleChecked,
-} from "./editor.js"
+import { pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "./editor.js"
 import type { LinkBubble } from "./linkBubble.js"
 import { createLinkBubble } from "./linkBubble.js"
 import type { LinkKind, ResolvedLink } from "./linkActions.js"
@@ -292,8 +286,7 @@ const puntoDeTexto = (x: number, y: number): { readonly nodo: Node; readonly off
     return p === null ? null : { nodo: p.offsetNode, offset: p.offset }
   }
   /* Safari antiguo sólo tiene el de antes, con otro nombre. */
-  const r: Range | null =
-    typeof document.caretRangeFromPoint === "function" ? document.caretRangeFromPoint(x, y) : null
+  const r: Range | null = typeof document.caretRangeFromPoint === "function" ? document.caretRangeFromPoint(x, y) : null
   return r === null ? null : { nodo: r.startContainer, offset: r.startOffset }
 }
 
@@ -313,25 +306,18 @@ const offsetEnPunto = (campo: HTMLElement, x: number, y: number): number | null 
  * Pinta la línea formateada: un `span` por tramo visible, con su estilo; las
  * marcas no se pintan. Un enlace roto lleva `md-roto` en todos sus tramos.
  */
-const pintarFormateada = (
-  campo: HTMLElement,
-  linea: FormattedLine,
-  rotos: ReadonlySet<LineLink>,
-): void => {
-  const visibles: ReadonlyArray<TextSpan> = linea.spans.filter(
-    (s: LineSpan): s is TextSpan => s.kind === "text",
-  )
-  const tramos: ReadonlyArray<HTMLSpanElement> = visibles
-    .map((s: TextSpan): HTMLSpanElement => {
-      const el: HTMLSpanElement = elemento("span", s.text)
-      el.classList.toggle("md-negrita", s.bold)
-      el.classList.toggle("md-cursiva", s.italic)
-      /* Sólo el aspecto: abrirlo es de la burbuja. Un `<a>` se iría al tocarlo. */
-      el.classList.toggle("md-enlace", s.link !== null)
-      /* Roto: sólo cambia el color, el texto es el mismo. */
-      el.classList.toggle("md-roto", s.link !== null && rotos.has(s.link))
-      return el
-    })
+const pintarFormateada = (campo: HTMLElement, linea: FormattedLine, rotos: ReadonlySet<LineLink>): void => {
+  const visibles: ReadonlyArray<TextSpan> = linea.spans.filter((s: LineSpan): s is TextSpan => s.kind === "text")
+  const tramos: ReadonlyArray<HTMLSpanElement> = visibles.map((s: TextSpan): HTMLSpanElement => {
+    const el: HTMLSpanElement = elemento("span", s.text)
+    el.classList.toggle("md-negrita", s.bold)
+    el.classList.toggle("md-cursiva", s.italic)
+    /* Sólo el aspecto: abrirlo es de la burbuja. Un `<a>` se iría al tocarlo. */
+    el.classList.toggle("md-enlace", s.link !== null)
+    /* Roto: sólo cambia el color, el texto es el mismo. */
+    el.classList.toggle("md-roto", s.link !== null && rotos.has(s.link))
+    return el
+  })
   campo.replaceChildren(...tramos)
   campo.classList.toggle("md-titulo", linea.heading)
   rellenarSiVacia(campo)
@@ -341,9 +327,7 @@ const pintarFormateada = (
 const muestraEnCrudo = (campo: HTMLElement, raw: string): boolean =>
   raw === ""
     ? campo.textContent === "" && campo.querySelector("span") === null
-    : campo.childNodes.length === 1 &&
-      campo.firstChild?.nodeType === Node.TEXT_NODE &&
-      campo.textContent === raw
+    : campo.childNodes.length === 1 && campo.firstChild?.nodeType === Node.TEXT_NODE && campo.textContent === raw
 
 /** Si el cursor está en la primera (o la última) fila visual del campo. */
 const enBordeVisual = (campo: HTMLElement, hacia: "prev" | "next"): boolean => {
@@ -454,8 +438,7 @@ export const createNoteEditor = ({
     lineas.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"] > .texto`)
 
   const idDe = (objetivo: EventTarget | null): ContentId | null => {
-    const fila: Element | null =
-      objetivo instanceof Element ? objetivo.closest("[data-id]") : null
+    const fila: Element | null = objetivo instanceof Element ? objetivo.closest("[data-id]") : null
     const bruto: string | null = fila?.getAttribute("data-id") ?? null
     return bruto === null ? null : contentId(bruto)
   }
@@ -596,8 +579,10 @@ export const createNoteEditor = ({
    * Lo último que se pintó formateado en cada campo: la cadena cruda y si cada
    * enlace interno resolvía. Si no cambió, no se rehace.
    */
-  const formateadoCon: WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }> =
-    new WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }>()
+  const formateadoCon: WeakMap<HTMLElement, { readonly raw: string; readonly enlaces: string }> = new WeakMap<
+    HTMLElement,
+    { readonly raw: string; readonly enlaces: string }
+  >()
 
   /** Si ese enlace es interno y su destino ya no está. */
   const estaRoto = (link: LineLink): boolean =>
@@ -735,8 +720,7 @@ export const createNoteEditor = ({
   const crudoDe = (campo: HTMLElement): string => {
     const id: ContentId | null = idDe(campo)
     const nota: Note | undefined = deps.note()
-    const linea: Content | undefined =
-      id === null || nota === undefined ? undefined : locate(nota.content, id)?.line
+    const linea: Content | undefined = id === null || nota === undefined ? undefined : locate(nota.content, id)?.line
     return linea?.text ?? crudoDelCampo(campo)
   }
 
@@ -802,9 +786,7 @@ export const createNoteEditor = ({
       const link: LineLink | undefined =
         elegido.id !== id
           ? undefined
-          : linea.links.find(
-              (l: LineLink): boolean => l.saved && l.start === elegido.start && l.end === elegido.end,
-            )
+          : linea.links.find((l: LineLink): boolean => l.saved && l.start === elegido.start && l.end === elegido.end)
       /* Pegado a él por uno de sus dos lados: el navegador a veces deja el cursor antes. */
       if (link !== undefined && (rawCursor === link.start || rawCursor === link.end)) {
         const bloque: HTMLElement | undefined = bloquesDe(campo).find(
@@ -874,12 +856,7 @@ export const createNoteEditor = ({
   const quitarEnlace = (): void => {
     const e: EnlaceVigente | null = enlaceVigente()
     if (e === null) return
-    const nuevo: { readonly text: string; readonly cursor: number } = removeLink(
-      e.raw,
-      e.linea,
-      e.link,
-      e.rawCursor,
-    )
+    const nuevo: { readonly text: string; readonly cursor: number } = removeLink(e.raw, e.linea, e.link, e.rawCursor)
     escribirLinea(e.id, nuevo.text, nuevo.cursor)
   }
 
@@ -965,9 +942,8 @@ export const createNoteEditor = ({
     const tocado: LineLink | null =
       visto === null
         ? null
-        : (readMarkdownLine(crudo).links.find(
-            (l: LineLink): boolean => l.saved && l.start <= donde && donde < l.end,
-          ) ?? null)
+        : (readMarkdownLine(crudo).links.find((l: LineLink): boolean => l.saved && l.start <= donde && donde < l.end) ??
+          null)
     activar(campo)
     const id: ContentId | null = idDe(campo)
     enlaceElegido = tocado === null || id === null ? null : { id, start: tocado.start, end: tocado.end }
@@ -1242,9 +1218,7 @@ export const createNoteEditor = ({
     const ahora: Caret | null = cursorEnVivo()
     if (ahora !== null) return ahora
     const nota: Note | undefined = deps.note()
-    return ultimo !== null && nota !== undefined && locate(nota.content, ultimo.line) !== null
-      ? ultimo
-      : null
+    return ultimo !== null && nota !== undefined && locate(nota.content, ultimo.line) !== null ? ultimo : null
   }
 
   /** Lo elegido en la línea de ahora; si el móvil ya cerró el teclado, el último cursor, sin selección. */

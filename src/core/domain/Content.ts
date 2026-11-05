@@ -37,11 +37,9 @@ export interface CheckBox {
  */
 export type Content = Text | CheckBox
 
-export const isCheckBox = (content: Content): content is CheckBox =>
-  content.type === "checkbox"
+export const isCheckBox = (content: Content): content is CheckBox => content.type === "checkbox"
 
-export const isText = (content: Content): content is Text =>
-  content.type === "text"
+export const isText = (content: Content): content is Text => content.type === "text"
 
 /*
     Constructores. Reciben el id ya hecho: el dominio es puro y no genera IDs

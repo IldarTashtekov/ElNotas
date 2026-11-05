@@ -77,8 +77,7 @@ test("resolveLink: borrar lo enlazado lo rompe", (): void => {
 
 /* ── linkAtCursor ── */
 
-const enlace = (raw: string, offset: number): LineLink | null =>
-  linkAtCursor(readMarkdownLine(raw), offset)
+const enlace = (raw: string, offset: number): LineLink | null => linkAtCursor(readMarkdownLine(raw), offset)
 
 test("linkAtCursor: estrictamente dentro, en la cadena cruda", (): void => {
   const raw: string = "ab [cd](#x) ef"
@@ -175,13 +174,32 @@ test("removeLink: lo quitado ya no se lee como enlace", (): void => {
 /* ── isWebAddress ── */
 
 test("isWebAddress: http, https y www, sin distinguir mayúsculas, con algo detrás", (): void => {
-  for (const ok of ["http://a.es", "https://a.es/x?y=1#z", "www.a.es", "HTTPS://A.ES", "WwW.a.es", "  https://a.es  "]) {
+  for (const ok of [
+    "http://a.es",
+    "https://a.es/x?y=1#z",
+    "www.a.es",
+    "HTTPS://A.ES",
+    "WwW.a.es",
+    "  https://a.es  ",
+  ]) {
     assert.strictEqual(isWebAddress(ok), true, ok)
   }
 })
 
 test("isWebAddress: sin nada detrás del prefijo, con espacios dentro o sin prefijo, no", (): void => {
-  for (const mal of ["", "  ", "https://", "http://", "www.", "a.es", "ftp://a.es", "https://a b", "mira https://a.es", "https:/a.es", "#id"]) {
+  for (const mal of [
+    "",
+    "  ",
+    "https://",
+    "http://",
+    "www.",
+    "a.es",
+    "ftp://a.es",
+    "https://a b",
+    "mira https://a.es",
+    "https:/a.es",
+    "#id",
+  ]) {
     assert.strictEqual(isWebAddress(mal), false, mal)
   }
 })
@@ -195,8 +213,14 @@ test("linkChoices: las demás notas y todos los diagramas, por nombre, sin conte
   const otro: Diagram | null = useCases.createDiagram("Árbol")
   if (zeta === null || alfa === null || otro === null) assert.fail("tenían que crearse")
   const r: LinkChoices = linkChoices(store.getState(), nota.id, null)
-  assert.deepEqual(r.notes.map((n: { readonly name: string }): string => n.name), ["Álamo", "zeta"])
-  assert.deepEqual(r.diagrams.map((d: { readonly name: string }): string => d.name), ["Árbol", "Plano"])
+  assert.deepEqual(
+    r.notes.map((n: { readonly name: string }): string => n.name),
+    ["Álamo", "zeta"],
+  )
+  assert.deepEqual(
+    r.diagrams.map((d: { readonly name: string }): string => d.name),
+    ["Árbol", "Plano"],
+  )
   assert.ok(r.diagrams.some((d: { readonly id: string }): boolean => d.id === diagrama.id))
   assert.ok(!r.notes.some((n: { readonly id: string }): boolean => n.id === nota.id))
 })
@@ -206,7 +230,9 @@ test("linkChoices: el orden ignora tildes y mayúsculas; sin nada que enlazar, l
   useCases.createNote("b")
   useCases.createNote("Á")
   useCases.createNote("a")
-  const nombres: ReadonlyArray<string> = linkChoices(store.getState(), nota.id, null).notes.map((n: { readonly name: string }): string => n.name)
+  const nombres: ReadonlyArray<string> = linkChoices(store.getState(), nota.id, null).notes.map(
+    (n: { readonly name: string }): string => n.name,
+  )
   assert.strictEqual(nombres[2], "b")
   assert.deepEqual(linkChoices(emptyAppState(), nota.id, null), { notes: [], diagrams: [], events: [], routines: [] })
 })
@@ -245,9 +271,7 @@ test("buildLink: lo escrito se lee de vuelta con ese texto y ese destino", (): v
   assert.strictEqual(linea.links.length, 1)
   assert.deepEqual(linea.links[0]?.target, { kind: "internal", id: "x" })
   assert.strictEqual(linea.links[0]?.saved, true)
-  const visto: string = linea.spans
-    .map((s: LineSpan): string => (s.kind === "text" ? s.text : ""))
-    .join("")
+  const visto: string = linea.spans.map((s: LineSpan): string => (s.kind === "text" ? s.text : "")).join("")
   assert.strictEqual(visto, "a]b[c\\d*e")
   const web: string = buildLink("w", "www.a.es") ?? assert.fail("tenía que construirse")
   assert.deepEqual(readMarkdownLine(web).links[0]?.target, { kind: "web", href: "https://www.a.es" })
@@ -362,13 +386,15 @@ test("linkChoices: eventos con su día al lado (próximos, con los de todo el d�
     r.events.map((e: { readonly name: string; readonly detail?: string }): string => `${e.detail} ${e.name}`),
     ["2026-10-30 Dentista", "2026-10-30 08:30 Temprano", "2026-11-05 Lejano", "2026-10-01 09:00 Pasado"],
   )
-  assert.deepEqual(r.routines.map((x: { readonly name: string }): string => x.name), ["Leer"])
+  assert.deepEqual(
+    r.routines.map((x: { readonly name: string }): string => x.name),
+    ["Leer"],
+  )
 })
 
 /* ── soleLink ── */
 
-const unico = (state: AppState, raw: string): ReturnType<typeof soleLink> =>
-  soleLink(state, readMarkdownLine(raw), raw)
+const unico = (state: AppState, raw: string): ReturnType<typeof soleLink> => soleLink(state, readMarkdownLine(raw), raw)
 
 test("soleLink: el texto entero es un enlace guardado e interno, y dice a qué lleva", (): void => {
   const { store, nota }: ReturnType<typeof conCalendario> = conCalendario()

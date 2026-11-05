@@ -74,7 +74,7 @@ const pedirPersistencia = (): void => {
     .catch((fallo: unknown): void => consoleLogger.failure("no se pudo pedir que no se borren los datos", fallo))
 }
 
-const mostrarFallo =(raiz: HTMLElement, mensaje: string): void => {
+const mostrarFallo = (raiz: HTMLElement, mensaje: string): void => {
   const aviso: HTMLParagraphElement = document.createElement("p")
   aviso.className = "aviso"
   aviso.setAttribute("role", "alert")

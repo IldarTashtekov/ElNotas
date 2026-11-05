@@ -60,9 +60,7 @@ test("StorageError tiene SEIS casos y ninguno más", () => {
 })
 
 test("sólo `io` se reintenta: los otros cinco no tienen arreglo por insistir", () => {
-  const reintentables: ReadonlyArray<StorageError["kind"]> = TODOS.filter(
-    merecePenaReintentar,
-  ).map((f) => f.kind)
+  const reintentables: ReadonlyArray<StorageError["kind"]> = TODOS.filter(merecePenaReintentar).map((f) => f.kind)
 
   assert.deepEqual(reintentables, ["io"])
 })

@@ -33,8 +33,7 @@ const textoDelNodo = (
   if (nodo.type !== "note-node") return nodo.text ?? ""
   const id: NoteId = nodo.noteId ?? ("" as NoteId)
   const nombre: string | undefined = nombreDe(id)
-  const visible: string =
-    nombre !== undefined ? nombre : ilegible(id) ? "Nota ilegible" : "Nota perdida"
+  const visible: string = nombre !== undefined ? nombre : ilegible(id) ? "Nota ilegible" : "Nota perdida"
   /* Un id con `)` no cabe en un enlace: queda el texto suelto. */
   return buildLink(visible, `#${id}`) ?? visible
 }
@@ -66,10 +65,7 @@ const migrarDiagrama = (
   return {
     ...diagrama,
     nodes: Object.fromEntries(
-      nodos.map((n: NodoGuardado): readonly [DiagramNodeId, DiagramNode] => [
-        n.id,
-        migrarNodo(n, nombreDe, ilegible),
-      ]),
+      nodos.map((n: NodoGuardado): readonly [DiagramNodeId, DiagramNode] => [n.id, migrarNodo(n, nombreDe, ilegible)]),
     ),
   }
 }
@@ -82,15 +78,13 @@ export const nodoUnico: Migration = {
       guardado.notes.map((n: Note): readonly [NoteId, string] => [n.id, n.name]),
     )
     const ilegibles: ReadonlySet<string> = new Set<string>(
-      (guardado.unreadable ?? []).flatMap((r: ItemRef): ReadonlyArray<string> =>
-        r.kind === "note" ? [r.id] : [],
-      ),
+      (guardado.unreadable ?? []).flatMap((r: ItemRef): ReadonlyArray<string> => (r.kind === "note" ? [r.id] : [])),
     )
     const nombreDe = (id: NoteId): string | undefined => nombres.get(id)
     const ilegible = (id: NoteId): boolean => ilegibles.has(id)
 
-    const diagrams: ReadonlyArray<Diagram> = guardado.diagrams.map(
-      (d: Diagram): Diagram => migrarDiagrama(d, nombreDe, ilegible),
+    const diagrams: ReadonlyArray<Diagram> = guardado.diagrams.map((d: Diagram): Diagram =>
+      migrarDiagrama(d, nombreDe, ilegible),
     )
     const iguales: boolean = diagrams.every((d: Diagram, i: number): boolean => d === guardado.diagrams[i])
     return iguales ? guardado : { ...guardado, diagrams }

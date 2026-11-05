@@ -57,10 +57,9 @@
     <h1>Verificación manual de <code>DirectoryHandleBlobStore</code></h1>
 
     <p class="aviso">
-      Sigue los pasos de <code>VERIFICACION-MANUAL.md</code>, no esta página. Lo
-      que esta página imprime es el <code>Result</code> que devuelve el código;
-      <strong>lo que hay que comprobar es la carpeta</strong>, abierta con el
-      explorador de ficheros.
+      Sigue los pasos de <code>VERIFICACION-MANUAL.md</code>, no esta página. Lo que esta página imprime es el
+      <code>Result</code> que devuelve el código; <strong>lo que hay que comprobar es la carpeta</strong>, abierta con
+      el explorador de ficheros.
     </p>
 
     <h2>1 · De dónde sale la carpeta</h2>
@@ -78,10 +77,10 @@
 
     <h2>3 · Bloques</h2>
     <p class="aviso">
-      Atajos: encadenan las operaciones de un paso entero y dejan el disco en un
-      estado concreto que se pueda auditar después.
-      <strong>No sustituyen a mirar la carpeta</strong>, ni deciden si algo pasa
-      o falla: imprimen lo mismo que los botones de arriba, sólo que seguido.
+      Atajos: encadenan las operaciones de un paso entero y dejan el disco en un estado concreto que se pueda auditar
+      después.
+      <strong>No sustituyen a mirar la carpeta</strong>, ni deciden si algo pasa o falla: imprimen lo mismo que los
+      botones de arriba, sólo que seguido.
     </p>
     <button id="bloqueA">Bloque A · write → read → list → read ausente</button>
     <button id="bloqueB">Bloque B · read → list (sin escribir)</button>
@@ -199,15 +198,9 @@
       })
 
       document.getElementById("leer").onclick = conAlmacen("read", () => blobs.read(CAMINO))
-      document.getElementById("listar").onclick = conAlmacen("list", () =>
-        blobs.list("notes/"),
-      )
-      document.getElementById("borrar").onclick = conAlmacen("delete", () =>
-        blobs.delete(CAMINO),
-      )
-      document.getElementById("ausente").onclick = conAlmacen("read ausente", () =>
-        blobs.read("no/existe.json"),
-      )
+      document.getElementById("listar").onclick = conAlmacen("list", () => blobs.list("notes/"))
+      document.getElementById("borrar").onclick = conAlmacen("delete", () => blobs.delete(CAMINO))
+      document.getElementById("ausente").onclick = conAlmacen("read ausente", () => blobs.read("no/existe.json"))
 
       /* ── Bloques ─────────────────────────────────────────────────────────
          Encadenan lo de arriba y nada más. Imprimen el mismo `Result` crudo y
@@ -269,9 +262,7 @@
         const estado = await handleGuardado.queryPermission({ mode: "readwrite" })
         if (estado === "granted") usar(handleGuardado, "carpeta recuperada sin diálogo")
         else {
-          anota(
-            `hay una carpeta guardada (${handleGuardado.name}) con permiso "${estado}".`,
-          )
+          anota(`hay una carpeta guardada (${handleGuardado.name}) con permiso "${estado}".`)
           anota("   pulsa «Reanudar con la carpeta guardada» — un clic, sin diálogo nativo.")
         }
       }

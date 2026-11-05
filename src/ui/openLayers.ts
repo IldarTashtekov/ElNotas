@@ -12,8 +12,7 @@ import type { AppState, DiagramId, NoteId, Result, StorageError } from "#core/in
 import { diagramId, noteId } from "#core/index"
 
 export type OpenLayer =
-  | { readonly kind: "note"; readonly id: NoteId }
-  | { readonly kind: "diagram"; readonly id: DiagramId }
+  { readonly kind: "note"; readonly id: NoteId } | { readonly kind: "diagram"; readonly id: DiagramId }
 
 /** De abajo arriba. La configuración no entra: al recargar no se vuelve a ella. */
 export type OpenLayers = ReadonlyArray<OpenLayer>
@@ -29,8 +28,7 @@ export interface OpenLayersPersistence {
 
 type Registro = Record<string, unknown>
 
-const esRegistro = (x: unknown): x is Registro =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 const leerCapa = (x: unknown): OpenLayer | null => {
   if (!esRegistro(x) || typeof x["id"] !== "string") return null
@@ -65,10 +63,7 @@ export const guardOpenLayers = (layers: OpenLayers, state: AppState): OpenLayers
 }
 
 /** Lo que hay que volver a abrir al arrancar. Si no se puede leer, nada. */
-export const layersToRestore = (
-  persistence: OpenLayersPersistence,
-  state: AppState,
-): OpenLayers => {
+export const layersToRestore = (persistence: OpenLayersPersistence, state: AppState): OpenLayers => {
   const leido: Result<unknown, StorageError> = persistence.load()
   return leido.ok ? guardOpenLayers(parseOpenLayers(leido.value), state) : NO_LAYERS
 }

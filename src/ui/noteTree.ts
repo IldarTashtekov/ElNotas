@@ -19,10 +19,7 @@ export interface Located {
 }
 
 export const locate = (content: ReadonlyArray<Content>, id: ContentId): Located | null => {
-  const buscar = (
-    lista: ReadonlyArray<Content>,
-    parent: CheckBox | null,
-  ): Located | null => {
+  const buscar = (lista: ReadonlyArray<Content>, parent: CheckBox | null): Located | null => {
     for (const [index, line] of lista.entries()) {
       if (line.id === id) return { line, parent, siblings: lista, index }
       if (isCheckBox(line)) {
@@ -51,11 +48,7 @@ export const lastLine = (content: ReadonlyArray<Content>): Content | null => {
 }
 
 /** La línea de antes o de después, leyendo de arriba abajo. Para las flechas. */
-export const lineBeside = (
-  content: ReadonlyArray<Content>,
-  id: ContentId,
-  hacia: "prev" | "next",
-): Content | null => {
+export const lineBeside = (content: ReadonlyArray<Content>, id: ContentId, hacia: "prev" | "next"): Content | null => {
   const todas: ReadonlyArray<Content> = inReadingOrder(content)
   const i: number = todas.findIndex((l: Content): boolean => l.id === id)
   if (i === -1) return null
@@ -64,9 +57,7 @@ export const lineBeside = (
 
 /** La de la raíz de la que cuelga, o ella misma si ya está en la raíz. */
 export const rootAncestor = (content: ReadonlyArray<Content>, id: ContentId): Content | null =>
-  content.find((raiz: Content): boolean =>
-    inReadingOrder([raiz]).some((l: Content): boolean => l.id === id),
-  ) ?? null
+  content.find((raiz: Content): boolean => inReadingOrder([raiz]).some((l: Content): boolean => l.id === id)) ?? null
 
 /** La hermana que viene justo detrás, que es donde nace la mitad nueva de un `split`. */
 export const nextSibling = (content: ReadonlyArray<Content>, id: ContentId): Content | null => {

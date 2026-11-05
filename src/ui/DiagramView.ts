@@ -57,12 +57,9 @@ export const mountDiagramView = (
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
-  const titulo: EditableTitle = createEditableTitle(
-    "Nombre del diagrama",
-    (nombre: string): void => {
-      useCases.renameDiagram(diagramId, nombre)
-    },
-  )
+  const titulo: EditableTitle = createEditableTitle("Nombre del diagrama", (nombre: string): void => {
+    useCases.renameDiagram(diagramId, nombre)
+  })
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"
   cabecera.append(titulo.element)

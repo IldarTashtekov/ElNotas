@@ -19,12 +19,7 @@ import { rehearseImport } from "#platform/web/rehearseImport"
 import type { ImportSummary } from "#ui/index"
 import { collectBackup } from "#platform/web/exportBackup"
 import type { ImportAtBoot } from "#platform/web/importStorage"
-import {
-  IMPORT_KEY,
-  cancelImport,
-  importIfRequested,
-  requestImport,
-} from "#platform/web/importStorage"
+import { IMPORT_KEY, cancelImport, importIfRequested, requestImport } from "#platform/web/importStorage"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"

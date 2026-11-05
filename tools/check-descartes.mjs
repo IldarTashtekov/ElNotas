@@ -10,13 +10,17 @@
 import ts from "typescript"
 
 const raiz = process.cwd()
-const config = ts.getParsedCommandLineOfConfigFile("tsconfig.json", {}, {
-  ...ts.sys,
-  onUnRecoverableConfigFileDiagnostic: (d) => {
-    console.error(ts.flattenDiagnosticMessageText(d.messageText, "\n"))
-    process.exit(1)
+const config = ts.getParsedCommandLineOfConfigFile(
+  "tsconfig.json",
+  {},
+  {
+    ...ts.sys,
+    onUnRecoverableConfigFileDiagnostic: (d) => {
+      console.error(ts.flattenDiagnosticMessageText(d.messageText, "\n"))
+      process.exit(1)
+    },
   },
-})
+)
 const programa = ts.createProgram(config.fileNames, config.options)
 const tipos = programa.getTypeChecker()
 
@@ -29,8 +33,9 @@ const esPromesa = (t) => {
 /** Un `Result` es lo que tiene `ok` y, además, `value` o `error`. */
 const llevaResult = (t) => {
   if (t.isUnion()) return t.types.some(llevaResult)
-  return t.getProperty("ok") !== undefined &&
-    (t.getProperty("value") !== undefined || t.getProperty("error") !== undefined)
+  return (
+    t.getProperty("ok") !== undefined && (t.getProperty("value") !== undefined || t.getProperty("error") !== undefined)
+  )
 }
 
 const peligroso = (t) => esPromesa(t) || llevaResult(t)
@@ -43,9 +48,7 @@ const resuelto = (t) => tipos.getAwaitedType(t) ?? t
 const sinParentesis = (n) => (ts.isParenthesizedExpression(n) ? sinParentesis(n.expression) : n)
 
 const acabaEnCatch = (n) =>
-  ts.isCallExpression(n) &&
-  ts.isPropertyAccessExpression(n.expression) &&
-  n.expression.name.text === "catch"
+  ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === "catch"
 
 const esAsignacion = (n) =>
   ts.isBinaryExpression(n) &&
@@ -56,8 +59,7 @@ const esAsignacion = (n) =>
 const esperaVoid = (n) => {
   const contexto = tipos.getContextualType(n)
   const firmas = contexto?.getCallSignatures() ?? []
-  return firmas.length > 0 &&
-    firmas.every((f) => (tipos.getReturnTypeOfSignature(f).flags & ts.TypeFlags.Void) !== 0)
+  return firmas.length > 0 && firmas.every((f) => (tipos.getReturnTypeOfSignature(f).flags & ts.TypeFlags.Void) !== 0)
 }
 
 const esFuncion = (n) => ts.isArrowFunction(n) || ts.isFunctionExpression(n)

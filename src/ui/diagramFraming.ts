@@ -26,8 +26,7 @@ export interface FramingPersistence {
 
 type Registro = Record<string, unknown>
 
-const esRegistro = (x: unknown): x is Registro =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 const finito = (x: unknown): x is number => typeof x === "number" && Number.isFinite(x)
 
@@ -53,9 +52,7 @@ export const parseFramings = (guardado: unknown): Framings => {
 /** Sin los de diagramas que ya no están. Los MISMOS encuadres si no sobra ninguno. */
 export const guardFramings = (framings: Framings, state: AppState): Framings => {
   const ids: ReadonlyArray<string> = Object.keys(framings)
-  const vivos: ReadonlyArray<string> = ids.filter(
-    (id: string): boolean => state.diagrams[diagramId(id)] !== undefined,
-  )
+  const vivos: ReadonlyArray<string> = ids.filter((id: string): boolean => state.diagrams[diagramId(id)] !== undefined)
   if (vivos.length === ids.length) return framings
   return Object.fromEntries(
     vivos.flatMap((id: string): ReadonlyArray<[string, Framing]> => {
@@ -83,10 +80,7 @@ export interface DiagramFramingDeps {
 export const createDiagramFraming = ({ store, persistence, logger }: DiagramFramingDeps): DiagramFraming => {
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer, todos se abren centrados: sólo se pierde dónde se miraba. */
-  let encuadres: Framings = guardFramings(
-    leido.ok ? parseFramings(leido.value) : NO_FRAMINGS,
-    store.getState(),
-  )
+  let encuadres: Framings = guardFramings(leido.ok ? parseFramings(leido.value) : NO_FRAMINGS, store.getState())
   let sucio: boolean = false
 
   return {

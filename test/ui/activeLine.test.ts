@@ -27,12 +27,7 @@ test("activeParts: texto sin enlaces ni énfasis, una sola parte", (): void => {
 })
 
 test("activeParts: enlaces pegados y con texto alrededor", (): void => {
-  assert.deepEqual(resumen("a [uno](#x)[dos](https://e.com) b"), [
-    't:"a "',
-    'L:"uno"',
-    'L:"dos"',
-    't:" b"',
-  ])
+  assert.deepEqual(resumen("a [uno](#x)[dos](https://e.com) b"), ['t:"a "', 'L:"uno"', 'L:"dos"', 't:" b"'])
 })
 
 test("activeParts: la etiqueta no lleva marcas ni barras", (): void => {
@@ -148,8 +143,27 @@ test("domToRaw: lo que se sale se recorta", (): void => {
 
 test("propiedades sobre 20 000 cadenas generadas con semilla fija", (): void => {
   const alfabeto: ReadonlyArray<string> = [
-    "[", "[", "]", "]", "(", ")", "(#x)", "](#x)", "](https://e.com)", "*", "**", "\\", "#", "# ",
-    " ", "a", "b", "https://", "www.", "e.com", "😀",
+    "[",
+    "[",
+    "]",
+    "]",
+    "(",
+    ")",
+    "(#x)",
+    "](#x)",
+    "](https://e.com)",
+    "*",
+    "**",
+    "\\",
+    "#",
+    "# ",
+    " ",
+    "a",
+    "b",
+    "https://",
+    "www.",
+    "e.com",
+    "😀",
   ]
   let semilla: number = 777
   const siguiente = (): number => {
@@ -239,7 +253,24 @@ test("visibleRuns: sin pares, vacío", (): void => {
 
 test("partes con énfasis: propiedades sobre 20 000 cadenas generadas con semilla fija", (): void => {
   const alfabeto: ReadonlyArray<string> = [
-    "*", "**", "*", "**", "[", "]", "(", ")", "(#x)", "](#x)", "#", "# ", "\\", " ", "a", "b", "www.", "e.com",
+    "*",
+    "**",
+    "*",
+    "**",
+    "[",
+    "]",
+    "(",
+    ")",
+    "(#x)",
+    "](#x)",
+    "#",
+    "# ",
+    "\\",
+    " ",
+    "a",
+    "b",
+    "www.",
+    "e.com",
   ]
   let semilla: number = 31337
   const siguiente = (): number => {
@@ -266,11 +297,7 @@ test("partes con énfasis: propiedades sobre 20 000 cadenas generadas con semill
           `marca ajena en ${dado}`,
         )
       }
-      if (
-        anterior !== undefined &&
-        anterior.kind === "text" &&
-        p.kind === "text"
-      ) {
+      if (anterior !== undefined && anterior.kind === "text" && p.kind === "text") {
         assert.ok(
           anterior.bold !== p.bold || anterior.italic !== p.italic || anterior.run !== p.run,
           `texto sin fusionar en ${dado}`,

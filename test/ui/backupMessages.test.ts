@@ -8,12 +8,7 @@ import assert from "node:assert/strict"
 
 import type { MigrationError, StorageError } from "#core/index"
 import type { ImportPreparation, ImportSummary } from "#ui/index"
-import {
-  IMPORT_NOT_APPLIED,
-  exportMessage,
-  importProblem,
-  importQuestion,
-} from "#ui/settingsContent"
+import { IMPORT_NOT_APPLIED, exportMessage, importProblem, importQuestion } from "#ui/settingsContent"
 import { describeImportFailure } from "#ui/index"
 import { describeMigrationError, describeStorageError } from "#ui/messages"
 
@@ -41,17 +36,11 @@ test("cancelada, no dice nada", (): void => {
 
 test("sin poder leer lo guardado, dice por qué", (): void => {
   const fallo: StorageError = { kind: "permission-denied" }
-  assert.match(
-    exportMessage({ kind: "failed", error: fallo }) ?? "",
-    new RegExp(describeStorageError(fallo)),
-  )
+  assert.match(exportMessage({ kind: "failed", error: fallo }) ?? "", new RegExp(describeStorageError(fallo)))
 })
 
 test("sin poder escribir el fichero, lo dice", (): void => {
-  assert.equal(
-    exportMessage({ kind: "failed", error: null }),
-    "No se ha podido escribir la copia.",
-  )
+  assert.equal(exportMessage({ kind: "failed", error: null }), "No se ha podido escribir la copia.")
 })
 
 /* ── Importar: la pregunta ── */
@@ -97,10 +86,7 @@ test("cada motivo para no importar tiene su frase", (): void => {
 
 test("si no arrancaría, dice el motivo del arranque", (): void => {
   const futuro: MigrationError = { kind: "schema-from-future", stored: 9, supported: 1 }
-  assert.match(
-    importProblem({ kind: "wont-boot", error: futuro }),
-    new RegExp(describeMigrationError(futuro)),
-  )
+  assert.match(importProblem({ kind: "wont-boot", error: futuro }), new RegExp(describeMigrationError(futuro)))
 })
 
 test("si no cabe al confirmar, dice que no ha cambiado nada", (): void => {

@@ -16,10 +16,7 @@ export interface EditableTitle {
   readonly edit: () => void
 }
 
-export const createEditableTitle = (
-  etiqueta: string,
-  onRename: (nombre: string) => void,
-): EditableTitle => {
+export const createEditableTitle = (etiqueta: string, onRename: (nombre: string) => void): EditableTitle => {
   const titulo: HTMLHeadingElement = elemento("h1")
   titulo.className = "titulo"
   let actual: string = ""

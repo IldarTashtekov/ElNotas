@@ -46,10 +46,7 @@ export interface WeekRow {
 
 export const routineList = (state: AppState, order: CalendarOrder, hoy: Day | null): RoutineList => {
   const rutinas: ReadonlyArray<Routine> = Object.values<Routine>(state.routines)
-  const ids: ReadonlyArray<string> = reconcileOrder(
-    order.routines,
-    rutinas.map((r: Routine): string => r.id).sort(),
-  )
+  const ids: ReadonlyArray<string> = reconcileOrder(order.routines, rutinas.map((r: Routine): string => r.id).sort())
   const filas: ReadonlyArray<RoutineRow> = ids.flatMap((id: string): ReadonlyArray<RoutineRow> => {
     const r: Routine | undefined = state.routines[id as Routine["id"]]
     if (r === undefined) return []
@@ -107,26 +104,22 @@ export interface WeekHeading {
 
 /** La cabecera de la tabla: inicial y número de cada día de la semana, con hoy señalado. */
 export const weekHeadings = (semana: WeekRow, hoy: Day): ReadonlyArray<WeekHeading> =>
-  semana.cells.map(
-    (c: WeekCell, i: number): WeekHeading => ({
-      initial: WEEKDAYS[i] ?? "",
-      number: Number(c.day.slice(8)),
-      today: c.day === hoy,
-    }),
-  )
+  semana.cells.map((c: WeekCell, i: number): WeekHeading => ({
+    initial: WEEKDAYS[i] ?? "",
+    number: Number(c.day.slice(8)),
+    today: c.day === hoy,
+  }))
 
 /** La semana de `hoy` de una rutina, con sus siete días; `null` si se sale del rango del calendario. */
 export const currentWeek = (routine: Routine, hoy: Day): WeekRow | null => {
   const semana: WeekProgress | null = weekProgress(routine, hoy)
   if (semana === null) return null
   return {
-    cells: semana.week.map(
-      (d: Day): WeekCell => ({
-        day: d,
-        marked: routine.days.includes(d),
-        future: compareDays(d, hoy) > 0,
-      }),
-    ),
+    cells: semana.week.map((d: Day): WeekCell => ({
+      day: d,
+      marked: routine.days.includes(d),
+      future: compareDays(d, hoy) > 0,
+    })),
     done: semana.done,
     goal: semana.goal,
     met: semana.met,

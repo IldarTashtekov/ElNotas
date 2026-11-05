@@ -57,8 +57,14 @@ test("splitPast: hoy cuenta como futuro; sin «hoy», todo es futuro", (): void 
     evento("c", "2026-10-29", "Mañana"),
   ]
   const partido: ReturnType<typeof splitPast> = splitPast(eventos, dia("2026-10-28"))
-  assert.deepEqual(partido.past.map((e: CalendarEvent): string => e.title), ["Ayer"])
-  assert.deepEqual(partido.upcoming.map((e: CalendarEvent): string => e.title), ["Hoy", "Mañana"])
+  assert.deepEqual(
+    partido.past.map((e: CalendarEvent): string => e.title),
+    ["Ayer"],
+  )
+  assert.deepEqual(
+    partido.upcoming.map((e: CalendarEvent): string => e.title),
+    ["Hoy", "Mañana"],
+  )
   assert.equal(splitPast(eventos, null).upcoming, eventos)
   assert.equal(splitPast(eventos, null).past.length, 0)
 })

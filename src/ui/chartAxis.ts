@@ -20,8 +20,7 @@ export const DEFAULT_SPAN_WEEKS: number = 12
 
 const entre = (x: number, min: number, max: number): number => Math.min(max, Math.max(min, x))
 
-const tramoDentro = (span: number, semanas: number): number =>
-  entre(span, Math.min(MIN_SPAN_WEEKS, semanas), semanas)
+const tramoDentro = (span: number, semanas: number): number => entre(span, Math.min(MIN_SPAN_WEEKS, semanas), semanas)
 
 /** El eje, dentro de sus topes para `semanas` semanas. El MISMO si ya lo estaba. */
 export const clampAxis = (a: ChartAxis, semanas: number): ChartAxis => {
@@ -30,8 +29,7 @@ export const clampAxis = (a: ChartAxis, semanas: number): ChartAxis => {
   return span === a.span && fromEnd === a.fromEnd ? a : { span, fromEnd }
 }
 
-export const defaultAxis = (semanas: number): ChartAxis =>
-  clampAxis({ span: DEFAULT_SPAN_WEEKS, fromEnd: 0 }, semanas)
+export const defaultAxis = (semanas: number): ChartAxis => clampAxis({ span: DEFAULT_SPAN_WEEKS, fromEnd: 0 }, semanas)
 
 /** Dónde empieza lo que se ve, en semanas desde la primera. */
 export const axisStart = (a: ChartAxis, semanas: number): number => semanas - a.fromEnd - a.span
@@ -68,8 +66,7 @@ export const pinchAxis = (
 ): ChartAxis => {
   const antes: number = Math.abs(a0 - b0)
   const ahora: number = Math.abs(a1 - b1)
-  const span: number =
-    antes === 0 || ahora === 0 ? inicio.span : tramoDentro((inicio.span * antes) / ahora, semanas)
+  const span: number = antes === 0 || ahora === 0 ? inicio.span : tramoDentro((inicio.span * antes) / ahora, semanas)
   const bajo: number = axisStart(inicio, semanas) + ((a0 + b0) / 2) * inicio.span
   return conInicio(inicio, bajo - ((a1 + b1) / 2) * span, span, semanas)
 }

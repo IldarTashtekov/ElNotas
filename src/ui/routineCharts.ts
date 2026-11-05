@@ -28,9 +28,7 @@ export const routineWeeks = (routine: Routine, hoy: Day): ReadonlyArray<WeekCoun
   const ultima: Day | null = lunesDe(hoy)
   if (ultima === null) return []
   const fin: Day | null = addDays(ultima, 6)
-  const dias: ReadonlyArray<Day> = routine.days.filter(
-    (d: Day): boolean => fin !== null && compareDays(d, fin) <= 0,
-  )
+  const dias: ReadonlyArray<Day> = routine.days.filter((d: Day): boolean => fin !== null && compareDays(d, fin) <= 0)
   const primero: Day | undefined = dias.reduce<Day | undefined>(
     (min: Day | undefined, d: Day): Day => (min === undefined || compareDays(d, min) < 0 ? d : min),
     undefined,
@@ -69,8 +67,7 @@ export interface RoutineChartsPersistence {
 
 type Registro = Record<string, unknown>
 
-const esRegistro = (x: unknown): x is Registro =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 const finito = (x: unknown): x is number => typeof x === "number" && Number.isFinite(x)
 

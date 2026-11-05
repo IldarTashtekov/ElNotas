@@ -14,8 +14,7 @@ export type Problem = string | null
 
 type Registro = Record<string, unknown>
 
-const esRegistro = (x: unknown): x is Registro =>
-  typeof x === "object" && x !== null && !Array.isArray(x)
+const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 const esTexto = (x: unknown): x is string => typeof x === "string"
 
@@ -28,8 +27,7 @@ const primero = (...comprobaciones: ReadonlyArray<() => Problem>): Problem => {
   return null
 }
 
-const texto = (o: Registro, campo: string): Problem =>
-  esTexto(o[campo]) ? null : `«${campo}» no es un texto`
+const texto = (o: Registro, campo: string): Problem => (esTexto(o[campo]) ? null : `«${campo}» no es un texto`)
 
 const numero = (o: Registro, campo: string): Problem =>
   typeof o[campo] === "number" && Number.isFinite(o[campo]) ? null : `«${campo}» no es un número`
@@ -126,11 +124,7 @@ const booleano = (o: Registro, campo: string): Problem =>
  * Comprueba cada valor de un mapa por id con `cada`, y que su clave sea su propio
  * id: con otra clave, quien lo busque por id no lo encontraría.
  */
-const cadaEntrada = (
-  o: Registro,
-  campo: string,
-  cada: (x: unknown) => Problem,
-): Problem => {
+const cadaEntrada = (o: Registro, campo: string, cada: (x: unknown) => Problem): Problem => {
   const mapa: unknown = o[campo]
   if (!esRegistro(mapa)) return `«${campo}» no es un mapa por id`
   for (const [clave, valor] of Object.entries(mapa)) {
@@ -179,12 +173,7 @@ export const diagramProblem = (o: Registro): Problem =>
 /* ──────────────────────────── Eventos ─────────────────────────────────────── */
 
 /** El campo es texto y `valida` lo acepta: un día mal escrito es un fichero ilegible. */
-const textoValido = (
-  o: Registro,
-  campo: string,
-  valida: (raw: string) => unknown,
-  esperado: string,
-): Problem => {
+const textoValido = (o: Registro, campo: string, valida: (raw: string) => unknown, esperado: string): Problem => {
   const valor: unknown = o[campo]
   if (!esTexto(valor)) return `«${campo}» no es un texto`
   return valida(valor) === null ? `«${campo}» no es ${esperado}` : null
@@ -196,8 +185,7 @@ export const eventProblem = (o: Registro): Problem =>
     (): Problem => texto(o, "title"),
     (): Problem => textoValido(o, "day", parseDay, "un día válido"),
     /* Sin hora es de todo el día: la clave no existe. */
-    (): Problem =>
-      o["time"] === undefined ? null : textoValido(o, "time", parseTime, "una hora válida"),
+    (): Problem => (o["time"] === undefined ? null : textoValido(o, "time", parseTime, "una hora válida")),
   )
 
 export const routineProblem = (o: Registro): Problem =>
@@ -210,8 +198,7 @@ export const routineProblem = (o: Registro): Problem =>
       ),
     /* Sin meta, la clave no existe. */
     (): Problem =>
-      o["weeklyGoal"] === undefined ||
-      (typeof o["weeklyGoal"] === "number" && isWeeklyGoal(o["weeklyGoal"]))
+      o["weeklyGoal"] === undefined || (typeof o["weeklyGoal"] === "number" && isWeeklyGoal(o["weeklyGoal"]))
         ? null
         : "«weeklyGoal» no es un entero de 1 a 7",
   )

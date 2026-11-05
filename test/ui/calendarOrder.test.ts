@@ -21,7 +21,10 @@ test("lo guardado pasa por JSON y vuelve igual", (): void => {
 })
 
 test("de las listas se descarta lo que no es texto y lo repetido, sin fallar", (): void => {
-  assert.deepEqual(parseCalendarOrder({ routines: ["a", 3, "a", null, "b"], archived: ["b", "b", 7] }), { routines: ["a", "b"], archived: ["b"] })
+  assert.deepEqual(parseCalendarOrder({ routines: ["a", 3, "a", null, "b"], archived: ["b", "b", 7] }), {
+    routines: ["a", "b"],
+    archived: ["b"],
+  })
   assert.deepEqual(parseCalendarOrder({ routines: "no", archived: "no" }), { routines: [], archived: [] })
 })
 

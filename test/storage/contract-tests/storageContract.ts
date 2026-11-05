@@ -18,16 +18,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import type {
-  CalendarEvent,
-  Context,
-  Diagram,
-  Note,
-  Result,
-  Routine,
-  StorageAdapter,
-  StorageError,
-} from "#core/index"
+import type { CalendarEvent, Context, Diagram, Note, Result, Routine, StorageAdapter, StorageError } from "#core/index"
 import { contextId, diagramId, err, noteId, noteRef, ok } from "#core/index"
 import type { Day, Time } from "#core/domain/calendar"
 import { parseDay, parseTime } from "#core/domain/calendar"
@@ -109,16 +100,12 @@ const CASA = contexto("casa", "Casa")
 const DIARIO_CON_ID_DE_COMPRA: Note = { ...DIARIO, id: COMPRA.id }
 
 /** `getAll` no promete orden, así que se compara ordenado. */
-const porId = <T extends { readonly id: string }>(
-  xs: ReadonlyArray<T>,
-): ReadonlyArray<T> => [...xs].sort((a, b) => a.id.localeCompare(b.id))
+const porId = <T extends { readonly id: string }>(xs: ReadonlyArray<T>): ReadonlyArray<T> =>
+  [...xs].sort((a, b) => a.id.localeCompare(b.id))
 
 /* ──────────────────────────────── El contrato ─────────────────────────────── */
 
-export const runStorageContract = (
-  nombre: string,
-  crear: () => StorageAdapter,
-): void => {
+export const runStorageContract = (nombre: string, crear: () => StorageAdapter): void => {
   const caso = (que: string, fn: (s: StorageAdapter) => Promise<void>): void => {
     test(`${nombre}: ${que}`, () => fn(crear()))
   }
@@ -342,9 +329,7 @@ export const runStorageContract = (
        sirve de algo cuando el permiso está revocado: exactamente el fallo que
        toda la taxonomía existe para evitar. */
     const sinPermiso: StorageError = { kind: "permission-denied" }
-    const r: Result<number, StorageError> = await s.transaction(async () =>
-      err(sinPermiso),
-    )
+    const r: Result<number, StorageError> = await s.transaction(async () => err(sinPermiso))
 
     assert.deepEqual(errorDe(r), sinPermiso)
   })

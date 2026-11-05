@@ -14,13 +14,7 @@
 import type { Context } from "../domain/Context.js"
 import type { CalendarEvent } from "../domain/CalendarEvent.js"
 import type { Diagram } from "../domain/Diagram.js"
-import type {
-  ContextId,
-  DiagramId,
-  EventId,
-  NoteId,
-  RoutineId,
-} from "../domain/Ids.js"
+import type { ContextId, DiagramId, EventId, NoteId, RoutineId } from "../domain/Ids.js"
 import type { Note } from "../domain/Note.js"
 import type { Routine } from "../domain/Routine.js"
 import type { Result } from "../domain/Result.js"
@@ -38,9 +32,7 @@ export interface StorageAdapter {
    * Agrupa escrituras. **Best-effort según el adaptador** — ver arriba.
    * El `T` es el de la función que se le pasa, no el de ninguna entidad.
    */
-  readonly transaction: <T>(
-    fn: () => Promise<Result<T, StorageError>>,
-  ) => Promise<Result<T, StorageError>>
+  readonly transaction: <T>(fn: () => Promise<Result<T, StorageError>>) => Promise<Result<T, StorageError>>
 
   /** Versión del esquema de lo guardado. Un almacén vacío responde `0`. */
   readonly getSchemaVersion: () => Promise<Result<number, StorageError>>

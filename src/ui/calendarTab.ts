@@ -37,10 +37,7 @@ export interface CalendarTabSettingDeps {
   readonly logger: Logger
 }
 
-export const createCalendarTabSetting = ({
-  persistence,
-  logger,
-}: CalendarTabSettingDeps): CalendarTabSetting => {
+export const createCalendarTabSetting = ({ persistence, logger }: CalendarTabSettingDeps): CalendarTabSetting => {
   const leido: Result<unknown, StorageError> = persistence.load()
   /* Si no se puede leer, la de siempre: lo único que se pierde es una pestaña. */
   let actual: CalendarTab = leido.ok ? parseCalendarTab(leido.value) : DEFAULT_CALENDAR_TAB

@@ -7,15 +7,7 @@
  * confirmarlo.
  */
 
-import type {
-  BlobStore,
-  Clock,
-  IdGenerator,
-  Logger,
-  MigrationOptions,
-  Result,
-  StorageError,
-} from "#core/index"
+import type { BlobStore, Clock, IdGenerator, Logger, MigrationOptions, Result, StorageError } from "#core/index"
 import { ok } from "#core/index"
 import type { ImportSummary } from "#ui/index"
 import type { Backup } from "./backup.js"
@@ -35,8 +27,7 @@ export interface RehearseDeps {
 const enMemoria = (backup: Backup): BlobStore => {
   const ficheros: Map<string, Uint8Array> = new Map<string, Uint8Array>(backupBytes(backup))
   return {
-    read: async (camino: string): Promise<Result<Uint8Array | null, StorageError>> =>
-      ok(ficheros.get(camino) ?? null),
+    read: async (camino: string): Promise<Result<Uint8Array | null, StorageError>> => ok(ficheros.get(camino) ?? null),
     write: async (camino: string, data: Uint8Array): Promise<Result<void, StorageError>> => {
       ficheros.set(camino, data)
       return ok(undefined)

@@ -24,9 +24,7 @@ export const isWeeklyGoal = (n: number): boolean => Number.isInteger(n) && n >= 
 export const withDay = (days: ReadonlyArray<Day>, day: Day, done: boolean): ReadonlyArray<Day> => {
   const esta: boolean = days.includes(day)
   if (esta === done) return days
-  return done
-    ? [...days, day].sort(compareDays)
-    : days.filter((d: Day): boolean => d !== day)
+  return done ? [...days, day].sort(compareDays) : days.filter((d: Day): boolean => d !== day)
 }
 
 /** Cómo va la semana (de lunes a domingo) que contiene un día. */

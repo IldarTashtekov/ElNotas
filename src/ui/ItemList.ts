@@ -15,17 +15,7 @@
  * se sigue seleccionando. Ni en el General ni en los ocultos.
  */
 
-import type {
-  AppState,
-  Context,
-  Diagram,
-  DiagramId,
-  ItemRef,
-  Note,
-  NoteId,
-  Store,
-  UseCases,
-} from "#core/index"
+import type { AppState, Context, Diagram, DiagramId, ItemRef, Note, NoteId, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { Confirm } from "./sheet.js"
 import { elemento } from "./dom.js"
@@ -62,11 +52,7 @@ export interface ItemListDeps {
 export interface ItemList {
   readonly element: HTMLElement
   /** Lo que tiene que enseñar ahora, y lo oculto aparte. `null` en la pantalla vacía. */
-  readonly update: (
-    ventana: WindowRef | null,
-    items: ReadonlyArray<ListItem>,
-    ocultos: ReadonlyArray<ListItem>,
-  ) => void
+  readonly update: (ventana: WindowRef | null, items: ReadonlyArray<ListItem>, ocultos: ReadonlyArray<ListItem>) => void
 }
 
 /** Lo que dura una pulsación larga, y cuánto se puede mover el dedo sin anularla. */
@@ -147,17 +133,25 @@ export const createItemList = ({
   const sinNotas: HTMLParagraphElement = elemento("p", "Esta ventana no tiene notas ni diagramas.")
   sinNotas.className = "vacia"
   /* «+ Nota» crea y entra: la nota nueva se abre para escribir en ella. */
-  const mas: HTMLButtonElement = boton("+", (): void => {
-    const nueva: Note | null = ventana === null ? null : createNoteIn(useCases, ventana)
-    if (nueva !== null) onOpenNote(nueva.id)
-  }, "mas")
+  const mas: HTMLButtonElement = boton(
+    "+",
+    (): void => {
+      const nueva: Note | null = ventana === null ? null : createNoteIn(useCases, ventana)
+      if (nueva !== null) onOpenNote(nueva.id)
+    },
+    "mas",
+  )
   mas.setAttribute("aria-label", "Nueva nota")
   mas.title = "Nueva nota"
   /* «+ Diagrama», al lado: crea y entra, con el nombre a punto de escribirse. */
-  const masDiagrama: HTMLButtonElement = boton("+", (): void => {
-    const nuevo: Diagram | null = ventana === null ? null : createDiagramIn(useCases, ventana)
-    if (nuevo !== null) onOpenDiagram(nuevo.id, true)
-  }, "mas mas-diagrama")
+  const masDiagrama: HTMLButtonElement = boton(
+    "+",
+    (): void => {
+      const nuevo: Diagram | null = ventana === null ? null : createDiagramIn(useCases, ventana)
+      if (nuevo !== null) onOpenDiagram(nuevo.id, true)
+    },
+    "mas mas-diagrama",
+  )
   masDiagrama.setAttribute("aria-label", "Nuevo diagrama")
   masDiagrama.title = "Nuevo diagrama"
 
@@ -178,10 +172,14 @@ export const createItemList = ({
   const flechaOcultos: HTMLSpanElement = elemento("span", "◀")
   flechaOcultos.setAttribute("aria-hidden", "true")
   const textoOcultos: HTMLSpanElement = elemento("span")
-  const filaOcultos: HTMLButtonElement = boton("", (): void => {
-    if (viendoOcultos) cerrarOcultos()
-    else abrirOcultos()
-  }, "fila-ocultos")
+  const filaOcultos: HTMLButtonElement = boton(
+    "",
+    (): void => {
+      if (viendoOcultos) cerrarOcultos()
+      else abrirOcultos()
+    },
+    "fila-ocultos",
+  )
   filaOcultos.append(flechaOcultos, iconoOculto(), textoOcultos)
 
   const element: HTMLElement = elemento("div")
@@ -242,8 +240,7 @@ export const createItemList = ({
   const seleccionadas = (): ReadonlyArray<ListItem> =>
     mostradas().filter((i: ListItem): boolean => seleccion.has(itemKey(i.ref)))
 
-  const refsSeleccionadas = (): ReadonlyArray<ItemRef> =>
-    seleccionadas().map((i: ListItem): ItemRef => i.ref)
+  const refsSeleccionadas = (): ReadonlyArray<ItemRef> => seleccionadas().map((i: ListItem): ItemRef => i.ref)
 
   const tirar = (): void => {
     if (ventana === null) return
@@ -277,16 +274,13 @@ export const createItemList = ({
 
   /** La clave de la fila sobre la que cayó el gesto, o `null` si no cayó en ninguna. */
   const claveDe = (objetivo: EventTarget | null): string | null => {
-    const fila: HTMLElement | null =
-      objetivo instanceof Element ? objetivo.closest<HTMLElement>("li[data-key]") : null
+    const fila: HTMLElement | null = objetivo instanceof Element ? objetivo.closest<HTMLElement>("li[data-key]") : null
     return fila?.dataset["key"] ?? null
   }
 
   /** Abrir una fila: la nota en la vista nota, el diagrama en la vista diagrama. */
   const abrir = (clave: string): void => {
-    const item: ListItem | undefined = mostradas().find(
-      (i: ListItem): boolean => itemKey(i.ref) === clave,
-    )
+    const item: ListItem | undefined = mostradas().find((i: ListItem): boolean => itemKey(i.ref) === clave)
     if (item === undefined) return
     if (item.ref.kind === "note") onOpenNote(item.ref.id)
     else onOpenDiagram(item.ref.id, false)
@@ -307,11 +301,9 @@ export const createItemList = ({
 
   let arrastre: Arrastre | null = null
   /* El ⠿ pulsado que aún no se ha movido: un toque sin moverse no hace nada. */
-  let asaPulsada: { readonly clave: string; readonly y: number } | null =
-    null
+  let asaPulsada: { readonly clave: string; readonly y: number } | null = null
 
-  const puedeReordenar = (): boolean =>
-    seleccionando && ventana?.kind === "context" && !viendoOcultos
+  const puedeReordenar = (): boolean => seleccionando && ventana?.kind === "context" && !viendoOcultos
 
   const enAsa = (objetivo: EventTarget | null): boolean =>
     objetivo instanceof Element && objetivo.closest(".asa") !== null
@@ -418,8 +410,7 @@ export const createItemList = ({
   })
   lista.addEventListener("pointermove", (evento: PointerEvent): void => {
     const lejos: boolean =
-      Math.abs(evento.clientX - origen.x) > TOLERANCIA_PX ||
-      Math.abs(evento.clientY - origen.y) > TOLERANCIA_PX
+      Math.abs(evento.clientX - origen.x) > TOLERANCIA_PX || Math.abs(evento.clientY - origen.y) > TOLERANCIA_PX
     if (lejos) cancelarEspera()
   })
   for (const fin of ["pointerup", "pointercancel", "pointerleave"]) {
@@ -510,8 +501,7 @@ export const createItemList = ({
 
     barra.hidden = !seleccionando
     if (!seleccionando || ventana === null) return
-    cuenta.textContent =
-      seleccion.size === 1 ? "1 seleccionada" : `${seleccion.size} seleccionadas`
+    cuenta.textContent = seleccion.size === 1 ? "1 seleccionada" : `${seleccion.size} seleccionadas`
     papelera.textContent = trashDeletes(ventana) ? "Borrar" : "Quitar"
     ocultar.hidden = ventana.kind !== "context"
     ocultar.textContent = viendoOcultos ? "Mostrar" : "Ocultar"
@@ -522,13 +512,15 @@ export const createItemList = ({
     destinos.replaceChildren(
       ...(moviendo
         ? [
-            ...posibles.map((ctx: Context): HTMLButtonElement =>
-              boton(ctx.name, (): void => moverA(ctx)),
+            ...posibles.map((ctx: Context): HTMLButtonElement => boton(ctx.name, (): void => moverA(ctx))),
+            boton(
+              "Cancelar",
+              (): void => {
+                moviendo = false
+                pintar()
+              },
+              "secundario",
             ),
-            boton("Cancelar", (): void => {
-              moviendo = false
-              pintar()
-            }, "secundario"),
           ]
         : []),
     )
@@ -541,15 +533,17 @@ export const createItemList = ({
       nuevos: ReadonlyArray<ListItem>,
       nuevosOcultos: ReadonlyArray<ListItem>,
     ): void => {
-      const otraVentana: boolean =
-        nueva === null || ventana === null || !sameWindow(nueva, ventana)
+      const otraVentana: boolean = nueva === null || ventana === null || !sameWindow(nueva, ventana)
       ventana = nueva
       items = nuevos
       ocultos = nuevosOcultos
       /* Lo que ya no está no sigue seleccionado; sin nada, se sale. */
       const quedan: Selection = otraVentana
         ? NO_SELECTION
-        : pruneSelected(seleccion, mostradas().map((i: ListItem): string => itemKey(i.ref)))
+        : pruneSelected(
+            seleccion,
+            mostradas().map((i: ListItem): string => itemKey(i.ref)),
+          )
       if (seleccionando && quedan.size === 0) {
         seleccion = NO_SELECTION
         salir()

@@ -46,9 +46,11 @@ const aTexto = (bytes: Uint8Array): string | null => {
  * ilegibles. Si el estado de la pantalla no se puede leer, va a `null`: sólo se
  * pierde cómo estaba montada la pantalla.
  */
-export const collectBackup = async (
-  { blobs, uiState, clock }: Pick<ExportDeps, "blobs" | "uiState" | "clock">,
-): Promise<Result<Backup, StorageError>> => {
+export const collectBackup = async ({
+  blobs,
+  uiState,
+  clock,
+}: Pick<ExportDeps, "blobs" | "uiState" | "clock">): Promise<Result<Backup, StorageError>> => {
   const caminos: Result<ReadonlyArray<string>, StorageError> = await blobs.list("")
   if (!caminos.ok) return caminos
 
@@ -91,9 +93,7 @@ const serializar = (backup: Backup): string | null => {
  * justo después de la pulsación, y esperar al guardado podría hacerle perderla.
  */
 export const exportBackup = async (deps: ExportDeps): Promise<ExportResult> => {
-  const destino: Destination | null = await deps.chooseDestination(
-    backupFileName(deps.clock.now()),
-  )
+  const destino: Destination | null = await deps.chooseDestination(backupFileName(deps.clock.now()))
   if (destino === null) return { kind: "cancelled" }
 
   const guardado: Result<void, StorageError> = await deps.flush()

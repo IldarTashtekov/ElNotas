@@ -78,7 +78,15 @@ test("weekProgress: con meta exacta cumple, y un día menos no", () => {
 })
 
 test("weekProgress: sin meta ninguna semana cumple, y done sigue contando", () => {
-  const r: Routine = rutina(["2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05"])
+  const r: Routine = rutina([
+    "2026-06-29",
+    "2026-06-30",
+    "2026-07-01",
+    "2026-07-02",
+    "2026-07-03",
+    "2026-07-04",
+    "2026-07-05",
+  ])
   const p: WeekProgress = progreso(r, "2026-07-02")
 
   assert.equal(p.goal, null)

@@ -17,14 +17,7 @@ import assert from "node:assert/strict"
 
 import type { CalendarEvent, Context, Diagram, Note, Result, Routine, StorageAdapter, StorageError } from "#core/index"
 import { checkBox, text } from "#core/domain/Content"
-import {
-  contentId,
-  contextId,
-  diagramId,
-  diagramNodeId,
-  diagramRelationId,
-  noteId,
-} from "#core/index"
+import { contentId, contextId, diagramId, diagramNodeId, diagramRelationId, noteId } from "#core/index"
 import { eventId, revision, routineId } from "#core/domain/Ids"
 
 import type { FakeBlobStore } from "./FakeBlobStore"
@@ -87,11 +80,7 @@ test("FileStorageAdapter: cada clase de entidad va a su carpeta", async () => {
   await s.diagrams.put(MUDANZA, null)
   await s.contexts.put(CASA, null)
 
-  assert.deepEqual([...blobs.caminos()].sort(), [
-    "contexts/casa.json",
-    "diagrams/mudanza.json",
-    "notes/compra.json",
-  ])
+  assert.deepEqual([...blobs.caminos()].sort(), ["contexts/casa.json", "diagrams/mudanza.json", "notes/compra.json"])
 })
 
 test("FileStorageAdapter: el JSON va indentado, que es para lo que se parte por entidad", async () => {
@@ -103,7 +92,7 @@ test("FileStorageAdapter: el JSON va indentado, que es para lo que se parte por 
 
   /* Un JSON en una sola línea haría que cambiar una palabra reescribiera la
      línea entera, que es justo el diff grande que el formato quiere evitar. */
-  assert.ok(texto.includes("\n  \"name\": \"Compra semanal\""), texto)
+  assert.ok(texto.includes('\n  "name": "Compra semanal"'), texto)
   assert.ok(texto.endsWith("\n"))
 })
 
@@ -288,7 +277,7 @@ test("FileStorageAdapter: JSON válido que no es un objeto también es corrupt",
 
 test("FileStorageAdapter: un objeto sin id es corrupt, no una entidad a medias", async () => {
   const { blobs, s } = montar()
-  blobs.escribirTexto("notes/compra.json", "{\"name\":\"sin id\"}")
+  blobs.escribirTexto("notes/compra.json", '{"name":"sin id"}')
 
   const fallo: StorageError = errorDe(await s.notes.get(COMPRA.id))
   assert.equal(fallo.kind, "corrupt")
@@ -307,9 +296,9 @@ test("FileStorageAdapter: bytes que no son UTF-8 válido son corrupt", async () 
   const { blobs, s } = montar()
   const codificador: TextEncoder = new TextEncoder()
   const rotos: Uint8Array = new Uint8Array([
-    ...codificador.encode("{\"id\":\"compra\",\"name\":\"Compra"),
+    ...codificador.encode('{"id":"compra","name":"Compra'),
     0xff, // ← no es UTF-8 válido en ninguna posición
-    ...codificador.encode("\"}"),
+    ...codificador.encode('"}'),
   ])
   await blobs.write("notes/compra.json", rotos)
 
@@ -343,7 +332,7 @@ test("FileStorageAdapter: un manifiesto ilegible es corrupt, no versión 0", asy
 
 test("FileStorageAdapter: un manifiesto sin schemaVersion numérico es corrupt", async () => {
   const { blobs, s } = montar()
-  blobs.escribirTexto("manifest.json", "{\"schemaVersion\":\"tres\"}")
+  blobs.escribirTexto("manifest.json", '{"schemaVersion":"tres"}')
 
   assert.equal(errorDe(await s.getSchemaVersion()).kind, "corrupt")
 })
@@ -373,7 +362,7 @@ test("FileStorageAdapter: un fichero ajeno en la carpeta no rompe getAll", async
   const { blobs, s } = montar()
   await s.notes.put(COMPRA, null)
   blobs.escribirTexto("notes/.DS_Store", "basura del sistema")
-  blobs.escribirTexto("notes/sub/anidada.json", "{\"id\":\"x\"}")
+  blobs.escribirTexto("notes/sub/anidada.json", '{"id":"x"}')
 
   assert.deepEqual(valorDe(await s.notes.getAll()), [COMPRA])
 })
@@ -489,7 +478,11 @@ const NOTAS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
   ["sin nombre", { ...NOTA_BIEN, name: 7 }, /name/],
   ["sin revisión", { ...NOTA_BIEN, revision: undefined }, /revision/],
   ["updatedAt que no es número", { ...NOTA_BIEN, updatedAt: "ayer" }, /updatedAt/],
-  ["una línea de tipo desconocido", { ...NOTA_BIEN, content: [{ type: "imagen", id: "x", text: "" }] }, /ni texto ni casilla/],
+  [
+    "una línea de tipo desconocido",
+    { ...NOTA_BIEN, content: [{ type: "imagen", id: "x", text: "" }] },
+    /ni texto ni casilla/,
+  ],
   [
     "una casilla sin checked",
     { ...NOTA_BIEN, content: [{ type: "checkbox", id: "c", text: "", children: [] }] },
@@ -499,7 +492,9 @@ const NOTAS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
     "un texto dentro de una casilla",
     {
       ...NOTA_BIEN,
-      content: [{ type: "checkbox", id: "c", text: "", checked: false, children: [{ type: "text", id: "t", text: "" }] }],
+      content: [
+        { type: "checkbox", id: "c", text: "", checked: false, children: [{ type: "text", id: "t", text: "" }] },
+      ],
     },
     /texto dentro de una casilla/,
   ],
@@ -508,7 +503,13 @@ const NOTAS_SIN_FORMA: ReadonlyArray<readonly [string, unknown, RegExp]> = [
     {
       ...NOTA_BIEN,
       content: [
-        { type: "checkbox", id: "x", text: "", checked: false, children: [{ type: "checkbox", id: "x", text: "", checked: false, children: [] }] },
+        {
+          type: "checkbox",
+          id: "x",
+          text: "",
+          checked: false,
+          children: [{ type: "checkbox", id: "x", text: "", checked: false, children: [] }],
+        },
       ],
     },
     /repetida/,
@@ -608,10 +609,7 @@ const esCorrupt = async (diagrama: Readonly<Record<string, unknown>>): Promise<b
 }
 
 test("FileStorageAdapter: un diagrama bien formado se lee", async (): Promise<void> => {
-  assert.equal(
-    await esCorrupt(diagramaCon({ a: NODO_TEXTO, b: NODO_NOTA }, { r: RELACION })),
-    false,
-  )
+  assert.equal(await esCorrupt(diagramaCon({ a: NODO_TEXTO, b: NODO_NOTA }, { r: RELACION })), false)
 })
 
 /* Las dos formas del esquema 1, de arriba, y la de hoy, sin tipo. */
@@ -783,7 +781,10 @@ test("FileStorageAdapter: con onCorrupt, un evento con un día inválido se salt
 
   const eventos: ReadonlyArray<CalendarEvent> = valorDe(await s.events.getAll())
 
-  assert.deepEqual(eventos.map((e: CalendarEvent): string => e.id), ["dentista"])
+  assert.deepEqual(
+    eventos.map((e: CalendarEvent): string => e.id),
+    ["dentista"],
+  )
   const aviso: StorageError | undefined = avisos()[0]
   if (aviso?.kind !== "corrupt") assert.fail("se esperaba un aviso corrupt")
   assert.equal(aviso.path, "events/roto.json")
@@ -850,7 +851,10 @@ test("FileStorageAdapter: con onCorrupt, una rutina con un día inválido se sal
 
   const rutinas: ReadonlyArray<Routine> = valorDe(await s.routines.getAll())
 
-  assert.deepEqual(rutinas.map((r: Routine): string => r.id), ["correr"])
+  assert.deepEqual(
+    rutinas.map((r: Routine): string => r.id),
+    ["correr"],
+  )
   const aviso: StorageError | undefined = avisos()[0]
   if (aviso?.kind !== "corrupt") assert.fail("se esperaba un aviso corrupt")
   assert.equal(aviso.path, "routines/rota.json")

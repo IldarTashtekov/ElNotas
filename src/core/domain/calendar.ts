@@ -29,8 +29,7 @@ export interface DayParts {
 const MIN_YEAR: number = 1
 const MAX_YEAR: number = 9999
 
-export const isLeapYear = (year: number): boolean =>
-  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
+export const isLeapYear = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
 
 /** Los días de un mes (1 a 12), con febrero bisiesto cuando toca. */
 export const daysInMonth = (year: number, month: number): number => {
@@ -86,7 +85,9 @@ const dayOfOrdinal = (ordinal: number): Day | null => {
   const z: number = ordinal + 719468
   const era: number = Math.floor(z / 146097)
   const doe: number = z - era * 146097
-  const yoe: number = Math.floor((doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365)
+  const yoe: number = Math.floor(
+    (doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365,
+  )
   const doy: number = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100))
   const mp: number = Math.floor((5 * doy + 2) / 153)
   const day: number = doy - Math.floor((153 * mp + 2) / 5) + 1

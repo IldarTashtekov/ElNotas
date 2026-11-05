@@ -26,8 +26,7 @@ export const copiedText = (
   const primera: number = lineas.findIndex((l: Content): boolean => l.id === desde.line)
   const ultima: number = lineas.findIndex((l: Content): boolean => l.id === hasta.line)
   if (primera === -1 || ultima === -1 || primera > ultima) return ""
-  const comoSeVe = (l: Content): string =>
-    l.id === enCrudo ? l.text : visibleText(readMarkdownLine(l.text))
+  const comoSeVe = (l: Content): string => (l.id === enCrudo ? l.text : visibleText(readMarkdownLine(l.text)))
   const tramo: ReadonlyArray<Content> = lineas.slice(primera, ultima + 1)
   if (primera === ultima) {
     const unica: Content | undefined = tramo[0]

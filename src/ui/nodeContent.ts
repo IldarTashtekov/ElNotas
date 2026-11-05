@@ -100,8 +100,7 @@ export const editedNodeText = (state: AppState, raw: string, visible: string): s
 }
 
 /** Si «Editar» tiene algo que cambiar: en uno que enlaza a algo de la app, no. */
-export const canEditNodeText = (nodo: NodeContent): boolean =>
-  nodo.kind === "text" || nodo.target.kind === "web"
+export const canEditNodeText = (nodo: NodeContent): boolean => nodo.kind === "text" || nodo.target.kind === "web"
 
 /**
  * El texto guardado de un nodo que enlaza a `destino` (`#id` o una web). Sin

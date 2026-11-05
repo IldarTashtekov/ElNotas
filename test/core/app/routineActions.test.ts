@@ -65,8 +65,20 @@ const rutinaDe = (s: AppState, id: RoutineId): Routine => {
 /* ──────────────────────────────── create / rename ─────────────────────────────── */
 
 test("create-routine crea una rutina vacía, con la meta si va y sin la clave si no", () => {
-  const con: AppState = aplicar({ type: "create-routine", routineId: routineId("n1"), name: "Yoga", weeklyGoal: 5, meta: META })
-  const sin: AppState = aplicar({ type: "create-routine", routineId: routineId("n2"), name: "Leer", weeklyGoal: null, meta: META })
+  const con: AppState = aplicar({
+    type: "create-routine",
+    routineId: routineId("n1"),
+    name: "Yoga",
+    weeklyGoal: 5,
+    meta: META,
+  })
+  const sin: AppState = aplicar({
+    type: "create-routine",
+    routineId: routineId("n2"),
+    name: "Leer",
+    weeklyGoal: null,
+    meta: META,
+  })
 
   assert.deepEqual(rutinaDe(con, routineId("n1")).days, [])
   assert.equal(rutinaDe(con, routineId("n1")).weeklyGoal, 5)
@@ -147,7 +159,14 @@ test("set-routine-day: marcar lo marcado, desmarcar lo no marcado o una rutina q
   assert.strictEqual(reduce(antes, marcar(AYER, true)), antes)
   assert.strictEqual(reduce(antes, marcar(HOY, false)), antes)
   assert.strictEqual(
-    reduce(antes, { type: "set-routine-day", routineId: routineId("fantasma"), day: HOY, done: true, today: HOY, meta: META }),
+    reduce(antes, {
+      type: "set-routine-day",
+      routineId: routineId("fantasma"),
+      day: HOY,
+      done: true,
+      today: HOY,
+      meta: META,
+    }),
     antes,
   )
 })
@@ -170,7 +189,12 @@ test("set-routine-goal cambia la meta sin tocar los días, y null la quita", () 
 
 test("set-routine-goal: la misma meta, una inválida o una rutina que no existe, nada", () => {
   const antes: AppState = estado()
-  const meta = (id: RoutineId, weeklyGoal: number | null): Action => ({ type: "set-routine-goal", routineId: id, weeklyGoal, meta: META })
+  const meta = (id: RoutineId, weeklyGoal: number | null): Action => ({
+    type: "set-routine-goal",
+    routineId: id,
+    weeklyGoal,
+    meta: META,
+  })
 
   assert.strictEqual(reduce(antes, meta(ID_CORRER, 3)), antes, "la misma")
   assert.strictEqual(reduce(antes, meta(ID_LEER, null)), antes, "quitar lo que no hay")
@@ -185,10 +209,7 @@ test("delete-routine borra la rutina con sus días y no toca la otra ni lo demá
   assert.equal(despues.routines[ID_CORRER], undefined)
   assert.strictEqual(despues.routines[ID_LEER], LEER)
   assert.strictEqual(despues.events, antes.events)
-  assert.strictEqual(
-    reduce(antes, { type: "delete-routine", routineId: routineId("fantasma"), meta: META }),
-    antes,
-  )
+  assert.strictEqual(reduce(antes, { type: "delete-routine", routineId: routineId("fantasma"), meta: META }), antes)
 })
 
 /* ─────────────────────────────────── diffState ─────────────────────────────────── */
@@ -199,7 +220,10 @@ test("diffState: una rutina nueva, cambiada o borrada sale en routines, y nada m
   const sin: AppState = reduce(antes, { type: "delete-routine", routineId: ID_LEER, meta: META })
 
   const cambio = diffState(antes, marcada)
-  assert.deepEqual(cambio.routines.upserted.map((r: Routine): RoutineId => r.id), [ID_CORRER])
+  assert.deepEqual(
+    cambio.routines.upserted.map((r: Routine): RoutineId => r.id),
+    [ID_CORRER],
+  )
   assert.deepEqual(cambio.routines.deleted, [])
   assert.strictEqual(cambio.notes, NO_CHANGES.notes)
 

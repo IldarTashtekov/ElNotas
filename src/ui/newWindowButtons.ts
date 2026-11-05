@@ -11,10 +11,7 @@ import { elemento } from "./dom.js"
 import { createAsWindow } from "./noteActions.js"
 import type { WindowRef } from "./windows.js"
 
-export const newWindowButtons = (
-  useCases: UseCases,
-  alCrear: (ref: WindowRef) => void,
-): HTMLElement => {
+export const newWindowButtons = (useCases: UseCases, alCrear: (ref: WindowRef) => void): HTMLElement => {
   const nuevo = (texto: string, kind: "context" | "note" | "diagram"): HTMLButtonElement => {
     const b: HTMLButtonElement = elemento("button", texto)
     b.type = "button"
@@ -27,10 +24,6 @@ export const newWindowButtons = (
   }
   const caja: HTMLElement = elemento("div")
   caja.className = "hoja-nuevos"
-  caja.append(
-    nuevo("+ Contexto nuevo", "context"),
-    nuevo("+ Nota nueva", "note"),
-    nuevo("+ Diagrama nuevo", "diagram"),
-  )
+  caja.append(nuevo("+ Contexto nuevo", "context"), nuevo("+ Nota nueva", "note"), nuevo("+ Diagrama nuevo", "diagram"))
   return caja
 }

@@ -120,10 +120,7 @@ const dePlataforma = (fallo: unknown): StorageError => {
   const nombre: string | null = nombreDe(fallo)
   const codigo: number | null = codigoDe(fallo)
 
-  if (
-    (nombre !== null && NOMBRES_DE_CUOTA.has(nombre)) ||
-    (codigo !== null && CODIGOS_DE_CUOTA.has(codigo))
-  ) {
+  if ((nombre !== null && NOMBRES_DE_CUOTA.has(nombre)) || (codigo !== null && CODIGOS_DE_CUOTA.has(codigo))) {
     const lleno: StorageError = { kind: "quota-exceeded" }
     return lleno
   }
@@ -147,10 +144,7 @@ const dePlataforma = (fallo: unknown): StorageError => {
  * `read`—. Un traductor fijo obligaría a un segundo `try`, que es justo lo que
  * esta función existe para que no haga falta.
  */
-const frontera = <T>(
-  fn: () => T,
-  aError: (fallo: unknown) => StorageError,
-): Result<T, StorageError> => {
+const frontera = <T>(fn: () => T, aError: (fallo: unknown) => StorageError): Result<T, StorageError> => {
   try {
     return ok(fn())
   } catch (fallo: unknown) {
@@ -208,10 +202,7 @@ export const createLocalStorageBlobStore = (almacen: Storage): BlobStore => ({
    * dentro es una clave más.
    */
   write: async (camino: string, data: Uint8Array): Promise<Result<void, StorageError>> =>
-    frontera(
-      (): void => almacen.setItem(claveDe(camino), aBase64(data)),
-      dePlataforma,
-    ),
+    frontera((): void => almacen.setItem(claveDe(camino), aBase64(data)), dePlataforma),
 
   /** Borrar lo que no está no es un error, y `removeItem` ya se comporta así. */
   delete: async (camino: string): Promise<Result<void, StorageError>> =>

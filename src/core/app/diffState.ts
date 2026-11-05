@@ -66,16 +66,12 @@ const diffRecord = <TId extends string, T extends { readonly id: TId }>(
 ): EntityChanges<T, TId> | null => {
   if (prev === next) return null // el atajo que lo hace barato
 
-  const upserted: ReadonlyArray<T> = Object.values<T>(next).filter(
-    (e: T): boolean => e !== prev[e.id],
-  )
+  const upserted: ReadonlyArray<T> = Object.values<T>(next).filter((e: T): boolean => e !== prev[e.id])
   const deleted: ReadonlyArray<TId> = Object.values<T>(prev)
     .filter((e: T): boolean => next[e.id] === undefined)
     .map((e: T): TId => e.id)
 
-  return upserted.length === 0 && deleted.length === 0
-    ? null
-    : { upserted, deleted }
+  return upserted.length === 0 && deleted.length === 0 ? null : { upserted, deleted }
 }
 
 export const diffState = (prev: AppState, next: AppState): StateDiff => {
@@ -83,28 +79,16 @@ export const diffState = (prev: AppState, next: AppState): StateDiff => {
 
   const notes: EntityChanges<Note, NoteId> | null = diffRecord(prev.notes, next.notes)
   const diagrams: EntityChanges<Diagram, DiagramId> | null = diffRecord(prev.diagrams, next.diagrams)
-  const contexts: EntityChanges<Context, ContextId> | null = diffRecord(
-    prev.contexts,
-    next.contexts,
-  )
+  const contexts: EntityChanges<Context, ContextId> | null = diffRecord(prev.contexts, next.contexts)
 
   const events: EntityChanges<CalendarEvent, EventId> | null = diffRecord(prev.events, next.events)
 
-  const routines: EntityChanges<Routine, RoutineId> | null = diffRecord(
-    prev.routines,
-    next.routines,
-  )
+  const routines: EntityChanges<Routine, RoutineId> | null = diffRecord(prev.routines, next.routines)
 
   /* Los cinco a null significa que los mapas cambiaron de objeto pero no de
      contenido —posible si alguien copia sin cambiar nada— y sigue sin haber nada
      que escribir. */
-  if (
-    notes === null &&
-    diagrams === null &&
-    contexts === null &&
-    events === null &&
-    routines === null
-  ) {
+  if (notes === null && diagrams === null && contexts === null && events === null && routines === null) {
     return NO_CHANGES
   }
 

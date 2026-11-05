@@ -107,11 +107,13 @@ export const monthView = (
   if (rejilla === null) return null
 
   /* Los días que tienen algún evento. */
-  const conEventos: Set<Day> = new Set<Day>(Object.values<CalendarEvent>(state.events).map((e: CalendarEvent): Day => e.day))
+  const conEventos: Set<Day> = new Set<Day>(
+    Object.values<CalendarEvent>(state.events).map((e: CalendarEvent): Day => e.day),
+  )
 
   /* Por día: cuántas de las rutinas elegidas lo tienen marcado. */
-  const elegidas: ReadonlyArray<Routine> = Object.values<Routine>(state.routines).filter(
-    (r: Routine): boolean => rutinas.has(r.id),
+  const elegidas: ReadonlyArray<Routine> = Object.values<Routine>(state.routines).filter((r: Routine): boolean =>
+    rutinas.has(r.id),
   )
   const marcadas: Map<Day, number> = new Map<Day, number>()
   for (const r of elegidas) {
@@ -120,19 +122,18 @@ export const monthView = (
 
   return {
     title: monthTitle(mes),
-    weeks: rejilla.map(
-      (fila: ReadonlyArray<Day>): ReadonlyArray<DayCell> =>
-        fila.map((day: Day): DayCell => {
-          return {
-            day,
-            number: partsOf(day).day,
-            inMonth: monthOf(day).year === mes.year && monthOf(day).month === mes.month,
-            isToday: hoy !== null && compareDays(day, hoy) === 0,
-            marked: conEventos.has(day),
-            routinesDone: marcadas.get(day) ?? 0,
-            routinesTotal: elegidas.length,
-          }
-        }),
+    weeks: rejilla.map((fila: ReadonlyArray<Day>): ReadonlyArray<DayCell> =>
+      fila.map((day: Day): DayCell => {
+        return {
+          day,
+          number: partsOf(day).day,
+          inMonth: monthOf(day).year === mes.year && monthOf(day).month === mes.month,
+          isToday: hoy !== null && compareDays(day, hoy) === 0,
+          marked: conEventos.has(day),
+          routinesDone: marcadas.get(day) ?? 0,
+          routinesTotal: elegidas.length,
+        }
+      }),
     ),
   }
 }

@@ -50,12 +50,10 @@ const createMemoryRepository = <
     /* `ok(null)` y no un error: preguntar por algo que no está guardado es una
        respuesta, no un fracaso. Es el principio de "ausencia no es fallo" visto
        desde el único sitio que puede romperlo. */
-    get: async (id: TId): Promise<Result<T | null, StorageError>> =>
-      ok(guardadas.get(id) ?? null),
+    get: async (id: TId): Promise<Result<T | null, StorageError>> => ok(guardadas.get(id) ?? null),
     // Array nuevo en cada llamada, a propósito: si devolviera el interior del
     // Map, quien lo recibe podría manosear el almacén sin pasar por `put`.
-    getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> =>
-      ok([...guardadas.values()]),
+    getAll: async (): Promise<Result<ReadonlyArray<T>, StorageError>> => ok([...guardadas.values()]),
     put: async (entity: T, expected: Revision | null): Promise<Result<void, StorageError>> => {
       const choque: StorageError | null = comprobar(entity.id, expected)
       if (choque !== null) return err(choque)
@@ -76,10 +74,7 @@ const createMemoryRepository = <
 export const createMemoryStorageAdapter = (): StorageAdapter => {
   const notes: Repository<Note, NoteId> = createMemoryRepository<Note, NoteId>()
   const diagrams: Repository<Diagram, DiagramId> = createMemoryRepository<Diagram, DiagramId>()
-  const contexts: Repository<Context, ContextId> = createMemoryRepository<
-    Context,
-    ContextId
-  >()
+  const contexts: Repository<Context, ContextId> = createMemoryRepository<Context, ContextId>()
   const events: Repository<CalendarEvent, EventId> = createMemoryRepository<CalendarEvent, EventId>()
   const routines: Repository<Routine, RoutineId> = createMemoryRepository<Routine, RoutineId>()
 
@@ -111,9 +106,7 @@ export const createMemoryStorageAdapter = (): StorageAdapter => {
         dos: un `fn` que lanza de forma SÍNCRONA rompería un `transaction` sin
         `async` antes de que hubiera promesa ninguna — ni `catch` que valiera.
     */
-    transaction: async <T>(
-      fn: () => Promise<Result<T, StorageError>>,
-    ): Promise<Result<T, StorageError>> => {
+    transaction: async <T>(fn: () => Promise<Result<T, StorageError>>): Promise<Result<T, StorageError>> => {
       try {
         return await fn()
       } catch (fallo: unknown) {

@@ -30,8 +30,7 @@ interface ConGuardarComo {
 const JSON_TIPO: string = "application/json"
 
 /** Cerrar el diálogo sin elegir es un `AbortError`: no es un fallo. */
-const esCancelar = (fallo: unknown): boolean =>
-  fallo instanceof DOMException && fallo.name === "AbortError"
+const esCancelar = (fallo: unknown): boolean => fallo instanceof DOMException && fallo.name === "AbortError"
 
 /** Escribe en el fichero elegido. `createWritable` y el flujo pueden lanzar. */
 const enFichero = (fichero: FileSystemFileHandle): Destination => ({
@@ -65,9 +64,7 @@ const enDescargas = (nombre: string): Destination => ({
   },
 })
 
-export const chooseFileDestination: ChooseDestination = async (
-  nombre: string,
-): Promise<Destination | null> => {
+export const chooseFileDestination: ChooseDestination = async (nombre: string): Promise<Destination | null> => {
   const ventana: ConGuardarComo = window as unknown as ConGuardarComo
   if (ventana.showSaveFilePicker === undefined) return enDescargas(nombre)
   try {

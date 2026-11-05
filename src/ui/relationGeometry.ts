@@ -71,10 +71,8 @@ export const fanOffsets = (relaciones: ReadonlyArray<FanItem>): ReadonlyMap<stri
  * Las relaciones que salen o llegan a `nodo`: las únicas que se mueven mientras
  * se arrastra. Las demás no cambian, y no hace falta redibujarlas.
  */
-export const relationsOf = <R extends FanItem>(
-  relaciones: ReadonlyArray<R>,
-  nodo: string,
-): ReadonlyArray<R> => relaciones.filter((r: R): boolean => r.from === nodo || r.to === nodo)
+export const relationsOf = <R extends FanItem>(relaciones: ReadonlyArray<R>, nodo: string): ReadonlyArray<R> =>
+  relaciones.filter((r: R): boolean => r.from === nodo || r.to === nodo)
 
 /** Cómo se dibuja una relación: los dos extremos, ya en el borde, y el punto de control. */
 export interface RelationCurve {
@@ -115,17 +113,14 @@ export const relationCurve = (
 const punto = (p: Point): string => `${p.x} ${p.y}`
 
 /** El trazado SVG de la curva, de `start` a `end`. */
-export const curvePath = (c: RelationCurve): string =>
-  `M ${punto(c.start)} Q ${punto(c.control)} ${punto(c.end)}`
+export const curvePath = (c: RelationCurve): string => `M ${punto(c.start)} Q ${punto(c.control)} ${punto(c.end)}`
 
 /**
  * El trazado que sigue el texto: el mismo, salvo que vaya de derecha a
  * izquierda; entonces, al revés, para que el texto no salga boca abajo.
  */
 export const labelPath = (c: RelationCurve): string =>
-  c.end.x < c.start.x
-    ? `M ${punto(c.end)} Q ${punto(c.control)} ${punto(c.start)}`
-    : curvePath(c)
+  c.end.x < c.start.x ? `M ${punto(c.end)} Q ${punto(c.control)} ${punto(c.start)}` : curvePath(c)
 
 /** El punto de la curva que queda a mitad de camino: donde se escribe su texto. */
 export const curveMidpoint = (c: RelationCurve): Point => ({
