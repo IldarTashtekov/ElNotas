@@ -86,7 +86,7 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 10.1 — Herramientas: un revisor, un verificador si puede, el formateador y las roturas aparte — PLANIFICADA, la siguiente
+### Fase 10.1 — Herramientas: un revisor, un verificador si puede, el formateador y las roturas aparte — EN CURSO
 
 **Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
 filtros antes de llegar al usuario. Va después de la 10 a propósito: la correa larga se prueba
@@ -109,10 +109,14 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
 - **Al principio, sin votación de dos revisores ni Workflow**: lo primero si al revisor se le
   escapan cosas; lo segundo cuando el recorrido lleve unas tandas sin cambiar.
 
-- [ ] **1. ¿Puede un subagente usar el navegador del panel?** *(mecánica)* Un subagente de prueba
+- [x] **1. ¿Puede un subagente usar el navegador del panel?** *(mecánica)* Un subagente de prueba
       abre la app, lee la página y hace una captura. **Se cierra cuando** el resultado está
       escrito aquí: si puede, hay verificador (tarea 3); si no, la 3 se tacha y las listas las
       sigue pasando Claude.
+      **Puede, el 2026-11-05** (un subagente con Sonnet): tiene las `mcp__Claude_Browser__*` sin
+      cargarlas; `preview_start` de `web-8001` arrancó el servidor, y `read_page`, la captura y
+      la consola funcionaron. `read_page` avisó de `Viewport: 0x0`, sin impedir nada: el panel
+      estaba oculto. Hay verificador.
 - [ ] **2. El revisor** *(pensar)*, en `.claude/agents/`, con Opus y sólo de lectura: lee el cambio
       sin haberlo escrito y mira lo que ningún guardián vigila —las reglas de `CLAUDE.md` que
       «tienes que recordar tú»—, fallos, pruebas que faltan para el no-op, decisiones cerradas que
