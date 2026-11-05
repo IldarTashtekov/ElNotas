@@ -10,9 +10,10 @@
  * dos veces), si no se puede traducir o si no tiene fichero de pruebas.
  * `npm run check:roturas -- fósforo` pasa sólo las que lo lleven en el nombre.
  *
- * No toca el proyecto: rompe y compila en una copia, `tmp-roturas/`, hecha al
- * empezar con lo que hay en el disco, versionado o nuevo. Así puede correr a la
- * vez que `npm run check`, y lo que se edite mientras tanto no se pisa.
+ * No toca el proyecto: rompe y compila en una copia, `tmp-roturas/<pid>/`, hecha
+ * al empezar con lo que hay en el disco, versionado o nuevo (lo ignorado, no), y
+ * borrada al acabar. Así puede correr a la vez que `npm run check` o que otra
+ * pasada, y lo que se edite mientras tanto no se pisa.
  */
 import { spawn, spawnSync } from "node:child_process"
 import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
@@ -20,7 +21,7 @@ import { dirname, join, resolve } from "node:path"
 import ts from "typescript"
 import { ROTURAS } from "./roturas.mjs"
 
-const COPIA = "tmp-roturas"
+const COPIA = resolve(`tmp-roturas/${process.pid}`)
 const SALIDA = "tmp-test"
 
 const git = (...args) => spawnSync("git", args, { encoding: "utf8" })
@@ -30,7 +31,8 @@ if (lista.status !== 0 || gitDir.status !== 0) {
   console.error(`✗ no se pudo preguntar a git qué copiar:\n${lista.stderr}${gitDir.stderr}`)
   process.exit(1)
 }
-rmSync(COPIA, { recursive: true, force: true })
+/* Una copia por pasada: dos pasadas a la vez no se la pisan. Se borra al salir, también si se corta. */
+process.on("exit", () => rmSync(COPIA, { recursive: true, force: true }))
 for (const fichero of lista.stdout.split("\0")) {
   /* Lo borrado sin comitear sigue en el índice, y el sandbox tapa rutas con dispositivos: sólo ficheros. */
   if (fichero === "" || !existsSync(fichero) || !lstatSync(fichero).isFile()) continue
@@ -38,12 +40,16 @@ for (const fichero of lista.stdout.split("\0")) {
   copyFileSync(fichero, join(COPIA, fichero))
 }
 symlinkSync(resolve("node_modules"), join(COPIA, "node_modules"), "dir")
-/* check:referencias pregunta a git qué está versionado: el del proyecto, con la copia como árbol. */
+/* check:referencias pregunta a git qué está versionado: el del proyecto, con la copia como árbol y con
+   una copia de su índice, para que nada de lo que se lance aquí refresque el de verdad. */
+const indice = join(COPIA, ".indice-git")
+copyFileSync(join(gitDir.stdout.trim(), "index"), indice)
 process.env.GIT_DIR = gitDir.stdout.trim()
-process.env.GIT_WORK_TREE = resolve(COPIA)
+process.env.GIT_WORK_TREE = COPIA
+process.env.GIT_INDEX_FILE = indice
 process.chdir(COPIA)
 
-/* Ctrl-C para la pasada entera, no sólo las pruebas en curso. Lo roto queda en la copia, que se rehace. */
+/* Ctrl-C para la pasada entera, no sólo las pruebas en curso. Lo roto sólo estaba en la copia. */
 let enCurso = null
 for (const senal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
   process.on(senal, () => {

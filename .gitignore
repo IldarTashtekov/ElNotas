@@ -5,7 +5,7 @@ dist/
 # JS compilado de los tests (node --test no ejecuta TS directamente)
 tmp-test/
 
-# La copia del proyecto donde check:roturas rompe y compila; se rehace en cada pasada
+# Las copias del proyecto donde check:roturas rompe y compila: una por pasada, borrada al acabar
 tmp-roturas/
 
 # Overrides personales de Claude Code. Lo compartido va en .claude/settings.json
