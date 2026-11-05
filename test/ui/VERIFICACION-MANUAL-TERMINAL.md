@@ -77,4 +77,29 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
 
 ## Pasadas
 
-*(Ninguna todavía.)*
+```
+Fecha:        2026-11-05
+Navegador:    Chrome/152.0.7977.167 (el del panel), viewport 1024x768
+Quién:        el verificador (subagente), en el panel
+Commit:       06202e1, árbol limpio salvo TAREAS.md, que esta lista no mira
+Origen:       localhost:8001, recargado sin caché
+
+T1  ✅
+T2  ✅
+T3  ❌ — el «+ Contexto» de ⚙: fondo transparente, sin borde, letra del fósforo; no va en inverso
+T4  ✅ — el aviso de guardado detenido, con un `div.aviso.aviso-guardado` metido en la página
+T5  ❌ — los largos se cortan con «…», pero «contexto» sale «contex…» (72 px frente a 70) y,
+         en la activa, «cont…»
+T6  ✅
+T8  ✅
+T9  ✅
+G1  ⏭ no se puede aquí — dedo y ratón de verdad; lo pasa el usuario. Con los clics del panel
+         respondió todo a la primera
+G2  ⏭ no se puede aquí — pellizco, pulsación larga y arrastre con el dedo; lo pasa el usuario.
+         Con el ratón del panel: fondo, rueda, mira y arrastrar un pósit, bien
+G3  ⏭ no se puede aquí — la fluidez en el móvil; lo pasa el usuario
+T7  ⏭ no se puede aquí — la PWA publicada; lo pasa el usuario en el móvil
+
+Notas: consola sin errores. Los dos ❌ abren tarea en TAREAS.md → Sin fase asignada. En T8,
+«las líneas» que cambian de color son los bordes y las del lienzo: las de barrido son negras.
+```

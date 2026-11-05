@@ -117,19 +117,19 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       cargarlas; `preview_start` de `web-8001` arrancó el servidor, y `read_page`, la captura y
       la consola funcionaron. `read_page` avisó de `Viewport: 0x0`, sin impedir nada: el panel
       estaba oculto. Hay verificador.
-- [ ] **2. El revisor** *(pensar)*, en `.claude/agents/`, con Opus y sólo de lectura: lee el cambio
+- [x] **2. El revisor** *(pensar)*, en `.claude/agents/`, con Opus y sólo de lectura: lee el cambio
       sin haberlo escrito y mira lo que ningún guardián vigila —las reglas de `CLAUDE.md` que
       «tienes que recordar tú»—, fallos, pruebas que faltan para el no-op, decisiones cerradas que
       el cambio contradice. **Sólo el código:** la documentación la revisa la auditoría de cierre
       de fase, no cada tarea. Devuelve una lista con fichero y línea, o «nada que objetar». Corto: remite a `CLAUDE.md`, no lo copia. Cierra C3
       de la Fase 9. **Se cierra cuando** su ficha está escrita y, sobre un cambio con un fallo
       metido a propósito que ningún guardián caza, lo encuentra.
-      **El 2026-11-05, la ficha escrita y probada, sin instalar:** `.claude/agents` es un fichero
-      vacío que dejó el *sandbox* y no se puede cambiar desde él; la carpeta la crea el usuario.
-      Probada con su texto como instrucciones (Opus): cazó el fallo metido (`removeFrom` con `push`
+      **Hecha el 2026-11-05**, en `.claude/agents/revisor.md` (un `.claude/agents` vacío que deja
+      el *sandbox* mientras corre una orden suya impidió escribirla a la primera). Probada con su
+      texto como instrucciones (Opus): cazó el fallo metido (`removeFrom` con `push`
       y una constante sin tipo, que `check` deja pasar) y, en el commit de la tarea 6, dos fallos
       de verdad, ya arreglados: dos pasadas de roturas se pisaban la copia, y el índice de git.
-- [ ] **3. El verificador** *(pensar)*, si la 1 dice que puede: pasa las listas `VERIFICACION-*.md`
+- [x] **3. El verificador** *(pensar)*, si la 1 dice que puede: pasa las listas `VERIFICACION-*.md`
       siguiendo `test/PASAR-LAS-LISTAS.md`, sin editar código, y devuelve cada paso con ✅ o ❌ y
       lo que vio. Candidato a Sonnet, porque sigue una lista escrita. **Se cierra cuando** su ficha
       está escrita y ha pasado una lista entera, anotada, con un fallo metido a propósito cazado.
@@ -137,8 +137,9 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       pasó la sección T de `VERIFICACION-MANUAL-TERMINAL.md` (lo que el panel puede) y cazó el fallo
       metido (los nombres de las pestañas partidos en vez de cortados), **pero a la segunda**: la
       primera vez el panel usó el CSS de antes, de su caché. La ficha ya recarga sin caché. Encontró
-      además dos ❌ de verdad, abiertos en *Sin fase asignada*. Falta pasarla sobre el árbol limpio
-      y anotarla.
+      además dos ❌ de verdad, abiertos en *Sin fase asignada*. **Hecha el mismo día**, en
+      `.claude/agents/verificador.md`: sobre `06202e1` pasó la lista entera, anotada en ella, con
+      los mismos dos ❌ y lo que es del dedo o del móvil en ⏭.
 - [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
