@@ -33,7 +33,7 @@ sobreescribe: interesa saber en qué navegador funcionó y en cuál no.
 > **Si algo no se puede provocar en ese navegador, se anota eso mismo.** El punto se cierra con
 > el resultado que salga, no con el bueno.
 
-> **Se pasa sobre un commit y con el árbol limpio**, y se anota el commit. La lista de la Fase 3
+> **Se anota el commit, y qué ficheros llevaba sin comitear**, como dice `test/PASAR-LAS-LISTAS.md`. La lista de la Fase 3
 > se pasó con el árbol sucio y lo verificado no era literalmente lo del commit; no hace falta
 > repetirlo.
 

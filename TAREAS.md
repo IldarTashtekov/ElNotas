@@ -66,14 +66,6 @@ resumen, en `TERMINADAS.md`.
       **Se cierra cuando** el usuario contesta; si es que sí, construidas y con su paso en la lista
       manual.
 
-#### De la Fase 9 — Meta-desarrollo
-
-- [ ] **C3. Un agente que verifica** *(el usuario, en `.claude/agents/`)*: lee el cambio de otro,
-      rompe a propósito y pasa las listas, sin haber escrito el código. Quien escribe no se da el
-      visto bueno. **En el aire**, con el resto del uso de agentes.
-      **Se cierra cuando** el usuario decide si existe; si es que sí, con su ficha y una pasada real
-      sobre un cambio.
-
 #### Avisos sin tarea, cada uno con lo que lo dispara
 
 - **El icono parece una ilustración de otra persona** (Fase 6): si la app se comparte, conviene un
@@ -85,111 +77,6 @@ resumen, en `TERMINADAS.md`.
   (`canvasSelection.ts`), pero el modo lo hizo crecer: queda partir las líneas y los gestos.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
-
-### Fase 10.1 — Herramientas: un revisor, un verificador si puede, el formateador y las roturas aparte — EN CURSO
-
-**Decidida con el usuario el 2026-10-18**, junto con la 9.1. **Qué es:** que el trabajo pase por
-filtros antes de llegar al usuario. Va después de la 10 a propósito: la correa larga se prueba
-primero con funcionalidades de verdad, y lo que salga de ahí cambiará este diseño. **No cambia la
-app.** **Se apoya en la 9.1 y no la repite:** el sandbox y los permisos, `.claude/agents/` en
-`ask`, la regla de cuándo para Claude, un commit por tarea en su rama, la etiqueta *(mecánica)* o
-*(pensar)*, que también elige el modelo de cada agente, y compactar y retomar solo. Lo nuevo son
-los dos agentes y el recorrido. **Ampliada por el usuario el 2026-11-04** con dos tareas más de
-herramientas: el formateador, que estaba sin fase, y que las roturas compilen en su propia carpeta.
-
-**Decidido con el usuario el 2026-10-18:**
-- **Claude, en la sesión principal, dirige y escribe el código**; no hay agente coordinador: un
-  subagente no lanza a otros. Plan y Explore, los de serie, cuando hagan falta. Un desarrollador
-  delegado, sólo si las tandas se alargan y el contexto no aguanta.
-- **El recorrido de cada tarea:** código → `check` → **revisor**, que si encuentra algo lo devuelve
-  y Claude corrige, con un tope de vueltas (unas 3; si no se resuelve, la tarea se aparca como
-  duda) → **verificador**, sólo si se ve en el navegador → roturas, sólo si toca `src/` → commit.
-- **Las roturas no son un agente:** son una orden fija sin criterio; se lanza en segundo plano y se
-  lee el resumen.
-- **Al principio, sin votación de dos revisores ni Workflow**: lo primero si al revisor se le
-  escapan cosas; lo segundo cuando el recorrido lleve unas tandas sin cambiar.
-
-- [x] **1. ¿Puede un subagente usar el navegador del panel?** *(mecánica)* Un subagente de prueba
-      abre la app, lee la página y hace una captura. **Se cierra cuando** el resultado está
-      escrito aquí: si puede, hay verificador (tarea 3); si no, la 3 se tacha y las listas las
-      sigue pasando Claude.
-      **Puede, el 2026-11-05** (un subagente con Sonnet): tiene las `mcp__Claude_Browser__*` sin
-      cargarlas; `preview_start` de `web-8001` arrancó el servidor, y `read_page`, la captura y
-      la consola funcionaron. `read_page` avisó de `Viewport: 0x0`, sin impedir nada: el panel
-      estaba oculto. Hay verificador.
-- [x] **2. El revisor** *(pensar)*, en `.claude/agents/`, con Opus y sólo de lectura: lee el cambio
-      sin haberlo escrito y mira lo que ningún guardián vigila —las reglas de `CLAUDE.md` que
-      «tienes que recordar tú»—, fallos, pruebas que faltan para el no-op, decisiones cerradas que
-      el cambio contradice. **Sólo el código:** la documentación la revisa la auditoría de cierre
-      de fase, no cada tarea. Devuelve una lista con fichero y línea, o «nada que objetar». Corto: remite a `CLAUDE.md`, no lo copia. Cierra C3
-      de la Fase 9. **Se cierra cuando** su ficha está escrita y, sobre un cambio con un fallo
-      metido a propósito que ningún guardián caza, lo encuentra.
-      **Hecha el 2026-11-05**, en `.claude/agents/revisor.md` (un `.claude/agents` vacío que deja
-      el *sandbox* mientras corre una orden suya impidió escribirla a la primera). Probada con su
-      texto como instrucciones (Opus): cazó el fallo metido (`removeFrom` con `push`
-      y una constante sin tipo, que `check` deja pasar) y, en el commit de la tarea 6, dos fallos
-      de verdad, ya arreglados: dos pasadas de roturas se pisaban la copia, y el índice de git.
-- [x] **3. El verificador** *(pensar)*, si la 1 dice que puede: pasa las listas `VERIFICACION-*.md`
-      siguiendo `test/PASAR-LAS-LISTAS.md`, sin editar código, y devuelve cada paso con ✅ o ❌ y
-      lo que vio. Candidato a Sonnet, porque sigue una lista escrita. **Se cierra cuando** su ficha
-      está escrita y ha pasado una lista entera, anotada, con un fallo metido a propósito cazado.
-      **El 2026-11-05, la ficha escrita y probada, sin instalar**, como la del revisor. Con Sonnet
-      pasó la sección T de `VERIFICACION-MANUAL-TERMINAL.md` (lo que el panel puede) y cazó el fallo
-      metido (los nombres de las pestañas partidos en vez de cortados), **pero a la segunda**: la
-      primera vez el panel usó el CSS de antes, de su caché. La ficha ya recarga sin caché. Encontró
-      además dos ❌ de verdad, abiertos en *Sin fase asignada*. **Hecha el mismo día**, en
-      `.claude/agents/verificador.md`: sobre `06202e1` pasó la lista entera, anotada en ella, con
-      los mismos dos ❌ y lo que es del dedo o del móvil en ⏭.
-- [x] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
-      con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
-      rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
-      **El 2026-11-05**, la tanda: el «+ Contexto» de ⚙ en inverso (`b3feff9`), y las palabras
-      cortadas de las pestañas, descartadas por el usuario. **Ajustes que acepta:** el verificador
-      pasa sobre el cambio sin comitear, apuntando qué ficheros lleva, en vez de exigir el árbol
-      limpio; las roturas, enteras y en segundo plano en cada tarea, no filtradas; la parada tras
-      plantear una *(pensar)* de UI (el (1) de *Ajustes a la correa larga*); y el tope de unas 3
-      vueltas con el revisor, sin cambios; y, en cada tarea, el verificador pasa sólo los pasos
-      que toca el cambio, y las listas enteras, al cerrar la fase. Lo aceptado se escribe en la
-      tarea 7.
-- [x] **5. Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, y metido en esta fase el 2026-11-04, tras la revisión
-      de estilo de la 7n: hoy nada fija el ancho de línea ni la forma del código, y hay unas 15
-      líneas de más de 120 caracteres en `src/ui`. **Toca una dependencia** (una de desarrollo, que
-      no entra en el bundle): la regla de «dependencias sólo cuando se usan» pide mirar antes si
-      Node o TypeScript ya lo hacen, y la decisión cerrada de no usar herramientas para analizar el
-      código (ni ESLint ni Biome) dejó fuera los analizadores, no los formateadores, pero hay que
-      confirmarlo con el usuario. Por decidir: cuál (Prettier, `dprint`, el de Biome sólo para
-      formatear), el ancho de línea, si `check` lo comprueba o sólo se lanza a mano, y si el primer
-      pase reformatea todo el repo en un commit aparte. **Elegido por el usuario el 2026-11-05:
-      Prettier, a 120** (no programa desde el móvil); dprint se descartó porque baja sus *plugins*
-      de la red, y Biome por rozar la decisión de no usar analizadores. Y con él, aceptado el mismo
-      día: sin punto y coma, comillas dobles, 2 espacios, Markdown fuera, `check` lo comprueba y
-      el primer pase en un commit aparte. **Se cierra cuando** el usuario elige y,
-      con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
-      `CLAUDE.md` recoge el comando.
-      **Hecha el 2026-11-05**, en tres commits: Prettier 3.9.10 exacto con `check:formato` y
-      `format`; el primer pase solo (137 ficheros); y `check:formato` dentro de `check`, con su
-      rotura y las 7 que el pase dejó caducadas, puestas al día. Mira una lista de carpetas, no `.`,
-      para no tropezar con los ficheros vacíos del *sandbox*. Quedan unas 240 líneas de más de 120:
-      comentarios y textos, que Prettier no parte.
-- [x] **6. Las roturas, en su propia carpeta** *(mecánica)*. Hoy `check` y `check:roturas` compilan
-      en `tmp-test/` y se pisan si corren a la vez; lo evita sólo la memoria de Claude. *Decidido por el
-      usuario el 2026-11-04*: que puedan correr **en paralelo**, cada una con su carpeta, en vez de
-      esperar turno con una marca de «ocupado». Lo delicado: los alias de prueba apuntan a
-      `tmp-test/src` (condición `compiled` de `package.json`), así que la carpeta de las roturas lleva
-      su propio `package.json` con los alias hacia la suya. **Se cierra cuando** las dos, lanzadas a la
-      vez, acaban bien y cazan lo mismo que solas, y la regla «nunca a la vez» sale de `CLAUDE.md`.
-      **Hecha el 2026-11-05, con otro cómo:** compartir `tmp-test/` no era el único choque, porque
-      cada rotura escribía el fichero roto en el árbol de verdad. Ahora rompen y compilan en una
-      copia, `tmp-roturas/<pid>/`, una por pasada y con su propio índice de git, hecha al empezar
-      con lo versionado y lo nuevo; su `package.json` copiado ya apunta los alias dentro. Lanzadas
-      a la vez que `check`, y dos pasadas juntas, todas pasan (una rotura que venía caducada de
-      antes, puesta al día), y sola caza las mismas 199.
-- [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
-      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio; en
-      `test/PASAR-LAS-LISTAS.md`, **recargar sin caché** antes de pasar una lista, como hace la
-      ficha del verificador (sin eso se pasa sobre el código de antes). Y la auditoría
-      de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
-      `check:arquitectura` pasa y la auditoría no deja nada falso.
 
 ### Fase 11 — Dos idiomas, español e inglés, y exportar a Markdown — PLANIFICADA, después de la 10.1
 
@@ -312,8 +199,8 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       `TAREAS.md` al quitar un concepto («sustituido por la 7m»), porque la auditoría de la 10
       volvió a encontrar grupos, 🔔 y ✗ descritos como vigentes. El tercero, que `check` y
       `check:roturas` no se pisen, pasó a la Fase 10.1 (tarea 6). **El (1), aceptado el
-      2026-11-05** al revisar la tanda de la 10.1, y va a `CLAUDE.md` en su tarea 7; el (2), sin
-      contestar. **Se cierra cuando** el usuario
+      2026-11-05** al revisar la tanda de la 10.1, y ya en `CLAUDE.md` → *Cómo se trabaja*; el (2),
+      sin contestar. **Se cierra cuando** el usuario
       acepta o descarta cada uno y lo aceptado queda en `CLAUDE.md` o en un guardián con su rotura.
 - [ ] **Negrita, cursiva, tachado y subrayado en el editor.** *Pedido por el usuario el
       2026-10-11*, tras usar la app en el móvil. **Fuera de la fase de refactor, por decisión

@@ -206,6 +206,25 @@ Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d`
 
 ---
 
+### Fase 10.1 — Herramientas: el revisor, el verificador, el formateador y las roturas aparte ✅ CERRADA el 2026-11-05
+
+Decidida el 2026-10-18 y hecha el 2026-11-05 en la rama `fase-10-1`, con 1349 pruebas y 200 roturas,
+todas cazadas. **No cambia la app** salvo un arreglo de la tanda real. **Los filtros:** un subagente
+puede usar el navegador del panel; el **revisor** (Opus, sólo lee) y el **verificador** (Sonnet,
+pasa las listas sin tocar código), en `.claude/agents/`, cada uno probado con un fallo metido que
+`check` deja pasar. Al verificador se le escapó el primero por la caché del panel: la ficha recarga
+sin caché. Saldan la deuda C3 de la Fase 9. **Las roturas**, en una copia por pasada
+(`tmp-roturas/<pid>/`, con su índice de git): van a la vez que `check` y enteras en cada tarea. El
+revisor les vio dos fallos, y una rotura caducada por un recorte de `CLAUDE.md`. **Prettier**
+3.9.10 a 120, sin punto y coma y sin los `.md`, dentro de `check`; el primer pase, solo (137
+ficheros). **La tanda real:** el «+ Contexto» de ⚙ en inverso; las palabras cortadas en las pestañas,
+descartadas por el usuario. **Ajustes que acepta:** el verificador sobre el cambio sin comitear y
+sólo en los pasos que toca (las listas enteras, al cerrar la fase), y una parada tras plantear una
+*(pensar)* de UI. **Desvío:** la tarea 6 se hizo con otro cómo que el acordado sin preguntar, y el
+revisor lo marcó. **Deuda:** ninguna nueva.
+Commits clave: `4a3791a` (el panel), `6762c4e` y `ab4768d` (las roturas), `06202e1` (los agentes),
+`24606f9`, `aaf473f` y `7f4b67b` (Prettier), `b3feff9` (el «+ Contexto»), `dd88575` (el recorrido).
+
 ## Tareas sueltas terminadas
 
 - **Fase 10, tarea 1: ocultos por contexto** 2026-10-24, rama `fase-10` (`6b5329d`): `Context.hidden`

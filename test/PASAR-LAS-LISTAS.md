@@ -24,8 +24,9 @@ dice qué se comprueba; esto dice cómo se pasa y cómo se apunta.
 > **Lo que borra, en un origen aparte**: `localhost:8001` (`web-8001` en `.claude/launch.json`)
 > empieza vacío y no toca lo que haya en `localhost:8000`.
 
-> **Una captura en cada paso que se ve**, enseñada al usuario en el chat. No se guardan en el
-> repo.
+> **Una captura en cada paso que se ve**: el verificador cuenta lo que muestra (sus capturas no
+> salen de él). Si un ❌ hay que verlo, Claude repite el paso en el panel y se lo enseña al usuario.
+> No se guardan en el repo.
 
 > **Nada se descarga ni se instala.** Lo que la página pide al sistema —«Guardar como», elegir un
 > fichero— se **simula** dentro de la página, y se apunta como tal.
@@ -46,7 +47,7 @@ Al final de la lista, en su sección de resultados (**Pasadas** u **Hoja de resu
 ```
 Fecha:        AAAA-MM-DD
 Navegador:    (nombre y versión: navigator.userAgent)
-Quién:        Claude, en el panel · o · el usuario, en (móvil y navegador)
+Quién:        el verificador, en el panel · o · el usuario, en (móvil y navegador)
 Commit:       (git rev-parse --short HEAD), árbol limpio · o · más lo sin comitear (qué ficheros)
 Origen:       (localhost:8001, la publicada…)
 

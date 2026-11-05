@@ -30,7 +30,7 @@ dice lo que es en el móvil.
 > salga, no con el bueno.
 
 > **Se anota sobre qué se pasa**: en el móvil, la versión que dice ⚙ al pie; en el escritorio, el
-> commit, con el árbol limpio.
+> commit y qué ficheros llevaba sin comitear, como dice `test/PASAR-LAS-LISTAS.md`.
 
 > **Un comportamiento raro no es un fallo si está en «Conocidos»**, al final. Se marca igual, pero
 > con un «conocido»: lo que interesa es si se aguanta.

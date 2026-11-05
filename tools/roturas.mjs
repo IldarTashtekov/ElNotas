@@ -610,8 +610,8 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una tarea abierta sin decir cómo se cierra",
     fichero: "TAREAS.md",
-    buscar: "**Se cierra cuando** el usuario decide si existe;",
-    poner: "Cuando el usuario decide si existe;",
+    buscar: "**Se cierra cuando** el usuario contesta; si es que sí, construidas",
+    poner: "Cuando el usuario contesta; si es que sí, construidas",
     caza: "check:tareas",
   },
   {
@@ -696,8 +696,8 @@ export const ROTURAS = [
   {
     nombre: "check:arquitectura: CLAUDE.md vuelve a contar las pruebas",
     fichero: "CLAUDE.md",
-    buscar: "falla si no hay ninguna prueba compilada.",
-    poner: "falla si no hay ninguna prueba compilada. Hoy son 846 pruebas.",
+    buscar: "sin pruebas compiladas, falla.",
+    poner: "sin pruebas compiladas, falla. Hoy son 846 pruebas.",
     caza: "check:arquitectura",
   },
   {

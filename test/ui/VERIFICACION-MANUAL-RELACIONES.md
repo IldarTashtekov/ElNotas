@@ -25,7 +25,7 @@ atrás roto.
 
 > **Si algo no se puede provocar en ese navegador, se anota eso mismo.**
 
-> **Se pasa sobre un commit con el árbol limpio**, y se anota el commit.
+> **Se anota el commit, y qué ficheros llevaba sin comitear**, como dice `test/PASAR-LAS-LISTAS.md`.
 
 > **Un comportamiento raro no es un fallo si está anotado abajo como conocido.** Se marca igual,
 > pero con un «conocido»: lo que interesa es si se aguanta.

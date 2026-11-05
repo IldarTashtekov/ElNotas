@@ -19,7 +19,7 @@ Sin bundler ni servidor de desarrollo: `tsc` compila a `dist/web/` y cualquier s
 sirve la raíz del repo, donde está `index.html`.
 
 ```bash
-npm install                 # sólo typescript y @types/node
+npm install                 # sólo typescript, @types/node y prettier
 npm run build:web           # compila src/ a dist/web/
 python3 -m http.server 8000 # y se abre http://localhost:8000
 ```

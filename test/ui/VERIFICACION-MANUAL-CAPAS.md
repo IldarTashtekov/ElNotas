@@ -19,7 +19,7 @@ móvil cerrando la app en segundo plano**, que no se puede provocar desde Node.
 
 ## Reglas al ejecutarla
 
-> **Se pasa sobre un commit con el árbol limpio**, y se anota el commit.
+> **Se anota el commit, y qué ficheros llevaba sin comitear**, como dice `test/PASAR-LAS-LISTAS.md`.
 
 > **Si algo no se puede provocar en ese navegador, se anota eso mismo.**
 
