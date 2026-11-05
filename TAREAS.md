@@ -143,6 +143,13 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
 - [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
+      **El 2026-11-05**, la tanda: el «+ Contexto» de ⚙ en inverso (`b3feff9`), y las palabras
+      cortadas de las pestañas, descartadas por el usuario. **Ajustes que acepta:** el verificador
+      pasa sobre el cambio sin comitear, apuntando qué ficheros lleva, en vez de exigir el árbol
+      limpio; las roturas, enteras y en segundo plano en cada tarea, no filtradas; la parada tras
+      plantear una *(pensar)* de UI (el (1) de *Ajustes a la correa larga*); y el tope de unas 3
+      vueltas con el revisor, sin cambios. **Falta:** el ajuste de pasar sólo los pasos afectados de
+      una lista en cada tarea, sin contestar. Lo aceptado se escribe en la tarea 7.
 - [x] **5. Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, y metido en esta fase el 2026-11-04, tras la revisión
       de estilo de la 7n: hoy nada fija el ancho de línea ni la forma del código, y hay unas 15
       líneas de más de 120 caracteres en `src/ui`. **Toca una dependencia** (una de desarrollo, que
@@ -303,7 +310,9 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       (2) **marcar lo sustituido** en la crónica de
       `TAREAS.md` al quitar un concepto («sustituido por la 7m»), porque la auditoría de la 10
       volvió a encontrar grupos, 🔔 y ✗ descritos como vigentes. El tercero, que `check` y
-      `check:roturas` no se pisen, pasó a la Fase 10.1 (tarea 6). **Se cierra cuando** el usuario
+      `check:roturas` no se pisen, pasó a la Fase 10.1 (tarea 6). **El (1), aceptado el
+      2026-11-05** al revisar la tanda de la 10.1, y va a `CLAUDE.md` en su tarea 7; el (2), sin
+      contestar. **Se cierra cuando** el usuario
       acepta o descarta cada uno y lo aceptado queda en `CLAUDE.md` o en un guardián con su rotura.
 - [ ] **Negrita, cursiva, tachado y subrayado en el editor.** *Pedido por el usuario el
       2026-10-11*, tras usar la app en el móvil. **Fuera de la fase de refactor, por decisión
