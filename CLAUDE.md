@@ -279,7 +279,7 @@ npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o
                              # pasa de 300 líneas o lleva fechas o recuentos de pruebas, o hay § rotas
 npm run check:referencias    # falla si un documento nombra un fichero, una orden o un alias que no existe
 npm test                     # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
-npm run check:roturas        # FUERA de check (~2 min), y nunca a la vez que él: comparten tmp-test/
+npm run check:roturas        # FUERA de check (~2 min); rompe en una copia, tmp-roturas/: puede ir a la vez
 npm run build:web            # compila src/ a dist/web/ en ESM, para el navegador
 python3 -m http.server 8000                # y se abre http://localhost:8000
 python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000

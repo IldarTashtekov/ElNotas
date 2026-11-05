@@ -7,38 +7,48 @@
  * su fichero de pruebas (el espejo, o el que diga `pruebasEn`).
  *
  * Falla si una sobrevive (nada la caza), si caducó (su texto ya no está, o está
- * dos veces), si no se puede traducir o si no tiene fichero de pruebas. Lo roto
- * se apunta en `.rotura-en-curso.json`: si se corta a medias, la siguiente pasada
- * lo restaura antes de nada. `npm run check:roturas -- fósforo` pasa sólo las
- * que lo lleven en el nombre.
+ * dos veces), si no se puede traducir o si no tiene fichero de pruebas.
+ * `npm run check:roturas -- fósforo` pasa sólo las que lo lleven en el nombre.
+ *
+ * No toca el proyecto: rompe y compila en una copia, `tmp-roturas/`, hecha al
+ * empezar con lo que hay en el disco, versionado o nuevo. Así puede correr a la
+ * vez que `npm run check`, y lo que se edite mientras tanto no se pisa.
  */
-import { spawn } from "node:child_process"
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs"
-import { resolve } from "node:path"
+import { spawn, spawnSync } from "node:child_process"
+import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { dirname, join, resolve } from "node:path"
 import ts from "typescript"
 import { ROTURAS } from "./roturas.mjs"
 
-const DIARIO = ".rotura-en-curso.json"
+const COPIA = "tmp-roturas"
 const SALIDA = "tmp-test"
 
-const restaurar = () => {
-  if (!existsSync(DIARIO)) return null
-  const { fichero, original } = JSON.parse(readFileSync(DIARIO, "utf8"))
-  writeFileSync(fichero, original)
-  rmSync(DIARIO)
-  return fichero
+const git = (...args) => spawnSync("git", args, { encoding: "utf8" })
+const lista = git("ls-files", "-z", "--cached", "--others", "--exclude-standard")
+const gitDir = git("rev-parse", "--absolute-git-dir")
+if (lista.status !== 0 || gitDir.status !== 0) {
+  console.error(`✗ no se pudo preguntar a git qué copiar:\n${lista.stderr}${gitDir.stderr}`)
+  process.exit(1)
 }
+rmSync(COPIA, { recursive: true, force: true })
+for (const fichero of lista.stdout.split("\0")) {
+  /* Lo borrado sin comitear sigue en el índice, y el sandbox tapa rutas con dispositivos: sólo ficheros. */
+  if (fichero === "" || !existsSync(fichero) || !lstatSync(fichero).isFile()) continue
+  mkdirSync(dirname(join(COPIA, fichero)), { recursive: true })
+  copyFileSync(fichero, join(COPIA, fichero))
+}
+symlinkSync(resolve("node_modules"), join(COPIA, "node_modules"), "dir")
+/* check:referencias pregunta a git qué está versionado: el del proyecto, con la copia como árbol. */
+process.env.GIT_DIR = gitDir.stdout.trim()
+process.env.GIT_WORK_TREE = resolve(COPIA)
+process.chdir(COPIA)
 
-const quedaba = restaurar()
-if (quedaba !== null) console.warn(`⚠ ${quedaba} se quedó roto de una pasada cortada: restaurado.\n`)
-/* Ctrl-C para la pasada entera, no sólo las pruebas en curso. */
+/* Ctrl-C para la pasada entera, no sólo las pruebas en curso. Lo roto queda en la copia, que se rehace. */
 let enCurso = null
-process.on("exit", restaurar)
 for (const senal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
   process.on(senal, () => {
     enCurso?.kill(senal)
-    restaurar()
-    console.error(`\n✗ cortada: lo roto está restaurado`)
+    console.error(`\n✗ cortada: el proyecto no se ha tocado`)
     process.exit(130)
   })
 }
@@ -97,7 +107,13 @@ if (elegidas.length === 0) {
 }
 
 /* Con la base en rojo, cualquier rotura «caería»: no probaría nada. `npm test` deja compilado tmp-test/. */
-for (const caza of new Set(elegidas.map((r) => r.caza))) {
+const cazadores = new Set(elegidas.map((r) => r.caza))
+/* dist/ no se copia, y build:pages arma lo publicado a partir de dist/web/. */
+if (cazadores.has("build:pages") && !(await npm("build:web")).ok) {
+  console.error("✗ la copia no compila con `npm run build:web`")
+  process.exit(1)
+}
+for (const caza of cazadores) {
   if (!(await npm(caza === "pruebas" ? "test" : caza)).ok) {
     console.error(`✗ la base no pasa \`npm run ${caza === "pruebas" ? "test" : caza}\`: arréglala antes de romper nada`)
     process.exit(1)
@@ -122,13 +138,12 @@ for (const rotura of elegidas) {
   }
 
   const roto = original.replace(buscar, poner)
-  writeFileSync(DIARIO, JSON.stringify({ fichero, original }))
   writeFileSync(fichero, roto)
   let r
   if (caza === "pruebas") {
     const js = traducir(fichero, roto)
     if (js === null) {
-      restaurar()
+      writeFileSync(fichero, original)
       fallos.push(`no compila: no se puede traducir a JS: ${nombre}`)
       console.log(`✗ no compila ${nombre}`)
       continue
@@ -140,7 +155,7 @@ for (const rotura of elegidas) {
   } else {
     r = await npm(caza)
   }
-  restaurar()
+  writeFileSync(fichero, original)
 
   if (r.ok) {
     fallos.push(`SOBREVIVE, nada la caza: ${nombre}`)

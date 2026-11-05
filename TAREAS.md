@@ -146,13 +146,18 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       el primer pase en un commit aparte. **Se cierra cuando** el usuario elige y,
       con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
       `CLAUDE.md` recoge el comando.
-- [ ] **6. Las roturas, en su propia carpeta** *(mecánica)*. Hoy `check` y `check:roturas` compilan
+- [x] **6. Las roturas, en su propia carpeta** *(mecánica)*. Hoy `check` y `check:roturas` compilan
       en `tmp-test/` y se pisan si corren a la vez; lo evita sólo la memoria de Claude. *Decidido por el
       usuario el 2026-11-04*: que puedan correr **en paralelo**, cada una con su carpeta, en vez de
       esperar turno con una marca de «ocupado». Lo delicado: los alias de prueba apuntan a
       `tmp-test/src` (condición `compiled` de `package.json`), así que la carpeta de las roturas lleva
       su propio `package.json` con los alias hacia la suya. **Se cierra cuando** las dos, lanzadas a la
       vez, acaban bien y cazan lo mismo que solas, y la regla «nunca a la vez» sale de `CLAUDE.md`.
+      **Hecha el 2026-11-05, con otro cómo:** compartir `tmp-test/` no era el único choque, porque
+      cada rotura escribía el fichero roto en el árbol de verdad. Ahora rompen y compilan en una
+      copia, `tmp-roturas/`, rehecha al empezar con lo versionado y lo nuevo; su `package.json`
+      copiado ya apunta los alias dentro. Lanzadas a la vez que `check`, las dos pasan (una
+      rotura que venía caducada de antes, puesta al día), y sola caza las mismas 199.
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
       agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
