@@ -124,10 +124,21 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       de fase, no cada tarea. Devuelve una lista con fichero y línea, o «nada que objetar». Corto: remite a `CLAUDE.md`, no lo copia. Cierra C3
       de la Fase 9. **Se cierra cuando** su ficha está escrita y, sobre un cambio con un fallo
       metido a propósito que ningún guardián caza, lo encuentra.
+      **El 2026-11-05, la ficha escrita y probada, sin instalar:** `.claude/agents` es un fichero
+      vacío que dejó el *sandbox* y no se puede cambiar desde él; la carpeta la crea el usuario.
+      Probada con su texto como instrucciones (Opus): cazó el fallo metido (`removeFrom` con `push`
+      y una constante sin tipo, que `check` deja pasar) y, en el commit de la tarea 6, dos fallos
+      de verdad, ya arreglados: dos pasadas de roturas se pisaban la copia, y el índice de git.
 - [ ] **3. El verificador** *(pensar)*, si la 1 dice que puede: pasa las listas `VERIFICACION-*.md`
       siguiendo `test/PASAR-LAS-LISTAS.md`, sin editar código, y devuelve cada paso con ✅ o ❌ y
       lo que vio. Candidato a Sonnet, porque sigue una lista escrita. **Se cierra cuando** su ficha
       está escrita y ha pasado una lista entera, anotada, con un fallo metido a propósito cazado.
+      **El 2026-11-05, la ficha escrita y probada, sin instalar**, como la del revisor. Con Sonnet
+      pasó la sección T de `VERIFICACION-MANUAL-TERMINAL.md` (lo que el panel puede) y cazó el fallo
+      metido (los nombres de las pestañas partidos en vez de cortados), **pero a la segunda**: la
+      primera vez el panel usó el CSS de antes, de su caché. La ficha ya recarga sin caché. Encontró
+      además dos ❌ de verdad, abiertos en *Sin fase asignada*. Falta pasarla sobre el árbol limpio
+      y anotarla.
 - [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
@@ -155,11 +166,14 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       vez, acaban bien y cazan lo mismo que solas, y la regla «nunca a la vez» sale de `CLAUDE.md`.
       **Hecha el 2026-11-05, con otro cómo:** compartir `tmp-test/` no era el único choque, porque
       cada rotura escribía el fichero roto en el árbol de verdad. Ahora rompen y compilan en una
-      copia, `tmp-roturas/`, rehecha al empezar con lo versionado y lo nuevo; su `package.json`
-      copiado ya apunta los alias dentro. Lanzadas a la vez que `check`, las dos pasan (una
-      rotura que venía caducada de antes, puesta al día), y sola caza las mismas 199.
+      copia, `tmp-roturas/<pid>/`, una por pasada y con su propio índice de git, hecha al empezar
+      con lo versionado y lo nuevo; su `package.json` copiado ya apunta los alias dentro. Lanzadas
+      a la vez que `check`, y dos pasadas juntas, todas pasan (una rotura que venía caducada de
+      antes, puesta al día), y sola caza las mismas 199.
 - [ ] **7. Documentación, en un solo pase al cerrar.** En `CLAUDE.md`, cuándo se llama a cada
-      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio. Y la auditoría
+      agente; el porqué de los filtros, en `ARCHITECTURE.md` si es un principio; en
+      `test/PASAR-LAS-LISTAS.md`, **recargar sin caché** antes de pasar una lista, como hace la
+      ficha del verificador (sin eso se pasa sobre el código de antes). Y la auditoría
       de la documentación de cierre de fase. **Se cierra cuando** los dos lo recogen,
       `check:arquitectura` pasa y la auditoría no deja nada falso.
 
@@ -274,6 +288,16 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       recoge el aspecto nuevo y esta entrada se sustituye por las tareas de la fase.
 
 ### Sin fase asignada
+
+- [ ] **El «+ Contexto» de ⚙ no va en vídeo inverso** *(mecánica)*. Lo vio el verificador el
+      2026-11-05 (T3 de `VERIFICACION-MANUAL-TERMINAL.md`): `.crear button` en `ajustes.css` lleva
+      `background: none` y el color del fósforo, y la decisión cerrada pide vídeo inverso para
+      crear. **Se cierra cuando** va en inverso, comparado el estilo calculado, y T3 pasa.
+- [ ] **«contexto» y «diagrama» salen cortados en las pestañas** *(pensar)*. Lo vio el
+      verificador el 2026-11-05 (T5 de la misma lista): a 15 px necesitan 72 px y la pestaña les
+      da 70, o 53 la activa por su ✕ (`max-width: 100px`). Arreglarlo es elegir entre ancho,
+      letra o relleno. **Se cierra cuando** las dos palabras se ven enteras en la pestaña activa y
+      en la inactiva, y T5 pasa.
 
 - [ ] **Ajustes a la correa larga, de la prueba de la Fase 10** *(pensar)*. *Propuestos el
       2026-10-29* al cerrar la 10; `CLAUDE.md` → *Cómo se trabaja* cambia sólo si el usuario lo
