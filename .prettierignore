@@ -1,0 +1,7 @@
+# Lo que Prettier no formatea. Los documentos se escriben a mano.
+*.md
+package-lock.json
+dist/
+tmp-test/
+tmp-roturas/
+assets/

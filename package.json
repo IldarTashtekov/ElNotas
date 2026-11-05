@@ -34,6 +34,8 @@
     "check:tareas": "node tools/check-tareas.mjs",
     "check:arquitectura": "node tools/check-arquitectura.mjs",
     "check:referencias": "node tools/check-referencias.mjs",
+    "check:formato": "prettier --check src test tools pwa .claude/hooks .claude/agents .claude/launch.json .github index.html manifest.webmanifest package.json tsconfig.json tsconfig.base.json tsconfig.test.json tsconfig.web.json .prettierrc.json",
+    "format": "npm run -s check:formato -- --write",
     "check:roturas": "node tools/check-roturas.mjs",
     "build:web": "node tools/clean-dist.mjs && tsc -p tsconfig.web.json",
     "build:pages": "node tools/build-pages.mjs",
@@ -52,6 +54,7 @@
   "homepage": "https://github.com/IldarTashtekov/ElNotas#readme",
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "prettier": "3.9.10",
     "typescript": "^6.0.3"
   }
 }
