@@ -79,6 +79,17 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
 
 ```
 Fecha:        2026-11-05
+Navegador:    Chrome/152.0.7977.167 (el del panel)
+Quién:        el verificador (subagente), en el panel
+Commit:       7f4b67b más el arreglo del «+ Contexto» en ajustes.css, sin comitear
+Origen:       localhost:8001, recargado sin caché
+
+T3  ✅ — sólo este paso, tras el arreglo: el «+ Contexto» de ⚙ en inverso en verde, ámbar y
+         magenta, también con el ratón encima
+```
+
+```
+Fecha:        2026-11-05
 Navegador:    Chrome/152.0.7977.167 (el del panel), viewport 1024x768
 Quién:        el verificador (subagente), en el panel
 Commit:       06202e1, árbol limpio salvo TAREAS.md, que esta lista no mira

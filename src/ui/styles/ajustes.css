@@ -21,13 +21,15 @@ h2 {
     flex: 1;
     min-width: 0;
   }
+  /* Crear, en vídeo inverso: como el «+ Contexto nuevo» de la hoja. */
   & button {
-    background: none;
+    background: var(--accent);
     border: none;
-    color: var(--accent);
+    color: var(--sobre-color);
     cursor: pointer;
     font-weight: 600;
     padding: 0.45rem 0.6rem;
+    text-shadow: none;
   }
 }
 /* Lo que se puede poner en una ventana: en las hojas y en «Mover a…». */

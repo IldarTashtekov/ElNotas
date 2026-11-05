@@ -295,10 +295,6 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
 
 ### Sin fase asignada
 
-- [ ] **El «+ Contexto» de ⚙ no va en vídeo inverso** *(mecánica)*. Lo vio el verificador el
-      2026-11-05 (T3 de `VERIFICACION-MANUAL-TERMINAL.md`): `.crear button` en `ajustes.css` lleva
-      `background: none` y el color del fósforo, y la decisión cerrada pide vídeo inverso para
-      crear. **Se cierra cuando** va en inverso, comparado el estilo calculado, y T3 pasa.
 - [ ] **«contexto» y «diagrama» salen cortados en las pestañas** *(pensar)*. Lo vio el
       verificador el 2026-11-05 (T5 de la misma lista): a 15 px necesitan 72 px y la pestaña les
       da 70, o 53 la activa por su ✕ (`max-width: 100px`). Arreglarlo es elegir entre ancho,
