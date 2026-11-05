@@ -47,8 +47,9 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
   negro), para no confundirse con el de nota.
 - **T4.** **Sólo lo de borrar y los errores son rojos**: «Borrar» en ⚙, «Borrar todo», el botón de
   la pregunta antes de borrar y el borde del aviso de guardado detenido.
-- **T5.** Las pestañas con un nombre largo lo **cortan con «…»**, sin partirlo ni desbordar, y
-  las palabras de ocho letras («contexto», «diagrama») se ven enteras cuando caben.
+- **T5.** Las pestañas con un nombre largo lo **cortan con «…»**, sin partirlo ni desbordar.
+  Una palabra de ocho letras («contexto») sale cortada por poco, más en la activa por su ✕: se
+  acepta así.
 - **T6.** El **foco del teclado** (tabulador) es un recuadro del color del fósforo, recto, no el anillo blanco y
   redondo del navegador.
 - **T8.** En ⚙, la sección **Pantalla** tiene **Verde**, **Ámbar** y **Magenta**, el elegido en vídeo

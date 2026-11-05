@@ -330,6 +330,8 @@ Commits clave: `6b5329d` (ocultos), `1023db8` (reordenar), `36bce45`–`38d905d`
 
 - ❌ **Un guardián para la regla de tipos explícitos**: no caza ningún fallo, sólo hace que un
   diff se lea mejor; la regla se queda y su comprobación no. El criterio, en `ARCHITECTURE.md` §2.4.
+- ❌ **Que «contexto» y «diagrama» quepan enteras en las pestañas** (Fase 10.1), 2026-11-05: les
+  faltan 2 px en la inactiva y unos 19 en la activa, por su ✕; al usuario no le parece un problema.
 - ❌ **`check:fronteras` de lista negra a lista blanca** (Fase 9, B3), 2026-10-13: sobreingeniería.
 - ❌ **Ramas, *pull requests* y CI en los PR** (Fase 9, C4), 2026-10-13: no hay `push` a otras ramas.
 - ❌ **Un adaptador de Google Drive**, 2026-10-12: guarda ficheros, y manda el modelo (*La nube*).

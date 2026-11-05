@@ -295,11 +295,6 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
 
 ### Sin fase asignada
 
-- [ ] **«contexto» y «diagrama» salen cortados en las pestañas** *(pensar)*. Lo vio el
-      verificador el 2026-11-05 (T5 de la misma lista): a 15 px necesitan 72 px y la pestaña les
-      da 70, o 53 la activa por su ✕ (`max-width: 100px`). Arreglarlo es elegir entre ancho,
-      letra o relleno. **Se cierra cuando** las dos palabras se ven enteras en la pestaña activa y
-      en la inactiva, y T5 pasa.
 
 - [ ] **Ajustes a la correa larga, de la prueba de la Fase 10** *(pensar)*. *Propuestos el
       2026-10-29* al cerrar la 10; `CLAUDE.md` → *Cómo se trabaja* cambia sólo si el usuario lo
