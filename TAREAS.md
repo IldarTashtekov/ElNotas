@@ -135,7 +135,11 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       código (ni ESLint ni Biome) dejó fuera los analizadores, no los formateadores, pero hay que
       confirmarlo con el usuario. Por decidir: cuál (Prettier, `dprint`, el de Biome sólo para
       formatear), el ancho de línea, si `check` lo comprueba o sólo se lanza a mano, y si el primer
-      pase reformatea todo el repo en un commit aparte. **Se cierra cuando** el usuario elige y,
+      pase reformatea todo el repo en un commit aparte. **Elegido por el usuario el 2026-11-05:
+      Prettier, a 120** (no programa desde el móvil); dprint se descartó porque baja sus *plugins*
+      de la red, y Biome por rozar la decisión de no usar analizadores. Y con él, aceptado el mismo
+      día: sin punto y coma, comillas dobles, 2 espacios, Markdown fuera, `check` lo comprueba y
+      el primer pase en un commit aparte. **Se cierra cuando** el usuario elige y,
       con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
       `CLAUDE.md` recoge el comando.
 - [ ] **6. Las roturas, en su propia carpeta** *(mecánica)*. Hoy `check` y `check:roturas` compilan
