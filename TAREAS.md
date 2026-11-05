@@ -140,7 +140,7 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       además dos ❌ de verdad, abiertos en *Sin fase asignada*. **Hecha el mismo día**, en
       `.claude/agents/verificador.md`: sobre `06202e1` pasó la lista entera, anotada en ella, con
       los mismos dos ❌ y lo que es del dedo o del móvil en ⏭.
-- [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
+- [x] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
       **El 2026-11-05**, la tanda: el «+ Contexto» de ⚙ en inverso (`b3feff9`), y las palabras
@@ -148,8 +148,9 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       pasa sobre el cambio sin comitear, apuntando qué ficheros lleva, en vez de exigir el árbol
       limpio; las roturas, enteras y en segundo plano en cada tarea, no filtradas; la parada tras
       plantear una *(pensar)* de UI (el (1) de *Ajustes a la correa larga*); y el tope de unas 3
-      vueltas con el revisor, sin cambios. **Falta:** el ajuste de pasar sólo los pasos afectados de
-      una lista en cada tarea, sin contestar. Lo aceptado se escribe en la tarea 7.
+      vueltas con el revisor, sin cambios; y, en cada tarea, el verificador pasa sólo los pasos
+      que toca el cambio, y las listas enteras, al cerrar la fase. Lo aceptado se escribe en la
+      tarea 7.
 - [x] **5. Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, y metido en esta fase el 2026-11-04, tras la revisión
       de estilo de la 7n: hoy nada fija el ancho de línea ni la forma del código, y hay unas 15
       líneas de más de 120 caracteres en `src/ui`. **Toca una dependencia** (una de desarrollo, que
