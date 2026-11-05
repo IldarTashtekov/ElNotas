@@ -63,7 +63,7 @@ escribe en el proyecto; `npm audit` y lo que necesite red, lo lanza el usuario.
   puerto, o un fallo sin arreglo. **Una duda que no bloquea**, a `TAREAS.md` → *Sin decidir*.
 - **Al acabar la tanda**, al usuario: lo hecho, los commits, las dudas apuntadas y **lo que falta**.
 
-**Al cerrar una fase**, además de `check:roturas` y las listas que se pasan en el panel, enteras:
+**Al cerrar una fase**, además de `check:roturas` y, enteras, las listas de lo que tocó la fase:
 1. **Auditoría de la documentación.** Un subagente que no ha escrito nada de la fase lee contra el
    repo `CLAUDE.md`, `ARCHITECTURE.md`, `TAREAS.md`, `README.md`, las listas de `test/` y `.claude/`,
    y devuelve cada afirmación falsa con fichero, línea y por qué; Claude corrige y se lo enseña al usuario.
