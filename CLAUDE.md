@@ -162,6 +162,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
 - Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el
   build, es rápido y casi nunca se equivoca. Las roturas, con una lista a mano, no con Stryker.
+  Para formatear, Prettier a 120 y sin punto y coma (no dprint, que baja de la red); los `.md`, a mano.
 - Hooks en `.claude/settings.json`: antes de Bash, nada de comitear en `main`; al editar, los
   tipos y los guardianes; al terminar, `check` entero si hay cambios sin comitear en `src/`,
   `test/` o `tools/`.
@@ -278,15 +279,14 @@ npm run check:tareas         # falla si una tarea abierta no dice cómo se cierr
 npm run check:arquitectura   # falla si ARCHITECTURE.md vuelve a ser anatomía o crónica, si CLAUDE.md
                              # pasa de 300 líneas o lleva fechas o recuentos de pruebas, o hay § rotas
 npm run check:referencias    # falla si un documento nombra un fichero, una orden o un alias que no existe
+npm run check:formato        # falla si algo no está como lo deja Prettier; npm run format lo arregla
 npm test                     # compila src/ y test/ a tmp-test/, EXIGE que haya pruebas y las lanza
-npm run check:roturas        # FUERA de check (~2 min); rompe en una copia, tmp-roturas/: puede ir a la vez
+npm run check:roturas        # FUERA de check (~2 min), en una copia: puede ir a la vez. `-- fósforo`, sólo ésas
 npm run build:web            # compila src/ a dist/web/ en ESM, para el navegador
 python3 -m http.server 8000                # y se abre http://localhost:8000
 python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000
 npm run build:pages          # tras build:web: arma dist/pages/ (lo publicado). Niega rutas absolutas
 ```
-
-`npm run check:roturas -- fósforo` pasa sólo las que lo lleven en el nombre.
 
 **Publicar es hacer `push` a `main`**; lo hace el usuario (denegado aquí en `.claude/settings.json`,
 a propósito). Lo publicado se prueba sirviendo `dist/pages/` en una subcarpeta de `localhost`.

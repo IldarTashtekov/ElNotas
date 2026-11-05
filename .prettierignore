@@ -5,3 +5,5 @@ dist/
 tmp-test/
 tmp-roturas/
 assets/
+# El sandbox de Claude no puede escribirlo: `npm run format` fallaría ahí. Se edita a mano.
+.claude/settings.json

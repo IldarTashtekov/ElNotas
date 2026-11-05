@@ -143,7 +143,7 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
 - [ ] **4. Una tanda real con el recorrido completo** *(pensar)*: un bloque de tareas pendientes,
       con la correa larga y los dos filtros. **Se cierra cuando** la tanda está comiteada en su
       rama y el usuario la ha revisado y dicho qué ajustar del recorrido.
-- [ ] **5. Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, y metido en esta fase el 2026-11-04, tras la revisión
+- [x] **5. Añadir un formateador** *(pensar)*. *Pedido por el usuario el 2026-10-29*, y metido en esta fase el 2026-11-04, tras la revisión
       de estilo de la 7n: hoy nada fija el ancho de línea ni la forma del código, y hay unas 15
       líneas de más de 120 caracteres en `src/ui`. **Toca una dependencia** (una de desarrollo, que
       no entra en el bundle): la regla de «dependencias sólo cuando se usan» pide mirar antes si
@@ -158,6 +158,11 @@ herramientas: el formateador, que estaba sin fase, y que las roturas compilen en
       el primer pase en un commit aparte. **Se cierra cuando** el usuario elige y,
       con él ya instalado, `npm run check` falla ante código sin formatear, el repo pasa entero y
       `CLAUDE.md` recoge el comando.
+      **Hecha el 2026-11-05**, en tres commits: Prettier 3.9.10 exacto con `check:formato` y
+      `format`; el primer pase solo (137 ficheros); y `check:formato` dentro de `check`, con su
+      rotura y las 7 que el pase dejó caducadas, puestas al día. Mira una lista de carpetas, no `.`,
+      para no tropezar con los ficheros vacíos del *sandbox*. Quedan unas 240 líneas de más de 120:
+      comentarios y textos, que Prettier no parte.
 - [x] **6. Las roturas, en su propia carpeta** *(mecánica)*. Hoy `check` y `check:roturas` compilan
       en `tmp-test/` y se pisan si corren a la vez; lo evita sólo la memoria de Claude. *Decidido por el
       usuario el 2026-11-04*: que puedan correr **en paralelo**, cada una con su carpeta, en vez de

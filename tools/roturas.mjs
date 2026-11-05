@@ -85,8 +85,8 @@ export const ROTURAS = [
   {
     nombre: "core: reordenar mueve el bloque en el orden del contexto",
     fichero: "src/core/app/reduce.ts",
-    buscar: "          ...mueven,\n",
-    poner: "          ...action.items,\n",
+    buscar: "...quedan.slice(0, donde), ...mueven, ...quedan",
+    poner: "...quedan.slice(0, donde), ...action.items, ...quedan",
     caza: "pruebas",
     pruebasEn: "test/core/app/entityActions.test.ts",
     prueba: "reorder-items mueve varios juntos, en el orden en que los lista el contexto",
@@ -194,8 +194,8 @@ export const ROTURAS = [
   {
     nombre: "fósforo: lo que no es un fósforo conocido es el de siempre",
     fichero: "src/ui/phosphor.ts",
-    buscar: "?.value ??\n  DEFAULT_PHOSPHOR",
-    poner: "?.value ??\n  (guardado as Phosphor)",
+    buscar: "?.value ?? DEFAULT_PHOSPHOR\n",
+    poner: "?.value ?? (guardado as Phosphor)\n",
     caza: "pruebas",
     prueba: "parsePhosphor convierte cualquier otra cosa en el de siempre",
   },
@@ -543,8 +543,8 @@ export const ROTURAS = [
   {
     nombre: "gráfica: cuentan los días posteriores a la semana de hoy",
     fichero: "src/ui/routineCharts.ts",
-    buscar: "(d: Day): boolean => fin !== null && compareDays(d, fin) <= 0,",
-    poner: "(d: Day): boolean => fin !== null && compareDays(d, fin) <= 1,",
+    buscar: "compareDays(d, fin) <= 0)",
+    poner: "compareDays(d, fin) <= 1)",
     caza: "pruebas",
     prueba: "lo que pase de la semana de hoy no cuenta",
   },
@@ -719,8 +719,8 @@ export const ROTURAS = [
   {
     nombre: "check:referencias: CLAUDE.md nombra una orden de npm que no existe",
     fichero: "CLAUDE.md",
-    buscar: "npm run check:roturas -- fósforo",
-    poner: "npm run check:rotas -- fósforo",
+    buscar: "npm run check:formato ",
+    poner: "npm run check:formateo ",
     caza: "check:referencias",
   },
   {
@@ -729,6 +729,13 @@ export const ROTURAS = [
     buscar: "(`#ui/noteActions`)",
     poner: "(`#vista/noteActions`)",
     caza: "check:referencias",
+  },
+  {
+    nombre: "check:formato: un punto y coma que Prettier quitaría",
+    fichero: "src/core/domain/Result.ts",
+    buscar: "({ ok: true, value })\n",
+    poner: "({ ok: true, value });\n",
+    caza: "check:formato",
   },
 
   /* ── El calendario: fechas ── */
@@ -895,9 +902,8 @@ export const ROTURAS = [
   {
     nombre: "calendario: reconcileOrder no quita lo que ya no existe",
     fichero: "src/ui/calendarOrder.ts",
-    buscar:
-      "  const vivos: ReadonlyArray<string> = guardado.filter((id: string): boolean =>\n    existentes.includes(id),\n  )",
-    poner: "  const vivos: ReadonlyArray<string> = guardado.filter((id: string): boolean =>\n    id.length >= 0,\n  )",
+    buscar: "guardado.filter((id: string): boolean => existentes.includes(id))",
+    poner: "guardado.filter((id: string): boolean => id.length >= 0)",
     caza: "pruebas",
     prueba: "reconcileOrder quita lo que ya no existe y conserva el orden de lo demás",
   },
@@ -920,8 +926,8 @@ export const ROTURAS = [
   {
     nombre: "copia: el estado de la pantalla importado no pasa por el lector",
     fichero: "src/platform/web/importStorage.ts",
-    buscar: "      parseUiState(copia.uiState),\n",
-    poner: "      copia.uiState as never,\n",
+    buscar: ".save(parseUiState(copia.uiState))",
+    poner: ".save(copia.uiState as never)",
     caza: "pruebas",
     prueba: "el estado de la pantalla de la copia pasa por el lector: lo que no tiene forma no entra",
   },
@@ -1337,8 +1343,8 @@ export const ROTURAS = [
   {
     nombre: "rutinas en pantalla: el mes pinta rutinas sin elegir",
     fichero: "src/ui/calendarMonth.ts",
-    buscar: "(r: Routine): boolean => rutinas.has(r.id),",
-    poner: "(r: Routine): boolean => rutinas.has(r.id) || true,",
+    buscar: "filter((r: Routine): boolean =>\n    rutinas.has(r.id),\n",
+    poner: "filter((r: Routine): boolean =>\n    rutinas.has(r.id) || true,\n",
     caza: "pruebas",
     pruebasEn: "test/ui/routineList.test.ts",
     prueba: "sin elegidas no hay progreso",
@@ -1587,8 +1593,8 @@ export const ROTURAS = [
   {
     nombre: "nodo-enlace: «Editar» sale en uno que enlaza a algo de la app",
     fichero: "src/ui/nodeContent.ts",
-    buscar: 'boolean =>\n  nodo.kind === "text" || nodo.target.kind === "web"',
-    poner: 'boolean =>\n  nodo.kind === "text" || nodo.target.kind !== "web"',
+    buscar: 'nodo.kind === "text" || nodo.target.kind === "web"\n',
+    poner: 'nodo.kind === "text" || nodo.target.kind !== "web"\n',
     caza: "pruebas",
     prueba: "editedNodeText: un enlace a algo de la app no cambia",
   },
