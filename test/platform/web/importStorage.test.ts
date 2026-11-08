@@ -62,6 +62,7 @@ const nombresDe = (app: App): ReadonlyArray<string> =>
 /** El estado de la pantalla de otro dispositivo, ya con la forma que deja su lector. */
 const PANTALLA: unknown = {
   phosphor: "magenta",
+  language: "en",
   windows: { windows: [{ kind: "general" }], active: { kind: "general" } },
   framings: { d1: { x: 10, y: -20, scale: 2 } },
   calendarOrder: { routines: ["r1", "r2"], archived: [] },
@@ -129,6 +130,7 @@ test("el estado de la pantalla de la copia pasa por el lector: lo que no tiene f
     ...(await copiaDeOtro()),
     uiState: {
       phosphor: "azul",
+      language: "fr",
       framings: { d1: { x: 1, y: 2, scale: 2 }, roto: { x: "a" } },
       calendarOrder: { groups: ["g1"], routines: ["r1", 3, "r1", "r2"], archived: ["r2", 5] },
       calendarTab: "otra",
@@ -141,6 +143,7 @@ test("el estado de la pantalla de la copia pasa por el lector: lo que no tiene f
   assert.deepEqual(guardado, {
     ...(guardado as object),
     phosphor: "green",
+    language: null,
     framings: { d1: { x: 1, y: 2, scale: 2 } },
     calendarOrder: { routines: ["r1", "r2"], archived: ["r2"] },
     calendarTab: "events",

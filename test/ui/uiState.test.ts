@@ -38,6 +38,7 @@ const almacen = (leido: Result<unknown, StorageError>): AlmacenFalso => {
 test("sin nada guardado, cada sección es la de siempre", (): void => {
   assert.deepEqual(parseUiState(null), {
     phosphor: "green",
+    language: null,
     windows: DEFAULT_LAYOUT,
     framings: {},
     calendarOrder: { routines: [], archived: [] },
@@ -47,8 +48,9 @@ test("sin nada guardado, cada sección es la de siempre", (): void => {
 })
 
 test("una sección rota vuelve a la de siempre sin tirar las demás", (): void => {
-  const estado: UiState = parseUiState({ phosphor: 42, calendarTab: "routines", framings: "roto" })
+  const estado: UiState = parseUiState({ phosphor: 42, language: "en", calendarTab: "routines", framings: "roto" })
   assert.equal(estado.phosphor, "green")
+  assert.equal(estado.language, "en")
   assert.equal(estado.calendarTab, "routines")
   assert.deepEqual(estado.framings, {})
 })

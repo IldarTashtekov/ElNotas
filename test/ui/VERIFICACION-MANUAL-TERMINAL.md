@@ -15,6 +15,7 @@ las letras frenando el lienzo.
 
 - antes de cerrar la Fase 8;
 - al tocar `src/ui/styles/base.css` (la paleta, el brillo o las líneas de barrido);
+- T10, al tocar el idioma (`src/ui/language.ts`, `src/ui/dateNames.ts` o los textos);
 - al probar un navegador o un móvil nuevos.
 
 **Cada pasada se anota abajo, debajo de la anterior.**
@@ -56,6 +57,15 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
   inverso. Pulsar **Ámbar** o **Magenta** lo cambia **todo al instante**: la tinta, el brillo, las
   líneas, los pósits y la rejilla. El rojo de borrar sigue rojo. **Recargar**: sigue igual. Volver a **Verde**.
 - **T9.** Con el ámbar elegido, **«Borrar todo»**: tras recargar, vuelve el **verde**.
+- **T10.** En ⚙, debajo de los colores, **Español** y **English**, con el del navegador en vídeo
+  inverso. Pulsar **English**: la app **recarga** y sale **toda en inglés**, ⚙ incluida, con
+  **English** marcado. En el calendario, el mes es **«November 2026»**, la semana **M T W T F S S**
+  y lo que se lee de un día, **«November 8, 2026»**; en la gráfica de una rutina, el lunes de cada
+  semana va **mes/día** («11/2»); en la lista de eventos, en la hoja de enlazar un evento y en lo que
+  se lee de la casilla de un día de una rutina, el día va como **«November 8, 2026»**, no
+  «2026-11-08». Recargar: **sigue en inglés**. Volver a **Español**: recarga,
+  **«noviembre de 2026»**, **L M X J V S D** y la gráfica en **día/mes** («2/11»). Pulsar el ya
+  elegido **no recarga**.
 
 ## G. Que los toques sigan llegando
 

@@ -7,6 +7,7 @@
  */
 
 import type { CalendarEvent, Day, Store } from "#core/index"
+import { dayTitle } from "./calendarMonth.js"
 import { elemento } from "./dom.js"
 import { eventsByTime, splitPast } from "./eventList.js"
 import { textos } from "./textos/idioma.js"
@@ -51,7 +52,7 @@ export const createEventsPanel = ({ store, today, onOpenEvent, onNewEvent }: Eve
     const { upcoming, past } = splitPast(eventsByTime(store.getState()), today())
     const linea = (e: CalendarEvent): HTMLButtonElement =>
       boton(
-        `${e.day}${e.time === undefined ? "" : ` ${e.time}`} ${e.title}`,
+        `${dayTitle(e.day)}${e.time === undefined ? "" : ` ${e.time}`} ${e.title}`,
         (): void => onOpenEvent(e),
         "grupo-evento",
       )

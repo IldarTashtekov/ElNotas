@@ -3,13 +3,14 @@
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
  * navegador, las notas, el estado de la pantalla y lo abierto encima de la
- * ventana en `localStorage`—,
+ * ventana en `localStorage`—, elige el idioma antes de pintar nada,
  * termina una importación pedida, arranca y monta la app, con la copia de
  * seguridad en la configuración. Si no arranca, lo dice en pantalla en vez de
  * quedarse en blanco.
  */
 
 import type { BlobStore, Day, IdGenerator, Result, StorageError } from "#core/index"
+import { err } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
@@ -18,6 +19,9 @@ import type {
   DiagramFraming,
   ExportResult,
   ImportPreparation,
+  Language,
+  LanguagePersistence,
+  LanguageSetting,
   MountedApp,
   Phosphor,
   PhosphorSetting,
@@ -28,6 +32,7 @@ import {
   createCalendarTabSetting,
   createRoutineChartsSetting,
   createDiagramFraming,
+  createLanguageSetting,
   createPhosphorSetting,
   createWindowsModel,
   describeBootError,
@@ -75,6 +80,24 @@ const pedirPersistencia = (): void => {
     .catch((fallo: unknown): void => consoleLogger.failure("no se pudo pedir que no se borren los datos", fallo))
 }
 
+/** Sin `localStorage` no hay nada guardado que leer: manda el del navegador. */
+const SIN_ALMACEN: LanguagePersistence = {
+  load: (): Result<unknown, StorageError> => err({ kind: "permission-denied" }),
+  save: (): Result<void, StorageError> => err({ kind: "permission-denied" }),
+}
+
+/** Elige el idioma de los textos y lo pone en la página. */
+const elegirIdioma = (persistence: LanguagePersistence): LanguageSetting =>
+  createLanguageSetting({
+    persistence,
+    browser: navigator.language,
+    apply: (elegido: Language): void => {
+      document.documentElement.lang = elegido
+    },
+    reload: (): void => window.location.reload(),
+    logger: consoleLogger,
+  })
+
 const mostrarFallo = (raiz: HTMLElement, mensaje: string): void => {
   const aviso: HTMLParagraphElement = document.createElement("p")
   aviso.className = "aviso"
@@ -117,6 +140,8 @@ const iniciar = async (): Promise<void> => {
   if (raiz === null) return
 
   const almacen: Storage | null = localStorageDisponible()
+  /* El idioma, lo primero: hasta los fallos del arranque salen en él. */
+  elegirIdioma(almacen === null ? SIN_ALMACEN : uiStateSection(createLocalStorageUiState(almacen), "language"))
   if (almacen === null) {
     mostrarFallo(raiz, describeBootError({ kind: "permission-denied" }))
     return
@@ -139,6 +164,9 @@ const iniciar = async (): Promise<void> => {
 
   /* Lo de la pantalla de este dispositivo, en un objeto: cada pieza recibe su sección. */
   const estadoUi: UiStatePersistence = createLocalStorageUiState(almacen)
+
+  /* Otra vez: la copia importada pudo traer otro, y «Borrar todo» lo olvida. */
+  const language: LanguageSetting = elegirIdioma(uiStateSection(estadoUi, "language"))
 
   /* El color, antes de arrancar: así lo que se pinte mientras tanto ya sale con él. */
   const phosphor: PhosphorSetting = createPhosphorSetting({
@@ -227,6 +255,7 @@ const iniciar = async (): Promise<void> => {
     calendarTab,
     routineCharts,
     phosphor,
+    language,
     openLayers: createLocalStorageOpenLayers(almacen),
     corrupt: app.corrupt,
     /* Sólo apunta el borrado y recarga: se hace al arrancar, antes de leer nada. */

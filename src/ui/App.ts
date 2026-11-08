@@ -39,6 +39,7 @@ import { describeStorageError } from "./messages.js"
 import { mountNoteView } from "./NoteView.js"
 import type { OpenLayer, OpenLayersPersistence } from "./openLayers.js"
 import { layersToRestore } from "./openLayers.js"
+import type { LanguageSetting } from "./language.js"
 import type { PhosphorSetting } from "./phosphor.js"
 import { mountSettingsView } from "./SettingsView.js"
 import type { Confirm, Sheet } from "./sheet.js"
@@ -55,6 +56,8 @@ export interface AppDeps {
   readonly framing: DiagramFraming
   /** El color de la pantalla, que se elige en la configuración. */
   readonly phosphor: PhosphorSetting
+  /** El idioma de los textos, que se elige en la configuración. */
+  readonly language: LanguageSetting
   /** Dónde se guarda lo abierto encima de la ventana, para volver a ello al recargar. */
   readonly openLayers: OpenLayersPersistence
   readonly corrupt: ReadonlyArray<StorageError>

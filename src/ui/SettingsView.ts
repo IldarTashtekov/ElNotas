@@ -1,6 +1,6 @@
 /**
  * La vista configuración: los contextos, con crear y borrar, el color de la
- * pantalla, y abajo los datos: exportar e importar una copia, y «Borrar todo»,
+ * pantalla y el idioma, y abajo los datos: exportar e importar una copia, y «Borrar todo»,
  * que deja la app en blanco tras preguntar.
  *
  * Se monta al abrirla y se desmonta al salir, así que lo que hubiera a medias
@@ -10,6 +10,8 @@
 import type { AppState, Context, Logger, Unsubscribe, Store, UseCases } from "#core/index"
 import type { BackupActions, ExportResult, ImportPreparation } from "./backup.js"
 import { elemento } from "./dom.js"
+import type { Language, LanguageChoice, LanguageSetting } from "./language.js"
+import { languageChoices } from "./language.js"
 import type { Phosphor, PhosphorChoice, PhosphorSetting } from "./phosphor.js"
 import { phosphorChoices } from "./phosphor.js"
 import type { Confirm } from "./sheet.js"
@@ -29,6 +31,7 @@ export interface SettingsViewDeps {
   readonly store: Store
   readonly useCases: UseCases
   readonly phosphor: PhosphorSetting
+  readonly language: LanguageSetting
   /** Pregunta antes de borrar. Lo pone quien monta la vista. */
   readonly confirm: Confirm
   readonly onExit: () => void
@@ -55,7 +58,7 @@ const boton = (texto: string, alPulsar: () => void, clase?: string): HTMLButtonE
 /** Devuelve la función que la desmonta. */
 export const mountSettingsView = (
   raiz: HTMLElement,
-  { store, useCases, phosphor, confirm, onExit, onResetAll, backup, version, logger }: SettingsViewDeps,
+  { store, useCases, phosphor, language, confirm, onExit, onResetAll, backup, version, logger }: SettingsViewDeps,
 ): (() => void) => {
   const titulo: HTMLHeadingElement = elemento("h1", textos.ajustes.titulo)
   titulo.className = "titulo"
@@ -152,6 +155,23 @@ export const mountSettingsView = (
     }),
   )
   marcarElegido()
+
+  /* ── El idioma: igual, cada uno escrito en el suyo; elegir otro recarga ── */
+
+  const idiomas: HTMLElement = elemento("div")
+  idiomas.className = "fosforos idiomas"
+  idiomas.setAttribute("role", "group")
+  idiomas.setAttribute("aria-label", textos.ajustes.idioma)
+  const actual: Language = language.get()
+  idiomas.append(
+    ...languageChoices().map((opcion: LanguageChoice): HTMLButtonElement => {
+      const b: HTMLButtonElement = boton(opcion.label, (): void => language.set(opcion.value))
+      b.lang = opcion.value
+      b.dataset["language"] = opcion.value
+      b.setAttribute("aria-pressed", String(opcion.value === actual))
+      return b
+    }),
+  )
 
   /* ── Borrar todo ── */
 
@@ -256,7 +276,7 @@ export const mountSettingsView = (
   vista.append(
     cabecera,
     seccion(textos.ajustes.seccionContextos, formulario, listaContextos),
-    seccion(textos.ajustes.seccionPantalla, fosforos),
+    seccion(textos.ajustes.seccionPantalla, fosforos, idiomas),
     datos,
     pie,
   )

@@ -1,9 +1,10 @@
 /**
  * El sitio al que se piden los textos: `textos.comun.borrar`, sin saber en qué idioma.
  *
- * Empieza en español. La plataforma elige el idioma una sola vez, al arrancar y
- * antes de pintar nada, con `usarIdioma`. Un texto se pide al usarlo, nunca se
- * guarda en una constante al cargar un módulo.
+ * Empieza en español. La plataforma elige el idioma al arrancar, antes de pintar
+ * nada, con `usarIdioma`, y no cambia mientras la app está abierta: cambiarlo
+ * recarga. Un texto se pide al usarlo, nunca se guarda en una constante al
+ * cargar un módulo.
  */
 
 import { es } from "./es.js"

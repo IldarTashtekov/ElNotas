@@ -18,6 +18,7 @@ import type {
   RoutineId,
 } from "#core/index"
 import { buildLink, diagramId, eventId, noteId, routineId } from "#core/index"
+import { dayTitle } from "./calendarMonth.js"
 import type { FormattedLine, LineLink, LineSpan } from "./markdownLine.js"
 import { textos } from "./textos/idioma.js"
 
@@ -160,7 +161,7 @@ export const linkChoices = (state: AppState, excluding: NoteId | null, today: Da
     (e: CalendarEvent): LinkChoice<EventId> => ({
       id: e.id,
       name: e.title,
-      detail: e.time === undefined ? e.day : `${e.day} ${e.time}`,
+      detail: e.time === undefined ? dayTitle(e.day) : `${dayTitle(e.day)} ${e.time}`,
     }),
   ),
   routines: Object.values<Routine>(state.routines)

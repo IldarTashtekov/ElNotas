@@ -2,8 +2,7 @@
  * Los textos de la app en inglés.
  *
  * Tiene la forma de `Textos`, como `es`: si le falta una frase, no compila. Las
- * comillas son las inglesas (“…”) y las fechas siguen el orden inglés: mes, día
- * y año.
+ * comillas son las inglesas (“…”); las fechas no están aquí, las escribe `Intl`.
  */
 
 import type { Textos } from "./Textos.js"
@@ -12,6 +11,8 @@ import type { Textos } from "./Textos.js"
 const contar = (n: number, uno: string, varios: string): string => `${n} ${n === 1 ? uno : varios}`
 
 export const en: Textos = {
+  codigo: "en",
+  nombreIdioma: "English",
   fallos: {
     ilegible: (ruta: string): string => `The file ${ruta} can't be read.`,
     sinPermiso: "The browser won't let ElNotas read or save its data.",
@@ -120,23 +121,6 @@ export const en: Textos = {
     editar: "Edit event",
   },
   calendario: {
-    iniciales: ["M", "T", "W", "T", "F", "S", "S"],
-    meses: [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ],
-    tituloMes: (mes: string, anio: number): string => `${mes} ${anio}`,
-    tituloDia: (dia: number, mes: string, anio: number): string => `${mes} ${dia}, ${anio}`,
     salir: "Exit calendar",
     mesAnterior: "Previous month",
     mesSiguiente: "Next month",
@@ -187,6 +171,7 @@ export const en: Textos = {
     masContexto: "+ Context",
     preguntaBorrarContexto: (nombre: string): string => `Delete “${nombre}”? Its notes will stay in General.`,
     colorPantalla: "Screen color",
+    idioma: "Language",
     fosforoVerde: "Green",
     fosforoAmbar: "Amber",
     fosforoMagenta: "Magenta",

@@ -118,7 +118,7 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
       no ven diferencia.
 - [x] **3. La traducción, `en`** *(pensar)*, con pruebas en inglés de las frases con datos.
       **Se cierra cuando** `en` compila con el mismo tipo que `es` y sus pruebas pasan.
-- [ ] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
+- [x] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
       página y las fechas con `Intl`. Fechas que la tarea 2 dejó en crudo: los rótulos `d/m` de la
       gráfica de rutinas, el día de un evento en la hoja de enlazar y en la etiqueta de una rutina;
       y el «Cargando…» de `index.html`, que se ve antes de montar la app. Con `Intl`, los meses, las

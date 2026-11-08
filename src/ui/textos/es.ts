@@ -8,6 +8,8 @@
 import type { Textos } from "./Textos.js"
 
 export const es: Textos = {
+  codigo: "es",
+  nombreIdioma: "Español",
   fallos: {
     ilegible: (ruta: string): string => `No se entiende el fichero ${ruta}.`,
     sinPermiso: "El navegador no deja leer ni guardar los datos de ElNotas.",
@@ -113,23 +115,6 @@ export const es: Textos = {
     editar: "Editar evento",
   },
   calendario: {
-    iniciales: ["L", "M", "X", "J", "V", "S", "D"],
-    meses: [
-      "enero",
-      "febrero",
-      "marzo",
-      "abril",
-      "mayo",
-      "junio",
-      "julio",
-      "agosto",
-      "septiembre",
-      "octubre",
-      "noviembre",
-      "diciembre",
-    ],
-    tituloMes: (mes: string, anio: number): string => `${mes} de ${anio}`,
-    tituloDia: (dia: number, mes: string, anio: number): string => `${dia} de ${mes} de ${anio}`,
     salir: "Salir del calendario",
     mesAnterior: "Mes anterior",
     mesSiguiente: "Mes siguiente",
@@ -180,6 +165,7 @@ export const es: Textos = {
     masContexto: "+ Contexto",
     preguntaBorrarContexto: (nombre: string): string => `¿Borrar «${nombre}»? Sus notas seguirán en General.`,
     colorPantalla: "Color de la pantalla",
+    idioma: "Idioma",
     fosforoVerde: "Verde",
     fosforoAmbar: "Ámbar",
     fosforoMagenta: "Magenta",

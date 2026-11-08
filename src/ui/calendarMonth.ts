@@ -8,7 +8,7 @@
 
 import type { AppState, CalendarEvent, Day, Routine } from "#core/index"
 import { compareDays, dayFromParts, monthGrid, partsOf } from "#core/index"
-import { textos } from "./textos/idioma.js"
+import { fullDateName, monthYearName } from "./dateNames.js"
 
 /** El mes que se mira: el año y el mes de 1 a 12. */
 export interface MonthRef {
@@ -55,13 +55,12 @@ export const shiftMonth = (mes: MonthRef, n: number): MonthRef | null => {
 export const sameMonth = (a: MonthRef, b: MonthRef): boolean => a.year === b.year && a.month === b.month
 
 /** «octubre de 2026». */
-export const monthTitle = (mes: MonthRef): string =>
-  textos.calendario.tituloMes(textos.calendario.meses[mes.month - 1] ?? "", mes.year)
+export const monthTitle = (mes: MonthRef): string => monthYearName(mes.year, mes.month)
 
 /** «2 de julio de 2026». */
 export const dayTitle = (day: Day): string => {
   const { year, month, day: dia } = partsOf(day)
-  return textos.calendario.tituloDia(dia, textos.calendario.meses[month - 1] ?? "", year)
+  return fullDateName(year, month, dia)
 }
 
 /**

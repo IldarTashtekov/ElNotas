@@ -12,7 +12,7 @@ import type { CalendarOrder } from "./calendarOrder.js"
 import { reconcileOrder } from "./calendarOrder.js"
 import type { Tap } from "./gestures.js"
 import { isDoubleTap } from "./gestures.js"
-import { textos } from "./textos/idioma.js"
+import { weekdayInitials } from "./dateNames.js"
 
 export interface RoutineRow {
   readonly id: string
@@ -103,12 +103,14 @@ export interface WeekHeading {
 }
 
 /** La cabecera de la tabla: inicial y número de cada día de la semana, con hoy señalado. */
-export const weekHeadings = (semana: WeekRow, hoy: Day): ReadonlyArray<WeekHeading> =>
-  semana.cells.map((c: WeekCell, i: number): WeekHeading => ({
-    initial: textos.calendario.iniciales[i] ?? "",
+export const weekHeadings = (semana: WeekRow, hoy: Day): ReadonlyArray<WeekHeading> => {
+  const iniciales: ReadonlyArray<string> = weekdayInitials()
+  return semana.cells.map((c: WeekCell, i: number): WeekHeading => ({
+    initial: iniciales[i] ?? "",
     number: Number(c.day.slice(8)),
     today: c.day === hoy,
   }))
+}
 
 /** La semana de `hoy` de una rutina, con sus siete días; `null` si se sale del rango del calendario. */
 export const currentWeek = (routine: Routine, hoy: Day): WeekRow | null => {

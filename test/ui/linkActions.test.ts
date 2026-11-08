@@ -384,7 +384,12 @@ test("linkChoices: eventos con su día al lado (próximos, con los de todo el d�
   const r: LinkChoices = linkChoices(store.getState(), nota.id, DIA)
   assert.deepEqual(
     r.events.map((e: { readonly name: string; readonly detail?: string }): string => `${e.detail} ${e.name}`),
-    ["2026-10-30 Dentista", "2026-10-30 08:30 Temprano", "2026-11-05 Lejano", "2026-10-01 09:00 Pasado"],
+    [
+      "30 de octubre de 2026 Dentista",
+      "30 de octubre de 2026 08:30 Temprano",
+      "5 de noviembre de 2026 Lejano",
+      "1 de octubre de 2026 09:00 Pasado",
+    ],
   )
   assert.deepEqual(
     r.routines.map((x: { readonly name: string }): string => x.name),

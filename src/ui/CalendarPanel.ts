@@ -42,6 +42,7 @@ import type { RoutinesPanel } from "./RoutinesPanel.js"
 import { createRoutinesPanel } from "./RoutinesPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
+import { weekdayInitials } from "./dateNames.js"
 import { textos } from "./textos/idioma.js"
 
 /** Una pestaña que no se guarda: la del calendario que no la comparte con nadie. */
@@ -162,7 +163,7 @@ export const createCalendarPanel = ({
 
   const cabeza: HTMLElement = elemento("div")
   cabeza.className = "mes-semana mes-dias"
-  cabeza.append(...textos.calendario.iniciales.map((d: string): HTMLSpanElement => elemento("span", d)))
+  cabeza.append(...weekdayInitials().map((d: string): HTMLSpanElement => elemento("span", d)))
   const rejilla: HTMLElement = elemento("div")
   rejilla.className = "mes-rejilla"
 

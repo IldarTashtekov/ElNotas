@@ -1,7 +1,7 @@
 /**
- * El estado de la UI de este dispositivo, en un solo objeto: el fósforo, las
- * ventanas, los encuadres de los diagramas, el orden de las rutinas, la pestaña
- * del calendario y la gráfica de las rutinas. No viaja con las notas.
+ * El estado de la UI de este dispositivo, en un solo objeto: el fósforo, el
+ * idioma, las ventanas, los encuadres de los diagramas, el orden de las rutinas,
+ * la pestaña del calendario y la gráfica de las rutinas. No viaja con las notas.
  *
  * Cada sección se da a quien la usa como la persistencia de siempre: su lectura
  * saca su parte, y su guardado cambia sólo su parte. Dónde se guarda el objeto
@@ -17,6 +17,8 @@ import type { CalendarTab } from "./calendarTab.js"
 import { parseCalendarTab } from "./calendarTab.js"
 import type { Framings } from "./diagramFraming.js"
 import { parseFramings } from "./diagramFraming.js"
+import type { Language } from "./language.js"
+import { parseLanguage } from "./language.js"
 import type { Phosphor } from "./phosphor.js"
 import { parsePhosphor } from "./phosphor.js"
 import type { RoutineCharts } from "./routineCharts.js"
@@ -26,6 +28,8 @@ import { parseWindowsLayout } from "./windows.js"
 
 export interface UiState {
   readonly phosphor: Phosphor
+  /** `null` mientras no se elija: entonces manda el del navegador. */
+  readonly language: Language | null
   readonly windows: WindowsLayout
   readonly framings: Framings
   readonly calendarOrder: CalendarOrder
@@ -59,6 +63,7 @@ export const parseUiState = (guardado: unknown): UiState => {
   const r: Registro = esRegistro(guardado) ? guardado : {}
   return {
     phosphor: parsePhosphor(r["phosphor"]),
+    language: parseLanguage(r["language"]),
     windows: parseWindowsLayout(r["windows"]),
     framings: parseFramings(r["framings"]),
     calendarOrder: parseCalendarOrder(r["calendarOrder"]),

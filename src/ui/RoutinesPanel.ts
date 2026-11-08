@@ -13,6 +13,7 @@
 import type { Day, Logger, Routine, RoutineId, Store, UseCases } from "#core/index"
 import type { BackStack } from "./backStack.js"
 import type { CalendarOrder, CalendarOrderPersistence } from "./calendarOrder.js"
+import { dayTitle } from "./calendarMonth.js"
 import { NO_ORDER, parseCalendarOrder } from "./calendarOrder.js"
 import { attachDragReorder } from "./dragReorder.js"
 import { elemento } from "./dom.js"
@@ -150,7 +151,7 @@ export const createRoutinesPanel = ({
       b.disabled = c.future && !c.marked
       b.classList.toggle("marcado", c.marked)
       b.setAttribute("aria-pressed", c.marked ? "true" : "false")
-      b.setAttribute("aria-label", `${r.name}, ${c.day}`)
+      b.setAttribute("aria-label", `${r.name}, ${dayTitle(c.day)}`)
       return b
     })
 

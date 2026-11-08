@@ -66,31 +66,20 @@ test("la importación a medias nombra el botón que la abandona", (): void => {
 
 /* ── El calendario ── */
 
-test("las fechas van en el orden inglés: mes, día y año", (): void => {
-  assert.equal(en.calendario.tituloMes("November", 2026), "November 2026")
-  assert.equal(en.calendario.tituloDia(8, "November", 2026), "November 8, 2026")
-})
-
 test("lo que se lee de un día dice sus eventos y sus rutinas sólo si los hay", (): void => {
   assert.equal(en.calendario.diaAria("November 8, 2026", false, null, 3), "November 8, 2026")
   assert.equal(en.calendario.diaAria("November 8, 2026", true, null, 3), "November 8, 2026, with events")
   assert.equal(en.calendario.diaAria("November 8, 2026", false, 2, 3), "November 8, 2026, routines 2 of 3")
 })
 
-test("la semana empieza en lunes y el año tiene doce meses", (): void => {
-  assert.deepEqual(en.calendario.iniciales, ["M", "T", "W", "T", "F", "S", "S"])
-  assert.equal(en.calendario.meses.length, 12)
-  assert.equal(en.calendario.meses[0], "January")
-})
-
 /* ── Nada sin traducir ── */
 
 /** Las claves cuyo texto se escribe igual en los dos idiomas. */
-const IGUALES: ReadonlyArray<string> = ["ventanas.general", "ajustes.fosforoMagenta", "calendario.iniciales.5"]
+const IGUALES: ReadonlyArray<string> = ["ventanas.general", "ajustes.fosforoMagenta"]
 
 /**
  * Cada frase de un idioma, con el camino de su clave: `comun.borrar`, o
- * `calendario.meses.0` en un array. Una frase con datos va por su código.
+ * `grupo.lista.0` en un array. Una frase con datos va por su código.
  */
 const frases = (objeto: object, camino: string): ReadonlyArray<readonly [string, string]> =>
   Object.entries(objeto).flatMap(([clave, valor]: [string, unknown]): ReadonlyArray<readonly [string, string]> => {
@@ -110,9 +99,9 @@ test("ninguna frase de en se ha quedado como la de es", (): void => {
   assert.deepEqual(iguales, [])
 })
 
-test("las frases se recorren todas, también las de los arrays y las que llevan datos", (): void => {
+test("las frases se recorren todas, también las de fuera de un grupo y las que llevan datos", (): void => {
   const claves: ReadonlyArray<string> = frases(en, "").map(([clave]: readonly [string, string]): string => clave)
+  assert.ok(claves.includes("nombreIdioma"))
   assert.ok(claves.includes("comun.borrar"))
-  assert.ok(claves.includes("calendario.meses.11"))
   assert.ok(claves.includes("lista.seleccionadas"))
 })

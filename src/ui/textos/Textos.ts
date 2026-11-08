@@ -7,6 +7,10 @@
  */
 
 export interface Textos {
+  /** El código del idioma, para `Intl` y el `lang` de la página. */
+  readonly codigo: "es" | "en"
+  /** El nombre del idioma escrito en él mismo: así sale en el selector de ⚙. */
+  readonly nombreIdioma: string
   readonly fallos: {
     readonly ilegible: (ruta: string) => string
     readonly sinPermiso: string
@@ -111,11 +115,6 @@ export interface Textos {
     readonly editar: string
   }
   readonly calendario: {
-    /** Las iniciales de las columnas: la semana empieza en lunes. */
-    readonly iniciales: ReadonlyArray<string>
-    readonly meses: ReadonlyArray<string>
-    readonly tituloMes: (mes: string, anio: number) => string
-    readonly tituloDia: (dia: number, mes: string, anio: number) => string
     readonly salir: string
     readonly mesAnterior: string
     readonly mesSiguiente: string
@@ -167,6 +166,7 @@ export interface Textos {
     readonly masContexto: string
     readonly preguntaBorrarContexto: (nombre: string) => string
     readonly colorPantalla: string
+    readonly idioma: string
     readonly fosforoVerde: string
     readonly fosforoAmbar: string
     readonly fosforoMagenta: string

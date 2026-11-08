@@ -17,6 +17,7 @@ import { elemento } from "./dom.js"
 import type { RoutineChartsSetting, WeekCount } from "./routineCharts.js"
 import { routineWeeks } from "./routineCharts.js"
 import { wheelFactor } from "./viewport.js"
+import { shortDateName } from "./dateNames.js"
 import { textos } from "./textos/idioma.js"
 
 export interface RoutineChartDeps {
@@ -164,7 +165,7 @@ export const createRoutineChart = ({ store, today, charts }: RoutineChartDeps): 
       ...puntos.flatMap(([i, x, s]: readonly [number, number, WeekCount]): ReadonlyArray<SVGElement> => {
         if ((n - 1 - i) % cada !== 0) return []
         const { day, month } = partsOf(s.monday)
-        return [texto(IZQUIERDA + x, alto - 6, `${day}/${month}`, "grafica-semana")]
+        return [texto(IZQUIERDA + x, alto - 6, shortDateName(month, day), "grafica-semana")]
       }),
     )
     dibujo.replaceChildren(...fijos, dentro, rotulos)
