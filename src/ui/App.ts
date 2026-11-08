@@ -94,8 +94,8 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   aviso.setAttribute("role", "alert")
   aviso.hidden = true
   const principal: HTMLElement = elemento("div")
-  /** Lo abierto encima de la ventana, de abajo arriba. Sólo se ve el último. La
-      configuración no lleva `abierta`: al recargar no se vuelve a ella. */
+  /** Lo abierto encima de la ventana, de abajo arriba. Sólo se ve el último. Lo
+      que no lleva `abierta` no vuelve al recargar. */
   let capas: ReadonlyArray<{ readonly elemento: HTMLElement; readonly abierta: OpenLayer | null }> = []
 
   /* Un fallo al guardar no se avisa, como el de las ventanas: sólo se pierde
@@ -130,10 +130,10 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
 
   /* Salir ES ir atrás: así el exit y el atrás del navegador no pueden divergir. */
   const abrirConfiguracion = (): void =>
-    abrirEncima(null, (raiz: HTMLElement): (() => void) =>
+    abrirEncima({ kind: "settings" }, (raiz: HTMLElement): (() => void) =>
       mountSettingsView(raiz, { ...deps, confirm, onExit: back.close }),
     )
-  /* Como la configuración: no lleva `abierta`, al recargar no se vuelve a ella. */
+  /* No lleva `abierta`: al recargar no se vuelve al calendario. */
   const abrirCalendario = (target?: CalendarTarget): void =>
     abrirEncima(null, (raiz: HTMLElement): (() => void) =>
       mountCalendarView(raiz, {
@@ -189,7 +189,8 @@ export const mountApp = (raiz: HTMLElement, deps: AppDeps): MountedApp => {
   /* Lo que había abierto antes de recargar, en el mismo orden, con su atrás. */
   for (const abierta of layersToRestore(deps.openLayers, deps.store.getState())) {
     if (abierta.kind === "note") abrirNota(abierta.id)
-    else abrirDiagrama(abierta.id, false)
+    else if (abierta.kind === "diagram") abrirDiagrama(abierta.id, false)
+    else if (abierta.kind === "settings") abrirConfiguracion()
   }
 
   return {

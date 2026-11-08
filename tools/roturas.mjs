@@ -252,6 +252,22 @@ export const ROTURAS = [
     prueba: "si están todas, devuelve LAS MISMAS capas",
   },
   {
+    nombre: "capas: la configuración no se lee",
+    fichero: "src/ui/openLayers.ts",
+    buscar: 'if (x["kind"] === "settings") return { kind: "settings" }',
+    poner: "",
+    caza: "pruebas",
+    prueba: "la configuración entra sin id, y lo que traiga de más se descarta",
+  },
+  {
+    nombre: "capas: la configuración se da por desaparecida",
+    fichero: "src/ui/openLayers.ts",
+    buscar: 'if (capa.kind === "settings") return true',
+    poner: 'if (capa.kind === "settings") return false',
+    caza: "pruebas",
+    prueba: "al arrancar se vuelve a la configuración, que siempre está",
+  },
+  {
     nombre: "capas: la cadena se corta en la primera capa sin forma",
     fichero: "src/ui/openLayers.ts",
     buscar: "if (capa === null) break",

@@ -1,6 +1,6 @@
 /**
  * Lo que había abierto encima de la ventana —notas y diagramas, apilados en
- * cualquier orden: de una nota se abre otra por un enlace—, para volver a abrirlo
+ * cualquier orden: de una nota se abre otra por un enlace; y la configuración—, para volver a abrirlo
  * cuando la app se recarga,
  * también cuando el sistema la cierra en segundo plano.
  *
@@ -12,9 +12,11 @@ import type { AppState, DiagramId, NoteId, Result, StorageError } from "#core/in
 import { diagramId, noteId } from "#core/index"
 
 export type OpenLayer =
-  { readonly kind: "note"; readonly id: NoteId } | { readonly kind: "diagram"; readonly id: DiagramId }
+  | { readonly kind: "note"; readonly id: NoteId }
+  | { readonly kind: "diagram"; readonly id: DiagramId }
+  | { readonly kind: "settings" }
 
-/** De abajo arriba. La configuración no entra: al recargar no se vuelve a ella. */
+/** De abajo arriba. */
 export type OpenLayers = ReadonlyArray<OpenLayer>
 
 export const NO_LAYERS: OpenLayers = []
@@ -31,7 +33,9 @@ type Registro = Record<string, unknown>
 const esRegistro = (x: unknown): x is Registro => typeof x === "object" && x !== null && !Array.isArray(x)
 
 const leerCapa = (x: unknown): OpenLayer | null => {
-  if (!esRegistro(x) || typeof x["id"] !== "string") return null
+  if (!esRegistro(x)) return null
+  if (x["kind"] === "settings") return { kind: "settings" }
+  if (typeof x["id"] !== "string") return null
   if (x["kind"] === "note") return { kind: "note", id: noteId(x["id"]) }
   if (x["kind"] === "diagram") return { kind: "diagram", id: diagramId(x["id"]) }
   return null
@@ -50,8 +54,11 @@ export const parseOpenLayers = (guardado: unknown): OpenLayers => {
   return capas
 }
 
-const existe = (capa: OpenLayer, state: AppState): boolean =>
-  capa.kind === "note" ? state.notes[capa.id] !== undefined : state.diagrams[capa.id] !== undefined
+/** La configuración siempre está. */
+const existe = (capa: OpenLayer, state: AppState): boolean => {
+  if (capa.kind === "settings") return true
+  return capa.kind === "note" ? state.notes[capa.id] !== undefined : state.diagrams[capa.id] !== undefined
+}
 
 /**
  * Hasta la primera que ya no está: lo de encima de algo borrado tampoco se abre.

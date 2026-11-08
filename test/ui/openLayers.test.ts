@@ -56,7 +56,7 @@ test("una nota, un diagrama, o un diagrama y una nota encima, entran tal cual", 
 test("se queda con las de abajo hasta la primera que no tiene forma", (): void => {
   const diagrama: unknown = { kind: "diagram", id: "d" }
   assert.deepEqual(parseOpenLayers([diagrama, { kind: "note", id: 7 }]), [diagrama])
-  assert.deepEqual(parseOpenLayers([{ kind: "settings", id: "s" }, diagrama]), [])
+  assert.deepEqual(parseOpenLayers([{ kind: "calendar", id: "c" }, diagrama]), [])
   assert.deepEqual(parseOpenLayers([null, diagrama]), [])
 })
 
@@ -68,6 +68,12 @@ test("cualquier nota o diagrama puede ir encima de cualquier otra capa, y se con
   assert.deepEqual(parseOpenLayers([nota, diagrama]), [nota, diagrama])
   assert.deepEqual(parseOpenLayers([diagrama, diagrama]), [diagrama, diagrama])
   assert.deepEqual(parseOpenLayers([diagrama, nota, diagrama, otra]), [diagrama, nota, diagrama, otra])
+})
+
+test("la configuración entra sin id, y lo que traiga de más se descarta", (): void => {
+  const diagrama: unknown = { kind: "diagram", id: "d" }
+  assert.deepEqual(parseOpenLayers([{ kind: "settings" }]), [{ kind: "settings" }])
+  assert.deepEqual(parseOpenLayers([diagrama, { kind: "settings", id: 3 }]), [diagrama, { kind: "settings" }])
 })
 
 test("la cadena se corta en la primera capa sin forma, con lo de encima", (): void => {
@@ -130,6 +136,11 @@ test("al arrancar se abre lo guardado que sigue ahí", (): void => {
   assert.deepEqual(layersToRestore(almacen(ok([{ kind: "note", id: nota.id }])), store.getState()), [
     { kind: "note", id: nota.id },
   ])
+})
+
+test("al arrancar se vuelve a la configuración, que siempre está", (): void => {
+  const { store }: Escenario = escenario()
+  assert.deepEqual(layersToRestore(almacen(ok([{ kind: "settings" }])), store.getState()), [{ kind: "settings" }])
 })
 
 test("al arrancar, lo guardado que ya no está no se abre", (): void => {

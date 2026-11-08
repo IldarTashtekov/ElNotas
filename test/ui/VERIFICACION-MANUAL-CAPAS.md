@@ -42,7 +42,8 @@ ventana con una nota** en la lista y **un diagrama con un nodo que enlaza a una 
 - **C3.** Abrir el diagrama en su vista (desde una lista), abrir encima la nota de un nodo y
   **recargar**. Se ve la nota. **El atrás** del navegador lleva al diagrama, y otro atrás a la
   ventana.
-- **C4.** Abrir ⚙ y **recargar**. Se ve **la ventana**, no la configuración.
+- **C4.** Abrir ⚙ y **recargar**. Se ve **la configuración**, y salir lleva a la ventana. Lo mismo
+  al cambiar de idioma en ⚙. Tras **importar una copia** o **«Borrar todo»**, en cambio, se ve la ventana.
 - **C5.** Abrir una nota, salir, y **recargar**. Se ve la ventana: salir olvida lo abierto.
 - **C6.** *(Móvil, app instalada.)* Abrir una nota encima del diagrama, pasar a otras apps
   pesadas hasta que el sistema cierre ElNotas (o cerrarla desde las recientes) y volver. Se ve

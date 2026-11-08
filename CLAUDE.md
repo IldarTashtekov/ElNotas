@@ -202,8 +202,8 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Cinco vistas: ventanas, nota, diagrama, calendario, configuración. Lo de encima **se apila**; exit, paso a paso.
 - Ventana = referencia (General, calendario, contexto, nota o diagrama); la lista, en el `UiState`, filtrada por `guardWindows`. Sin nada
   guardado, el General. Una ventana repetida, no: añadirla la activa. Un fallo al guardar no avisa.
-- Al recargar, vuelve la nota o el diagrama abiertos encima (`elnotas:capas`, en `localStorage`, no
-  `sessionStorage`), también en cadena (nota → nota por un enlace); ⚙ no. Lo que ya no está se corta, y lo de encima con ello.
+- Al recargar, vuelve lo abierto encima: la nota, el diagrama o ⚙ (`elnotas:capas`, en `localStorage`, no
+  `sessionStorage`), también en cadena (nota → nota por un enlace). Lo que ya no está se corta, y lo de encima con ello.
 - Ventanas en pestañas, todas iguales (también el General y el calendario): ✕ sólo en la activa, sin
   confirmar. Se deslizan y se reordena con pulsación larga. Su «+», al final: contexto, nota o diagrama (los dos últimos, sin contexto). ⚙, sólo contextos.
 - La papelera del General borra; la de un contexto, sólo quita. Confirmar, con hoja, no `window.confirm`.
