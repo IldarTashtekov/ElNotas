@@ -6,6 +6,7 @@
  */
 
 import { elemento } from "./dom.js"
+import { textos } from "./textos/idioma.js"
 
 export interface LinkBubble {
   readonly element: HTMLElement
@@ -34,9 +35,9 @@ export const createLinkBubble = (acciones: {
   const element: HTMLElement = elemento("div")
   element.className = "burbuja-enlace"
   element.hidden = true
-  const abrir: HTMLButtonElement = boton("↗ Abrir", acciones.onOpen)
-  const cambiar: HTMLButtonElement = boton("Cambiar", acciones.onChange)
-  const quitar: HTMLButtonElement = boton("Quitar", acciones.onRemove)
+  const abrir: HTMLButtonElement = boton(textos.enlaces.abrir, acciones.onOpen)
+  const cambiar: HTMLButtonElement = boton(textos.enlaces.cambiar, acciones.onChange)
+  const quitar: HTMLButtonElement = boton(textos.comun.quitar, acciones.onRemove)
   element.append(abrir, cambiar, quitar)
 
   return {

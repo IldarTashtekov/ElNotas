@@ -14,21 +14,18 @@ import { diagramRef, noteRef } from "#core/index"
 import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
 import { GENERAL } from "./windows.js"
-
-export const NEW_CONTEXT_NAME: string = "Nuevo contexto"
-export const NEW_NOTE_NAME: string = "Nueva Nota"
-export const NEW_DIAGRAM_NAME: string = "Nuevo diagrama"
+import { textos } from "./textos/idioma.js"
 
 /** Una «Nueva Nota» en la ventana: dentro del contexto, o sin contexto desde el General. */
 export const createNoteIn = (useCases: UseCases, ventana: WindowRef): Note | null => {
-  const nota: Note | null = useCases.createNote(NEW_NOTE_NAME)
+  const nota: Note | null = useCases.createNote(textos.nombres.nuevaNota)
   if (nota !== null && ventana.kind === "context") useCases.addItem(ventana.id, noteRef(nota.id))
   return nota
 }
 
 /** Un «Nuevo diagrama» en la ventana, igual que una nota. */
 export const createDiagramIn = (useCases: UseCases, ventana: WindowRef): Diagram | null => {
-  const diagrama: Diagram | null = useCases.createDiagram(NEW_DIAGRAM_NAME)
+  const diagrama: Diagram | null = useCases.createDiagram(textos.nombres.nuevoDiagrama)
   if (diagrama !== null && ventana.kind === "context") {
     useCases.addItem(ventana.id, diagramRef(diagrama.id))
   }
@@ -43,7 +40,7 @@ export const createDiagramIn = (useCases: UseCases, ventana: WindowRef): Diagram
  */
 export const createAsWindow = (useCases: UseCases, kind: "context" | "note" | "diagram"): WindowRef | null => {
   if (kind === "context") {
-    const contexto: Context | null = useCases.createContext(NEW_CONTEXT_NAME)
+    const contexto: Context | null = useCases.createContext(textos.nombres.nuevoContexto)
     return contexto === null ? null : { kind: "context", id: contexto.id }
   }
   if (kind === "note") {
@@ -111,17 +108,17 @@ export const moveTargets = (state: AppState, desde: WindowRef): ReadonlyArray<Co
 /** Cómo se cuentan varios: notas, diagramas, o elementos si van mezclados. */
 const cuantos = (items: ReadonlyArray<ListItem>): string => {
   const notas: number = items.filter((i: ListItem): boolean => i.ref.kind === "note").length
-  if (notas === items.length) return `${items.length} notas`
-  if (notas === 0) return `${items.length} diagramas`
-  return `${items.length} elementos`
+  if (notas === items.length) return textos.lista.variasNotas(items.length)
+  if (notas === 0) return textos.lista.variosDiagramas(items.length)
+  return textos.lista.variosElementos(items.length)
 }
 
 /** La pregunta de la papelera del General, con uno o con varios. */
 export const deleteQuestion = (items: ReadonlyArray<ListItem>): string => {
   const [uno] = items
   return items.length === 1 && uno !== undefined
-    ? `¿Borrar «${uno.name}»? No se puede deshacer.`
-    : `¿Borrar ${cuantos(items)}? No se puede deshacer.`
+    ? textos.lista.preguntaBorrarUno(uno.name)
+    : textos.lista.preguntaBorrarVarios(cuantos(items))
 }
 
 /** Los contextos que listan esto, por nombre. */

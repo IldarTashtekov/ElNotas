@@ -28,7 +28,7 @@ import type { CalendarTab, CalendarTabSetting } from "./calendarTab.js"
 import type { ChartAxis } from "./chartAxis.js"
 import { DEFAULT_CALENDAR_TAB, daysOpenSheet } from "./calendarTab.js"
 import type { DayCell, MonthRef, MonthView } from "./calendarMonth.js"
-import { dayTitle, eventsOfDay, monthOf, monthView, sameMonth, shiftMonth, WEEKDAYS } from "./calendarMonth.js"
+import { dayTitle, eventsOfDay, monthOf, monthView, sameMonth, shiftMonth } from "./calendarMonth.js"
 import { elemento } from "./dom.js"
 import type { EventFormResult } from "./eventForm.js"
 import { parseEventForm } from "./eventForm.js"
@@ -42,6 +42,7 @@ import type { RoutinesPanel } from "./RoutinesPanel.js"
 import { createRoutinesPanel } from "./RoutinesPanel.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
+import { textos } from "./textos/idioma.js"
 
 /** Una pestaña que no se guarda: la del calendario que no la comparte con nadie. */
 const enMemoria = (): CalendarTabSetting => {
@@ -143,11 +144,11 @@ export const createCalendarPanel = ({
   const titulo: HTMLSpanElement = elemento("span")
   titulo.className = "mes-titulo"
   const anterior: HTMLButtonElement = boton("‹", (): void => ir(-1), "flecha")
-  anterior.setAttribute("aria-label", "Mes anterior")
+  anterior.setAttribute("aria-label", textos.calendario.mesAnterior)
   const siguiente: HTMLButtonElement = boton("›", (): void => ir(1), "flecha")
-  siguiente.setAttribute("aria-label", "Mes siguiente")
+  siguiente.setAttribute("aria-label", textos.calendario.mesSiguiente)
   const irAHoy: HTMLButtonElement = boton(
-    "hoy",
+    textos.calendario.hoy,
     (): void => {
       if (hoy === null) return
       mes = monthOf(hoy)
@@ -161,7 +162,7 @@ export const createCalendarPanel = ({
 
   const cabeza: HTMLElement = elemento("div")
   cabeza.className = "mes-semana mes-dias"
-  cabeza.append(...WEEKDAYS.map((d: string): HTMLSpanElement => elemento("span", d)))
+  cabeza.append(...textos.calendario.iniciales.map((d: string): HTMLSpanElement => elemento("span", d)))
   const rejilla: HTMLElement = elemento("div")
   rejilla.className = "mes-rejilla"
 
@@ -192,8 +193,10 @@ export const createCalendarPanel = ({
     const conRutinas: boolean = tabs.get() === "routines" && c.routinesDone > 0
     b.classList.toggle("marcado", conEventos)
     b.classList.toggle("cumplido", conRutinas)
-    const rutinas: string = !conRutinas ? "" : `, rutinas ${c.routinesDone} de ${c.routinesTotal}`
-    b.setAttribute("aria-label", `${dayTitle(c.day)}${conEventos ? ", con eventos" : ""}${rutinas}`)
+    b.setAttribute(
+      "aria-label",
+      textos.calendario.diaAria(dayTitle(c.day), conEventos, conRutinas ? c.routinesDone : null, c.routinesTotal),
+    )
     if (conEventos) {
       const marca: HTMLElement = elemento("i")
       marca.className = "dia-marca asterisco"
@@ -240,9 +243,9 @@ export const createCalendarPanel = ({
     const eventos: ReadonlyArray<CalendarEvent> = eventsOfDay(store.getState(), day)
     const lista: HTMLElement = elemento("div")
     lista.className = "eventos"
-    lista.append(...(eventos.length === 0 ? [elemento("p", "Sin eventos este día.")] : eventos.map(fila)))
+    lista.append(...(eventos.length === 0 ? [elemento("p", textos.eventos.sinEventosDia)] : eventos.map(fila)))
     const nuevo: HTMLButtonElement = boton(
-      "+ Evento",
+      textos.eventos.nuevo,
       (): void => {
         modo = { kind: "formulario", day, editando: null }
         pintarCaja()
@@ -275,7 +278,7 @@ export const createCalendarPanel = ({
     /* Un área de texto, no una línea: un motivo largo salta de línea en vez de esconderse. */
     const motivo: HTMLTextAreaElement = elemento("textarea")
     motivo.rows = 2
-    motivo.placeholder = "Motivo"
+    motivo.placeholder = textos.eventos.motivo
     motivo.value = evento?.title ?? ""
 
     const problema: HTMLParagraphElement = elemento("p")
@@ -299,13 +302,13 @@ export const createCalendarPanel = ({
 
     const acciones: HTMLElement = elemento("div")
     acciones.className = "hoja-nuevos"
-    acciones.append(boton("Guardar", guardar, "hoja-nuevo"))
+    acciones.append(boton(textos.comun.guardar, guardar, "hoja-nuevo"))
     if (evento !== undefined) {
       acciones.append(
         boton(
-          "Borrar",
+          textos.comun.borrar,
           (): void => {
-            confirm("¿Borrar este evento? No se puede deshacer.", "Borrar", (): void => {
+            confirm(textos.eventos.preguntaBorrar, textos.comun.borrar, (): void => {
               useCases.deleteEvent(evento.id)
               modo = { kind: "lista", day: evento.day }
               pintarCaja()
@@ -317,7 +320,7 @@ export const createCalendarPanel = ({
     }
 
     const volver: HTMLButtonElement = boton(
-      "‹ Volver al día",
+      textos.eventos.volverAlDia,
       (): void => {
         modo = { kind: "lista", day }
         pintarCaja()
@@ -326,10 +329,10 @@ export const createCalendarPanel = ({
     )
     caja.replaceChildren(
       volver,
-      elemento("p", evento === undefined ? "Evento nuevo" : "Editar evento"),
-      campo("Día", dia),
-      campo("Hora", hora),
-      campo("Motivo", motivo),
+      elemento("p", evento === undefined ? textos.eventos.eventoNuevo : textos.eventos.editar),
+      campo(textos.eventos.dia, dia),
+      campo(textos.eventos.hora, hora),
+      campo(textos.eventos.motivo, motivo),
       problema,
       acciones,
     )
@@ -411,8 +414,8 @@ export const createCalendarPanel = ({
     }
   }
   for (const [cual, texto] of [
-    ["events", "Eventos"],
-    ["routines", "Rutinas"],
+    ["events", textos.calendario.pestanaEventos],
+    ["routines", textos.calendario.pestanaRutinas],
   ] as const) {
     const b: HTMLButtonElement = boton(texto, (): void => elegirPestana(cual), "pestana")
     b.setAttribute("role", "tab")

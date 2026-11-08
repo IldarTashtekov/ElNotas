@@ -19,6 +19,7 @@ import type {
 } from "#core/index"
 import { buildLink, diagramId, eventId, noteId, routineId } from "#core/index"
 import type { FormattedLine, LineLink, LineSpan } from "./markdownLine.js"
+import { textos } from "./textos/idioma.js"
 
 /** Lo que hay detrás de un enlace interno, o `null` si está roto. */
 export type ResolvedLink =
@@ -177,9 +178,9 @@ export const defaultLinkText = (destino: string, nombre?: string): string => {
   if (/^(https?:\/\/|www\.)/i.test(limpio)) {
     const host: string =
       /^(?:https?:\/\/)?(?:[^\s/?#@]*@)?([^\s/?#:]*)/i.exec(limpio)?.[1]?.replace(/^www\./i, "") ?? ""
-    return host === "" ? "enlace" : host
+    return host === "" ? textos.enlaces.textoPorDefecto : host
   }
-  return nombre !== undefined && nombre.trim() !== "" ? nombre : "enlace"
+  return nombre !== undefined && nombre.trim() !== "" ? nombre : textos.enlaces.textoPorDefecto
 }
 
 /**

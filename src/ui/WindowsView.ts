@@ -50,6 +50,7 @@ import type { WindowTab, WindowView } from "./windowView.js"
 import { windowTabs, windowView } from "./windowView.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import type { WindowsModel } from "./windowsModel.js"
+import { textos } from "./textos/idioma.js"
 
 export interface WindowsViewDeps {
   readonly store: Store
@@ -114,13 +115,13 @@ export const mountWindowsView = (
   /* La fila de pestañas: todas en su carril, que se desliza, y el «+». */
   const carril: HTMLOListElement = elemento("ol")
   carril.className = "pestanas-carril"
-  const agregar: HTMLButtonElement = flecha("+", "Añadir ventana")
+  const agregar: HTMLButtonElement = flecha("+", textos.ventanas.anadir)
   agregar.classList.add("agregar")
   const pestanas: HTMLElement = elemento("nav")
   pestanas.className = "pestanas"
-  pestanas.setAttribute("aria-label", "Ventanas")
+  pestanas.setAttribute("aria-label", textos.ventanas.pestanas)
   pestanas.append(carril, agregar)
-  const titulo: EditableTitle = createEditableTitle("Nombre", (nombre: string): void => {
+  const titulo: EditableTitle = createEditableTitle(textos.comun.nombre, (nombre: string): void => {
     /* Se lee al guardar: es la ventana en la que se empezó a escribir. */
     if (vista.kind !== "window") return
     if (vista.editsNote !== null) useCases.renameNote(vista.editsNote, nombre)
@@ -130,12 +131,12 @@ export const mountWindowsView = (
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"
   const engranaje = (): HTMLButtonElement => {
-    const boton: HTMLButtonElement = flecha("⚙", "Configuración")
+    const boton: HTMLButtonElement = flecha("⚙", textos.ajustes.titulo)
     boton.addEventListener("click", onOpenSettings)
     return boton
   }
   const ajustes: HTMLButtonElement = engranaje()
-  const calendario: HTMLButtonElement = flecha("▦", "Calendario")
+  const calendario: HTMLButtonElement = flecha("▦", textos.ventanas.calendario)
   calendario.classList.add("icono-calendario")
   calendario.addEventListener("click", onOpenCalendar)
   cabecera.append(titulo.element, calendario, ajustes)
@@ -161,7 +162,7 @@ export const mountWindowsView = (
      pestañas, con su «+», también. */
   const sinVentanas: HTMLElement = elemento("div")
   sinVentanas.className = "vacia"
-  sinVentanas.append(elemento("p", "No hay ninguna ventana."), engranaje())
+  sinVentanas.append(elemento("p", textos.ventanas.sinVentanas), engranaje())
 
   let vista: WindowView = { kind: "empty" }
 
@@ -299,7 +300,7 @@ export const mountWindowsView = (
     const cerrar: HTMLElement | null = li.querySelector<HTMLElement>(".cerrar")
     if (cerrar !== null) {
       cerrar.hidden = !tab.active
-      setAttrIfChanged(cerrar, "aria-label", `Cerrar «${tab.title}»`)
+      setAttrIfChanged(cerrar, "aria-label", textos.ventanas.cerrar(tab.title))
     }
   }
 
@@ -363,7 +364,7 @@ export const mountWindowsView = (
       /* Nace con el título a punto de escribir su nombre. */
       titulo.edit()
     })
-    hoja.open("Añadir ventana", opciones.length > 0 ? [nuevos, lista] : [nuevos])
+    hoja.open(textos.ventanas.anadir, opciones.length > 0 ? [nuevos, lista] : [nuevos])
   })
 
   /* ── Pintar ── */

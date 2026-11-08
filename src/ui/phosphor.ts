@@ -6,6 +6,7 @@
  */
 
 import type { Logger, Result, StorageError } from "#core/index"
+import { textos } from "./textos/idioma.js"
 
 export type Phosphor = "green" | "amber" | "magenta"
 
@@ -15,17 +16,17 @@ export interface PhosphorChoice {
 }
 
 /** En el orden en que salen en la configuración. */
-export const PHOSPHORS: ReadonlyArray<PhosphorChoice> = [
-  { value: "green", label: "Verde" },
-  { value: "amber", label: "Ámbar" },
-  { value: "magenta", label: "Magenta" },
+export const phosphorChoices = (): ReadonlyArray<PhosphorChoice> => [
+  { value: "green", label: textos.ajustes.fosforoVerde },
+  { value: "amber", label: textos.ajustes.fosforoAmbar },
+  { value: "magenta", label: textos.ajustes.fosforoMagenta },
 ]
 
 export const DEFAULT_PHOSPHOR: Phosphor = "green"
 
 /** Cualquier cosa que no sea un fósforo conocido es el de siempre. */
 export const parsePhosphor = (guardado: unknown): Phosphor =>
-  PHOSPHORS.find((opcion: PhosphorChoice): boolean => opcion.value === guardado)?.value ?? DEFAULT_PHOSPHOR
+  phosphorChoices().find((opcion: PhosphorChoice): boolean => opcion.value === guardado)?.value ?? DEFAULT_PHOSPHOR
 
 /** Dónde se guarda. Lo pone `platform/`. Ninguno de los dos lanza. */
 export interface PhosphorPersistence {

@@ -8,7 +8,7 @@
 import type { CalendarPanel, CalendarPanelDeps, CalendarTarget } from "./CalendarPanel.js"
 import { createCalendarPanel } from "./CalendarPanel.js"
 import { elemento } from "./dom.js"
-import { CALENDAR_TITLE } from "./windowView.js"
+import { textos } from "./textos/idioma.js"
 
 export interface CalendarViewDeps extends CalendarPanelDeps {
   readonly onExit: () => void
@@ -18,12 +18,12 @@ export interface CalendarViewDeps extends CalendarPanelDeps {
 
 /** Devuelve la función que la desmonta. */
 export const mountCalendarView = (raiz: HTMLElement, { onExit, target, ...deps }: CalendarViewDeps): (() => void) => {
-  const titulo: HTMLHeadingElement = elemento("h1", CALENDAR_TITLE)
+  const titulo: HTMLHeadingElement = elemento("h1", textos.ventanas.calendario)
   titulo.className = "titulo"
   const salir: HTMLButtonElement = elemento("button", "✕")
   salir.type = "button"
   salir.className = "flecha"
-  salir.setAttribute("aria-label", "Salir del calendario")
+  salir.setAttribute("aria-label", textos.calendario.salir)
   salir.addEventListener("click", onExit)
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"

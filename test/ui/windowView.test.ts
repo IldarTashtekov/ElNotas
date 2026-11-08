@@ -14,7 +14,8 @@ import type { ListItem, WindowTab, WindowView } from "#ui/windowView"
 import type { WindowRef } from "#ui/windows"
 import type { WindowsLayout } from "#ui/windows"
 import { CALENDAR, GENERAL } from "#ui/windows"
-import { GENERAL_TITLE, windowTabs, windowView } from "#ui/windowView"
+import { textos } from "#ui/textos/idioma"
+import { windowTabs, windowView } from "#ui/windowView"
 
 const nota = (id: string, name: string): Note => ({
   id: noteId(id),
@@ -90,7 +91,7 @@ test("un contexto se titula con su nombre y se renombra", (): void => {
 
 test("el General no se renombra", (): void => {
   const vista: Extract<WindowView, { kind: "window" }> = ventanaDe({ windows: TRES, active: GENERAL })
-  assert.equal(vista.title, GENERAL_TITLE)
+  assert.equal(vista.title, textos.ventanas.general)
   assert.equal(vista.renames, null)
 })
 

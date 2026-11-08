@@ -10,14 +10,12 @@
 import type { AppState, Context, Logger, Unsubscribe, Store, UseCases } from "#core/index"
 import type { BackupActions, ExportResult, ImportPreparation } from "./backup.js"
 import { elemento } from "./dom.js"
-import { NEW_CONTEXT_NAME } from "./noteActions.js"
 import type { Phosphor, PhosphorChoice, PhosphorSetting } from "./phosphor.js"
-import { PHOSPHORS } from "./phosphor.js"
+import { phosphorChoices } from "./phosphor.js"
 import type { Confirm } from "./sheet.js"
 import { reconcile, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent } from "./settingsContent.js"
 import {
-  IMPORT_NOT_APPLIED,
   exportMessage,
   importProblem,
   importQuestion,
@@ -25,6 +23,7 @@ import {
   settingsContent,
   versionLine,
 } from "./settingsContent.js"
+import { textos } from "./textos/idioma.js"
 
 export interface SettingsViewDeps {
   readonly store: Store
@@ -58,28 +57,28 @@ export const mountSettingsView = (
   raiz: HTMLElement,
   { store, useCases, phosphor, confirm, onExit, onResetAll, backup, version, logger }: SettingsViewDeps,
 ): (() => void) => {
-  const titulo: HTMLHeadingElement = elemento("h1", "Configuración")
+  const titulo: HTMLHeadingElement = elemento("h1", textos.ajustes.titulo)
   titulo.className = "titulo"
   const cabecera: HTMLElement = elemento("header")
   cabecera.className = "cabecera"
   const salir: HTMLButtonElement = boton("✕", onExit, "flecha")
-  salir.setAttribute("aria-label", "Salir de la configuración")
+  salir.setAttribute("aria-label", textos.ajustes.salir)
   cabecera.append(titulo, salir)
 
   const listaContextos: HTMLUListElement = elemento("ul")
   listaContextos.className = "ajustes"
 
   const campo: HTMLInputElement = elemento("input")
-  campo.placeholder = NEW_CONTEXT_NAME
-  campo.setAttribute("aria-label", "Nombre del contexto nuevo")
+  campo.placeholder = textos.nombres.nuevoContexto
+  campo.setAttribute("aria-label", textos.ajustes.nombreContextoNuevo)
   const formulario: HTMLFormElement = elemento("form")
   formulario.className = "crear"
-  formulario.append(campo, elemento("button", "+ Contexto"))
+  formulario.append(campo, elemento("button", textos.ajustes.masContexto))
   formulario.addEventListener("submit", (evento: SubmitEvent): void => {
     evento.preventDefault()
     const nombre: string = campo.value.trim()
     /* Crear aquí NO le da ventana: para eso está el «+» de las pestañas. */
-    useCases.createContext(nombre === "" ? NEW_CONTEXT_NAME : nombre)
+    useCases.createContext(nombre === "" ? textos.nombres.nuevoContexto : nombre)
     campo.value = ""
   })
 
@@ -103,12 +102,12 @@ export const mountSettingsView = (
         li.append(
           elemento("span"),
           boton(
-            "Borrar",
+            textos.comun.borrar,
             (): void => {
               /* El nombre se lee al pulsar: la fila sobrevive a los renombrados. */
               const nombre: string = store.getState().contexts[ctx.id]?.name ?? ctx.name
               /* Una de las pocas confirmaciones de la app: no tiene vuelta atrás. */
-              confirm(`¿Borrar «${nombre}»? Sus notas seguirán en General.`, "Borrar", (): void => {
+              confirm(textos.ajustes.preguntaBorrarContexto(nombre), textos.comun.borrar, (): void => {
                 useCases.deleteContext(ctx.id)
               })
             },
@@ -135,7 +134,7 @@ export const mountSettingsView = (
   const fosforos: HTMLElement = elemento("div")
   fosforos.className = "fosforos"
   fosforos.setAttribute("role", "group")
-  fosforos.setAttribute("aria-label", "Color de la pantalla")
+  fosforos.setAttribute("aria-label", textos.ajustes.colorPantalla)
   const marcarElegido = (): void => {
     const elegido: Phosphor = phosphor.get()
     for (const b of fosforos.children) {
@@ -143,7 +142,7 @@ export const mountSettingsView = (
     }
   }
   fosforos.append(
-    ...PHOSPHORS.map((opcion: PhosphorChoice): HTMLButtonElement => {
+    ...phosphorChoices().map((opcion: PhosphorChoice): HTMLButtonElement => {
       const b: HTMLButtonElement = boton(opcion.label, (): void => {
         phosphor.set(opcion.value)
         marcarElegido()
@@ -156,35 +155,26 @@ export const mountSettingsView = (
 
   /* ── Borrar todo ── */
 
-  const sinBorrar: HTMLParagraphElement = elemento(
-    "p",
-    "No se ha podido borrar: el navegador no deja escribir en los datos del sitio.",
-  )
+  const sinBorrar: HTMLParagraphElement = elemento("p", textos.ajustes.sinBorrar)
   sinBorrar.className = "aviso"
   sinBorrar.setAttribute("role", "alert")
   sinBorrar.hidden = true
   const borrarTodo: HTMLButtonElement = boton(
-    "Borrar todo",
+    textos.ajustes.borrarTodo,
     (): void => {
       /* La pregunta se cuenta al pulsar: dice lo que hay ahora. */
-      confirm(resetQuestion(store.getState()), "Borrar todo", (): void => {
+      confirm(resetQuestion(store.getState()), textos.ajustes.borrarTodo, (): void => {
         sinBorrar.hidden = onResetAll()
       })
     },
     "borrar-todo",
   )
-  const explicacion: HTMLParagraphElement = elemento(
-    "p",
-    "Borra todas las notas, diagramas, contextos y ventanas de este navegador, y deja la app como recién instalada.",
-  )
+  const explicacion: HTMLParagraphElement = elemento("p", textos.ajustes.explicacionBorrarTodo)
   explicacion.className = "explicacion"
 
   /* ── La copia: exportar e importar ── */
 
-  const sobreLaCopia: HTMLParagraphElement = elemento(
-    "p",
-    "La copia guarda en un fichero las notas, diagramas, contextos, ventanas y el color. Importar una sustituye todo lo de este navegador.",
-  )
+  const sobreLaCopia: HTMLParagraphElement = elemento("p", textos.copia.explicacion)
   sobreLaCopia.className = "explicacion"
   /* Lo que pasó con la última copia; vacío y escondido hasta entonces. */
   const estadoCopia: HTMLParagraphElement = elemento("p")
@@ -203,7 +193,7 @@ export const mountSettingsView = (
     ocupar(false)
     decir(exportMessage(resultado))
   }
-  const exportar: HTMLButtonElement = boton("Exportar copia", (): void => {
+  const exportar: HTMLButtonElement = boton(textos.copia.exportar, (): void => {
     exportarCopia().catch((fallo: unknown): void => logger.failure("falló exportar la copia", fallo))
   })
 
@@ -220,7 +210,7 @@ export const mountSettingsView = (
       importar(fichero).catch((fallo: unknown): void => logger.failure("falló importar la copia", fallo))
     }
   })
-  const importarBoton: HTMLButtonElement = boton("Importar copia", (): void => elegirFichero.click())
+  const importarBoton: HTMLButtonElement = boton(textos.copia.importar, (): void => elegirFichero.click())
 
   const ocupar = (ocupado: boolean): void => {
     exportar.disabled = ocupado
@@ -229,7 +219,7 @@ export const mountSettingsView = (
 
   const importar = async (fichero: File): Promise<void> => {
     ocupar(true)
-    decir("Leyendo la copia…")
+    decir(textos.copia.leyendo)
     const preparada: ImportPreparation = await backup.prepareImport(fichero)
     ocupar(false)
     if (preparada.kind !== "ready") {
@@ -238,8 +228,8 @@ export const mountSettingsView = (
     }
     decir(null)
     /* Pregunta antes, como «Borrar todo»: lo de ahora no vuelve. */
-    confirm(importQuestion(preparada.summary), "Sustituir todo", (): void => {
-      if (!preparada.apply()) decir(IMPORT_NOT_APPLIED)
+    confirm(importQuestion(preparada.summary), textos.copia.sustituirTodo, (): void => {
+      if (!preparada.apply()) decir(textos.copia.noCabe)
     })
   }
 
@@ -249,7 +239,7 @@ export const mountSettingsView = (
 
   /* «Datos» va abajo del todo de la pantalla, lejos de lo que se toca a diario. */
   const datos: HTMLElement = seccion(
-    "Datos",
+    textos.ajustes.seccionDatos,
     sobreLaCopia,
     botonesCopia,
     estadoCopia,
@@ -263,7 +253,13 @@ export const mountSettingsView = (
   pie.className = "version"
   const vista: HTMLElement = elemento("div")
   vista.className = "vista-ajustes"
-  vista.append(cabecera, seccion("Contextos", formulario, listaContextos), seccion("Pantalla", fosforos), datos, pie)
+  vista.append(
+    cabecera,
+    seccion(textos.ajustes.seccionContextos, formulario, listaContextos),
+    seccion(textos.ajustes.seccionPantalla, fosforos),
+    datos,
+    pie,
+  )
   raiz.replaceChildren(vista)
   pintar()
   const baja: Unsubscribe = store.subscribe((): void => pintar())

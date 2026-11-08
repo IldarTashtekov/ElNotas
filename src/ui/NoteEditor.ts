@@ -56,6 +56,7 @@ import type { Confirm, Sheet } from "./sheet.js"
 import { createConfirm } from "./sheet.js"
 import type { WritingMode } from "./writingMode.js"
 import { INITIAL_MODE, toggleNest } from "./writingMode.js"
+import { textos } from "./textos/idioma.js"
 
 export interface NoteEditorDeps {
   readonly useCases: UseCases
@@ -419,7 +420,7 @@ export const createNoteEditor = ({
 
   const lineas: HTMLElement = elemento("div")
   lineas.className = "lineas"
-  const empezar: HTMLParagraphElement = elemento("p", "Esta nota está vacía. Toca para escribir.")
+  const empezar: HTMLParagraphElement = elemento("p", textos.nota.vacia)
   empezar.className = "vacia empezar"
   empezar.tabIndex = 0
   empezar.setAttribute("role", "button")
@@ -504,7 +505,7 @@ export const createNoteEditor = ({
           /* La caja la dibuja el CSS: aquí sólo va el ✓ de dentro. */
           setTextIfChanged(marca, marcada ? "✓" : "")
           setAttrIfChanged(marca, "aria-pressed", marcada ? "true" : "false")
-          setAttrIfChanged(marca, "aria-label", `${marcada ? "Desmarcar" : "Marcar"}${atajo === null ? "" : " hoy"}`)
+          setAttrIfChanged(marca, "aria-label", textos.nota.casillaAria(marcada, atajo !== null))
         }
         if (fila.classList.contains("marcada") !== marcada) fila.classList.toggle("marcada", marcada)
         const hijas: Element | null = fila.querySelector(":scope > .hijas")
@@ -553,8 +554,8 @@ export const createNoteEditor = ({
       useCases.move(noteId, ids, at)
     },
     onDelete: (ids: ReadonlyArray<ContentId>): void => {
-      const pregunta: string = ids.length === 1 ? "¿Borrar 1 línea?" : `¿Borrar ${ids.length} líneas?`
-      confirmar(pregunta, "Borrar", (): void => {
+      const pregunta: string = textos.nota.preguntaBorrarLineas(ids.length)
+      confirmar(pregunta, textos.comun.borrar, (): void => {
         useCases.remove(noteId, ids)
       })
     },
@@ -824,7 +825,7 @@ export const createNoteEditor = ({
     }
     const destino: ResolvedLink = resolveLink(state(), e.link.target.id)
     if (destino === null) {
-      briefNotice("El enlace ya no existe", AVISO_ROTO_MS)
+      briefNotice(textos.enlaces.yaNoExiste, AVISO_ROTO_MS)
       return
     }
     /* Lo que se abre encima esconde esta nota: su burbuja no se queda colgada. */
@@ -873,7 +874,7 @@ export const createNoteEditor = ({
       /* Si la línea cambió o ya no está, el enlace capturado no vale. */
       if (textoDe(id) !== raw) return
       if (destino.includes(")")) {
-        briefNotice("Esa dirección no se puede enlazar", AVISO_ROTO_MS)
+        briefNotice(textos.enlaces.direccionNoValida, AVISO_ROTO_MS)
         return
       }
       const nuevo: { readonly text: string; readonly cursor: number } = changeLink(
@@ -889,7 +890,7 @@ export const createNoteEditor = ({
       (p: ActivePart): boolean => p.kind === "link" && p.start === link.start && p.end === link.end,
     )
     openLinkSheet(sheet, {
-      title: "Cambiar enlace",
+      title: textos.enlaces.cambiarEnlace,
       choices: linkChoices(state(), noteId, today()),
       initialText: actual?.kind === "link" ? actual.label : "",
       initialAddress: link.target.kind === "web" ? link.target.href : "",
@@ -1240,7 +1241,7 @@ export const createNoteEditor = ({
     return caret === null ? null : { line: caret.line, from: caret.offset, to: caret.offset }
   }
 
-  const enlazar: HTMLButtonElement = botonDeBarra("", "Enlazar…", (): void => {
+  const enlazar: HTMLButtonElement = botonDeBarra("", textos.enlaces.enlazarPuntos, (): void => {
     const sel: Seleccion | null = seleccionRecordada()
     const raw: string | undefined = sel === null ? undefined : textoDe(sel.line)
     /* Sin cursor no hay dónde escribirlo, como en «☐ Casilla»: no hace nada. */
@@ -1255,13 +1256,13 @@ export const createNoteEditor = ({
       /* Con la hoja abierta la línea pudo borrarse o cambiar: entonces no se escribe. */
       if (textoDe(sel.line) !== raw) return
       if (enlace === null) {
-        briefNotice("Esa dirección no se puede enlazar", AVISO_ROTO_MS)
+        briefNotice(textos.enlaces.direccionNoValida, AVISO_ROTO_MS)
         return
       }
       escribirLinea(sel.line, raw.slice(0, desde) + enlace + raw.slice(to), desde + enlace.length)
     }
     openLinkSheet(sheet, {
-      title: "Enlazar",
+      title: textos.enlaces.tituloEnlazar,
       choices: linkChoices(state(), noteId, today()),
       initialText: usable ? elegido : "",
       onPickAddress: (direccion: string, texto: string): void =>
@@ -1272,11 +1273,11 @@ export const createNoteEditor = ({
   })
   enlazar.replaceChildren(iconoEnlace())
 
-  const casilla: HTMLButtonElement = botonDeBarra("☐", "Casilla", (): void => {
+  const casilla: HTMLButtonElement = botonDeBarra("☐", textos.nota.casilla, (): void => {
     const caret: Caret | null = cursorRecordado()
     ordenar((): EditResult => toggleCheckbox(deps, caret, modo))
   })
-  const anidar: HTMLButtonElement = botonDeBarra("↳", "Anidar", (): void => {
+  const anidar: HTMLButtonElement = botonDeBarra("↳", textos.nota.anidar, (): void => {
     modo = toggleNest(modo)
     pintarBarra()
     const caret: Caret | null = cursorRecordado()
@@ -1296,7 +1297,7 @@ export const createNoteEditor = ({
     anidar.setAttribute("aria-pressed", modo.nestArmed ? "true" : "false")
     /* ⚠️ El armado tiene que verse: actúa sobre una línea que todavía no existe. */
     anidar.classList.toggle("activo", modo.nestArmed)
-    const nombre: string = modo.nestArmed ? "Anidar armado" : "Anidar"
+    const nombre: string = modo.nestArmed ? textos.nota.anidarArmado : textos.nota.anidar
     anidar.setAttribute("aria-label", nombre)
     anidar.title = nombre
   }

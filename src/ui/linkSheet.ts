@@ -9,6 +9,7 @@ import { elemento } from "./dom.js"
 import type { LinkChoice, LinkChoices, LinkKind } from "./linkActions.js"
 import { isWebAddress } from "./linkActions.js"
 import type { Sheet } from "./sheet.js"
+import { textos } from "./textos/idioma.js"
 
 export interface LinkSheetOptions {
   readonly title: string
@@ -30,19 +31,19 @@ export const openLinkSheet = (
   const texto: HTMLInputElement = elemento("input")
   texto.type = "text"
   texto.className = "enlazar-texto"
-  texto.placeholder = "Texto del enlace"
-  texto.setAttribute("aria-label", "Texto del enlace")
+  texto.placeholder = textos.enlaces.textoDelEnlace
+  texto.setAttribute("aria-label", textos.enlaces.textoDelEnlace)
   texto.autocapitalize = "off"
   texto.spellcheck = false
   texto.value = initialText ?? ""
   const campo: HTMLInputElement = elemento("input")
   campo.type = "text"
-  campo.placeholder = "Pega una dirección"
-  campo.setAttribute("aria-label", "Pega una dirección")
+  campo.placeholder = textos.enlaces.pegarDireccion
+  campo.setAttribute("aria-label", textos.enlaces.pegarDireccion)
   campo.autocapitalize = "off"
   campo.spellcheck = false
   campo.value = initialAddress ?? ""
-  const enlazar: HTMLButtonElement = elemento("button", "Enlazar")
+  const enlazar: HTMLButtonElement = elemento("button", textos.enlaces.enlazar)
   enlazar.type = "button"
   const pegar: HTMLElement = elemento("div")
   pegar.className = "enlazar-direccion"
@@ -73,7 +74,7 @@ export const openLinkSheet = (
   const lista: HTMLElement = elemento("div")
   lista.className = "selector"
   const fila = (kind: LinkKind, { id, name, detail }: LinkChoice<string>): HTMLButtonElement => {
-    const sinNombre: string = name === "" ? "Sin nombre" : name
+    const sinNombre: string = name === "" ? textos.nombres.sinNombre : name
     const b: HTMLButtonElement = elemento("button", detail === undefined ? sinNombre : `${detail} · ${sinNombre}`)
     b.type = "button"
     b.addEventListener("click", (): void => {
@@ -92,9 +93,9 @@ export const openLinkSheet = (
     lista.append(rotulo(titulo))
     lista.append(...elegibles.map((c: LinkChoice<string>): HTMLElement => fila(tipo, c)))
   }
-  grupo("Notas", "note", choices.notes)
-  grupo("Diagramas", "diagram", choices.diagrams)
-  grupo("Eventos", "event", choices.events)
-  grupo("Rutinas", "routine", choices.routines)
+  grupo(textos.enlaces.grupoNotas, "note", choices.notes)
+  grupo(textos.enlaces.grupoDiagramas, "diagram", choices.diagrams)
+  grupo(textos.enlaces.grupoEventos, "event", choices.events)
+  grupo(textos.enlaces.grupoRutinas, "routine", choices.routines)
   sheet.open(title, [texto, pegar, lista])
 }

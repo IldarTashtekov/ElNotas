@@ -36,6 +36,7 @@ import { NO_SELECTION, itemKey, pruneSelected, toggleSelected } from "./selectio
 import type { ListItem } from "./windowView.js"
 import type { WindowRef } from "./windows.js"
 import { sameWindow } from "./windows.js"
+import { textos } from "./textos/idioma.js"
 
 export interface ItemListDeps {
   readonly store: Store
@@ -130,7 +131,7 @@ export const createItemList = ({
   lista.className = "notas"
   lista.setAttribute("role", "listbox")
   lista.setAttribute("aria-multiselectable", "true")
-  const sinNotas: HTMLParagraphElement = elemento("p", "Esta ventana no tiene notas ni diagramas.")
+  const sinNotas: HTMLParagraphElement = elemento("p", textos.lista.vacia)
   sinNotas.className = "vacia"
   /* «+ Nota» crea y entra: la nota nueva se abre para escribir en ella. */
   const mas: HTMLButtonElement = boton(
@@ -141,8 +142,8 @@ export const createItemList = ({
     },
     "mas",
   )
-  mas.setAttribute("aria-label", "Nueva nota")
-  mas.title = "Nueva nota"
+  mas.setAttribute("aria-label", textos.lista.nuevaNota)
+  mas.title = textos.lista.nuevaNota
   /* «+ Diagrama», al lado: crea y entra, con el nombre a punto de escribirse. */
   const masDiagrama: HTMLButtonElement = boton(
     "+",
@@ -152,12 +153,12 @@ export const createItemList = ({
     },
     "mas mas-diagrama",
   )
-  masDiagrama.setAttribute("aria-label", "Nuevo diagrama")
-  masDiagrama.title = "Nuevo diagrama"
+  masDiagrama.setAttribute("aria-label", textos.lista.nuevoDiagrama)
+  masDiagrama.title = textos.lista.nuevoDiagrama
 
   const cuenta: HTMLSpanElement = elemento("span")
   const papelera: HTMLButtonElement = boton("", (): void => tirar())
-  const mover: HTMLButtonElement = boton("Mover a…", (): void => {
+  const mover: HTMLButtonElement = boton(textos.lista.moverA, (): void => {
     moviendo = !moviendo
     pintar()
   })
@@ -251,7 +252,7 @@ export const createItemList = ({
       salir()
     }
     /* Sólo confirma la papelera del General: es la única que borra de verdad. */
-    if (trashDeletes(donde)) confirm(deleteQuestion(seleccionadas()), "Borrar", hacer)
+    if (trashDeletes(donde)) confirm(deleteQuestion(seleccionadas()), textos.comun.borrar, hacer)
     else hacer()
   }
 
@@ -497,14 +498,14 @@ export const createItemList = ({
     filaOcultos.disabled = seleccionando
     filaOcultos.setAttribute("aria-expanded", viendoOcultos ? "true" : "false")
     flechaOcultos.hidden = !viendoOcultos
-    setTextIfChanged(textoOcultos, `Ocultos (${ocultos.length})`)
+    setTextIfChanged(textoOcultos, textos.lista.ocultos(ocultos.length))
 
     barra.hidden = !seleccionando
     if (!seleccionando || ventana === null) return
-    cuenta.textContent = seleccion.size === 1 ? "1 seleccionada" : `${seleccion.size} seleccionadas`
-    papelera.textContent = trashDeletes(ventana) ? "Borrar" : "Quitar"
+    cuenta.textContent = textos.lista.seleccionadas(seleccion.size)
+    papelera.textContent = trashDeletes(ventana) ? textos.comun.borrar : textos.comun.quitar
     ocultar.hidden = ventana.kind !== "context"
-    ocultar.textContent = viendoOcultos ? "Mostrar" : "Ocultar"
+    ocultar.textContent = viendoOcultos ? textos.lista.mostrar : textos.lista.ocultar
     const estado: AppState = store.getState()
     const posibles: ReadonlyArray<Context> = moveTargets(estado, ventana)
     mover.disabled = posibles.length === 0
@@ -514,7 +515,7 @@ export const createItemList = ({
         ? [
             ...posibles.map((ctx: Context): HTMLButtonElement => boton(ctx.name, (): void => moverA(ctx))),
             boton(
-              "Cancelar",
+              textos.comun.cancelar,
               (): void => {
                 moviendo = false
                 pintar()

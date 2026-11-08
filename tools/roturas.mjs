@@ -228,7 +228,7 @@ export const ROTURAS = [
   {
     nombre: "ventanas: un contexto nuevo desde ⚙ se llama como debe",
     fichero: "src/ui/noteActions.ts",
-    buscar: "useCases.createContext(NEW_CONTEXT_NAME)",
+    buscar: "useCases.createContext(textos.nombres.nuevoContexto)",
     poner: 'useCases.createContext("")',
     caza: "pruebas",
     prueba: "+ Contexto nuevo como ventana: un «Nuevo contexto» vacío, y su ventana",
@@ -617,7 +617,7 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una fase cerrada sigue en TAREAS.md",
     fichero: "TAREAS.md",
-    buscar: "— PLANIFICADA, después de la 10.1\n",
+    buscar: "— PLANIFICADA, después de la 11\n",
     poner: "✅ CERRADA\n",
     caza: "check:tareas",
   },
@@ -990,7 +990,7 @@ export const ROTURAS = [
   {
     nombre: "calendario: el formulario acepta un día imposible",
     fichero: "src/ui/eventForm.ts",
-    buscar: 'if (dia === null) return { ok: false, problem: "Pon un día válido." }',
+    buscar: "if (dia === null) return { ok: false, problem: textos.eventos.diaInvalido }",
     poner: "if (dia === null) return { ok: true, input: { day: day as Day, time: null, title: title } }",
     caza: "pruebas",
     prueba: "un día que no existe no vale",
@@ -998,7 +998,7 @@ export const ROTURAS = [
   {
     nombre: "calendario: el evento sin motivo queda sin nombre",
     fichero: "src/ui/eventForm.ts",
-    buscar: 'title: motivo === "" ? NEW_EVENT_TITLE : motivo',
+    buscar: 'title: motivo === "" ? textos.nombres.evento : motivo',
     poner: "title: motivo",
     caza: "pruebas",
     prueba: "sin motivo se llama «Evento»",

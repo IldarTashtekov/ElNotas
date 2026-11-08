@@ -17,6 +17,7 @@ import { elemento } from "./dom.js"
 import type { RoutineChartsSetting, WeekCount } from "./routineCharts.js"
 import { routineWeeks } from "./routineCharts.js"
 import { wheelFactor } from "./viewport.js"
+import { textos } from "./textos/idioma.js"
 
 export interface RoutineChartDeps {
   readonly store: Store
@@ -62,7 +63,7 @@ export const createRoutineChart = ({ store, today, charts }: RoutineChartDeps): 
 
   const raiz: HTMLElement = elemento("div")
   raiz.className = "rutina-grafica"
-  const aviso: HTMLParagraphElement = elemento("p", "Elige una rutina")
+  const aviso: HTMLParagraphElement = elemento("p", textos.rutinas.eligeUna)
   aviso.className = "rutina-grafica-aviso"
   const dibujo: SVGSVGElement = svg("svg")
   dibujo.setAttribute("aria-hidden", "true")

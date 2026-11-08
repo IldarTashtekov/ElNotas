@@ -33,6 +33,7 @@ import {
   describeBootError,
   describeImportFailure,
   mountApp,
+  textos,
   uiStateSection,
 } from "#ui/index"
 import type { App, BootError } from "./boot.js"
@@ -103,8 +104,8 @@ const mostrarImportacionSinTerminar = (raiz: HTMLElement, almacen: Storage, fall
   aviso.setAttribute("role", "alert")
   aviso.append(
     texto,
-    boton("Reintentar", "recargar", (): void => window.location.reload()),
-    boton("Abandonar la importación", "abandonar", (): void => {
+    boton(textos.arranque.reintentar, "recargar", (): void => window.location.reload()),
+    boton(textos.arranque.abandonarImportacion, "abandonar", (): void => {
       if (cancelImport(almacen)) window.location.reload()
     }),
   )

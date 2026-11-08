@@ -10,6 +10,7 @@ import type { UseCases } from "#core/index"
 import { elemento } from "./dom.js"
 import { createAsWindow } from "./noteActions.js"
 import type { WindowRef } from "./windows.js"
+import { textos } from "./textos/idioma.js"
 
 export const newWindowButtons = (useCases: UseCases, alCrear: (ref: WindowRef) => void): HTMLElement => {
   const nuevo = (texto: string, kind: "context" | "note" | "diagram"): HTMLButtonElement => {
@@ -24,6 +25,10 @@ export const newWindowButtons = (useCases: UseCases, alCrear: (ref: WindowRef) =
   }
   const caja: HTMLElement = elemento("div")
   caja.className = "hoja-nuevos"
-  caja.append(nuevo("+ Contexto nuevo", "context"), nuevo("+ Nota nueva", "note"), nuevo("+ Diagrama nuevo", "diagram"))
+  caja.append(
+    nuevo(textos.ventanas.contextoNuevo, "context"),
+    nuevo(textos.ventanas.notaNueva, "note"),
+    nuevo(textos.ventanas.diagramaNuevo, "diagram"),
+  )
   return caja
 }

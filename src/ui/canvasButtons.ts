@@ -6,6 +6,7 @@
  */
 
 import { elemento } from "./dom.js"
+import { textos } from "./textos/idioma.js"
 
 /** Un elemento SVG: `elemento` crea los de HTML, y éstos van en otro espacio de nombres. */
 export const svg = <K extends keyof SVGElementTagNameMap>(etiqueta: K): SVGElementTagNameMap[K] =>
@@ -80,15 +81,20 @@ const botonDeLienzo = (
 
 /** La mira, para el lienzo o para una barra. */
 export const crosshairButton = (alPulsar: () => void): HTMLButtonElement =>
-  botonDeLienzo("mira", "Volver al inicio", dibujoMira(), alPulsar)
+  botonDeLienzo("mira", textos.diagrama.volverAlInicio, dibujoMira(), alPulsar)
 
 /** El de seleccionar nodos. Quien lo crea le pone `aria-pressed` según el modo. */
 export const selectButton = (alPulsar: () => void): HTMLButtonElement => {
-  const b: HTMLButtonElement = botonDeLienzo("seleccionar", "Seleccionar nodos", dibujoSeleccion(), alPulsar)
+  const b: HTMLButtonElement = botonDeLienzo(
+    "seleccionar",
+    textos.diagrama.seleccionarNodos,
+    dibujoSeleccion(),
+    alPulsar,
+  )
   b.setAttribute("aria-pressed", "false")
   return b
 }
 
 /** La papelera de lo marcado. Quien la crea la enseña sólo en el modo de seleccionar. */
 export const trashButton = (alPulsar: () => void): HTMLButtonElement =>
-  botonDeLienzo("papelera-lienzo", "Borrar los marcados", dibujoPapelera(), alPulsar)
+  botonDeLienzo("papelera-lienzo", textos.diagrama.borrarMarcados, dibujoPapelera(), alPulsar)

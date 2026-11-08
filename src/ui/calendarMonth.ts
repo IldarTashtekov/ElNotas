@@ -8,6 +8,7 @@
 
 import type { AppState, CalendarEvent, Day, Routine } from "#core/index"
 import { compareDays, dayFromParts, monthGrid, partsOf } from "#core/index"
+import { textos } from "./textos/idioma.js"
 
 /** El mes que se mira: el año y el mes de 1 a 12. */
 export interface MonthRef {
@@ -35,24 +36,6 @@ export interface MonthView {
   readonly weeks: ReadonlyArray<ReadonlyArray<DayCell>>
 }
 
-/** Las iniciales de las columnas: la semana empieza en lunes. */
-export const WEEKDAYS: ReadonlyArray<string> = ["L", "M", "X", "J", "V", "S", "D"]
-
-const MESES: ReadonlyArray<string> = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-]
-
 export const monthOf = (day: Day): MonthRef => {
   const { year, month } = partsOf(day)
   return { year, month }
@@ -72,12 +55,13 @@ export const shiftMonth = (mes: MonthRef, n: number): MonthRef | null => {
 export const sameMonth = (a: MonthRef, b: MonthRef): boolean => a.year === b.year && a.month === b.month
 
 /** «octubre de 2026». */
-export const monthTitle = (mes: MonthRef): string => `${MESES[mes.month - 1] ?? ""} de ${mes.year}`
+export const monthTitle = (mes: MonthRef): string =>
+  textos.calendario.tituloMes(textos.calendario.meses[mes.month - 1] ?? "", mes.year)
 
 /** «2 de julio de 2026». */
 export const dayTitle = (day: Day): string => {
   const { year, month, day: dia } = partsOf(day)
-  return `${dia} de ${MESES[month - 1] ?? ""} de ${year}`
+  return textos.calendario.tituloDia(dia, textos.calendario.meses[month - 1] ?? "", year)
 }
 
 /**

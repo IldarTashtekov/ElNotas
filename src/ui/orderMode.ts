@@ -14,6 +14,7 @@ import { contentId } from "#core/index"
 import { elemento } from "./dom.js"
 import type { DropTarget, FlatLine } from "./lineOrder.js"
 import { dropTarget, flatLines, linesToDelete, linesToMove, movesText, remainingLines } from "./lineOrder.js"
+import { textos } from "./textos/idioma.js"
 
 /** Lo que se mueve el dedo antes de que un toque en el ⠿ sea un arrastre. */
 const ARRASTRE_PX: number = 5
@@ -89,15 +90,15 @@ export const createOrderMode = ({ element, lines, content, onMove, onDelete, onT
 
   const button: HTMLButtonElement = elemento("button", "⠿")
   button.type = "button"
-  button.setAttribute("aria-label", "Ordenar")
-  button.title = "Ordenar"
+  button.setAttribute("aria-label", textos.comun.ordenar)
+  button.title = textos.comun.ordenar
   button.className = "ordenar"
   button.addEventListener("pointerdown", (evento: PointerEvent): void => evento.preventDefault())
 
   const trash: HTMLButtonElement = elemento("button")
   trash.type = "button"
-  trash.setAttribute("aria-label", "Borrar")
-  trash.title = "Borrar"
+  trash.setAttribute("aria-label", textos.comun.borrar)
+  trash.title = textos.comun.borrar
   trash.className = "papelera"
   trash.hidden = true
   trash.disabled = true

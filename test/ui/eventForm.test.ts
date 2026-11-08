@@ -7,7 +7,8 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { EventFormResult } from "#ui/eventForm"
-import { NEW_EVENT_TITLE, parseEventForm } from "#ui/eventForm"
+import { parseEventForm } from "#ui/eventForm"
+import { textos } from "#ui/textos/idioma"
 
 test("un evento con hora y motivo se lee tal cual, sin espacios de más", (): void => {
   const r: EventFormResult = parseEventForm(" 2026-07-02 ", "18:00", "  Cena  ")
@@ -23,7 +24,7 @@ test("sin hora es de todo el día", (): void => {
 test("sin motivo se llama «Evento»", (): void => {
   const r: EventFormResult = parseEventForm("2026-07-02", "", "   ")
   assert.ok(r.ok)
-  assert.equal(r.input.title, NEW_EVENT_TITLE)
+  assert.equal(r.input.title, textos.nombres.evento)
 })
 
 test("un día que no existe no vale", (): void => {

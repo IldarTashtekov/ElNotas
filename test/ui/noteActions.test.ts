@@ -25,10 +25,8 @@ import { emptyAppState } from "#core/domain/AppState"
 import type { ListItem } from "#ui/windowView"
 import type { WindowRef } from "#ui/windows"
 import { GENERAL } from "#ui/windows"
+import { textos } from "#ui/textos/idioma"
 import {
-  NEW_CONTEXT_NAME,
-  NEW_DIAGRAM_NAME,
-  NEW_NOTE_NAME,
   contextsWith,
   createAsWindow,
   createDiagramIn,
@@ -77,7 +75,7 @@ const itemsDe = (state: AppState, id: ContextId): ReadonlyArray<NoteId> =>
 
 test("+ Nota en un contexto crea una «Nueva Nota» DENTRO de él", (): void => {
   const { store, compra, leche, pan } = escenario()
-  assert.equal(store.getState().notes[leche]?.name, NEW_NOTE_NAME)
+  assert.equal(store.getState().notes[leche]?.name, textos.nombres.nuevaNota)
   assert.deepEqual(itemsDe(store.getState(), compra), [leche, pan])
 })
 
@@ -94,7 +92,7 @@ test("+ Contexto nuevo como ventana: un «Nuevo contexto» vacío, y su ventana"
   const ref: WindowRef | null = createAsWindow(useCases, "context")
   if (ref === null || ref.kind !== "context") return assert.fail("tenía que dar una ventana de contexto")
 
-  assert.equal(store.getState().contexts[ref.id]?.name, NEW_CONTEXT_NAME)
+  assert.equal(store.getState().contexts[ref.id]?.name, textos.nombres.nuevoContexto)
   assert.equal(itemsDe(store.getState(), ref.id).length, 0)
   assert.equal(itemsDe(store.getState(), compra).length, 2)
 })
@@ -104,7 +102,7 @@ test("+ Nota nueva como ventana: una «Nueva Nota» sin contexto, y su ventana",
   const ref: WindowRef | null = createAsWindow(useCases, "note")
   if (ref === null || ref.kind !== "note") return assert.fail("tenía que dar una ventana de nota")
 
-  assert.equal(store.getState().notes[ref.id]?.name, NEW_NOTE_NAME)
+  assert.equal(store.getState().notes[ref.id]?.name, textos.nombres.nuevaNota)
   assert.equal(itemsDe(store.getState(), compra).length, 2)
   assert.equal(itemsDe(store.getState(), casa).length, 0)
 })
@@ -114,7 +112,7 @@ test("+ Diagrama nuevo como ventana: un «Nuevo diagrama» sin contexto, y su ve
   const ref: WindowRef | null = createAsWindow(useCases, "diagram")
   if (ref === null || ref.kind !== "diagram") return assert.fail("tenía que dar una ventana de diagrama")
 
-  assert.equal(store.getState().diagrams[ref.id]?.name, NEW_DIAGRAM_NAME)
+  assert.equal(store.getState().diagrams[ref.id]?.name, textos.nombres.nuevoDiagrama)
   assert.equal(itemsDe(store.getState(), compra).length, 2)
   assert.equal(itemsDe(store.getState(), casa).length, 0)
 })
@@ -192,7 +190,7 @@ const refsDe = (state: AppState, id: ContextId): ReadonlyArray<ItemRef> => state
 
 test("+ Diagrama en un contexto crea un «Nuevo diagrama» DENTRO de él, detrás de las notas", (): void => {
   const { store, compra, leche, pan, mudanza } = conDiagrama()
-  assert.equal(store.getState().diagrams[mudanza]?.name, NEW_DIAGRAM_NAME)
+  assert.equal(store.getState().diagrams[mudanza]?.name, textos.nombres.nuevoDiagrama)
   assert.deepEqual(refsDe(store.getState(), compra), [noteRef(leche), noteRef(pan), diagramRef(mudanza)])
 })
 

@@ -7,6 +7,7 @@
  */
 
 import type { ChooseDestination, Destination } from "./exportBackup.js"
+import { textos } from "#ui/index"
 
 /*
     `showSaveFilePicker` no viene en los tipos de TypeScript: es de la File System
@@ -70,7 +71,7 @@ export const chooseFileDestination: ChooseDestination = async (nombre: string): 
   try {
     const fichero: FileSystemFileHandle = await ventana.showSaveFilePicker({
       suggestedName: nombre,
-      types: [{ description: "Copia de ElNotas", accept: { [JSON_TIPO]: [".json"] } }],
+      types: [{ description: textos.copia.descripcionFichero, accept: { [JSON_TIPO]: [".json"] } }],
     })
     return enFichero(fichero)
   } catch (fallo: unknown) {

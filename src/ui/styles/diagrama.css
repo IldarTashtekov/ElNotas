@@ -285,7 +285,7 @@
   }
   & .texto:empty::before {
     color: var(--muted);
-    content: "Sin texto";
+    content: attr(data-vacio);
   }
 }
 .posit-campo {

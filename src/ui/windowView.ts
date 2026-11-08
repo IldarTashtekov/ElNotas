@@ -12,9 +12,7 @@ import type { AppState, Context, ContextId, Diagram, DiagramId, ItemRef, Note, N
 import { diagramRef, noteRef } from "#core/index"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { sameWindow } from "./windows.js"
-
-export const GENERAL_TITLE: string = "General"
-export const CALENDAR_TITLE: string = "Calendario"
+import { textos } from "./textos/idioma.js"
 
 /** Una fila de la lista de una ventana: una nota o un diagrama, con su nombre. */
 export interface ListItem {
@@ -58,9 +56,9 @@ const VACIA: WindowView = { kind: "empty" }
 export const windowTitle = (ref: WindowRef, state: AppState): string => {
   switch (ref.kind) {
     case "general":
-      return GENERAL_TITLE
+      return textos.ventanas.general
     case "calendar":
-      return CALENDAR_TITLE
+      return textos.ventanas.calendario
     case "context":
       return state.contexts[ref.id]?.name ?? ""
     case "note":
@@ -134,7 +132,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     return {
       kind: "window",
       ref: activa,
-      title: GENERAL_TITLE,
+      title: textos.ventanas.general,
       renames: null,
       editsNote: null,
       editsDiagram: null,
@@ -180,7 +178,7 @@ export const windowView = (layout: WindowsLayout, state: AppState): WindowView =
     return {
       kind: "window",
       ref: activa,
-      title: CALENDAR_TITLE,
+      title: textos.ventanas.calendario,
       renames: null,
       editsNote: null,
       editsDiagram: null,

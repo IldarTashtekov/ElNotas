@@ -12,7 +12,7 @@ import { revision } from "#core/domain/Ids"
 import type { SettingsContent, WindowRow } from "#ui/settingsContent"
 import type { WindowRef } from "#ui/windows"
 import { CALENDAR, GENERAL } from "#ui/windows"
-import { GENERAL_TITLE } from "#ui/windowView"
+import { textos } from "#ui/textos/idioma"
 import { addWindowChoices, choiceGroupLabel, resetQuestion, settingsContent, versionLine } from "#ui/settingsContent"
 
 const contexto = (id: string, name: string): Context => ({
@@ -60,7 +60,7 @@ test("los contextos salen TODOS, estén o no en una ventana, por nombre", (): vo
 
 test("se puede elegir el General, cada contexto y cada nota: en ese orden, y por nombre", (): void => {
   assert.deepEqual(titulos(CONTENIDO.choices), [
-    GENERAL_TITLE,
+    textos.ventanas.general,
     "Calendario",
     "Compra",
     "Sin ventana",
@@ -80,7 +80,14 @@ test("el «+» ofrece lo que NO tiene ventana: sin el General ni Trabajo, que ya
 test("el «+» esconde también una nota que ya es ventana, y ofrece el General si no lo es", (): void => {
   const deNota: WindowRef = { kind: "note", id: noteId("n1") }
   const filas: ReadonlyArray<WindowRow> = addWindowChoices({ windows: [deNota], active: deNota }, ESTADO)
-  assert.deepEqual(titulos(filas), [GENERAL_TITLE, "Calendario", "Compra", "Sin ventana", "Trabajo", "Recetas"])
+  assert.deepEqual(titulos(filas), [
+    textos.ventanas.general,
+    "Calendario",
+    "Compra",
+    "Sin ventana",
+    "Trabajo",
+    "Recetas",
+  ])
 })
 
 test("con todo en ventanas, el «+» no ofrece nada", (): void => {

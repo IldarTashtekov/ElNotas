@@ -6,37 +6,38 @@
  */
 
 import type { MigrationError, StorageError } from "#core/index"
+import { textos } from "./textos/idioma.js"
 
 export const describeStorageError = (fallo: StorageError): string => {
   switch (fallo.kind) {
     case "corrupt":
-      return `No se entiende el fichero ${fallo.path}.`
+      return textos.fallos.ilegible(fallo.path)
     case "permission-denied":
-      return "El navegador no deja leer ni guardar los datos de ElNotas."
+      return textos.fallos.sinPermiso
     case "not-found":
-      return "No se encuentra dónde se guardan las notas."
+      return textos.fallos.noEncontrado
     case "quota-exceeded":
-      return "No queda sitio para guardar más."
+      return textos.fallos.sinSitio
     case "stale":
-      return "Otra pestaña ha cambiado lo mismo que esta. Para no pisarlo, aquí se ha dejado de guardar."
+      return textos.fallos.otraPestana
     case "io":
-      return "Algo ha fallado al leer o guardar."
+      return textos.fallos.alLeerOGuardar
   }
 }
 
 export const describeMigrationError = (fallo: MigrationError): string => {
   switch (fallo.kind) {
     case "schema-from-future":
-      return "Estas notas se guardaron con una versión más nueva de ElNotas. Ábrelas con esa versión."
+      return textos.fallos.versionMasNueva
     case "missing-migration":
     case "migration-failed":
-      return "Estas notas vienen de una versión antigua de ElNotas y no se han podido poner al día."
+      return textos.fallos.migracionImposible
   }
 }
 
 /** La pantalla de cuando una importación se quedó a medias al arrancar. */
 export const describeImportFailure = (fallo: StorageError): string =>
-  `La copia no se ha terminado de importar. ${describeStorageError(fallo)} Se reintentará al recargar; si no llega a entrar, «Abandonar la importación» arranca con lo que ya haya entrado.`
+  textos.fallos.importacionSinTerminar(describeStorageError(fallo), textos.arranque.abandonarImportacion)
 
 /** Para el arranque, que puede fallar por cualquiera de los dos lados. */
 export const describeBootError = (fallo: StorageError | MigrationError): string =>

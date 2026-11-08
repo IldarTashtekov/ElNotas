@@ -7,6 +7,7 @@
 
 import type { Day, Time } from "#core/index"
 import { parseDay, parseTime } from "#core/index"
+import { textos } from "./textos/idioma.js"
 
 export interface EventInput {
   readonly day: Day
@@ -18,16 +19,13 @@ export interface EventInput {
 export type EventFormResult =
   { readonly ok: true; readonly input: EventInput } | { readonly ok: false; readonly problem: string }
 
-/** El motivo que se le pone a un evento sin motivo, como «Nueva Nota» a una nota. */
-export const NEW_EVENT_TITLE: string = "Evento"
-
 export const parseEventForm = (day: string, time: string, title: string): EventFormResult => {
   const dia: Day | null = parseDay(day.trim())
-  if (dia === null) return { ok: false, problem: "Pon un día válido." }
+  if (dia === null) return { ok: false, problem: textos.eventos.diaInvalido }
   const hora: string = time.trim()
   const parsed: Time | null = hora === "" ? null : parseTime(hora)
-  if (hora !== "" && parsed === null) return { ok: false, problem: "Pon una hora válida, como 18:00." }
+  if (hora !== "" && parsed === null) return { ok: false, problem: textos.eventos.horaInvalida }
   /* El motivo es un texto de una línea: los saltos que se cuelen al escribirlo se vuelven espacios. */
   const motivo: string = title.replace(/\s+/g, " ").trim()
-  return { ok: true, input: { day: dia, time: parsed, title: motivo === "" ? NEW_EVENT_TITLE : motivo } }
+  return { ok: true, input: { day: dia, time: parsed, title: motivo === "" ? textos.nombres.evento : motivo } }
 }

@@ -12,6 +12,7 @@ import { describeBootError, describeStorageError } from "./messages.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { CALENDAR, GENERAL, sameWindow } from "./windows.js"
 import { windowTitle } from "./windowView.js"
+import { textos } from "./textos/idioma.js"
 
 export interface WindowRow {
   readonly ref: WindowRef
@@ -74,13 +75,10 @@ export const choiceGroupLabel = (opciones: ReadonlyArray<WindowRow>, i: number):
   if (opcion === undefined) return null
   const clase: WindowRef["kind"] = opcion.ref.kind
   if (opciones[i - 1]?.ref.kind === clase) return null
-  if (clase === "note") return "Notas:"
-  if (clase === "diagram") return "Diagramas:"
+  if (clase === "note") return textos.ventanas.rotuloNotas
+  if (clase === "diagram") return textos.ventanas.rotuloDiagramas
   return null
 }
-
-/** «1 nota», «3 notas»: cuántas de algo, en singular o en plural. */
-const cuantas = (n: number, singular: string, plural: string): string => `${n} ${n === 1 ? singular : plural}`
 
 /**
  * «2 notas, 1 diagrama y 3 contextos». Lo que no hay no se nombra; `null` si no
@@ -88,16 +86,14 @@ const cuantas = (n: number, singular: string, plural: string): string => `${n} $
  */
 const recuento = (notas: number, diagramas: number, contextos: number): string | null => {
   const partes: ReadonlyArray<string> = [
-    [notas, "nota", "notas"] as const,
-    [diagramas, "diagrama", "diagramas"] as const,
-    [contextos, "contexto", "contextos"] as const,
+    [notas, textos.recuentos.notas] as const,
+    [diagramas, textos.recuentos.diagramas] as const,
+    [contextos, textos.recuentos.contextos] as const,
   ]
     .filter(([n]): boolean => n > 0)
-    .map(([n, singular, plural]): string => cuantas(n, singular, plural))
+    .map(([n, cuantas]): string => cuantas(n))
   if (partes.length === 0) return null
-  return partes.length === 1
-    ? (partes[0] ?? "")
-    : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1] ?? ""}`
+  return textos.recuentos.unir(partes)
 }
 
 /**
@@ -110,8 +106,8 @@ export const resetQuestion = (state: AppState): string => {
     Object.keys(state.diagrams).length,
     Object.keys(state.contexts).length,
   )
-  if (lista === null) return "¿Dejar la app en blanco? No hay nada guardado."
-  return `¿Borrar ${lista}, y las ventanas? No se puede deshacer.`
+  if (lista === null) return textos.ajustes.preguntaEnBlanco
+  return textos.ajustes.preguntaBorrarTodo(lista)
 }
 
 /**
@@ -120,46 +116,35 @@ export const resetQuestion = (state: AppState): string => {
  */
 export const importQuestion = (resumen: ImportSummary): string => {
   const lista: string | null = recuento(resumen.notes, resumen.diagrams, resumen.contexts)
-  const trae: string = lista === null ? "La copia está vacía." : `La copia trae ${lista}.`
-  const ilegibles: string =
-    resumen.unreadable === 0
-      ? ""
-      : resumen.unreadable === 1
-        ? " 1 fichero no se puede leer: entra igual, pero no se verá."
-        : ` ${resumen.unreadable} ficheros no se pueden leer: entran igual, pero no se verán.`
-  return `${trae}${ilegibles} ¿Sustituir por ella todo lo de este navegador? Lo de ahora se pierde.`
+  const trae: string = lista === null ? textos.copia.vacia : textos.copia.trae(lista)
+  return textos.copia.preguntaImportar(trae, textos.copia.ilegibles(resumen.unreadable))
 }
 
 /** Por qué no se puede importar ese fichero. */
 export const importProblem = (problema: Exclude<ImportPreparation, { readonly kind: "ready" }>): string => {
   switch (problema.kind) {
     case "unreadable-file":
-      return "No se ha podido leer el fichero."
+      return textos.copia.ficheroNoSeLee
     case "not-a-backup":
-      return "Ese fichero no es una copia de ElNotas."
+      return textos.copia.noEsCopia
     case "newer-backup":
-      return "Esa copia es de una versión más nueva de ElNotas. Actualiza la app y vuelve a probar."
+      return textos.copia.copiaNueva
     case "wont-boot":
-      return `Esa copia no se puede usar. ${describeBootError(problema.error)}`
+      return textos.copia.copiaInutil(describeBootError(problema.error))
   }
 }
-
-/** Cuando se confirmó, pero la copia no cabe para apuntarla. */
-export const IMPORT_NOT_APPLIED: string = "La copia no cabe en el navegador. No se ha cambiado nada."
 
 /** Cómo fue exportar. `null` si no hay nada que decir: se canceló. */
 export const exportMessage = (resultado: ExportResult): string | null => {
   switch (resultado.kind) {
     case "exported":
-      return resultado.partial
-        ? "Copia guardada, pero sin los últimos cambios: el guardado está detenido."
-        : "Copia guardada."
+      return resultado.partial ? textos.copia.guardadaSinLoUltimo : textos.copia.guardada
     case "cancelled":
       return null
     case "failed":
       return resultado.error === null
-        ? "No se ha podido escribir la copia."
-        : `No se ha podido hacer la copia. ${describeStorageError(resultado.error)}`
+        ? textos.copia.noSePudoEscribir
+        : textos.copia.noSePudoHacer(describeStorageError(resultado.error))
   }
 }
 
@@ -168,4 +153,4 @@ export const exportMessage = (resultado: ExportResult): string | null => {
  * la versión publicada: la pone el script que la arma, y en desarrollo no existe.
  */
 export const versionLine = (version: string | null): string =>
-  version === null ? "Versión de desarrollo" : `Versión ${version}`
+  version === null ? textos.ajustes.versionDesarrollo : textos.ajustes.version(version)

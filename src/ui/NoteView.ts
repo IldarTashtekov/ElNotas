@@ -13,6 +13,7 @@ import { createEditableTitle } from "./editableTitle.js"
 import type { NoteEditor } from "./NoteEditor.js"
 import { createNoteEditor } from "./NoteEditor.js"
 import type { Sheet } from "./sheet.js"
+import { textos } from "./textos/idioma.js"
 
 export interface NoteViewDeps {
   readonly store: Store
@@ -48,7 +49,7 @@ export const mountNoteView = (
 ): (() => void) => {
   const nota = (): Note | undefined => store.getState().notes[noteId]
 
-  const titulo: EditableTitle = createEditableTitle("Nombre de la nota", (nombre: string): void => {
+  const titulo: EditableTitle = createEditableTitle(textos.nota.nombre, (nombre: string): void => {
     useCases.renameNote(noteId, nombre)
   })
   const cabecera: HTMLElement = elemento("header")
@@ -70,8 +71,8 @@ export const mountNoteView = (
 
   const salir: HTMLButtonElement = elemento("button", "✕")
   salir.type = "button"
-  salir.setAttribute("aria-label", "Salir")
-  salir.title = "Salir"
+  salir.setAttribute("aria-label", textos.comun.salir)
+  salir.title = textos.comun.salir
   salir.className = "salir"
   salir.addEventListener("click", onExit)
   const barra: HTMLElement = elemento("div")

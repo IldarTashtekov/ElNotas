@@ -10,9 +10,9 @@ import type { AppState, Day, Routine, WeekProgress } from "#core/index"
 import { compareDays, weekProgress } from "#core/index"
 import type { CalendarOrder } from "./calendarOrder.js"
 import { reconcileOrder } from "./calendarOrder.js"
-import { WEEKDAYS } from "./calendarMonth.js"
 import type { Tap } from "./gestures.js"
 import { isDoubleTap } from "./gestures.js"
+import { textos } from "./textos/idioma.js"
 
 export interface RoutineRow {
   readonly id: string
@@ -105,7 +105,7 @@ export interface WeekHeading {
 /** La cabecera de la tabla: inicial y número de cada día de la semana, con hoy señalado. */
 export const weekHeadings = (semana: WeekRow, hoy: Day): ReadonlyArray<WeekHeading> =>
   semana.cells.map((c: WeekCell, i: number): WeekHeading => ({
-    initial: WEEKDAYS[i] ?? "",
+    initial: textos.calendario.iniciales[i] ?? "",
     number: Number(c.day.slice(8)),
     today: c.day === hoy,
   }))

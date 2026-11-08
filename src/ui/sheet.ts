@@ -9,6 +9,7 @@
 
 import type { BackStack } from "./backStack.js"
 import { elemento } from "./dom.js"
+import { textos } from "./textos/idioma.js"
 
 export interface Sheet {
   readonly element: HTMLElement
@@ -29,7 +30,7 @@ export const createSheet = (back: BackStack): Sheet => {
   const cabeza: HTMLHeadingElement = elemento("h2")
   const cuerpo: HTMLDivElement = elemento("div")
   cuerpo.className = "hoja-cuerpo"
-  const cancelar: HTMLButtonElement = elemento("button", "Cancelar")
+  const cancelar: HTMLButtonElement = elemento("button", textos.comun.cancelar)
   cancelar.type = "button"
   cancelar.className = "secundario hoja-cancelar"
   hoja.append(cabeza, cuerpo, cancelar)

@@ -9,6 +9,7 @@
 import type { CalendarEvent, Day, Store } from "#core/index"
 import { elemento } from "./dom.js"
 import { eventsByTime, splitPast } from "./eventList.js"
+import { textos } from "./textos/idioma.js"
 
 export interface EventsPanelDeps {
   readonly store: Store
@@ -43,7 +44,7 @@ export const createEventsPanel = ({ store, today, onOpenEvent, onNewEvent }: Eve
   contenido.className = "grupo-eventos"
   const pie: HTMLElement = elemento("div")
   pie.className = "grupos-pie"
-  pie.append(boton("+ Evento", onNewEvent, "secundario grupo-nuevo"))
+  pie.append(boton(textos.eventos.nuevo, onNewEvent, "secundario grupo-nuevo"))
   raiz.append(contenido, pie)
 
   const pintar = (): void => {
@@ -55,12 +56,12 @@ export const createEventsPanel = ({ store, today, onOpenEvent, onNewEvent }: Eve
         "grupo-evento",
       )
     contenido.replaceChildren()
-    if (upcoming.length === 0 && past.length === 0) contenido.append(elemento("p", "Sin eventos."))
+    if (upcoming.length === 0 && past.length === 0) contenido.append(elemento("p", textos.eventos.ninguno))
     contenido.append(...upcoming.map(linea))
     if (past.length > 0) {
       contenido.append(
         boton(
-          `${pasadosAbiertos ? "▾" : "▸"} Pasados (${past.length})`,
+          `${pasadosAbiertos ? "▾" : "▸"} ${textos.eventos.pasados(past.length)}`,
           (): void => {
             pasadosAbiertos = !pasadosAbiertos
             pintar()

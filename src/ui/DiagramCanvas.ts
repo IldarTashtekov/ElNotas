@@ -81,6 +81,7 @@ import {
   wheelFactor,
   zoomAround,
 } from "./viewport.js"
+import { textos } from "./textos/idioma.js"
 
 export interface DiagramCanvasDeps {
   readonly store: Store
@@ -210,7 +211,7 @@ export const createDiagramCanvas = ({
   capa.append(lineas, nodosCapa)
   const lienzo: HTMLElement = elemento("div")
   lienzo.className = "lienzo"
-  lienzo.setAttribute("aria-label", "Lienzo del diagrama")
+  lienzo.setAttribute("aria-label", textos.diagrama.lienzo)
   lienzo.append(capa)
   const menu: Sheet = createSheet(back)
   /* La de enlazar, aparte: se abre al elegir en la de los menús, y el cierre de ésa,
@@ -220,7 +221,7 @@ export const createDiagramCanvas = ({
   const marco: HTMLElement = elemento("div")
   marco.className = "lienzo-marco"
   /* El aviso de *Conectar*, sobre el lienzo y fuera de la capa: no se mueve con el corcho. */
-  const avisoConectar: HTMLElement = elemento("p", "Toca el nodo de destino")
+  const avisoConectar: HTMLElement = elemento("p", textos.diagrama.tocaElDestino)
   avisoConectar.className = "aviso-conectar"
   avisoConectar.setAttribute("role", "status")
   avisoConectar.hidden = true
@@ -319,8 +320,11 @@ export const createDiagramCanvas = ({
         const el: HTMLElement = elemento("div")
         el.className = "posit"
         el.dataset["id"] = nodo.id
-        el.append(elemento("div"))
-        el.firstElementChild?.classList.add("texto")
+        const texto: HTMLElement = elemento("div")
+        texto.classList.add("texto")
+        /* Lo que se ve, por CSS, mientras el nodo no tiene texto. */
+        texto.dataset["vacio"] = textos.diagrama.sinTexto
+        el.append(texto)
         tamanos.observe(el)
         return el
       },
@@ -507,7 +511,7 @@ export const createDiagramCanvas = ({
     campo.className = "posit-campo"
     /* Sólo lo que se ve: los símbolos del Markdown no se escriben aquí. */
     campo.value = readNode(store.getState(), nodo.text).text
-    campo.setAttribute("aria-label", "Texto del nodo")
+    campo.setAttribute("aria-label", textos.diagrama.textoDelNodo)
     const ajustarAlto = (): void => {
       campo.style.height = "auto"
       campo.style.height = `${campo.scrollHeight}px`
@@ -604,19 +608,19 @@ export const createDiagramCanvas = ({
     const caja: HTMLElement = elemento("div")
     caja.className = "hoja-acciones"
     caja.append(
-      opcion("Texto", (): void => {
+      opcion(textos.diagrama.nodoDeTexto, (): void => {
         const nuevo: DiagramNodeId | null = ponerNodo((): Diagram | null =>
           useCases.addTextNode(diagramId, "", p.x, p.y),
         )
         if (nuevo !== null) editar(nuevo)
       }),
-      opcion("Enlazar…", (): void => {
-        elegirEnlace("Enlazar", "", (texto: string): void => {
+      opcion(textos.enlaces.enlazarPuntos, (): void => {
+        elegirEnlace(textos.enlaces.tituloEnlazar, "", (texto: string): void => {
           ponerNodo((): Diagram | null => useCases.addTextNode(diagramId, texto, p.x, p.y))
         })
       }),
     )
-    menu.open("Añadir al diagrama", [caja])
+    menu.open(textos.diagrama.anadirAlDiagrama, [caja])
   }
 
   /* ── Conectar: el nodo de origen espera al de destino ── */
@@ -687,7 +691,7 @@ export const createDiagramCanvas = ({
   const borrarMarcados = (): void => {
     const ids: ReadonlyArray<DiagramNodeId> = [...marcados]
     if (!seleccionando || ids.length === 0) return
-    confirmar(ids.length === 1 ? "¿Borrar 1 nodo?" : `¿Borrar ${ids.length} nodos?`, "Borrar", (): void => {
+    confirmar(textos.diagrama.preguntaBorrarNodos(ids.length), textos.comun.borrar, (): void => {
       useCases.removeNodes(diagramId, ids)
     })
   }
@@ -757,7 +761,7 @@ export const createDiagramCanvas = ({
     const campo: HTMLInputElement = elemento("input")
     campo.className = "etiqueta-campo"
     campo.value = r.label
-    campo.setAttribute("aria-label", "Texto de la relación")
+    campo.setAttribute("aria-label", textos.diagrama.textoDeLaRelacion)
     const medio: Point = curveMidpoint(c)
     campo.style.left = `${medio.x}px`
     campo.style.top = `${medio.y}px`
@@ -787,7 +791,7 @@ export const createDiagramCanvas = ({
     if (actual === undefined || r === undefined) return
     const nombre = (n: DiagramNodeId): string => {
       const nodo: DiagramNode | undefined = actual.nodes[n]
-      return nodo === undefined ? "?" : textoDe(nodo, store.getState()) || "Sin texto"
+      return nodo === undefined ? "?" : textoDe(nodo, store.getState()) || textos.diagrama.sinTexto
     }
     menu.open(
       `${nombre(r.from)} ${r.directed ? "→" : "—"} ${nombre(r.to)}`,
@@ -795,21 +799,21 @@ export const createDiagramCanvas = ({
         /* Sin flecha no hay sentido que invertir: la opción ni sale. */
         ...(r.directed
           ? [
-              opcion("Invertir dirección", (): void => {
+              opcion(textos.diagrama.invertir, (): void => {
                 useCases.setRelationEnds(diagramId, id, r.to, r.from)
               }),
-              opcion("Sin dirección", (): void => {
+              opcion(textos.diagrama.sinDireccion, (): void => {
                 useCases.setRelationDirected(diagramId, id, false)
               }),
             ]
           : [
-              opcion("Con dirección", (): void => {
+              opcion(textos.diagrama.conDireccion, (): void => {
                 useCases.setRelationDirected(diagramId, id, true)
               }),
             ]),
-        opcion("Texto", (): void => editarTexto(id)),
+        opcion(textos.diagrama.textoRelacion, (): void => editarTexto(id)),
         opcion(
-          "Borrar",
+          textos.comun.borrar,
           (): void => {
             useCases.removeRelation(diagramId, id)
           },
@@ -824,28 +828,32 @@ export const createDiagramCanvas = ({
     if (nodo === undefined) return
     const contenido: NodeContent = readNode(store.getState(), nodo.text)
     menu.open(
-      contenido.text === "" ? "Nodo" : contenido.text,
+      contenido.text === "" ? textos.diagrama.nodo : contenido.text,
       acciones(
-        opcion("Conectar", (): void => empezarAConectar(id)),
+        opcion(textos.diagrama.conectar, (): void => empezarAConectar(id)),
         /* Uno que enlaza a algo de la app enseña su nombre: no hay texto propio que editar. */
-        ...(canEditNodeText(contenido) ? [opcion("Editar", (): void => editar(id))] : []),
-        opcion(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar…", (): void => {
-          elegirEnlace(contenido.kind === "link" ? "Cambiar enlace" : "Enlazar", nodo.text, (texto: string): void => {
-            useCases.setNodeText(diagramId, id, texto)
-          })
+        ...(canEditNodeText(contenido) ? [opcion(textos.diagrama.editar, (): void => editar(id))] : []),
+        opcion(contenido.kind === "link" ? textos.enlaces.cambiarEnlace : textos.enlaces.enlazarPuntos, (): void => {
+          elegirEnlace(
+            contenido.kind === "link" ? textos.enlaces.cambiarEnlace : textos.enlaces.tituloEnlazar,
+            nodo.text,
+            (texto: string): void => {
+              useCases.setNodeText(diagramId, id, texto)
+            },
+          )
         }),
         ...(contenido.kind === "link"
           ? [
-              opcion("Quitar enlace", (): void => {
+              opcion(textos.enlaces.quitarEnlace, (): void => {
                 useCases.setNodeText(diagramId, id, unlinkedNodeText(store.getState(), nodo.text))
               }),
             ]
           : []),
-        opcion(nodo.done ? "Desmarcar hecho" : "Marcar hecho", (): void => {
+        opcion(nodo.done ? textos.diagrama.desmarcarHecho : textos.diagrama.marcarHecho, (): void => {
           useCases.setNodeDone(diagramId, id, !nodo.done)
         }),
         opcion(
-          "Borrar",
+          textos.comun.borrar,
           (): void => {
             useCases.removeNode(diagramId, id)
           },
@@ -1087,7 +1095,7 @@ export const createDiagramCanvas = ({
       return
     }
     const destino: ResolvedLink = contenido.resolved
-    if (destino === null) briefNotice("El enlace ya no existe", AVISO_ROTO_MS)
+    if (destino === null) briefNotice(textos.enlaces.yaNoExiste, AVISO_ROTO_MS)
     else if (destino.kind === "note") onOpenNote(destino.id)
     /* El mismo diagrama ya está abierto: encima, sería otra vez él. */
     else if (destino.kind === "diagram") {

@@ -8,9 +8,10 @@ import assert from "node:assert/strict"
 
 import type { MigrationError, StorageError } from "#core/index"
 import type { ImportPreparation, ImportSummary } from "#ui/index"
-import { IMPORT_NOT_APPLIED, exportMessage, importProblem, importQuestion } from "#ui/settingsContent"
+import { exportMessage, importProblem, importQuestion } from "#ui/settingsContent"
 import { describeImportFailure } from "#ui/index"
 import { describeMigrationError, describeStorageError } from "#ui/messages"
+import { textos } from "#ui/textos/idioma"
 
 const resumen = (cambios: Partial<ImportSummary>): ImportSummary => ({
   notes: 0,
@@ -90,7 +91,7 @@ test("si no arrancaría, dice el motivo del arranque", (): void => {
 })
 
 test("si no cabe al confirmar, dice que no ha cambiado nada", (): void => {
-  assert.match(IMPORT_NOT_APPLIED, /No se ha cambiado nada/)
+  assert.match(textos.copia.noCabe, /No se ha cambiado nada/)
 })
 
 /* ── La importación a medias ── */

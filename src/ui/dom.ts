@@ -6,6 +6,7 @@
 
 import type { StorageError } from "#core/index"
 import { describeStorageError } from "./messages.js"
+import { textos } from "./textos/idioma.js"
 
 export const elemento = <K extends keyof HTMLElementTagNameMap>(
   etiqueta: K,
@@ -29,19 +30,9 @@ export const corruptNotice = (corrupt: ReadonlyArray<StorageError>): HTMLElement
   const lista: HTMLUListElement = elemento("ul")
   lista.append(...corrupt.map((fallo: StorageError): HTMLLIElement => elemento("li", describeStorageError(fallo))))
   aviso.append(
-    elemento(
-      "p",
-      corrupt.length === 1
-        ? "Un fichero no se ha podido leer y se ha dejado fuera:"
-        : `${corrupt.length} ficheros no se han podido leer y se han dejado fuera:`,
-    ),
+    elemento("p", textos.avisos.ficherosIlegibles(corrupt.length)),
     lista,
-    elemento(
-      "p",
-      corrupt.length === 1
-        ? "Sigue guardado sin tocar. El resto está bien."
-        : "Siguen guardados sin tocar. El resto está bien.",
-    ),
+    elemento("p", textos.avisos.ficherosSinTocar(corrupt.length)),
   )
   /* Se difumina solo, o antes si se toca; al acabar, se quita. Con un tiempo y no
      con `transitionend`, que en una pestaña oculta no llega. */

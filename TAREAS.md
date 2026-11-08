@@ -92,7 +92,10 @@ Markdown** (tarea 5), que estaba sin fase.
   función y una clave en texto (`t("borrar")`), que no caza una clave mal escrita.
 - **Las frases con datos, funciones** dentro de cada idioma (`textos.notasEnLaCopia(8)`).
 - **Se elige una vez, al arrancar**, y lo inyecta `platform/web/`, como los adaptadores.
-  Cambiar de idioma en ⚙ recarga la app.
+  Cambiar de idioma en ⚙ recarga la app. **Cómo llega, decidido por el usuario el 2026-11-08:**
+  un solo sitio en la UI guarda el idioma en uso, `platform/web/` lo fija antes de pintar nada y
+  cada pantalla lo lee de ahí; no se pasa de pantalla en pantalla. Como no cambia con la app
+  abierta, ningún texto se guarda en una constante al cargar el módulo: se pide al usarlo.
 - **Días y meses, con `Intl`** del navegador; la semana sigue empezando en lunes.
 
 Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos están juntos.
@@ -109,14 +112,16 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
          «General» se traduce siempre: no es un nombre del usuario.
       4. **Cambiar de idioma en ⚙ recarga la app.**
       5. **El `manifest` no se traduce**: sólo lleva el nombre, «ElNotas».
-- [ ] **2. Sacar los textos a `es`** *(mecánica, larga: subagente con Sonnet)*, sin cambiar nada de
+- [x] **2. Sacar los textos a `es`** *(mecánica, larga: subagente con Sonnet)*, sin cambiar nada de
       lo que se ve. **Se cierra cuando** ningún texto para quien usa la app queda escrito suelto en
-      `src/ui/`, `npm run check` pasa sin tocar las pruebas que comparan frases y las listas manuales
+      `src/ui/` ni en `src/platform/web/`, `npm run check` pasa sin tocar las pruebas que comparan frases y las listas manuales
       no ven diferencia.
 - [ ] **3. La traducción, `en`** *(pensar)*, con pruebas en inglés de las frases con datos.
       **Se cierra cuando** `en` compila con el mismo tipo que `es` y sus pruebas pasan.
 - [ ] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
-      página y las fechas con `Intl`. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
+      página y las fechas con `Intl`. Fechas que la tarea 2 dejó en crudo: los rótulos `d/m` de la
+      gráfica de rutinas, el día de un evento en la hoja de enlazar y en la etiqueta de una rutina;
+      y el «Cargando…» de `index.html`, que se ve antes de montar la app. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
       entera tras recargar, con sus pruebas y su paso en la lista manual.
 - [ ] **5. Exportar las notas a Markdown** *(pensar)*, metida en esta fase por el usuario el
       2026-11-04, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el

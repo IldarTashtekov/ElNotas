@@ -17,6 +17,7 @@ import { createDiagramCanvas } from "./DiagramCanvas.js"
 import { elemento } from "./dom.js"
 import type { EditableTitle } from "./editableTitle.js"
 import { createEditableTitle } from "./editableTitle.js"
+import { textos } from "./textos/idioma.js"
 
 export interface DiagramViewDeps {
   readonly store: Store
@@ -57,7 +58,7 @@ export const mountDiagramView = (
 ): (() => void) => {
   const diagrama = (): Diagram | undefined => store.getState().diagrams[diagramId]
 
-  const titulo: EditableTitle = createEditableTitle("Nombre del diagrama", (nombre: string): void => {
+  const titulo: EditableTitle = createEditableTitle(textos.diagrama.nombre, (nombre: string): void => {
     useCases.renameDiagram(diagramId, nombre)
   })
   const cabecera: HTMLElement = elemento("header")
@@ -79,7 +80,7 @@ export const mountDiagramView = (
     today,
   })
 
-  const salir: HTMLButtonElement = elemento("button", "✕ Salir")
+  const salir: HTMLButtonElement = elemento("button", textos.diagrama.salir)
   salir.type = "button"
   salir.className = "salir"
   salir.addEventListener("click", (): void => {

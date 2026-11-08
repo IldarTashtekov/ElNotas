@@ -30,6 +30,7 @@ import {
 } from "./routineList.js"
 import type { Confirm, Sheet } from "./sheet.js"
 import { createSheet } from "./sheet.js"
+import { textos } from "./textos/idioma.js"
 
 export interface RoutinesPanelDeps {
   readonly store: Store
@@ -128,7 +129,7 @@ export const createRoutinesPanel = ({
       },
       "rutinas-vista",
     )
-    cambiar.setAttribute("aria-label", grafica ? "Ver el mes" : "Ver la gráfica")
+    cambiar.setAttribute("aria-label", grafica ? textos.rutinas.verElMes : textos.rutinas.verLaGrafica)
     fila.append(cambiar)
     return fila
   }
@@ -161,7 +162,7 @@ export const createRoutinesPanel = ({
     const nombre: HTMLButtonElement = elemento("button", f.name)
     nombre.type = "button"
     nombre.className = "rutina-nombre"
-    nombre.setAttribute("aria-label", `Opciones de ${f.name}`)
+    nombre.setAttribute("aria-label", textos.rutinas.opcionesDe(f.name))
     li.append(nombre)
     /* Toda la fila, menos las casillas de los días: ahí un doble clic marcaría y desmarcaría. */
     li.addEventListener("click", (e: MouseEvent): void => {
@@ -210,11 +211,11 @@ export const createRoutinesPanel = ({
     cabeza.replaceChildren(...(hoy === null || semana === null ? [] : [cabecera(semana, hoy)]))
     archivadas.replaceChildren(...todas.archived.map((f: RoutineRow): HTMLLIElement => fila(f, null)))
     archivadas.hidden = !verArchivadas || todas.archived.length === 0
-    const botones: HTMLButtonElement[] = [boton("+ Rutina", abrirNueva, "secundario grupo-nuevo")]
+    const botones: HTMLButtonElement[] = [boton(textos.rutinas.nueva, abrirNueva, "secundario grupo-nuevo")]
     if (todas.archived.length > 0) {
       botones.push(
         boton(
-          `${verArchivadas ? "▾" : "▸"} Archivadas (${todas.archived.length})`,
+          `${verArchivadas ? "▾" : "▸"} ${textos.rutinas.archivadas(todas.archived.length)}`,
           (): void => {
             verArchivadas = !verArchivadas
             pintar()
@@ -258,7 +259,7 @@ export const createRoutinesPanel = ({
     const metas: ReadonlyArray<number | null> = [null, 1, 2, 3, 4, 5, 6, 7]
     const botones: ReadonlyArray<HTMLButtonElement> = metas.map((m: number | null): HTMLButtonElement =>
       boton(
-        m === null ? "Sin meta" : String(m),
+        m === null ? textos.rutinas.sinMeta : String(m),
         (): void => {
           alElegir(m)
           marcar(m)
@@ -279,7 +280,7 @@ export const createRoutinesPanel = ({
   const abrirNueva = (): void => {
     let meta: number | null = null
     const entrada: HTMLInputElement = elemento("input")
-    entrada.placeholder = "Nombre"
+    entrada.placeholder = textos.comun.nombre
     const crear = (): void => {
       const nombre: string = entrada.value.trim()
       if (nombre === "") return
@@ -290,13 +291,13 @@ export const createRoutinesPanel = ({
       if (e.key === "Enter") crear()
     })
     caja.replaceChildren(
-      elemento("h2", "Rutina nueva"),
+      elemento("h2", textos.rutinas.tituloNueva),
       entrada,
-      elemento("p", "Días a la semana"),
+      elemento("p", textos.rutinas.diasPorSemana),
       campoMeta(null, (m: number | null): void => {
         meta = m
       }),
-      boton("Crear", crear, "hoja-nuevo"),
+      boton(textos.rutinas.crear, crear, "hoja-nuevo"),
     )
     hoja.open("", [caja])
   }
@@ -304,10 +305,10 @@ export const createRoutinesPanel = ({
   const abrirMenu = (f: RoutineRow): void => {
     const id: RoutineId = f.id as RoutineId
     const renombrar: HTMLButtonElement = boton(
-      "Renombrar",
+      textos.rutinas.renombrar,
       (): void => {
         const entrada: HTMLInputElement = elemento("input")
-        entrada.placeholder = "Nombre"
+        entrada.placeholder = textos.comun.nombre
         entrada.value = f.name
         const guardar = (): void => {
           const nombre: string = entrada.value.trim()
@@ -318,23 +319,23 @@ export const createRoutinesPanel = ({
         entrada.addEventListener("keydown", (e: KeyboardEvent): void => {
           if (e.key === "Enter") guardar()
         })
-        caja.replaceChildren(elemento("h2", f.name), entrada, boton("Guardar", guardar, "hoja-nuevo"))
+        caja.replaceChildren(elemento("h2", f.name), entrada, boton(textos.comun.guardar, guardar, "hoja-nuevo"))
       },
       "hoja-nuevo",
     )
     const meta: HTMLButtonElement = boton(
-      "Cambiar meta",
+      textos.rutinas.cambiarMeta,
       (): void => {
         caja.replaceChildren(
           elemento("h2", f.name),
-          elemento("p", "Días a la semana"),
+          elemento("p", textos.rutinas.diasPorSemana),
           campoMeta(f.goal, (m: number | null): void => void useCases.setRoutineGoal(id, m)),
         )
       },
       "hoja-nuevo",
     )
     const archivar: HTMLButtonElement = boton(
-      f.archived ? "Desarchivar" : "Archivar",
+      f.archived ? textos.rutinas.desarchivar : textos.rutinas.archivar,
       (): void => {
         const orden: CalendarOrder = leerOrden()
         /* Las que ya no existen se podan al guardar. */
@@ -353,17 +354,13 @@ export const createRoutinesPanel = ({
       "hoja-nuevo",
     )
     const borrar: HTMLButtonElement = boton(
-      "Borrar",
+      textos.comun.borrar,
       (): void => {
         const dias: number = store.getState().routines[id]?.days.length ?? 0
-        confirm(
-          `¿Borrar la rutina «${f.name}»? Se pierden sus ${dias} días marcados y no se puede deshacer. Para apartarla sin perderlos, archívala.`,
-          "Borrar",
-          (): void => {
-            useCases.deleteRoutine(id)
-            hoja.close()
-          },
-        )
+        confirm(textos.rutinas.preguntaBorrar(f.name, dias), textos.comun.borrar, (): void => {
+          useCases.deleteRoutine(id)
+          hoja.close()
+        })
       },
       "hoja-peligro",
     )
