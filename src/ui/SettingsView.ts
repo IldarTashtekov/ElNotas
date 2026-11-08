@@ -159,9 +159,7 @@ export const mountSettingsView = (
   /* ── El idioma: igual, cada uno escrito en el suyo; elegir otro recarga ── */
 
   const idiomas: HTMLElement = elemento("div")
-  idiomas.className = "fosforos idiomas"
-  idiomas.setAttribute("role", "group")
-  idiomas.setAttribute("aria-label", textos.ajustes.idioma)
+  idiomas.className = "fosforos"
   const actual: Language = language.get()
   idiomas.append(
     ...languageChoices().map((opcion: LanguageChoice): HTMLButtonElement => {
@@ -276,7 +274,8 @@ export const mountSettingsView = (
   vista.append(
     cabecera,
     seccion(textos.ajustes.seccionContextos, formulario, listaContextos),
-    seccion(textos.ajustes.seccionPantalla, fosforos, idiomas),
+    seccion(textos.ajustes.seccionPantalla, fosforos),
+    seccion(textos.ajustes.seccionIdioma, idiomas),
     datos,
     pie,
   )

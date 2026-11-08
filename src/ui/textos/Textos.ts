@@ -166,7 +166,6 @@ export interface Textos {
     readonly masContexto: string
     readonly preguntaBorrarContexto: (nombre: string) => string
     readonly colorPantalla: string
-    readonly idioma: string
     readonly fosforoVerde: string
     readonly fosforoAmbar: string
     readonly fosforoMagenta: string
@@ -175,6 +174,7 @@ export interface Textos {
     readonly explicacionBorrarTodo: string
     readonly seccionContextos: string
     readonly seccionPantalla: string
+    readonly seccionIdioma: string
     readonly seccionDatos: string
     readonly preguntaEnBlanco: string
     readonly preguntaBorrarTodo: (lista: string) => string

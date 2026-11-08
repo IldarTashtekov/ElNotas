@@ -57,8 +57,8 @@ en el móvil, por la IP del ordenador. Hace falta **un contexto con alguna nota 
   inverso. Pulsar **Ámbar** o **Magenta** lo cambia **todo al instante**: la tinta, el brillo, las
   líneas, los pósits y la rejilla. El rojo de borrar sigue rojo. **Recargar**: sigue igual. Volver a **Verde**.
 - **T9.** Con el ámbar elegido, **«Borrar todo»**: tras recargar, vuelve el **verde**.
-- **T10.** En ⚙, debajo de los colores, **Español** y **English**, con el del navegador en vídeo
-  inverso. Pulsar **English**: la app **recarga** y sale **toda en inglés**, ⚙ incluida, con
+- **T10.** En ⚙, una sección propia, **Idioma** (**Language** en inglés), debajo de **Pantalla**,
+  con **Español** y **English** y el del navegador en vídeo inverso. Pulsar **English**: la app **recarga** y sale **toda en inglés**, ⚙ incluida, con
   **English** marcado. En el calendario, el mes es **«November 2026»**, la semana **M T W T F S S**
   y lo que se lee de un día, **«November 8, 2026»**; en la gráfica de una rutina, el lunes de cada
   semana va **mes/día** («11/2»); en la lista de eventos, en la hoja de enlazar un evento y en lo que

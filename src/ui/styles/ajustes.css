@@ -79,10 +79,6 @@ h2 {
     }
   }
 }
-/* El idioma, debajo del color y con sus mismos botones. */
-.idiomas {
-  margin-top: 0.6rem;
-}
 .secundario {
   background: none !important;
   border-color: transparent !important;
