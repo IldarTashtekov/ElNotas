@@ -1664,4 +1664,38 @@ export const ROTURAS = [
     caza: "pruebas",
     prueba: "addWindow del General o del calendario los pone al final, como a cualquier otra",
   },
+
+  /* ── Los textos en inglés ── */
+  {
+    nombre: "inglés: el singular con uno",
+    fichero: "src/ui/textos/en.ts",
+    buscar: "`${n} ${n === 1 ? uno : varios}`",
+    poner: "`${n} ${varios}`",
+    caza: "pruebas",
+    prueba: "los recuentos llevan el singular con uno y el plural con los demás",
+  },
+  {
+    nombre: "inglés: una frase que se queda en español",
+    fichero: "src/ui/textos/en.ts",
+    buscar: 'borrar: "Delete",',
+    poner: 'borrar: "Borrar",',
+    caza: "pruebas",
+    prueba: "ninguna frase de en se ha quedado como la de es",
+  },
+  {
+    nombre: "inglés: una frase con datos que se queda en español",
+    fichero: "src/ui/textos/en.ts",
+    buscar: "seleccionadas: (n: number): string => `${n} selected`,",
+    poner: 'seleccionadas: (n: number): string => (n === 1 ? "1 seleccionada" : `${n} seleccionadas`),',
+    caza: "pruebas",
+    prueba: "ninguna frase de en se ha quedado como la de es",
+  },
+  {
+    nombre: "inglés: el día con el orden español",
+    fichero: "src/ui/textos/en.ts",
+    buscar: "`${mes} ${dia}, ${anio}`",
+    poner: "`${dia} ${mes} ${anio}`",
+    caza: "pruebas",
+    prueba: "las fechas van en el orden inglés: mes, día y año",
+  },
 ]

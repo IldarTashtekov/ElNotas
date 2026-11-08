@@ -116,12 +116,13 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
       lo que se ve. **Se cierra cuando** ningún texto para quien usa la app queda escrito suelto en
       `src/ui/` ni en `src/platform/web/`, `npm run check` pasa sin tocar las pruebas que comparan frases y las listas manuales
       no ven diferencia.
-- [ ] **3. La traducción, `en`** *(pensar)*, con pruebas en inglés de las frases con datos.
+- [x] **3. La traducción, `en`** *(pensar)*, con pruebas en inglés de las frases con datos.
       **Se cierra cuando** `en` compila con el mismo tipo que `es` y sus pruebas pasan.
 - [ ] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
       página y las fechas con `Intl`. Fechas que la tarea 2 dejó en crudo: los rótulos `d/m` de la
       gráfica de rutinas, el día de un evento en la hoja de enlazar y en la etiqueta de una rutina;
-      y el «Cargando…» de `index.html`, que se ve antes de montar la app. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
+      y el «Cargando…» de `index.html`, que se ve antes de montar la app. Con `Intl`, los meses, las
+      iniciales y los títulos de mes y de día salen de `Textos`. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
       entera tras recargar, con sus pruebas y su paso en la lista manual.
 - [ ] **5. Exportar las notas a Markdown** *(pensar)*, metida en esta fase por el usuario el
       2026-11-04, legible y **sólo hacia fuera**. Desde el 2026-10-12, con «manda el
