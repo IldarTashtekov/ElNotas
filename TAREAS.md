@@ -78,7 +78,7 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 11 — Dos idiomas, español e inglés, y exportar a Markdown — PLANIFICADA, después de la 10.1
+### Fase 11 — Dos idiomas, español e inglés, y exportar a Markdown — EN CURSO
 
 **Pedida por el usuario el 2026-11-04.** **Qué es:** que la app hable en español o en inglés, a
 elegir en ⚙. Se traduce lo que escribe la app (botones, hojas, avisos, ⚙, los fallos de
@@ -97,11 +97,18 @@ Markdown** (tarea 5), que estaba sin fase.
 
 Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos están juntos.
 
-- [ ] **1. Las decisiones abiertas** *(pensar)*: el idioma de partida (siempre español, o el del
+- [x] **1. Las decisiones abiertas** *(pensar)*: el idioma de partida (siempre español, o el del
       navegador); si el idioma viaja en la copia (en el `UiState`) o es del dispositivo; si «Nueva
       Nota» y los demás nombres por defecto se crean en el idioma elegido; recargar o cambiar al
       momento; y si se traduce el `manifest` (la app instalada y la publicada). **Se cierra cuando**
       el usuario contesta las cinco y quedan escritas aquí.
+      **Contestadas por el usuario el 2026-11-08:**
+      1. **De partida, el del navegador**: inglés si el navegador está en inglés; si no, español.
+      2. **Viaja en la copia**: una sección más del `UiState`, como el fósforo.
+      3. **Los nombres por defecto, en el idioma elegido** («New Note»); lo ya creado no cambia. El
+         «General» se traduce siempre: no es un nombre del usuario.
+      4. **Cambiar de idioma en ⚙ recarga la app.**
+      5. **El `manifest` no se traduce**: sólo lleva el nombre, «ElNotas».
 - [ ] **2. Sacar los textos a `es`** *(mecánica, larga: subagente con Sonnet)*, sin cambiar nada de
       lo que se ve. **Se cierra cuando** ningún texto para quien usa la app queda escrito suelto en
       `src/ui/`, `npm run check` pasa sin tocar las pruebas que comparan frases y las listas manuales
