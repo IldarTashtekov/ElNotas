@@ -255,7 +255,7 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
 - La nube con Supabase (diseñada y aparcada: `TAREAS.md` → *Ideas aparcadas*) · `storageTarget`
-- Importar mezclando · formato de texto y texto más grande (sin fase)
+- Importar mezclando · exportar a Markdown · formato de texto y texto más grande (sin fase)
 - Sync entre pares · CRDTs, colaboración. Android (Capacitor) y escritorio (Tauri), en las fases 12 y 13
 
 ## Plan por fases
