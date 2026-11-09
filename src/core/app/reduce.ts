@@ -245,7 +245,7 @@ export const reduce = (state: AppState, action: Action): AppState => {
 
     case "insert":
       return onContent(state, action.noteId, action.meta, (c: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-        insert(c, action.block, action.position),
+        insert(c, action.blocks, action.position),
       )
 
     case "remove":

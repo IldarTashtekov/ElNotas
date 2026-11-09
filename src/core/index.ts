@@ -36,7 +36,7 @@ export {
 } from "./domain/Ids.js"
 
 /* Contenido de una nota */
-export type { CheckBox, Content } from "./domain/Content.js"
+export type { CheckBox, CheckBoxDraft, Content, ContentDraft } from "./domain/Content.js"
 export { isCheckBox } from "./domain/Content.js"
 
 /* El fallo como valor: lo que puede fallar lo devuelve, no lo lanza.

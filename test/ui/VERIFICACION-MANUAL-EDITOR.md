@@ -177,11 +177,11 @@ setTimeout(() => console.log("cambios en pantalla:", cambios), 700)
 
 ---
 
-## M. Seleccionar y copiar
+## M. Seleccionar, copiar y pegar
 
 Con una nota de un texto, una línea vacía, una casilla marcada con dos hijas, y otro texto. (Desde
-la Fase 10 las líneas que no se escriben se ven **formateadas**, sección N: lo copiado ya no lleva
-las marcas de formato.)
+la Fase 10 las líneas que no se escriben se ven **formateadas**, sección N. Desde la Fase 11, lo
+copiado de una línea a otra va **como se guarda**: casillas con su marca, formato con sus marcas.)
 
 - **M1.** Al abrir la nota, **ninguna línea tiene cursor**. Tocar en medio de una palabra pone el
   cursor **donde se tocó**, y sólo esa línea se edita. *(Con la consola.)*
@@ -191,10 +191,10 @@ las marcas de formato.)
   formateado). ⚠️ Hacia arriba
   igual, y **la línea vacía también se pinta**: un hueco ahí era el fallo de la pasada 4.
 - **M3.** ⚠️ Copiar (Ctrl/Cmd + C) y pegarlo **fuera de la app**, en un editor de texto: **una
-  línea por renglón**, sin ✓ ni renglones vacíos de más, la primera y la última cortadas donde
-  empezaba y acababa la selección. **Sin marcas de formato**: si alguna línea lleva `**negrita**`
-  o un enlace, sale su texto sin `**` ni `[](…)`. (Con la consola se puede lanzar el `copy` y leer
-  el resultado, como en la pasada 3.)
+  línea por renglón**, sin renglones vacíos de más, y **las líneas enteras**, aunque la selección
+  empezara o acabara en medio. Cada casilla con su marca, `- [x] ` o `- [ ] `, y las hijas **dos
+  espacios más adentro**; los textos, como se guardan, con sus `**` o `[](…)`. (Con la consola se
+  puede lanzar el `copy` y leer el resultado, como en la pasada 3.)
 - **M4.** *(Móvil.)* ⚠️ **Pulsación larga** en una palabra de una línea que no se está
   escribiendo: sale la selección del sistema, con sus **asas**, que **cruzan líneas**. *Copiar*,
   en su menú, copia como en M3.
@@ -202,6 +202,18 @@ las marcas de formato.)
   cursor ahí, y la selección se va. ⚠️ También tocando **encima** de lo seleccionado.
 - **M6.** Intro, Retroceso al principio y las flechas, como en C, D y G: **la que se edita pasa a
   ser la línea a la que va el cursor**, y la anterior deja de serlo.
+- **M7.** ⚠️ Copiar de la casilla marcada a su segunda hija (M3), ir al **final** del último texto y
+  **pegar** (Ctrl/Cmd + V): aparecen **debajo** la casilla **marcada** y sus dos hijas **anidadas**,
+  y el cursor queda al final de la última hija. Recargar: siguen ahí.
+- **M8.** Pegarlo con el cursor **en medio** de un texto: la línea se parte, y lo pegado queda
+  **entre las dos mitades**. Al **principio** de una línea con texto: entra **encima** de ella. En la
+  **línea vacía**: ocupa su sitio, sin dejar una vacía de más.
+- **M9.** Con el cursor al final de una **hija**, pegar dos casillas (copiadas de otra nota): entran
+  como **hermanas** de esa hija. Pegar algo que lleve **un texto**: entra **debajo de su casilla de
+  la raíz**, no entre las hijas.
+- **M10.** Pegar **una sola palabra** (copiada de dentro de una línea): entra **dentro de la línea**,
+  donde el cursor, como siempre. Pegar una lista de fuera con `- [ ] uno` y `- [x] dos`: salen
+  **casillas**, la segunda marcada.
 
 ## N. Formato de las líneas
 
@@ -235,10 +247,10 @@ mira [la web](https://example.com) o www.example.com.
   crudo**, aunque estuviera formateada (como B5).
 - **N7.** `document.querySelectorAll("[contenteditable]").length` sigue valiendo **1**: sólo la
   activa es editable (como M1).
-- **N8.** ⚠️ Seleccionar con el ratón desde la mitad de una línea formateada hasta la mitad de otra
-  y **copiar**: sale **texto plano sin marcas** (sin `**`, `*`, `# ` ni `[](…)`; un enlace, **como
-  su texto**), una línea por renglón. Si la selección incluye **la línea activa**, ésa sale **en
-  crudo**. *(Con un `copy` lanzado desde la consola; pegarlo fuera de la app, el usuario.)*
+- **N8.** ⚠️ Seleccionar con el ratón **dentro** de una línea formateada y **copiar**: sale **texto
+  plano sin marcas** (sin `**`, `*`, `# ` ni `[](…)`; un enlace, **como su texto**). De una línea a
+  otra, en cambio, salen **enteras y en crudo**, como en M3. *(Con un `copy` lanzado desde la
+  consola; pegarlo fuera de la app, el usuario.)*
 - **N9.** Escribir en la línea activa una marca cerrada (`*x*`) no la formatea **hasta que se
   deja**; al tocar otra línea se ve formateada.
 

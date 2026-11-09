@@ -15,6 +15,7 @@
 import type {
   AppState,
   Content,
+  ContentDraft,
   ContentId,
   Day,
   DiagramId,
@@ -32,7 +33,8 @@ import type { ActiveLine } from "./activeLine.js"
 import { copiedText } from "./copyText.js"
 import { briefNotice, elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
-import { pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "./editor.js"
+import { pasteLines, pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "./editor.js"
+import { isInlinePaste, pastedLines } from "./pastedLines.js"
 import type { LinkBubble } from "./linkBubble.js"
 import { createLinkBubble } from "./linkBubble.js"
 import type { LinkKind, ResolvedLink } from "./linkActions.js"
@@ -1158,14 +1160,58 @@ export const createNoteEditor = ({
     actualizarBurbuja()
   })
 
-  if (!textoPlano) {
-    /* Sin `plaintext-only`, pegar traería formato: se pega sólo el texto. */
-    lineas.addEventListener("paste", (evento: ClipboardEvent): void => {
-      const texto: string = (evento.clipboardData?.getData("text/plain") ?? "").replace(/\n/g, " ")
-      evento.preventDefault()
-      document.execCommand("insertText", false, texto)
-    })
+  /**
+   * Dónde entra lo pegado: en el cursor; si hay un trozo de la línea activa
+   * seleccionado, se quita y entra en su lugar. Si la selección pasa de una línea a
+   * otra, o no está en la activa, entra debajo de su última línea, sin quitar nada.
+   */
+  const dondePegar = (evento: Event): Caret | null => {
+    const sel: Selection | null = window.getSelection()
+    if (sel === null || sel.rangeCount === 0 || sel.isCollapsed) return cursorActual(evento)
+    const rango: Range = sel.getRangeAt(0)
+    const desde: Caret | null = extremo(rango, "inicio")
+    const hasta: Caret | null = extremo(rango, "fin")
+    const campo: HTMLElement | null = hasta === null ? null : campoDe(hasta.line)
+    if (desde === null || hasta === null || campo === null) return null
+    if (desde.line !== hasta.line || campo !== activa) {
+      /* Una línea que no es la activa se ve sin marcas: su largo, el de la nota. */
+      const guardada: Content | undefined = locate(deps.note()?.content ?? [], hasta.line)?.line
+      return guardada === undefined ? null : { line: hasta.line, offset: guardada.text.length }
+    }
+    const crudo: string = crudoDelCampo(campo)
+    const queda: string = crudo.slice(0, desde.offset) + crudo.slice(hasta.offset)
+    pintarActiva(campo, queda)
+    useCases.setText(noteId, desde.line, queda)
+    return desde
   }
+
+  /** ¿Hay una selección que no cabe en la línea activa? Entonces nada se pega dentro de una línea. */
+  const seleccionFueraDeLaActiva = (): boolean => {
+    const sel: Selection | null = window.getSelection()
+    if (sel === null || sel.rangeCount === 0 || sel.isCollapsed) return false
+    const rango: Range = sel.getRangeAt(0)
+    return activa === null || !activa.contains(rango.startContainer) || !activa.contains(rango.endContainer)
+  }
+
+  /* Un solo texto entra dentro de la línea, como al escribirlo; varias líneas, o
+     una casilla, entran como líneas nuevas, y también el texto si la selección
+     cruza líneas, que el navegador borraría sin que la nota se enterase. */
+  lineas.addEventListener("paste", (evento: ClipboardEvent): void => {
+    const texto: string = evento.clipboardData?.getData("text/plain") ?? ""
+    const pegadas: ReadonlyArray<ContentDraft> = pastedLines(texto)
+    const [unica] = pegadas
+    if (isInlinePaste(pegadas) && unica !== undefined && !seleccionFueraDeLaActiva()) {
+      /* Con `plaintext-only` y en un renglón, pega el navegador; si no, traería formato o saltos. */
+      if (textoPlano && !texto.includes("\n")) return
+      evento.preventDefault()
+      document.execCommand("insertText", false, unica.text)
+      return
+    }
+    evento.preventDefault()
+    const caret: Caret | null = dondePegar(evento)
+    if (caret === null) return
+    ordenar((): EditResult => pasteLines(deps, caret, pegadas, modo))
+  })
 
   /* Recordar el cursor para cuando se pulse la barra, que no tiene foco propio. */
   /** El cursor según la selección de ahora mismo, si está en una línea de esta nota. */

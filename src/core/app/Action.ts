@@ -71,16 +71,16 @@ export interface SetText {
 }
 
 /**
- * «Se metió una línea nueva aquí».
+ * «Se metieron estas líneas aquí», seguidas: una al escribir, varias al pegar.
  *
- * El bloque llega **ya construido, con su id**, porque el dominio no genera
+ * Los bloques llegan **ya construidos, con sus ids**, porque el dominio no genera
  * identificadores: lo hace el caso de uso, que es quien tiene el `IdGenerator`.
  * Y el "aquí" es un `Position`, que tiene cuatro casos y ni uno más.
  */
 export interface Insert {
   readonly type: "insert"
   readonly noteId: NoteId
-  readonly block: Content
+  readonly blocks: ReadonlyArray<Content>
   readonly position: Position
   readonly meta: ActionMeta
 }

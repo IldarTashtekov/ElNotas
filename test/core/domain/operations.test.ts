@@ -12,6 +12,7 @@ import assert from "node:assert/strict"
 
 import type { CheckBox, Content } from "#core/domain/Content"
 import { checkBox, isCheckBox, text } from "#core/domain/Content"
+import type { ContentId } from "#core/domain/Ids"
 import { contentId } from "#core/domain/Ids"
 import type { Position } from "#core/domain/Position"
 import { after, before, lastChildOf, rootEnd } from "#core/domain/Position"
@@ -195,18 +196,18 @@ test("setChecked: no muta el árbol original", () => {
 test("insert root-end: añade al final de la raíz, sea texto o casilla", () => {
   const antes = listaDeLaCompra()
 
-  const conCasilla = insert(antes, casillaNueva(), rootEnd)
+  const conCasilla = insert(antes, [casillaNueva()], rootEnd)
   assert.equal(conCasilla.length, 4)
   assert.equal(bloqueEn(conCasilla, 3).text, "Plátanos")
 
-  const conTexto = insert(antes, textoNuevo(), rootEnd)
+  const conTexto = insert(antes, [textoNuevo()], rootEnd)
   assert.equal(bloqueEn(conTexto, 3).text, "Nota al margen")
 })
 
 test("insert root-end: no copia lo que ya estaba", () => {
   const antes = listaDeLaCompra()
 
-  const despues = insert(antes, casillaNueva(), rootEnd)
+  const despues = insert(antes, [casillaNueva()], rootEnd)
 
   assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0))
   assert.strictEqual(bloqueEn(despues, 1), bloqueEn(antes, 1))
@@ -217,13 +218,13 @@ test("insert con una posición desconocida, llegada sin tipos: no hace nada", ()
   const antes: ReadonlyArray<Content> = listaDeLaCompra()
   const desconocida: Position = { at: "rot-end" } as unknown as Position
 
-  assert.strictEqual(insert(antes, casillaNueva(), desconocida), antes)
+  assert.strictEqual(insert(antes, [casillaNueva()], desconocida), antes)
 })
 
 test("insert after: mete justo detrás, en la raíz", () => {
   const antes = listaDeLaCompra()
 
-  const despues = insert(antes, casillaNueva(), after(ID_COMPRA))
+  const despues = insert(antes, [casillaNueva()], after(ID_COMPRA))
 
   assert.equal(despues.length, 4)
   assert.equal(bloqueEn(despues, 1).text, "Plátanos", "detrás de 'Compra semanal'")
@@ -233,7 +234,7 @@ test("insert after: mete justo detrás, en la raíz", () => {
 test("insert after: mete justo detrás de una hermana, en profundidad", () => {
   const antes = listaDeLaCompra()
 
-  const despues = insert(antes, casillaNueva(), after(ID_MANZANAS))
+  const despues = insert(antes, [casillaNueva()], after(ID_MANZANAS))
 
   const hijas = casillaEn(despues, 1).children
   assert.equal(hijas.length, 3)
@@ -244,7 +245,7 @@ test("insert after: mete justo detrás de una hermana, en profundidad", () => {
 test("insert after: no hace nada si el destino no existe", () => {
   const antes = listaDeLaCompra()
 
-  assert.strictEqual(insert(antes, casillaNueva(), after(ID_INEXISTENTE)), antes)
+  assert.strictEqual(insert(antes, [casillaNueva()], after(ID_INEXISTENTE)), antes)
 })
 
 /* El caso que el compilador ya impide escribir mal, y que aquí se comprueba
@@ -252,13 +253,13 @@ test("insert after: no hace nada si el destino no existe", () => {
 test("insert after: no hace nada al meter un texto suelto entre hijas", () => {
   const antes = listaDeLaCompra()
 
-  assert.strictEqual(insert(antes, textoNuevo(), after(ID_MANZANAS)), antes, "un texto no cabe dentro de una casilla")
+  assert.strictEqual(insert(antes, [textoNuevo()], after(ID_MANZANAS)), antes, "un texto no cabe dentro de una casilla")
 })
 
 test("insert last-child-of: añade como última hija", () => {
   const antes = listaDeLaCompra()
 
-  const despues = insert(antes, casillaNueva(), lastChildOf(ID_FRUTA))
+  const despues = insert(antes, [casillaNueva()], lastChildOf(ID_FRUTA))
 
   const hijas = casillaEn(despues, 1).children
   assert.equal(hijas.length, 3)
@@ -268,7 +269,7 @@ test("insert last-child-of: añade como última hija", () => {
 test("insert last-child-of: funciona sobre una casilla que aún no tiene hijas", () => {
   const antes = listaDeLaCompra()
 
-  const despues = insert(antes, casillaNueva(), lastChildOf(ID_PERAS))
+  const despues = insert(antes, [casillaNueva()], lastChildOf(ID_PERAS))
 
   const peras = hijaEn(casillaEn(despues, 1).children, 1)
   assert.equal(peras.children.length, 1)
@@ -278,19 +279,19 @@ test("insert last-child-of: funciona sobre una casilla que aún no tiene hijas",
 test("insert last-child-of: no hace nada si el destino es un texto suelto", () => {
   const antes = listaDeLaCompra()
 
-  assert.strictEqual(insert(antes, casillaNueva(), lastChildOf(ID_COMPRA)), antes, "un texto no tiene hijas")
+  assert.strictEqual(insert(antes, [casillaNueva()], lastChildOf(ID_COMPRA)), antes, "un texto no tiene hijas")
 })
 
 test("insert last-child-of: no hace nada al meter un texto suelto dentro", () => {
   const antes = listaDeLaCompra()
 
-  assert.strictEqual(insert(antes, textoNuevo(), lastChildOf(ID_FRUTA)), antes)
+  assert.strictEqual(insert(antes, [textoNuevo()], lastChildOf(ID_FRUTA)), antes)
 })
 
 test("insert last-child-of: no hace nada si el destino no existe", () => {
   const antes = listaDeLaCompra()
 
-  assert.strictEqual(insert(antes, casillaNueva(), lastChildOf(ID_INEXISTENTE)), antes)
+  assert.strictEqual(insert(antes, [casillaNueva()], lastChildOf(ID_INEXISTENTE)), antes)
 })
 
 /* La fila que no estaba en la tabla y se añadió al implementar. */
@@ -298,18 +299,82 @@ test("insert: no hace nada si ya existe una línea con ese id", () => {
   const antes = listaDeLaCompra()
   const repetida = checkBox(ID_PERAS, "Peras impostoras")
 
-  assert.strictEqual(insert(antes, repetida, rootEnd), antes, "en la raíz")
-  assert.strictEqual(insert(antes, repetida, after(ID_COMPRA)), antes, "detrás de otra")
-  assert.strictEqual(insert(antes, repetida, lastChildOf(ID_FRUTA)), antes, "como hija")
+  assert.strictEqual(insert(antes, [repetida], rootEnd), antes, "en la raíz")
+  assert.strictEqual(insert(antes, [repetida], after(ID_COMPRA)), antes, "detrás de otra")
+  assert.strictEqual(insert(antes, [repetida], lastChildOf(ID_FRUTA)), antes, "como hija")
 })
 
 test("insert: detecta el id repetido esté a la profundidad que esté", () => {
   const antes = listaDeLaCompra()
 
   assert.strictEqual(
-    insert(antes, checkBox(ID_FREGONA, "Otra fregona"), rootEnd),
+    insert(antes, [checkBox(ID_FREGONA, "Otra fregona")], rootEnd),
     antes,
     "'Fregona' vive anidada, y aun así se detecta",
+  )
+})
+
+/* ── Varios bloques: lo pegado ── */
+
+const ID_OTRO: ContentId = contentId("otro")
+const ID_HIJA: ContentId = contentId("hija")
+
+test("insert de varios: entran seguidos y en orden, el primero donde se pide", (): void => {
+  const despues: ReadonlyArray<Content> = insert(
+    listaDeLaCompra(),
+    [textoNuevo(), checkBox(ID_OTRO, "Leche", { checked: true, children: [checkBox(ID_HIJA, "Entera")] })],
+    after(ID_COMPRA),
+  )
+  assert.deepEqual(
+    despues.map((c: Content): ContentId => c.id),
+    [ID_COMPRA, ID_NUEVO, ID_OTRO, ID_FRUTA, ID_LIMPIEZA],
+  )
+  assert.equal(casillaEn(despues, 2).checked, true, "conserva la marca")
+  assert.equal(hijaEn(casillaEn(despues, 2).children, 0).id, ID_HIJA, "y sus hijas")
+})
+
+test("insert de varios entre hijas: entran todas seguidas", (): void => {
+  const despues: ReadonlyArray<Content> = insert(
+    listaDeLaCompra(),
+    [casillaNueva(), checkBox(ID_OTRO, "Uvas")],
+    before(ID_PERAS),
+  )
+  assert.deepEqual(
+    casillaEn(despues, 1).children.map((h: CheckBox): ContentId => h.id),
+    [ID_MANZANAS, ID_NUEVO, ID_OTRO, ID_PERAS],
+  )
+})
+
+test("insert de varios: no copia lo que ya estaba", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  const despues: ReadonlyArray<Content> = insert(antes, [textoNuevo(), checkBox(ID_OTRO, "Leche")], after(ID_COMPRA))
+  assert.strictEqual(bloqueEn(despues, 0), bloqueEn(antes, 0))
+  assert.strictEqual(bloqueEn(despues, 3), bloqueEn(antes, 1))
+  assert.strictEqual(bloqueEn(despues, 4), bloqueEn(antes, 2))
+})
+
+test("insert de varios: si uno no cabe, no entra ninguno", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(insert(antes, [casillaNueva(), text(ID_OTRO, "suelto")], after(ID_MANZANAS)), antes)
+})
+
+test("insert de varios: no hace nada sin bloques, ni con un id repetido entre ellos o en sus hijas", (): void => {
+  const antes: ReadonlyArray<Content> = listaDeLaCompra()
+  assert.strictEqual(insert(antes, [], rootEnd), antes, "sin bloques")
+  assert.strictEqual(insert(antes, [casillaNueva(), text(ID_NUEVO, "otra")], rootEnd), antes, "repetido entre ellos")
+  assert.strictEqual(
+    insert(
+      antes,
+      [checkBox(ID_OTRO, "Leche", { children: [checkBox(ID_NUEVO, "a"), checkBox(ID_NUEVO, "b")] })],
+      rootEnd,
+    ),
+    antes,
+    "repetido entre hijas",
+  )
+  assert.strictEqual(
+    insert(antes, [checkBox(ID_OTRO, "Leche", { children: [checkBox(ID_FREGONA, "Fregona")] })], rootEnd),
+    antes,
+    "una hija con un id que ya está en la nota",
   )
 })
 
@@ -752,10 +817,10 @@ test("texto → casilla → texto devuelve una línea equivalente, y con el mism
 /* ══════════════════════════════ insert before ══════════════════════════════ */
 
 test("insert before: mete justo delante, en la raíz y entre hijas", (): void => {
-  const enLaRaiz: ReadonlyArray<Content> = insert(listaDeLaCompra(), casillaNueva(), before(ID_COMPRA))
+  const enLaRaiz: ReadonlyArray<Content> = insert(listaDeLaCompra(), [casillaNueva()], before(ID_COMPRA))
   assert.equal(bloqueEn(enLaRaiz, 0).id, ID_NUEVO)
 
-  const entreHijas: ReadonlyArray<Content> = insert(listaDeLaCompra(), casillaNueva(), before(ID_MANZANAS))
+  const entreHijas: ReadonlyArray<Content> = insert(listaDeLaCompra(), [casillaNueva()], before(ID_MANZANAS))
   assert.deepEqual(
     casillaEn(entreHijas, 1).children.map((h: CheckBox): string => h.id),
     [ID_NUEVO, ID_MANZANAS, ID_PERAS],
@@ -764,8 +829,8 @@ test("insert before: mete justo delante, en la raíz y entre hijas", (): void =>
 
 test("insert before: no hace nada con un texto suelto entre hijas ni con un destino que no existe", (): void => {
   const antes: ReadonlyArray<Content> = listaDeLaCompra()
-  assert.strictEqual(insert(antes, textoNuevo(), before(ID_MANZANAS)), antes)
-  assert.strictEqual(insert(antes, casillaNueva(), before(ID_INEXISTENTE)), antes)
+  assert.strictEqual(insert(antes, [textoNuevo()], before(ID_MANZANAS)), antes)
+  assert.strictEqual(insert(antes, [casillaNueva()], before(ID_INEXISTENTE)), antes)
 })
 
 /* ══════════════════════════════════ move ══════════════════════════════════ */

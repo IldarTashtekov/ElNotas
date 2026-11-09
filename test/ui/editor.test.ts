@@ -22,7 +22,8 @@ import { revision } from "#core/domain/Ids"
 import type { Caret, EditResult, EditorDeps } from "#ui/editor"
 import type { WritingMode } from "#ui/writingMode"
 import { INITIAL_MODE, toggleNest } from "#ui/writingMode"
-import { pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "#ui/editor"
+import { pasteLines, pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "#ui/editor"
+import { pastedLines } from "#ui/pastedLines"
 
 /* ─────────────────────────────── El escenario ───────────────────────────── */
 
@@ -314,4 +315,85 @@ test("la línea nueva lleva un id nuevo, no reutiliza ninguno", (): void => {
   const ids: ReadonlyArray<ContentId> = (e.deps.note()?.content ?? []).map((l: Content): ContentId => l.id)
   assert.equal(new Set<ContentId>(ids).size, ids.length)
   assert.notEqual(r.caret?.line, contentId("a"))
+})
+
+/* ═══════════════════════════════ Pegar líneas ══════════════════════════════ */
+
+/** Pega lo que diga el portapapeles, leído como lo lee el editor. */
+const pegar = (e: Editor, caret: Caret, portapapeles: string): EditResult =>
+  pasteLines(e.deps, caret, pastedLines(portapapeles), APAGADA)
+
+const LISTA: string = "- [x] Fruta\n  - [ ] Peras\nFin"
+
+test("pegar al final de una línea: debajo, con marca y anidado, y el cursor al final de la última", (): void => {
+  const e: Editor = editor([t("a", "Compra"), t("b", "Otra")])
+  const r: EditResult = pegar(e, en("a", 6), LISTA)
+  assert.deepEqual(dibujo(e, r.caret), ["T Compra", "X Fruta", "  C Peras", "T Fin|", "T Otra"])
+})
+
+test("pegar en medio de una línea: se parte, y lo pegado entra entre las dos mitades", (): void => {
+  const e: Editor = editor([t("a", "Compra")])
+  const r: EditResult = pegar(e, en("a", 3), LISTA)
+  assert.deepEqual(dibujo(e, r.caret), ["T Com", "X Fruta", "  C Peras", "T Fin|", "T pra"])
+})
+
+test("pegar al principio de una línea: encima de ella", (): void => {
+  const e: Editor = editor([t("a", "Compra")])
+  const r: EditResult = pegar(e, en("a", 0), "- [ ] Pan")
+  assert.deepEqual(dibujo(e, r.caret), ["C Pan|", "T Compra"])
+})
+
+test("pegar en una línea vacía: lo pegado ocupa su sitio", (): void => {
+  const e: Editor = editor([t("a", "Arriba"), t("b", ""), t("c", "Abajo")])
+  const r: EditResult = pegar(e, en("b", 0), "uno\ndos")
+  assert.deepEqual(dibujo(e, r.caret), ["T Arriba", "T uno", "T dos|", "T Abajo"])
+})
+
+test("pegar en una casilla vacía con hijas: no la quita", (): void => {
+  const e: Editor = editor([c("a", "", [c("a1", "Hija")])])
+  const r: EditResult = pegar(e, en("a", 0), "- [ ] Pan")
+  assert.deepEqual(dibujo(e, r.caret), ["C ", "  C Hija", "C Pan|"])
+})
+
+test("pegar casillas en una anidada: entran como hermanas suyas", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche"), c("a2", "Pan")])])
+  const r: EditResult = pegar(e, en("a1", 5), "- [ ] Huevos\n- [x] Sal")
+  assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche", "  C Huevos", "  X Sal|", "  C Pan"])
+})
+
+test("pegar algún texto en una anidada: entra debajo de su casilla de la raíz", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche")]), t("b", "Fin")])
+  const r: EditResult = pegar(e, en("a1", 5), "uno\n- [ ] dos")
+  assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche", "T uno", "C dos|", "T Fin"])
+})
+
+test("pegar algún texto en medio de una anidada: no la parte, y entra debajo de su casilla de la raíz", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Leche")])])
+  const r: EditResult = pegar(e, en("a1", 2), "uno\ndos")
+  assert.deepEqual(dibujo(e, r.caret), ["C Compra", "  C Leche", "T uno", "T dos|"])
+})
+
+test("pegar nada en medio de una línea: no la parte", (): void => {
+  const e: Editor = editor([t("a", "Compra")])
+  const r: EditResult = pasteLines(e.deps, en("a", 3), [], APAGADA)
+  assert.deepEqual(dibujo(e, r.caret), ["T Com|pra"])
+})
+
+test("pegar en una línea que ya no está: no hace nada", (): void => {
+  const e: Editor = editor([t("a", "Compra")])
+  const r: EditResult = pegar(e, en("no-esta", 0), LISTA)
+  assert.deepEqual(dibujo(e, r.caret), ["T Compra"])
+  assert.deepEqual(r.caret, en("no-esta", 0))
+})
+
+test("pegar es una sola acción, más la de partir si hace falta", (): void => {
+  const e: Editor = editor([t("a", "Compra")])
+  let acciones: number = 0
+  e.store.subscribe((): void => {
+    acciones += 1
+  })
+  pegar(e, en("a", 6), LISTA)
+  assert.equal(acciones, 1, "al final, sólo insertar")
+  pegar(e, en("a", 3), LISTA)
+  assert.equal(acciones, 3, "en medio, partir e insertar")
 })

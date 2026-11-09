@@ -1,16 +1,16 @@
 /**
  * Lo que hace cada tecla y cada botón del editor: Intro, Retroceso al principio
- * de una línea, el interruptor de casilla, anidar y marcar.
+ * de una línea, el interruptor de casilla, anidar, marcar y pegar líneas.
  *
  * Cada acción ejecuta las operaciones que tocan —con los casos de uso, sin tocar
  * el core— y devuelve dónde queda el cursor y cómo queda el modo. No sabe nada
  * del DOM, así que se prueba en Node, tecla a tecla y caso a caso.
  */
 
-import type { Content, ContentId, Note, NoteId, Position, UseCases } from "#core/index"
-import { after, isCheckBox, lastChildOf, rootEnd } from "#core/index"
+import type { Content, ContentDraft, ContentId, Note, NoteId, Position, UseCases } from "#core/index"
+import { after, before, isCheckBox, lastChildOf, rootEnd } from "#core/index"
 import type { Located } from "./noteTree.js"
-import { locate, mergeTarget, nextSibling, rootAncestor } from "./noteTree.js"
+import { inReadingOrder, locate, mergeTarget, nextSibling, rootAncestor } from "./noteTree.js"
 import type { WritingMode } from "./writingMode.js"
 
 /** Dónde está el cursor: en qué línea y tras cuántos caracteres. */
@@ -161,4 +161,51 @@ export const startWriting = (deps: EditorDeps, mode: WritingMode): EditResult =>
     : deps.useCases.insertText(deps.noteId, "", rootEnd)
   const ultima: Content | undefined = nota?.content[nota.content.length - 1]
   return { caret: ultima === undefined ? null : { line: ultima.id, offset: 0 }, mode }
+}
+
+/**
+ * Pegar líneas: entran seguidas, en una sola acción, donde está el cursor.
+ *
+ *     al final de la línea       debajo de ella
+ *     al principio               encima
+ *     en medio                   la línea se parte, y entran entre las dos mitades
+ *     en una línea vacía         ocupan su sitio, si no tiene hijas
+ *
+ * Un texto sólo cabe en la raíz: si la línea va anidada y lo pegado trae alguno,
+ * entran debajo de su casilla de la raíz, y la línea no se parte. El cursor queda al final de la última
+ * línea pegada, y si no entraron, donde estaba.
+ */
+export const pasteLines = (
+  deps: EditorDeps,
+  caret: Caret,
+  lineas: ReadonlyArray<ContentDraft>,
+  mode: WritingMode,
+): EditResult => {
+  const donde: Located | null = locate(contenido(deps), caret.line)
+  if (donde === null) return { caret, mode }
+  const linea: Content = donde.line
+  const largo: number = linea.text.length
+  const vacia: boolean = largo === 0 && !(isCheckBox(linea) && linea.children.length > 0)
+  const aLaRaiz: boolean = donde.parent !== null && lineas.some((l: ContentDraft): boolean => l.type === "text")
+
+  if (lineas.length === 0) return { caret, mode }
+  /* Si lo pegado se va a la raíz, no hay nada que meter entre las mitades: no se parte. */
+  if (!aLaRaiz && caret.offset > 0 && caret.offset < largo) deps.useCases.split(deps.noteId, linea.id, caret.offset)
+  /* Lo que ya había, mitad partida incluida: lo que no esté aquí es lo pegado. */
+  const habia: ReadonlySet<ContentId> = new Set(inReadingOrder(contenido(deps)).map((l: Content): ContentId => l.id))
+  const raiz: Content = rootAncestor(contenido(deps), linea.id) ?? linea
+  const posicion: Position = aLaRaiz
+    ? after(raiz.id)
+    : caret.offset === 0 && largo > 0
+      ? before(linea.id)
+      : after(linea.id)
+  const nota: Note | null = deps.useCases.insertLines(deps.noteId, lineas, posicion)
+  if (nota === null) return { caret, mode }
+  if (vacia) deps.useCases.remove(deps.noteId, [linea.id])
+
+  const pegadas: ReadonlyArray<Content> = inReadingOrder(contenido(deps)).filter(
+    (l: Content): boolean => !habia.has(l.id),
+  )
+  const ultima: Content | undefined = pegadas[pegadas.length - 1]
+  return { caret: ultima === undefined ? caret : { line: ultima.id, offset: ultima.text.length }, mode }
 }

@@ -37,6 +37,19 @@ export interface CheckBox {
  */
 export type Content = Text | CheckBox
 
+/**
+ * Una línea que todavía no está en ninguna nota: la misma forma, sin ids. Así
+ * llega lo pegado; los ids se los pone el caso de uso al meterla.
+ */
+export type ContentDraft = { readonly type: "text"; readonly text: string } | CheckBoxDraft
+
+export interface CheckBoxDraft {
+  readonly type: "checkbox"
+  readonly text: string
+  readonly checked: boolean
+  readonly children: ReadonlyArray<CheckBoxDraft>
+}
+
 export const isCheckBox = (content: Content): content is CheckBox => content.type === "checkbox"
 
 export const isText = (content: Content): content is Text => content.type === "text"

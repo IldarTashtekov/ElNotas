@@ -125,13 +125,12 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
       y el «Cargando…» de `index.html`, que se ve antes de montar la app. Con `Intl`, los meses, las
       iniciales y los títulos de mes y de día salen de `Textos`. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
       entera tras recargar, con sus pruebas y su paso en la lista manual.
-- [ ] **5. Copiar y pegar casillas** *(pensar)*, metida en esta fase por el usuario el 2026-11-09.
-      Hoy copiar lleva sólo el texto que se ve, y pegar lo junta en la línea activa. Copiar escribiría
-      la selección en Markdown (`- [ ]`, `- [x]`, las hijas con sangría), para que se entienda también
-      fuera de la app. Pegar crearía las líneas debajo de la activa. Antes del código, al usuario: si
-      se parte la línea con el cursor en medio, si se respetan lo marcado y las hijas, qué pasa con lo
-      que parece una casilla y viene de fuera, y cómo se pegan varias en una sola acción (hoy `insert`
-      crea una, y ampliarla toca el core). **Se cierra cuando** copiar y pegar dentro de una nota
+- [x] **5. Copiar y pegar casillas** *(pensar)*, metida en esta fase por el usuario el 2026-11-09.
+      **Planteamiento aprobado por el usuario el 2026-11-09**, con `insert` de varios bloques en el
+      core (la opción B): copiar de una línea a otra lleva las líneas como se guardan, cada casilla
+      con `- [ ]` o `- [x]` y las hijas sangradas; pegar varias líneas, o una casilla, crea líneas
+      nuevas en una sola acción (partiendo la línea si el cursor va en medio); un solo texto se pega
+      dentro de la línea, como antes. **Se cierra cuando** copiar y pegar dentro de una nota
       conserva las casillas, con sus pruebas y su paso en la lista del editor.
 - [ ] **6. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
       cuando** la pasada está anotada sin textos en español sueltos, `CLAUDE.md` recoge la regla de

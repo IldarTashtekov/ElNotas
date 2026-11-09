@@ -124,7 +124,7 @@ test("insert mete la línea al final de la raíz", () => {
   const s = reduce(estado(), {
     type: "insert",
     noteId: ID_NOTA,
-    block: text(ID_NUEVO, "Leche"),
+    blocks: [text(ID_NUEVO, "Leche")],
     position: rootEnd,
     meta: META,
   })
@@ -137,7 +137,7 @@ test("insert coloca detrás de una línea concreta", () => {
   const s = reduce(estado(), {
     type: "insert",
     noteId: ID_NOTA,
-    block: checkBox(ID_NUEVO, "Leche"),
+    blocks: [checkBox(ID_NUEVO, "Leche")],
     position: after(ID_TITULO),
     meta: META,
   })
@@ -149,7 +149,7 @@ test("insert mete como última hija de una casilla", () => {
   const s = reduce(estado(), {
     type: "insert",
     noteId: ID_NOTA,
-    block: checkBox(ID_NUEVO, "Manzanas"),
+    blocks: [checkBox(ID_NUEVO, "Manzanas")],
     position: lastChildOf(ID_FRUTA),
     meta: META,
   })
@@ -165,7 +165,7 @@ test("insert con un id que ya existe es no-op", () => {
     reduce(antes, {
       type: "insert",
       noteId: ID_NOTA,
-      block: text(ID_TITULO, "Duplicada"),
+      blocks: [text(ID_TITULO, "Duplicada")],
       position: rootEnd,
       meta: META,
     }),
@@ -323,7 +323,7 @@ test("todas las acciones de contenido sobre una nota inexistente son no-op", () 
     {
       type: "insert",
       noteId: fantasma,
-      block: text(ID_NUEVO, "x"),
+      blocks: [text(ID_NUEVO, "x")],
       position: rootEnd,
       meta: META,
     },

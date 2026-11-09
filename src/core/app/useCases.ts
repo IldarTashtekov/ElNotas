@@ -19,6 +19,7 @@
 
 import type { Day, Time } from "../domain/calendar.js"
 import type { CalendarEvent } from "../domain/CalendarEvent.js"
+import type { CheckBox, CheckBoxDraft, Content, ContentDraft } from "../domain/Content.js"
 import { checkBox, text } from "../domain/Content.js"
 import type { Context, DefaultView } from "../domain/Context.js"
 import type { Diagram } from "../domain/Diagram.js"
@@ -62,6 +63,11 @@ export interface UseCases {
    */
   readonly insertText: (noteId: NoteId, value: string, at: Position) => Note | null
   readonly insertCheckBox: (noteId: NoteId, value: string, at: Position) => Note | null
+  /**
+   * Mete varias líneas seguidas, en una sola acción: lo pegado. Cada una, y cada
+   * hija, recibe aquí su id. O entran todas, o ninguna.
+   */
+  readonly insertLines: (noteId: NoteId, lines: ReadonlyArray<ContentDraft>, at: Position) => Note | null
   /** Una casilla, con todo su árbol. `null` si no existe ninguna. */
   readonly remove: (noteId: NoteId, contentIds: ReadonlyArray<ContentId>) => Note | null
   /** Parte una línea por `offset`. El id de la mitad nueva se genera aquí. */
@@ -217,7 +223,7 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
       trasNota(noteId, {
         type: "insert",
         noteId,
-        block: text(contentId(ids.next()), value),
+        blocks: [text(contentId(ids.next()), value)],
         position: at,
         meta: meta(),
       }),
@@ -226,7 +232,16 @@ export const createUseCases = ({ clock, ids, store }: UseCaseDeps): UseCases => 
       trasNota(noteId, {
         type: "insert",
         noteId,
-        block: checkBox(contentId(ids.next()), value),
+        blocks: [checkBox(contentId(ids.next()), value)],
+        position: at,
+        meta: meta(),
+      }),
+
+    insertLines: (noteId: NoteId, lines: ReadonlyArray<ContentDraft>, at: Position): Note | null =>
+      trasNota(noteId, {
+        type: "insert",
+        noteId,
+        blocks: lines.map((line: ContentDraft): Content => conIds(ids, line)),
         position: at,
         meta: meta(),
       }),
@@ -485,6 +500,19 @@ const cambio = <T>(antes: T | undefined, despues: T | undefined): T | null =>
     envoltorios de una línea en vez de un método por tipo en el puerto.
 */
 const contentIdNuevo = (ids: IdGenerator): ContentId => contentId(ids.next())
+
+/** La casilla, con un id nuevo para ella y para cada hija, en orden de lectura. */
+const casillaConIds = (ids: IdGenerator, draft: CheckBoxDraft): CheckBox => {
+  const id: ContentId = contentIdNuevo(ids)
+  return checkBox(id, draft.text, {
+    checked: draft.checked,
+    children: draft.children.map((hija: CheckBoxDraft): CheckBox => casillaConIds(ids, hija)),
+  })
+}
+
+/** La línea, con un id nuevo para ella y para cada hija. */
+const conIds = (ids: IdGenerator, draft: ContentDraft): Content =>
+  draft.type === "text" ? text(contentIdNuevo(ids), draft.text) : casillaConIds(ids, draft)
 const noteIdNuevo = (ids: IdGenerator): NoteId => noteId(ids.next())
 const contextIdNuevo = (ids: IdGenerator): ContextId => contextId(ids.next())
 const diagramIdNuevo = (ids: IdGenerator): DiagramId => diagramId(ids.next())

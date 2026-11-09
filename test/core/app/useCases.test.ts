@@ -5,7 +5,7 @@
  * tentación es no probarla. Pero es la **única** que lee el mundo, y hay tres
  * cosas que sólo pasan aquí y que ninguna prueba del reducer puede ver:
  *
- *   1. **el cableado**: cuarenta y cinco bloques casi idénticos uno debajo de otro son
+ *   1. **el cableado**: cuarenta y seis bloques casi idénticos uno debajo de otro son
  *      justo donde se cuela un copy-paste, y un `renameNote` que despachara
  *      `delete-note` borraría notas al renombrarlas sin que fallara nada en el
  *      reducer, que haría exactamente lo que le piden;
@@ -24,7 +24,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState } from "#core/domain/AppState"
-import type { Content } from "#core/domain/Content"
+import type { Content, ContentDraft } from "#core/domain/Content"
 import { checkBox, isCheckBox, isText, text } from "#core/domain/Content"
 import type { Context } from "#core/domain/Context"
 import type { Day, Time } from "#core/domain/calendar"
@@ -87,6 +87,14 @@ const ID_EVENTO: EventId = eventId("cita")
 const ID_RUTINA: RoutineId = routineId("correr")
 const DIA: Day = parseDay("2026-07-02") as Day
 const HORA_DEL_DIA: Time = parseTime("18:00") as Time
+
+/** Una línea pegada: una casilla hecha, con una hija sin hacer. */
+const PEGADA: ContentDraft = {
+  type: "checkbox",
+  text: "Fruta",
+  checked: true,
+  children: [{ type: "checkbox", text: "Peras", checked: false, children: [] }],
+}
 
 const VACIO: AppState = { notes: {}, diagrams: {}, contexts: {}, events: {}, routines: {} }
 
@@ -164,7 +172,7 @@ const conContextos = (...ctxs: ReadonlyArray<Context>): AppState => ({
   contexts: Object.fromEntries(ctxs.map((c: Context): [ContextId, Context] => [c.id, c])),
 })
 
-/* ──────────────────── (1) El cableado: los cuarenta y cinco ──────────────────── */
+/* ──────────────────── (1) El cableado: los cuarenta y seis ───────────────────── */
 
 /**
  * Cada caso de uso con el `type` que tiene que despachar. Si alguien añade uno y
@@ -177,6 +185,7 @@ const CABLEADO: ReadonlyArray<
   ["set-text", (u) => u.setText(ID_NOTA, ID_LINEA, "hola")],
   ["insert", (u) => u.insertText(ID_NOTA, "hola", rootEnd)],
   ["insert", (u) => u.insertCheckBox(ID_NOTA, "hola", rootEnd)],
+  ["insert", (u: UseCases): Note | null => u.insertLines(ID_NOTA, [PEGADA], rootEnd)],
   ["remove", (u) => u.remove(ID_NOTA, [ID_LINEA])],
   ["split", (u) => u.split(ID_NOTA, ID_LINEA, 3)],
   ["merge", (u) => u.merge(ID_NOTA, ID_LINEA)],
@@ -247,13 +256,13 @@ test("la lista de cableado cubre TODOS los casos de uso", () => {
       contenido que faltaban en vez de las OCHO que hay— y se arrastró sin que
       nada lo comprobara, porque ningún sitio contaba de verdad.
 
-      Son **cuarenta y cinco casos de uso para cuarenta y cuatro acciones**: `insert` tiene dos
-      —`insertText` e `insertCheckBox`— porque el id de la línea se genera en esta
-      capa y hay que saber qué clase de línea se está creando.
+      Son **cuarenta y seis casos de uso para cuarenta y cuatro acciones**: `insert` tiene tres
+      —`insertText`, `insertCheckBox` e `insertLines`, la de pegar— porque el id de la
+      línea se genera en esta capa y hay que saber qué clase de línea se está creando.
   */
   const app = montar()
-  assert.equal(CABLEADO.length, 45, "faltan filas en la lista de cableado")
-  assert.equal(Object.keys(app.useCases).length, 45, "hay casos de uso sin cablear aquí")
+  assert.equal(CABLEADO.length, 46, "faltan filas en la lista de cableado")
+  assert.equal(Object.keys(app.useCases).length, 46, "hay casos de uso sin cablear aquí")
 
   // Y el ancla que no existía: cuántas acciones DISTINTAS hay de verdad.
   const tipos = new Set(CABLEADO.map(([tipo]) => tipo))
@@ -341,9 +350,11 @@ const NO_OP_CON_NOTA: ReadonlyArray<readonly [string, (u: UseCases) => Note | nu
   // Insertar TRAS una línea que no existe: no-op. Con `rootEnd` sí aplicaría.
   ["insertText", (u) => u.insertText(ID_NOTA, "hola", after(contentId("fantasma")))],
   ["insertCheckBox", (u) => u.insertCheckBox(ID_NOTA, "hola", after(contentId("fantasma")))],
+  ["insertLines", (u: UseCases): Note | null => u.insertLines(ID_NOTA, [PEGADA], after(contentId("fantasma")))],
+  ["insertLines vacío", (u: UseCases): Note | null => u.insertLines(ID_NOTA, [], rootEnd)],
 ]
 
-test("⚠️ un no-op devuelve null AUNQUE la nota exista — los once, uno por uno", () => {
+test("⚠️ un no-op devuelve null AUNQUE la nota exista — los trece, uno por uno", () => {
   for (const [nombre, llamar] of NO_OP_CON_NOTA) {
     const nota: Note = notaCon(ID_NOTA, [])
     const { store, useCases } = montarDeVerdad(conNotas(nota))
@@ -577,9 +588,11 @@ test("insertText da al bloque su propio id, distinto del de la revisión", () =>
   assert.equal(app.idsGenerados(), 2, "hacen falta dos ids: el del bloque y el de la revisión")
   // ⚠️ Aquí es donde el orden de evaluación del objeto literal deja de ser un
   // detalle: si se invirtiera, el bloque nacería con el id de la revisión.
-  assert.notEqual(accion.block.id, accion.meta.revision)
-  assert.ok(isText(accion.block), "insertText tiene que meter un texto")
-  assert.equal(isText(accion.block) && accion.block.text, "Leche")
+  const [bloque] = accion.blocks
+  assert.ok(bloque !== undefined && accion.blocks.length === 1, "mete un solo bloque")
+  assert.notEqual(bloque.id, accion.meta.revision)
+  assert.ok(isText(bloque), "insertText tiene que meter un texto")
+  assert.equal(isText(bloque) && bloque.text, "Leche")
 })
 
 test("insertCheckBox mete una casilla, no un texto", () => {
@@ -588,8 +601,33 @@ test("insertCheckBox mete una casilla, no un texto", () => {
   const accion = app.ultima()
 
   assert.ok(accion.type === "insert")
-  assert.ok(isCheckBox(accion.block), "ha metido un texto en vez de una casilla")
-  assert.equal(isCheckBox(accion.block) && accion.block.checked, false, "nace marcada")
+  const [bloque] = accion.blocks
+  assert.ok(bloque !== undefined && isCheckBox(bloque), "ha metido un texto en vez de una casilla")
+  assert.equal(isCheckBox(bloque) && bloque.checked, false, "nace marcada")
+})
+
+test("insertLines da un id a cada línea y a cada hija, conserva la marca, y todo en una acción", (): void => {
+  const app = montar()
+  app.useCases.insertLines(ID_NOTA, [{ type: "text", text: "Compra" }, PEGADA], rootEnd)
+  const accion: Action = app.ultima()
+
+  assert.ok(accion.type === "insert")
+  assert.equal(app.cuantas(), 1, "una sola acción")
+  assert.equal(app.idsGenerados(), 4, "tres líneas y la revisión")
+  assert.deepEqual(accion.blocks, [
+    text(contentId("id-1"), "Compra"),
+    checkBox(contentId("id-2"), "Fruta", { checked: true, children: [checkBox(contentId("id-3"), "Peras")] }),
+  ])
+  assert.equal(accion.meta.revision, revision("id-4"))
+})
+
+test("insertLines mete las líneas en la nota, detrás de la pedida", (): void => {
+  const { useCases } = montarDeVerdad(conNotas(notaCon(ID_NOTA, [text(ID_LINEA, "Arriba")])))
+  const nota: Note | null = useCases.insertLines(ID_NOTA, [PEGADA, { type: "text", text: "Abajo" }], after(ID_LINEA))
+  assert.deepEqual(
+    nota?.content.map((c: Content): string => c.text),
+    ["Arriba", "Fruta", "Abajo"],
+  )
 })
 
 test("split pide un id para la mitad nueva, distinto del de la revisión", () => {

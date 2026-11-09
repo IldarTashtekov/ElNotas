@@ -1,7 +1,7 @@
 /**
- * Lo que se copia de una nota: una línea por renglón, en el orden en que se
- * leen, sin marcas de casilla ni de formato y cortando la primera y la última
- * donde empieza y acaba la selección, contando lo que se ve.
+ * Lo que se copia de una nota. Dentro de una línea, el trozo, contando lo que se
+ * ve. De una línea a otra, las líneas enteras como se guardan, en el orden en que
+ * se leen, cada casilla con su marca y las hijas sangradas.
  */
 
 import { test } from "node:test"
@@ -37,16 +37,20 @@ test("dentro de una línea, sólo lo seleccionado", (): void => {
   assert.equal(copiedText(NOTA, en("intro", 6), en("intro", 9), null), "del")
 })
 
-test("de una línea a otra: la primera desde donde empieza, la última hasta donde acaba", (): void => {
-  assert.equal(copiedText(NOTA, en("intro", 6), en("compra", 3), null), "del día\nCom")
+test("de una línea a otra van las líneas enteras, aunque la selección empiece o acabe en medio", (): void => {
+  assert.equal(copiedText(NOTA, en("intro", 6), en("compra", 3), null), "Intro del día\n- [x] Compra")
 })
 
-test("las hijas van detrás de su casilla, y ninguna lleva su marca", (): void => {
-  assert.equal(copiedText(NOTA, en("compra", 0), en("pan", 3), null), "Compra\nLeche\nPan")
+test("cada casilla con su marca, y las hijas detrás de su casilla, sangradas dos espacios", (): void => {
+  assert.equal(copiedText(NOTA, en("compra", 0), en("pan", 3), null), "- [x] Compra\n  - [ ] Leche\n  - [ ] Pan")
 })
 
-test("una línea vacía en medio es un renglón vacío", (): void => {
-  assert.equal(copiedText(NOTA, en("pan", 0), en("fin", 3), null), "Pan\n\nFin")
+test("la sangría cuenta desde la menos honda de las copiadas", (): void => {
+  assert.equal(copiedText(NOTA, en("leche", 2), en("pan", 1), null), "- [ ] Leche\n- [ ] Pan")
+})
+
+test("una línea vacía en medio es un renglón vacío; con un texto, la hija sigue sangrada", (): void => {
+  assert.equal(copiedText(NOTA, en("pan", 0), en("fin", 3), null), "  - [ ] Pan\n\nFin")
 })
 
 test("al revés, o con una línea que no está, no se copia nada", (): void => {
@@ -65,17 +69,18 @@ const CON_FORMATO: ReadonlyArray<Content> = [
   text(contentId("cola"), "*c* \\*d"),
 ]
 
-test("sin las marcas de formato: los enlaces, como su texto visible", (): void => {
-  assert.equal(copiedText(CON_FORMATO, en("titulo", 0), en("cola", 4), null), "Título\na b web\nc *d")
+test("de una línea a otra, el formato y los enlaces van como se guardan", (): void => {
+  assert.equal(
+    copiedText(CON_FORMATO, en("titulo", 0), en("cola", 4), null),
+    "# Título\na **b** [web](https://x.com)\n*c* \\*d",
+  )
 })
 
-test("los offset cuentan lo que se ve, no la cadena cruda", (): void => {
+test("dentro de una línea, los offset cuentan lo que se ve, y sale sin marcas", (): void => {
   /* Lo que se ve de la del medio es «a b web»: de la 2 a la 7, «b web». */
   assert.equal(copiedText(CON_FORMATO, en("medio", 2), en("medio", 7), null), "b web")
-  assert.equal(copiedText(CON_FORMATO, en("titulo", 3), en("medio", 3), null), "ulo\na b")
 })
 
-test("la línea que se ve en crudo se copia en crudo", (): void => {
+test("dentro de la línea que se ve en crudo, se copia en crudo", (): void => {
   assert.equal(copiedText(CON_FORMATO, en("medio", 2), en("medio", 7), contentId("medio")), "**b**")
-  assert.equal(copiedText(CON_FORMATO, en("titulo", 0), en("medio", 7), contentId("titulo")), "# Título\na b web")
 })

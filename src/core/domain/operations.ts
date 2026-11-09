@@ -67,6 +67,12 @@ export const setChecked = (content: ReadonlyArray<Content>, id: ContentId, check
 const existsIn = (items: ReadonlyArray<Content>, id: ContentId): boolean =>
   items.some((item: Content): boolean => item.id === id || (isCheckBox(item) && existsIn(item.children, id)))
 
+/** Todas las líneas en el orden en que se leen: cada casilla y, detrás, sus hijas. */
+const enOrdenDeLectura = (content: ReadonlyArray<Content>): ReadonlyArray<Content> =>
+  content.flatMap((line: Content): ReadonlyArray<Content> =>
+    isCheckBox(line) ? [line, ...enOrdenDeLectura(line.children)] : [line],
+  )
+
 /**
  * Mete el bloque justo al lado de `targetId`: detrás (`1`) o delante (`0`).
  * Lista intacta si `targetId` no está.
@@ -82,21 +88,8 @@ const insertNextTo = <T extends Content>(
   return [...items.slice(0, index + side), block, ...items.slice(index + side)]
 }
 
-/**
- * Mete un bloque en el sitio que diga la posición.
- *
- * **No hace nada si:** el destino no existe · el destino es un `Text` y se pide
- * meter dentro · se pide meter un texto suelto en una lista de hijas · **ya
- * existe una línea con ese id**.
- *
- * El último no estaba en la tabla original y se añadió al implementarla: un id
- * repetido corrompe el árbol **en silencio**, porque a partir de ahí toda
- * operación sobre ese id actúa siempre sobre la primera coincidencia y jamás
- * sobre la segunda. Sale más barato negarse que detectarlo después.
- */
-export const insert = (content: ReadonlyArray<Content>, block: Content, position: Position): ReadonlyArray<Content> => {
-  if (existsIn(content, block.id)) return content
-
+/** Mete un solo bloque donde diga la posición; si no cabe, la lista de ENTRADA. */
+const meterUno = (content: ReadonlyArray<Content>, block: Content, position: Position): ReadonlyArray<Content> => {
   switch (position.at) {
     case "root-end":
       return [...content, block]
@@ -133,6 +126,44 @@ export const insert = (content: ReadonlyArray<Content>, block: Content, position
       position satisfies never
       return content
   }
+}
+
+/**
+ * Mete esos bloques, seguidos y en ese orden, en el sitio que diga la posición: el
+ * primero allí, y cada uno de los demás detrás del anterior. Una casilla entra con
+ * sus hijas. **O entran todos, o ninguno.**
+ *
+ * **No hace nada si:** no llega ningún bloque · el destino no existe · el destino
+ * es un `Text` y se pide meter dentro · alguno es un texto suelto y le toca una
+ * lista de hijas · **ya existe una línea con alguno de sus ids**, a cualquier
+ * profundidad, o **se repite uno entre los que llegan**.
+ *
+ * Lo de los ids no estaba en la tabla original y se añadió al implementarla: un id
+ * repetido corrompe el árbol **en silencio**, porque a partir de ahí toda
+ * operación sobre ese id actúa siempre sobre la primera coincidencia y jamás
+ * sobre la segunda. Sale más barato negarse que detectarlo después.
+ */
+export const insert = (
+  content: ReadonlyArray<Content>,
+  blocks: ReadonlyArray<Content>,
+  position: Position,
+): ReadonlyArray<Content> => {
+  const nuevos: ReadonlyArray<ContentId> = enOrdenDeLectura(blocks).map((b: Content): ContentId => b.id)
+  if (new Set(nuevos).size !== nuevos.length) return content
+  if (nuevos.some((id: ContentId): boolean => existsIn(content, id))) return content
+
+  const [primero, ...resto] = blocks
+  if (primero === undefined) return content
+  let lista: ReadonlyArray<Content> = meterUno(content, primero, position)
+  if (lista === content) return content
+  let previa: ContentId = primero.id
+  for (const block of resto) {
+    const siguiente: ReadonlyArray<Content> = meterUno(lista, block, after(previa))
+    if (siguiente === lista) return content
+    lista = siguiente
+    previa = block.id
+  }
+  return lista
 }
 
 /** La lista sin las elegidas, cada una con todas sus hijas. Sin cambios, la MISMA. */
@@ -206,29 +237,16 @@ export const move = (
 ): ReadonlyArray<Content> => {
   const elegidas: ReadonlySet<ContentId> = new Set(ids)
   const ramas: ReadonlyArray<Content> = ramasElegidas(content, elegidas)
-  const [primera, ...resto] = ramas
-  if (primera === undefined) return content
+  if (ramas.length === 0) return content
 
   const fuera: ReadonlySet<ContentId> = new Set(ramas.map((r: Content): ContentId => r.id))
   const sinEllas: ReadonlyArray<Content> = content
     .filter((item: Content): boolean => !fuera.has(item.id))
     .map((item: Content): Content => (isCheckBox(item) ? podar(item, fuera) : item))
 
-  /* La primera va a la posición pedida, y cada una de las demás, detrás de la anterior. */
-  interface Paso {
-    readonly lista: ReadonlyArray<Content>
-    readonly previa: ContentId
-  }
-  const { lista: movido }: Paso = resto.reduce(
-    (paso: Paso, rama: Content): Paso => ({
-      lista: insert(paso.lista, rama, after(paso.previa)),
-      previa: rama.id,
-    }),
-    { lista: insert(sinEllas, primera, position), previa: primera.id },
-  )
-
-  /* Un `insert` que no aplicó deja fuera alguna: entonces no se mueve ninguna. */
-  if (!ramas.every((r: Content): boolean => existsIn(movido, r.id))) return content
+  /* `insert` las mete juntas, o ninguna: si no cupo, no se mueve ninguna. */
+  const movido: ReadonlyArray<Content> = insert(sinEllas, ramas, position)
+  if (movido === sinEllas) return content
   return mismaForma(movido, content) ? content : movido
 }
 
@@ -350,12 +368,6 @@ export const split = (
     },
   })
 }
-
-/** Todas las líneas en el orden en que se leen: cada casilla y, detrás, sus hijas. */
-const enOrdenDeLectura = (content: ReadonlyArray<Content>): ReadonlyArray<Content> =>
-  content.flatMap((line: Content): ReadonlyArray<Content> =>
-    isCheckBox(line) ? [line, ...enOrdenDeLectura(line.children)] : [line],
-  )
 
 /**
  * Une una línea con la de arriba: la línea desaparece y su texto sube.
