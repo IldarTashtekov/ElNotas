@@ -132,7 +132,15 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
       para leer, y los diagramas no caben en él.
       **Se cierra cuando** la conversión de una nota a Markdown tiene sus pruebas, el botón de ⚙
       descarga el fichero y la lista manual tiene su paso.
-- [ ] **6. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
+- [ ] **6. Copiar y pegar casillas** *(pensar)*, metida en esta fase por el usuario el 2026-11-09.
+      Hoy copiar lleva sólo el texto que se ve, y pegar lo junta en la línea activa. Copiar escribiría
+      la selección como el Markdown de la tarea 5 (`- [ ]`, `- [x]`, las hijas con sangría), así que
+      va detrás de ella. Pegar crearía las líneas debajo de la activa. Antes del código, al usuario: si
+      se parte la línea con el cursor en medio, si se respetan lo marcado y las hijas, qué pasa con lo
+      que parece una casilla y viene de fuera, y cómo se pegan varias en una sola acción (hoy `insert`
+      crea una, y ampliarla toca el core). **Se cierra cuando** copiar y pegar dentro de una nota
+      conserva las casillas, con sus pruebas y su paso en la lista del editor.
+- [ ] **7. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
       cuando** la pasada está anotada sin textos en español sueltos, `CLAUDE.md` recoge la regla de
       los textos y la auditoría de cierre de fase no deja nada falso.
 
