@@ -22,7 +22,15 @@ import { revision } from "#core/domain/Ids"
 import type { Caret, EditResult, EditorDeps } from "#ui/editor"
 import type { WritingMode } from "#ui/writingMode"
 import { INITIAL_MODE, toggleNest } from "#ui/writingMode"
-import { pasteLines, pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "#ui/editor"
+import {
+  deleteSelection,
+  pasteLines,
+  pressBackspaceAtStart,
+  pressEnter,
+  startWriting,
+  toggleCheckbox,
+  toggleChecked,
+} from "#ui/editor"
 import { pastedLines } from "#ui/pastedLines"
 
 /* ─────────────────────────────── El escenario ───────────────────────────── */
@@ -396,4 +404,113 @@ test("pegar es una sola acción, más la de partir si hace falta", (): void => {
   assert.equal(acciones, 1, "al final, sólo insertar")
   pegar(e, en("a", 3), LISTA)
   assert.equal(acciones, 3, "en medio, partir e insertar")
+})
+
+/* ═════════════════════════ Borrar una selección ════════════════════════════ */
+
+const borrar = (e: Editor, desde: Caret, hasta: Caret, enCrudo: ContentId | null = null): EditResult =>
+  deleteSelection(e.deps, desde, hasta, enCrudo, APAGADA)
+
+test("borrar de una línea a otra: la primera se queda con lo de antes y se le une lo de después", (): void => {
+  const e: Editor = editor([t("a", "Leche"), t("b", "Pan"), t("c", "Huevos")])
+  const r: EditResult = borrar(e, en("a", 2), en("c", 3))
+  assert.deepEqual(dibujo(e, r.caret), ["T Le|vos"])
+})
+
+test("la primera conserva su clase y su marca; la última se va aunque sea casilla", (): void => {
+  const e: Editor = editor([c("a", "Leche", [], true), t("b", "Pan")])
+  const r: EditResult = borrar(e, en("a", 5), en("b", 0))
+  assert.deepEqual(dibujo(e, r.caret), ["X Leche|Pan"])
+})
+
+test("las de en medio se van con sus hijas, si caen todas dentro", (): void => {
+  const e: Editor = editor([t("a", "Uno"), c("b", "Dos", [c("b1", "Hija")]), t("c", "Tres")])
+  const r: EditResult = borrar(e, en("a", 3), en("c", 0))
+  assert.deepEqual(dibujo(e, r.caret), ["T Uno|Tres"])
+})
+
+test("la última con hijas no se une: sólo pierde lo seleccionado, y las hijas se quedan", (): void => {
+  const e: Editor = editor([t("a", "Uno"), c("b", "Compra", [c("b1", "Pan")])])
+  const r: EditResult = borrar(e, en("a", 1), en("b", 3))
+  assert.deepEqual(dibujo(e, r.caret), ["T U|", "C pra", "  C Pan"])
+})
+
+test("una de en medio con hijas fuera de la selección se queda, vacía", (): void => {
+  const e: Editor = editor([t("a", "Uno"), c("b", "Compra", [c("b1", "Pan"), c("b2", "Sal")])])
+  const r: EditResult = borrar(e, en("a", 3), en("b1", 2))
+  assert.deepEqual(dibujo(e, r.caret), ["T Uno|n", "C ", "  C Sal"])
+})
+
+test("hasta la última hija de una casilla: la casilla se va con todo su árbol", (): void => {
+  const e: Editor = editor([t("a", "Uno"), c("b", "Compra", [c("b1", "Pan"), c("b2", "Sal")]), t("c", "Fin")])
+  const r: EditResult = borrar(e, en("a", 3), en("b2", 3))
+  assert.deepEqual(dibujo(e, r.caret), ["T Uno|", "T Fin"])
+})
+
+test("desde una casilla hasta una hija suya: la casilla se queda, con lo de después unido", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Pan"), c("a2", "Sal")])])
+  const r: EditResult = borrar(e, en("a", 3), en("a1", 1))
+  assert.deepEqual(dibujo(e, r.caret), ["C Com|an", "  C Sal"])
+})
+
+test("dentro de una sola línea, quita el trozo", (): void => {
+  const e: Editor = editor([t("a", "Leche"), t("b", "Pan")])
+  const r: EditResult = borrar(e, en("a", 1), en("a", 4))
+  assert.deepEqual(dibujo(e, r.caret), ["T L|e", "T Pan"])
+})
+
+test("al revés, con una línea que ya no está o sin nada dentro de una línea, no hace nada: el MISMO estado", (): void => {
+  const e: Editor = editor([t("a", "Leche"), t("b", "Pan")])
+  const antes: AppState = e.store.getState()
+  assert.equal(borrar(e, en("b", 0), en("a", 2)).caret, null)
+  assert.equal(borrar(e, en("no-esta", 0), en("b", 2)).caret, null)
+  borrar(e, en("a", 2), en("a", 2))
+  borrar(e, en("a", 3), en("a", 1))
+  assert.strictEqual(e.store.getState(), antes)
+})
+
+test("desde una casilla hasta una hija suya que tiene hijas: la hija sólo se recorta", (): void => {
+  const e: Editor = editor([c("a", "Compra", [c("a1", "Pan", [c("a11", "Sal")])])])
+  const r: EditResult = borrar(e, en("a", 3), en("a1", 1))
+  assert.deepEqual(dibujo(e, r.caret), ["C Com|", "  C an", "    C Sal"])
+})
+
+test("hasta una nieta de una de en medio: la de en medio y su hija se quedan vacías", (): void => {
+  const e: Editor = editor([t("a", "Uno"), c("x", "Equis", [c("x1", "Hija", [c("x11", "Nieta"), c("x12", "Otra")])])])
+  const r: EditResult = borrar(e, en("a", 3), en("x11", 2))
+  assert.deepEqual(dibujo(e, r.caret), ["T Uno|eta", "C ", "  C ", "    C Otra"])
+})
+
+test("con formato en los extremos: la negrita partida se cierra, el enlace partido se queda, y el cursor va a la cadena cruda", (): void => {
+  const e: Editor = editor([t("a", "a **Pan**"), t("b", "[Sal](#n1) y fin")])
+  const r: EditResult = borrar(e, en("a", 3), en("b", 2))
+  assert.deepEqual(dibujo(e, r.caret), ["T a **P|**[Sal](#n1) y fin"])
+})
+
+test("la última, un título con hijas, sólo se recorta y sigue siendo título", (): void => {
+  const e: Editor = editor([t("a", "Uno"), c("b", "# Título", [c("b1", "Hija")])])
+  const r: EditResult = borrar(e, en("a", 1), en("b", 0))
+  assert.deepEqual(dibujo(e, r.caret), ["T U|", "C # Título", "  C Hija"])
+})
+
+test("en la línea que se ve en crudo, los offset son de la cadena tal cual", (): void => {
+  const e: Editor = editor([t("a", "a **Pan**"), t("b", "Fin")])
+  const r: EditResult = borrar(e, en("a", 3), en("b", 1), contentId("a"))
+  assert.deepEqual(dibujo(e, r.caret), ["T a *|in"])
+})
+
+test("dentro de una línea formateada, el trozo se quita contando lo que se ve", (): void => {
+  const e: Editor = editor([t("a", "**Pan** y sal")])
+  const r: EditResult = borrar(e, en("a", 1), en("a", 3))
+  assert.deepEqual(dibujo(e, r.caret), ["T **P|** y sal"])
+})
+
+test("borrar de una línea a otra son pocas acciones: un texto por línea que se queda, y quitar", (): void => {
+  const e: Editor = editor([t("a", "Uno"), t("b", "Dos"), t("c", "Tres")])
+  let acciones: number = 0
+  e.store.subscribe((): void => {
+    acciones += 1
+  })
+  borrar(e, en("a", 1), en("c", 1))
+  assert.equal(acciones, 2, "el texto de la primera, y quitar las otras dos")
 })

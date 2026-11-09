@@ -1,6 +1,7 @@
 /**
  * Lo que hace cada tecla y cada botón del editor: Intro, Retroceso al principio
- * de una línea, el interruptor de casilla, anidar, marcar y pegar líneas.
+ * de una línea, el interruptor de casilla, anidar, marcar, pegar líneas y borrar
+ * una selección de varias.
  *
  * Cada acción ejecuta las operaciones que tocan —con los casos de uso, sin tocar
  * el core— y devuelve dónde queda el cursor y cómo queda el modo. No sabe nada
@@ -11,6 +12,8 @@ import type { Content, ContentDraft, ContentId, Note, NoteId, Position, UseCases
 import { after, before, isCheckBox, lastChildOf, rootEnd } from "#core/index"
 import type { Located } from "./noteTree.js"
 import { inReadingOrder, locate, mergeTarget, nextSibling, rootAncestor } from "./noteTree.js"
+import type { Cut } from "./markdownLine.js"
+import { cutAfter, cutBefore, joinCuts, readMarkdownLine, withoutVisible } from "./markdownLine.js"
 import type { WritingMode } from "./writingMode.js"
 
 /** Dónde está el cursor: en qué línea y tras cuántos caracteres. */
@@ -208,4 +211,81 @@ export const pasteLines = (
   )
   const ultima: Content | undefined = pegadas[pegadas.length - 1]
   return { caret: ultima === undefined ? caret : { line: ultima.id, offset: ultima.text.length }, mode }
+}
+
+/** Cuántas líneas lleva colgando, a cualquier profundidad. */
+const descendientes = (linea: Content): number => inReadingOrder([linea]).length - 1
+
+/**
+ * Borrar lo seleccionado, de `desde` a `hasta`. Como en un editor de texto:
+ *
+ *     la primera línea        se queda con lo de antes de la selección
+ *     la última               lo de después se une a la primera, y se va
+ *     … con hijas             no se une: sólo pierde lo seleccionado
+ *     las de en medio         se van, cada casilla con sus hijas
+ *     … con hijas fuera       no se va: se queda vacía
+ *
+ * Dentro de una sola línea, quita el trozo. Los `offset` cuentan lo que se ve,
+ * salvo en la línea `enCrudo`, que se ve tal cual: una negrita o un enlace
+ * partidos se cierran o se reabren a cada lado. El cursor queda donde empezaba la
+ * selección; si alguna no está o van al revés, no hace nada.
+ */
+export const deleteSelection = (
+  deps: EditorDeps,
+  desde: Caret,
+  hasta: Caret,
+  enCrudo: ContentId | null,
+  mode: WritingMode,
+): EditResult => {
+  const todas: ReadonlyArray<Content> = inReadingOrder(contenido(deps))
+  const a: number = todas.findIndex((l: Content): boolean => l.id === desde.line)
+  const b: number = todas.findIndex((l: Content): boolean => l.id === hasta.line)
+  const primera: Content | undefined = todas[a]
+  const ultima: Content | undefined = todas[b]
+  if (primera === undefined || ultima === undefined || a > b) return { caret: null, mode }
+  const enBruto = (l: Content): boolean => l.id === enCrudo
+  const caret: Caret = {
+    line: primera.id,
+    offset: enBruto(primera) ? desde.offset : cutBefore(primera.text, desde.offset).text.length,
+  }
+  if (a === b) {
+    if (desde.offset >= hasta.offset) return { caret, mode }
+    const queda: string = enBruto(primera)
+      ? primera.text.slice(0, desde.offset) + primera.text.slice(hasta.offset)
+      : withoutVisible(primera.text, desde.offset, hasta.offset)
+    deps.useCases.setText(deps.noteId, primera.id, queda)
+    return { caret, mode }
+  }
+
+  /* Una línea se va si todo su árbol cae dentro: su última hija, como mucho, es la última. */
+  const seVa = (linea: Content, i: number): boolean => i + descendientes(linea) <= b
+  const seUne: boolean = seVa(ultima, b)
+  const cola: Cut = enBruto(ultima)
+    ? { text: ultima.text.slice(hasta.offset), marks: [] }
+    : cutAfter(ultima.text, hasta.offset)
+  const cabeza: Cut = enBruto(primera)
+    ? { text: primera.text.slice(0, desde.offset), marks: [] }
+    : cutBefore(primera.text, desde.offset)
+  const unida: { readonly text: string; readonly caret: number } = joinCuts(
+    cabeza,
+    seUne ? cola : { text: "", marks: [] },
+  )
+
+  const medio: ReadonlyArray<Content> = todas.slice(a + 1, b)
+  const fuera: ReadonlyArray<ContentId> = [
+    ...medio.filter((l: Content, k: number): boolean => seVa(l, a + 1 + k)).map((l: Content): ContentId => l.id),
+    ...(seUne ? [ultima.id] : []),
+  ]
+  for (const [k, linea] of medio.entries()) {
+    if (!seVa(linea, a + 1 + k) && linea.text !== "") deps.useCases.setText(deps.noteId, linea.id, "")
+  }
+  if (!seUne) {
+    /* Se queda en su sitio: si era un título, lo sigue siendo. */
+    const titulo: string = !enBruto(ultima) && readMarkdownLine(ultima.text).heading ? "# " : ""
+    deps.useCases.setText(deps.noteId, ultima.id, titulo + joinCuts({ text: "", marks: [] }, cola).text)
+  }
+  deps.useCases.setText(deps.noteId, primera.id, unida.text)
+  if (fuera.length > 0) deps.useCases.remove(deps.noteId, fuera)
+  /* El cursor, donde acaba lo que se quedó de la primera: tras un enlace partido, no en medio. */
+  return { caret: { line: primera.id, offset: unida.caret }, mode }
 }

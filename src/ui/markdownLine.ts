@@ -395,3 +395,114 @@ export const rawOffset = (line: FormattedLine, visible: number): number => {
   }
   return largo
 }
+
+/* ──────────────── Lo que queda al borrar desde o hasta un punto ──────────────── */
+
+/** Un par de marcas de énfasis que envuelve texto: la que abre y la que cierra. */
+interface Envoltorio {
+  readonly abreDe: number
+  readonly abreA: number
+  readonly cierraDe: number
+  readonly cierraA: number
+}
+
+const envoltorios = (line: FormattedLine): ReadonlyArray<Envoltorio> =>
+  line.runs.map((r: EmphasisRun): Envoltorio => ({
+    abreDe: r.start,
+    abreA: r.openEnd,
+    cierraDe: r.closeStart,
+    cierraA: r.end,
+  }))
+
+/** El enlace guardado que el punto parte por dentro, si lo hay: un enlace va entero o no va. */
+const enlacePartido = (line: FormattedLine, corte: number): LineLink | undefined =>
+  line.links.find((l: LineLink): boolean => l.saved && l.start < corte && corte < l.end)
+
+/** Antes de la letra `visible`, pegado a lo que se ve detrás: tras las marcas que la separan de la anterior. */
+const crudoAntesDe = (line: FormattedLine, visible: number): number => {
+  let antes: number = 0
+  for (const s of tramosDeTexto(line)) {
+    const tramo: number = s.end - s.start
+    if (visible < antes + tramo) return s.start + (visible - antes)
+    antes += tramo
+  }
+  const ultimo: LineSpan | undefined = line.spans[line.spans.length - 1]
+  return ultimo === undefined ? 0 : ultimo.end
+}
+
+const crudo = (line: FormattedLine): string => line.spans.map((s: LineSpan): string => s.text).join("")
+
+/**
+ * Un lado de un corte: el trozo crudo que se queda y, aparte, las marcas que hacen
+ * falta para que no quede partido —las que cierran detrás de lo de antes, de la
+ * más honda afuera; las que abren delante de lo de después, de fuera adentro—.
+ */
+export interface Cut {
+  readonly text: string
+  readonly marks: ReadonlyArray<string>
+}
+
+/**
+ * Lo que se queda de la línea antes de la letra `visible`, cuando se borra desde
+ * ahí, con las marcas que cierran la negrita o la cursiva que quedó abierta. Un
+ * enlace partido se queda entero. El `# ` de un título, se queda.
+ */
+export const cutBefore = (raw: string, visible: number): Cut => {
+  const line: FormattedLine = readMarkdownLine(raw)
+  if (visible <= 0) return { text: line.heading ? "# " : "", marks: [] }
+  const punto: number = rawOffset(line, visible)
+  /* Un enlace partido se queda entero, como un bloque en la línea que se escribe. */
+  const corte: number = enlacePartido(line, punto)?.end ?? punto
+  const marks: ReadonlyArray<string> = envoltorios(line)
+    .filter((e: Envoltorio): boolean => e.abreA <= corte && corte <= e.cierraDe)
+    .sort((x: Envoltorio, y: Envoltorio): number => x.cierraDe - y.cierraDe)
+    .map((e: Envoltorio): string => raw.slice(e.cierraDe, e.cierraA))
+  return { text: raw.slice(0, corte), marks }
+}
+
+/**
+ * Lo que se queda de la línea desde la letra `visible`, cuando se borra hasta ahí,
+ * con las marcas que abren la negrita o la cursiva que cierra. Un enlace partido
+ * se queda entero. Sin el `# ` de un título.
+ */
+export const cutAfter = (raw: string, visible: number): Cut => {
+  const line: FormattedLine = readMarkdownLine(raw)
+  const punto: number = crudoAntesDe(line, visible)
+  if (punto >= crudo(line).length) return { text: "", marks: [] }
+  const corte: number = enlacePartido(line, punto)?.start ?? punto
+  const marks: ReadonlyArray<string> = envoltorios(line)
+    .filter((e: Envoltorio): boolean => e.abreA <= corte && corte <= e.cierraDe)
+    .sort((x: Envoltorio, y: Envoltorio): number => x.abreDe - y.abreDe)
+    .map((e: Envoltorio): string => raw.slice(e.abreDe, e.abreA))
+  return { text: raw.slice(corte), marks }
+}
+
+/**
+ * Lo de antes y lo de después, juntos. Donde un lado cierra y el otro abre con la
+ * misma marca, sobran las dos: la cursiva sigue de un lado al otro, en vez de
+ * dejar `**` pegados. `caret`, dónde acaba lo de antes, para el cursor.
+ */
+export const joinCuts = (antes: Cut, despues: Cut): { readonly text: string; readonly caret: number } => {
+  let cierres: ReadonlyArray<string> = antes.marks
+  let aperturas: ReadonlyArray<string> = despues.marks
+  while (cierres.length > 0 && cierres[cierres.length - 1] === aperturas[0]) {
+    cierres = cierres.slice(0, -1)
+    aperturas = aperturas.slice(1)
+  }
+  return { text: antes.text + cierres.join("") + aperturas.join("") + despues.text, caret: antes.text.length }
+}
+
+/**
+ * La línea sin lo que se ve entre las letras `desde` y `hasta`, cortando como
+ * `cutBefore` y `cutAfter`. Dentro de un mismo enlace no quita nada.
+ */
+export const withoutVisible = (raw: string, desde: number, hasta: number): string => {
+  const line: FormattedLine = readMarkdownLine(raw)
+  const s: number = desde <= 0 ? (line.heading ? 2 : 0) : rawOffset(line, desde)
+  const e: number = crudoAntesDe(line, hasta)
+  if (s >= e) return raw
+  /* Dentro de un mismo enlace no se quita nada: va entero o no va. */
+  const enlace: LineLink | undefined = enlacePartido(line, s)
+  if (enlace !== undefined && enlace === enlacePartido(line, e)) return raw
+  return joinCuts(cutBefore(raw, desde), cutAfter(raw, hasta)).text
+}

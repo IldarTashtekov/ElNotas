@@ -7,7 +7,16 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { EmphasisRun, FormattedLine, LineLink, LineSpan } from "#ui/markdownLine"
-import { rawOffset, readMarkdownLine, visibleText } from "#ui/markdownLine"
+import type { Cut } from "#ui/markdownLine"
+import {
+  cutAfter,
+  cutBefore,
+  joinCuts,
+  rawOffset,
+  readMarkdownLine,
+  visibleText,
+  withoutVisible,
+} from "#ui/markdownLine"
 
 // Resume una línea en una cadena: marcas `m:"…"`, texto con prefijo B / I / L(destino).
 const resumen = (linea: FormattedLine): string => {
@@ -436,4 +445,63 @@ test("pares de énfasis: coherentes con los tramos, en 20 000 cadenas generadas"
       }
     }
   }
+})
+
+/* ─────────────── Lo que queda al borrar desde o hasta un punto ─────────────── */
+
+const keptBefore = (raw: string, visible: number): string => {
+  const corte: Cut = cutBefore(raw, visible)
+  return corte.text + corte.marks.join("")
+}
+const keptAfter = (raw: string, visible: number): string => {
+  const corte: Cut = cutAfter(raw, visible)
+  return corte.marks.join("") + corte.text
+}
+
+test("lo de antes de un punto: una negrita partida se cierra; un enlace partido se queda entero", (): void => {
+  assert.equal(keptBefore("**Pan** y sal", 3), "**Pan**")
+  assert.equal(keptBefore("**Pan** y sal", 1), "**P**")
+  assert.equal(keptBefore("a [Pan](#n1) b", 3), "a [Pan](#n1)")
+  assert.equal(keptBefore("[**ab**](#x) z", 1), "[**ab**](#x)")
+  assert.equal(keptBefore("a **Pan**", 2), "a ")
+  assert.equal(keptBefore("**Pan**", 0), "")
+})
+
+test("lo de antes de un punto: el # de un título se queda, aunque no quede nada más", (): void => {
+  assert.equal(keptBefore("# Título", 0), "# ")
+  assert.equal(keptBefore("# Título", 3), "# Tít")
+})
+
+test("lo de después de un punto: una negrita partida se reabre; un enlace partido se queda entero", (): void => {
+  assert.equal(keptAfter("a **Pan**", 2), "**Pan**")
+  assert.equal(keptAfter("**Pan** y sal", 1), "**an** y sal")
+  assert.equal(keptAfter("**Pan** y sal", 3), " y sal")
+  assert.equal(keptAfter("[Pan](#n1) y sal", 3), " y sal")
+  assert.equal(keptAfter("[Pan](#n1) y sal", 2), "[Pan](#n1) y sal")
+  assert.equal(keptAfter("[a **bc**](#x) z", 3), "[a **bc**](#x) z")
+  assert.equal(keptAfter("Pan", 3), "")
+})
+
+test("lo de después de un punto, en un título: sin el #", (): void => {
+  assert.equal(keptAfter("# Título", 0), "Título")
+})
+
+test("quitar un trozo de lo que se ve: entre marcas, sin tocarlas; si parte un par, lo cierra y lo reabre; un enlace, entero", (): void => {
+  assert.equal(withoutVisible("x **bold** y", 2, 6), "x  y")
+  assert.equal(withoutVisible("**Panes**", 1, 3), "**Pes**")
+  assert.equal(withoutVisible("**Pan** y", 1, 3), "**P** y")
+  assert.equal(withoutVisible("a [Pan](#n1)", 0, 3), "[Pan](#n1)")
+  assert.equal(withoutVisible("[Panes](#n1) y", 1, 3), "[Panes](#n1) y")
+  assert.equal(withoutVisible("# Título", 0, 2), "# tulo")
+  assert.equal(withoutVisible("Pan", 2, 2), "Pan")
+})
+
+test("al juntar dos lados, el cierre y la apertura iguales se funden: ni ** pegados ni marcas de más", (): void => {
+  assert.equal(joinCuts(cutBefore("*Leche*", 2), cutAfter("*Pan*", 1)).text, "*Lean*")
+  assert.equal(joinCuts(cutBefore("**Leche**", 2), cutAfter("**Pan**", 1)).text, "**Lean**")
+  assert.equal(joinCuts(cutBefore("*Leche*", 2), cutAfter("Pan", 1)).caret, 3)
+})
+
+test("un enlace partido dentro de una cursiva: la cursiva sigue entera", (): void => {
+  assert.equal(withoutVisible("*a [Pan](#x) b*", 1, 4), "*a[Pan](#x) b*")
 })

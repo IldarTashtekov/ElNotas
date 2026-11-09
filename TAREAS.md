@@ -132,7 +132,16 @@ Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos e
       nuevas en una sola acción (partiendo la línea si el cursor va en medio); un solo texto se pega
       dentro de la línea, como antes. **Se cierra cuando** copiar y pegar dentro de una nota
       conserva las casillas, con sus pruebas y su paso en la lista del editor.
-- [ ] **6. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
+- [x] **6. Borrar y cortar una selección de varias líneas** *(pensar)*, pedida por el usuario el
+      2026-11-09: Supr o Retroceso con una selección hecha con el ratón no hacían nada. **Decidido por
+      el usuario el mismo día (la opción A)**: como en un editor de texto, se va sólo lo seleccionado;
+      la primera línea se queda con lo de antes y se le une lo que queda de la última; las de en medio
+      se van. Una casilla con hijas fuera de la selección no se va: si es la última, sólo se recorta;
+      si va en medio, se queda vacía. Sin confirmar. Cortar (Ctrl+X) es copiar y esto. En las líneas
+      formateadas, una negrita o cursiva partida se cierra y se reabre, y un enlace partido se queda
+      entero. **Se cierra cuando** las dos teclas y cortar lo hacen, con sus pruebas y su paso en la
+      lista del editor (M11–M15).
+- [ ] **7. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
       cuando** la pasada está anotada sin textos en español sueltos, `CLAUDE.md` recoge la regla de
       los textos y la auditoría de cierre de fase no deja nada falso.
 

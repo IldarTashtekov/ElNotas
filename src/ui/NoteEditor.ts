@@ -33,7 +33,15 @@ import type { ActiveLine } from "./activeLine.js"
 import { copiedText } from "./copyText.js"
 import { briefNotice, elemento } from "./dom.js"
 import type { Caret, EditResult, EditorDeps } from "./editor.js"
-import { pasteLines, pressBackspaceAtStart, pressEnter, startWriting, toggleCheckbox, toggleChecked } from "./editor.js"
+import {
+  deleteSelection,
+  pasteLines,
+  pressBackspaceAtStart,
+  pressEnter,
+  startWriting,
+  toggleCheckbox,
+  toggleChecked,
+} from "./editor.js"
 import { isInlinePaste, pastedLines } from "./pastedLines.js"
 import type { LinkBubble } from "./linkBubble.js"
 import { createLinkBubble } from "./linkBubble.js"
@@ -1131,9 +1139,11 @@ export const createNoteEditor = ({
   lineas.addEventListener("beforeinput", (evento: InputEvent): void => {
     if (evento.isComposing) return
     if (evento.inputType === "insertParagraph" || evento.inputType === "insertLineBreak") intro(evento)
-    else if (evento.inputType === "deleteContentBackward") retroceso(evento)
-    else if (evento.inputType === "deleteContentForward") quitarBloquePegado(evento, "adelante")
-    else if (evento.inputType === "insertText" && evento.data !== null) escribirJuntoABloque(evento, evento.data)
+    else if (evento.inputType === "deleteContentBackward") {
+      if (!borrarSeleccion(evento)) retroceso(evento)
+    } else if (evento.inputType === "deleteContentForward") {
+      if (!borrarSeleccion(evento)) quitarBloquePegado(evento, "adelante")
+    } else if (evento.inputType === "insertText" && evento.data !== null) escribirJuntoABloque(evento, evento.data)
   })
 
   lineas.addEventListener("input", (evento: Event): void => {
@@ -1192,6 +1202,60 @@ export const createNoteEditor = ({
     const rango: Range = sel.getRangeAt(0)
     return activa === null || !activa.contains(rango.startContainer) || !activa.contains(rango.endContainer)
   }
+
+  /**
+   * La selección que pasa de una línea a otra, o que cae en una que no es la
+   * activa, con los `offset` como en `extremo`. `null` si no la hay: dentro de la
+   * activa, borra y corta el navegador, y la nota se entera con `input`.
+   */
+  const seleccionDeVarias = (): { readonly desde: Caret; readonly hasta: Caret } | null => {
+    const sel: Selection | null = window.getSelection()
+    if (sel === null || sel.rangeCount === 0 || !seleccionFueraDeLaActiva()) return null
+    const rango: Range = sel.getRangeAt(0)
+    if (!lineas.contains(rango.commonAncestorContainer)) return null
+    const desde: Caret | null = extremo(rango, "inicio")
+    const hasta: Caret | null = extremo(rango, "fin")
+    return desde === null || hasta === null ? null : { desde, hasta }
+  }
+
+  /** Borra la selección de varias líneas, como un editor de texto. Dice si la había. */
+  const borrarSeleccion = (evento: Event): boolean => {
+    const tramo: { readonly desde: Caret; readonly hasta: Caret } | null = seleccionDeVarias()
+    if (tramo === null) return false
+    evento.preventDefault()
+    const enCrudo: ContentId | null = activa === null ? null : idDe(activa)
+    ordenar((): EditResult => deleteSelection(deps, tramo.desde, tramo.hasta, enCrudo, modo))
+    return true
+  }
+
+  /**
+   * ¿Va con esta nota lo que se ha pulsado? Desde una línea o sin foco en nada, y
+   * con la nota delante: no tapada por otra capa, que la deja montada y escondida.
+   */
+  const conLaNotaDelante = (evento: Event): boolean => {
+    const objetivo: EventTarget | null = evento.target
+    const desdeAqui: boolean =
+      objetivo instanceof Node &&
+      (element.contains(objetivo) || objetivo === document.body || objetivo === document.documentElement)
+    return desdeAqui && element.isConnected && element.closest("[hidden]") === null
+  }
+
+  /* Con la selección fuera de la activa, el foco puede no estar en ninguna línea:
+     Supr y Retroceso se escuchan en todo el documento, como copiar. Mayús + Supr
+     es cortar en algunos sistemas: se deja para el `cut`. */
+  const teclaSobreSeleccion = (evento: KeyboardEvent): void => {
+    if (evento.isComposing || evento.defaultPrevented || !conLaNotaDelante(evento)) return
+    if (evento.key === "Backspace" || (evento.key === "Delete" && !evento.shiftKey)) borrarSeleccion(evento)
+  }
+  document.addEventListener("keydown", teclaSobreSeleccion)
+
+  /** Cortar: copiar como siempre, y borrar como Supr. Dentro de la activa, lo hace el navegador. */
+  const cortar = (evento: ClipboardEvent): void => {
+    if (!conLaNotaDelante(evento) || seleccionDeVarias() === null) return
+    copiar(evento)
+    if (evento.defaultPrevented) borrarSeleccion(evento)
+  }
+  document.addEventListener("cut", cortar)
 
   /* Un solo texto entra dentro de la línea, como al escribirlo; varias líneas, o
      una casilla, entran como líneas nuevas, y también el texto si la selección
@@ -1356,6 +1420,8 @@ export const createNoteEditor = ({
     destroy: (): void => {
       document.removeEventListener("selectionchange", recordarCursor)
       document.removeEventListener("copy", copiar)
+      document.removeEventListener("keydown", teclaSobreSeleccion)
+      document.removeEventListener("cut", cortar)
       orden.destroy()
     },
   }

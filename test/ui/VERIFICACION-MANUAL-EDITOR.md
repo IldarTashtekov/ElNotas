@@ -214,6 +214,24 @@ copiado de una línea a otra va **como se guarda**: casillas con su marca, forma
 - **M10.** Pegar **una sola palabra** (copiada de dentro de una línea): entra **dentro de la línea**,
   donde el cursor, como siempre. Pegar una lista de fuera con `- [ ] uno` y `- [x] dos`: salen
   **casillas**, la segunda marcada.
+- **M11.** *(Escritorio.)* ⚠️ Seleccionar desde la mitad del primer texto hasta la mitad de la
+  **segunda hija** y pulsar **Supr**: se va sólo lo seleccionado, como en un editor de texto. El
+  primer texto se queda con lo de antes y se le une lo que queda de la hija; la vacía, la casilla y
+  la primera hija se van; el cursor, donde empezaba la selección. Recargar: sigue así. Con
+  **Retroceso**, igual.
+- **M12.** Seleccionar desde la mitad de un texto hasta la mitad de **una casilla con hijas** y pulsar
+  Supr: la casilla **no se une**, sólo pierde lo seleccionado, y sus hijas siguen debajo. Hasta la
+  mitad de **la primera hija**: la casilla se queda **vacía**, con la segunda hija.
+- **M13.** ⚠️ **Cortar** (Ctrl/Cmd + X) de una línea a otra: la nota queda como en M11, y pegarlo
+  (Ctrl/Cmd + V) en otra línea devuelve las líneas, con su marca y sus hijas, como en M7. Cortar un
+  trozo **dentro de la línea que se escribe** lo corta el navegador, como siempre.
+- **M14.** Con una línea `a **Pan**` y debajo `[Sal](#…) y fin` (un enlace a otra nota), seleccionar
+  desde la mitad de «Pan» hasta la mitad de «Sal» y pulsar Supr: queda **una** línea con «Pan»
+  **partido y aún en negrita** y **el enlace «Sal» entero**, que no se parte, sin `**` ni `](`
+  sueltos a la vista.
+- **M15.** ⚠️ Con líneas seleccionadas, abrir la hoja del enlace (🔗) o ⚙ encima, y pulsar Retroceso
+  y Supr ahí (también dentro de un campo de texto): **la nota de debajo no cambia**. Cerrar la capa:
+  siguen todas.
 
 ## N. Formato de las líneas
 
