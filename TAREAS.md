@@ -66,6 +66,16 @@ resumen, en `TERMINADAS.md`.
       **Se cierra cuando** el usuario contesta; si es que sí, construidas y con su paso en la lista
       manual.
 
+#### De la Fase 11 — Dos idiomas, y copiar casillas
+
+- [ ] **Lo de la tarea 6 que sólo se ve con un teclado de verdad o en el móvil:** Ctrl+X pulsado (en
+      el panel se lanzó el evento a mano) y borrar o cortar una selección con el dedo (M11–M14).
+      **Se cierra cuando** el usuario lo pasa y queda anotado en la lista del editor.
+- [ ] **G1: ↑ hacia una línea larga cae en su primera fila**, no en la última como en un editor;
+      ↓ sí recorre las filas. Lo sacó la pasada 13 de la lista del editor y viene de antes de la
+      fase: el salto entre líneas conserva el número de carácter, no la altura en pantalla.
+      **Se cierra cuando** ↑ desde la línea de debajo cae en la última fila, con su paso G1 en ✅.
+
 #### Avisos sin tarea, cada uno con lo que lo dispara
 
 - **El icono parece una ilustración de otra persona** (Fase 6): si la app se comparte, conviene un
@@ -78,74 +88,7 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 11 — Dos idiomas, español e inglés, y copiar casillas — EN CURSO
-
-**Pedida por el usuario el 2026-11-04.** **Qué es:** que la app hable en español o en inglés, a
-elegir en ⚙. Se traduce lo que escribe la app (botones, hojas, avisos, ⚙, los fallos de
-`messages.ts`, el «General», los días y los meses); **lo que escribe el usuario, no**. El core no
-se toca: no tiene textos para quien usa la app. Cero dependencias. **Y copiar y pegar casillas**
-(tarea 5), pedida el 2026-11-09. Exportar las notas a Markdown entró el 2026-11-04 y el usuario la
-aparcó el 2026-11-09, ya planteada (*Ideas aparcadas*).
-
-**Planteado con el usuario el 2026-11-04:**
-- **Un objeto de textos por idioma** en `src/ui/` (`es` y `en`, con el mismo tipo): si a `en` le
-  falta un texto, no compila. Cada texto se pide por su nombre (`textos.borrar`), no con una
-  función y una clave en texto (`t("borrar")`), que no caza una clave mal escrita.
-- **Las frases con datos, funciones** dentro de cada idioma (`textos.notasEnLaCopia(8)`).
-- **Se elige una vez, al arrancar**, y lo inyecta `platform/web/`, como los adaptadores.
-  Cambiar de idioma en ⚙ recarga la app. **Cómo llega, decidido por el usuario el 2026-11-08:**
-  un solo sitio en la UI guarda el idioma en uso, `platform/web/` lo fija antes de pintar nada y
-  cada pantalla lo lee de ahí; no se pasa de pantalla en pantalla. Como no cambia con la app
-  abierta, ningún texto se guarda en una constante al cargar el módulo: se pide al usarlo.
-- **Días y meses, con `Intl`** del navegador; la semana sigue empezando en lunes.
-
-Unos 280 textos repartidos por unos 20 ficheros de `src/ui/`; sólo los fallos están juntos.
-
-- [x] **1. Las decisiones abiertas** *(pensar)*: el idioma de partida (siempre español, o el del
-      navegador); si el idioma viaja en la copia (en el `UiState`) o es del dispositivo; si «Nueva
-      Nota» y los demás nombres por defecto se crean en el idioma elegido; recargar o cambiar al
-      momento; y si se traduce el `manifest` (la app instalada y la publicada). **Se cierra cuando**
-      el usuario contesta las cinco y quedan escritas aquí.
-      **Contestadas por el usuario el 2026-11-08:**
-      1. **De partida, el del navegador**: inglés si el navegador está en inglés; si no, español.
-      2. **Viaja en la copia**: una sección más del `UiState`, como el fósforo.
-      3. **Los nombres por defecto, en el idioma elegido** («New Note»); lo ya creado no cambia. El
-         «General» se traduce siempre: no es un nombre del usuario.
-      4. **Cambiar de idioma en ⚙ recarga la app.**
-      5. **El `manifest` no se traduce**: sólo lleva el nombre, «ElNotas».
-- [x] **2. Sacar los textos a `es`** *(mecánica, larga: subagente con Sonnet)*, sin cambiar nada de
-      lo que se ve. **Se cierra cuando** ningún texto para quien usa la app queda escrito suelto en
-      `src/ui/` ni en `src/platform/web/`, `npm run check` pasa sin tocar las pruebas que comparan frases y las listas manuales
-      no ven diferencia.
-- [x] **3. La traducción, `en`** *(pensar)*, con pruebas en inglés de las frases con datos.
-      **Se cierra cuando** `en` compila con el mismo tipo que `es` y sus pruebas pasan.
-- [x] **4. Elegir el idioma** *(pensar)*: el selector en ⚙, la inyección al arrancar, el `lang` de la
-      página y las fechas con `Intl`. Fechas que la tarea 2 dejó en crudo: los rótulos `d/m` de la
-      gráfica de rutinas, el día de un evento en la hoja de enlazar y en la etiqueta de una rutina;
-      y el «Cargando…» de `index.html`, que se ve antes de montar la app. Con `Intl`, los meses, las
-      iniciales y los títulos de mes y de día salen de `Textos`. **Se cierra cuando** cambiar de idioma en ⚙ cambia la app
-      entera tras recargar, con sus pruebas y su paso en la lista manual.
-- [x] **5. Copiar y pegar casillas** *(pensar)*, metida en esta fase por el usuario el 2026-11-09.
-      **Planteamiento aprobado por el usuario el 2026-11-09**, con `insert` de varios bloques en el
-      core (la opción B): copiar de una línea a otra lleva las líneas como se guardan, cada casilla
-      con `- [ ]` o `- [x]` y las hijas sangradas; pegar varias líneas, o una casilla, crea líneas
-      nuevas en una sola acción (partiendo la línea si el cursor va en medio); un solo texto se pega
-      dentro de la línea, como antes. **Se cierra cuando** copiar y pegar dentro de una nota
-      conserva las casillas, con sus pruebas y su paso en la lista del editor.
-- [x] **6. Borrar y cortar una selección de varias líneas** *(pensar)*, pedida por el usuario el
-      2026-11-09: Supr o Retroceso con una selección hecha con el ratón no hacían nada. **Decidido por
-      el usuario el mismo día (la opción A)**: como en un editor de texto, se va sólo lo seleccionado;
-      la primera línea se queda con lo de antes y se le une lo que queda de la última; las de en medio
-      se van. Una casilla con hijas fuera de la selección no se va: si es la última, sólo se recorta;
-      si va en medio, se queda vacía. Sin confirmar. Cortar (Ctrl+X) es copiar y esto. En las líneas
-      formateadas, una negrita o cursiva partida se cierra y se reabre, y un enlace partido se queda
-      entero. **Se cierra cuando** las dos teclas y cortar lo hacen, con sus pruebas y su paso en la
-      lista del editor (M11–M15).
-- [ ] **7. Una pasada de las listas en inglés y la documentación, al cerrar.** **Se cierra
-      cuando** la pasada está anotada sin textos en español sueltos, `CLAUDE.md` recoge la regla de
-      los textos y la auditoría de cierre de fase no deja nada falso.
-
-### Fase 12 — App Android autocontenida, con Capacitor — PLANIFICADA, después de la 11
+### Fase 12 — App Android autocontenida, con Capacitor — PLANIFICADA, la siguiente
 
 **Pedida por el usuario el 2026-11-04.** **Qué es:** una app Android **dueña de su código y de sus
 datos**, que no depende de Chrome ni de una dirección web. Por dentro se sigue pintando con el visor
@@ -328,7 +271,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Sincronizar sin nube, entre pares** (*peer-to-peer*) | Preguntado el 2026-10-12, y al usuario le atraía más que la base de datos. Tres variantes, cada una con su pega. **(1) Manual, en la PWA, con WebRTC:** los dos dispositivos se presentan con QR, pero son **dos escaneos** (oferta y respuesta) **cada vez**, o un servicio público sólo para el saludo; y las dos apps abiertas a la vez. **(2) Automático** («enciendo el ordenador y se sincroniza»): una PWA no puede escuchar conexiones ni correr en segundo plano, y una página HTTPS no puede llamar a `http://192.168.x.x`. Pide **app nativa en los dos lados**. **(3) PWA más un servicio Kotlin aparte en cada dispositivo**, hablando por `localhost`: es la versión frágil de la (2). Chrome está poniendo permiso a que las webs públicas lleguen a la red local, Android exige una notificación fija para el segundo plano, y son dos programas más por dispositivo. Lo limpio es **Capacitor con plugins en Kotlin**, que es la (2). Ninguna da copia fuera de casa. | **(1):** querer prescindir de la nube y aceptar que sincronizar sea un gesto. **(2):** la app nativa (Fases 12 y 13). Las dos entrarían como **un servicio más** en la sección «Nube» de ⚙, con el puerto sin Supabase dentro y la misma política de conflictos. |
 | **Markdown como formato de guardado** | Preguntado el 2026-10-12. Una nota es un dato estructurado y un `.md` es texto libre: los ids de línea no tienen sitio, lo que el usuario escribe y parece Markdown hay que escaparlo, los diagramas y los contextos no caben, y si se edita fuera la app no lo entiende ni se entera (la `revision` no cambia). Con «manda el modelo», Markdown es **sólo para exportar** (*Exportar las notas a Markdown*, aquí arriba). | Que se reabra «manda el fichero»: editar las notas en Obsidian o en cualquier editor. Es otro proyecto, no una ampliación del almacenamiento. |
 | **Cifrar la sesión guardada de la nube** (con una llave de WebCrypto que no se puede sacar) | El 2026-10-12 se decidió guardar la sesión en el navegador sin cifrar. Cifrarla impide que copiar el almacén baste para llevarse el token, pero no protege de un script malicioso dentro de la app, que podría usar la llave. Hoy no hay código de terceros ni dependencias. | Que la app cargue código ajeno, o que se comparta con más gente. |
-| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, más de trescientas líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 27 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** adaptador sobre navegador con lógica de verdad —el de Supabase, con su sesión y sus reintentos; hasta el 2026-10-12 decía «el de Drive»— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
+| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, más de trescientas líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 37 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** adaptador sobre navegador con lógica de verdad —el de Supabase, con su sesión y sus reintentos; hasta el 2026-10-12 decía «el de Drive»— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | ⚠️ **Superada el 2026-09-27:** webpack ya **no** es el bundler previsto para la Fase 4 — la fase arranca con el `importmap`, sin bundler. La elección entre bundlers no afecta a la arquitectura, así que no urge. | Que algo concreto exija un bundler. Ese día se comparan los que haya, no sólo estos dos; y se reinstala **sólo** el elegido. |
 | **Las ventanas como entidad del core** (la opción B de el `ARCHITECTURE.md` viejo: algo como `Layout`, en su fichero junto a las notas) | Es la opción más limpia —una sola fuente, viaja con las notas, el reducer vigila la integridad—, pero reabre `StorageAdapter`, la suite de contratos, `FileStorageAdapter` y el catálogo de acciones, todo cerrado. Se eligió la C (`localStorage`) para salir del paso. | Que lleguen las **entidades «meta» de UX/UI** al core, que el usuario prevé; o que duela de verdad que las ventanas no viajen con las notas (un cambio de destino o de dispositivo). Ese día la guarda de la presentación se sustituye por la integridad del reducer. |
 | **Revisar `Context.defaultView`** (y su acción `set-default-view`) | Se queda sin consumidor en la Fase 4: «abrir directamente una nota» lo hace ahora una ventana de tipo nota. No se quita porque el dominio está cerrado y quitarlo toca modelo, reducer, pruebas y formato en disco por algo que no molesta. | Lo mismo que la fila anterior: cuando lleguen las entidades «meta» de UX. Ahí se decide si se elimina o si recupera un sentido. |
@@ -338,7 +281,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Tailwind, o cualquier CSS que pida compilación** (UnoCSS, Sass, CSS Modules) | Preguntado el 2026-10-03. Pide un paso de compilación y una dependencia, **duplica** las variables CSS que ya llevan los colores en claro y oscuro, y mete el estilo en el TypeScript (`className = "…"` con quince clases). Sass y CSS Modules, compilación también, y el anidamiento ya es nativo. Se hizo lo contrario: CSS nativo partido por vista en `src/ui/styles/`. | Que el CSS crezca hasta que **los choques de cascada** entre ficheros se vuelvan inmanejables, o que haya un equipo diseñando muchas pantallas. Ese día se mira primero **`@layer` por vista**, que es nativo. |
 | **Snabbdom, o cualquier DOM virtual mínimo** | Preguntado el 2026-09-20. Es el **único candidato honesto** de todos los que se plantearon, porque aporta sólo *diffing* (~3 KB) y no duplica nada: el estado ya está resuelto. Aun así no ahora, y el motivo es el mismo que hace difícil a esta app — lo que describe §7, *reconciliar por `data-id`* y **saltarse el nodo enfocado**, es un vdom a mano recortado alrededor de la única excepción que un vdom genérico expresa mal. Daría el 90% y habría que pelearse con él justo en el 10% que decide si la app se siente bien. Sería además la **primera dependencia de runtime** del proyecto. | **Cambiado con el usuario el 2026-10-03: ya no cuenta el tamaño, cuentan los fallos.** Se reabre cuando aparezcan **fallos de sincronizar el DOM** —un dato que cambia y no se repinta, un nodo que se repinta de más, una lista que se desordena al repintar—, que son los que el *diffing* evita. El tamaño (~600 líneas) se descartó como disparador: se pasó sin que saliera ni un fallo de ésos. ⚠️ Ese día se evalúa **Snabbdom, no React ni Svelte ni Angular**: los frameworks traen estado, y el estado ya está construido. |
 | **Un motor de edición** (ProseMirror, Lexical, CodeMirror) | Preguntado el 2026-09-20, y es **lo único que ahorraría semanas de verdad**: resuelven cursor, selección, deshacer y anidamiento, que es literalmente la Fase 4. Por eso mismo es lo más caro: **traen su propio modelo de documento**. `Note`, `Content`, las nueve operaciones, la lógica del editor de `src/ui/` y buena parte de las pruebas pasarían a ser redundantes. No complementan el core, **lo sustituyen**. | Querer **texto rico** — negritas, enlaces, tablas. Hoy `Content` es `Text \| CheckBox` con cadenas planas y no hay nada que ganar. Ese día la pregunta ya no es «qué librería de vistas», es **«¿se rehace el núcleo?»**, y es una decisión de otro tamaño: conviene no llegar a ella por accidente, añadiendo formato poco a poco. |
-| **Un framework con estado dentro** (React, Angular, Svelte, Redux) · **htmx** | Preguntados el 2026-09-20 y descartados en bloque, para no volver a discutirlos de uno en uno. **Redux ya está construido**: `Store.ts` son 65 líneas con `getState`/`dispatch`/`subscribe` sobre un reducer puro, más lo que Redux no da —la invariante de identidad, en `if (next === state) return`—. **React** es débil exactamente donde esta app es difícil: el vdom y `contenteditable` se llevan mal porque el navegador muta el DOM mientras se escribe (Facebook abandonó Draft.js; ProseMirror, CodeMirror y Lexical gestionan el DOM ellos mismos), así que §7 obligaría a salirse de React justo en el componente que importa. **Angular** es de otra escala. **Svelte** es el mejor de los cuatro, pero sus *stores* compiten con el `Store` que ya existe y exige compilador. **htmx** es de otro paradigma: vive de que un servidor devuelva HTML, y esta app no tiene servidor. | Nada previsible. Si algún día se reabre, se reabre por la fila de **Snabbdom** —diffing sin estado—, que es la única necesidad real que podría aparecer. |
+| **Un framework con estado dentro** (React, Angular, Svelte, Redux) · **htmx** | Preguntados el 2026-09-20 y descartados en bloque, para no volver a discutirlos de uno en uno. **Redux ya está construido**: `Store.ts` son 63 líneas con `getState`/`dispatch`/`subscribe` sobre un reducer puro, más lo que Redux no da —la invariante de identidad, en `if (next === state) return`—. **React** es débil exactamente donde esta app es difícil: el vdom y `contenteditable` se llevan mal porque el navegador muta el DOM mientras se escribe (Facebook abandonó Draft.js; ProseMirror, CodeMirror y Lexical gestionan el DOM ellos mismos), así que §7 obligaría a salirse de React justo en el componente que importa. **Angular** es de otra escala. **Svelte** es el mejor de los cuatro, pero sus *stores* compiten con el `Store` que ya existe y exige compilador. **htmx** es de otro paradigma: vive de que un servidor devuelva HTML, y esta app no tiene servidor. | Nada previsible. Si algún día se reabre, se reabre por la fila de **Snabbdom** —diffing sin estado—, que es la única necesidad real que podría aparecer. |
 
 ### La nube: el diseño — DISEÑADA el 2026-10-12, APARCADA el 2026-11-04
 

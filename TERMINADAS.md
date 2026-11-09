@@ -225,6 +225,27 @@ revisor lo marcó. **Deuda:** ninguna nueva.
 Commits clave: `4a3791a` (el panel), `6762c4e` y `ab4768d` (las roturas), `06202e1` (los agentes),
 `24606f9`, `aaf473f` y `7f4b67b` (Prettier), `b3feff9` (el «+ Contexto»), `dd88575` (el recorrido).
 
+---
+
+### Fase 11 — Dos idiomas, español e inglés, y copiar casillas ✅ CERRADA el 2026-11-09
+
+Pedida por el usuario el 2026-11-04 y hecha en la rama `fase-11`, con 1424 pruebas y 239 roturas,
+todas cazadas. **Los textos:** unos 280, sacados de unos 20 ficheros de `src/ui/` a `src/ui/textos/`,
+un objeto por idioma con el mismo tipo (si a `en` le falta uno, no compila), pedidos por su nombre al
+usarlos; el core, sin tocar. **El idioma**, en ⚙ debajo de Pantalla, viaja en el `UiState`; de partida,
+el del navegador, y cambiarlo recarga. Días y meses con `Intl`; los nombres por defecto, en el elegido
+(«New Note»); el `manifest`, sin traducir. **Copiar y pegar casillas** con su marca y sus hijas, con
+`insert` de varios bloques en el core. **Borrar y cortar una selección de varias líneas**, como en un
+editor y sin confirmar (la opción A del usuario). **De paso:** ⚙ vuelve al recargar, como las demás
+capas. **Las listas:** por decisión del usuario el 2026-11-09, **no se pasaron enteras**: sólo la del
+editor (A–L y M15, en inglés, sin textos en español a la vista) y los pasos de cada tarea. Esa pasada
+sacó G1, ↑ hacia una línea larga cae en su primera fila, que viene de antes de la fase. La auditoría
+de cierre halló 8 afirmaciones falsas, corregidas; tres, del principio de no borrar sin confirmar,
+que ahora recoge lo seleccionado como un texto.
+Commits clave: `66dcbcc` (el planteamiento), `0b56e3c` (los textos en `es`), `34e01e7` (en `en`),
+`62c363b` y `38d3b23` (elegir el idioma), `7f2cec0` (⚙ al recargar), `919dccc` (copiar casillas),
+`88eadb7` (borrar una selección), `353c5c1` (exportar a Markdown, aparcada).
+
 ## Tareas sueltas terminadas
 
 - **Fase 10, tarea 1: ocultos por contexto** 2026-10-24, rama `fase-10` (`6b5329d`): `Context.hidden`

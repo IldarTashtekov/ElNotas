@@ -341,7 +341,8 @@ estampas, N avisos y N escrituras.
 
 **Nada desaparece sin que el usuario lo esté mirando.** Lo que haría desaparecer contenido que no se
 ve —absorber o convertir una línea con hijas— es un no-op; borrar una casilla con su árbol sólo se
-hace eligiéndola y confirmando con la cuenta de lo que se va. Un borrado accidental de cuarenta casillas no
+hace eligiéndola: en «⠿ Ordenar», confirmando con la cuenta de lo que se va; o seleccionándola como
+un texto, con su árbol a la vista, y pulsando Supr, Retroceso o cortar, como en un editor. Un borrado accidental de cuarenta casillas no
 es un deshacer más: es la clase de pérdida que hace que dejes de fiarte de la app.
 
 **Sobrevive con su identidad lo que ya estaba.** Cuando una operación parte, une o convierte, la línea
@@ -591,7 +592,7 @@ referencia (§3). Lo que reabriría esto son fallos reales de sincronizar el DOM
 | **Contenido** | notas, diagramas, contextos | en el core, persistido, viaja con los datos |
 | **Modo de trabajo** | cómo se comporta el teclado ahora mismo | en memoria, en quien lo usa; se pierde sin consecuencias |
 | **Organización de la vista** | qué se enseña y cómo: ventanas, encuadres, lo abierto encima | **fuera del core**, en el dispositivo; no viaja |
-| **Preferencias del dispositivo** | el aspecto | igual: fuera del core, en el dispositivo |
+| **Preferencias del dispositivo** | el aspecto y el idioma | igual: fuera del core, en el dispositivo |
 
 **Lo que no es contenido no entra en el core.** Meterlo llenaría la persistencia de basura de
 interfaz, y abrir un menú marcaría notas como sucias. Lo que se guarda fuera del core **no lo vigila
@@ -638,7 +639,8 @@ dejaría de significar «salir».
 - **Móvil y escritorio, los mismos gestos.** Nada depende de lo que un teclado de móvil no tiene, como
   el Tabulador. Un diseño que lo necesite es un diseño sólo para ordenador.
 - **Se confirma sólo lo que no tiene vuelta atrás**, con una hoja propia y no con un diálogo del
-  navegador, que algunos contestan solos. Quitar, mover o lo que se rehace de un toque, no confirma.
+  navegador, que algunos contestan solos. Quitar, mover o lo que se rehace de un toque, no confirma;
+  tampoco borrar lo seleccionado como un texto, que es lo que hace cualquier editor.
 - **Un control que actúa sobre lo que todavía no existe tiene que verse armado.** Si el efecto no está
   en lo que se mira, un estado invisible convierte la siguiente pulsación en una sorpresa.
 - **Una pulsación, una cosa**, y ninguna se lleva por delante lo que el usuario no está mirando.

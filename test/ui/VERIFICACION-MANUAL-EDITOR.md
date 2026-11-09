@@ -811,3 +811,32 @@ Sin probar: U4, U7 y U8 en pantalla (U7 lo cubren las pruebas de `move`), y U10 
 Notas: el usuario las dio por buenas todas juntas («todo rula»), sin detalle paso a paso. Cierra
 lo del móvil de las pasadas 6, 7, 8 y 11; lo de R sin probar en el ordenador (varios enlaces
 pegados, texto vacío, R8) sigue sin pasar.
+
+
+### Pasada 13 — escritorio, A–L y M15, con la app en inglés (Fase 11)
+
+| | |
+|---|---|
+| Fecha | 2026-11-09 |
+| Navegador y versión | el navegador del panel (Linux), Chrome 152 |
+| Quién | el verificador, en el panel |
+| Commit | `88eadb7`, con `CLAUDE.md` sin comitear |
+| Origen | `localhost:8001`, vaciado, con `?depurar` y `language: "en"` |
+
+| Paso | Resultado |
+|---|---|
+| A1–A5 | ✅ la nota nueva se llama «New Note» |
+| B1–B5 | ✅ el teclado del móvil, sin probar |
+| C1–C8, C7b | ✅ |
+| D1–D6, D4b | ✅ |
+| E1–E5 | ✅ el borde discontinuo de «Nest armed» sólo se aprecia de cerca |
+| F1–F4 | ✅ al ☐ se llega con Shift+Tab, porque Tab mete un tabulador |
+| G1 | ❌ ↓ recorre las filas de una línea larga, pero ↑ desde la línea de debajo cae en su **primera** fila, no en la última. Viene de antes de la fase |
+| G2 | ✅ |
+| I1–I3 | ✅ |
+| I4 | 🔁 la pulsación larga, con eventos de puntero lanzados a mano |
+| J1, K1, K2, L1, L2 | ✅ |
+| M15 | ✅ con «Link to» y con ⚙ encima, Retroceso y Supr no tocan la nota y los campos se editan normal |
+
+Notas: ningún texto en español a la vista con la app en inglés (pantallas, hojas, avisos y los
+`aria-label`, `title` y `placeholder` de todo el DOM); sólo los mensajes de la consola.

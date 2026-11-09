@@ -89,18 +89,16 @@ index.html         # carga dist/web/ con un importmap, sin bundler (§8.5)
 manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la PWA (§8.6)
 ```
 
-- **La verja de pureza:** `document.`, `crypto` o un temporizador en el core no compilan
-  (`typecheck:core`); el reloj y el azar sí, y los caza `check:purity`. IDs, hora y azar entran
-  **por puerto** (`IdGenerator`, `Clock`).
+- **La verja de pureza:** `document.`, `crypto` o un temporizador en el core no compilan (`typecheck:core`); el
+  reloj y el azar sí, y los caza `check:purity`. IDs, hora y azar entran **por puerto** (`IdGenerator`, `Clock`).
 - **Ni `baseUrl` ni `paths`.** Los alias van en el campo `imports` de `package.json` y se calcan
   en el `importmap` de `index.html`: **un alias nuevo, en los dos sitios**, y sólo cuando el
   módulo exista. **Nada comprueba el `importmap`**: un alias olvidado ahí se ve al abrir la app.
 - **Un `index.ts` por módulo** (menos `platform/`), y **sólo exporta lo que importa otro módulo de
   `src/`**, sin `export *` (`check:exportaciones`).
-- **Las pruebas van en `test/`, espejo de `src/`** (`src/core/domain/operations.ts` →
-  `test/core/domain/operations.test.ts`). Desde `test/` se importa **por alias y por su fichero**
-  lo que el `index.ts` no anuncia (`#ui/noteActions`); entre ficheros de `test/`, relativo. Un
-  ayudante sin pruebas **no lleva `.test`**.
+- **Las pruebas van en `test/`, espejo de `src/`** (`src/core/domain/operations.ts` → `test/core/domain/operations.test.ts`).
+  Desde `test/` se importa **por alias y por su fichero** lo que el `index.ts` no anuncia (`#ui/noteActions`); entre
+  ficheros de `test/`, relativo. Un ayudante sin pruebas **no lleva `.test`**.
 
 ## Reglas al escribir código
 
@@ -118,9 +116,8 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
   contratos de `storage/` compara por valor a propósito. **No lo «arregles».**
 - **El reducer, puro y total:** ni IDs, ni reloj, ni excepciones; `meta: { now, revision }` lo
   ponen los casos de uso. **Una operación que no aplica NO HACE NADA** en vez de fallar (§5).
-- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive sólo en las
-  **fronteras**, donde se habla con algo que lanza. **Ausencia no es fallo:** `get` de lo que no
-  está es `ok(null)` (§6.4).
+- **Los errores se devuelven, no se lanzan** (`Result`). El `try/catch` vive sólo en las **fronteras**, donde se
+  habla con algo que lanza. **Ausencia no es fallo:** `get` de lo que no está es `ok(null)` (§6.4).
 - **⚠️ EL PELIGRO NO ES EL `throw`: ES LA LLAMADA SIN ENVOLVER.** Lo vigila `check:fronteras`, pero
   **su lista de lo peligroso se mantiene a mano**: si llamas a una API nueva que lanza, añádela ahí.
 - **Un error se mira siempre**, aunque sea para registrarlo con el `Logger`: ni un `Result` ni una
@@ -137,6 +134,8 @@ manifest.webmanifest · assets/icono/ · pwa/sw.js · .github/workflows/   # la 
 - **`Context.items` es `ItemRef[]`, nunca `(Note | Diagram)[]`.** No negociable.
 - **Nada de credenciales en el repo ni en el bundle.** Web: la sesión de un servicio externo, en el
   navegador, revocable desde ⚙ (aparcada: `TAREAS.md` → *Ideas aparcadas*). Desktop: keychain.
+- **Ningún texto para quien usa la app va suelto en el código:** se pide a `textos` (`src/ui/textos/`) por su
+  nombre, al usarlo, nunca en una constante al cargar. Uno nuevo, en `es` y en `en`. Lo del usuario no se traduce.
 - **Comentarios en castellano.** La **cabecera** responde a «¿para qué sirve esto?» en 3-8 líneas,
   sin porqués. **Los comentarios de dentro se quedan.** Al quitar una cabecera, si explicaba un
   principio que no está en `ARCHITECTURE.md`, se mueve allí (§8.7). Sin `§` en el código
@@ -156,16 +155,14 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - CSS nativo, sin Tailwind ni preprocesador: un fichero por vista **en el orden de la cascada**,
   anidamiento nativo, `@layer base`, colores sólo en `base.css`. Al tocarlo, comparar el estilo calculado.
 - Sin bundler: `importmap` y `.js` en los relativos. `node:test`, no vitest. Pruebas en `test/`.
-- Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o el verificador
-  en el panel. Si tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`;
-  las dos excepciones, en `TERMINADAS.md`).
+- Navegador y UI se verifican **con listas escritas**, no con Playwright: a mano, o el verificador en el panel. Si
+  tocas `DirectoryHandleBlobStore.ts`, se vuelve a pasar su lista (`test/storage/blobs/`; dos excepciones, en `TERMINADAS.md`).
 - Un tipo de plataforma que falte se declara a mano, local; antes, mira si TypeScript ya lo trae.
 - Sin dependencias para analizar el código (ni ESLint, ni Biome): un guardián vale si falla el
   build, es rápido y casi nunca se equivoca. Las roturas, con una lista a mano, no con Stryker.
   Para formatear, Prettier a 120 y sin punto y coma (no dprint, que baja de la red); los `.md`, a mano.
-- Hooks en `.claude/settings.json`: antes de Bash, nada de comitear en `main`; al editar, los
-  tipos y los guardianes; al terminar, `check` entero si hay cambios sin comitear en `src/`,
-  `test/` o `tools/`.
+- Hooks en `.claude/settings.json`: antes de Bash, nada de comitear en `main`; al editar, los tipos y los guardianes;
+  al terminar, `check` entero si hay cambios sin comitear en `src/`, `test/` o `tools/`.
 
 **Dominio**
 - Estado normalizado con `ItemRef`. `Versioned` con `revision` opaca. En un contexto, `hidden` ⊆ `items`.
@@ -175,7 +172,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Nueve operaciones; **ni `indent`/`outdent`**. ⚠️ Anidar NO es `indent`: actúa en la siguiente. `move`: varias, juntas,
   con sus hijas; con un texto, a la raíz. «⠿ Ordenar»: tocar elige, se arrastra por el `⠿`, el dedo da la profundidad.
 - Marcar una casilla NO arrastra a sus hijas; la cascada, si llega, en una sola acción.
-- `merge`/`convertToText` con hijas: no-op. `remove`, varias; una casilla, con su árbol (papelera de «⠿ Ordenar»). `insert`, varias: todas o ninguna.
+- `merge`/`convertToText` con hijas: no-op. `remove`, varias; una casilla, con su árbol (papelera de «⠿ Ordenar», o seleccionada y Supr). `insert`, varias: todas o ninguna.
 - `WritingMode` = «☐ Casilla» + anidar (sólo con casilla, actúa una vez). No se persiste. El resto
   del teclado lo fijan las pruebas del editor: si una cae, era una decisión.
 - Una acción, una operación. Los casos de uso devuelven la entidad protagonista o `null`: ⚠️ no es undo.
@@ -214,7 +211,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Nota nueva en su contexto, «Nueva Nota»; vacía se mantiene; nombres repetidos, sí. Título sólo en la cabecera,
   renombrable. `defaultView`, sin uso (en `TAREAS.md` → *Sin decidir*).
 - El atrás del navegador cierra lo de encima; una capa sin entrada en el historial se cierra sin ir atrás.
-- `UiState` (fósforo, ventanas, encuadres, orden y gráficas de rutinas, pestaña del calendario): un objeto en `elnotas:ui`, un
+- `UiState` (fósforo, idioma, ventanas, encuadres, orden y gráficas de rutinas, pestaña del calendario): un objeto en `elnotas:ui`, un
   adaptador, sin core ni versión; guardar una sección no pisa las otras. Las capas, fuera: dónde se está, no cómo se ve.
 
 **Aspecto**
@@ -222,6 +219,8 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Letra monoespaciada **del sistema**, sin fuente propia. Sin esquinas redondeadas ni sombras.
 - Crear o confirmar, en **vídeo inverso**; el rojo, sólo para borrar y los errores. Sin verde «de crear».
 - CRT suave y **fijo**: brillo leve y líneas de barrido con `pointer-events: none`. Nada se mueve.
+- **Español o inglés, en ⚙**; de partida, el del navegador. Cambiarlo recarga. Los nombres por defecto, en el elegido
+  («New Note»); lo ya creado no cambia. Días y meses con `Intl`. El `manifest`, sin traducir.
 
 **Diagramas**
 - Lienzo libre, desde cero: pósits HTML y líneas SVG, sin librería.

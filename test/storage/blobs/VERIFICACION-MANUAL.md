@@ -216,7 +216,7 @@ Fase 3 está sin decidir (`TAREAS.md`), así que se pasa si se quiere y se anota
 
 ## Hoja de resultados
 
-Una pasada por bloque, **la más reciente arriba**. Se copia la plantilla y se rellena.
+Una pasada por bloque, **debajo de la anterior** (las dos primeras, de antes de la regla, van al revés). Se copia la plantilla y se rellena.
 
 ```
 Fecha:        AAAA-MM-DD
