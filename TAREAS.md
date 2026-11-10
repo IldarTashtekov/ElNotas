@@ -215,7 +215,11 @@ de construir nada.
 - [ ] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
       Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
-      no se ve otra cosa que negro antes de la app.
+      no se ve otra cosa que negro antes de la app (desde Android 12 el sistema pone el icono en el
+      centro de la carga: no se puede quitar sin esconderlo). **Código hecho el 2026-11-10:** los
+      iconos, generados una vez desde `icono-512.png` (el adaptativo, en los 66 dp que no se
+      recortan), la carga y el fondo del visor en el `--ground`, y `build:android` falla si esas
+      copias del color se desvían. Falta la sección D de la lista.
 
 ### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
 

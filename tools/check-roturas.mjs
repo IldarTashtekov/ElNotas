@@ -126,8 +126,8 @@ if (elegidas.length === 0) {
 
 /* Con la base en rojo, cualquier rotura «caería»: no probaría nada. `npm test` deja compilado tmp-test/. */
 const cazadores = new Set(elegidas.map((r) => r.caza))
-/* dist/ no se copia, y build:pages arma lo publicado a partir de dist/web/. */
-if (cazadores.has("build:pages") && !(await npm("build:web")).ok) {
+/* dist/ no se copia, y build:pages y build:android arman lo suyo a partir de dist/web/. */
+if ((cazadores.has("build:pages") || cazadores.has("build:android")) && !(await npm("build:web")).ok) {
   console.error("✗ la copia no compila con `npm run build:web`")
   process.exit(1)
 }

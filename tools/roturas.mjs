@@ -478,6 +478,20 @@ export const ROTURAS = [
     caza: "build:pages",
   },
   {
+    nombre: "build:android: el fondo de la app de Android no es el --ground",
+    fichero: "capacitor.config.json",
+    buscar: '"backgroundColor": "#050301"',
+    poner: '"backgroundColor": "#ffffff"',
+    caza: "build:android",
+  },
+  {
+    nombre: "build:android: la carga de Android no es del color del --ground",
+    fichero: "android/app/src/main/res/values/styles.xml",
+    buscar: '"windowSplashScreenBackground">#050301',
+    poner: '"windowSplashScreenBackground">#ffffff',
+    caza: "build:android",
+  },
+  {
     nombre: "check:fronteras: getItem fuera de su try",
     fichero: "src/platform/web/LocalStorageUiState.ts",
     buscar: "    try {\n      const texto: string | null = almacen.getItem(UI_STATE_KEY)\n",

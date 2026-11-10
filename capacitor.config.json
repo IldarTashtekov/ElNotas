@@ -1,5 +1,6 @@
 {
   "appId": "io.github.ildartashtekov.elnotas",
   "appName": "ElNotas",
-  "webDir": "dist/android"
+  "webDir": "dist/android",
+  "backgroundColor": "#050301"
 }

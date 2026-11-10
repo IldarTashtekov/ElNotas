@@ -9,7 +9,8 @@
  * desarrollo no hay service worker, porque el index.html del repo no lo registra.
  * Se niega a terminar si index.html o el manifiesto piden algo con ruta absoluta
  * o algo que no se publica: es el fallo que sólo se notaría en el móvil. También,
- * si el fondo del manifiesto no es el `--ground` de base.css.
+ * si el fondo del manifiesto (y, para Android, los del proyecto Android) no es el
+ * `--ground` de base.css.
  */
 import { createHash } from "node:crypto"
 import {
@@ -62,6 +63,34 @@ if (fondo?.toLowerCase() !== suelo.toLowerCase()) {
     `    manifest.webmanifest  background_color: ${fondo}`,
     `    ${BASE_CSS}  --ground: ${suelo}`,
   ])
+}
+
+// La app de Android tampoco lee variables CSS: el fondo del visor, el de la pantalla de
+// carga y el del icono son más copias del mismo `--ground`.
+if (ANDROID) {
+  const RES = "android/app/src/main/res/values"
+  const copias = [
+    [
+      "capacitor.config.json  backgroundColor",
+      JSON.parse(readFileSync("capacitor.config.json", "utf8")).backgroundColor,
+    ],
+    [
+      `${RES}/styles.xml  windowSplashScreenBackground`,
+      readFileSync(`${RES}/styles.xml`, "utf8").match(/"windowSplashScreenBackground">\s*(#[0-9a-f]+)/i)?.[1],
+    ],
+    [
+      `${RES}/ic_launcher_background.xml  ic_launcher_background`,
+      readFileSync(`${RES}/ic_launcher_background.xml`, "utf8").match(/"ic_launcher_background">\s*(#[0-9a-f]+)/i)?.[1],
+    ],
+  ]
+  const distintas = copias.filter(([, color]) => color?.toLowerCase() !== suelo.toLowerCase())
+  if (distintas.length > 0) {
+    fallar([
+      "El fondo de la app de Android no coincide con el de la app. Se vería un",
+      `  destello de otro color al abrirla. Tienen que valer lo que --ground (${suelo}):`,
+      ...distintas.map(([donde, color]) => `    ${donde}: ${color ?? "(no está)"}`),
+    ])
+  }
 }
 
 if (!existsSync("dist/web")) {

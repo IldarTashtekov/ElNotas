@@ -113,6 +113,16 @@ a otra app, así que dice «Copia enviada», no «guardada».
   («Copiar», Quick Share o Bluetooth, el que haya). Anotar qué dice la app: puede no decir nada
   aunque se haya enviado.
 
+## D. El icono y la carga (Fase 12, tarea 9)
+
+- **D1. El icono es el «nerd».** En la pantalla de inicio y en el cajón de apps, el icono de
+  ElNotas es el del «nerd» con la lluvia de letras, sobre negro; no el de Capacitor.
+- **D2. Al abrir, todo negro.** Cerrar la app desde las recientes y abrirla: la pantalla de carga
+  es negra (en Android 12 o más, con el icono en el centro) y no hay ningún destello blanco antes
+  de que salga la app.
+
+---
+
 ## Hoja de resultados
 
 ### 2026-11-10 — Xiaomi, Capacitor 8, `.apk` de *debug* (modelo y versión de Android sin anotar)
