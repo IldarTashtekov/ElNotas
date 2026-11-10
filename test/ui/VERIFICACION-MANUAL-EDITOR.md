@@ -112,7 +112,13 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
 ## G. Moverse
 
 - **G1.** **↑ ↓** pasan a la línea de arriba o de abajo, conservando la columna si cabe; en una línea
-  larga que ocupa varias filas, primero recorren sus filas.
+  larga que ocupa varias filas, primero recorren sus filas. **↑** desde la línea de debajo de una
+  larga cae en su **última** fila, y **↓** desde la de encima, en la primera, en la columna que se
+  ve. Igual desde una línea vacía, entre una casilla anidada y una de la raíz, y hacia una línea que
+  empieza o acaba con un enlace guardado o lleva negritas; y con la larga partida en un espacio,
+  ↑ a la columna 0 de su última fila (el cursor se pinta en ella, no al final de la de antes) y ↓
+  con la columna más allá del final de su primera fila. Tras **Fin** en una fila que no es la
+  última, ↓ va a la fila de debajo, sin saltarla.
 - **G2.** **←** al principio de una línea va al final de la de arriba; **→** al final, al principio
   de la de abajo.
 
@@ -840,3 +846,21 @@ pegados, texto vacío, R8) sigue sin pasar.
 
 Notas: ningún texto en español a la vista con la app en inglés (pantallas, hojas, avisos y los
 `aria-label`, `title` y `placeholder` de todo el DOM); sólo los mensajes de la consola.
+
+
+### Pasada 14 — escritorio, G1 y G2 tras el arreglo de G1 (2026-11-10)
+
+| | |
+|---|---|
+| Fecha | 2026-11-10 |
+| Navegador y versión | el navegador del panel (Linux), Chrome 152, a 360×700 |
+| Quién | el verificador, en el panel, en tres vueltas con el revisor |
+| Commit | `fbbfd67`, con el arreglo sin comitear |
+| Origen | `localhost:8001`, una nota nueva |
+
+| Paso | Resultado |
+|---|---|
+| G1 | ✅ ↑ desde una corta cae en la última fila de la larga, en la misma x, y ↓ recorre sus filas una a una; desde una vacía, ↑ cae en el principio de la última fila y ↓ en la primera; hacia y desde un enlace guardado, la columna que se ve; tras Fin o Inicio en una fila de en medio, ↓ ↑ no se la saltan, también partida dentro de una palabra. ⚠️ Tras caer con ↑ al principio de una fila partida, el primer ↓ va al final de esa fila y hace falta otro para salir (deuda) |
+| G2 | ✅ |
+
+Notas: sin errores en la consola.

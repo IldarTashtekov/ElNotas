@@ -365,6 +365,10 @@ Commits clave: `66dcbcc` (el planteamiento), `0b56e3c` (los textos en `es`), `34
 - **Archivar rutinas, de la presentación** (2026-10-30): `Routine` ya no lleva `archived` ni existe `set-routine-archived`; lo archivado es una lista de ids en `elnotas:calendario-orden` (`CalendarOrder.archived`), por dispositivo y dentro de la copia. Los enlaces de una nota ofrecen también las archivadas.
 - **El «+ Contexto» de ⚙, en vídeo inverso** (2026-11-05, Fase 10.1, la primera tarea con el revisor y el verificador): como el «+ Contexto nuevo» de la hoja; T3 de la lista del terminal pasa en los tres fósforos.
 - **Eventos sin «hecho»** (2026-11-02): `CalendarEvent` pierde `done` y el core `set-event-done`; fuera la casilla, el tachado, el asterisco atenuado y el atajo de casilla a un evento (el de rutina sigue). Los eventos son citas, no tareas; lo guardado con `done` quedaría ilegible (no había ninguno).
+- **G1: ↑ ↓ por la columna que se ve** (2026-11-10, tras cerrar la Fase 11, deuda que sacó su pasada): el salto
+  entre líneas mide en pantalla en vez de contar letras; ↑ hacia una línea larga cae en su última fila. Sin
+  medida, como antes. Sin prueba en Node: el paso G1 de la lista del editor, ampliado. Tres vueltas con el
+  revisor; lo que queda (un ↓ de más tras caer al principio de una fila partida), en la deuda de la Fase 11.
 
 ## Descartadas
 

@@ -633,7 +633,7 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una fase cerrada sigue en TAREAS.md",
     fichero: "TAREAS.md",
-    buscar: "— PLANIFICADA, después de la 11\n",
+    buscar: "— PLANIFICADA, la siguiente\n",
     poner: "✅ CERRADA\n",
     caza: "check:tareas",
   },

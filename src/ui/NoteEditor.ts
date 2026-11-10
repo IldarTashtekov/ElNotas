@@ -340,11 +340,36 @@ const muestraEnCrudo = (campo: HTMLElement, raw: string): boolean =>
     ? campo.textContent === "" && campo.querySelector("span") === null
     : campo.childNodes.length === 1 && campo.firstChild?.nodeType === Node.TEXT_NODE && campo.textContent === raw
 
+/**
+ * Dónde se pinta el cursor, o nada si no se sabe (un campo vacío no da
+ * rectángulo). Donde una línea larga se parte, da dos, el final de una fila y el
+ * principio de la siguiente, y no se sabe en cuál se pinta: se toma el que no se
+ * salta nada al ir hacia `hacia`, el de abajo al subir y el de arriba al bajar.
+ */
+const rectanguloDelCursor = (hacia: "prev" | "next"): DOMRect | undefined => {
+  const sel: Selection | null = window.getSelection()
+  if (sel === null || sel.rangeCount === 0) return undefined
+  const rects: DOMRectList = sel.getRangeAt(0).getClientRects()
+  return (hacia === "prev" ? rects[rects.length - 1] : rects[0]) ?? junto(sel.focusNode)
+}
+
+/** El cursor en el nodo vacío que se le crea junto a un bloque no da rectángulo: se toma el del bloque. */
+const junto = (nodo: Node | null): DOMRect | undefined => {
+  if (nodo === null || nodo.nodeType !== Node.TEXT_NODE || nodo.textContent !== "") return undefined
+  const antes: Node | null = nodo.previousSibling
+  const despues: Node | null = nodo.nextSibling
+  if (antes instanceof Element) {
+    const r: DOMRectList = antes.getClientRects()
+    const u: DOMRect | undefined = r[r.length - 1]
+    if (u !== undefined) return new DOMRect(u.right, u.top, 0, u.height)
+  }
+  const p: DOMRect | undefined = despues instanceof Element ? despues.getClientRects()[0] : undefined
+  return p === undefined ? undefined : new DOMRect(p.left, p.top, 0, p.height)
+}
+
 /** Si el cursor está en la primera (o la última) fila visual del campo. */
 const enBordeVisual = (campo: HTMLElement, hacia: "prev" | "next"): boolean => {
-  const sel: Selection | null = window.getSelection()
-  if (sel === null || sel.rangeCount === 0) return true
-  const cursor: DOMRect | undefined = sel.getRangeAt(0).getClientRects()[0]
+  const cursor: DOMRect | undefined = rectanguloDelCursor(hacia)
   /* Un campo vacío no da rectángulo: está en los dos bordes a la vez. */
   if (cursor === undefined) return true
   const caja: DOMRect = campo.getBoundingClientRect()
@@ -1094,9 +1119,32 @@ export const createNoteEditor = ({
     const campo: HTMLElement | null = otra === null ? null : campoDe(otra.id)
     if (otra === null || campo === null) return
     evento.preventDefault()
-    /* Con ↑ ↓ se conserva la columna si cabe; con ← → se va al borde de la otra. */
-    const offset: number = alBorde ? (hacia === "prev" ? otra.text.length : 0) : caret.offset
-    ponerCursor(campo, offset)
+    /* Con ← → se va al borde de la otra. */
+    const borde: number = hacia === "prev" ? otra.text.length : 0
+    if (alBorde) return ponerCursor(campo, borde)
+    /* Con ↑ ↓, a la columna que se ve, en la fila de la otra que queda pegada:
+       su última al subir, su primera al bajar. Se mide con la otra ya en crudo,
+       que es como se va a ver. Una línea vacía no da rectángulo: su x es la de
+       su borde izquierdo. Sin rectángulo de la fila, media línea dentro de la
+       caja de la otra. Si el navegador no da la letra de ese punto, el cursor se
+       queda en el borde de la otra, que ya está en la fila pegada. */
+    const x: number | undefined = rectanguloDelCursor(hacia)?.left ?? campoDe(caret.line)?.getBoundingClientRect().left
+    if (x === undefined) return ponerCursor(campo, caret.offset)
+    ponerCursor(campo, borde)
+    const fila: DOMRect | undefined = rectanguloDelCursor(hacia)
+    const caja: DOMRect = campo.getBoundingClientRect()
+    const media: number = (parseFloat(getComputedStyle(campo).lineHeight) || 16) / 2
+    const dentro: number = Math.min(Math.max(x, caja.left + 1), caja.right - 1)
+    const y: number =
+      fila !== undefined ? fila.top + fila.height / 2 : hacia === "prev" ? caja.bottom - media : caja.top + media
+    const punto: { readonly nodo: Node; readonly offset: number } | null = puntoDeTexto(dentro, y)
+    if (punto === null || !campo.contains(punto.nodo)) return
+    const destino: number = contarHasta(campo, punto.nodo, punto.offset)
+    ponerCursor(campo, destino)
+    /* Donde la fila se parte en un espacio, la letra de su principio es ese
+       espacio, que se pinta al final de la fila de antes: un paso más. */
+    const puesto: DOMRect | undefined = rectanguloDelCursor(hacia)
+    if (puesto !== undefined && Math.abs(puesto.top + puesto.height / 2 - y) > media) ponerCursor(campo, destino + 1)
   }
 
   lineas.addEventListener("keydown", (evento: KeyboardEvent): void => {
