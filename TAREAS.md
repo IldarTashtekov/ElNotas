@@ -136,7 +136,11 @@ de construir nada.
          encima, cierra la app.
       7. **Exportar, con la hoja «Compartir»** de Android. **La copia automática, en una carpeta fija**,
          `Documentos/ElNotas/`; elegirla, más adelante. Al abrir la app y tras guardar, **como mucho
-         una cada 12 h**, y **tres que se turnan**: la nueva pisa la más vieja.
+         una cada 12 h**, y **tres que se turnan**: la nueva pisa la más vieja. *(Cambiado el
+         2026-11-10 tras la tarea 3: tras reinstalar, la app no puede tocar lo de la instalación
+         vieja. **Opción A**, del usuario: cada copia con su propio nombre, con la fecha; la app
+         borra sólo las suyas y se queda con tres. Las de una instalación anterior se quedan hasta
+         que el usuario las borre a mano, y se recuperan con «Importar copia», que sí las lee.)*
 - [x] **2. El proyecto Android, con la app tal cual** *(pensar)*: como dependencias de desarrollo
       (las instala el usuario: aquí no hay red), `@capacitor/cli`, `@capacitor/android` y los tres
       plugins que usa la fase, `@capacitor/filesystem`, `@capacitor/share` y `@capacitor/app`;
@@ -148,7 +152,7 @@ de construir nada.
       `CLAUDE.md`. **Hecha el 2026-11-10**, con Capacitor 8, en un Xiaomi. El `.apk` que vale es el
       de *Build APK(s)*, en `android/app/build/outputs/`; el de ▶, en `intermediates/`, va marcado
       «sólo para pruebas» y el móvil lo rechaza. Instalar por USB pide cuenta Xiaomi: se pasa a mano.
-- [ ] **3. Comprobar en el móvil lo que no se puede dar por hecho** *(pensar)*: con un sondeo mínimo
+- [x] **3. Comprobar en el móvil lo que no se puede dar por hecho** *(pensar)*: con un sondeo mínimo
       que escribe Claude, detrás de `?depurar`, que el visor web de la app tiene OPFS; que el puente
       `window.Capacitor` llama a los plugins sin `@capacitor/core`; que se puede escribir en
       `Documentos/ElNotas/` sin pedir permisos; que tras **desinstalar y reinstalar** la app nueva ve
@@ -156,7 +160,11 @@ de construir nada.
       cuando** el usuario pasa los cinco pasos de una lista nueva,
       `test/platform/web/VERIFICACION-ANDROID.md`, y quedan anotados, `npm run check` pasa con el
       sondeo dentro y el sondeo sale del código en el mismo commit que cierra la tarea; un «no» para
-      la fase y se pregunta.
+      la fase y se pregunta. **Hecha el 2026-11-10**, anotada en la lista. El sondeo no fue detrás
+      de `?depurar`, que en la app no se puede escribir: corría siempre dentro de ella. Puente
+      (con los plugins en `Plugins`), OPFS, `Documentos` e importar, ✓. **Reinstalar, ✗**: la app
+      nueva no lee ni pisa lo de la vieja, pero crea ficheros nuevos y el selector lee los viejos;
+      el usuario eligió la opción A (decisión 7). Y exportar desde ⚙ no hace nada en la app.
 - [ ] **4. Las notas, en OPFS dentro de la app** *(pensar)*: «¿estoy dentro de la app?», decidido en
       un solo sitio; `main.ts` inyecta `DirectoryHandleBlobStore` sobre OPFS; sin *service worker*.
       «Borrar todo» e importar sobre ese almacén (el cuarto cabo de la deuda de la Fase 4): vacían
@@ -186,11 +194,13 @@ de construir nada.
       *Copia de seguridad* y «migrar» en *Decisiones cerradas* de `CLAUDE.md`, y la entrada de la
       deuda de la Fase 4 sale de aquí.
 - [ ] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
-      al abrir y tras guardar, como mucho una cada 12 h, tres que se turnan, y en ⚙ «última copia:
-      hace 2 h», en `es` y en `en`. Cuándo toca y cuál se pisa, puro y con el reloj por puerto.
-      **Se cierra cuando** esa regla tiene sus pruebas en Node y su rotura, `npm run check` pasa, en
-      la lista de Android aparecen las tres copias y la cuarta pisa la más vieja, y la copia
-      automática queda en *Copia de seguridad* de `CLAUDE.md`.
+      al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
+      por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en
+      ⚙ «última copia: hace 2 h», en `es` y en `en`. Cuándo toca y cuál se borra, puro y con el reloj
+      por puerto. **Se cierra cuando** esa regla tiene sus pruebas en Node y su rotura,
+      `npm run check` pasa, en la lista de Android aparecen las tres copias y con la cuarta se va la
+      más vieja, tras reinstalar una copia vieja se importa entera, y la copia automática queda en
+      *Copia de seguridad* de `CLAUDE.md`.
 - [ ] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
       Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
