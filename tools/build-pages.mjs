@@ -1,11 +1,12 @@
 /**
  * Arma dist/pages/, la carpeta que se publica en GitHub Pages: sólo lo que el
  * navegador carga, con las mismas rutas que en el repo. Va después de
- * `npm run build:web`, con `npm run build:pages`.
+ * `npm run build:web`, con `npm run build:pages`. Con `npm run build:android`
+ * arma dist/android/, lo que Capacitor mete en la app: lo mismo, sin service worker.
  *
- * Calcula la huella del contenido, escribe sw.js a partir de pwa/sw.js y añade al
- * index.html copiado la versión y el registro del service worker: en desarrollo
- * no hay service worker, porque el index.html del repo no lo registra.
+ * Calcula la huella del contenido y añade al index.html copiado la versión; en
+ * dist/pages/, además, escribe sw.js a partir de pwa/sw.js y su registro: en
+ * desarrollo no hay service worker, porque el index.html del repo no lo registra.
  * Se niega a terminar si index.html o el manifiesto piden algo con ruta absoluta
  * o algo que no se publica: es el fallo que sólo se notaría en el móvil. También,
  * si el fondo del manifiesto no es el `--ground` de base.css.
@@ -23,7 +24,12 @@ import {
 } from "node:fs"
 import { dirname, join, posix, sep } from "node:path"
 
-const DESTINO = "dist/pages"
+/* Para la app de Android, sin service worker: la app ya lleva sus ficheros dentro. */
+const ANDROID = process.argv[2] === "android"
+if (process.argv[2] !== undefined && !ANDROID) {
+  fallar([`Argumento desconocido: «${process.argv[2]}». Sin nada, dist/pages/; con «android», dist/android/.`])
+}
+const DESTINO = ANDROID ? "dist/android" : "dist/pages"
 
 /** Lo que se publica, con su ruta del repo: ficheros sueltos y carpetas enteras. */
 const FICHEROS = ["index.html", "manifest.webmanifest", "assets/icono/icono-192.png", "assets/icono/icono-512.png"]
@@ -104,7 +110,7 @@ if (ausentes.length > 0) {
 
 // La huella: cambia un byte de cualquier fichero, o cambia uno de nombre, y cambia.
 const hash = createHash("sha256")
-for (const ruta of [...publicados, SERVICE_WORKER]) {
+for (const ruta of ANDROID ? publicados : [...publicados, SERVICE_WORKER]) {
   hash.update(ruta)
   hash.update("\0")
   hash.update(readFileSync(ruta))
@@ -118,18 +124,19 @@ for (const ruta of publicados) {
   copyFileSync(ruta, join(DESTINO, ruta))
 }
 
-const cabecera = [
-  `const HUELLA = ${JSON.stringify(huella)}`,
-  `const FICHEROS = ${JSON.stringify(publicados, null, 2)}`,
-].join("\n")
-writeFileSync(join(DESTINO, "sw.js"), `${cabecera}\n\n${readFileSync(SERVICE_WORKER, "utf8")}`)
+if (!ANDROID) {
+  const cabecera = [
+    `const HUELLA = ${JSON.stringify(huella)}`,
+    `const FICHEROS = ${JSON.stringify(publicados, null, 2)}`,
+  ].join("\n")
+  writeFileSync(join(DESTINO, "sw.js"), `${cabecera}\n\n${readFileSync(SERVICE_WORKER, "utf8")}`)
+}
 
 // La versión y el registro, sólo en la copia: el index.html del repo no los lleva.
 if (indexHtml.split("</head>").length !== 2) {
   fallar(["index.html tiene que tener exactamente un </head>, para escribir la versión."])
 }
-const añadido = [
-  `  <meta name="elnotas-version" content="${version}" />`,
+const registro = [
   `    <script>`,
   `      if ("serviceWorker" in navigator) {`,
   `        navigator.serviceWorker.register("./sw.js").catch((error) => {`,
@@ -137,6 +144,10 @@ const añadido = [
   `        })`,
   `      }`,
   `    </script>`,
+]
+const añadido = [
+  `  <meta name="elnotas-version" content="${version}" />`,
+  ...(ANDROID ? [] : registro),
   `  </head>`,
 ].join("\n")
 writeFileSync(join(DESTINO, "index.html"), indexHtml.replace("</head>", añadido))

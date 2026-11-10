@@ -34,11 +34,12 @@
     "check:tareas": "node tools/check-tareas.mjs",
     "check:arquitectura": "node tools/check-arquitectura.mjs",
     "check:referencias": "node tools/check-referencias.mjs",
-    "check:formato": "prettier --check src test tools pwa .claude/hooks .claude/agents .claude/launch.json .github index.html manifest.webmanifest package.json tsconfig.json tsconfig.base.json tsconfig.test.json tsconfig.web.json .prettierrc.json",
+    "check:formato": "prettier --check src test tools pwa .claude/hooks .claude/agents .claude/launch.json .github index.html manifest.webmanifest capacitor.config.json package.json tsconfig.json tsconfig.base.json tsconfig.test.json tsconfig.web.json .prettierrc.json",
     "format": "npm run -s check:formato -- --write",
     "check:roturas": "node tools/check-roturas.mjs",
     "build:web": "node tools/clean-dist.mjs && tsc -p tsconfig.web.json",
     "build:pages": "node tools/build-pages.mjs",
+    "build:android": "node tools/build-pages.mjs android",
     "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm run check:fronteras && npm run check:extensiones && npm run check:descartes && npm run check:paragrafos && npm run check:exportaciones && npm run check:tareas && npm run check:arquitectura && npm run check:referencias && npm run check:formato && npm test"
   },
   "repository": {
@@ -53,6 +54,11 @@
   },
   "homepage": "https://github.com/IldarTashtekov/ElNotas#readme",
   "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
     "@types/node": "^26.2.0",
     "prettier": "3.9.10",
     "typescript": "^6.0.3"

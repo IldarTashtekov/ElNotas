@@ -137,7 +137,7 @@ de construir nada.
       7. **Exportar, con la hoja «Compartir»** de Android. **La copia automática, en una carpeta fija**,
          `Documentos/ElNotas/`; elegirla, más adelante. Al abrir la app y tras guardar, **como mucho
          una cada 12 h**, y **tres que se turnan**: la nueva pisa la más vieja.
-- [ ] **2. El proyecto Android, con la app tal cual** *(pensar)*: como dependencias de desarrollo
+- [x] **2. El proyecto Android, con la app tal cual** *(pensar)*: como dependencias de desarrollo
       (las instala el usuario: aquí no hay red), `@capacitor/cli`, `@capacitor/android` y los tres
       plugins que usa la fase, `@capacitor/filesystem`, `@capacitor/share` y `@capacitor/app`;
       `capacitor.config.json`, `android/` (lo que genera Gradle, en `.gitignore`) y un
@@ -145,7 +145,9 @@ de construir nada.
       en `index.html` para ⚙ pero sin *service worker*. Las notas siguen en `localStorage`.
       **Se cierra cuando** `npm run check` sigue pasando con `android/` en el repo, el usuario
       instala el `.apk` y la app abre y guarda como la PWA, y las órdenes quedan en *Comandos* de
-      `CLAUDE.md`.
+      `CLAUDE.md`. **Hecha el 2026-11-10**, con Capacitor 8, en un Xiaomi. El `.apk` que vale es el
+      de *Build APK(s)*, en `android/app/build/outputs/`; el de ▶, en `intermediates/`, va marcado
+      «sólo para pruebas» y el móvil lo rechaza. Instalar por USB pide cuenta Xiaomi: se pasa a mano.
 - [ ] **3. Comprobar en el móvil lo que no se puede dar por hecho** *(pensar)*: con un sondeo mínimo
       que escribe Claude, detrás de `?depurar`, que el visor web de la app tiene OPFS; que el puente
       `window.Capacitor` llama a los plugins sin `@capacitor/core`; que se puede escribir en
