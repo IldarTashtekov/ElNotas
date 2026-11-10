@@ -171,19 +171,30 @@ de construir nada.
       rehacerlo. Ojo con las capas sin entrada en el historial, que se cierran sin ir atrás.
       **Se cierra cuando** su paso queda anotado en la lista de Android y, si hubo código,
       `npm run check` pasa con su prueba.
-- [ ] **6. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
+- [ ] **6. La clave propia y la versión *release*** *(pensar)*: una actualización sólo se instala
+      encima con la misma firma, y desinstalar borra las notas de la carpeta privada. Antes de meter
+      notas de verdad, una clave del usuario, **fuera del repo** y con copia fuera del ordenador; la
+      contraseña, tampoco en el repo; y la orden para compilar la *release* firmada con ella. La de
+      *debug* se desinstala una vez, sin notas que perder. **Se cierra cuando** el usuario instala la
+      *release*, una segunda *release* se instala encima sin perder una nota de prueba, ningún
+      secreto queda en git y la orden está en *Comandos* de `CLAUDE.md`.
+- [ ] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
       app, la copia se escribe en la caché y se abre la hoja «Compartir»; importar, con el selector de
       ficheros. Después, el usuario pasa a la app lo escrito de verdad en la PWA del móvil.
       **Se cierra cuando** `npm run check` pasa, en la lista de Android una copia exportada a Drive o
       a Archivos se vuelve a importar entera y la de la PWA entra en la app, «Compartir» queda en
       *Copia de seguridad* y «migrar» en *Decisiones cerradas* de `CLAUDE.md`, y la entrada de la
       deuda de la Fase 4 sale de aquí.
-- [ ] **7. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
+- [ ] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
       al abrir y tras guardar, como mucho una cada 12 h, tres que se turnan, y en ⚙ «última copia:
       hace 2 h», en `es` y en `en`. Cuándo toca y cuál se pisa, puro y con el reloj por puerto.
       **Se cierra cuando** esa regla tiene sus pruebas en Node y su rotura, `npm run check` pasa, en
       la lista de Android aparecen las tres copias y la cuarta pisa la más vieja, y la copia
       automática queda en *Copia de seguridad* de `CLAUDE.md`.
+- [ ] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
+      Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
+      **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
+      no se ve otra cosa que negro antes de la app.
 
 ### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
 
