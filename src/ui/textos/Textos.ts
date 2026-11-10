@@ -189,6 +189,8 @@ export interface Textos {
   }
   readonly copia: {
     readonly descripcionFichero: string
+    /** El título de la hoja «Compartir» de Android al exportar desde la app. */
+    readonly compartirEn: string
     readonly explicacion: string
     readonly exportar: string
     readonly importar: string
@@ -206,6 +208,9 @@ export interface Textos {
     readonly noCabe: string
     readonly guardadaSinLoUltimo: string
     readonly guardada: string
+    /** En la app de Android: la copia se pasó a otra app, que es lo único que se sabe. */
+    readonly enviadaSinLoUltimo: string
+    readonly enviada: string
     readonly noSePudoEscribir: string
     readonly noSePudoHacer: (fallo: string) => string
   }

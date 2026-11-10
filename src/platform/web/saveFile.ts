@@ -6,7 +6,7 @@
  * escribe se prepara después.
  */
 
-import type { ChooseDestination, Destination } from "./exportBackup.js"
+import type { ChooseDestination, Destination, Written } from "./exportBackup.js"
 import { textos } from "#ui/index"
 
 /*
@@ -35,21 +35,21 @@ const esCancelar = (fallo: unknown): boolean => fallo instanceof DOMException &&
 
 /** Escribe en el fichero elegido. `createWritable` y el flujo pueden lanzar. */
 const enFichero = (fichero: FileSystemFileHandle): Destination => ({
-  write: async (texto: string): Promise<boolean> => {
+  write: async (texto: string): Promise<Written> => {
     try {
       const flujo: FileSystemWritableFileStream = await fichero.createWritable()
       await flujo.write(texto)
       await flujo.close()
-      return true
+      return "written"
     } catch {
-      return false
+      return "failed"
     }
   },
 })
 
 /** Lo descarga con un enlace de mentira: va a la carpeta de descargas. */
 const enDescargas = (nombre: string): Destination => ({
-  write: async (texto: string): Promise<boolean> => {
+  write: async (texto: string): Promise<Written> => {
     try {
       const url: string = URL.createObjectURL(new Blob([texto], { type: JSON_TIPO }))
       const enlace: HTMLAnchorElement = document.createElement("a")
@@ -58,9 +58,9 @@ const enDescargas = (nombre: string): Destination => ({
       enlace.click()
       /* Se suelta después: soltarlo enseguida corta la descarga en algún navegador. */
       setTimeout((): void => URL.revokeObjectURL(url), 10_000)
-      return true
+      return "written"
     } catch {
-      return false
+      return "failed"
     }
   },
 })

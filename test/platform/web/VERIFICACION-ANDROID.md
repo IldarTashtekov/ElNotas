@@ -92,7 +92,26 @@ estaba.
 - **B6. Con una capa que vuelve al abrir.** Abrir una nota, cerrar la app desde las recientes y
   abrirla (vuelve con la nota abierta). Atrás: se cierra la nota. Atrás: la app sale.
 
----
+## C. Exportar con «Compartir» (Fase 12, tarea 7)
+
+En la app no se puede descargar: «Exportar copia» escribe la copia y abre la hoja «Compartir» de
+Android, desde la que se guarda donde se quiera. Lo único que la app llega a saber es que la pasó
+a otra app, así que dice «Copia enviada», no «guardada».
+
+- **C1. Sale la hoja.** ⚙ → Datos → «Exportar copia»: sube la hoja de compartir de Android, con
+  el título «Guardar la copia en…» (en inglés, «Save the backup to…»).
+- **C2. Se guarda en Drive y se vuelve a importar entera.** En la hoja, elegir Drive y guardarla.
+  La app dice «Copia enviada.». Crear una nota de prueba, «Importar copia», abrir Drive en el
+  selector, elegir ese fichero y aceptar: vuelve lo de antes y la nota de prueba ya no está. Si en
+  la hoja sale también un gestor de archivos que guarde, probarlo igual y anotarlo.
+- **C3. Cerrar la hoja no es un fallo.** «Exportar copia» y cerrar la hoja sin elegir nada (atrás
+  o tocando fuera): la app no dice nada.
+- **C4. Cancelar dentro de Drive.** «Exportar copia», elegir Drive y, en su pantalla de guardar,
+  cancelar. Anotar qué dice la app: Android no le cuenta que se canceló, y lo esperable es que
+  diga «Copia enviada.» igualmente.
+- **C5. Un destino que se abre encima.** «Exportar copia» y elegir uno que no saque de la app
+  («Copiar», Quick Share o Bluetooth, el que haya). Anotar qué dice la app: puede no decir nada
+  aunque se haya enviado.
 
 ## Hoja de resultados
 

@@ -199,7 +199,11 @@ de construir nada.
       **Se cierra cuando** `npm run check` pasa, en la lista de Android una copia exportada a Drive o
       a Archivos se vuelve a importar entera y la de la PWA entra en la app, «Compartir» queda en
       *Copia de seguridad* y «migrar» en *Decisiones cerradas* de `CLAUDE.md`, y la entrada de la
-      deuda de la Fase 4 sale de aquí.
+      deuda de la Fase 4 sale de aquí. **Código hecho el 2026-11-10** (importar ya funcionaba, tarea
+      3): la copia, en `copias/` de la caché, vaciada antes de cada una, y la hoja «Compartir». Android
+      sólo dice que se pasó a otra app, así que la app dice «Copia enviada», no «guardada»; cancelar
+      dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Falta la
+      sección C de la lista y pasar las notas de la PWA.
 - [ ] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
       al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
       por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en

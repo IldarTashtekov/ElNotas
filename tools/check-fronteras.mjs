@@ -70,6 +70,7 @@ const PELIGROSAS = [
   [/^paso\.migrate$/, "CÓDIGO AJENO: la migración"],
   [/^onCorrupt$/, "CÓDIGO AJENO: el aviso de un fichero ilegible"],
   [/^onError$/, "CÓDIGO AJENO: el aviso de que no se guarda"],
+  [/^plugin[A-Z]\w*$/, "CÓDIGO AJENO: un plugin de Capacitor, por el puente de la app"],
 ]
 
 /** Envoltorios que llevan el `try` dentro: cubren la función que reciben. */

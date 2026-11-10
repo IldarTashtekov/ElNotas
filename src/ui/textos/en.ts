@@ -198,6 +198,7 @@ export const en: Textos = {
   },
   copia: {
     descripcionFichero: "ElNotas backup",
+    compartirEn: "Save the backup to…",
     explicacion:
       "The backup saves the notes, diagrams, contexts, windows and the color to a file. Importing one replaces everything in this browser.",
     exportar: "Export backup",
@@ -221,6 +222,8 @@ export const en: Textos = {
     noCabe: "The backup doesn't fit in the browser. Nothing has changed.",
     guardadaSinLoUltimo: "Backup saved, but without the latest changes: saving is stopped.",
     guardada: "Backup saved.",
+    enviadaSinLoUltimo: "Backup sent, but without the latest changes: saving is stopped.",
+    enviada: "Backup sent.",
     noSePudoEscribir: "The backup couldn't be written.",
     noSePudoHacer: (fallo: string): string => `The backup couldn't be made. ${fallo}`,
   },

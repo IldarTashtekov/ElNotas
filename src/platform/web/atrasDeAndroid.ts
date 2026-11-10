@@ -31,19 +31,19 @@ const puedeIrAtras = (datos: unknown): boolean =>
 /** Empieza a escuchar el botón atrás. `false` si el puente no deja. */
 export const escucharAtras = (ventana: Window, logger: Logger): boolean => {
   const capacitor: ConPuente["Capacitor"] = (ventana as unknown as ConPuente).Capacitor
-  const escuchar: ((plugin: string, evento: string, alLlegar: (datos: unknown) => void) => unknown) | undefined =
+  const pluginEscuchar: ((plugin: string, evento: string, alLlegar: (datos: unknown) => void) => unknown) | undefined =
     capacitor?.addListener
-  if (escuchar === undefined) return false
+  if (pluginEscuchar === undefined) return false
   try {
-    escuchar("App", "backButton", (datos: unknown): void => {
+    pluginEscuchar("App", "backButton", (datos: unknown): void => {
       if (queHacerConAtras(puedeIrAtras(datos)) === "ir-atras") {
         ventana.history.back()
         return
       }
-      const minimizar: MetodoDePlugin | undefined = capacitor?.Plugins?.App?.minimizeApp
-      if (minimizar === undefined) return logger.failure("el puente no trae minimizeApp", null)
+      const pluginMinimizar: MetodoDePlugin | undefined = capacitor?.Plugins?.App?.minimizeApp
+      if (pluginMinimizar === undefined) return logger.failure("el puente no trae minimizeApp", null)
       try {
-        minimizar({}).catch((fallo: unknown): void => logger.failure("no se pudo sacar la app", fallo))
+        pluginMinimizar({}).catch((fallo: unknown): void => logger.failure("no se pudo sacar la app", fallo))
       } catch (fallo: unknown) {
         logger.failure("no se pudo sacar la app", fallo)
       }

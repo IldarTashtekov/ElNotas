@@ -11,6 +11,8 @@ import type { MigrationError, StorageError } from "#core/index"
 export type ExportResult =
   /** Escrita. `partial`: el guardado estaba detenido y lo último no va dentro. */
   | { readonly kind: "exported"; readonly partial: boolean }
+  /** Pasada a otra app (la hoja «Compartir» de Android): no se sabe si llegó a guardarse. */
+  | { readonly kind: "shared"; readonly partial: boolean }
   /** El usuario cerró el diálogo: no es un fallo y no se avisa. */
   | { readonly kind: "cancelled" }
   /** Con `error` si no se pudo leer lo guardado; sin él, si no se pudo escribir. */

@@ -192,6 +192,7 @@ export const es: Textos = {
   },
   copia: {
     descripcionFichero: "Copia de ElNotas",
+    compartirEn: "Guardar la copia en…",
     explicacion:
       "La copia guarda en un fichero las notas, diagramas, contextos, ventanas y el color. Importar una sustituye todo lo de este navegador.",
     exportar: "Exportar copia",
@@ -215,6 +216,8 @@ export const es: Textos = {
     noCabe: "La copia no cabe en el navegador. No se ha cambiado nada.",
     guardadaSinLoUltimo: "Copia guardada, pero sin los últimos cambios: el guardado está detenido.",
     guardada: "Copia guardada.",
+    enviadaSinLoUltimo: "Copia enviada, pero sin los últimos cambios: el guardado está detenido.",
+    enviada: "Copia enviada.",
     noSePudoEscribir: "No se ha podido escribir la copia.",
     noSePudoHacer: (fallo: string): string => `No se ha podido hacer la copia. ${fallo}`,
   },

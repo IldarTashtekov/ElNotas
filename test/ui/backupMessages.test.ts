@@ -31,6 +31,11 @@ test("exportada con el guardado detenido, avisa de que falta lo último", (): vo
   assert.match(exportMessage({ kind: "exported", partial: true }) ?? "", /sin los últimos cambios/)
 })
 
+test("pasada a otra app, dice que se envió y no que se guardó", (): void => {
+  assert.equal(exportMessage({ kind: "shared", partial: false }), "Copia enviada.")
+  assert.match(exportMessage({ kind: "shared", partial: true }) ?? "", /enviada, pero sin los últimos cambios/)
+})
+
 test("cancelada, no dice nada", (): void => {
   assert.equal(exportMessage({ kind: "cancelled" }), null)
 })

@@ -12,7 +12,7 @@ import type { UiStatePersistence } from "#ui/index"
 import type { Backup, BackupProblem } from "#platform/web/backup"
 import { readBackup } from "#platform/web/backup"
 import type { ExportResult } from "#ui/index"
-import type { Destination, ExportDeps } from "#platform/web/exportBackup"
+import type { Destination, ExportDeps, Written } from "#platform/web/exportBackup"
 import { collectBackup, exportBackup } from "#platform/web/exportBackup"
 
 import type { FakeBlobStore } from "../../storage/file/FakeBlobStore"
@@ -50,14 +50,14 @@ interface Escena {
   readonly nombre: () => string | null
 }
 
-const escena = (cambios: Partial<ExportDeps> = {}, escribe: boolean = true): Escena => {
+const escena = (cambios: Partial<ExportDeps> = {}, escribe: Written = "written"): Escena => {
   let escrito: string | null = null
   let nombre: string | null = null
   let pasos: ReadonlyArray<string> = []
   const destino: Destination = {
-    write: async (texto: string): Promise<boolean> => {
+    write: async (texto: string): Promise<Written> => {
       pasos = [...pasos, "escribir"]
-      if (escribe) escrito = texto
+      if (escribe === "written") escrito = texto
       return escribe
     },
   }
@@ -157,8 +157,18 @@ test("si no se puede leer un fichero, falla con ese error", async (): Promise<vo
 })
 
 test("si no se puede escribir el fichero, falla sin error de almacén", async (): Promise<void> => {
-  const e: Escena = escena({}, false)
+  const e: Escena = escena({}, "failed")
   assert.deepEqual(await exportBackup(e.deps), { kind: "failed", error: null })
+})
+
+test("si el usuario deja la escritura a medias, es cancelar, no fallar", async (): Promise<void> => {
+  const e: Escena = escena({}, "cancelled")
+  assert.deepEqual(await exportBackup(e.deps), { kind: "cancelled" })
+})
+
+test("pasada a otra app, lo dice así: no se sabe si se guardó", async (): Promise<void> => {
+  const e: Escena = escena({}, "shared")
+  assert.deepEqual(await exportBackup(e.deps), { kind: "shared", partial: false })
 })
 
 test("un fichero listado que ya no está no va, y no es un fallo", async (): Promise<void> => {

@@ -4,7 +4,9 @@
  *
  * Primero se elige dónde, luego se guarda lo pendiente y se lee lo guardado. Si
  * el guardado está detenido, se exporta igualmente lo que hay y se dice. Dónde
- * acaba el fichero lo decide quien pasa `chooseDestination`.
+ * acaba el fichero lo decide quien pasa `chooseDestination`; en la app de Android
+ * no se pregunta nada antes y la hoja de compartir sale al escribir, así que
+ * cancelar puede llegar al elegir o al escribir.
  */
 
 import type { BlobStore, Clock, Result, StorageError } from "#core/index"
@@ -13,9 +15,15 @@ import type { ExportResult, UiStatePersistence } from "#ui/index"
 import type { Backup } from "./backup.js"
 import { backupFileName, makeBackup } from "./backup.js"
 
-/** Dónde va la copia, ya elegido. `false` si no se pudo escribir. */
+/**
+ * Cómo acabó escribir: `shared` si se pasó a otra app (no se sabe si se guardó), y
+ * `cancelled` si el usuario lo dejó a medias, como cerrar la hoja de compartir.
+ */
+export type Written = "written" | "shared" | "cancelled" | "failed"
+
+/** Dónde va la copia, ya elegido. */
 export interface Destination {
-  readonly write: (texto: string) => Promise<boolean>
+  readonly write: (texto: string) => Promise<Written>
 }
 
 /** Pregunta dónde guardar. `null` si el usuario lo cancela. */
@@ -101,6 +109,10 @@ export const exportBackup = async (deps: ExportDeps): Promise<ExportResult> => {
   if (!copia.ok) return { kind: "failed", error: copia.error }
 
   const texto: string | null = serializar(copia.value)
-  if (texto === null || !(await destino.write(texto))) return { kind: "failed", error: null }
+  if (texto === null) return { kind: "failed", error: null }
+  const escrita: Written = await destino.write(texto)
+  if (escrita === "cancelled") return { kind: "cancelled" }
+  if (escrita === "failed") return { kind: "failed", error: null }
+  if (escrita === "shared") return { kind: "shared", partial: !guardado.ok }
   return { kind: "exported", partial: !guardado.ok }
 }

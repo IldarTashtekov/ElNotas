@@ -55,6 +55,7 @@ import { requestReset, resetAllIfRequested, resetIfRequested } from "./resetStor
 import { dentroDeLaApp } from "./dentroDeLaApp.js"
 import { escucharAtras } from "./atrasDeAndroid.js"
 import { chooseFileDestination } from "./saveFile.js"
+import { chooseShareDestination } from "./shareFile.js"
 import { systemClock } from "./SystemClock.js"
 import { todayOf } from "./today.js"
 
@@ -258,7 +259,10 @@ const iniciar = async (): Promise<void> => {
         blobs,
         uiState: estadoUi,
         clock: systemClock,
-        chooseDestination: chooseFileDestination,
+        /* En la app no se descarga: se comparte. */
+        chooseDestination: dentroDeLaApp(window)
+          ? chooseShareDestination(window, consoleLogger)
+          : chooseFileDestination,
       })
     },
     prepareImport: (fichero: File): Promise<ImportPreparation> =>

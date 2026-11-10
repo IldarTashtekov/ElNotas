@@ -139,6 +139,8 @@ export const exportMessage = (resultado: ExportResult): string | null => {
   switch (resultado.kind) {
     case "exported":
       return resultado.partial ? textos.copia.guardadaSinLoUltimo : textos.copia.guardada
+    case "shared":
+      return resultado.partial ? textos.copia.enviadaSinLoUltimo : textos.copia.enviada
     case "cancelled":
       return null
     case "failed":
