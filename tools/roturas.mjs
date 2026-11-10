@@ -633,7 +633,7 @@ export const ROTURAS = [
   {
     nombre: "check:tareas: una fase cerrada sigue en TAREAS.md",
     fichero: "TAREAS.md",
-    buscar: "— PLANIFICADA, la siguiente\n",
+    buscar: "— PLANIFICADA, después de la 12\n",
     poner: "✅ CERRADA\n",
     caza: "check:tareas",
   },
@@ -1981,5 +1981,57 @@ export const ROTURAS = [
     poner: "language: null,",
     caza: "pruebas",
     prueba: "una sección rota vuelve a la de siempre sin tirar las demás",
+  },
+
+  /* ── La app de Android: las notas en OPFS ── */
+  {
+    nombre: "android: en un navegador se cree dentro de la app",
+    fichero: "src/platform/web/dentroDeLaApp.ts",
+    buscar: "isNativePlatform?.() === true",
+    poner: "isNativePlatform?.() !== false",
+    caza: "pruebas",
+    prueba: "en un navegador, sin puente, no",
+  },
+  {
+    nombre: "android: vaciar el almacén sigue tras un borrado que falla",
+    fichero: "src/platform/web/vaciarBlobs.ts",
+    buscar: "    if (!borrado.ok) return borrado\n",
+    poner: "",
+    caza: "pruebas",
+    prueba: "si un borrado falla, lo devuelve",
+  },
+  {
+    nombre: "android: «Borrar todo» quita la marca aunque no se vaciaran las notas",
+    fichero: "src/platform/web/resetStorage.ts",
+    buscar: "  if (!vaciado.ok) return false\n",
+    poner: "",
+    caza: "pruebas",
+    prueba: "con las notas aparte, si vaciarlas falla, la marca sigue y las claves no se tocan",
+  },
+  {
+    nombre: "android: importar escribe en localStorage aunque las notas vivan aparte",
+    fichero: "src/platform/web/importStorage.ts",
+    buscar: "const blobs: BlobStore = notas ?? createLocalStorageBlobStore(almacen)",
+    poner: "const blobs: BlobStore = createLocalStorageBlobStore(almacen)",
+    caza: "pruebas",
+    prueba: "con las notas aparte, la copia entra ahí y lo que había se va",
+  },
+  {
+    nombre: "android: importar borra localStorage antes de vaciar las notas",
+    fichero: "src/platform/web/importStorage.ts",
+    buscar:
+      '  if (notas !== null) {\n    const vaciado: Result<void, StorageError> = await vaciarBlobs(notas)\n    if (!vaciado.ok) return { kind: "failed", error: vaciado.error }\n  }\n  const sinBorrar: unknown = borrarLoDeAntes(almacen)\n  if (sinBorrar !== null) return fallo(sinBorrar)\n',
+    poner:
+      '  const sinBorrar: unknown = borrarLoDeAntes(almacen)\n  if (sinBorrar !== null) return fallo(sinBorrar)\n  if (notas !== null) {\n    const vaciado: Result<void, StorageError> = await vaciarBlobs(notas)\n    if (!vaciado.ok) return { kind: "failed", error: vaciado.error }\n  }\n',
+    caza: "pruebas",
+    prueba: "con las notas aparte, si vaciarlas falla, lo de localStorage tampoco se toca",
+  },
+  {
+    nombre: "android: vaciar el almacén borra el manifiesto cuando le toca",
+    fichero: "src/platform/web/vaciarBlobs.ts",
+    buscar: "  for (const camino of enOrden) {",
+    poner: "  for (const camino of caminos.value) {",
+    caza: "pruebas",
+    prueba: "el manifiesto se borra el último: si algo falla antes, sigue ahí",
   },
 ]

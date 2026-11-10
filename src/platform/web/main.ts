@@ -2,8 +2,8 @@
  * La entrada de la app en el navegador: la carga `index.html`.
  *
  * Decide lo que en web es cada pieza —el reloj del sistema, los ids del azar del
- * navegador, las notas, el estado de la pantalla y lo abierto encima de la
- * ventana en `localStorage`—, elige el idioma antes de pintar nada,
+ * navegador, las notas en `localStorage` (en la app de Android, en OPFS), y el
+ * estado de la pantalla y lo abierto encima de la ventana en `localStorage`—, elige el idioma antes de pintar nada,
  * termina una importación pedida, arranca y monta la app, con la copia de
  * seguridad en la configuración. Si no arranca, lo dice en pantalla en vez de
  * quedarse en blanco.
@@ -11,7 +11,7 @@
 
 import type { BlobStore, Day, IdGenerator, Result, StorageError } from "#core/index"
 import { err } from "#core/index"
-import { createLocalStorageBlobStore } from "#storage/index"
+import { createDirectoryHandleBlobStore, createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
   CalendarTabSetting,
@@ -51,7 +51,8 @@ import { cancelImport, importIfRequested } from "./importStorage.js"
 import { createLocalStorageOpenLayers } from "./LocalStorageOpenLayers.js"
 import { createLocalStorageUiState, forgetOldUiKeys } from "./LocalStorageUiState.js"
 import { prepareImport } from "./prepareImport.js"
-import { requestReset, resetIfRequested } from "./resetStorage.js"
+import { requestReset, resetAllIfRequested, resetIfRequested } from "./resetStorage.js"
+import { dentroDeLaApp } from "./dentroDeLaApp.js"
 import { chooseFileDestination } from "./saveFile.js"
 import { systemClock } from "./SystemClock.js"
 import { todayOf } from "./today.js"
@@ -78,6 +79,16 @@ const pedirPersistencia = (): void => {
   navigator.storage
     ?.persist()
     .catch((fallo: unknown): void => consoleLogger.failure("no se pudo pedir que no se borren los datos", fallo))
+}
+
+/** OPFS, la carpeta privada del origen, como almacén de las notas; `null` si no se abre. */
+const abrirOpfs = async (): Promise<BlobStore | null> => {
+  try {
+    return createDirectoryHandleBlobStore(await navigator.storage.getDirectory())
+  } catch (fallo: unknown) {
+    consoleLogger.failure("no se pudo abrir OPFS para las notas", fallo)
+    return null
+  }
 }
 
 /** Sin `localStorage` no hay nada guardado que leer: manda el del navegador. */
@@ -147,8 +158,15 @@ const iniciar = async (): Promise<void> => {
     return
   }
 
+  /* En la app de Android las notas viven en OPFS; en el navegador, en `localStorage`.
+     Si OPFS no se abre, no se arranca: con otro almacén se vería la app vacía. */
+  const opfs: BlobStore | null = dentroDeLaApp(window) ? await abrirOpfs() : null
+  if (dentroDeLaApp(window) && opfs === null) {
+    mostrarFallo(raiz, describeBootError({ kind: "permission-denied" }))
+    return
+  }
   /* Si se pidió importar una copia, antes que nada: sustituye lo guardado por ella. */
-  const importada: ImportAtBoot = await importIfRequested(almacen)
+  const importada: ImportAtBoot = await importIfRequested(almacen, opfs)
   if (importada.kind === "failed") {
     mostrarImportacionSinTerminar(raiz, almacen, importada.error)
     return
@@ -156,7 +174,8 @@ const iniciar = async (): Promise<void> => {
 
   /* Si se pidió «Borrar todo», es aquí, antes de leer nada: así también se va lo
      que el guardado escribió al salir de la página. */
-  resetIfRequested(almacen)
+  if (opfs === null) resetIfRequested(almacen)
+  else await resetAllIfRequested(almacen, opfs)
   if (!forgetOldUiKeys(almacen)) {
     consoleLogger.failure("no se quitaron las claves de antes del estado de la pantalla", null)
   }
@@ -187,7 +206,7 @@ const iniciar = async (): Promise<void> => {
   let avisarDeGuardado: (fallo: StorageError) => void = (fallo: StorageError): void => {
     sinGuardar = fallo
   }
-  const blobs: BlobStore = createLocalStorageBlobStore(almacen)
+  const blobs: BlobStore = opfs ?? createLocalStorageBlobStore(almacen)
   const ids: IdGenerator = createCryptoIdGenerator(window.crypto)
   const arrancada: Result<App, BootError> = await boot({
     blobs,

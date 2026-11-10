@@ -57,6 +57,22 @@ bloque, copiado tal cual o con una foto.
 
 ---
 
+## A. Las notas, en OPFS (Fase 12, tarea 4)
+
+Desde la tarea 4, dentro de la app las notas viven en OPFS y no en `localStorage`. Lo que se
+escribió con una versión anterior de la app se queda en `localStorage`, sin verse: la app arranca
+vacía la primera vez.
+
+- **A1. Las notas sobreviven a cerrar la app.** Crear una nota con texto, cerrar la app desde
+  las recientes (deslizándola fuera) y volver a abrirla: la nota sigue con su texto.
+- **A2. Y a reiniciar el móvil.** Reiniciar el móvil y abrir la app: la nota sigue ahí.
+- **A3. «Borrar todo» lo vacía todo.** ⚙ → «Borrar todo» y confirmar: la app vuelve a arrancar
+  vacía, en el General, sin la nota. Cerrarla y abrirla otra vez: sigue vacía.
+- **A4. Importar entra en OPFS.** Tras A3, ⚙ → Datos → «Importar copia» con una copia de la PWA:
+  sus notas aparecen. Cerrar la app y volver a abrirla: siguen ahí.
+
+---
+
 ## Hoja de resultados
 
 ### 2026-11-10 — Xiaomi, Capacitor 8, `.apk` de *debug* (modelo y versión de Android sin anotar)

@@ -173,7 +173,9 @@ de construir nada.
       puertos sigue esperando al primero de verdad. **Se cierra cuando** `npm run check` pasa, la
       elección tiene su prueba y su rotura, en la lista de Android las notas sobreviven a cerrar la
       app y a reiniciar el móvil y «Borrar todo» lo vacía todo, y el usuario confirma cómo quedan
-      las líneas de «Borrar todo» e importar en *Decisiones cerradas* de `CLAUDE.md`.
+      las líneas de «Borrar todo» e importar en *Decisiones cerradas* de `CLAUDE.md`. **Código
+      hecho el 2026-11-10**, comprobado en la web por el verificador; falta la sección A de la lista
+      en el móvil y el visto bueno del usuario a las líneas de `CLAUDE.md`.
 - [ ] **5. El botón atrás de Android** *(pensar)*: primero, ver si basta lo que Capacitor hace solo
       (atrás en el historial; sin historial, cerrar la app); escuchar el botón lo quita y obliga a
       rehacerlo. Ojo con las capas sin entrada en el historial, que se cierran sin ir atrás.
@@ -306,6 +308,13 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       aunque los sustituye. No pierde nada, pero la cuenta enseña menos de lo que se va a
       reemplazar. **Se cierra cuando** el usuario dice si la frase los nombra (toca
       `importQuestion` y su prueba) o se queda como está.
+
+- [ ] **En la app de Android, importar sigue cabiendo en `localStorage`** *(salió en la tarea 4 de la
+      Fase 12, 2026-11-10)*. Las notas ya viven en OPFS, sin el techo de ~5 MB, pero importar apunta
+      la copia entera en una clave de `localStorage` hasta el arranque: una copia de más de ~5 MB no
+      se podría importar (`requestImport` da `false`). Opciones: dejarlo hasta que una copia se
+      acerque, o apuntarla en OPFS cuando lo haya. **Se cierra cuando** el usuario elige y la
+      decisión queda escrita aquí.
 
 ### Si OPFS entra en juego: lo que queda del criterio de la Fase 3
 

@@ -5,8 +5,12 @@
  * Se hace en dos tiempos: el botón sólo apunta que se quiere borrar y recarga, y
  * es al arrancar, antes de leer nada, cuando se borra. Así lo que el guardado
  * escriba al salir de la página también se va. Sólo se tocan las claves de la
- * app, las que empiezan por `elnotas:`.
+ * app, las que empiezan por `elnotas:`, y, si las notas viven en otro almacén,
+ * todo lo de ése.
  */
+
+import type { BlobStore, Result, StorageError } from "#core/index"
+import { vaciarBlobs } from "./vaciarBlobs.js"
 
 /** La marca que pide el borrado en el próximo arranque. */
 export const RESET_KEY: string = "elnotas:borrar-todo"
@@ -41,4 +45,25 @@ export const resetIfRequested = (almacen: Storage): boolean => {
   } catch {
     return false
   }
+}
+
+/** Si está apuntado el borrado. Si no se puede leer, como si no. */
+const pedido = (almacen: Storage): boolean => {
+  try {
+    return almacen.getItem(RESET_KEY) !== null
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Lo mismo cuando las notas viven en otro almacén (en la app de Android, OPFS):
+ * primero se vacía ése y luego las claves. Si vaciarlo falla, la marca se queda
+ * y el próximo arranque lo reintenta.
+ */
+export const resetAllIfRequested = async (almacen: Storage, notas: BlobStore): Promise<boolean> => {
+  if (!pedido(almacen)) return false
+  const vaciado: Result<void, StorageError> = await vaciarBlobs(notas)
+  if (!vaciado.ok) return false
+  return resetIfRequested(almacen)
 }

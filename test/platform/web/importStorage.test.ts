@@ -287,3 +287,46 @@ test("una copia v1 con los nodos de antes pasa el ensayo y, importada, arranca c
   if (!arrancada.ok) assert.fail(`tenía que arrancar: ${JSON.stringify(arrancada.error)}`)
   assert.deepEqual(nodosDe(arrancada.value.store.getState().diagrams), NODOS_MIGRADOS)
 })
+
+/* ── Con las notas en otro almacén (en la app de Android, OPFS) ── */
+
+test("con las notas aparte, la copia entra ahí y lo que había se va", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const fondo: FakeStorage = createFakeStorage()
+  await conNotas(fondo, ["Vieja"])
+  requestImport(almacen, await copiaDeOtro())
+  assert.deepEqual(await importIfRequested(almacen, createLocalStorageBlobStore(fondo)), { kind: "imported" })
+  assert.deepEqual(nombresDe(await arrancar(fondo)), ["Compra", "Viaje"])
+  assert.deepEqual(pantallaDe(almacen), PANTALLA)
+  assert.equal(almacen.getItem(IMPORT_KEY), null)
+})
+
+test("con las notas aparte, si vaciarlas falla, la marca sigue para reintentarlo", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const fondo: FakeStorage = createFakeStorage()
+  await conNotas(fondo, ["Vieja"])
+  requestImport(almacen, await copiaDeOtro())
+  fondo.lanzarEn("removeItem", new Error("bloqueado"))
+  assert.equal((await importIfRequested(almacen, createLocalStorageBlobStore(fondo))).kind, "failed")
+  assert.notEqual(almacen.getItem(IMPORT_KEY), null)
+})
+
+test("con las notas aparte, si vaciarlas falla, lo de localStorage tampoco se toca", async (): Promise<void> => {
+  const almacen: FakeStorage = await esteDispositivo()
+  const fondo: FakeStorage = createFakeStorage()
+  await conNotas(fondo, ["Vieja"])
+  requestImport(almacen, await copiaDeOtro())
+  const antes: ReadonlyArray<string> = almacen.claves()
+  fondo.lanzarEn("removeItem", new Error("bloqueado"))
+  await importIfRequested(almacen, createLocalStorageBlobStore(fondo))
+  assert.deepEqual(almacen.claves(), antes)
+})
+
+test("con las notas aparte, lo apuntado que no es una copia no las toca", async (): Promise<void> => {
+  const almacen: FakeStorage = createFakeStorage()
+  const fondo: FakeStorage = createFakeStorage()
+  await conNotas(fondo, ["Vieja"])
+  almacen.setItem(IMPORT_KEY, "esto no es json")
+  assert.deepEqual(await importIfRequested(almacen, createLocalStorageBlobStore(fondo)), { kind: "invalid" })
+  assert.deepEqual(nombresDe(await arrancar(fondo)), ["Vieja"])
+})

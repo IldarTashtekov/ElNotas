@@ -1,5 +1,6 @@
 /**
- * Importar una copia sustituyendo todo lo de la app en `localStorage`.
+ * Importar una copia sustituyendo todo lo de la app: lo de `localStorage` y, si
+ * las notas viven en otro almacén, lo de ése.
  *
  * Se hace en dos tiempos, como «Borrar todo»: el botón apunta la copia y recarga,
  * y es al arrancar, antes de leer nada, cuando se borra lo que había y se
@@ -14,6 +15,7 @@ import { parseUiState } from "#ui/index"
 import type { Backup, BackupProblem } from "./backup.js"
 import { backupBytes, readBackup } from "./backup.js"
 import { createLocalStorageUiState } from "./LocalStorageUiState.js"
+import { vaciarBlobs } from "./vaciarBlobs.js"
 
 /** La marca que lleva dentro la copia que hay que importar en el próximo arranque. */
 export const IMPORT_KEY: string = "elnotas:importar"
@@ -84,8 +86,12 @@ const borrarLoDeAntes = (almacen: Storage): unknown => {
   }
 }
 
-/** Al arrancar, antes de leer nada: si se pidió, sustituye todo por la copia. */
-export const importIfRequested = async (almacen: Storage): Promise<ImportAtBoot> => {
+/**
+ * Al arrancar, antes de leer nada: si se pidió, sustituye todo por la copia. Las
+ * notas van a `notas` si viven en otro almacén (en la app de Android, OPFS), que
+ * antes se vacía; si no, a `localStorage`.
+ */
+export const importIfRequested = async (almacen: Storage, notas: BlobStore | null = null): Promise<ImportAtBoot> => {
   const apuntada: Result<Backup | null, BackupProblem | StorageError> = leerApuntada(almacen)
   if (!apuntada.ok) {
     if (apuntada.error.kind === "io") return { kind: "failed", error: apuntada.error }
@@ -97,10 +103,14 @@ export const importIfRequested = async (almacen: Storage): Promise<ImportAtBoot>
   const copia: Backup | null = apuntada.value
   if (copia === null) return { kind: "none" }
 
+  if (notas !== null) {
+    const vaciado: Result<void, StorageError> = await vaciarBlobs(notas)
+    if (!vaciado.ok) return { kind: "failed", error: vaciado.error }
+  }
   const sinBorrar: unknown = borrarLoDeAntes(almacen)
   if (sinBorrar !== null) return fallo(sinBorrar)
 
-  const blobs: BlobStore = createLocalStorageBlobStore(almacen)
+  const blobs: BlobStore = notas ?? createLocalStorageBlobStore(almacen)
   for (const [camino, bytes] of backupBytes(copia)) {
     const escrito: Result<void, StorageError> = await blobs.write(camino, bytes)
     if (!escrito.ok) return { kind: "failed", error: escrito.error }

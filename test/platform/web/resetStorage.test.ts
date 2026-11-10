@@ -6,7 +6,9 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { RESET_KEY, requestReset, resetIfRequested } from "#platform/web/resetStorage"
+import type { BlobStore } from "#core/index"
+import { createLocalStorageBlobStore } from "#storage/index"
+import { RESET_KEY, requestReset, resetAllIfRequested, resetIfRequested } from "#platform/web/resetStorage"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage } from "../../storage/blobs/FakeStorage"
@@ -100,4 +102,42 @@ test("la marca se quita la ÚLTIMA: si falla un borrado de en medio, sigue puest
   requestReset(almacen)
   assert.equal(resetIfRequested(fallaElBorrado(almacen, 2)), false)
   assert.equal(almacen.getItem(RESET_KEY), "1")
+})
+
+/* ── Con las notas en otro almacén (en la app de Android, OPFS) ── */
+
+/** Las notas, en un almacén aparte: un `BlobStore` sobre otro `Storage` de mentira. */
+const notasAparte = async (): Promise<{ readonly fondo: FakeStorage; readonly notas: BlobStore }> => {
+  const fondo: FakeStorage = createFakeStorage()
+  const notas: BlobStore = createLocalStorageBlobStore(fondo)
+  await notas.write("notes/compra.json", new TextEncoder().encode("{}"))
+  await notas.write("manifest.json", new TextEncoder().encode("{}"))
+  return { fondo, notas }
+}
+
+test("con las notas aparte, sin pedirlo no borra nada de ningún sitio", async (): Promise<void> => {
+  const almacen: FakeStorage = conDatos()
+  const { fondo, notas }: { readonly fondo: FakeStorage; readonly notas: BlobStore } = await notasAparte()
+  assert.equal(await resetAllIfRequested(almacen, notas), false)
+  assert.equal(fondo.claves().length, 2)
+  assert.equal(almacen.claves().length, 4)
+})
+
+test("con las notas aparte, pedido, vacía ese almacén y las claves de la app", async (): Promise<void> => {
+  const almacen: FakeStorage = conDatos()
+  const { fondo, notas }: { readonly fondo: FakeStorage; readonly notas: BlobStore } = await notasAparte()
+  requestReset(almacen)
+  assert.equal(await resetAllIfRequested(almacen, notas), true)
+  assert.deepEqual(fondo.claves(), [])
+  assert.deepEqual(almacen.claves(), ["otra-app:cosa"])
+})
+
+test("con las notas aparte, si vaciarlas falla, la marca sigue y las claves no se tocan", async (): Promise<void> => {
+  const almacen: FakeStorage = conDatos()
+  const { fondo, notas }: { readonly fondo: FakeStorage; readonly notas: BlobStore } = await notasAparte()
+  requestReset(almacen)
+  fondo.lanzarEn("removeItem", new Error("bloqueado"))
+  assert.equal(await resetAllIfRequested(almacen, notas), false)
+  assert.equal(almacen.getItem(RESET_KEY), "1")
+  assert.equal(almacen.claves().length, 5)
 })

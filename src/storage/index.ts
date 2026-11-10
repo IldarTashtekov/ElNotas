@@ -23,13 +23,14 @@ export { createFileStorageAdapter, pathOf, refOf } from "./file/FileStorageAdapt
    `LocalStorageBlobStore` es el de desarrollo y el de emergencia, y se prueba
    entero en Node. `DirectoryHandleBlobStore` es la carpeta de verdad —y OPFS,
    que es el mismo código con otro handle—, **no tiene pruebas a propósito**
-   y se verifica con `blobs/VERIFICACION-MANUAL.md`; no sale por aquí hasta que
-   la carpeta del usuario llegue a la app.
+   y se verifica con `blobs/VERIFICACION-MANUAL.md`; sale por aquí para OPFS,
+   donde guarda las notas la app de Android.
 
    Las dos reciben por constructor lo que las conecta con la plataforma —un
    `Storage`, un `FileSystemDirectoryHandle`—, porque conseguirlo es composición
    y eso vive en `platform/`. */
 export { createLocalStorageBlobStore } from "./blobs/LocalStorageBlobStore.js"
+export { createDirectoryHandleBlobStore } from "./blobs/DirectoryHandleBlobStore.js"
 
 /* El escritor diferido: la mitad impura del write-behind. La otra mitad
    —`diffState`, que decide qué está sucio— es pura y vive en el core. */
