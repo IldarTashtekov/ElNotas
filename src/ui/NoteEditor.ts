@@ -343,14 +343,36 @@ const muestraEnCrudo = (campo: HTMLElement, raw: string): boolean =>
 /**
  * Dónde se pinta el cursor, o nada si no se sabe (un campo vacío no da
  * rectángulo). Donde una línea larga se parte, da dos, el final de una fila y el
- * principio de la siguiente, y no se sabe en cuál se pinta: se toma el que no se
- * salta nada al ir hacia `hacia`, el de abajo al subir y el de arriba al bajar.
+ * principio de la siguiente, y la Selection API no dice cuál se pinta:
+ * `pintadoArriba` lo deja sabido. Si no puede, el que no se salta nada al ir
+ * hacia `hacia`: el de abajo al subir y el de arriba al bajar.
  */
 const rectanguloDelCursor = (hacia: "prev" | "next"): DOMRect | undefined => {
   const sel: Selection | null = window.getSelection()
   if (sel === null || sel.rangeCount === 0) return undefined
+  const dobles: boolean = sel.getRangeAt(0).getClientRects().length > 1
+  const arriba: boolean | null = dobles ? pintadoArriba(sel) : null
   const rects: DOMRectList = sel.getRangeAt(0).getClientRects()
-  return (hacia === "prev" ? rects[rects.length - 1] : rects[0]) ?? junto(sel.focusNode)
+  const elegido: DOMRect | undefined = (arriba ?? hacia === "next") ? rects[0] : rects[rects.length - 1]
+  return elegido ?? junto(sel.focusNode)
+}
+
+/**
+ * Si el cursor, donde la línea se parte, se pinta al final de la fila de arriba.
+ * Se le pregunta al navegador llevándolo al final de su fila, como la tecla Fin:
+ * si no se mueve, ya estaba ahí, arriba. Si se mueve, se devuelve con
+ * `addRange`, que lo pinta abajo, al principio de la siguiente; así se sabe dónde
+ * queda, sea donde sea que estuviera. `null` si el navegador no sabe moverlo.
+ */
+const pintadoArriba = (sel: Selection): boolean | null => {
+  if (typeof sel.modify !== "function") return null
+  const antes: Range = sel.getRangeAt(0).cloneRange()
+  sel.modify("move", "forward", "lineboundary")
+  if (sel.rangeCount === 0) return null
+  if (sel.getRangeAt(0).compareBoundaryPoints(Range.START_TO_START, antes) === 0) return true
+  sel.removeAllRanges()
+  sel.addRange(antes)
+  return false
 }
 
 /** El cursor en el nodo vacío que se le crea junto a un bloque no da rectángulo: se toma el del bloque. */

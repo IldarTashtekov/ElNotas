@@ -71,14 +71,6 @@ resumen, en `TERMINADAS.md`.
 - [ ] **Lo de la tarea 6 que sólo se ve con un teclado de verdad o en el móvil:** Ctrl+X pulsado (en
       el panel se lanzó el evento a mano) y borrar o cortar una selección con el dedo (M11–M14).
       **Se cierra cuando** el usuario lo pasa y queda anotado en la lista del editor.
-- [ ] **Lo que dejó el arreglo de G1 (↑ ↓ por la columna que se ve), tras tres vueltas con el revisor:**
-      donde una línea larga se parte, el navegador no dice en qué fila pinta el cursor, y la app, en la
-      duda, nunca se salta una fila. El precio: tras caer con ↑ al principio de una fila partida, el
-      primer ↓ va al final de esa fila y hace falta otro para salir. Un arreglo posible: recordar que
-      ese cursor lo puso ↑ y olvidarlo con cualquier otra tecla o toque. Dudas del revisor, sin ver en
-      pantalla: ↓ más allá del final de la primera fila, varios espacios donde se parte la fila, y una
-      línea con negritas que cambia de ancho al poner el cursor.
-      **Se cierra cuando** un solo ↓ sale de ahí, con su paso G1 en ✅, o el usuario lo da por bueno.
 
 #### Avisos sin tarea, cada uno con lo que lo dispara
 

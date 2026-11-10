@@ -118,7 +118,9 @@ Para cada sección, una nota nueva con el botón **+** grande vale: nace vacía 
   empieza o acaba con un enlace guardado o lleva negritas; y con la larga partida en un espacio,
   ↑ a la columna 0 de su última fila (el cursor se pinta en ella, no al final de la de antes) y ↓
   con la columna más allá del final de su primera fila. Tras **Fin** en una fila que no es la
-  última, ↓ va a la fila de debajo, sin saltarla.
+  última, ↓ va a la fila de debajo, sin saltarla. Al **principio de la última fila** de una larga
+  (llegando con ↑, con **Inicio** o con un toque), un solo ↓ pasa a la línea de abajo; y con un
+  toque tras el espacio del final de una fila partida, ↓ va a la siguiente, sin saltarla.
 - **G2.** **←** al principio de una línea va al final de la de arriba; **→** al final, al principio
   de la de abajo.
 
@@ -860,7 +862,7 @@ Notas: ningún texto en español a la vista con la app en inglés (pantallas, ho
 
 | Paso | Resultado |
 |---|---|
-| G1 | ✅ ↑ desde una corta cae en la última fila de la larga, en la misma x, y ↓ recorre sus filas una a una; desde una vacía, ↑ cae en el principio de la última fila y ↓ en la primera; hacia y desde un enlace guardado, la columna que se ve; tras Fin o Inicio en una fila de en medio, ↓ ↑ no se la saltan, también partida dentro de una palabra. ⚠️ Tras caer con ↑ al principio de una fila partida, el primer ↓ va al final de esa fila y hace falta otro para salir (deuda) |
+| G1 | ✅ ↑ desde una corta cae en la última fila de la larga, en la misma x, y ↓ recorre sus filas una a una; desde una vacía, ↑ cae en el principio de la última fila y ↓ en la primera; hacia y desde un enlace guardado, la columna que se ve; tras Fin o Inicio en una fila de en medio, ↓ ↑ no se la saltan, también partida dentro de una palabra. En una segunda vuelta, al principio de la última fila (con ↑, Inicio o un toque), un solo ↓ sale; con un toque tras el espacio del final de una fila, o ←, ↓ no se salta la siguiente. Un primer toque desde fuera dejó el cursor pintado al principio de la fila de debajo, y ↓ fue a la otra: bien para donde se veía; no se repitió |
 | G2 | ✅ |
 
 Notas: sin errores en la consola.
