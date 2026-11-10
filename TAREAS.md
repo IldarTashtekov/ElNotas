@@ -180,7 +180,12 @@ de construir nada.
       (atrás en el historial; sin historial, cerrar la app); escuchar el botón lo quita y obliga a
       rehacerlo. Ojo con las capas sin entrada en el historial, que se cierran sin ir atrás.
       **Se cierra cuando** su paso queda anotado en la lista de Android y, si hubo código,
-      `npm run check` pasa con su prueba.
+      `npm run check` pasa con su prueba. **Código hecho el 2026-11-10:** lo que Capacitor hace solo
+      no basta (sin historial, no hace nada); se escucha por el puente: con historial,
+      `history.back()`; sin él, se saca la app con `minimizeApp`, como Android desde la 12. Tras una
+      recarga con algo encima queda una pulsación muerta, como en la PWA: el usuario eligió dejarlo
+      así por ahora (opción A) frente a preguntar a la pila de capas de la UI (opción B). Falta la
+      sección B de la lista en el móvil.
 - [ ] **6. La clave propia y la versión *release*** *(pensar)*: una actualización sólo se instala
       encima con la misma firma, y desinstalar borra las notas de la carpeta privada. Antes de meter
       notas de verdad, una clave del usuario, **fuera del repo** y con copia fuera del ordenador; la

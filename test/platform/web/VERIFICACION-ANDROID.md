@@ -71,6 +71,27 @@ vacía la primera vez.
 - **A4. Importar entra en OPFS.** Tras A3, ⚙ → Datos → «Importar copia» con una copia de la PWA:
   sus notas aparecen. Cerrar la app y volver a abrirla: siguen ahí.
 
+## B. El botón atrás (Fase 12, tarea 5)
+
+El atrás de Android hace lo del atrás del navegador: cierra lo de encima, paso a paso. Sin nada
+encima, saca la app de la pantalla, como cualquier app de Android; al volver a ella sigue donde
+estaba.
+
+- **B1. Cierra lo de encima, paso a paso.** Abrir una nota con un enlace a otra nota y pulsar el
+  enlace. Atrás: vuelve a la primera nota. Atrás: se cierra y queda la ventana.
+- **B2. Cierra una hoja.** En una ventana, abrir el «+» de las pestañas (sube una hoja). Atrás: se
+  cierra la hoja y nada más.
+- **B3. Cierra el modo selección.** Pulsación larga sobre una nota de la lista. Atrás: sale del
+  modo selección, sin borrar ni mover nada.
+- **B4. Sin nada encima, sale.** En una ventana sin nada abierto encima, atrás: la app sale de la
+  pantalla. Volver a ella desde las recientes: sigue en esa ventana.
+- **B5. Tras una recarga con algo encima, una pulsación muerta (aceptada).** Abrir ⚙ y cambiar
+  el idioma (la app recarga con ⚙ abierto). Atrás: se cierra ⚙. El siguiente atrás no hace nada
+  y el otro saca la app: la recarga deja una entrada vieja en el historial. Pasa igual en la PWA,
+  y el usuario lo aceptó así el 2026-11-10 (opción A). Volver a poner el idioma de antes.
+- **B6. Con una capa que vuelve al abrir.** Abrir una nota, cerrar la app desde las recientes y
+  abrirla (vuelve con la nota abierta). Atrás: se cierra la nota. Atrás: la app sale.
+
 ---
 
 ## Hoja de resultados

@@ -2034,4 +2034,28 @@ export const ROTURAS = [
     caza: "pruebas",
     prueba: "el manifiesto se borra el último: si algo falla antes, sigue ahí",
   },
+  {
+    nombre: "android: el atrás sale de la app aunque haya historial",
+    fichero: "src/platform/web/atrasDeAndroid.ts",
+    buscar: '(puedeIrAtras ? "ir-atras" : "salir")',
+    poner: '(puedeIrAtras ? "salir" : "salir")',
+    caza: "pruebas",
+    prueba: "con historial al que volver, va atrás",
+  },
+  {
+    nombre: "android: el atrás con historial no va atrás en la ventana",
+    fichero: "src/platform/web/atrasDeAndroid.ts",
+    buscar: "        ventana.history.back()\n",
+    poner: "",
+    caza: "pruebas",
+    prueba: "pulsado con historial, va atrás en la ventana",
+  },
+  {
+    nombre: "android: un aviso del atrás sin forma cuenta como con historial",
+    fichero: "src/platform/web/atrasDeAndroid.ts",
+    buscar: ".canGoBack === true",
+    poner: ".canGoBack !== false",
+    caza: "pruebas",
+    prueba: "un aviso sin forma cuenta como sin historial: sale",
+  },
 ]

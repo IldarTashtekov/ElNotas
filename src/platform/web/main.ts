@@ -53,6 +53,7 @@ import { createLocalStorageUiState, forgetOldUiKeys } from "./LocalStorageUiStat
 import { prepareImport } from "./prepareImport.js"
 import { requestReset, resetAllIfRequested, resetIfRequested } from "./resetStorage.js"
 import { dentroDeLaApp } from "./dentroDeLaApp.js"
+import { escucharAtras } from "./atrasDeAndroid.js"
 import { chooseFileDestination } from "./saveFile.js"
 import { systemClock } from "./SystemClock.js"
 import { todayOf } from "./today.js"
@@ -165,6 +166,11 @@ const iniciar = async (): Promise<void> => {
     mostrarFallo(raiz, describeBootError({ kind: "permission-denied" }))
     return
   }
+  /* En la app, el botón atrás de Android, como el del navegador. */
+  if (dentroDeLaApp(window) && !escucharAtras(window, consoleLogger)) {
+    consoleLogger.failure("el botón atrás de Android no se escucha", null)
+  }
+
   /* Si se pidió importar una copia, antes que nada: sustituye lo guardado por ella. */
   const importada: ImportAtBoot = await importIfRequested(almacen, opfs)
   if (importada.kind === "failed") {
