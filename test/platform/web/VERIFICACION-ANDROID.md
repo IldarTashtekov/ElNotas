@@ -115,11 +115,14 @@ a otra app, así que dice «Copia enviada», no «guardada».
 
 ## D. El icono y la carga (Fase 12, tarea 9)
 
-- **D1. El icono es el «nerd».** En la pantalla de inicio y en el cajón de apps, el icono de
-  ElNotas es el del «nerd» con la lluvia de letras, sobre negro; no el de Capacitor.
+- **D1. El icono es el «nerd», entero.** En la pantalla de inicio y en el cajón de apps, el icono
+  de ElNotas es el del «nerd» con la lluvia de letras, sobre negro; no el robot de Capacitor. Con
+  la forma de icono que traiga el móvil (redonda o cuadrada con esquinas), la cabeza y los libros se
+  ven enteros, y no sale el marco verde del icono de la PWA, ni cortado ni como un icono dentro de
+  otro. Si el lanzador deja cambiar la forma, probar también la redonda.
 - **D2. Al abrir, todo negro.** Cerrar la app desde las recientes y abrirla: la pantalla de carga
-  es negra (en Android 12 o más, con el icono en el centro) y no hay ningún destello blanco antes
-  de que salga la app.
+  es negra y no hay ningún destello blanco antes de que salga la app. En Android 12 o más, en el
+  centro sale el «nerd» en un círculo; no el icono genérico de Android ni el robot de Capacitor.
 
 ---
 

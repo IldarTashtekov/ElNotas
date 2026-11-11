@@ -9,8 +9,8 @@
  * desarrollo no hay service worker, porque el index.html del repo no lo registra.
  * Se niega a terminar si index.html o el manifiesto piden algo con ruta absoluta
  * o algo que no se publica: es el fallo que sólo se notaría en el móvil. También,
- * si el fondo del manifiesto (y, para Android, los del proyecto Android) no es el
- * `--ground` de base.css.
+ * si el fondo del manifiesto (y, para Android, los del proyecto Android y su
+ * pantalla de carga) no es el `--ground` de base.css.
  */
 import { createHash } from "node:crypto"
 import {
@@ -65,18 +65,31 @@ if (fondo?.toLowerCase() !== suelo.toLowerCase()) {
   ])
 }
 
-// La app de Android tampoco lee variables CSS: el fondo del visor, el de la pantalla de
-// carga y el del icono son más copias del mismo `--ground`.
+// La app de Android tampoco lee variables CSS: el fondo del visor y el del icono son
+// más copias del mismo `--ground`. La pantalla de carga no copia el color: apunta al
+// del icono, y se comprueba que siga apuntando.
 if (ANDROID) {
   const RES = "android/app/src/main/res/values"
+  // Sólo el estilo de la carga, sin comentarios: otro estilo también pone android:background.
+  const estilos =
+    readFileSync(`${RES}/styles.xml`, "utf8")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .match(/<style name="AppTheme\.NoActionBarLaunch"[\s\S]*?<\/style>/)?.[0] ?? ""
+  const sinApuntar = ["android:background", "windowSplashScreenBackground"].filter(
+    (atributo) => !estilos.includes(`"${atributo}">@color/ic_launcher_background<`),
+  )
+  if (sinApuntar.length > 0) {
+    fallar([
+      "La pantalla de carga de Android no toma el fondo de ic_launcher_background. Se",
+      `  vería otro color al abrir la app. En ${RES}/styles.xml, AppTheme.NoActionBarLaunch`,
+      "  tiene que poner @color/ic_launcher_background en:",
+      ...sinApuntar.map((atributo) => `    ${atributo}`),
+    ])
+  }
   const copias = [
     [
       "capacitor.config.json  backgroundColor",
       JSON.parse(readFileSync("capacitor.config.json", "utf8")).backgroundColor,
-    ],
-    [
-      `${RES}/styles.xml  windowSplashScreenBackground`,
-      readFileSync(`${RES}/styles.xml`, "utf8").match(/"windowSplashScreenBackground">\s*(#[0-9a-f]+)/i)?.[1],
     ],
     [
       `${RES}/ic_launcher_background.xml  ic_launcher_background`,

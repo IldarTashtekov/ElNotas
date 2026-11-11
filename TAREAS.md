@@ -217,9 +217,11 @@ de construir nada.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
       no se ve otra cosa que negro antes de la app (desde Android 12 el sistema pone el icono en el
       centro de la carga: no se puede quitar sin esconderlo). **Código hecho el 2026-11-10:** los
-      iconos, generados una vez desde `icono-512.png` (el adaptativo, en los 66 dp que no se
-      recortan), la carga y el fondo del visor en el `--ground`, y `build:android` falla si esas
-      copias del color se desvían. Falta la sección D de la lista.
+      iconos, generados una vez desde `icono-512.png` (el adaptativo, sin el marco y en el círculo
+      de 72 dp que enseñan las máscaras: lo importante, dentro de los 66 dp que no se recortan), la
+      carga con el color del icono y su primer plano en el centro, sin las imágenes de Capacitor, y
+      `build:android` falla si las copias del color se desvían o la carga deja de apuntar a él.
+      Falta pasar la sección D de la lista en el móvil.
 
 ### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
 

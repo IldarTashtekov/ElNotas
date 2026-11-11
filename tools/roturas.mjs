@@ -485,10 +485,34 @@ export const ROTURAS = [
     caza: "build:android",
   },
   {
-    nombre: "build:android: la carga de Android no es del color del --ground",
+    nombre: "build:android: el fondo del icono de Android no es el --ground",
+    fichero: "android/app/src/main/res/values/ic_launcher_background.xml",
+    buscar: '"ic_launcher_background">#050301',
+    poner: '"ic_launcher_background">#ffffff',
+    caza: "build:android",
+  },
+  {
+    nombre: "build:android: la carga de Android 12 no toma el fondo del icono",
     fichero: "android/app/src/main/res/values/styles.xml",
-    buscar: '"windowSplashScreenBackground">#050301',
-    poner: '"windowSplashScreenBackground">#ffffff',
+    buscar: '"windowSplashScreenBackground">@color/ic_launcher_background<',
+    poner: '"windowSplashScreenBackground">#ffffff<',
+    caza: "build:android",
+  },
+  {
+    nombre: "build:android: la carga de Android 11 o menos no toma el fondo del icono",
+    fichero: "android/app/src/main/res/values/styles.xml",
+    buscar: '"android:background">@color/ic_launcher_background<',
+    poner: '"android:background">@drawable/splash<',
+    caza: "build:android",
+  },
+  {
+    nombre: "build:android: la carga toma su fondo de otro estilo",
+    fichero: "android/app/src/main/res/values/styles.xml",
+    // La línea buena pasa a AppTheme.NoActionBar, y la carga se queda con @null.
+    buscar:
+      '        <item name="android:background">@null</item>\n    </style>\n\n\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <!-- La carga, en el negro de la app (el --ground de base.css), que guarda ic_launcher_background.xml. -->\n        <item name="android:background">@color/ic_launcher_background</item>\n',
+    poner:
+      '        <item name="android:background">@color/ic_launcher_background</item>\n    </style>\n\n\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <!-- <item name="android:background">@color/ic_launcher_background</item> -->\n        <item name="android:background">@null</item>\n',
     caza: "build:android",
   },
   {
