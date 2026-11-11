@@ -7,7 +7,7 @@
  */
 
 import type { AppState, Context, Diagram, Note } from "#core/index"
-import type { ExportResult, ImportPreparation, ImportSummary } from "./backup.js"
+import type { AutoBackupStatus, ExportResult, ImportPreparation, ImportSummary } from "./backup.js"
 import { describeBootError, describeStorageError } from "./messages.js"
 import type { WindowRef, WindowsLayout } from "./windows.js"
 import { CALENDAR, GENERAL, sameWindow } from "./windows.js"
@@ -156,3 +156,28 @@ export const exportMessage = (resultado: ExportResult): string | null => {
  */
 export const versionLine = (version: string | null): string =>
   version === null ? textos.ajustes.versionDesarrollo : textos.ajustes.version(version)
+
+const MINUTO: number = 60 * 1000
+const HORA: number = 60 * MINUTO
+const DIA: number = 24 * HORA
+
+/** «hace 2 horas», en el idioma elegido. Lo que es de antes de un minuto, o del futuro, «hace un momento». */
+export const timeAgo = (ms: number): string => {
+  if (ms < MINUTO) return textos.copia.haceUnMomento
+  const formato: Intl.RelativeTimeFormat = new Intl.RelativeTimeFormat(textos.codigo, { numeric: "auto" })
+  if (ms < HORA) return formato.format(-Math.floor(ms / MINUTO), "minute")
+  if (ms < DIA) return formato.format(-Math.floor(ms / HORA), "hour")
+  return formato.format(-Math.floor(ms / DIA), "day")
+}
+
+/** La línea de la copia automática en «Datos». */
+export const autoBackupLine = (estado: AutoBackupStatus): string => {
+  switch (estado.kind) {
+    case "none":
+      return textos.copia.automaticaNinguna
+    case "done":
+      return textos.copia.automaticaHecha(timeAgo(estado.ago))
+    case "failed":
+      return textos.copia.automaticaFallo(timeAgo(estado.ago))
+  }
+}

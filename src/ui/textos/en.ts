@@ -226,6 +226,10 @@ export const en: Textos = {
     enviada: "Backup sent.",
     noSePudoEscribir: "The backup couldn't be written.",
     noSePudoHacer: (fallo: string): string => `The backup couldn't be made. ${fallo}`,
+    automaticaHecha: (hace: string): string => `Automatic backup: ${hace}, in Documents/ElNotas.`,
+    automaticaNinguna: "Automatic backup: none yet.",
+    automaticaFallo: (hace: string): string => `Automatic backup: failed ${hace}. It couldn't be written.`,
+    haceUnMomento: "just now",
   },
   rutinas: {
     verElMes: "See the month",

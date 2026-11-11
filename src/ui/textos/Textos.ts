@@ -213,6 +213,12 @@ export interface Textos {
     readonly enviada: string
     readonly noSePudoEscribir: string
     readonly noSePudoHacer: (fallo: string) => string
+    /** La copia automática de la app de Android; `hace` es «hace 2 horas», de `Intl`. */
+    readonly automaticaHecha: (hace: string) => string
+    readonly automaticaNinguna: string
+    readonly automaticaFallo: (hace: string) => string
+    /** Lo que se dice en vez de «hace 0 minutos». */
+    readonly haceUnMomento: string
   }
   readonly rutinas: {
     readonly verElMes: string

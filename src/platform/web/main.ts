@@ -10,7 +10,7 @@
  */
 
 import type { BlobStore, Day, IdGenerator, Result, StorageError } from "#core/index"
-import { err } from "#core/index"
+import { err, ok } from "#core/index"
 import { createDirectoryHandleBlobStore, createLocalStorageBlobStore } from "#storage/index"
 import type {
   BackupActions,
@@ -45,7 +45,12 @@ import type { App, BootError } from "./boot.js"
 import { boot } from "./boot.js"
 import { consoleLogger } from "./ConsoleLogger.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
-import { exportBackup } from "./exportBackup.js"
+import type { AutoBackup } from "./autoBackup.js"
+import { PLAZO_DEPURAR_MS, PLAZO_MS, createAutoBackup, hasContent } from "./autoBackup.js"
+import type { AutoBackupStatePersistence, DocumentsFolder } from "./autoBackupStorage.js"
+import { createLocalStorageAutoBackupState, documentsFolder } from "./autoBackupStorage.js"
+import type { Backup } from "./backup.js"
+import { collectBackup, exportBackup, serializeBackup } from "./exportBackup.js"
 import type { ImportAtBoot } from "./importStorage.js"
 import { cancelImport, importIfRequested } from "./importStorage.js"
 import { createLocalStorageOpenLayers } from "./LocalStorageOpenLayers.js"
@@ -148,6 +153,39 @@ const mostrarImportacionSinTerminar = (raiz: HTMLElement, almacen: Storage, fall
   raiz.replaceChildren(aviso)
 }
 
+/**
+ * La copia automática de la app: lo mismo que «Exportar copia», tras escribir lo
+ * pendiente. Con sólo el manifiesto guardado, la app está vacía y no hay copia.
+ */
+const copiaAutomatica = (
+  app: App,
+  blobs: BlobStore,
+  estadoUi: UiStatePersistence,
+  almacen: Storage,
+  depurar: boolean,
+): AutoBackup => {
+  const carpeta: DocumentsFolder = documentsFolder(window, consoleLogger)
+  const apuntado: AutoBackupStatePersistence = createLocalStorageAutoBackupState(almacen, consoleLogger)
+  return createAutoBackup({
+    collect: async (): Promise<Result<string | null, StorageError>> => {
+      const guardado: Result<void, StorageError> = await app.flush()
+      if (!guardado.ok) return guardado
+      const copia: Result<Backup, StorageError> = await collectBackup({ blobs, uiState: estadoUi, clock: systemClock })
+      if (!copia.ok) return copia
+      if (!hasContent(copia.value.files)) return ok(null)
+      const texto: string | null = serializeBackup(copia.value)
+      return texto === null ? err({ kind: "io", cause: null }) : ok(texto)
+    },
+    write: carpeta.write,
+    remove: carpeta.remove,
+    load: apuntado.load,
+    save: apuntado.save,
+    clock: systemClock,
+    plazo: depurar ? PLAZO_DEPURAR_MS : PLAZO_MS,
+    logger: consoleLogger,
+  })
+}
+
 const iniciar = async (): Promise<void> => {
   const raiz: HTMLElement | null = document.getElementById("app")
   if (raiz === null) return
@@ -229,9 +267,10 @@ const iniciar = async (): Promise<void> => {
   }
 
   const app: App = arrancada.value
+  const depurar: boolean = new URLSearchParams(window.location.search).has("depurar")
   /* Sólo con `?depurar` en la dirección: deja el estado a mano en la consola,
      para las comprobaciones de la lista manual. Sin él, no existe. */
-  if (new URLSearchParams(window.location.search).has("depurar")) {
+  if (depurar) {
     Object.assign(window, { elnotas: { store: app.store, useCases: app.useCases } })
   }
   const windows: WindowsModel = createWindowsModel({
@@ -249,6 +288,10 @@ const iniciar = async (): Promise<void> => {
     persistence: uiStateSection(estadoUi, "routineCharts"),
     logger: consoleLogger,
   })
+  /* En la app, la copia automática en Documentos; en el navegador no hay dónde. */
+  const automatica: AutoBackup | null = dentroDeLaApp(window)
+    ? copiaAutomatica(app, blobs, estadoUi, almacen, depurar)
+    : null
   /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
   const backup: BackupActions = {
     exportAll: (): Promise<ExportResult> => {
@@ -273,6 +316,7 @@ const iniciar = async (): Promise<void> => {
         logger: consoleLogger,
         reload: (): void => window.location.reload(),
       }),
+    autoBackupStatus: automatica === null ? null : automatica.status,
   }
   const montada: MountedApp = mountApp(raiz, {
     store: app.store,
@@ -299,6 +343,15 @@ const iniciar = async (): Promise<void> => {
   })
   avisarDeGuardado = montada.showSaveError
   if (sinGuardar !== null) montada.showSaveError(sinGuardar)
+
+  /* Al abrir y tras cada cambio; la regla decide si toca. */
+  if (automatica !== null) {
+    const intentar = (): void => {
+      automatica.maybeRun().catch((fallo: unknown): void => consoleLogger.failure("falló la copia automática", fallo))
+    }
+    intentar()
+    app.store.subscribe(intentar)
+  }
 
   /* Lo pendiente se escribe al salir, y dónde se miraba el diagrama abierto. En
      el móvil `pagehide` no siempre llega, y pasar a segundo plano es la última

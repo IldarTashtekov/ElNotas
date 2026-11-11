@@ -20,6 +20,7 @@ import type { ImportSummary } from "#ui/index"
 import { collectBackup } from "#platform/web/exportBackup"
 import type { ImportAtBoot } from "#platform/web/importStorage"
 import { IMPORT_KEY, cancelImport, importIfRequested, requestImport } from "#platform/web/importStorage"
+import { AUTO_BACKUP_KEY } from "#platform/web/autoBackupStorage"
 
 import type { FakeStorage } from "../../storage/blobs/FakeStorage"
 import { createFakeStorage, excepcionDeCuota } from "../../storage/blobs/FakeStorage"
@@ -157,6 +158,15 @@ test("la marca se quita, y lo que no es de la app no se toca", async (): Promise
   await importIfRequested(almacen)
   assert.equal(almacen.getItem(IMPORT_KEY), null)
   assert.equal(almacen.getItem("otra-app:cosa"), "x")
+})
+
+test("la lista de las copias automáticas se queda: esos ficheros siguen siendo de esta instalación", async (): Promise<void> => {
+  const almacen: FakeStorage = await esteDispositivo()
+  const lista: string = '{"mias":["elnotas-2026-11-11-090507.json"],"ultima":1,"fallo":null}'
+  almacen.setItem(AUTO_BACKUP_KEY, lista)
+  requestImport(almacen, await copiaDeOtro())
+  await importIfRequested(almacen)
+  assert.equal(almacen.getItem(AUTO_BACKUP_KEY), lista)
 })
 
 test("lo que se escriba entre pedirlo y arrancar también se va", async (): Promise<void> => {

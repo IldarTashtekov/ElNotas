@@ -187,6 +187,36 @@ el recuento de commits: cada *release* nueva sube sola. Por eso, lo que ya se co
   no encuentra nada, y `git grep -F 'la contraseña' $(git rev-list --all)`, con la de verdad,
   tampoco: busca en toda la historia (luego, borrar esa línea del historial de la terminal).
 
+## F. La copia automática (Fase 12, tarea 8)
+
+Al abrir la app y tras cada cambio, si han pasado 12 horas desde la última, la app escribe en
+`Documentos/ElNotas/` el mismo `.json` de «Exportar copia», con fecha y hora en el nombre
+(`elnotas-AAAA-MM-DD-HHMMSS.json`). Se queda con tres: al escribir la cuarta, borra la más vieja de
+las suyas. Para no esperar medio día entre una y otra, se adelanta el reloj del móvil (*Ajustes →
+Fecha y hora*, quitando la hora automática); al terminar, se vuelve a poner la automática. La
+carpeta se mira con el gestor de archivos del móvil.
+
+- **F1. La primera, al abrir.** Con alguna nota y ⚙ cerrada, cerrar la app desde las recientes y
+  abrirla: en `Documentos/ElNotas/` hay un `elnotas-…json` con la fecha y la hora de ahora. Abrir
+  entonces ⚙ → Datos (la línea se cuenta al abrirla): debajo de los botones de la copia, «Copia
+  automática: hace un momento, en Documentos/ElNotas.»
+- **F2. Dentro del plazo, ninguna más.** Editar una nota, cerrar la app y abrirla: sigue habiendo
+  una sola.
+- **F3. La cuarta borra la más vieja.** Adelantar el reloj 13 horas y editar una nota: aparece la
+  segunda. Otras 13 horas: la tercera. Otras 13: hay tres, y la primera ya no está. En ⚙, «hace un
+  momento». Volver a la hora automática: al abrir la app hace una más, y vuelve a haber tres (con
+  el reloj atrás, la regla deja hacerla).
+- **F4. Tras reinstalar, se importa una de esas.** Desinstalar la app e instalar el mismo `.apk`:
+  en ⚙, «Copia automática: todavía ninguna.» y la app está vacía. «Importar copia», ir a
+  `Documentos/ElNotas/` en el selector, elegir la más reciente y aceptar: vuelve todo. Al abrir
+  después, la app hace una copia nueva y no toca las de la instalación anterior (ahora hay cuatro).
+  Si al reinstalar la app ya traía las notas, Android ha devuelto sus datos de su propia copia
+  (`allowBackup`): anotarlo, porque entonces la lista de las copias también vuelve.
+- **F5. En inglés.** En ⚙, cambiar a English: la línea dice «Automatic backup: … ago, in
+  Documents/ElNotas.» (o «just now», si es de hace menos de un minuto). Volver a Español.
+- **F6. La app vacía no copia.** ⚙ → «Borrar todo» y confirmar: en ⚙, «todavía ninguna.»; cerrar y
+  abrir la app no añade nada a la carpeta, y las de antes siguen ahí.
+
 ---
 
 ## Hoja de resultados

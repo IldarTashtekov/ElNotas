@@ -2,7 +2,7 @@
  * Lo que enseña la vista configuración, sin DOM.
  */
 
-import { test } from "node:test"
+import { afterEach, test } from "node:test"
 import assert from "node:assert/strict"
 
 import type { AppState, Context, Diagram, Note } from "#core/index"
@@ -12,8 +12,18 @@ import { revision } from "#core/domain/Ids"
 import type { SettingsContent, WindowRow } from "#ui/settingsContent"
 import type { WindowRef } from "#ui/windows"
 import { CALENDAR, GENERAL } from "#ui/windows"
-import { textos } from "#ui/textos/idioma"
-import { addWindowChoices, choiceGroupLabel, resetQuestion, settingsContent, versionLine } from "#ui/settingsContent"
+import { en } from "#ui/textos/en"
+import { es } from "#ui/textos/es"
+import { textos, usarIdioma } from "#ui/textos/idioma"
+import {
+  addWindowChoices,
+  autoBackupLine,
+  choiceGroupLabel,
+  resetQuestion,
+  settingsContent,
+  timeAgo,
+  versionLine,
+} from "#ui/settingsContent"
 
 const contexto = (id: string, name: string): Context => ({
   id: contextId(id),
@@ -187,4 +197,58 @@ test("el «+» ofrece el calendario una sola vez: con uno en la lista, ya no", (
 
 test("el calendario no lleva rótulo en el selector", (): void => {
   assert.equal(choiceGroupLabel(CONTENIDO.choices, 1), null)
+})
+
+/* ── La copia automática de la app de Android, en los dos idiomas ── */
+
+afterEach((): void => {
+  usarIdioma(es)
+})
+
+const MINUTO: number = 60 * 1000
+const HORA: number = 60 * MINUTO
+
+test("hecha: cuánto hace y dónde está", (): void => {
+  usarIdioma(es)
+  assert.equal(
+    autoBackupLine({ kind: "done", ago: 2 * HORA + 5 * MINUTO }),
+    "Copia automática: hace 2 horas, en Documentos/ElNotas.",
+  )
+})
+
+test("ninguna todavía", (): void => {
+  usarIdioma(es)
+  assert.equal(autoBackupLine({ kind: "none" }), "Copia automática: todavía ninguna.")
+})
+
+test("fallida: cuánto hace que falló", (): void => {
+  usarIdioma(es)
+  assert.equal(
+    autoBackupLine({ kind: "failed", ago: 3 * HORA }),
+    "Copia automática: falló hace 3 horas. No se ha podido escribir.",
+  )
+})
+
+test("en inglés, lo mismo", (): void => {
+  usarIdioma(en)
+  assert.equal(autoBackupLine({ kind: "done", ago: 2 * HORA }), "Automatic backup: 2 hours ago, in Documents/ElNotas.")
+  assert.equal(autoBackupLine({ kind: "none" }), "Automatic backup: none yet.")
+  assert.equal(
+    autoBackupLine({ kind: "failed", ago: 3 * HORA }),
+    "Automatic backup: failed 3 hours ago. It couldn't be written.",
+  )
+})
+
+test("menos de un minuto, o un reloj que fue atrás, es «hace un momento»", (): void => {
+  usarIdioma(es)
+  assert.equal(timeAgo(59 * 1000), "hace un momento")
+  assert.equal(timeAgo(-HORA), "hace un momento")
+})
+
+test("minutos, horas y días; ayer, con su palabra", (): void => {
+  usarIdioma(es)
+  assert.equal(timeAgo(5 * MINUTO), "hace 5 minutos")
+  assert.equal(timeAgo(23 * HORA), "hace 23 horas")
+  assert.equal(timeAgo(24 * HORA), "ayer")
+  assert.equal(timeAgo(3 * 24 * HORA), "hace 3 días")
 })

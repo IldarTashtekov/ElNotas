@@ -13,6 +13,7 @@ import { err, ok } from "#core/index"
 import { createLocalStorageBlobStore } from "#storage/index"
 import { parseUiState } from "#ui/index"
 import type { Backup, BackupProblem } from "./backup.js"
+import { AUTO_BACKUP_KEY } from "./autoBackupStorage.js"
 import { backupBytes, readBackup } from "./backup.js"
 import { createLocalStorageUiState } from "./LocalStorageUiState.js"
 import { vaciarBlobs } from "./vaciarBlobs.js"
@@ -72,13 +73,19 @@ const leerApuntada = (almacen: Storage): Result<Backup | null, BackupProblem | S
   }
 }
 
-/** Quita todas las claves de la app menos la marca. El fallo, si lo hay. */
+/**
+ * Quita todas las claves de la app menos la marca y la lista de las copias
+ * automáticas: esos ficheros siguen siendo de esta instalación. El fallo, si lo hay.
+ */
 const borrarLoDeAntes = (almacen: Storage): unknown => {
   try {
     const claves: ReadonlyArray<string> = Array.from(
       { length: almacen.length },
       (_: unknown, i: number): string | null => almacen.key(i),
-    ).filter((k: string | null): k is string => k !== null && k.startsWith(PREFIJO) && k !== IMPORT_KEY)
+    ).filter(
+      (k: string | null): k is string =>
+        k !== null && k.startsWith(PREFIJO) && k !== IMPORT_KEY && k !== AUTO_BACKUP_KEY,
+    )
     for (const clave of claves) almacen.removeItem(clave)
     return null
   } catch (causa: unknown) {

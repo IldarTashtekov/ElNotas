@@ -217,7 +217,8 @@ de construir nada.
       por puerto. **Se cierra cuando** esa regla tiene sus pruebas en Node y su rotura,
       `npm run check` pasa, en la lista de Android aparecen las tres copias y con la cuarta se va la
       más vieja, tras reinstalar una copia vieja se importa entera, y la copia automática queda en
-      *Copia de seguridad* de `CLAUDE.md`.
+      *Copia de seguridad* de `CLAUDE.md`. **Código hecho el 2026-11-11**, con la regla probada en
+      Node y la línea en `CLAUDE.md`; falta pasar la sección F de `VERIFICACION-ANDROID.md` en el móvil.
 - [x] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
       Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
@@ -308,6 +309,16 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       core lo permite. Opciones: pulsar el día en el mes con la pestaña Rutinas, o nada. Sin
       decidir hasta que el usuario lo eche en falta. **Se cierra cuando** el usuario elige y la
       decisión queda escrita aquí.
+- [ ] **La copia automática en Android 7 a 10** *(salió en la tarea 8 de la Fase 12, 2026-11-11)*.
+      La app admite desde Android 7 (`minSdkVersion = 24`), y ahí escribir en Documentos pide el
+      permiso `WRITE_EXTERNAL_STORAGE`, que la app no declara: la copia automática fallaría siempre
+      (se vería en ⚙, «falló…»). Opciones: subir el mínimo a Android 11, declarar el permiso (con su
+      diálogo), o aceptarlo así. **Se cierra cuando** el usuario elige y queda escrito aquí.
+- [ ] **`allowBackup` en la app de Android** *(salió en la tarea 8 de la Fase 12, 2026-11-11)*. Con
+      `android:allowBackup="true"`, Android puede devolver al reinstalar los datos de la app (OPFS y
+      `localStorage`), y con ellos la lista de las copias automáticas de la instalación anterior,
+      que ya no puede borrar. Opciones: dejarlo (las notas vuelven solas) o quitarlo (manda la copia
+      de `Documentos/ElNotas/`). **Se cierra cuando** el usuario elige, a la vista de F4 en el móvil.
 - [ ] **`Context.defaultView`, sin uso** *(salió en E2 de la Fase 9, 2026-10-17)*. Sigue en el
       modelo con su acción `set-default-view`, y nadie lo usa desde que una ventana puede ser una
       nota o un diagrama. Choca con el principio de no construir lo que no tiene quien lo use

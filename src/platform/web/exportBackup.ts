@@ -88,7 +88,7 @@ export const collectBackup = async ({
 }
 
 /** La copia como texto, legible si alguien la abre. `null` si no se puede. */
-const serializar = (backup: Backup): string | null => {
+export const serializeBackup = (backup: Backup): string | null => {
   try {
     return `${JSON.stringify(backup, null, 2)}\n`
   } catch {
@@ -108,7 +108,7 @@ export const exportBackup = async (deps: ExportDeps): Promise<ExportResult> => {
   const copia: Result<Backup, StorageError> = await collectBackup(deps)
   if (!copia.ok) return { kind: "failed", error: copia.error }
 
-  const texto: string | null = serializar(copia.value)
+  const texto: string | null = serializeBackup(copia.value)
   if (texto === null) return { kind: "failed", error: null }
   const escrita: Written = await destino.write(texto)
   if (escrita === "cancelled") return { kind: "cancelled" }

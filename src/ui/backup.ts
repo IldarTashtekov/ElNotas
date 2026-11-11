@@ -36,8 +36,16 @@ export type ImportPreparation =
   /** Es una copia, pero la app no arrancaría con ella. */
   | { readonly kind: "wont-boot"; readonly error: StorageError | MigrationError }
 
+/** Cómo va la copia automática de la app de Android; `ago`, en milisegundos. */
+export type AutoBackupStatus =
+  | { readonly kind: "none" }
+  | { readonly kind: "done"; readonly ago: number }
+  | { readonly kind: "failed"; readonly ago: number }
+
 export interface BackupActions {
   readonly exportAll: () => Promise<ExportResult>
   /** Lee el fichero elegido y lo ensaya, sin cambiar nada. */
   readonly prepareImport: (fichero: File) => Promise<ImportPreparation>
+  /** Sólo en la app de Android, que es donde hay copia automática; si no, `null`. */
+  readonly autoBackupStatus: (() => AutoBackupStatus) | null
 }

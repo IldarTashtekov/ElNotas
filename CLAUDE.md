@@ -239,7 +239,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - Barras del móvil con el color del sistema: sin `theme-color` ni `theme_color`.
 
 **Copia de seguridad**
-- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también) y el `uiState`. Una v1 importa sólo ficheros.
+- Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también) y el `uiState`. Una v1 importa sólo ficheros. En la app, además, una automática en `Documentos/ElNotas/` al abrir y tras cada cambio, como mucho cada 12 h; tres por instalación, y las de otra no se tocan. Su lista, en `localStorage`: importar la conserva, «Borrar todo» no.
 - Importar **sustituye todo** (en la app, también OPFS); mezclar, aparcado. Sin tocar el core. De la PWA a la app: exportar e importar.
 - «Guardar como» si el navegador lo tiene; si no, Descargas; en la app, la hoja «Compartir» («Copia enviada»). No reabre «la carpeta del usuario».
 - Antes de borrar, un ensayo con el mismo `boot`, en memoria; luego en dos tiempos, como «Borrar todo». A medias,

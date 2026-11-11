@@ -18,6 +18,7 @@ import type { Confirm } from "./sheet.js"
 import { reconcile, setTextIfChanged } from "./reconcile.js"
 import type { SettingsContent } from "./settingsContent.js"
 import {
+  autoBackupLine,
   exportMessage,
   importProblem,
   importQuestion,
@@ -251,6 +252,11 @@ export const mountSettingsView = (
     })
   }
 
+  /* En la app de Android, cómo va la copia automática: se cuenta al abrir la configuración. */
+  const lineaAutomatica: ReadonlyArray<HTMLParagraphElement> =
+    backup.autoBackupStatus === null ? [] : [elemento("p", autoBackupLine(backup.autoBackupStatus()))]
+  for (const linea of lineaAutomatica) linea.className = "copia-automatica"
+
   const botonesCopia: HTMLElement = elemento("div")
   botonesCopia.className = "copia"
   botonesCopia.append(exportar, importarBoton, elegirFichero)
@@ -261,6 +267,7 @@ export const mountSettingsView = (
     sobreLaCopia,
     botonesCopia,
     estadoCopia,
+    ...lineaAutomatica,
     explicacion,
     borrarTodo,
     sinBorrar,

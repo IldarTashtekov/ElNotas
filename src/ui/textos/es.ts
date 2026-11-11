@@ -220,6 +220,10 @@ export const es: Textos = {
     enviada: "Copia enviada.",
     noSePudoEscribir: "No se ha podido escribir la copia.",
     noSePudoHacer: (fallo: string): string => `No se ha podido hacer la copia. ${fallo}`,
+    automaticaHecha: (hace: string): string => `Copia automática: ${hace}, en Documentos/ElNotas.`,
+    automaticaNinguna: "Copia automática: todavía ninguna.",
+    automaticaFallo: (hace: string): string => `Copia automática: falló ${hace}. No se ha podido escribir.`,
+    haceUnMomento: "hace un momento",
   },
   rutinas: {
     verElMes: "Ver el mes",
