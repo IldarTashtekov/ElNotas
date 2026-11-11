@@ -186,7 +186,7 @@ de construir nada.
       recarga con algo encima queda una pulsación muerta, como en la PWA: el usuario eligió dejarlo
       así por ahora (opción A) frente a preguntar a la pila de capas de la UI (opción B). Sección B
       de la lista, pasada en el móvil el 2026-11-11.
-- [ ] **6. La clave propia y la versión *release*** *(pensar)*: una actualización sólo se instala
+- [x] **6. La clave propia y la versión *release*** *(pensar)*: una actualización sólo se instala
       encima con la misma firma, y desinstalar borra las notas de la carpeta privada. Antes de meter
       notas de verdad, una clave del usuario, **fuera del repo** y con copia fuera del ordenador; la
       contraseña, tampoco en el repo; y la orden para compilar la *release* firmada con ella. La de
@@ -196,8 +196,8 @@ de construir nada.
       2026-11-11:** la clave y sus contraseñas, en `~/.elnotas/` (el usuario eligió la contraseña en
       un fichero junto a la clave; la copia de la clave, fuera del ordenador y sin él), la *release*
       firmada con ellas y sin ellas se niega, el número de versión es el recuento de commits, y
-      `npm run build:apk`. La *release* compila y se instala (sección E, el 2026-11-11); falta
-      E3, una segunda *release* instalada encima sin perder la nota de prueba.
+      `npm run build:apk`. La *release* compila y se instala, y una segunda se instala encima sin
+      perder nada (sección E, el 2026-11-11).
 - [ ] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
       app, la copia se escribe en la caché y se abre la hoja «Compartir»; importar, con el selector de
       ficheros. Después, el usuario pasa a la app lo escrito de verdad en la PWA del móvil.
@@ -218,7 +218,8 @@ de construir nada.
       `npm run check` pasa, en la lista de Android aparecen las tres copias y con la cuarta se va la
       más vieja, tras reinstalar una copia vieja se importa entera, y la copia automática queda en
       *Copia de seguridad* de `CLAUDE.md`. **Código hecho el 2026-11-11**, con la regla probada en
-      Node y la línea en `CLAUDE.md`; falta pasar la sección F de `VERIFICACION-ANDROID.md` en el móvil.
+      Node y la línea en `CLAUDE.md`; en el móvil, F1–F3 pasadas (tres copias, y con la cuarta se va la más vieja); falta F4–F6, con
+      la importación tras reinstalar, antes de llevar a la app las notas de verdad.
 - [x] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
       Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app

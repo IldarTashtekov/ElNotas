@@ -254,5 +254,10 @@ pasos; de C4 y C5 no anotó qué dijo la app.
 - **D1–D2** ✓ El icono, el «nerd» entero en la máscara del móvil; la carga, negra y sin destello.
 - **E1** — No se pasó: la *release* compila con la firma, que es lo que importa.
 - **E2** ✓ La *release* se instala y funciona.
-- **E3** Pendiente: falta una segunda *release* instalada encima.
+- **E3** ✓ (pasada después, con la *release* de la copia automática) La segunda *release* se
+  instala encima, con «Actualizar», y la nota de prueba sigue ahí.
 - **E4** ✓ Ni la clave ni `firma.properties` aparecen en la historia de git.
+- **F1–F3** ✓ La primera copia sale al abrir, con su línea en ⚙; dentro del plazo no hay más; con
+  la cuarta quedan tres y se va la más vieja. El usuario adelantó el reloj del móvil en vez de
+  esperar las 12 horas.
+- **F4–F6** Pendientes: desinstalar e importar, el inglés y «Borrar todo».
