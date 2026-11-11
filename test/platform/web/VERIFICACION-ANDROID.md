@@ -192,9 +192,12 @@ el recuento de commits: cada *release* nueva sube sola. Por eso, lo que ya se co
 Al abrir la app y tras cada cambio, si han pasado 12 horas desde la última, la app escribe en
 `Documentos/ElNotas/` el mismo `.json` de «Exportar copia», con fecha y hora en el nombre
 (`elnotas-AAAA-MM-DD-HHMMSS.json`). Se queda con tres: al escribir la cuarta, borra la más vieja de
-las suyas. Para no esperar medio día entre una y otra, se adelanta el reloj del móvil (*Ajustes →
-Fecha y hora*, quitando la hora automática); al terminar, se vuelve a poner la automática. La
-carpeta se mira con el gestor de archivos del móvil.
+las suyas. Se pasa a lo largo de dos días, usando la app como siempre y con el reloj del móvil en
+hora automática: entre una copia y la siguiente hay que esperar el plazo. La carpeta se mira con el
+gestor de archivos del móvil.
+
+⚠️ **F4 y F6 lo borran todo** (desinstalar, «Borrar todo»): antes, exportar una copia a Drive, o
+pasarlas antes de llevar a la app las notas de verdad.
 
 - **F1. La primera, al abrir.** Con alguna nota y ⚙ cerrada, cerrar la app desde las recientes y
   abrirla: en `Documentos/ElNotas/` hay un `elnotas-…json` con la fecha y la hora de ahora. Abrir
@@ -202,10 +205,9 @@ carpeta se mira con el gestor de archivos del móvil.
   automática: hace un momento, en Documentos/ElNotas.»
 - **F2. Dentro del plazo, ninguna más.** Editar una nota, cerrar la app y abrirla: sigue habiendo
   una sola.
-- **F3. La cuarta borra la más vieja.** Adelantar el reloj 13 horas y editar una nota: aparece la
-  segunda. Otras 13 horas: la tercera. Otras 13: hay tres, y la primera ya no está. En ⚙, «hace un
-  momento». Volver a la hora automática: al abrir la app hace una más, y vuelve a haber tres (con
-  el reloj atrás, la regla deja hacerla).
+- **F3. La cuarta borra la más vieja.** Pasadas 12 horas desde la primera, abrir la app o editar
+  una nota: aparece la segunda. Otras 12 horas: la tercera. Otras 12: sigue habiendo tres, y la
+  primera ya no está. En ⚙, la línea dice cuánto hace de la última.
 - **F4. Tras reinstalar, se importa una de esas.** Desinstalar la app e instalar el mismo `.apk`:
   en ⚙, «Copia automática: todavía ninguna.» y la app está vacía. «Importar copia», ir a
   `Documentos/ElNotas/` en el selector, elegir la más reciente y aceptar: vuelve todo. Al abrir
