@@ -40,23 +40,6 @@ resumen, en `TERMINADAS.md`.
       hacen falta como órdenes sueltas, y el disparador de anidar, **siguen sin contestar**.
       **Se cierra cuando** el usuario contesta las tres por escrito aquí, y cada «no se aguanta»
       abre su propia tarea.
-- [ ] **Qué pasa con las notas de `localStorage` al cambiar de destino.** Arrancar en
-      `LocalStorageBlobStore` fue decidido «para salir del paso», y es barato de revertir porque
-      el destino se inyecta en un solo sitio. Lo que **no** es gratis son las notas ya escritas:
-      o se migran o se pierden. Conviene decidirlo antes de usar la app en serio. Techo
-      conocido mientras tanto: ~5 MB por origen, que el base64 del blob infla alrededor de un
-      tercio. **En notas, unas 4.000** de un título y seis líneas (~1.300 caracteres cada una),
-      estimado el 2026-10-11 en la Fase 7: el techo llega antes que la lentitud. **Y desde el 2026-09-27, un tercer cabo:** la lista de ventanas vive fuera del almacén
-      (hoy, en `elnotas:ui`), así que un cambio de destino la pierde; de dispositivo, sólo si no se
-      lleva con una copia de seguridad, que desde la Fase 10 incluye el `uiState`. **Y desde
-      el 2026-10-04, un cuarto:** «Borrar todo» vacía las claves `elnotas:` del `localStorage` de
-      ese navegador; con otro destino —carpeta, OPFS— **hay que revisar qué borra** y si sigue
-      teniendo sentido en dos tiempos. **Y desde el 2026-10-08, un
-      quinto:** la app publicada de la Fase 6 es **otro origen** y empieza vacía; no ve lo escrito
-      en la red de casa. **El usuario acepta perderlo**.
-      **Desde el 2026-11-04 se contesta en la Fase 12**: las notas pasan a la app con la copia.
-      **Se cierra cuando** el usuario elige migrar o perder lo escrito, y queda en *Decisiones
-      cerradas* de `CLAUDE.md`.
 
 #### De la Fase 5 — Diagramas
 
@@ -198,7 +181,7 @@ de construir nada.
       firmada con ellas y sin ellas se niega, el número de versión es el recuento de commits, y
       `npm run build:apk`. La *release* compila y se instala, y una segunda se instala encima sin
       perder nada (sección E, el 2026-11-11).
-- [ ] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
+- [x] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
       app, la copia se escribe en la caché y se abre la hoja «Compartir»; importar, con el selector de
       ficheros. Después, el usuario pasa a la app lo escrito de verdad en la PWA del móvil.
       **Se cierra cuando** `npm run check` pasa, en la lista de Android una copia exportada a Drive o
@@ -208,8 +191,8 @@ de construir nada.
       3): la copia, en `copias/` de la caché, vaciada antes de cada una, y la hoja «Compartir». Android
       sólo dice que se pasó a otra app, así que la app dice «Copia enviada», no «guardada»; cancelar
       dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Sección C
-      de la lista, en el móvil el 2026-11-11, y «Compartir» y «migrar», en `CLAUDE.md`. Falta que el
-      usuario pase sus notas de la PWA (mejor tras E3) y quitar la entrada de la deuda de la Fase 4.
+      de la lista, en el móvil el 2026-11-11, y «Compartir» y «migrar», en `CLAUDE.md`. El usuario
+      pasó sus notas de la PWA a la app el 2026-11-11, y la deuda de la Fase 4 quedó contestada.
 - [x] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
       al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
       por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en

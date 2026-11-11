@@ -420,6 +420,8 @@ Commits clave: `66dcbcc` (el planteamiento), `0b56e3c` (los textos en `es`), `34
 - **Los shells de Capacitor y Tauri**, desaparcados el 2026-11-04: las fases 12 y 13, autocontenidas.
 - **La copia automática en Android 7 a 10**, aceptada el 2026-11-11 tal cual: sin el permiso de
   escribir en Documentos falla, y lo dice la línea de ⚙; las notas y «Exportar copia» van igual.
+- **Las notas de `localStorage` al cambiar de destino** (deuda de la Fase 4): se migran con la copia
+  de seguridad; las de la PWA pasaron así a la app de Android el 2026-11-11.
 - **`allowBackup` se queda** en la app de Android, 2026-11-11: si Android devuelve los datos al
   reinstalar, vuelven las notas, a cambio de alguna copia automática vieja que ya no se borra.
 

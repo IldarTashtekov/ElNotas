@@ -262,3 +262,4 @@ pasos; de C4 y C5 no anotó qué dijo la app.
   esperar las 12 horas.
 - **F4–F6** ✓ Tras reinstalar, una copia de la carpeta se importa entera; la línea sale en inglés;
   con la app vacía no se copia nada.
+- **Las notas de la PWA** ✓ Exportadas desde la PWA del móvil e importadas en la app: entran.
