@@ -161,11 +161,14 @@ keyPassword=LA_CONTRASENA
 `firma.properties`; la contraseña, en un gestor de contraseñas o en papel. Si se pierde la clave,
 no hay forma de actualizar sin desinstalar.
 
-**Compilar la release.** Con `JAVA_HOME` apuntando al Java de Android Studio (se puede añadir a
-`~/.bashrc`, como `CAPACITOR_ANDROID_STUDIO_PATH`):
+**Compilar la release.** Con `JAVA_HOME` apuntando al Java con el que compila Android Studio, el
+21 de `~/.jdks/` (se puede añadir a `~/.bashrc`, como `CAPACITOR_ANDROID_STUDIO_PATH`). El de
+`/snap/android-studio/current/jbr` es un Java 25, y Gradle 8.14 falla con él («Unsupported class
+file major version 69»); vale para `keytool`, no para compilar. Si Android Studio cambia de Java,
+el suyo sale en *Settings → Build Tools → Gradle → Gradle JDK*.
 
 ```bash
-cd /home/ubuntu/proyectos-dev/ElNotas && export JAVA_HOME=/snap/android-studio/current/jbr && npm run build:web && npm run build:android && npx cap sync android && npm run build:apk
+cd /home/ubuntu/proyectos-dev/ElNotas && export JAVA_HOME=~/.jdks/jbr-21.0.11 && npm run build:web && npm run build:android && npx cap sync android && npm run build:apk
 ```
 
 El `.apk` sale en `android/app/build/outputs/apk/release/app-release.apk`. Su número de versión es
