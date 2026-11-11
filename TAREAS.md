@@ -174,9 +174,9 @@ de construir nada.
       elección tiene su prueba y su rotura, en la lista de Android las notas sobreviven a cerrar la
       app y a reiniciar el móvil y «Borrar todo» lo vacía todo, y el usuario confirma cómo quedan
       las líneas de «Borrar todo» e importar en *Decisiones cerradas* de `CLAUDE.md`. **Código
-      hecho el 2026-11-10**, comprobado en la web por el verificador; falta la sección A de la lista
-      en el móvil y el visto bueno del usuario a las líneas de `CLAUDE.md`.
-- [ ] **5. El botón atrás de Android** *(pensar)*: primero, ver si basta lo que Capacitor hace solo
+      hecho el 2026-11-10**, comprobado en la web por el verificador, y la sección A de la lista,
+      en el móvil el 2026-11-11; falta el visto bueno del usuario a las líneas de `CLAUDE.md`.
+- [x] **5. El botón atrás de Android** *(pensar)*: primero, ver si basta lo que Capacitor hace solo
       (atrás en el historial; sin historial, cerrar la app); escuchar el botón lo quita y obliga a
       rehacerlo. Ojo con las capas sin entrada en el historial, que se cierran sin ir atrás.
       **Se cierra cuando** su paso queda anotado en la lista de Android y, si hubo código,
@@ -184,8 +184,8 @@ de construir nada.
       no basta (sin historial, no hace nada); se escucha por el puente: con historial,
       `history.back()`; sin él, se saca la app con `minimizeApp`, como Android desde la 12. Tras una
       recarga con algo encima queda una pulsación muerta, como en la PWA: el usuario eligió dejarlo
-      así por ahora (opción A) frente a preguntar a la pila de capas de la UI (opción B). Falta la
-      sección B de la lista en el móvil.
+      así por ahora (opción A) frente a preguntar a la pila de capas de la UI (opción B). Sección B
+      de la lista, pasada en el móvil el 2026-11-11.
 - [ ] **6. La clave propia y la versión *release*** *(pensar)*: una actualización sólo se instala
       encima con la misma firma, y desinstalar borra las notas de la carpeta privada. Antes de meter
       notas de verdad, una clave del usuario, **fuera del repo** y con copia fuera del ordenador; la
@@ -196,7 +196,8 @@ de construir nada.
       2026-11-11:** la clave y sus contraseñas, en `~/.elnotas/` (el usuario eligió la contraseña en
       un fichero junto a la clave; la copia de la clave, fuera del ordenador y sin él), la *release*
       firmada con ellas y sin ellas se niega, el número de versión es el recuento de commits, y
-      `npm run build:apk`. Gradle no corre en el *sandbox*: falta la sección E de la lista.
+      `npm run build:apk`. La *release* compila y se instala (sección E, el 2026-11-11); falta
+      E3, una segunda *release* instalada encima sin perder la nota de prueba.
 - [ ] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
       app, la copia se escribe en la caché y se abre la hoja «Compartir»; importar, con el selector de
       ficheros. Después, el usuario pasa a la app lo escrito de verdad en la PWA del móvil.
@@ -206,8 +207,8 @@ de construir nada.
       deuda de la Fase 4 sale de aquí. **Código hecho el 2026-11-10** (importar ya funcionaba, tarea
       3): la copia, en `copias/` de la caché, vaciada antes de cada una, y la hoja «Compartir». Android
       sólo dice que se pasó a otra app, así que la app dice «Copia enviada», no «guardada»; cancelar
-      dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Falta la
-      sección C de la lista y pasar las notas de la PWA.
+      dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Sección C
+      de la lista, en el móvil el 2026-11-11; falta pasar las notas de la PWA y `CLAUDE.md`.
 - [ ] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
       al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
       por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en
@@ -216,7 +217,7 @@ de construir nada.
       `npm run check` pasa, en la lista de Android aparecen las tres copias y con la cuarta se va la
       más vieja, tras reinstalar una copia vieja se importa entera, y la copia automática queda en
       *Copia de seguridad* de `CLAUDE.md`.
-- [ ] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
+- [x] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
       Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
       no se ve otra cosa que negro antes de la app (desde Android 12 el sistema pone el icono en el
@@ -225,7 +226,7 @@ de construir nada.
       de 72 dp que enseñan las máscaras: lo importante, dentro de los 66 dp que no se recortan), la
       carga con el color del icono y su primer plano en el centro, sin las imágenes de Capacitor, y
       `build:android` falla si las copias del color se desvían o la carga deja de apuntar a él.
-      Falta pasar la sección D de la lista en el móvil.
+      Sección D de la lista, pasada en el móvil el 2026-11-11.
 
 ### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
 

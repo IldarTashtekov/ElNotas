@@ -207,3 +207,20 @@ el recuento de commits: cada *release* nueva sube sola. Por eso, lo que ya se co
   instalación anterior y dice que no es una copia de ElNotas: lo ha leído. Importar una copia
   de la PWA también funciona. El selector sólo enseña `.json`.
 - **S6** ✗ «Exportar copia» no hace nada: ni diálogo ni error. Lo arregla la tarea 7.
+
+### 2026-11-11 — Xiaomi, Capacitor 8, `.apk` *release* firmado con la clave del usuario
+
+Todo en una sola instalación: la de *debug* desinstalada antes. El usuario da por buenos todos los
+pasos; de C4 y C5 no anotó qué dijo la app.
+
+- **A1–A4** ✓ Las notas sobreviven a cerrar la app y a reiniciar el móvil; «Borrar todo» lo vacía
+  todo; una copia de la PWA se importa y sigue tras cerrar la app.
+- **B1–B6** ✓ El atrás cierra lo de encima paso a paso, las hojas y la selección; sin nada encima
+  saca la app; tras una recarga queda la pulsación muerta aceptada.
+- **C1–C5** ✓ «Exportar copia» abre la hoja con su título; la copia guardada en Drive se vuelve a
+  importar entera; cerrar la hoja no dice nada.
+- **D1–D2** ✓ El icono, el «nerd» entero en la máscara del móvil; la carga, negra y sin destello.
+- **E1** — No se pasó: la *release* compila con la firma, que es lo que importa.
+- **E2** ✓ La *release* se instala y funciona.
+- **E3** Pendiente: falta una segunda *release* instalada encima.
+- **E4** ✓ Ni la clave ni `firma.properties` aparecen en la historia de git.
