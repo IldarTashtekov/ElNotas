@@ -1,7 +1,7 @@
 # ElNotas
 
-App de notas personal, en TypeScript. **Web primero**, publicada como PWA; desktop y móvil
-nativos, más adelante (shells sobre la misma UI web).
+App de notas personal, en TypeScript. **Web primero**, publicada como PWA; también, app de Android
+(Capacitor, sobre la misma UI web, `.apk` a mano); el escritorio, más adelante.
 
 | Fichero | Qué hay dentro |
 |---|---|
@@ -252,10 +252,10 @@ Los principios, en `ARCHITECTURE.md`. Si una está mal, **plantéalo como duda**
 No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas*.
 
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
-- La carpeta del usuario y OPFS como destino, con «reconectar carpeta» · una librería para el lienzo
+- La carpeta del usuario, y OPFS como destino en la web, con «reconectar carpeta» · una librería para el lienzo
 - La nube con Supabase (diseñada y aparcada: `TAREAS.md` → *Ideas aparcadas*) · `storageTarget`
 - Importar mezclando · exportar a Markdown · formato de texto y texto más grande (sin fase)
-- Sync entre pares · CRDTs, colaboración. Android (Capacitor) y escritorio (Tauri), en las fases 12 y 13
+- Sync entre pares · CRDTs, colaboración. El escritorio (Tauri), en la fase 13
 
 ## Plan por fases
 

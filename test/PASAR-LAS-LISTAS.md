@@ -8,7 +8,7 @@ dice qué se comprueba; esto dice cómo se pasa y cómo se apunta.
 - **El verificador** (`.claude/agents/verificador.md`), con el navegador del panel, todo lo que el
   panel puede hacer: es lo primero. Claude apunta lo que devuelve.
 - **El usuario, en el móvil**, lo que sólo se ve ahí: la PWA instalada, el selector de Android,
-  el teclado del móvil. Lo menos posible.
+  el teclado del móvil, y la app de Android entera (`VERIFICACION-ANDROID.md`). Lo menos posible.
 
 **Cuánto:** en cada tarea, sólo los pasos que toca el cambio; al cerrar la fase, la lista entera.
 

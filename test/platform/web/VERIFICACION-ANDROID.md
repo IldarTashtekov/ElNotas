@@ -242,8 +242,8 @@ pasarlas antes de llevar a la app las notas de verdad.
 
 ### 2026-11-11 — Xiaomi, Capacitor 8, `.apk` *release* firmado con la clave del usuario
 
-Todo en una sola instalación: la de *debug* desinstalada antes. El usuario da por buenos todos los
-pasos; de C4 y C5 no anotó qué dijo la app.
+Sobre la *release*, con la de *debug* desinstalada antes; E3 instala encima y F4 reinstala a propósito.
+El usuario da por buenos los pasos que pasó (E1, no); de C4 y C5 no anotó qué dijo la app.
 
 - **A1–A4** ✓ Las notas sobreviven a cerrar la app y a reiniciar el móvil; «Borrar todo» lo vacía
   todo; una copia de la PWA se importa y sigue tras cerrar la app.

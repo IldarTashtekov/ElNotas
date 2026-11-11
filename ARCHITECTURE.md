@@ -288,7 +288,8 @@ Cuatro módulos, y las flechas siempre hacia dentro:
 - **`storage`** y **`ui`** sólo conocen al core.
 - **`platform`**: **la composición**, el único sitio que sabe a la vez qué puertos hay y qué
   implementaciones existen, y que decide qué se inyecta. **Nadie la importa.** El día que haya otra
-  plataforma, aparece otra composición al lado y nada más se toca.
+  plataforma, aparece otra composición al lado y nada más se toca; mientras las diferencias sean
+  pocas, la misma composición lo decide en un solo sitio y lo pregunta donde cambia algo.
 
 **Un puerto se declara cuando el dominio necesita algo del mundo**, no para dar cobijo a código que
 no es del dominio. El ejemplo que lo fijó: el debounce del guardado necesita un temporizador, y la

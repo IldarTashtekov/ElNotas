@@ -137,6 +137,43 @@ location.reload()
 Cómo se pasa y cómo se marca cada paso: `test/PASAR-LAS-LISTAS.md`.
 
 ```
+Fecha:        2026-11-11, al cerrar la Fase 12
+Navegador:    Chrome 152, el del panel (Claude/4.16336.0)
+Quién:        el verificador, en el panel
+Commit:       7383ea7, más lo sin comitear: android/.idea/misc.xml (no toca la app)
+Origen:       localhost:8001, vacío al empezar
+
+Preparación ✅ — los datos, por `?depurar`; ventanas, encuadre (×1,82) y fósforo verde, por la interfaz
+E1  🔁 simulado — «Guardar como» en memoria: propone elnotas-backup-2026-11-11.json y dice «Copia guardada.»
+E2  ✅ — "app": "elnotas", "backupVersion": 2, 5 ficheros; `uiState` con 3 ventanas, verde y el encuadre
+E3  🔁 simulado — cerrar el diálogo: ni mensaje ni fichero, botones activos
+E4  🔁 simulado — sin showSaveFilePicker: mismo nombre, la copia entera, «Copia guardada.»
+E5  ⏭ el móvil
+E6  ✅ — con el diálogo en espera, los dos botones desactivados y una sola llamada
+I1  🔁 simulado (el selector) — la hoja con el recuento y «Sustituir todo» en rojo
+I2  ✅ — «Cancelar» cierra y no cambia nada
+I3  ✅ — «Sustituir todo»: queda como la copia; `elnotas:copias` sigue, una clave `elnotas:` ajena se va
+I4  🔁 simulado — el mismo fichero otra vez: la hoja vuelve
+I5  🔁 simulado — un .json cualquiera y un texto: «Ese fichero no es una copia de ElNotas.»
+I6  ⏭ el selector de Android
+I7  ⏭ la publicada, no abierta
+I8  🔁 simulado — el atrás cierra la hoja sin importar
+I9  🔁 simulado (el selector) — una v1: entran las notas; verde, sólo el General, `elnotas:copias` intacta
+F1  ✅ — el aviso, con «Retry» en inverso y «Abandon import» en hueco, nada en rojo
+F2  ✅ — «Retry»: el mismo aviso
+F3  ✅ — sin el relleno: arranca y avisa del fichero ilegible
+F4  ✅ — vaciado el origen, «Abandon import»: arranca vacía
+V1  ✅ — los dos botones sin color y «Borrar todo» en rojo
+V2  ✅ — a 375 px, en una fila y sin desplazamiento lateral
+C7 de VERIFICACION-MANUAL.md ✅ — la hoja con el recuento y el foco en «Cancelar»; «Borrar todo» deja
+       sólo el manifiesto, `elnotas:copias` incluida, y sigue en blanco al recargar
+
+Notas:
+- F1–F4, en inglés: `localStorage.clear()` quita también el idioma y el panel está en inglés.
+- Sin errores en la consola.
+```
+
+```
 Fecha:        2026-11-03
 Navegador:    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.1623.0 Chrome/152.0.7977.167 Safari/537.36
 Quién:        Claude, en el panel

@@ -221,7 +221,8 @@ ficheros). **La tanda real:** el «+ Contexto» de ⚙ en inverso; las palabras 
 descartadas por el usuario. **Ajustes que acepta:** el verificador sobre el cambio sin comitear y
 sólo en los pasos que toca (las listas enteras, al cerrar la fase), y una parada tras plantear una
 *(pensar)* de UI. **Desvío:** la tarea 6 se hizo con otro cómo que el acordado sin preguntar, y el
-revisor lo marcó. **Deuda:** ninguna nueva.
+revisor lo marcó. **Deuda:** ninguna; queda *Sin decidir* importar en
+`localStorage`, y aparcados elegir la carpeta de la copia y los extras de Android.
 Commits clave: `4a3791a` (el panel), `6762c4e` y `ab4768d` (las roturas), `06202e1` (los agentes),
 `24606f9`, `aaf473f` y `7f4b67b` (Prettier), `b3feff9` (el «+ Contexto»), `dd88575` (el recorrido).
 
@@ -245,6 +246,29 @@ que ahora recoge lo seleccionado como un texto.
 Commits clave: `66dcbcc` (el planteamiento), `0b56e3c` (los textos en `es`), `34e01e7` (en `en`),
 `62c363b` y `38d3b23` (elegir el idioma), `7f2cec0` (⚙ al recargar), `919dccc` (copiar casillas),
 `88eadb7` (borrar una selección), `353c5c1` (exportar a Markdown, aparcada).
+
+---
+
+### Fase 12 — App Android autocontenida, con Capacitor ✅ CERRADA el 2026-11-11
+
+Pedida por el usuario el 2026-11-04 y hecha en la rama `fase-12`, con 1492 pruebas y 280 roturas,
+todas cazadas. **Las siete decisiones** del usuario (2026-11-10): sin `@capacitor/core`, por el puente
+`window.Capacitor` y sólo desde `platform/`; las notas en OPFS, con el `DirectoryHandleBlobStore` de
+siempre; la PWA sigue viva y las notas pasan con la copia; `.apk` a mano; una sola composición que
+pregunta «¿estoy dentro de la app?»; el atrás, como el del navegador; exportar con «Compartir».
+**La app:** Capacitor 8, el icono del «nerd» y la carga negra; el atrás escucha el puente y, sin
+historial, saca la app; exportar dice «Copia enviada»; «Borrar todo» e importar vacían también OPFS.
+**La *release***, firmada con una clave del usuario en `~/.elnotas/`, fuera del repo, con el Java 21
+de Android Studio; una segunda se instala encima sin perder nada. **La copia automática**, en
+`Documentos/ElNotas/`, como mucho cada 12 h y tres por instalación: tras reinstalar, Android no deja
+tocar las de la vieja (lo vio el sondeo de la tarea 3), y el usuario eligió un nombre por copia.
+**Las listas:** la de Android, entera en el móvil por el usuario; la de la copia y C7 de la manual,
+por el verificador. **Aceptado tal cual:** la copia automática en Android 7–10, `allowBackup` y una
+pulsación muerta del atrás tras recargar. La auditoría de cierre halló 12 afirmaciones falsas,
+corregidas; una matiza el principio de la composición. **Deuda:** ninguna nueva.
+Commits clave: `4ad5d08` (las decisiones), `5dc5948` (Capacitor), `9d427d1` (OPFS), `8080a47` (el
+atrás), `5b0095e` («Compartir»), `c3de6e7` y `3433866` (el icono), `6abcdda` (la *release*),
+`022707a` (la copia automática).
 
 ## Tareas sueltas terminadas
 
@@ -424,6 +448,8 @@ Commits clave: `66dcbcc` (el planteamiento), `0b56e3c` (los textos en `es`), `34
   de seguridad; las de la PWA pasaron así a la app de Android el 2026-11-11.
 - **`allowBackup` se queda** en la app de Android, 2026-11-11: si Android devuelve los datos al
   reinstalar, vuelven las notas, a cambio de alguna copia automática vieja que ya no se borra.
+- **OPFS es composición, no adaptador** (la pregunta abierta de la Fase 3), cerrada por la Fase 12: es
+  el mismo `DirectoryHandleBlobStore` con otro handle, y así lo usa la app de Android.
 
 ## Hitos
 

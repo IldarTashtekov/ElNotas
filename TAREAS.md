@@ -67,153 +67,6 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 12 — App Android autocontenida, con Capacitor — EN CURSO
-
-**Pedida por el usuario el 2026-11-04.** **Qué es:** una app Android **dueña de su código y de sus
-datos**, que no depende de Chrome ni de una dirección web. Por dentro se sigue pintando con el visor
-web del sistema (Chromium): rehacer la UI en nativo queda fuera. La UI es la misma que la de la PWA.
-Sale de *Ideas aparcadas* (la fila de los shells). **Sin plantear**: se plantea con el usuario antes
-de construir nada.
-
-**Hablado con el usuario el 2026-11-04:**
-- **Lo que da la independencia son los datos, no la cáscara:** las notas, **en ficheros**, con un
-  `BlobStore` nuevo sobre el plugin de ficheros de Capacitor, en vez de `localStorage`. Es el segundo
-  uso real de los puertos (*Avisos sin tarea*). *(Sustituido por la decisión 2 de la tarea 1: OPFS
-  con el `BlobStore` que ya existe.)*
-- **Lo que deja de funcionar fuera del navegador:** el botón atrás de Android (por defecto cierra la
-  app), exportar la copia (descargar no funciona en el visor web: guardar fichero o compartir) y el
-  *service worker*, que sobra.
-- **Las notas de la PWA se pasan con la copia de seguridad**; eso contesta la deuda de la Fase 4
-  sobre las notas de `localStorage` al cambiar de destino.
-- **La copia de seguridad automática** *(el usuario, 2026-11-04)*: el mismo `.json` de exportar,
-  escrito solo en una carpeta que se elige una vez en ⚙ («cambiar carpeta», «última copia: hace
-  2 h»). Sin segundo plano: con la app abierta, tras guardar cambios y como mucho cada X horas, o al
-  abrirla si la última es vieja. **Dos o tres copias rotando**, no una sobrescrita: si se guardara
-  algo estropeado, no pisa la buena. Si otra app sincroniza esa carpeta (Drive, Syncthing…), es copia
-  fuera del móvil sin que ElNotas hable con ninguna nube. En la PWA del móvil no se puede: Chrome no
-  deja escribir un fichero sin pedirlo cada vez. *(La carpeta elegida, sustituida por la decisión 7
-  de la tarea 1: una fija, y elegirla, más adelante.)*
-- Notificaciones, compartir desde otras apps, widgets o Play Store: extras, a decidir aparte.
-
-- [x] **1. Las decisiones abiertas** *(pensar)*: aceptar `@capacitor/core` como primera dependencia
-      de runtime o evitarla; los ficheros en la carpeta privada de la app (se van al desinstalar) o
-      en una del usuario (con permisos); qué pasa con la PWA publicada; `.apk` a mano o Play Store;
-      dónde vive la segunda composición junto a `platform/web/`; si es el momento de los
-      *workspaces* de npm; y de la copia automática, cada cuánto y cuántas copias rotan.
-      **Se cierra cuando** el usuario contesta y esta entrada se sustituye por
-      las tareas de la fase, cada una con su etiqueta y su cierre.
-      **Contestadas por el usuario el 2026-11-10:**
-      1. **Sin `@capacitor/core`**: las herramientas de Capacitor y sus plugins, sólo de desarrollo;
-         en el bundle, nada. Se habla con Android por el puente `window.Capacitor` que trae la app,
-         con su tipo declarado a mano, y sólo desde `platform/`, nunca desde `src/core/`.
-      2. **Las notas, en la carpeta privada de la app**: OPFS dentro del visor web, con el
-         `DirectoryHandleBlobStore` que ya existe, en vez de un `BlobStore` nuevo sobre el plugin de
-         ficheros. Exportar e importar sí salen fuera, y la copia automática cubre la desinstalación.
-      3. **La PWA publicada sigue viva**, con el mismo código. Las notas pasan de una a otra con la copia
-         de seguridad: contesta «migrar» a la deuda de la Fase 4.
-      4. **`.apk` a mano**; la Play Store, no. Lo compila e instala el usuario, con su Android Studio.
-      5. **Una sola composición**, `platform/web/`, que pregunta «¿estoy dentro de la app?» donde
-         cambia algo; lo propio de Android, en ficheros suyos ahí dentro, y el proyecto de Capacitor,
-         en `android/`. Se parte en `platform/android/` sólo si las diferencias crecen. Sin *workspaces*.
-      6. **El atrás de Android**, como el del navegador: cierra lo de encima, paso a paso; sin nada
-         encima, cierra la app.
-      7. **Exportar, con la hoja «Compartir»** de Android. **La copia automática, en una carpeta fija**,
-         `Documentos/ElNotas/`; elegirla, más adelante. Al abrir la app y tras guardar, **como mucho
-         una cada 12 h**, y **tres que se turnan**: la nueva pisa la más vieja. *(Cambiado el
-         2026-11-10 tras la tarea 3: tras reinstalar, la app no puede tocar lo de la instalación
-         vieja. **Opción A**, del usuario: cada copia con su propio nombre, con la fecha; la app
-         borra sólo las suyas y se queda con tres. Las de una instalación anterior se quedan hasta
-         que el usuario las borre a mano, y se recuperan con «Importar copia», que sí las lee.)*
-- [x] **2. El proyecto Android, con la app tal cual** *(pensar)*: como dependencias de desarrollo
-      (las instala el usuario: aquí no hay red), `@capacitor/cli`, `@capacitor/android` y los tres
-      plugins que usa la fase, `@capacitor/filesystem`, `@capacitor/share` y `@capacitor/app`;
-      `capacitor.config.json`, `android/` (lo que genera Gradle, en `.gitignore`) y un
-      `npm run build:android` que arme lo que se mete en la app como `build:pages`, con la versión
-      en `index.html` para ⚙ pero sin *service worker*. Las notas siguen en `localStorage`.
-      **Se cierra cuando** `npm run check` sigue pasando con `android/` en el repo, el usuario
-      instala el `.apk` y la app abre y guarda como la PWA, y las órdenes quedan en *Comandos* de
-      `CLAUDE.md`. **Hecha el 2026-11-10**, con Capacitor 8, en un Xiaomi. El `.apk` que vale es el
-      de *Build APK(s)*, en `android/app/build/outputs/`; el de ▶, en `intermediates/`, va marcado
-      «sólo para pruebas» y el móvil lo rechaza. Instalar por USB pide cuenta Xiaomi: se pasa a mano.
-- [x] **3. Comprobar en el móvil lo que no se puede dar por hecho** *(pensar)*: con un sondeo mínimo
-      que escribe Claude, detrás de `?depurar`, que el visor web de la app tiene OPFS; que el puente
-      `window.Capacitor` llama a los plugins sin `@capacitor/core`; que se puede escribir en
-      `Documentos/ElNotas/` sin pedir permisos; que tras **desinstalar y reinstalar** la app nueva ve
-      y pisa lo que dejó allí la vieja; y que «Importar» abre el selector de ficheros. **Se cierra
-      cuando** el usuario pasa los cinco pasos de una lista nueva,
-      `test/platform/web/VERIFICACION-ANDROID.md`, y quedan anotados, `npm run check` pasa con el
-      sondeo dentro y el sondeo sale del código en el mismo commit que cierra la tarea; un «no» para
-      la fase y se pregunta. **Hecha el 2026-11-10**, anotada en la lista. El sondeo no fue detrás
-      de `?depurar`, que en la app no se puede escribir: corría siempre dentro de ella. Puente
-      (con los plugins en `Plugins`), OPFS, `Documentos` e importar, ✓. **Reinstalar, ✗**: la app
-      nueva no lee ni pisa lo de la vieja, pero crea ficheros nuevos y el selector lee los viejos;
-      el usuario eligió la opción A (decisión 7). Y exportar desde ⚙ no hace nada en la app.
-- [x] **4. Las notas, en OPFS dentro de la app** *(pensar)*: «¿estoy dentro de la app?», decidido en
-      un solo sitio; `main.ts` inyecta `DirectoryHandleBlobStore` sobre OPFS; sin *service worker*.
-      «Borrar todo» e importar sobre ese almacén (el cuarto cabo de la deuda de la Fase 4): vacían
-      OPFS **y** las claves `elnotas:` que siguen en `localStorage` (`elnotas:ui`, `elnotas:capas`),
-      en dos tiempos como hoy. No es un adaptador nuevo, sólo otro handle: el aviso de revisar los
-      puertos sigue esperando al primero de verdad. **Se cierra cuando** `npm run check` pasa, la
-      elección tiene su prueba y su rotura, en la lista de Android las notas sobreviven a cerrar la
-      app y a reiniciar el móvil y «Borrar todo» lo vacía todo, y el usuario confirma cómo quedan
-      las líneas de «Borrar todo» e importar en *Decisiones cerradas* de `CLAUDE.md`. **Código
-      hecho el 2026-11-10**, comprobado en la web por el verificador, y la sección A de la lista,
-      en el móvil el 2026-11-11; las líneas de `CLAUDE.md`, con el visto bueno del usuario.
-- [x] **5. El botón atrás de Android** *(pensar)*: primero, ver si basta lo que Capacitor hace solo
-      (atrás en el historial; sin historial, cerrar la app); escuchar el botón lo quita y obliga a
-      rehacerlo. Ojo con las capas sin entrada en el historial, que se cierran sin ir atrás.
-      **Se cierra cuando** su paso queda anotado en la lista de Android y, si hubo código,
-      `npm run check` pasa con su prueba. **Código hecho el 2026-11-10:** lo que Capacitor hace solo
-      no basta (sin historial, no hace nada); se escucha por el puente: con historial,
-      `history.back()`; sin él, se saca la app con `minimizeApp`, como Android desde la 12. Tras una
-      recarga con algo encima queda una pulsación muerta, como en la PWA: el usuario eligió dejarlo
-      así por ahora (opción A) frente a preguntar a la pila de capas de la UI (opción B). Sección B
-      de la lista, pasada en el móvil el 2026-11-11.
-- [x] **6. La clave propia y la versión *release*** *(pensar)*: una actualización sólo se instala
-      encima con la misma firma, y desinstalar borra las notas de la carpeta privada. Antes de meter
-      notas de verdad, una clave del usuario, **fuera del repo** y con copia fuera del ordenador; la
-      contraseña, tampoco en el repo; y la orden para compilar la *release* firmada con ella. La de
-      *debug* se desinstala una vez, sin notas que perder. **Se cierra cuando** el usuario instala la
-      *release*, una segunda *release* se instala encima sin perder una nota de prueba, ningún
-      secreto queda en git y la orden está en *Comandos* de `CLAUDE.md`. **Código hecho el
-      2026-11-11:** la clave y sus contraseñas, en `~/.elnotas/` (el usuario eligió la contraseña en
-      un fichero junto a la clave; la copia de la clave, fuera del ordenador y sin él), la *release*
-      firmada con ellas y sin ellas se niega, el número de versión es el recuento de commits, y
-      `npm run build:apk`. La *release* compila y se instala, y una segunda se instala encima sin
-      perder nada (sección E, el 2026-11-11).
-- [x] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
-      app, la copia se escribe en la caché y se abre la hoja «Compartir»; importar, con el selector de
-      ficheros. Después, el usuario pasa a la app lo escrito de verdad en la PWA del móvil.
-      **Se cierra cuando** `npm run check` pasa, en la lista de Android una copia exportada a Drive o
-      a Archivos se vuelve a importar entera y la de la PWA entra en la app, «Compartir» queda en
-      *Copia de seguridad* y «migrar» en *Decisiones cerradas* de `CLAUDE.md`, y la entrada de la
-      deuda de la Fase 4 sale de aquí. **Código hecho el 2026-11-10** (importar ya funcionaba, tarea
-      3): la copia, en `copias/` de la caché, vaciada antes de cada una, y la hoja «Compartir». Android
-      sólo dice que se pasó a otra app, así que la app dice «Copia enviada», no «guardada»; cancelar
-      dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Sección C
-      de la lista, en el móvil el 2026-11-11, y «Compartir» y «migrar», en `CLAUDE.md`. El usuario
-      pasó sus notas de la PWA a la app el 2026-11-11, y la deuda de la Fase 4 quedó contestada.
-- [x] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
-      al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
-      por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en
-      ⚙ «última copia: hace 2 h», en `es` y en `en`. Cuándo toca y cuál se borra, puro y con el reloj
-      por puerto. **Se cierra cuando** esa regla tiene sus pruebas en Node y su rotura,
-      `npm run check` pasa, en la lista de Android aparecen las tres copias y con la cuarta se va la
-      más vieja, tras reinstalar una copia vieja se importa entera, y la copia automática queda en
-      *Copia de seguridad* de `CLAUDE.md`. **Código hecho el 2026-11-11**, con la regla probada en
-      Node y la línea en `CLAUDE.md`; en el móvil, la sección F entera (2026-11-11): tres copias, con la cuarta se va la más vieja, y
-      tras reinstalar una se importa entera.
-- [x] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
-      Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
-      **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
-      no se ve otra cosa que negro antes de la app (desde Android 12 el sistema pone el icono en el
-      centro de la carga: no se puede quitar sin esconderlo). **Código hecho el 2026-11-10:** los
-      iconos, generados una vez desde `icono-512.png` (el adaptativo, sin el marco y en el círculo
-      de 72 dp que enseñan las máscaras: lo importante, dentro de los 66 dp que no se recortan), la
-      carga con el color del icono y su primer plano en el centro, sin las imágenes de Capacitor, y
-      `build:android` falla si las copias del color se desvían o la carga deja de apuntar a él.
-      Sección D de la lista, pasada en el móvil el 2026-11-11.
-
 ### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
 
 **Pedida por el usuario el 2026-11-04.** **Qué es:** la app de escritorio, **autocontenida como la
@@ -322,30 +175,6 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       acerque, o apuntarla en OPFS cuando lo haya. **Se cierra cuando** el usuario elige y la
       decisión queda escrita aquí.
 
-### Si OPFS entra en juego: lo que queda del criterio de la Fase 3
-
-Se dejó abierto a conciencia: decidirlo de paso habría cambiado el alcance de la fase por la
-puerta de atrás. Los otros dos huecos de entonces están cerrados (`TERMINADAS.md`).
-
-- **¿Entra OPFS en la Fase 3? — LA ÚNICA QUE SIGUE ABIERTA.** El `ARCHITECTURE.md` viejo decía que es **la misma**
-  `DirectoryHandleBlobStore` y que lo único que cambia es **cómo se consigue el handle**
-  (`showDirectoryPicker()` frente a `navigator.storage.getDirectory()`). Si eso es «quién abre el
-  storage», es composición y cae en la Fase 4; si se considera parte del adaptador,
-  entonces la lista manual necesita **una segunda pasada**. El criterio de cierre pide una pasada
-  sobre la carpeta real y no se pronuncia sobre la otra.
-  **Cómo se dejó mientras tanto, sin decidirlo por la puerta de atrás:** la lista manual lleva
-  OPFS como **sección E, marcada opcional**, con su botón en el andamio y la nota de que el
-  criterio de cierre no la exige. Quien pase la lista puede hacerla o no; si la hace, se anota.
-  Lo que esa sección **no puede** sustituir es la de la carpeta real: en OPFS no hay explorador
-  de ficheros que mirar, y el oráculo del `close()` es precisamente mirar el fichero en el disco.
-  **Y la realidad la ha dejado sin filo, aunque la pregunta siga sin contestar formalmente:** en
-  la pasada del 2026-09-13 la sección E **se hizo y pasó en los dos navegadores** —es lo único
-  que Firefox pudo probar—, y la fase se cerró **sin exigirla**. Así que la respuesta de facto es
-  la primera: OPFS es «cómo se consigue el handle», o sea composición, o sea Fase 4. Si alguien
-  quiere cerrarla formalmente, eso es lo que hay que escribir.
-
----
-
 ## Ideas aparcadas
 
 Lo que se contempló y no se eligió. Cada una con **qué haría falta para que mereciera la
@@ -353,6 +182,8 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 
 | Idea | Por qué no ahora | Qué la desbloquearía |
 |---|---|---|
+| **Elegir la carpeta de la copia automática** en la app de Android | De la Fase 12 (decisión 7, 2026-11-10): una carpeta fija, `Documentos/ElNotas/`, bastaba para empezar; elegirla pide el selector de carpetas de Android y recordar el permiso. | Querer la copia en otra carpeta, por ejemplo una que sincronice otra app. |
+| **Los extras de la app de Android**: notificaciones, compartir hacia ElNotas desde otras apps, widgets, Play Store | De la Fase 12 (hablado el 2026-11-04): extras, a decidir aparte; la Play Store, descartada en la decisión 4 en favor del `.apk` a mano. | Que el usuario pida uno en concreto. |
 | **Una entidad `Preferences` en el core para lo de presentación que viaja** (orden de las rutinas, archivadas y, más adelante, orden dentro de un contexto y ocultos) | Planteado el 2026-10-30 tras sacar `archived` de `Routine`. Hoy el orden y lo archivado viven en el `UiState` (`elnotas:ui`), por dispositivo y fuera del core. Diseño esbozado: un objeto `{ schemaVersion, routineOrder, archivedRoutines, … }` guardado como un fichero más con el escritor diferido; sólo la parte que viaja; el resto del `UiState` se queda en el dispositivo. Pide una entidad nueva, su acción y su reconciliación en el core. Dudas abiertas: una global o una por contexto; si los ocultos (`hidden` en `Context`, decisión cerrada) se mueven ahí, y si entra el orden de contexto de la tarea 2. | Querer que el orden y lo archivado viajen entre dispositivos, o la nube. Decidir antes las tres dudas. |
 | **Repeticiones y duración de los eventos del calendario** (un evento cada semana, uno que dura varios días o de una hora a otra) | Planteado el 2026-10-27 al diseñar el calendario (Fase 10, tarea 7): los esbozos del usuario sólo tienen un día y una hora opcional, y repetir o durar pide un modelo más grande (reglas de repetición, excepciones, qué se pinta en el mes). | Echar en falta crear a mano el mismo evento cada semana, o uno de varios días. Es añadido: un campo opcional en el evento, sin migrar lo guardado. |
 | **Subcontextos, o un contexto como elemento de otro** | Planteado por el usuario el 2026-10-18 y aparcado por él: interesa, pero no hace falta. De los dos, prefiere **la referencia a la contención**: un contexto enlazado desde varios (n a n, como una clave ajena), sin árbol y sin recorrerlo recursivamente. Un árbol abriría ciclos, qué pasa al borrar un padre, cómo se abre y qué enseña el General. Desde la Fase 10 una nota puede enlazar notas y diagramas con `[texto](#id)`; los contextos, no, por ahora (2026-10-25). | Echar en falta ver un contexto **dentro de la lista** de otro, no sólo enlazado desde una nota. Ese día, un tercer tipo de `ItemRef` (`kind: "context"`), con la limpieza al borrar como la de las notas. |
@@ -371,7 +202,7 @@ pena**: esa última parte es la que evita volver a discutirlo desde cero.
 | **Sincronizar sin nube, entre pares** (*peer-to-peer*) | Preguntado el 2026-10-12, y al usuario le atraía más que la base de datos. Tres variantes, cada una con su pega. **(1) Manual, en la PWA, con WebRTC:** los dos dispositivos se presentan con QR, pero son **dos escaneos** (oferta y respuesta) **cada vez**, o un servicio público sólo para el saludo; y las dos apps abiertas a la vez. **(2) Automático** («enciendo el ordenador y se sincroniza»): una PWA no puede escuchar conexiones ni correr en segundo plano, y una página HTTPS no puede llamar a `http://192.168.x.x`. Pide **app nativa en los dos lados**. **(3) PWA más un servicio Kotlin aparte en cada dispositivo**, hablando por `localhost`: es la versión frágil de la (2). Chrome está poniendo permiso a que las webs públicas lleguen a la red local, Android exige una notificación fija para el segundo plano, y son dos programas más por dispositivo. Lo limpio es **Capacitor con plugins en Kotlin**, que es la (2). Ninguna da copia fuera de casa. | **(1):** querer prescindir de la nube y aceptar que sincronizar sea un gesto. **(2):** la app nativa (Fases 12 y 13). Las dos entrarían como **un servicio más** en la sección «Nube» de ⚙, con el puerto sin Supabase dentro y la misma política de conflictos. |
 | **Markdown como formato de guardado** | Preguntado el 2026-10-12. Una nota es un dato estructurado y un `.md` es texto libre: los ids de línea no tienen sitio, lo que el usuario escribe y parece Markdown hay que escaparlo, los diagramas y los contextos no caben, y si se edita fuera la app no lo entiende ni se entera (la `revision` no cambia). Con «manda el modelo», Markdown es **sólo para exportar** (*Exportar las notas a Markdown*, aquí arriba). | Que se reabra «manda el fichero»: editar las notas en Obsidian o en cualquier editor. Es otro proyecto, no una ampliación del almacenamiento. |
 | **Cifrar la sesión guardada de la nube** (con una llave de WebCrypto que no se puede sacar) | El 2026-10-12 se decidió guardar la sesión en el navegador sin cifrar. Cifrarla impide que copiar el almacén baste para llevarse el token, pero no protege de un script malicioso dentro de la app, que podría usar la llave. Hoy no hay código de terceros ni dependencias. | Que la app cargue código ajeno, o que se comparta con más gente. |
-| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, más de trescientas líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los 37 MB de hoy, y una cadena de herramientas más que mantener. | Que aparezca un **segundo** adaptador sobre navegador con lógica de verdad —el de Supabase, con su sesión y sus reintentos; hasta el 2026-10-12 decía «el de Drive»— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
+| **Un runner de navegador para las pruebas** (Playwright o similar) | Lo único que no se puede probar en Node es un fichero —`DirectoryHandleBlobStore`, más de trescientas líneas de código— cuya parte larga es un clasificador de excepciones: probarlo con un doble es comprobar lo que uno *cree* que lanza la API. Y se ejercita solo cada vez que alguien usa la app. A cambio: cientos de megas frente a los ~130 MB de hoy (Capacitor incluido), y una cadena de herramientas más que mantener. | Que aparezca un **segundo** adaptador sobre navegador con lógica de verdad —el de Supabase, con su sesión y sus reintentos; hasta el 2026-10-12 decía «el de Drive»— o que ese fichero dé más de un sobresalto. Ese día se instala **sólo para esa fase**, coherente con la política de dependencias. |
 | **Migrar de webpack a Vite** | ⚠️ **Superada el 2026-09-27:** webpack ya **no** es el bundler previsto para la Fase 4 — la fase arranca con el `importmap`, sin bundler. La elección entre bundlers no afecta a la arquitectura, así que no urge. | Que algo concreto exija un bundler. Ese día se comparan los que haya, no sólo estos dos; y se reinstala **sólo** el elegido. |
 | **Las ventanas como entidad del core** (la opción B de el `ARCHITECTURE.md` viejo: algo como `Layout`, en su fichero junto a las notas) | Es la opción más limpia —una sola fuente, viaja con las notas, el reducer vigila la integridad—, pero reabre `StorageAdapter`, la suite de contratos, `FileStorageAdapter` y el catálogo de acciones, todo cerrado. Se eligió la C (`localStorage`) para salir del paso. | Que lleguen las **entidades «meta» de UX/UI** al core, que el usuario prevé; o que duela de verdad que las ventanas no viajen con las notas (un cambio de destino o de dispositivo). Ese día la guarda de la presentación se sustituye por la integridad del reducer. |
 | **Revisar `Context.defaultView`** (y su acción `set-default-view`) | Se queda sin consumidor en la Fase 4: «abrir directamente una nota» lo hace ahora una ventana de tipo nota. No se quita porque el dominio está cerrado y quitarlo toca modelo, reducer, pruebas y formato en disco por algo que no molesta. | Lo mismo que la fila anterior: cuando lleguen las entidades «meta» de UX. Ahí se decide si se elimina o si recupera un sentido. |

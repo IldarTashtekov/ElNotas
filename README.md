@@ -8,10 +8,11 @@ framework y sin dependencias de runtime. El código vive en `src/` —`core/` (e
 `test/`, en un árbol que calca el de `src/`.
 
 **Publicada** en <https://ildartashtekov.github.io/ElNotas/>, y se instala en el móvil como app
-(PWA). Hace notas con casillas anidadas, las agrupa en contextos y las enseña en ventanas, como
+(PWA); también hay una app de Android, con Capacitor, que se compila a mano. Hace notas con casillas anidadas, las agrupa en contextos y las enseña en ventanas, como
 pestañas; lleva un calendario con eventos y rutinas; dibuja diagramas en un lienzo libre, con pósits y líneas entre ellos. Tiene aspecto
-de terminal de fósforo, verde, ámbar o magenta. Guarda en el `localStorage` del navegador, y en
-⚙ → Datos se **exporta una copia** a un fichero y se **importa** sustituyendo todo.
+de terminal de fósforo, verde, ámbar o magenta. Guarda en el `localStorage` del navegador (en la
+app de Android, en OPFS), y en ⚙ → Datos se **exporta una copia** a un fichero y se **importa**
+sustituyendo todo.
 
 ## Abrir la app
 
@@ -19,7 +20,7 @@ Sin bundler ni servidor de desarrollo: `tsc` compila a `dist/web/` y cualquier s
 sirve la raíz del repo, donde está `index.html`.
 
 ```bash
-npm install                 # sólo typescript, @types/node y prettier
+npm install                 # typescript, @types/node, prettier y, para Android, Capacitor
 npm run build:web           # compila src/ a dist/web/
 python3 -m http.server 8000 # y se abre http://localhost:8000
 ```
@@ -54,4 +55,6 @@ npm test                  # compila src/ y test/ a tmp-test/ y lanza node --test
 
 npm run build:web         # compila la app para el navegador, a dist/web/
 npm run build:pages       # tras build:web: arma dist/pages/, lo que se publica
+npm run build:android     # tras build:web: arma dist/android/; luego npx cap sync android
+npm run build:apk         # la release de Android, firmada con la clave de ~/.elnotas/
 ```

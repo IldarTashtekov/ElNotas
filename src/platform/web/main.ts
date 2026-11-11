@@ -46,7 +46,7 @@ import { boot } from "./boot.js"
 import { consoleLogger } from "./ConsoleLogger.js"
 import { createCryptoIdGenerator } from "./CryptoIdGenerator.js"
 import type { AutoBackup } from "./autoBackup.js"
-import { PLAZO_DEPURAR_MS, PLAZO_MS, createAutoBackup, hasContent } from "./autoBackup.js"
+import { PLAZO_MS, createAutoBackup, hasContent } from "./autoBackup.js"
 import type { AutoBackupStatePersistence, DocumentsFolder } from "./autoBackupStorage.js"
 import { createLocalStorageAutoBackupState, documentsFolder } from "./autoBackupStorage.js"
 import type { Backup } from "./backup.js"
@@ -157,13 +157,7 @@ const mostrarImportacionSinTerminar = (raiz: HTMLElement, almacen: Storage, fall
  * La copia automática de la app: lo mismo que «Exportar copia», tras escribir lo
  * pendiente. Con sólo el manifiesto guardado, la app está vacía y no hay copia.
  */
-const copiaAutomatica = (
-  app: App,
-  blobs: BlobStore,
-  estadoUi: UiStatePersistence,
-  almacen: Storage,
-  depurar: boolean,
-): AutoBackup => {
+const copiaAutomatica = (app: App, blobs: BlobStore, estadoUi: UiStatePersistence, almacen: Storage): AutoBackup => {
   const carpeta: DocumentsFolder = documentsFolder(window, consoleLogger)
   const apuntado: AutoBackupStatePersistence = createLocalStorageAutoBackupState(almacen, consoleLogger)
   return createAutoBackup({
@@ -181,7 +175,7 @@ const copiaAutomatica = (
     load: apuntado.load,
     save: apuntado.save,
     clock: systemClock,
-    plazo: depurar ? PLAZO_DEPURAR_MS : PLAZO_MS,
+    plazo: PLAZO_MS,
     logger: consoleLogger,
   })
 }
@@ -289,9 +283,7 @@ const iniciar = async (): Promise<void> => {
     logger: consoleLogger,
   })
   /* En la app, la copia automática en Documentos; en el navegador no hay dónde. */
-  const automatica: AutoBackup | null = dentroDeLaApp(window)
-    ? copiaAutomatica(app, blobs, estadoUi, almacen, depurar)
-    : null
+  const automatica: AutoBackup | null = dentroDeLaApp(window) ? copiaAutomatica(app, blobs, estadoUi, almacen) : null
   /* La copia lee lo guardado, no lo de la pantalla: así van también los ficheros ilegibles. */
   const backup: BackupActions = {
     exportAll: (): Promise<ExportResult> => {

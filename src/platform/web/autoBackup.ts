@@ -17,9 +17,6 @@ export const COPIAS: number = 3
 /** Como mucho, una copia cada tanto. */
 export const PLAZO_MS: number = 12 * 60 * 60 * 1000
 
-/** Con `?depurar`, para probarla en el móvil sin esperar medio día. */
-export const PLAZO_DEPURAR_MS: number = 60 * 1000
-
 /** Tras un fallo no se vuelve a intentar enseguida: cada cambio lo repetiría. */
 export const REINTENTO_MS: number = 10 * 60 * 1000
 
