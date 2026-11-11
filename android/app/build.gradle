@@ -1,5 +1,20 @@
 apply plugin: 'com.android.application'
 
+// La firma de la release: la clave y sus contraseñas viven fuera del repo, en
+// ~/.elnotas/firma.properties (storeFile, storePassword, keyAlias, keyPassword).
+// Sin ese fichero, la debug compila igual; la release se niega.
+def ficheroFirma = new File(System.getProperty('user.home'), '.elnotas/firma.properties')
+def firma = new Properties()
+if (ficheroFirma.exists()) {
+    ficheroFirma.withReader('UTF-8') { firma.load(it) }
+}
+
+// El número de versión, el recuento de commits: cada release sube sola, y Android
+// sólo instala encima una versión igual o mayor.
+def recuento = providers.exec {
+    commandLine 'git', 'rev-list', '--count', 'HEAD'
+}.standardOutput.asText.get().trim().toInteger()
+
 android {
     namespace = "io.github.ildartashtekov.elnotas"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +22,8 @@ android {
         applicationId "io.github.ildartashtekov.elnotas"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode recuento
+        versionName "${recuento}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,11 +31,33 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (ficheroFirma.exists()) {
+                // trim: un espacio al final, al pegar la plantilla, daría «contraseña incorrecta»
+                def ruta = firma.getProperty('storeFile', '').trim()
+                storeFile new File(ruta.startsWith('~') ? System.getProperty('user.home') + ruta.substring(1) : ruta)
+                storePassword firma.getProperty('storePassword', '').trim()
+                keyAlias firma.getProperty('keyAlias', '').trim()
+                keyPassword firma.getProperty('keyPassword', '').trim()
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+// Una release sin firma no se instala en el móvil: mejor no compilarla. También
+// caen `build`, `lint` y `test`, que tocan la variante release.
+gradle.taskGraph.whenReady { grafo ->
+    def pideRelease = grafo.allTasks.any { it.name.toLowerCase().contains('release') }
+    if (pideRelease && !firma.getProperty('storeFile')) {
+        throw new GradleException("Falta ${ficheroFirma}, o no dice storeFile: lo que toca la variante release necesita tu clave. Los pasos, en test/platform/web/VERIFICACION-ANDROID.md, sección E.")
     }
 }
 

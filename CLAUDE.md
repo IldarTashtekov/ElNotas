@@ -285,7 +285,7 @@ npm run build:web            # compila src/ a dist/web/ en ESM, para el navegado
 python3 -m http.server 8000                # y se abre http://localhost:8000
 python3 -m http.server 8000 --bind 0.0.0.0 # para el móvil: http://<IP del ordenador>:8000
 npm run build:pages          # tras build:web: arma dist/pages/ (lo publicado). Niega rutas absolutas
-npm run build:android        # tras build:web: dist/android/, sin service worker; luego npx cap sync android
+npm run build:android        # tras build:web: dist/android/; luego npx cap sync android y npm run build:apk (firma en ~/.elnotas/)
 ```
 
 **Publicar es hacer `push` a `main`**; lo hace el usuario (denegado aquí en `.claude/settings.json`,

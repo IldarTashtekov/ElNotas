@@ -192,7 +192,11 @@ de construir nada.
       contraseña, tampoco en el repo; y la orden para compilar la *release* firmada con ella. La de
       *debug* se desinstala una vez, sin notas que perder. **Se cierra cuando** el usuario instala la
       *release*, una segunda *release* se instala encima sin perder una nota de prueba, ningún
-      secreto queda en git y la orden está en *Comandos* de `CLAUDE.md`.
+      secreto queda en git y la orden está en *Comandos* de `CLAUDE.md`. **Código hecho el
+      2026-11-11:** la clave y sus contraseñas, en `~/.elnotas/` (el usuario eligió la contraseña en
+      un fichero junto a la clave; la copia de la clave, fuera del ordenador y sin él), la *release*
+      firmada con ellas y sin ellas se niega, el número de versión es el recuento de commits, y
+      `npm run build:apk`. Gradle no corre en el *sandbox*: falta la sección E de la lista.
 - [ ] **7. Exportar con «Compartir», importar desde fuera, y las notas de la PWA** *(pensar)*: en la
       app, la copia se escribe en la caché y se abre la hoja «Compartir»; importar, con el selector de
       ficheros. Después, el usuario pasa a la app lo escrito de verdad en la PWA del móvil.

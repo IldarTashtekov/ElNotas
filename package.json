@@ -40,6 +40,7 @@
     "build:web": "node tools/clean-dist.mjs && tsc -p tsconfig.web.json",
     "build:pages": "node tools/build-pages.mjs",
     "build:android": "node tools/build-pages.mjs android",
+    "build:apk": "cd android && ./gradlew assembleRelease",
     "check": "npm run typecheck && npm run typecheck:core && npm run check:purity && npm run check:fronteras && npm run check:extensiones && npm run check:descartes && npm run check:paragrafos && npm run check:exportaciones && npm run check:tareas && npm run check:arquitectura && npm run check:referencias && npm run check:formato && npm test"
   },
   "repository": {

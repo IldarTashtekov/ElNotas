@@ -15,6 +15,10 @@ la anterior, con la fecha, el móvil y su versión de Android.
    `intermediates/` va marcado «sólo para pruebas» y el móvil lo rechaza.
 4. Se pasa al móvil y se abre desde el gestor de archivos.
 
+⚠️ **Una vez instalada la *release* (sección E), al móvil sólo va la *release***, compilada con
+`npm run build:apk`. Una *debug* lleva otra firma y Android no la deja instalar encima; desinstalar
+para que entre borra las notas.
+
 ---
 
 ## S. El sondeo (provisional, Fase 12, tarea 3)
@@ -123,6 +127,62 @@ a otra app, así que dice «Copia enviada», no «guardada».
 - **D2. Al abrir, todo negro.** Cerrar la app desde las recientes y abrirla: la pantalla de carga
   es negra y no hay ningún destello blanco antes de que salga la app. En Android 12 o más, en el
   centro sale el «nerd» en un círculo; no el icono genérico de Android ni el robot de Capacitor.
+
+## E. La release, firmada con la clave del usuario (Fase 12, tarea 6)
+
+Una actualización sólo se instala encima si va firmada con la misma clave, y desinstalar borra
+las notas. Por eso la *release* se firma con una clave propia, que se crea **una sola vez** y no
+se puede perder. La clave y sus contraseñas viven en `~/.elnotas/`, fuera del repo; nada de eso
+entra en el `.apk` ni en git.
+
+**Crear la clave (una vez).** En una terminal, con el Java de Android Studio:
+
+```bash
+mkdir -p ~/.elnotas && chmod 700 ~/.elnotas
+/snap/android-studio/current/jbr/bin/keytool -genkeypair -v -keystore ~/.elnotas/clave-android.jks -alias elnotas -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Pide la contraseña dos veces: de 6 caracteres o más, **sólo letras sin tilde ni ñ y números**
+(sin `\`), para que llegue igual al compilar. Luego pide unos datos de nombre, que pueden quedarse
+en blanco con Intro. Al final pregunta si es correcto: hay que escribir «sí» (o «yes»), porque con
+Intro responde que no y vuelve a empezar. La clave no pide contraseña aparte: es la misma.
+
+Luego, crear `~/.elnotas/firma.properties` con esto, poniendo esa contraseña en las dos líneas, y
+dejarlo legible sólo para ti con `chmod 600 ~/.elnotas/firma.properties`:
+
+```
+storeFile=~/.elnotas/clave-android.jks
+storePassword=LA_CONTRASENA
+keyAlias=elnotas
+keyPassword=LA_CONTRASENA
+```
+
+**La copia, fuera del ordenador.** `clave-android.jks` a un pendrive o a Drive, **sin**
+`firma.properties`; la contraseña, en un gestor de contraseñas o en papel. Si se pierde la clave,
+no hay forma de actualizar sin desinstalar.
+
+**Compilar la release.** Con `JAVA_HOME` apuntando al Java de Android Studio (se puede añadir a
+`~/.bashrc`, como `CAPACITOR_ANDROID_STUDIO_PATH`):
+
+```bash
+cd /home/ubuntu/proyectos-dev/ElNotas && export JAVA_HOME=/snap/android-studio/current/jbr && npm run build:web && npm run build:android && npx cap sync android && npm run build:apk
+```
+
+El `.apk` sale en `android/app/build/outputs/apk/release/app-release.apk`. Su número de versión es
+el recuento de commits: cada *release* nueva sube sola. Por eso, lo que ya se compiló en una
+*release* no se reescribe: ni `reset` hacia atrás, ni *rebase* que quite commits, ni juntar con
+*squash*. El recuento bajaría, y Android no instala encima una versión menor.
+
+- **E1. Sin la firma, la release se niega.** Antes de crear `firma.properties` (o moviéndolo un
+  momento), `npm run build:apk` falla diciendo que falta `~/.elnotas/firma.properties`.
+- **E2. Se instala la release.** Desinstalar la de *debug* (aún sin notas de verdad: se pierden) e
+  instalar `app-release.apk`. Abre y funciona; crear una nota de prueba.
+- **E3. Una segunda release se instala encima sin perder nada.** Tras un commit nuevo, volver a
+  compilar e instalar el `.apk` nuevo encima, sin desinstalar: Android ofrece «Actualizar», y la
+  nota de prueba sigue ahí.
+- **E4. Ningún secreto en git.** `git log --all --name-only | grep -E '\.jks$|\.keystore$|firma\.properties$'`
+  no encuentra nada, y `git grep -F 'la contraseña' $(git rev-list --all)`, con la de verdad,
+  tampoco: busca en toda la historia (luego, borrar esa línea del historial de la terminal).
 
 ---
 
