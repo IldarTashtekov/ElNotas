@@ -17,7 +17,7 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <!-- La carga, en el negro de la app (el --ground de base.css), que guarda ic_launcher_background.xml. -->
+        <!-- La carga, en el negro de la app (la variable ground de base.css), que guarda ic_launcher_background.xml. -->
         <item name="android:background">@color/ic_launcher_background</item>
         <!-- Android 12 y siguientes: el mismo fondo, y en el centro el primer plano del icono. -->
         <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>

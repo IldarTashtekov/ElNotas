@@ -69,6 +69,23 @@ if (fondo?.toLowerCase() !== suelo.toLowerCase()) {
 // más copias del mismo `--ground`. La pantalla de carga no copia el color: apunta al
 // del icono, y se comprueba que siga apuntando.
 if (ANDROID) {
+  // XML no admite «--» dentro de un comentario ni un «-» justo antes del cierre, y Gradle
+  // sólo lo dice al compilar el .apk. Los recursos y el manifiesto, todo lo de src/main.
+  const conGuiones = ficherosDe("android/app/src/main")
+    .filter((ruta) => ruta.endsWith(".xml"))
+    .filter((ruta) =>
+      [...readFileSync(ruta, "utf8").matchAll(/<!--([\s\S]*?)-->/g)].some(
+        (m) => m[1].includes("--") || m[1].endsWith("-"),
+      ),
+    )
+  if (conGuiones.length > 0) {
+    fallar([
+      "Un comentario XML de Android lleva «--» dentro o «-» antes del cierre, y XML",
+      "  no lo admite: Gradle no compilaría el .apk. Quítalo de:",
+      ...conGuiones.map((ruta) => `    ${ruta}`),
+      "  Si es res/xml/config.xml, lo escribe npx cap sync: el «--» viene de lo que copia.",
+    ])
+  }
   const RES = "android/app/src/main/res/values"
   // Sólo el estilo de la carga, sin comentarios: otro estilo también pone android:background.
   const estilos =

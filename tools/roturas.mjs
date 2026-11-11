@@ -485,6 +485,27 @@ export const ROTURAS = [
     caza: "build:android",
   },
   {
+    nombre: "build:android: un comentario XML de Android con «--» dentro",
+    fichero: "android/app/src/main/res/values/styles.xml",
+    buscar: "(la variable ground de base.css)",
+    poner: "(el --ground de base.css)",
+    caza: "build:android",
+  },
+  {
+    nombre: "build:android: un comentario XML de Android con «-» pegado al cierre",
+    fichero: "android/app/src/main/res/values/styles.xml",
+    buscar: "el primer plano del icono. -->",
+    poner: "el primer plano del icono --->",
+    caza: "build:android",
+  },
+  {
+    nombre: "build:android: un comentario del manifiesto de Android con «--» dentro",
+    fichero: "android/app/src/main/AndroidManifest.xml",
+    buscar: "<!-- Permissions -->",
+    poner: "<!-- Permissions -- todas -->",
+    caza: "build:android",
+  },
+  {
     nombre: "build:android: el fondo del icono de Android no es el --ground",
     fichero: "android/app/src/main/res/values/ic_launcher_background.xml",
     buscar: '"ic_launcher_background">#050301',
@@ -510,7 +531,7 @@ export const ROTURAS = [
     fichero: "android/app/src/main/res/values/styles.xml",
     // La línea buena pasa a AppTheme.NoActionBar, y la carga se queda con @null.
     buscar:
-      '        <item name="android:background">@null</item>\n    </style>\n\n\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <!-- La carga, en el negro de la app (el --ground de base.css), que guarda ic_launcher_background.xml. -->\n        <item name="android:background">@color/ic_launcher_background</item>\n',
+      '        <item name="android:background">@null</item>\n    </style>\n\n\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <!-- La carga, en el negro de la app (la variable ground de base.css), que guarda ic_launcher_background.xml. -->\n        <item name="android:background">@color/ic_launcher_background</item>\n',
     poner:
       '        <item name="android:background">@color/ic_launcher_background</item>\n    </style>\n\n\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <!-- <item name="android:background">@color/ic_launcher_background</item> -->\n        <item name="android:background">@null</item>\n',
     caza: "build:android",
