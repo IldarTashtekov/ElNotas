@@ -254,8 +254,8 @@ No empezar sin pedirlo. Motivo y desbloqueo, en `TAREAS.md` → *Ideas aparcadas
 - Las candidatas extra de la barra · el «reintentar» de `onError` · las ventanas en el core
 - La carpeta del usuario, y OPFS como destino en la web, con «reconectar carpeta» · una librería para el lienzo
 - La nube con Supabase (diseñada y aparcada: `TAREAS.md` → *Ideas aparcadas*) · `storageTarget`
-- Importar mezclando · exportar a Markdown · formato de texto y texto más grande (sin fase)
-- Sync entre pares · CRDTs, colaboración. El escritorio (Tauri), en la fase 13
+- Importar mezclando · exportar a Markdown · formato de texto y texto más grande (fase 13)
+- Sync entre pares · CRDTs, colaboración. El escritorio (Tauri), en la fase 14
 
 ## Plan por fases
 

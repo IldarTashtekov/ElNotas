@@ -67,41 +67,19 @@ resumen, en `TERMINADAS.md`.
 - **El recorrido conjunto de las listas**, `test/ui/VERIFICACION-SENTADA.md` (Fase 5): quedó para
   la próxima vez que se pasen las del lienzo.
 
-### Fase 13 — App de escritorio, con Tauri — PLANIFICADA, después de la 12
-
-**Pedida por el usuario el 2026-11-04.** **Qué es:** la app de escritorio, **autocontenida como la
-de la 12** (sus notas, en OPFS como allí, si el visor de Tauri lo tiene), y **mejor en pantalla
-grande**: lo que el usuario busca en el escritorio son **ventanas divididas** (dos lado a lado: una
-nota y su diagrama, dos notas, una nota y el calendario) y **más atajos de teclado al escribir**.
-Tauri aporta además las combinaciones que el navegador se reserva (Ctrl+W, Ctrl+T, Ctrl+N…). **La
-copia de seguridad automática** de la 12 se aprovecha, con otra forma de escribir en una carpeta.
-**Sin plantear.**
-
-- [ ] **1. Las decisiones abiertas** *(pensar)*: cuántos paneles y qué cabe en cada uno; si lo
-      dividido va al `UiState`; si un enlace se abre en el otro panel; qué pasa en el móvil; qué
-      atajos, y si entra «manejar el lienzo con teclado» (*Ideas aparcadas*). Redefine las decisiones
-      cerradas «ventanas en pestañas», «lo de encima se apila» y quizá «móvil = escritorio». Es el
-      momento de evaluar Snabbdom si salen fallos de repintado (*Ideas aparcadas*). **Se cierra
-      cuando** el usuario contesta, `CLAUDE.md` recoge las decisiones cambiadas y esta entrada se
-      sustituye por las tareas de la fase.
-
-### Fase 14 — Aspecto de grimorio medieval, y el manual de uso — PLANIFICADA, la última
+### Fase 13 — Aspecto de grimorio medieval, y lo que no tenía fase — PLANIFICADA, la siguiente
 
 **Pedida por el usuario el 2026-11-04.** **Qué es:** cambiar el aspecto de terminal de fósforo por
-uno de **grimorio medieval**, y escribir **un manual de uso dentro de la app**. El manual va al
-final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin plantear.**
+uno de **grimorio medieval**, y con él las dos tareas que no tenían fase: los ajustes a la correa
+larga y el formato del texto en el editor. **Reordenada por el usuario el 2026-11-11:** primero ésta,
+después el escritorio (Fase 14) y al final el manual (Fase 15). **Sin plantear.**
 
 - [ ] **1. Las decisiones abiertas** *(pensar)*: si el grimorio **sustituye** al fósforo o **se suma**
       como estilo a elegir en ⚙; qué fuente (incluir una, con licencia libre, rompe «letra del
       sistema»); inicial capitular; cuánto ornamento cabe en el móvil; si el lienzo también es
-      pergamino; el icono. Reabre casi todo *Aspecto* de `CLAUDE.md`. Del manual: dentro de la app
-      (vista de sólo lectura, sin red) o fuera; en los dos idiomas de la 11; texto o capturas; y que
-      la auditoría de cierre de fase lo revise. **Se cierra cuando** el usuario contesta, `CLAUDE.md`
-      recoge el aspecto nuevo y esta entrada se sustituye por las tareas de la fase.
-
-### Sin fase asignada
-
-
+      pergamino; el icono. Reabre casi todo *Aspecto* de `CLAUDE.md`. **Se cierra cuando** el
+      usuario contesta, `CLAUDE.md` recoge el aspecto nuevo y esta entrada se sustituye por las
+      tareas de la fase.
 - [ ] **Ajustes a la correa larga, de la prueba de la Fase 10** *(pensar)*. *Propuestos el
       2026-10-29* al cerrar la 10; `CLAUDE.md` → *Cómo se trabaja* cambia sólo si el usuario lo
       acepta. Dos: (1) **una parada tras plantear una *(pensar)* de UI**, enseñando el
@@ -126,6 +104,35 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       dispositivo en `localStorage` con su clave `elnotas:`, y con dos fronteras nuevas.
       **Se cierra cuando** el usuario decide cómo se guarda el formato y cómo se aplica: entonces se
       parte en tareas propias, cada una con su cierre.
+
+### Fase 14 — App de escritorio, con Tauri — PLANIFICADA, después de la 13
+
+**Pedida por el usuario el 2026-11-04.** **Qué es:** la app de escritorio, **autocontenida como la
+de la 12** (sus notas, en OPFS como allí, si el visor de Tauri lo tiene), y **mejor en pantalla
+grande**: lo que el usuario busca en el escritorio son **ventanas divididas** (dos lado a lado: una
+nota y su diagrama, dos notas, una nota y el calendario) y **más atajos de teclado al escribir**.
+Tauri aporta además las combinaciones que el navegador se reserva (Ctrl+W, Ctrl+T, Ctrl+N…). **La
+copia de seguridad automática** de la 12 se aprovecha, con otra forma de escribir en una carpeta.
+**Sin plantear.**
+
+- [ ] **1. Las decisiones abiertas** *(pensar)*: cuántos paneles y qué cabe en cada uno; si lo
+      dividido va al `UiState`; si un enlace se abre en el otro panel; qué pasa en el móvil; qué
+      atajos, y si entra «manejar el lienzo con teclado» (*Ideas aparcadas*). Redefine las decisiones
+      cerradas «ventanas en pestañas», «lo de encima se apila» y quizá «móvil = escritorio». Es el
+      momento de evaluar Snabbdom si salen fallos de repintado (*Ideas aparcadas*). **Se cierra
+      cuando** el usuario contesta, `CLAUDE.md` recoge las decisiones cambiadas y esta entrada se
+      sustituye por las tareas de la fase.
+
+### Fase 15 — El manual de uso — PLANIFICADA, la última
+
+**Pedida por el usuario el 2026-11-04**, junto con el grimorio; **separada de él el 2026-11-11.**
+**Qué es:** un manual de uso de la app. Va al final a propósito: escrito antes, el grimorio y el
+escritorio lo dejarían viejo. **Sin plantear.**
+
+- [ ] **1. Las decisiones abiertas** *(pensar)*: dentro de la app (vista de sólo lectura, sin red) o
+      fuera; en los dos idiomas de la 11; texto o capturas; y que la auditoría de cierre de fase lo
+      revise. **Se cierra cuando** el usuario contesta y esta entrada se sustituye por las tareas de
+      la fase.
 
 ---
 
