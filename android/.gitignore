@@ -51,6 +51,8 @@ captures/
 .idea/modules.xml
 # Comment next line if keeping position of elements in Navigation Editor is relevant for you
 .idea/navEditor.xml
+# Android Studio lo reescribe según el ordenador (el JDK elegido): fuera de git
+.idea/misc.xml
 
 # Keystore files: la clave de la firma y sus contraseñas viven en ~/.elnotas/, nunca aquí
 *.jks
