@@ -182,7 +182,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 
 **Persistencia y errores**
 - **Manda el modelo, no el fichero:** un fichero o una fila es la copia guardada de una entidad.
-- Espejo con local como primario. File System Access API, con OPFS de fallback.
+- Espejo con local como primario. File System Access API, con OPFS de fallback. En la app de Android, notas en OPFS; ui y capas, en `localStorage`.
 - Un fichero por entidad + `manifest.json` con SÓLO `{ schemaVersion }` (ausente = versión 0). Éste vive en
   `StorageAdapter`; en un almacén vacío `boot` apunta la actual.
 - Write-behind en dos piezas: qué está sucio, en el core; cuándo, en `storage/`. Sin `Scheduler`.
@@ -193,7 +193,7 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 - `BlobStore` devuelve `Result`; el sobre es suyo, el contenido de `FileStorageAdapter`.
 - Ilegible (`corrupt`): se salta y se avisa con `onCorrupt`, conservando sus referencias.
 - La forma de lo leído se valida en `storage/file/schema.ts`, no en el core.
-- «Borrar todo»: marca y recarga; `main.ts` borra al arrancar, sólo claves `elnotas:`.
+- «Borrar todo»: marca y recarga; `main.ts` borra al arrancar las claves `elnotas:` y, en la app, todo OPFS, el manifiesto el último.
 
 **Navegación y UI**
 - Cinco vistas: ventanas, nota, diagrama, calendario, configuración. Lo de encima **se apila**; exit, paso a paso.
@@ -240,8 +240,8 @@ el navegador ya lo hacen. Cero de runtime. **Sin bundler ni servidor de desarrol
 
 **Copia de seguridad**
 - Un `.json` con los ficheros guardados TAL CUAL (los ilegibles también) y el `uiState`. Una v1 importa sólo ficheros.
-- Importar **sustituye todo**; mezclar, aparcado. Sin tocar el core.
-- «Guardar como» si el navegador lo tiene; si no, Descargas. No reabre «la carpeta del usuario».
+- Importar **sustituye todo** (en la app, también OPFS); mezclar, aparcado. Sin tocar el core. De la PWA a la app: exportar e importar.
+- «Guardar como» si el navegador lo tiene; si no, Descargas; en la app, la hoja «Compartir» («Copia enviada»). No reabre «la carpeta del usuario».
 - Antes de borrar, un ensayo con el mismo `boot`, en memoria; luego en dos tiempos, como «Borrar todo». A medias,
   la app no arranca: «Reintentar» o «Abandonar la importación».
 

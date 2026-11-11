@@ -165,7 +165,7 @@ de construir nada.
       (con los plugins en `Plugins`), OPFS, `Documentos` e importar, ✓. **Reinstalar, ✗**: la app
       nueva no lee ni pisa lo de la vieja, pero crea ficheros nuevos y el selector lee los viejos;
       el usuario eligió la opción A (decisión 7). Y exportar desde ⚙ no hace nada en la app.
-- [ ] **4. Las notas, en OPFS dentro de la app** *(pensar)*: «¿estoy dentro de la app?», decidido en
+- [x] **4. Las notas, en OPFS dentro de la app** *(pensar)*: «¿estoy dentro de la app?», decidido en
       un solo sitio; `main.ts` inyecta `DirectoryHandleBlobStore` sobre OPFS; sin *service worker*.
       «Borrar todo» e importar sobre ese almacén (el cuarto cabo de la deuda de la Fase 4): vacían
       OPFS **y** las claves `elnotas:` que siguen en `localStorage` (`elnotas:ui`, `elnotas:capas`),
@@ -175,7 +175,7 @@ de construir nada.
       app y a reiniciar el móvil y «Borrar todo» lo vacía todo, y el usuario confirma cómo quedan
       las líneas de «Borrar todo» e importar en *Decisiones cerradas* de `CLAUDE.md`. **Código
       hecho el 2026-11-10**, comprobado en la web por el verificador, y la sección A de la lista,
-      en el móvil el 2026-11-11; falta el visto bueno del usuario a las líneas de `CLAUDE.md`.
+      en el móvil el 2026-11-11; las líneas de `CLAUDE.md`, con el visto bueno del usuario.
 - [x] **5. El botón atrás de Android** *(pensar)*: primero, ver si basta lo que Capacitor hace solo
       (atrás en el historial; sin historial, cerrar la app); escuchar el botón lo quita y obliga a
       rehacerlo. Ojo con las capas sin entrada en el historial, que se cierran sin ir atrás.
@@ -208,7 +208,8 @@ de construir nada.
       3): la copia, en `copias/` de la caché, vaciada antes de cada una, y la hoja «Compartir». Android
       sólo dice que se pasó a otra app, así que la app dice «Copia enviada», no «guardada»; cancelar
       dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Sección C
-      de la lista, en el móvil el 2026-11-11; falta pasar las notas de la PWA y `CLAUDE.md`.
+      de la lista, en el móvil el 2026-11-11, y «Compartir» y «migrar», en `CLAUDE.md`. Falta que el
+      usuario pase sus notas de la PWA (mejor tras E3) y quitar la entrada de la deuda de la Fase 4.
 - [ ] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
       al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
       por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en
