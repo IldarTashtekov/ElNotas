@@ -310,11 +310,6 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       core lo permite. Opciones: pulsar el día en el mes con la pestaña Rutinas, o nada. Sin
       decidir hasta que el usuario lo eche en falta. **Se cierra cuando** el usuario elige y la
       decisión queda escrita aquí.
-- [ ] **`allowBackup` en la app de Android** *(salió en la tarea 8 de la Fase 12, 2026-11-11)*. Con
-      `android:allowBackup="true"`, Android puede devolver al reinstalar los datos de la app (OPFS y
-      `localStorage`), y con ellos la lista de las copias automáticas de la instalación anterior,
-      que ya no puede borrar. Opciones: dejarlo (las notas vuelven solas) o quitarlo (manda la copia
-      de `Documentos/ElNotas/`). **Se cierra cuando** el usuario elige, a la vista de F4 en el móvil.
 - [ ] **`Context.defaultView`, sin uso** *(salió en E2 de la Fase 9, 2026-10-17)*. Sigue en el
       modelo con su acción `set-default-view`, y nadie lo usa desde que una ventana puede ser una
       nota o un diagrama. Choca con el principio de no construir lo que no tiene quien lo use
