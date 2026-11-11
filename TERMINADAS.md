@@ -418,6 +418,8 @@ Commits clave: `66dcbcc` (el planteamiento), `0b56e3c` (los textos en `es`), `34
 - **El sync entre dispositivos**, diseñado el 2026-10-12 con la copia en conflicto (*La nube*).
 - **La nube, aparcada** el 2026-11-04: la copia de seguridad basta por ahora (*Ideas aparcadas*).
 - **Los shells de Capacitor y Tauri**, desaparcados el 2026-11-04: las fases 12 y 13, autocontenidas.
+- **La copia automática en Android 7 a 10**, aceptada el 2026-11-11 tal cual: sin el permiso de
+  escribir en Documentos falla, y lo dice la línea de ⚙; las notas y «Exportar copia» van igual.
 
 ## Hitos
 

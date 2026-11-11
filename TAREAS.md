@@ -310,11 +310,6 @@ final a propósito: escrito antes, las fases 12 a 14 lo dejarían viejo. **Sin p
       core lo permite. Opciones: pulsar el día en el mes con la pestaña Rutinas, o nada. Sin
       decidir hasta que el usuario lo eche en falta. **Se cierra cuando** el usuario elige y la
       decisión queda escrita aquí.
-- [ ] **La copia automática en Android 7 a 10** *(salió en la tarea 8 de la Fase 12, 2026-11-11)*.
-      La app admite desde Android 7 (`minSdkVersion = 24`), y ahí escribir en Documentos pide el
-      permiso `WRITE_EXTERNAL_STORAGE`, que la app no declara: la copia automática fallaría siempre
-      (se vería en ⚙, «falló…»). Opciones: subir el mínimo a Android 11, declarar el permiso (con su
-      diálogo), o aceptarlo así. **Se cierra cuando** el usuario elige y queda escrito aquí.
 - [ ] **`allowBackup` en la app de Android** *(salió en la tarea 8 de la Fase 12, 2026-11-11)*. Con
       `android:allowBackup="true"`, Android puede devolver al reinstalar los datos de la app (OPFS y
       `localStorage`), y con ellos la lista de las copias automáticas de la instalación anterior,
