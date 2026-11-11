@@ -260,4 +260,5 @@ pasos; de C4 y C5 no anotó qué dijo la app.
 - **F1–F3** ✓ La primera copia sale al abrir, con su línea en ⚙; dentro del plazo no hay más; con
   la cuarta quedan tres y se va la más vieja. El usuario adelantó el reloj del móvil en vez de
   esperar las 12 horas.
-- **F4–F6** Pendientes: desinstalar e importar, el inglés y «Borrar todo».
+- **F4–F6** ✓ Tras reinstalar, una copia de la carpeta se importa entera; la línea sale en inglés;
+  con la app vacía no se copia nada.

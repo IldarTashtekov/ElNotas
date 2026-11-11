@@ -210,7 +210,7 @@ de construir nada.
       dentro de Drive no se ve, y un destino que se abre encima puede pasar por cancelar. Sección C
       de la lista, en el móvil el 2026-11-11, y «Compartir» y «migrar», en `CLAUDE.md`. Falta que el
       usuario pase sus notas de la PWA (mejor tras E3) y quitar la entrada de la deuda de la Fase 4.
-- [ ] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
+- [x] **8. La copia automática** *(pensar, de UI: para tras plantearla)*: en `Documentos/ElNotas/`,
       al abrir y tras guardar, como mucho una cada 12 h, cada una con su nombre y la fecha, tres
       por instalación (la app borra la más vieja de las suyas, nunca las de otra instalación), y en
       ⚙ «última copia: hace 2 h», en `es` y en `en`. Cuándo toca y cuál se borra, puro y con el reloj
@@ -218,8 +218,8 @@ de construir nada.
       `npm run check` pasa, en la lista de Android aparecen las tres copias y con la cuarta se va la
       más vieja, tras reinstalar una copia vieja se importa entera, y la copia automática queda en
       *Copia de seguridad* de `CLAUDE.md`. **Código hecho el 2026-11-11**, con la regla probada en
-      Node y la línea en `CLAUDE.md`; en el móvil, F1–F3 pasadas (tres copias, y con la cuarta se va la más vieja); falta F4–F6, con
-      la importación tras reinstalar, antes de llevar a la app las notas de verdad.
+      Node y la línea en `CLAUDE.md`; en el móvil, la sección F entera (2026-11-11): tres copias, con la cuarta se va la más vieja, y
+      tras reinstalar una se importa entera.
 - [x] **9. El icono y la pantalla de carga, los de ElNotas** *(mecánica, corta)*: hoy son los de
       Capacitor. El icono, el «nerd» de `assets/icono/`; la carga, negra, como la de la PWA.
       **Se cierra cuando** en la lista de Android el icono del móvil es el «nerd» y al abrir la app
